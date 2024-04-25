@@ -1,6 +1,7 @@
 package com.voltix.wallet.app.ui.theme
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,6 +11,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.toColorInt
@@ -87,6 +89,16 @@ fun OnBoardingComposeTheme(
             shapes = Shapes,
             content = content
         )
+    }
+    if (Build.VERSION.SDK_INT >= 21) {
+        val window =(LocalContext.current as Activity). window
+        if (darkTheme){
+            window.statusBarColor = appColors.oxfordBlue800.toArgb()
+        }
+        else{
+//            window.statusBarColor = appColors.neutral0.toArgb()
+            window.statusBarColor = appColors.oxfordBlue800.toArgb()
+        }
     }
 
 }

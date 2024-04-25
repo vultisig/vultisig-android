@@ -1,6 +1,5 @@
 package com.voltix.wallet.presenter.welcome
 
-import android.widget.Space
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -19,11 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,11 +27,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.voltix.wallet.R
@@ -44,9 +39,8 @@ import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.domain.on_board.models.OnBoardPage
 import com.voltix.wallet.presenter.common.UiEvent
-import com.voltix.wallet.presenter.navigation.Screen
 import com.voltix.wallet.presenter.welcome.WelcomeEvent.BoardCompleted
-import multiColorButton
+import MultiColorButton
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -64,6 +58,16 @@ fun WelcomeScreen(
             when (uiEvent) {
                 is UiEvent.NavigateTo -> {
                     navController.navigate(uiEvent.screen.route)
+                }
+                is UiEvent.ScrollToNextPage ->{
+                    if (pagerState.currentPage<2){
+                        pagerState.scrollToPage(pagerState.currentPage+1)
+                    }
+                    else{
+                        navController.popBackStack();
+                        navController.navigate(uiEvent.screen.route);
+
+                    }
                 }
 
                 UiEvent.PopBackStack -> {
@@ -108,29 +112,34 @@ fun WelcomeScreen(
         }
         Spacer(modifier = Modifier
             .weight(0.3f))
-        multiColorButton(
+        MultiColorButton(
             text = "Next",
+            minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
-                .weight(0.7f)
                 .fillMaxWidth()
-                .padding(start = MaterialTheme.dimens.medium1, end = MaterialTheme.dimens.medium1)
+                .padding(
+                    start = MaterialTheme.dimens.minHeightButton,
+                    end = MaterialTheme.dimens.buttonMargin
+                )
 //            pagerState = pagerState
         ) {
-//            viewModel.onEvent(BoardCompleted)
+            viewModel.onEvent(WelcomeEvent.NextPages)
         }
         Spacer(modifier = Modifier
             .weight(0.3f))
-        multiColorButton(
-            text = "Skip",
-            backgroundColor = MaterialTheme.appColor.oxfordBlue800,
-            textColor = MaterialTheme.appColor.turquoise800,
-            iconColor = MaterialTheme.appColor.oxfordBlue800,
-            modifier = Modifier
-                .weight(0.7f)
-                .fillMaxWidth()
-                .padding(start = MaterialTheme.dimens.medium1, end = MaterialTheme.dimens.medium1)
-        ) {
-            viewModel.onEvent(BoardCompleted)
+        if (pagerState.currentPage<2){
+            MultiColorButton(
+                text = "Skip",
+                backgroundColor = MaterialTheme.appColor.oxfordBlue800,
+                textColor = MaterialTheme.appColor.turquoise800,
+                iconColor = MaterialTheme.appColor.oxfordBlue800,
+                minHeight = MaterialTheme.dimens.minHeightButton,
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                viewModel.onEvent(BoardCompleted)
+
+            }
         }
     }
 }
@@ -172,32 +181,32 @@ fun PagerScreen(onBoardingPage: OnBoardPage,navController: NavHostController) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@ExperimentalAnimationApi
-@Composable
-fun FinishButton(
-    modifier: Modifier,
-    pagerState: PagerState,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = modifier
-            .padding(horizontal = 40.dp),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        AnimatedVisibility(
-            modifier = Modifier.fillMaxWidth(),
-            visible = pagerState.currentPage == 2
-        ) {
-            Button(
-                onClick = onClick,
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.White
-                )
-            ) {
-                Text(text = "Finish")
-            }
-        }
-    }
-}
+//@OptIn(ExperimentalFoundationApi::class)
+//@ExperimentalAnimationApi
+//@Composable
+//fun FinishButton(
+//    modifier: Modifier,
+//    pagerState: PagerState,
+//    onClick: () -> Unit
+//) {
+//    Row(
+//        modifier = modifier
+//            .padding(horizontal = 40.dp),
+//        verticalAlignment = Alignment.Top,
+//        horizontalArrangement = Arrangement.Center
+//    ) {
+//        AnimatedVisibility(
+//            modifier = Modifier.fillMaxWidth(),
+//            visible = pagerState.currentPage == 2
+//        ) {
+//            Button(
+//                onClick = onClick,
+//                colors = ButtonDefaults.buttonColors(
+//                    contentColor = Color.White
+//                )
+//            ) {
+//                Text(text = "Finish")
+//            }
+//        }
+//    }
+//}

@@ -1,5 +1,6 @@
 package com.voltix.wallet.presenter.create_new_vault
 
+import MultiColorButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
+import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.presenter.navigation.Screen
 
@@ -64,20 +67,33 @@ fun CreateNewVault(navController: NavHostController) {
         }
         Column(
             modifier = Modifier
-                .align(BottomCenter)
-                .padding(20.dp),
+                .align(BottomCenter),
             horizontalAlignment = CenterHorizontally
         ) {
-            Button(onClick = {
+            MultiColorButton(
+                text = "Create a New Vault",
+                minHeight = MaterialTheme.dimens.minHeightButton,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = MaterialTheme.dimens.buttonMargin, end = MaterialTheme.dimens.buttonMargin)
+            ) {
                 navController.navigate(route = Screen.Setup.route)
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Create a New Vault")
             }
-            Button(onClick = {
+            Spacer(modifier = Modifier.size( MaterialTheme.dimens.small3))
+            MultiColorButton(
+                text = "Import an Existing Vault",
+                backgroundColor = MaterialTheme.appColor.oxfordBlue800,
+                textColor = MaterialTheme.appColor.turquoise800,
+                iconColor = MaterialTheme.appColor.oxfordBlue800,
+                borderSize = 1.dp,
+                minHeight = MaterialTheme.dimens.minHeightButton,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = MaterialTheme.dimens.buttonMargin, end = MaterialTheme.dimens.buttonMargin)
+            ) {
                 navController.navigate(Screen.ImportFile.route)
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Import an Existing Vault")
             }
+
 
         }
     }

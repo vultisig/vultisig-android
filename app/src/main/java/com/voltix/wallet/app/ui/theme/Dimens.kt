@@ -15,6 +15,8 @@ data class Dimens(
     val bottomHeight: Dp = 0.dp,
     val logoSize: Dp = 0.dp,
     val minWidth: Dp = 0.dp,
+    var buttonMargin: Dp = 0.dp,
+    val minHeightButton :Dp =0.dp,
 )
 
 val CompactSmallDimens = Dimens(
@@ -28,7 +30,8 @@ val CompactSmallDimens = Dimens(
     large = 45.dp,
     bottomHeight = 30.dp,
     logoSize = 36.dp,
-    minWidth = 170.dp,
+    buttonMargin = 30.dp,
+    minHeightButton = 45.dp,
 
 )
 
@@ -44,6 +47,8 @@ val CompactMediumDimens = Dimens(
     bottomHeight = 30.dp,
     logoSize = 36.dp,
     minWidth = 170.dp,
+    buttonMargin = 35.dp,
+    minHeightButton = 50.dp,
     )
 
 val CompactDimens = Dimens(
@@ -58,6 +63,8 @@ val CompactDimens = Dimens(
     bottomHeight = 30.dp,
     logoSize = 36.dp,
     minWidth = 170.dp,
+    buttonMargin = 35.dp,
+    minHeightButton = 55.dp,
     )
 
 val MediumDimens = Dimens(
@@ -72,6 +79,8 @@ val MediumDimens = Dimens(
     bottomHeight = 30.dp,
     logoSize = 36.dp,
     minWidth = 170.dp,
+    buttonMargin = 40.dp,
+    minHeightButton = 60.dp,
     )
 
 val ExpandedDimens = Dimens(
@@ -86,4 +95,6 @@ val ExpandedDimens = Dimens(
     bottomHeight = 30.dp,
     logoSize = 36.dp,
     minWidth = 170.dp,
+    buttonMargin = 40.dp,
+    minHeightButton = 60.dp,
     )

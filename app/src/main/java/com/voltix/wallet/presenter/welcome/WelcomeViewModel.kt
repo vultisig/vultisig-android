@@ -24,7 +24,7 @@ class WelcomeViewModel @Inject constructor(
     private val boardPage: BoardPages
 ) : ViewModel() {
 
-    var state by mutableStateOf(WelcomeState())
+     var state by mutableStateOf(WelcomeState())
         private set
     private var _channel = Channel<UiEvent>()
     var channel = _channel.receiveAsFlow()
@@ -36,13 +36,11 @@ class WelcomeViewModel @Inject constructor(
     fun onEvent(event: WelcomeEvent) {
         when (event) {
             InitPages -> getBoardPages()
-            NextPages -> getNextPages()
             BoardCompleted -> saveOnBoardingState()
+            NextPages ->scrollToNextPage()
         }
     }
-    private fun getNextPages() {
-        state = state.copy(pages = boardPage())
-    }
+
     private fun getBoardPages() {
         state = state.copy(pages = boardPage())
     }
@@ -54,5 +52,12 @@ class WelcomeViewModel @Inject constructor(
             _channel.send(PopBackStack)
         }
     }
+
+    private fun scrollToNextPage(){
+        viewModelScope.launch(Dispatchers.IO){
+            _channel.send(ScrollToNextPage(Screen.Home))
+        }
+    }
+
 
 }
