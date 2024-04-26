@@ -1,4 +1,4 @@
-package com.voltix.wallet.domain.on_board.use_cases
+package com.voltix.wallet.on_board.use_cases
 
 import com.voltix.wallet.domain.on_board.models.OnBoardPage
 import com.voltix.wallet.on_board.repository.OnBoardRepository

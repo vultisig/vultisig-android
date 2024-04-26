@@ -70,7 +70,6 @@ fun KeygenQr(navController: NavHostController) {
             modifier = Modifier
                 .width(150.dp)
                 .height(150.dp)
-
                 .drawBehind {
                     drawRoundRect(
                         color = Color("#33e6bf".toColorInt()), style = Stroke(
@@ -82,7 +81,6 @@ fun KeygenQr(navController: NavHostController) {
                 .padding(20.dp))
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-
         Spacer(
             modifier = Modifier.height(MaterialTheme.dimens.small1)
         )

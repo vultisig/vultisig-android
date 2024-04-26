@@ -1,4 +1,4 @@
-package com.voltix.wallet.domain.on_board.use_cases
+package com.voltix.wallet.on_board.use_cases
 
 import com.voltix.wallet.on_board.repository.OnBoardRepository
 import kotlinx.coroutines.flow.Flow

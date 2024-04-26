@@ -20,9 +20,11 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -62,4 +64,10 @@ fun Pair(navController: NavHostController) {
                 })
         }
     }
+}
+@Preview(showBackground = true, name = "Pair Preview")
+@Composable
+fun PreviewPair() {
+    val navController = rememberNavController()
+    Pair(navController = navController)
 }

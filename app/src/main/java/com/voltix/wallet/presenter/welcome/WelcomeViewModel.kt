@@ -5,8 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.voltix.wallet.domain.on_board.use_cases.BoardPages
-import com.voltix.wallet.domain.on_board.use_cases.SaveOnBoard
+import com.voltix.wallet.on_board.use_cases.BoardPages
+import com.voltix.wallet.on_board.use_cases.SaveOnBoard
 import com.voltix.wallet.presenter.common.UiEvent
 import com.voltix.wallet.presenter.common.UiEvent.*
 import com.voltix.wallet.presenter.navigation.Screen

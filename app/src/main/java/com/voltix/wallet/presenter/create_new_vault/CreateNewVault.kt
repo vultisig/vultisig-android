@@ -20,9 +20,11 @@ import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.montserratFamily
@@ -81,4 +83,11 @@ fun CreateNewVault(navController: NavHostController) {
 
         }
     }
+}
+
+@Preview(showBackground = true, name = "Create New Vault Preview")
+@Composable
+fun PreviewCreateNewVault() {
+    val navController = rememberNavController()
+    CreateNewVault(navController = navController)
 }

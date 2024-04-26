@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.voltix.wallet.R
@@ -86,4 +87,25 @@ public fun multiColorButton(
             modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.large)
         )
     }
+}
+@Preview(showBackground = true, name = "Multi Color Button Preview")
+@Composable
+public fun PreviewMultiColorButton() {
+    multiColorButton(
+        text = "Button",
+        startIcon = null,
+        trailingIcon = null,
+        iconColor = MaterialTheme.appColor.turquoise600Main,
+        backgroundColor = MaterialTheme.appColor.turquoise600Main,
+        foregroundColor = MaterialTheme.appColor.oxfordBlue600Main,
+        borderColor = MaterialTheme.appColor.turquoise600Main,
+        iconSize = 24.dp,
+        borderSize = 1.dp,
+        minWidth = 100.dp,
+        minHeight = 50.dp,
+        textStyle = MaterialTheme.montserratFamily.titleLarge,
+        textColor = MaterialTheme.appColor.oxfordBlue600Main,
+        modifier = Modifier.padding(16.dp),
+        onClick = {}
+    )
 }
