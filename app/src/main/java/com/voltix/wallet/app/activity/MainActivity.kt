@@ -15,9 +15,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @ExperimentalAnimationApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen().setKeepOnScreenCondition {

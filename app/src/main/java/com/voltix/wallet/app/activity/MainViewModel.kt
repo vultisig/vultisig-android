@@ -1,14 +1,15 @@
 package com.voltix.wallet.app.activity
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.voltix.wallet.data.on_board.repository.DataStoreRepositoryImpl
-import com.voltix.wallet.domain.on_board.use_cases.ReadOnBoard
+import com.voltix.wallet.on_board.use_cases.ReadOnBoard
 import com.voltix.wallet.presenter.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

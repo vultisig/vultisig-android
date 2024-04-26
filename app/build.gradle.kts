@@ -4,14 +4,13 @@ plugins {
     alias(libs.plugins.daggerHiltAndroid)
     kotlin("kapt")
 }
-
 android {
     namespace = "com.voltix.wallet"
     compileSdk = 34
 
     defaultConfig {
         applicationId = "com.voltix.wallet"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -76,6 +75,5 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
-
-
+    implementation(libs.spark.core)
 }
