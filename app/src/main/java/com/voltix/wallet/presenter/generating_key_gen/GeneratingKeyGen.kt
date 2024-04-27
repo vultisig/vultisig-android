@@ -15,9 +15,11 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -26,12 +28,13 @@ import com.voltix.wallet.presenter.common.TopBar
 
 @Composable
 fun GeneratingKeyGen(navController: NavHostController) {
-    val textColor = MaterialTheme.colorScheme.onBackground
+    val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(MaterialTheme.dimens.medium1)
+            .padding(vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall)
     ) {
         TopBar(centerText = "Keygen")
 
@@ -64,4 +67,11 @@ fun GeneratingKeyGen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
     }
+}
+@Preview(showBackground = true)
+@Composable
+fun GeneratingKeyGenPreview() {
+    val navController = rememberNavController()
+    GeneratingKeyGen(navController)
+
 }

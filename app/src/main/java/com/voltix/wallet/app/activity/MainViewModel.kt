@@ -1,21 +1,19 @@
 package com.voltix.wallet.app.activity
 
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.voltix.wallet.on_board.use_cases.ReadOnBoard
+import com.voltix.wallet.on_board.OnBoardRepository
 import com.voltix.wallet.presenter.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val readOnBoard: ReadOnBoard
+    private val repository: OnBoardRepository
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -26,7 +24,7 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            readOnBoard().collect { completed ->
+            repository.readOnBoardingState().collect { completed ->
                 if (completed) {
                     _startDestination.value = Screen.Home.route
                 } else {

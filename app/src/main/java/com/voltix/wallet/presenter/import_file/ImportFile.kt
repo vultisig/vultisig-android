@@ -31,9 +31,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -44,13 +46,13 @@ import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
 fun ImportFile(navController: NavHostController, hasFile: Boolean) {
-    val textColor = MaterialTheme.colorScheme.onBackground
+    val textColor = MaterialTheme.appColor.neutral0
 
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(MaterialTheme.dimens.medium1)
+            .padding(vertical = MaterialTheme.dimens.marginMedium,horizontal = MaterialTheme.dimens.marginExtraLarge)
     ) {
         TopBar("Import")
         Spacer(modifier = Modifier.height(48.dp))
@@ -134,4 +136,11 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
             )
         }
     }
+}
+@Preview(showBackground = true)
+@Composable
+fun ImportFilePreview() {
+    val navController = rememberNavController()
+    ImportFile(navController,true)
+
 }

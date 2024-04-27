@@ -1,5 +1,6 @@
 package com.voltix.wallet.presenter.device_list
 
+import MultiColorButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -25,7 +28,7 @@ import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
 fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
-    val textColor = MaterialTheme.colorScheme.onBackground
+    val textColor = MaterialTheme.appColor.neutral0
     val items = listOf(
         "1- iPad Pro 6th generation (This Device)",
         "2- iPad Pro (Pair Device)",
@@ -36,7 +39,8 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(MaterialTheme.dimens.medium1)
+            .padding(vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall)
     ) {
         TopBar(centerText = "Keygen", startIcon = R.drawable.caret_left)
 
@@ -82,8 +86,20 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
 
         Spacer(modifier = Modifier.weight(1.0f))
 
-
-        Button(onClick = {
+        MultiColorButton(
+            text = "Continue",
+            backgroundColor = MaterialTheme.appColor.turquoise600Main,
+            textColor = MaterialTheme.appColor.oxfordBlue600Main,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            textStyle = MaterialTheme.montserratFamily.titleLarge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = MaterialTheme.dimens.marginMedium,
+                    end = MaterialTheme.dimens.marginMedium,
+                    bottom = MaterialTheme.dimens.marginMedium,
+                )
+        ) {
             if (itemCount + 1 <= 4) {
                 navController.navigate(
                     Screen.DeviceList.route.replace(
@@ -95,8 +111,29 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
                     Screen.GeneratingKeyGen.route
                 )
             }
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Continue")
         }
+//        Button(onClick = {
+//            if (itemCount + 1 <= 4) {
+//                navController.navigate(
+//                    Screen.DeviceList.route.replace(
+//                        oldValue = "{count}", newValue = "${itemCount + 1}"
+//                    )
+//                )
+//            } else {
+//                navController.navigate(
+//                    Screen.GeneratingKeyGen.route
+//                )
+//            }
+//        }, modifier = Modifier.fillMaxWidth().padding(MaterialTheme.dimens.marginMedium)) {
+//            Text(text = "Continue")
+//        }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DeviceListPreview() {
+    val navController = rememberNavController()
+    DeviceList(navController)
+
 }

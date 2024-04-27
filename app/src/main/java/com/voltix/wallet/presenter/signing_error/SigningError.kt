@@ -1,5 +1,6 @@
 package com.voltix.wallet.presenter.signing_error
 
+import MultiColorButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -15,8 +16,10 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -25,12 +28,15 @@ import com.voltix.wallet.presenter.common.TopBar
 
 @Composable
 fun SigningError(navController: NavHostController) {
-    val textColor = MaterialTheme.colorScheme.onBackground
+    val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(MaterialTheme.dimens.medium1)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
     ) {
         TopBar(centerText = "Keygen")
 
@@ -60,8 +66,28 @@ fun SigningError(navController: NavHostController) {
             ),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-        Button(onClick = { /*TODO*/ }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Try Again")
+        MultiColorButton(
+            text = "Try Again",
+            backgroundColor = MaterialTheme.appColor.turquoise600Main,
+            textColor = MaterialTheme.appColor.oxfordBlue600Main,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            modifier = Modifier.fillMaxWidth()
+                .padding(
+                    start = MaterialTheme.dimens.marginMedium,
+                    end = MaterialTheme.dimens.marginMedium,
+                    bottom = MaterialTheme.dimens.buttonMargin,
+                )
+        ) {
+
         }
+
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SigningErrorPreview() {
+    val navController = rememberNavController()
+    SigningError( navController)
+
 }

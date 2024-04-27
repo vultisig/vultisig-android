@@ -1,6 +1,6 @@
-package com.voltix.wallet.on_board.repository
+package com.voltix.wallet.on_board
 
-import com.voltix.wallet.domain.on_board.models.OnBoardPage
+import com.voltix.wallet.data.on_board.models.OnBoardPage
 import kotlinx.coroutines.flow.Flow
 
 interface OnBoardRepository {

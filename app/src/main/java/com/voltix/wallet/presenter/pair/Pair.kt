@@ -29,14 +29,14 @@ import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.presenter.common.TopBar
-
 @Composable
 fun Pair(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier.run {
             background(MaterialTheme.appColor.oxfordBlue800)
-                .padding(vertical = MaterialTheme.dimens.medium1)
+                .padding(vertical = MaterialTheme.dimens.marginMedium,
+                    horizontal = MaterialTheme.dimens.marginSmall)
         }
     ) {
         TopBar(centerText = "Pair", startIcon = R.drawable.caret_left)
@@ -65,9 +65,11 @@ fun Pair(navController: NavHostController) {
         }
     }
 }
-@Preview(showBackground = true, name = "Pair Preview")
+
+@Preview(showBackground = true)
 @Composable
-fun PreviewPair() {
+fun PairPreview() {
     val navController = rememberNavController()
-    Pair(navController = navController)
+    Pair( navController)
+
 }
