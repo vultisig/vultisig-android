@@ -76,4 +76,6 @@ dependencies {
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.spark.core)
+    implementation(libs.gson)
+    implementation(libs.guava)
 }

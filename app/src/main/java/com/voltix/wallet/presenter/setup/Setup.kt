@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R.drawable
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -102,4 +104,10 @@ fun Setup(navController: NavHostController) {
             Text(text = "Join")
         }
     }
+}
+@Preview(showBackground = true, name = "Setup Preview")
+@Composable
+fun PreviewSetup() {
+    val navController = rememberNavController()
+    Setup(navController)
 }
