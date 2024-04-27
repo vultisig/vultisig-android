@@ -22,29 +22,13 @@ public class ServerManager extends BroadcastReceiver {
     private static final int CMD_VALUE_ERROR = 2;
     private static final int CMD_VALUE_STOP = 4;
 
-    /**
-     * Notify serverStart.
-     *
-     * @param context context.
-     */
     public static void onServerStart(Context context, String hostAddress) {
         sendBroadcast(context, CMD_VALUE_START, hostAddress);
     }
 
-    /**
-     * Notify serverStop.
-     *
-     * @param context context.
-     */
     public static void onServerError(Context context, String error) {
         sendBroadcast(context, CMD_VALUE_ERROR, error);
     }
-
-    /**
-     * Notify serverStop.
-     *
-     * @param context context.
-     */
     public static void onServerStop(Context context) {
         sendBroadcast(context, CMD_VALUE_STOP);
     }
@@ -70,18 +54,12 @@ public class ServerManager extends BroadcastReceiver {
         mService = new Intent(activity, CoreService.class);
     }
 
-    /**
-     * Register broadcast.
-     */
     @SuppressLint("UnsafeOptInUsageError")
     public void register() {
         IntentFilter filter = new IntentFilter(ACTION);
         mActivity.registerReceiver(this, filter);
     }
 
-    /**
-     * UnRegister broadcast.
-     */
     @SuppressLint("UnsafeOptInUsageError")
     public void unRegister() {
         mActivity.unregisterReceiver(this);
