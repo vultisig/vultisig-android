@@ -2,6 +2,7 @@ package com.voltix.wallet.presenter.common
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,11 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
 
 @Composable
 fun TopBar(
+    navController: NavController,
     centerText: String,
     modifier: Modifier = Modifier,
     @DrawableRes startIcon: Int? = null,
@@ -31,7 +34,9 @@ fun TopBar(
         verticalAlignment = CenterVertically
     ) {
         startIcon?.let { id ->
-            Image(painter = painterResource(id = id), contentDescription = null)
+            Image(painter = painterResource(id = id), contentDescription = null,modifier = Modifier.clickable {
+                navController.popBackStack()
+            })
         } ?: Spacer(modifier = Modifier)
         Text(
             text = centerText,
@@ -42,9 +47,4 @@ fun TopBar(
             Image(painter = painterResource(id = id), contentDescription = null)
         } ?: Spacer(modifier = Modifier)
     }
-}
-@Preview(showBackground = true, name = "Top Bar Preview")
-@Composable
-fun PreviewTopBar() {
-    TopBar(centerText = "Top Bar")
 }

@@ -42,7 +42,7 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
             .padding(vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall)
     ) {
-        TopBar(centerText = "Keygen", startIcon = R.drawable.caret_left)
+        TopBar(centerText = "Keygen", startIcon = R.drawable.caret_left, navController = navController)
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
 

@@ -72,26 +72,40 @@ fun CreateNewVault(navController: NavHostController) {
                 .align(BottomCenter),
             horizontalAlignment = CenterHorizontally
         ) {
+
             MultiColorButton(
                 text = "Create a New Vault",
                 minHeight = MaterialTheme.dimens.minHeightButton,
+                backgroundColor = MaterialTheme.appColor.turquoise800,
+                textColor = MaterialTheme.appColor.oxfordBlue800,
+                iconColor = MaterialTheme.appColor.turquoise800,
+                textStyle = MaterialTheme.montserratFamily.titleLarge,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = MaterialTheme.dimens.buttonMargin, end = MaterialTheme.dimens.buttonMargin)
+                    .padding(
+                        start = MaterialTheme.dimens.marginMedium,
+                        end = MaterialTheme.dimens.marginMedium,
+                        bottom = MaterialTheme.dimens.marginMedium,
+                    )
             ) {
                 navController.navigate(route = Screen.Setup.route)
             }
-            Spacer(modifier = Modifier.size( MaterialTheme.dimens.small3))
+            Spacer(modifier = Modifier.size( MaterialTheme.dimens.extraSmall))
             MultiColorButton(
                 text = "Import an Existing Vault",
                 backgroundColor = MaterialTheme.appColor.oxfordBlue800,
                 textColor = MaterialTheme.appColor.turquoise800,
                 iconColor = MaterialTheme.appColor.oxfordBlue800,
                 borderSize = 1.dp,
+                textStyle = MaterialTheme.montserratFamily.titleLarge,
                 minHeight = MaterialTheme.dimens.minHeightButton,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = MaterialTheme.dimens.buttonMargin, end = MaterialTheme.dimens.buttonMargin)
+                    .padding(
+                        start = MaterialTheme.dimens.marginMedium,
+                        end = MaterialTheme.dimens.marginMedium,
+                        bottom = MaterialTheme.dimens.buttonMargin,
+                    )
             ) {
                 navController.navigate(Screen.ImportFile.route)
             }
@@ -100,10 +114,9 @@ fun CreateNewVault(navController: NavHostController) {
         }
     }
 }
-
-@Preview(showBackground = true, name = "Create New Vault Preview")
+@Preview(showBackground = true)
 @Composable
-fun PreviewCreateNewVault() {
+fun CreateNewVaultPreview() {
     val navController = rememberNavController()
-    CreateNewVault(navController = navController)
+    CreateNewVault( navController)
 }

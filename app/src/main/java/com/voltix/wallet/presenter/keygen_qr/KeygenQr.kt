@@ -51,7 +51,8 @@ fun KeygenQr(navController: NavHostController) {
                 horizontal = MaterialTheme.dimens.marginSmall)
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left
+            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Text(

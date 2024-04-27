@@ -36,7 +36,7 @@ fun GeneratingKeyGen(navController: NavHostController) {
             .padding(vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall)
     ) {
-        TopBar(centerText = "Keygen")
+        TopBar(centerText = "Keygen", navController = navController)
 
         Spacer(modifier = Modifier.weight(1.0f))
         Text(text = "generating", color = textColor, style = MaterialTheme.menloFamily.bodyMedium)

@@ -29,6 +29,7 @@ import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.presenter.common.TopBar
+
 @Composable
 fun Pair(navController: NavHostController) {
     Column(
@@ -39,7 +40,7 @@ fun Pair(navController: NavHostController) {
                     horizontal = MaterialTheme.dimens.marginSmall)
         }
     ) {
-        TopBar(centerText = "Pair", startIcon = R.drawable.caret_left)
+        TopBar(centerText = "Pair", startIcon = R.drawable.caret_left, navController = navController)
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
         Box(

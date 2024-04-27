@@ -54,7 +54,7 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
             .background(MaterialTheme.appColor.oxfordBlue800)
             .padding(vertical = MaterialTheme.dimens.marginMedium,horizontal = MaterialTheme.dimens.marginExtraLarge)
     ) {
-        TopBar("Import")
+        TopBar(centerText = "Import",navController = navController)
         Spacer(modifier = Modifier.height(48.dp))
         Text(
             text = "Enter your previously created vault share",

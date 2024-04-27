@@ -16,7 +16,7 @@ import com.voltix.wallet.app.ui.theme.menloFamily
 
 @Composable
 fun DeviceInfoItem(info: String) {
-    val textColor = MaterialTheme.colorScheme.onBackground
+    val textColor = MaterialTheme.appColor.neutral0
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -30,9 +30,4 @@ fun DeviceInfoItem(info: String) {
             text = info, color = textColor, style = MaterialTheme.menloFamily.bodyMedium
         )
     }
-}
-@Preview(showBackground = true)
-@Composable
-fun PreviewDeviceInfoItem() {
-    DeviceInfoItem("Device Name: Voltix")
 }

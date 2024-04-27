@@ -38,7 +38,7 @@ fun SigningError(navController: NavHostController) {
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(centerText = "Keygen")
+        TopBar(centerText = "Keygen", navController = navController)
 
         Spacer(modifier = Modifier.weight(1.0f))
         Image(

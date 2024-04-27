@@ -29,6 +29,7 @@ import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.navigation.Screen
+
 @Composable
 fun Setup(navController: NavHostController) {
     val textColor = MaterialTheme.appColor.neutral0
@@ -42,7 +43,7 @@ fun Setup(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Setup", startIcon = drawable.caret_left, endIcon = drawable.question
+            centerText = "Setup", startIcon = drawable.caret_left, endIcon = drawable.question, navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Text(
