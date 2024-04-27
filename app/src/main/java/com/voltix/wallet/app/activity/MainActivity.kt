@@ -36,11 +36,6 @@ class MainActivity : ComponentActivity() {
                 SetupNavGraph(navController = navController, startDestination = screen)
             }
         }
-        GlobalScope.launch(Dispatchers.IO) {
-            val server = Server(context)
-            server.startMediator("first")
-        }
-
     }
 
     override fun onDestroy() {

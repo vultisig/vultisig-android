@@ -55,6 +55,7 @@ public fun MultiColorButton(
                         , MaterialTheme.appColor.persianBlue600Main)),
                 shape = CircleShape)
         )
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -78,6 +79,7 @@ public fun MultiColorButton(
         )
         Text(
             text = text,
+
             color = textColor ?: MaterialTheme.appColor.oxfordBlue600Main,
             style = textStyle ?: MaterialTheme.montserratFamily.titleLarge
         )
@@ -88,25 +90,4 @@ public fun MultiColorButton(
             modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
         )
     }
-}
-@Preview(showBackground = true, name = "Multi Color Button Preview")
-@Composable
-public fun PreviewMultiColorButton() {
-    MultiColorButton(
-        text = "Button",
-        startIcon = null,
-        trailingIcon = null,
-        iconColor = MaterialTheme.appColor.turquoise600Main,
-        backgroundColor = MaterialTheme.appColor.turquoise600Main,
-        foregroundColor = MaterialTheme.appColor.oxfordBlue600Main,
-        borderColor = MaterialTheme.appColor.turquoise600Main,
-        iconSize = 24.dp,
-        borderSize = 1.dp,
-        minWidth = 100.dp,
-        minHeight = 50.dp,
-        textStyle = MaterialTheme.montserratFamily.titleLarge,
-        textColor = MaterialTheme.appColor.oxfordBlue600Main,
-        modifier = Modifier.padding(16.dp),
-        onClick = {}
-    )
 }
