@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -91,7 +92,7 @@ public fun MultiColorButton(
 @Preview(showBackground = true, name = "Multi Color Button Preview")
 @Composable
 public fun PreviewMultiColorButton() {
-    multiColorButton(
+    MultiColorButton(
         text = "Button",
         startIcon = null,
         trailingIcon = null,

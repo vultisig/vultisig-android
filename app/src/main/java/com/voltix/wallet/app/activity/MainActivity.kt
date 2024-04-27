@@ -1,5 +1,6 @@
 package com.voltix.wallet.app.activity
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -21,6 +22,7 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
+    val context: Context = this
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         installSplashScreen().setKeepOnScreenCondition {
@@ -35,8 +37,8 @@ class MainActivity : ComponentActivity() {
             }
         }
         GlobalScope.launch(Dispatchers.IO) {
-            val server = Server()
-            server.startMediator()
+            val server = Server(context)
+            server.startMediator("first")
         }
 
     }
