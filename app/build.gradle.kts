@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
     kotlin("kapt")
+//    alias(libs.plugins.yanzhenjieAndserver)
+
 }
 android {
     namespace = "com.voltix.wallet"
@@ -76,4 +78,9 @@ dependencies {
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.spark.core)
+    implementation(libs.spark.core)
+
+
+    implementation (libs.api)
+    kapt (libs.processor)
 }

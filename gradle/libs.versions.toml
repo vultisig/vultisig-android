@@ -1,5 +1,6 @@
 [versions]
 agp = "8.3.2"
+api = "2.1.12"
 coreSplashscreen = "1.0.1"
 hiltAndroid = "2.51.1"
 datastorePreferences = "1.1.0"
@@ -17,6 +18,7 @@ hilt="2.51.1"
 material3WindowSizeClassAndroid = "1.2.1"
 navigationCompose = "2.7.7"
 sparkCore = "2.9.4"
+yanzhenjie="2.1.12"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,6 +27,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-material3-window = { group = "androidx.compose.material3", name = "material3-window-size-class-android", version.ref = "material3WindowSizeClassAndroid" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+api = { module = "com.yanzhenjie.andserver:api", version.ref = "api" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hiltAndroid" }
 kotlinx-coroutines-core ={ group = "org.jetbrains.kotlinx",name ="kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
@@ -41,10 +44,13 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-spark-core = { module = "com.sparkjava:spark-core", version.ref = "sparkCore" }
+processor = { group = "com.yanzhenjie.andserver",name="processor", version.ref = "api" }
+spark-core = { group = "com.sparkjava",name="spark-core", version.ref = "sparkCore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 daggerHiltAndroid = {id = "com.google.dagger.hilt.android", version.ref = "hilt"}
+yanzhenjieAndserver = {id = "com.yanzhenjie.andserver", version = "yanzhenjie"}
+
 
