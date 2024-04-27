@@ -22,6 +22,7 @@ fun SetupNavGraph(
     navController: NavHostController,
     startDestination: String
 ) {
+
     NavHost(
         navController = navController,
         startDestination = startDestination
