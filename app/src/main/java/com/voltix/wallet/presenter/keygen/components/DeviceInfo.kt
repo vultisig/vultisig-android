@@ -1,4 +1,4 @@
-package com.voltix.wallet.presenter.keygen_qr.components
+package com.voltix.wallet.presenter.keygen.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
@@ -43,4 +45,13 @@ fun DeviceInfo(@DrawableRes icon: Int, name: String, info: String) {
             text = info, color = textColor, style = MaterialTheme.montserratFamily.titleSmall
         )
     }
+}
+@Preview(showBackground = true, name = "Device Info Preview")
+@Composable
+fun PreviewDeviceInfo() {
+    DeviceInfo(
+        icon = R.drawable.ipad,
+        name = "iPad",
+        info = "iOS 15.0.2"
+    )
 }

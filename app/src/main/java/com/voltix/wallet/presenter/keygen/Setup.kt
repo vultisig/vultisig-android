@@ -1,10 +1,8 @@
-package com.voltix.wallet.presenter.keygen_qr
+package com.voltix.wallet.presenter.keygen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,29 +14,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.toColorInt
 import androidx.navigation.NavHostController
-import com.voltix.wallet.R
+import androidx.navigation.compose.rememberNavController
+import com.voltix.wallet.R.drawable
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.presenter.common.TopBar
-import com.voltix.wallet.presenter.keygen_qr.components.DeviceInfo
 import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
-fun KeygenQr(navController: NavHostController) {
+fun Setup(navController: NavHostController) {
     val textColor = MaterialTheme.colorScheme.onBackground
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -47,7 +39,7 @@ fun KeygenQr(navController: NavHostController) {
             .padding(MaterialTheme.dimens.medium1)
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left
+            centerText = "Setup", startIcon = drawable.caret_left, endIcon = drawable.question
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Text(
@@ -58,41 +50,38 @@ fun KeygenQr(navController: NavHostController) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         Text(
-            text = "Pair with other devices:",
+            text = "(Any 3 Devices)",
             color = textColor,
             style = MaterialTheme.montserratFamily.bodyMedium
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
 
-        Image(painter = painterResource(id = R.drawable.qr),
-            contentScale = ContentScale.FillBounds,
+        Image(
+            painter = painterResource(id = drawable.devices),
             contentDescription = "devices",
-            modifier = Modifier
-                .width(150.dp)
-                .height(150.dp)
-                .drawBehind {
-                    drawRoundRect(
-                        color = Color("#33e6bf".toColorInt()), style = Stroke(
-                            width = 8f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 50f), 0.0f)
-                        ), cornerRadius = CornerRadius(16.dp.toPx())
-                    )
-                }
-                .padding(20.dp))
-
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-        Spacer(
-            modifier = Modifier.height(MaterialTheme.dimens.small1)
+            modifier = Modifier.width(140.dp)
         )
-        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-            DeviceInfo(R.drawable.ipad, "iPad", "1234h2i34h")
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.large))
-            DeviceInfo(R.drawable.iphone, "iPhone", "623654ghdsg")
-        }
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+
+        Text(
+            style = MaterialTheme.montserratFamily.bodySmall,
+            text = "3 Devices to create a vault; ",
+            color = textColor
+        )
+        Text(
+            style = MaterialTheme.montserratFamily.bodySmall,
+            text = "2 devices to sign a transaction.",
+            color = textColor
+        )
+        Text(
+            style = MaterialTheme.montserratFamily.bodySmall,
+            text = "Automatically backed-up",
+            color = textColor
+        )
 
         Spacer(modifier = Modifier.weight(1.0f))
 
-        Image(painter = painterResource(id = R.drawable.wifi), contentDescription = null)
+        Image(painter = painterResource(id = drawable.wifi), contentDescription = null)
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
@@ -104,13 +93,21 @@ fun KeygenQr(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         Button(onClick = {
-            navController.navigate(
-                Screen.DeviceList.route.replace(
-                    oldValue = "{count}", newValue = "2"
-                )
-            )
+            navController.navigate(Screen.KeygenQr.route)
         }, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Start")
         }
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+        Button(onClick = {
+                         navController.navigate(Screen.Pair.route)
+        }, modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Join")
+        }
     }
+}
+@Preview(showBackground = true, name = "Setup Preview")
+@Composable
+fun PreviewSetup() {
+    val navController = rememberNavController()
+    Setup(navController)
 }
