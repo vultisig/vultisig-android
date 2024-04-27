@@ -19,7 +19,24 @@ class Server(context: Context) {
     private val cache: Cache<String, Any> = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .build()
+    private val registrationListener = object : NsdManager.RegistrationListener {
+        override fun onServiceRegistered(serviceInfo: NsdServiceInfo) {
+            val serviceName = serviceInfo.serviceName
+            Log.d("Server", "Service registered: $serviceName")
+        }
 
+        override fun onRegistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+            Log.e("Server", "Service registration failed: $errorCode")
+        }
+
+        override fun onServiceUnregistered(serviceInfo: NsdServiceInfo) {
+            Log.d("Server", "Service unregistered: ${serviceInfo.serviceName}")
+        }
+
+        override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+            Log.e("Server", "Service unregistration failed: $errorCode")
+        }
+    }
     fun startMediator(name: String) {
         val httpService = Service.ignite()
         httpService.port(port)
@@ -31,27 +48,9 @@ class Server(context: Context) {
     private fun registerService(name: String) {
         val serviceInfo = NsdServiceInfo().apply {
             serviceName = name
-            serviceType = "_http._tcp."
-            port = port
+            serviceType = "_http._tcp"
         }
-        val registrationListener = object : NsdManager.RegistrationListener {
-            override fun onServiceRegistered(serviceInfo: NsdServiceInfo) {
-                val serviceName = serviceInfo.serviceName
-                Log.d("Server", "Service registered: $serviceName")
-            }
-
-            override fun onRegistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                Log.e("Server", "Service registration failed: $errorCode")
-            }
-
-            override fun onServiceUnregistered(serviceInfo: NsdServiceInfo) {
-                Log.d("Server", "Service unregistered: ${serviceInfo.serviceName}")
-            }
-
-            override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                Log.e("Server", "Service unregistration failed: $errorCode")
-            }
-        }
+        serviceInfo.port = port
         nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
     }
     private fun setupRouting(service: Service) {
@@ -352,5 +351,6 @@ class Server(context: Context) {
         stop()
         // clear cache
         cache.invalidateAll()
+        nsdManager.unregisterService(registrationListener)
     }
 }
