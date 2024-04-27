@@ -1,5 +1,6 @@
 package com.voltix.wallet.presenter.keygen_qr
 
+import MultiColorButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,10 +25,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -39,15 +42,17 @@ import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
 fun KeygenQr(navController: NavHostController) {
-    val textColor = MaterialTheme.colorScheme.onBackground
+    val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(MaterialTheme.dimens.medium1)
+            .padding(vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall)
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left
+            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Text(
@@ -62,14 +67,15 @@ fun KeygenQr(navController: NavHostController) {
             color = textColor,
             style = MaterialTheme.montserratFamily.bodyMedium
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
+        Spacer(modifier = Modifier.weight(1.0f))
 
         Image(painter = painterResource(id = R.drawable.qr),
             contentScale = ContentScale.FillBounds,
             contentDescription = "devices",
             modifier = Modifier
-                .width(150.dp)
-                .height(150.dp)
+                .width(250.dp)
+                .height(250.dp)
+
                 .drawBehind {
                     drawRoundRect(
                         color = Color("#33e6bf".toColorInt()), style = Stroke(
@@ -80,37 +86,63 @@ fun KeygenQr(navController: NavHostController) {
                 }
                 .padding(20.dp))
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-        Spacer(
-            modifier = Modifier.height(MaterialTheme.dimens.small1)
-        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginExtraLarge))
+
         Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
             DeviceInfo(R.drawable.ipad, "iPad", "1234h2i34h")
-            Spacer(modifier = Modifier.width(MaterialTheme.dimens.large))
+            Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginExtraLarge))
             DeviceInfo(R.drawable.iphone, "iPhone", "623654ghdsg")
         }
 
         Spacer(modifier = Modifier.weight(1.0f))
 
         Image(painter = painterResource(id = R.drawable.wifi), contentDescription = null)
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
         Text(
-            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-            text = "Keep devices on the same WiFi Network with VOLTIX open.",
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
+            text = "Keep all devices on same WiFi with Voltix App open. (May not work on hotel/airport WiFi)",
             color = textColor,
             style = MaterialTheme.menloFamily.headlineSmall.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
             ),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
-        Button(onClick = {
+//        Button(onClick = {
+//            navController.navigate(
+//                Screen.DeviceList.route.replace(
+//                    oldValue = "{count}", newValue = "2"
+//                )
+//            )
+//        }, modifier = Modifier.fillMaxWidth().padding(MaterialTheme.dimens.marginMedium)) {
+//            Text(text = "Start")
+//        }
+        MultiColorButton(
+            text = "Start",
+            backgroundColor = MaterialTheme.appColor.turquoise600Main,
+            textColor = MaterialTheme.appColor.oxfordBlue600Main,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            textStyle = MaterialTheme.montserratFamily.titleLarge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = MaterialTheme.dimens.marginMedium,
+                    end = MaterialTheme.dimens.marginMedium,
+                    bottom = MaterialTheme.dimens.buttonMargin,
+                )
+        ) {
             navController.navigate(
                 Screen.DeviceList.route.replace(
                     oldValue = "{count}", newValue = "2"
                 )
             )
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Start")
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun KeygenQrPreview() {
+    val navController = rememberNavController()
+    KeygenQr( navController)
+
 }

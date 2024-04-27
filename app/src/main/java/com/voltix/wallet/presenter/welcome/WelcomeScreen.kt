@@ -1,6 +1,6 @@
 package com.voltix.wallet.presenter.welcome
 
-import androidx.compose.animation.AnimatedVisibility
+import MultiColorButton
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -10,10 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -30,17 +28,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
-import com.voltix.wallet.domain.on_board.models.OnBoardPage
-import com.voltix.wallet.presenter.common.UiEvent
-import com.voltix.wallet.presenter.welcome.WelcomeEvent.BoardCompleted
-import MultiColorButton
+import com.voltix.wallet.data.on_board.models.OnBoardPage
+
+import com.voltix.wallet.presenter.common.UiEvent.*
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -56,21 +52,19 @@ fun WelcomeScreen(
     LaunchedEffect(key1 = Unit) {
         viewModel.channel.collect { uiEvent ->
             when (uiEvent) {
-                is UiEvent.NavigateTo -> {
+                is NavigateTo -> {
                     navController.navigate(uiEvent.screen.route)
                 }
-                is UiEvent.ScrollToNextPage ->{
-                    if (pagerState.currentPage<2){
+                is ScrollToNextPage -> {
+                    if(pagerState.currentPage<2)
                         pagerState.scrollToPage(pagerState.currentPage+1)
+                    else {
+                        navController.popBackStack()
+                        navController.navigate(uiEvent.screen.route)
                     }
-                    else{
-                        navController.popBackStack();
-                        navController.navigate(uiEvent.screen.route);
 
-                    }
                 }
-
-                UiEvent.PopBackStack -> {
+                PopBackStack -> {
                     navController.popBackStack()
                 }
             }
@@ -79,14 +73,19 @@ fun WelcomeScreen(
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .background(MaterialTheme.appColor.oxfordBlue800)
+        .background(MaterialTheme.appColor.oxfordBlue800),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(R.drawable.voltix_icon_text),
+            contentDescription = "Pager Image"
+        )
         HorizontalPager(
             modifier = Modifier.weight(9f),
             state = pagerState,
             verticalAlignment = Alignment.Top
         ) { position ->
-            PagerScreen(onBoardingPage = pages[position],navController)
+            PagerScreen(onBoardingPage = pages[position])
         }
         Row(
             Modifier
@@ -118,16 +117,16 @@ fun WelcomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.dimens.minHeightButton,
+                    start = MaterialTheme.dimens.buttonMargin,
                     end = MaterialTheme.dimens.buttonMargin
                 )
-//            pagerState = pagerState
         ) {
             viewModel.onEvent(WelcomeEvent.NextPages)
+
         }
         Spacer(modifier = Modifier
             .weight(0.3f))
-        if (pagerState.currentPage<2){
+        if(pagerState.currentPage<  2) {
             MultiColorButton(
                 text = "Skip",
                 backgroundColor = MaterialTheme.appColor.oxfordBlue800,
@@ -137,33 +136,22 @@ fun WelcomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                viewModel.onEvent(BoardCompleted)
-
+                viewModel.onEvent(WelcomeEvent.BoardCompleted)
             }
         }
     }
 }
 
 @Composable
-fun PagerScreen(onBoardingPage: OnBoardPage,navController: NavHostController) {
+fun PagerScreen(onBoardingPage: OnBoardPage) {
     Column(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        Spacer(modifier = Modifier.weight(1.0f))
         Image(
-            modifier = Modifier
-                .fillMaxWidth(0.4f)
-                .fillMaxHeight(0.2f),
-            painter = painterResource(R.drawable.voltix_icon_text),
-            contentDescription = "Pager Image"
-        )
-        Spacer(Modifier.height(20.dp))
-        Image(
-            modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .fillMaxHeight(0.5f),
             painter = painterResource(id = onBoardingPage.image),
             contentDescription = "Pager Image"
         )
@@ -177,7 +165,7 @@ fun PagerScreen(onBoardingPage: OnBoardPage,navController: NavHostController) {
             color =MaterialTheme.appColor.neutral0 ,
             textAlign = TextAlign.Center
         )
-
+        Spacer(modifier = Modifier.weight(1.0f))
     }
 }
 

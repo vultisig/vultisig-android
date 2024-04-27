@@ -1,5 +1,6 @@
 package com.voltix.wallet.presenter.setup
 
+import MultiColorButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -16,9 +17,11 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R.drawable
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -29,15 +32,18 @@ import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
 fun Setup(navController: NavHostController) {
-    val textColor = MaterialTheme.colorScheme.onBackground
+    val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(MaterialTheme.dimens.medium1)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
     ) {
         TopBar(
-            centerText = "Setup", startIcon = drawable.caret_left, endIcon = drawable.question
+            centerText = "Setup", startIcon = drawable.caret_left, endIcon = drawable.question, navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Text(
@@ -52,12 +58,11 @@ fun Setup(navController: NavHostController) {
             color = textColor,
             style = MaterialTheme.montserratFamily.bodyMedium
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
+        Spacer(modifier = Modifier.weight(1.0f))
 
         Image(
             painter = painterResource(id = drawable.devices),
             contentDescription = "devices",
-            modifier = Modifier.width(140.dp)
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
 
@@ -90,16 +95,67 @@ fun Setup(navController: NavHostController) {
             ),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
-        Button(onClick = {
+//        Button(
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = MaterialTheme.appColor.turquoise600Main,
+//                contentColor =  MaterialTheme.appColor.oxfordBlue600Main),
+//            onClick = {
+//            navController.navigate(Screen.KeygenQr.route)
+//        }, modifier = Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.dimens.marginMedium)) {
+//            Text(text = "Start")
+//        }
+        MultiColorButton(
+            text = "Start",
+            backgroundColor = MaterialTheme.appColor.turquoise600Main,
+            textColor = MaterialTheme.appColor.oxfordBlue600Main,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            textStyle = MaterialTheme.montserratFamily.titleLarge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = MaterialTheme.dimens.marginMedium,
+                    end = MaterialTheme.dimens.marginMedium,
+                    bottom = MaterialTheme.dimens.marginMedium,
+                )
+        ) {
             navController.navigate(Screen.KeygenQr.route)
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Start")
         }
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-        Button(onClick = {
-                         navController.navigate(Screen.Pair.route)
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Join")
+//        Spacer(modifier = Modifier.height(MaterialTheme.dimens.extraSmall))
+//        Button(
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = MaterialTheme.appColor.turquoise600Main,
+//                contentColor =  MaterialTheme.appColor.oxfordBlue600Main),
+//            onClick = {
+//                         navController.navigate(Screen.Pair.route)
+//        }, modifier = Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.dimens.marginMedium)) {
+//            Text(text = "Join")
+//        }
+
+        MultiColorButton(
+            text = "Join",
+            backgroundColor = MaterialTheme.appColor.oxfordBlue600Main,
+            textColor = MaterialTheme.appColor.turquoise600Main,
+            iconColor = MaterialTheme.appColor.oxfordBlue600Main,
+            borderSize = 1.dp,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            textStyle = MaterialTheme.montserratFamily.titleLarge,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = MaterialTheme.dimens.marginMedium,
+                    end = MaterialTheme.dimens.marginMedium,
+                    bottom = MaterialTheme.dimens.buttonMargin,
+                )
+        ) {
+            navController.navigate(Screen.Pair.route)
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SetupPreview() {
+    val navController = rememberNavController()
+    Setup(navController)
+
 }

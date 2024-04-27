@@ -1,4 +1,4 @@
-package com.voltix.wallet.domain.on_board.models
+package com.voltix.wallet.data.on_board.models
 
 import androidx.annotation.DrawableRes
 

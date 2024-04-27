@@ -4,7 +4,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.voltix.wallet.data.common.data_store.AppDataStore
 import com.voltix.wallet.data.on_board.mappers.toDomain
 import com.voltix.wallet.data.on_board.static_data.getOnBoardingPages
-import com.voltix.wallet.on_board.repository.OnBoardRepository
+import com.voltix.wallet.on_board.OnBoardRepository
 import javax.inject.Inject
 
 
@@ -22,7 +22,7 @@ class DataStoreRepositoryImpl @Inject constructor(private val appDataStore: AppD
         appDataStore.readData(onBoardingKey, false)
 
 
-    override fun onBoardPages() = getOnBoardingPages().map { it.toDomain() }
+    override fun onBoardPages() = getOnBoardingPages()
 
 
     private companion object PreferencesKey {
