@@ -38,6 +38,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d("MainActivity", "onPause: user is not active")
+    }
     override fun onDestroy() {
         Log.d("MainActivity", "onDestroy: ")
         super.onDestroy()

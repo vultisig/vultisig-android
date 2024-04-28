@@ -1,8 +1,8 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    alias(libs.plugins.daggerHiltAndroid)
     kotlin("kapt")
+    alias(libs.plugins.daggerHiltAndroid)
     id("org.jetbrains.kotlin.plugin.parcelize")
 }
 android {
@@ -42,7 +42,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.12"
     }
     packaging {
         resources {
@@ -50,8 +50,11 @@ android {
         }
     }
 }
+hilt{
 
+}
 dependencies {
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -75,6 +78,7 @@ dependencies {
     implementation(libs.androidx.material3.window)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.hilt.android)
+
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.spark.core)
