@@ -10,13 +10,9 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
-import com.voltix.wallet.presenter.navigation.SetupNavGraph
 import com.voltix.wallet.app.ui.theme.OnBoardingComposeTheme
-import com.voltix.wallet.mediator.Server
+import com.voltix.wallet.presenter.navigation.SetupNavGraph
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 @ExperimentalAnimationApi
 @AndroidEntryPoint
@@ -46,6 +42,7 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         Log.d("MainActivity", "onPause: user is not active")
     }
+
     override fun onDestroy() {
         Log.d("MainActivity", "onDestroy: ")
         super.onDestroy()

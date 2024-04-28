@@ -15,7 +15,7 @@ abstract class Module {
     @Singleton
     @Binds
     abstract fun bindOnBoardRepository(
-        onBindRepositoryImpl: DataStoreRepositoryImpl
+        onBindRepositoryImpl: DataStoreRepositoryImpl,
     ): OnBoardRepository
 
 }

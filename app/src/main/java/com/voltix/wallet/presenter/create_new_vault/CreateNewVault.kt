@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -90,7 +89,7 @@ fun CreateNewVault(navController: NavHostController) {
             ) {
                 navController.navigate(route = Screen.Setup.route)
             }
-            Spacer(modifier = Modifier.size( MaterialTheme.dimens.extraSmall))
+            Spacer(modifier = Modifier.size(MaterialTheme.dimens.extraSmall))
             MultiColorButton(
                 text = "Import an Existing Vault",
                 backgroundColor = MaterialTheme.appColor.oxfordBlue800,
@@ -114,9 +113,10 @@ fun CreateNewVault(navController: NavHostController) {
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun CreateNewVaultPreview() {
     val navController = rememberNavController()
-    CreateNewVault( navController)
+    CreateNewVault(navController)
 }

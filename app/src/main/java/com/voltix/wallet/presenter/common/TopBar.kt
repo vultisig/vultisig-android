@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.voltix.wallet.app.ui.theme.dimens
@@ -34,9 +33,12 @@ fun TopBar(
         verticalAlignment = CenterVertically
     ) {
         startIcon?.let { id ->
-            Image(painter = painterResource(id = id), contentDescription = null,modifier = Modifier.clickable {
-                navController.popBackStack()
-            })
+            Image(
+                painter = painterResource(id = id),
+                contentDescription = null,
+                modifier = Modifier.clickable {
+                    navController.popBackStack()
+                })
         } ?: Spacer(modifier = Modifier)
         Text(
             text = centerText,

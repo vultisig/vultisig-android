@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +18,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.voltix.wallet.R
@@ -29,31 +27,35 @@ import com.voltix.wallet.app.ui.theme.montserratFamily
 
 @Composable
 public fun MultiColorButton(
-    text: String="",
-    startIcon: Int?=null,
-    trailingIcon: Int?=null,
-    iconColor:  Color?=null,
-    backgroundColor: Color?=null,
-    foregroundColor: Color?=null,
-    borderColor: Color?=null,
-    iconSize: Dp?=null,
-    borderSize: Dp?=null,
-    minWidth: Dp?=null,
-    minHeight: Dp?=null,
-    textStyle: TextStyle?=null,
-    textColor:  Color?=null,
+    text: String = "",
+    startIcon: Int? = null,
+    trailingIcon: Int? = null,
+    iconColor: Color? = null,
+    backgroundColor: Color? = null,
+    foregroundColor: Color? = null,
+    borderColor: Color? = null,
+    iconSize: Dp? = null,
+    borderSize: Dp? = null,
+    minWidth: Dp? = null,
+    minHeight: Dp? = null,
+    textStyle: TextStyle? = null,
+    textColor: Color? = null,
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
-    var innerModifier=modifier
-    if (borderSize!=null)
+    var innerModifier = modifier
+    if (borderSize != null)
         innerModifier = innerModifier.then(
-            Modifier .border(
+            Modifier.border(
                 width = borderSize,
                 brush = Brush.horizontalGradient(
-                    listOf(MaterialTheme.appColor.turquoise600Main
-                        , MaterialTheme.appColor.persianBlue600Main)),
-                shape = CircleShape)
+                    listOf(
+                        MaterialTheme.appColor.turquoise600Main,
+                        MaterialTheme.appColor.persianBlue600Main
+                    )
+                ),
+                shape = CircleShape
+            )
         )
 
     Row(
@@ -65,8 +67,8 @@ public fun MultiColorButton(
                 color = backgroundColor ?: MaterialTheme.appColor.turquoise600Main,
             )
             .defaultMinSize(
-                minWidth = minWidth ?: MaterialTheme.dimens.minWidth
-                , minHeight = minHeight ?: MaterialTheme.dimens.medium2
+                minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
+                minHeight = minHeight ?: MaterialTheme.dimens.medium2
             )
             .clickable(onClick = onClick)
 

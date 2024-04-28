@@ -17,11 +17,11 @@ data class Dimens(
     val minWidth: Dp = 0.dp,
     val buttonMargin: Dp = 0.dp,
     val minHeightButton: Dp = 0.dp,
-    val marginExtraSmall:Dp = 0.dp,
-    val marginSmall:Dp = 0.dp,
-    val marginMedium:Dp = 0.dp,
-    val marginLarge:Dp = 0.dp,
-    val marginExtraLarge:Dp = 0.dp,
+    val marginExtraSmall: Dp = 0.dp,
+    val marginSmall: Dp = 0.dp,
+    val marginMedium: Dp = 0.dp,
+    val marginLarge: Dp = 0.dp,
+    val marginExtraLarge: Dp = 0.dp,
 )
 
 val CompactSmallDimens = Dimens(

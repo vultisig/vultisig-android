@@ -11,7 +11,7 @@ import com.google.gson.reflect.TypeToken
 import spark.Request
 import spark.Response
 import spark.Service
-import spark.Spark.*
+import spark.Spark.stop
 
 class Server(context: Context) {
     private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
@@ -37,6 +37,7 @@ class Server(context: Context) {
             Log.e("Server", "Service unregistration failed: $errorCode")
         }
     }
+
     fun startMediator(name: String) {
         val httpService = Service.ignite()
         httpService.port(port)
@@ -45,6 +46,7 @@ class Server(context: Context) {
         registerService(name)
         Log.d("Server", "Server started on port $port")
     }
+
     private fun registerService(name: String) {
         val serviceInfo = NsdServiceInfo().apply {
             serviceName = name
@@ -53,6 +55,7 @@ class Server(context: Context) {
         serviceInfo.port = port
         nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
     }
+
     private fun setupRouting(service: Service) {
         service.get("/:sessionID") { request, response -> getSession(request, response) }
         service.post("/:sessionID") { request, response -> postSession(request, response) }
@@ -110,7 +113,7 @@ class Server(context: Context) {
         }
     }
 
-    private fun postStartKeygenOrKeysign(request: Request, response: Response) : String {
+    private fun postStartKeygenOrKeysign(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
@@ -120,13 +123,13 @@ class Server(context: Context) {
         val key = "session-$sessionID-start"
         val decodeType = object : TypeToken<List<String>>() {}.type
         val participants: List<String> = Gson().fromJson(request.body(), decodeType)
-        cache.put(key,Session(sessionID,participants.toMutableList()))
+        cache.put(key, Session(sessionID, participants.toMutableList()))
         response.status(HttpStatus.OK)
         response.type("application/json")
         return ""
     }
 
-    private fun getStartKeygenOrKeysign(request: Request, response: Response) : String {
+    private fun getStartKeygenOrKeysign(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
@@ -145,7 +148,7 @@ class Server(context: Context) {
         return ""
     }
 
-    private fun getCompleteKeySign(request: Request, response: Response) : String {
+    private fun getCompleteKeySign(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
@@ -169,7 +172,7 @@ class Server(context: Context) {
         return ""
     }
 
-    private fun postCompleteKeySign(request: Request, response: Response):String {
+    private fun postCompleteKeySign(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
@@ -183,13 +186,13 @@ class Server(context: Context) {
             return ""
         }
         val key = "keysign-${sessionID.trim()}-$messageID-complete"
-        cache.put(key,request.body())
+        cache.put(key, request.body())
         response.status(HttpStatus.OK)
         response.type("application/json")
         return ""
     }
 
-    private fun deleteMessage(request: Request, response: Response) : String {
+    private fun deleteMessage(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
@@ -219,7 +222,7 @@ class Server(context: Context) {
         return ""
     }
 
-    private fun getMessage(request: Request, response: Response) : String {
+    private fun getMessage(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
@@ -246,7 +249,7 @@ class Server(context: Context) {
         }
     }
 
-    private fun postMessage(request: Request, response: Response) : String {
+    private fun postMessage(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")

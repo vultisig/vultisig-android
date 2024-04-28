@@ -36,11 +36,17 @@ fun Pair(navController: NavHostController) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier.run {
             background(MaterialTheme.appColor.oxfordBlue800)
-                .padding(vertical = MaterialTheme.dimens.marginMedium,
-                    horizontal = MaterialTheme.dimens.marginSmall)
+                .padding(
+                    vertical = MaterialTheme.dimens.marginMedium,
+                    horizontal = MaterialTheme.dimens.marginSmall
+                )
         }
     ) {
-        TopBar(centerText = "Pair", startIcon = R.drawable.caret_left, navController = navController)
+        TopBar(
+            centerText = "Pair",
+            startIcon = R.drawable.caret_left,
+            navController = navController
+        )
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
         Box(
@@ -71,6 +77,6 @@ fun Pair(navController: NavHostController) {
 @Composable
 fun PairPreview() {
     val navController = rememberNavController()
-    Pair( navController)
+    Pair(navController)
 
 }
