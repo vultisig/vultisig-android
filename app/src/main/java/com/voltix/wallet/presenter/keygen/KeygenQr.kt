@@ -1,4 +1,4 @@
-package com.voltix.wallet.presenter.keygen_qr
+package com.voltix.wallet.presenter.keygen
 
 import MultiColorButton
 import androidx.compose.foundation.Image
@@ -37,7 +37,7 @@ import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.presenter.common.TopBar
-import com.voltix.wallet.presenter.keygen_qr.components.DeviceInfo
+import com.voltix.wallet.presenter.keygen.components.DeviceInfo
 import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable

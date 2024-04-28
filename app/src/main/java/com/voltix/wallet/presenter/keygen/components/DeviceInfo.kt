@@ -1,4 +1,4 @@
-package com.voltix.wallet.presenter.keygen_qr.components
+package com.voltix.wallet.presenter.keygen.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
