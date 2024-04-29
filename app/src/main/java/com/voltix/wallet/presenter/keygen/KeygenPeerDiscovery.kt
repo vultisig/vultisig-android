@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 
 @Composable
-fun PeerDiscovery(
+fun KeygenPeerDiscovery(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
