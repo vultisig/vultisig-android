@@ -29,7 +29,7 @@ import com.voltix.wallet.ui.theme.Shapes
 fun OnBoardingComposeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     activity: Activity = LocalContext.current as MainActivity,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val appColors = if (darkTheme) {
         OnDarkCustomColorsPalette
@@ -38,42 +38,39 @@ fun OnBoardingComposeTheme(
     }
     val window = calculateWindowSizeClass(activity = activity)
     val config = LocalConfiguration.current
-    var menloFamilyTypography= compactMenloFamilyTypography
-    var montserratFamilyTypography= compactMontserratFamilyTypography
-    var appDimens= CompactDimens
-    when(window.widthSizeClass)
-    {
-        WindowWidthSizeClass.Compact->{
-            if (config.screenWidthDp<= 360)
-            {
-                appDimens= CompactSmallDimens
-                menloFamilyTypography= compactSmallMenloFamilyTypography
-                montserratFamilyTypography= compactSmallMontserratFamilyTypography
-            }
-            else if (config.screenWidthDp<= 599)
-            {
-                appDimens= CompactMediumDimens
-                menloFamilyTypography= compactMediumMenloFamilyTypography
-                montserratFamilyTypography= compactMediumMontserratFamilyTypography
-            }else
-            {
-                appDimens= CompactDimens
-                menloFamilyTypography= compactMenloFamilyTypography
-                montserratFamilyTypography= compactMontserratFamilyTypography
+    var menloFamilyTypography = compactMenloFamilyTypography
+    var montserratFamilyTypography = compactMontserratFamilyTypography
+    var appDimens = CompactDimens
+    when (window.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            if (config.screenWidthDp <= 360) {
+                appDimens = CompactSmallDimens
+                menloFamilyTypography = compactSmallMenloFamilyTypography
+                montserratFamilyTypography = compactSmallMontserratFamilyTypography
+            } else if (config.screenWidthDp <= 599) {
+                appDimens = CompactMediumDimens
+                menloFamilyTypography = compactMediumMenloFamilyTypography
+                montserratFamilyTypography = compactMediumMontserratFamilyTypography
+            } else {
+                appDimens = CompactDimens
+                menloFamilyTypography = compactMenloFamilyTypography
+                montserratFamilyTypography = compactMontserratFamilyTypography
             }
         }
-        else->{
-            appDimens= ExpandedDimens
-            menloFamilyTypography= expandedMenloFamilyTypography
-            montserratFamilyTypography= expandedMontserratFamilyTypography
+
+        else -> {
+            appDimens = ExpandedDimens
+            menloFamilyTypography = expandedMenloFamilyTypography
+            montserratFamilyTypography = expandedMontserratFamilyTypography
         }
 
     }
 
-    AppUtils(appDimens = appDimens,
+    AppUtils(
+        appDimens = appDimens,
         appColor = appColors,
-        menloFamilyTypography=menloFamilyTypography,
-        montserratFamilyTypography =montserratFamilyTypography,
+        menloFamilyTypography = menloFamilyTypography,
+        montserratFamilyTypography = montserratFamilyTypography,
     ) {
         MaterialTheme(
             //typography = typography,
@@ -91,11 +88,10 @@ fun OnBoardingComposeTheme(
         )
     }
     if (Build.VERSION.SDK_INT >= 21) {
-        val window =(LocalContext.current as Activity). window
-        if (darkTheme){
+        val window = (LocalContext.current as Activity).window
+        if (darkTheme) {
             window.statusBarColor = appColors.oxfordBlue800.toArgb()
-        }
-        else{
+        } else {
 //            window.statusBarColor = appColors.neutral0.toArgb()
             window.statusBarColor = appColors.oxfordBlue800.toArgb()
         }
@@ -114,7 +110,7 @@ val MaterialTheme.dimens
 
 val MaterialTheme.appColor
     @Composable
-    get()= LocalAppColors.current
+    get() = LocalAppColors.current
 
 val MaterialTheme.menloFamily
     @Composable

@@ -2,7 +2,6 @@ package com.voltix.wallet.data.on_board.repository
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.voltix.wallet.data.common.data_store.AppDataStore
-import com.voltix.wallet.data.on_board.mappers.toDomain
 import com.voltix.wallet.data.on_board.static_data.getOnBoardingPages
 import com.voltix.wallet.on_board.OnBoardRepository
 import javax.inject.Inject

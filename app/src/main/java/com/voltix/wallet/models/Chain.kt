@@ -1,6 +1,6 @@
 package com.voltix.wallet.models
 
-enum class Chain (val vault:String)  {
+enum class Chain(val vault: String) {
     thorChain("THORChain"),
     solana("Solana"),
     ethereum("Ethereum"),
@@ -21,8 +21,9 @@ enum class Chain (val vault:String)  {
     mayaChain("Maya Chain"),
     cronosChain("Cronos Chain"),
 }
+
 val Chain.Ticker: String
-    get() = when(this) {
+    get() = when (this) {
         Chain.thorChain -> "RUNE"
         Chain.solana -> "SOL"
         Chain.ethereum -> "ETH"
@@ -44,7 +45,7 @@ val Chain.Ticker: String
         Chain.cronosChain -> "CRO"
     }
 val Chain.SwapAsset: String
-    get() = when(this) {
+    get() = when (this) {
         Chain.thorChain -> "thor"
         Chain.solana -> "sol"
         Chain.ethereum -> "eth"
@@ -66,7 +67,7 @@ val Chain.SwapAsset: String
         Chain.cronosChain -> "cro"
     }
 val Chain.IsSwapSupported: Boolean
-    get() = when(this) {
-        Chain.thorChain,Chain.ethereum,Chain.avalanche,Chain.bscChain,Chain.bitcoin,Chain.bitcoinCash,Chain.gaiaChain,Chain.litecoin,Chain.dogecoin -> true
-        Chain.solana,Chain.dash,Chain.kujira,Chain.mayaChain,Chain.cronosChain,Chain.base,Chain.arbitrum,Chain.polygon,Chain.optimism,Chain.blast -> false
+    get() = when (this) {
+        Chain.thorChain, Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.bitcoin, Chain.bitcoinCash, Chain.gaiaChain, Chain.litecoin, Chain.dogecoin -> true
+        Chain.solana, Chain.dash, Chain.kujira, Chain.mayaChain, Chain.cronosChain, Chain.base, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.blast -> false
     }

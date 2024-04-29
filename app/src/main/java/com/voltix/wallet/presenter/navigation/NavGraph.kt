@@ -11,8 +11,8 @@ import com.voltix.wallet.presenter.generating_key_gen.GeneratingKeyGen
 import com.voltix.wallet.presenter.home.HomeScreen
 import com.voltix.wallet.presenter.import_file.ImportFile
 import com.voltix.wallet.presenter.keygen.KeygenQr
-import com.voltix.wallet.presenter.pair.Pair
 import com.voltix.wallet.presenter.keygen.Setup
+import com.voltix.wallet.presenter.pair.Pair
 import com.voltix.wallet.presenter.signing_error.SigningError
 import com.voltix.wallet.presenter.welcome.WelcomeScreen
 
@@ -20,7 +20,7 @@ import com.voltix.wallet.presenter.welcome.WelcomeScreen
 @Composable
 fun SetupNavGraph(
     navController: NavHostController,
-    startDestination: String
+    startDestination: String,
 ) {
 
     NavHost(
@@ -46,7 +46,7 @@ fun SetupNavGraph(
         }
 
 
-        composable(route = Screen.KeygenQr.route) {backStackEntry ->
+        composable(route = Screen.KeygenQr.route) { backStackEntry ->
             KeygenQr(navController)
         }
 

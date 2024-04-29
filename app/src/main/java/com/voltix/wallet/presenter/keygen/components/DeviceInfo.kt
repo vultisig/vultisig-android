@@ -37,7 +37,11 @@ fun DeviceInfo(@DrawableRes icon: Int, name: String, info: String) {
 
         horizontalAlignment = CenterHorizontally
     ) {
-        Image(painter = painterResource(id = icon), contentDescription = null, modifier = Modifier.height(100.dp))
+        Image(
+            painter = painterResource(id = icon),
+            contentDescription = null,
+            modifier = Modifier.height(100.dp)
+        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
             text = name, color = textColor, style = MaterialTheme.montserratFamily.titleMedium
@@ -53,6 +57,6 @@ fun DeviceInfo(@DrawableRes icon: Int, name: String, info: String) {
 @Composable
 fun DeviceInfoPreview() {
     val navController = rememberNavController()
-    DeviceInfo( R.drawable.ipad, "iPad", "1234h2i34h")
+    DeviceInfo(R.drawable.ipad, "iPad", "1234h2i34h")
 
 }

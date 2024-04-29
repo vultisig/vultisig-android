@@ -10,6 +10,7 @@ class MediatorService() : Service() {
     override fun onCreate() {
         super.onCreate()
     }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
             val name = intent.getStringExtra("name")
@@ -20,9 +21,11 @@ class MediatorService() : Service() {
 
         return START_STICKY
     }
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
+
     override fun onDestroy() {
         super.onDestroy()
         server.stopServer()

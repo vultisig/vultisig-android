@@ -7,9 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.voltix.wallet.on_board.OnBoardRepository
 import com.voltix.wallet.presenter.common.UiEvent
-import com.voltix.wallet.presenter.common.UiEvent.*
+import com.voltix.wallet.presenter.common.UiEvent.NavigateTo
+import com.voltix.wallet.presenter.common.UiEvent.PopBackStack
+import com.voltix.wallet.presenter.common.UiEvent.ScrollToNextPage
 import com.voltix.wallet.presenter.navigation.Screen
-import com.voltix.wallet.presenter.welcome.WelcomeEvent.*
+import com.voltix.wallet.presenter.welcome.WelcomeEvent.BoardCompleted
+import com.voltix.wallet.presenter.welcome.WelcomeEvent.InitPages
+import com.voltix.wallet.presenter.welcome.WelcomeEvent.NextPages
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -19,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WelcomeViewModel @Inject constructor(
-    private val repository: OnBoardRepository
+    private val repository: OnBoardRepository,
 ) : ViewModel() {
 
     var state by mutableStateOf(WelcomeState())
@@ -38,6 +42,7 @@ class WelcomeViewModel @Inject constructor(
             BoardCompleted -> saveOnBoardingState()
         }
     }
+
     private fun getBoardPages() {
         state = state.copy(pages = repository.onBoardPages())
     }
@@ -49,6 +54,7 @@ class WelcomeViewModel @Inject constructor(
             _channel.send(PopBackStack)
         }
     }
+
     private fun scrollToNextPage() {
         viewModelScope.launch(Dispatchers.IO) {
             _channel.send(ScrollToNextPage(Screen.Home))

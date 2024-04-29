@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,10 +38,16 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
     ) {
-        TopBar(centerText = "Keygen", startIcon = R.drawable.caret_left, navController = navController)
+        TopBar(
+            centerText = "Keygen",
+            startIcon = R.drawable.caret_left,
+            navController = navController
+        )
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
 

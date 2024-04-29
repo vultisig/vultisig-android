@@ -9,7 +9,7 @@ data class Message(
     @SerializedName("to") val to: String,
     @SerializedName("body") val body: String,
     @SerializedName("hash") val hash: String,
-    @SerializedName("sequence_no") val sequenceNo: Int
+    @SerializedName("sequence_no") val sequenceNo: Int,
 ) {
     fun toJson(): String {
         return gson.toJson(this)

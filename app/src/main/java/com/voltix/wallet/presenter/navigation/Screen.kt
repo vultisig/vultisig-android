@@ -1,8 +1,5 @@
 package com.voltix.wallet.presenter.navigation
 
-import com.voltix.wallet.models.TssAction
-import com.voltix.wallet.models.Vault
-
 sealed class Screen(val route: String) {
     data object Welcome : Screen(route = "welcome_screen")
     data object Home : Screen(route = "home_screen")

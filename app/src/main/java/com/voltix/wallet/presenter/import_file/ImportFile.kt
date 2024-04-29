@@ -52,9 +52,12 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(vertical = MaterialTheme.dimens.marginMedium,horizontal = MaterialTheme.dimens.marginExtraLarge)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginExtraLarge
+            )
     ) {
-        TopBar(centerText = "Import",navController = navController)
+        TopBar(centerText = "Import", navController = navController)
         Spacer(modifier = Modifier.height(48.dp))
         Text(
             text = "Enter your previously created vault share",
@@ -70,7 +73,12 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
             )
             .clickable {
-                navController.navigate(Screen.ImportFile.route.replace(oldValue = "{has_file}", newValue = true.toString()))
+                navController.navigate(
+                    Screen.ImportFile.route.replace(
+                        oldValue = "{has_file}",
+                        newValue = true.toString()
+                    )
+                )
             }
             .drawBehind {
                 drawRoundRect(
@@ -124,7 +132,8 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
         Button(
             onClick = {
                 navController.navigate(Screen.Setup.route)
-            }, enabled = hasFile,
+            },
+            enabled = hasFile,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors()
                 .copy(disabledContainerColor = MaterialTheme.colorScheme.surfaceDim),
@@ -137,10 +146,11 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
         }
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun ImportFilePreview() {
     val navController = rememberNavController()
-    ImportFile(navController,true)
+    ImportFile(navController, true)
 
 }

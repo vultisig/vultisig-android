@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,8 +46,10 @@ fun KeygenQr(navController: NavHostController) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
     ) {
         TopBar(
             centerText = "Keygen", startIcon = R.drawable.caret_left,
@@ -143,6 +144,6 @@ fun KeygenQr(navController: NavHostController) {
 @Composable
 fun KeygenQrPreview() {
     val navController = rememberNavController()
-    KeygenQr( navController)
+    KeygenQr(navController)
 
 }

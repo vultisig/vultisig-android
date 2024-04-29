@@ -7,7 +7,7 @@ import androidx.navigation.NavHostController
 @Composable
 fun PeerDiscovery(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
 
 }

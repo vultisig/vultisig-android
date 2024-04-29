@@ -33,8 +33,10 @@ fun GeneratingKeyGen(navController: NavHostController) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
     ) {
         TopBar(centerText = "Keygen", navController = navController)
 
@@ -68,6 +70,7 @@ fun GeneratingKeyGen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun GeneratingKeyGenPreview() {

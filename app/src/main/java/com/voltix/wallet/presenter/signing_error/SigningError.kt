@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -71,7 +70,8 @@ fun SigningError(navController: NavHostController) {
             backgroundColor = MaterialTheme.appColor.turquoise600Main,
             textColor = MaterialTheme.appColor.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(
                     start = MaterialTheme.dimens.marginMedium,
                     end = MaterialTheme.dimens.marginMedium,
@@ -88,6 +88,6 @@ fun SigningError(navController: NavHostController) {
 @Composable
 fun SigningErrorPreview() {
     val navController = rememberNavController()
-    SigningError( navController)
+    SigningError(navController)
 
 }

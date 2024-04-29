@@ -16,18 +16,18 @@ fun AppUtils(
     appColor: ColorsPalette,
     menloFamilyTypography: Typography,
     montserratFamilyTypography: Typography,
-    content:@Composable ()-> Unit
+    content: @Composable () -> Unit,
 ) {
-    val appDimens= remember {
+    val appDimens = remember {
         appDimens
     }
-    val appColor= remember {
+    val appColor = remember {
         appColor
     }
-    val menloFamilyTypography= remember {
+    val menloFamilyTypography = remember {
         menloFamilyTypography
     }
-    val montserratFamilyTypography= remember {
+    val montserratFamilyTypography = remember {
         montserratFamilyTypography
     }
     CompositionLocalProvider(
@@ -40,15 +40,16 @@ fun AppUtils(
     }
 
 }
-val LocalAppDimens= compositionLocalOf {
+
+val LocalAppDimens = compositionLocalOf {
     CompactDimens
 }
-val LocalAppColors= compositionLocalOf {
+val LocalAppColors = compositionLocalOf {
     OnLightCustomColorsPalette
 }
-val LocalMenloFamilyTypography= compositionLocalOf {
+val LocalMenloFamilyTypography = compositionLocalOf {
     compactMenloFamilyTypography
 }
-val LocalMontserratFamilyTypography= compositionLocalOf {
+val LocalMontserratFamilyTypography = compositionLocalOf {
     compactMontserratFamilyTypography
 }
