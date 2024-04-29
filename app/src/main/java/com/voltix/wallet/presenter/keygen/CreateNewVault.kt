@@ -1,4 +1,4 @@
-package com.voltix.wallet.presenter.create_new_vault
+package com.voltix.wallet.presenter.keygen
 
 import MultiColorButton
 import androidx.compose.foundation.Image
