@@ -1,3 +1,5 @@
+@file:JvmName("KeygenPeerDiscoveryKt")
+
 package com.voltix.wallet.presenter.keygen
 
 import MultiColorButton
@@ -28,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
@@ -40,7 +43,8 @@ import com.voltix.wallet.presenter.keygen.components.DeviceInfo
 import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
-fun KeygenQr(navController: NavHostController) {
+fun KeygenPeerDiscovery(navController: NavHostController) {
+    val viewModel: KeygenDiscoveryViewModel = viewModel()
     val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -144,6 +148,6 @@ fun KeygenQr(navController: NavHostController) {
 @Composable
 fun KeygenQrPreview() {
     val navController = rememberNavController()
-    KeygenQr(navController)
+    KeygenPeerDiscovery(navController)
 
 }

@@ -2,7 +2,7 @@ package com.voltix.wallet.presenter.home
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import com.voltix.wallet.presenter.create_new_vault.CreateNewVault
+import com.voltix.wallet.presenter.keygen.CreateNewVault
 
 @Composable
 fun HomeScreen(navController: NavHostController) {

@@ -1,4 +1,4 @@
-package com.voltix.wallet.presenter.generating_key_gen
+package com.voltix.wallet.presenter.keygen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -1,4 +1,4 @@
-package com.voltix.wallet.presenter.device_list.components
+package com.voltix.wallet.presenter.keygen.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
