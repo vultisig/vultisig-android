@@ -89,4 +89,5 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.core.zxing)
     implementation(libs.zxing.android.embedded)
+    implementation(com.google.code.gson:gson:2.8.8)
 }
