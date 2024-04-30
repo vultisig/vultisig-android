@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
+import com.voltix.wallet.common.Endpoints
 import com.voltix.wallet.common.Utils
 import com.voltix.wallet.common.VoltixRelay
 import com.voltix.wallet.mediator.MediatorService
@@ -20,6 +21,10 @@ import com.voltix.wallet.models.ReshareMessage
 import com.voltix.wallet.models.TssAction
 import com.voltix.wallet.models.Vault
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.SecureRandom
@@ -90,6 +95,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
         // when relay is disabled, start the mediator service
             startMediatorService(context)
         else {
+            serverAddress = Endpoints.VOLTIX_RELAY
             // start the session
             startSession(serverAddress, sessionID, vault.LocalPartyID)
             // kick off discovery
@@ -97,14 +103,16 @@ class KeygenDiscoveryViewModel @Inject constructor(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d("KeygenDiscoveryViewModel", "onReceive: ${intent.action}")
             if (intent.action == MediatorService.SERVICE_ACTION) {
                 Log.d("KeygenDiscoveryViewModel", "onReceive: Mediator service started")
                 // send a request to local mediator server to start the session
-                startSession(serverAddress, sessionID, vault.LocalPartyID)
-
+                GlobalScope.launch(Dispatchers.IO) {
+                    Thread.sleep(1000) // back off a second
+                    startSession(serverAddress, sessionID, vault.LocalPartyID)
+                }
                 // kick off discovery
                 participantDiscovery?.discoveryParticipants()
             }
@@ -114,7 +122,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
     private fun startMediatorService(context: Context) {
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)
-        context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
 
         // start mediator service
         val intent = Intent(context, MediatorService::class.java)
@@ -144,7 +152,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
             Log.d("KeygenDiscoveryViewModel", "startSession: Response code: $responseCode")
             conn.disconnect()
         } catch (e: Exception) {
-            Log.e("KeygenDiscoveryViewModel", "startSession: ${e.message}")
+            Log.e("KeygenDiscoveryViewModel", "startSession: ${e.stackTraceToString()}")
         }
     }
 
