@@ -3,7 +3,6 @@
 package com.voltix.wallet.presenter.keygen
 
 import MultiColorButton
-import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +36,6 @@ import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.common.Utils
-import com.voltix.wallet.mediator.MediatorService
 import com.voltix.wallet.models.TssAction
 import com.voltix.wallet.models.Vault
 import com.voltix.wallet.presenter.common.QRCodeKeyGenImage
@@ -49,15 +47,10 @@ import com.voltix.wallet.presenter.navigation.Screen
 fun KeygenPeerDiscovery(navController: NavHostController, vault: Vault) {
     val viewModel: KeygenDiscoveryViewModel = hiltViewModel()
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
-    val context = LocalContext.current
+    val context = LocalContext.current.applicationContext
     LaunchedEffect(key1 = viewModel) {
         // start mediator server
-        val intent = Intent(context, MediatorService::class.java)
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        intent.putExtra("serverName", viewModel.serviceName)
-        context.startService(intent)
-        viewModel.setData(TssAction.KEYGEN, vault)
-
+        viewModel.setData(TssAction.KEYGEN, vault, context)
     }
     val textColor = MaterialTheme.appColor.neutral0
     Column(
