@@ -25,7 +25,7 @@ import com.voltix.wallet.app.ui.theme.montserratFamily
 
 
 @Composable
-fun DeviceInfo(@DrawableRes icon: Int, name: String, info: String) {
+fun DeviceInfo(@DrawableRes icon: Int, name: String, ) {
     val textColor = MaterialTheme.appColor.neutral0
     Column(
         modifier = Modifier
@@ -46,10 +46,6 @@ fun DeviceInfo(@DrawableRes icon: Int, name: String, info: String) {
         Text(
             text = name, color = textColor, style = MaterialTheme.montserratFamily.titleMedium
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-        Text(
-            text = info, color = textColor, style = MaterialTheme.montserratFamily.titleSmall
-        )
     }
 }
 
@@ -57,6 +53,6 @@ fun DeviceInfo(@DrawableRes icon: Int, name: String, info: String) {
 @Composable
 fun DeviceInfoPreview() {
     val navController = rememberNavController()
-    DeviceInfo(R.drawable.ipad, "iPad", "1234h2i34h")
+    DeviceInfo(R.drawable.ipad, "iPad")
 
 }

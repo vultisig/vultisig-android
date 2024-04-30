@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -30,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -38,13 +40,19 @@ import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.app.ui.theme.montserratFamily
+import com.voltix.wallet.models.TssAction
+import com.voltix.wallet.models.Vault
 import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.keygen.components.DeviceInfo
 import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
-fun KeygenPeerDiscovery(navController: NavHostController) {
-    val viewModel: KeygenDiscoveryViewModel = viewModel()
+fun KeygenPeerDiscovery(navController: NavHostController,vault:Vault) {
+    val viewModel: KeygenDiscoveryViewModel = hiltViewModel()
+
+    LaunchedEffect(key1 = viewModel) {
+        viewModel.setData(TssAction.KEYGEN,vault)
+    }
     val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -60,11 +68,13 @@ fun KeygenPeerDiscovery(navController: NavHostController) {
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
-        Text(
-            text = "2 of 3 Vault",
-            color = textColor,
-            style = MaterialTheme.montserratFamily.bodyLarge
-        )
+        if(!viewModel.selection.value.isNullOrEmpty()) {
+            Text(
+                text = " of ${viewModel.selection.value?.count()} Vault",
+                color = textColor,
+                style = MaterialTheme.montserratFamily.bodyLarge
+            )
+        }
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         Text(
@@ -148,6 +158,6 @@ fun KeygenPeerDiscovery(navController: NavHostController) {
 @Composable
 fun KeygenQrPreview() {
     val navController = rememberNavController()
-    KeygenPeerDiscovery(navController)
+    KeygenPeerDiscovery(navController, Vault("new vault"))
 
 }
