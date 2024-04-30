@@ -18,18 +18,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.toColorInt
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -38,13 +31,17 @@ import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.app.ui.theme.montserratFamily
+import com.voltix.wallet.presenter.common.QRCodeKeyGenImage
 import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.keygen.components.DeviceInfo
 import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
-fun KeygenPeerDiscovery(navController: NavHostController) {
-    val viewModel: KeygenDiscoveryViewModel = viewModel()
+fun KeygenPeerDiscovery(
+    navController: NavHostController,
+    viewModel: KeygenDiscoveryViewModel = hiltViewModel()
+) {
+
     val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -74,22 +71,7 @@ fun KeygenPeerDiscovery(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.weight(1.0f))
 
-        Image(painter = painterResource(id = R.drawable.qr),
-            contentScale = ContentScale.FillBounds,
-            contentDescription = "devices",
-            modifier = Modifier
-                .width(250.dp)
-                .height(250.dp)
-
-                .drawBehind {
-                    drawRoundRect(
-                        color = Color("#33e6bf".toColorInt()), style = Stroke(
-                            width = 8f,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 50f), 0.0f)
-                        ), cornerRadius = CornerRadius(16.dp.toPx())
-                    )
-                }
-                .padding(20.dp))
+        QRCodeKeyGenImage(viewModel.keyGenPayloadState.value)
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginExtraLarge))
 
@@ -149,5 +131,4 @@ fun KeygenPeerDiscovery(navController: NavHostController) {
 fun KeygenQrPreview() {
     val navController = rememberNavController()
     KeygenPeerDiscovery(navController)
-
 }

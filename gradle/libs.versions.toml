@@ -1,5 +1,6 @@
 [versions]
 agp = "8.3.2"
+core = "3.4.1"
 coreSplashscreen = "1.0.1"
 gson = "2.10.1"
 guava = "30.1-jre"
@@ -17,6 +18,7 @@ material3WindowSizeClassAndroid = "1.2.1"
 navigationCompose = "2.7.7"
 sparkCore = "2.9.4"
 annotation = "1.7.1"
+zxingAndroidEmbedded = "4.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,6 +27,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-material3-window = { group = "androidx.compose.material3", name = "material3-window-size-class-android", version.ref = "material3WindowSizeClassAndroid" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+core-zxing = { module = "com.google.zxing:core", version.ref = "core" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version = "2.51.1" }
@@ -45,6 +48,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 spark-core = { module = "com.sparkjava:spark-core", version.ref = "sparkCore" }
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
+zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
