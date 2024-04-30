@@ -6,19 +6,32 @@ import android.content.Intent
 import android.os.IBinder
 
 class MediatorService() : Service() {
-    private val server: Server = Server(this as Context)
+    private var server: Server? = null
+    private var isRunning: Boolean = false
+    private var serverName: String = ""
     override fun onCreate() {
         super.onCreate()
+        server = Server(this as Context)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
-            val name = intent.getStringExtra("name")
+            val name = intent.getStringExtra("serverName")
             name?.let {
-                server.startMediator(name)
+                if(!isRunning){
+                    server?.startMediator(name)
+                    isRunning = true
+                }
+
+                if (serverName == name)
+                    return START_STICKY
+
+                serverName = name
+                server?.stopServer()
+                server?.startMediator(name)
+                isRunning = true
             }
         }
-
         return START_STICKY
     }
 
@@ -28,6 +41,8 @@ class MediatorService() : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        server.stopServer()
+        server?.stopServer()
+        isRunning = false
+        serverName = ""
     }
 }

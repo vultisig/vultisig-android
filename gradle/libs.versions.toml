@@ -6,6 +6,7 @@ gson = "2.10.1"
 guava = "30.1-jre"
 datastorePreferences = "1.1.0"
 hiltNavigationCompose = "1.2.0"
+junitJupiter = "5.8.1"
 kotlin = "1.9.23"
 coreKtx = "1.13.0"
 junit = "4.13.2"
@@ -32,6 +33,7 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version = "2.51.1" }
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version = "2.51.1" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 kotlinx-coroutines-core ={ group = "org.jetbrains.kotlinx",name ="kotlinx-coroutines-core", version = "1.8.0" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

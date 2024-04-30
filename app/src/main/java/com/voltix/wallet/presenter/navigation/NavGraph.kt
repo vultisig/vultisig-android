@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.voltix.wallet.models.Vault
 import com.voltix.wallet.presenter.keygen.CreateNewVault
 import com.voltix.wallet.presenter.keygen.DeviceList
 import com.voltix.wallet.presenter.keygen.GeneratingKeyGen
@@ -47,7 +48,7 @@ fun SetupNavGraph(
 
 
         composable(route = Screen.KeygenQr.route) { backStackEntry ->
-            KeygenPeerDiscovery(navController)
+            KeygenPeerDiscovery(navController, Vault("New Vault"))
         }
 
 
