@@ -21,7 +21,7 @@ class ParticipantDiscovery(
 ) {
     private var job: Job? = null
     private val _participants: MutableLiveData<List<String>> =
-        MutableLiveData(listOf<String>(localPartyID))
+        MutableLiveData(listOf<String>())
 
     val participants: MutableLiveData<List<String>>
         get() = _participants

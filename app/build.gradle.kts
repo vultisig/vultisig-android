@@ -87,4 +87,6 @@ dependencies {
     implementation(libs.spark.core)
     implementation(libs.gson)
     implementation(libs.guava)
+    implementation(libs.core.zxing)
+    implementation(libs.zxing.android.embedded)
 }

@@ -11,8 +11,9 @@ class Vault(var name: String) : Parcelable {
     var CreatedAt: Date = Date()
     var HexChainCode: String = ""
     var LocalPartyID: String = ""
+    var signers: List<String> = listOf()
     var ResharePrefix: String = ""
-    var Keyshares: MutableList<KeyShare> = mutableListOf()
+    var Keyshares: List<KeyShare> = listOf()
     var Coins: MutableList<Coin> = mutableListOf()
 
 }

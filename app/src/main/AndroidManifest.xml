@@ -28,8 +28,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".mediator.MediatorService"
-            android:exported="false" />
+            android:name=".mediator.MediatorService" android:enabled="true" />
     </application>
 
 </manifest>

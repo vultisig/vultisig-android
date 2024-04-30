@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +26,7 @@ import com.voltix.wallet.app.ui.theme.montserratFamily
 
 
 @Composable
-fun DeviceInfo(@DrawableRes icon: Int, name: String, ) {
+fun DeviceInfo(@DrawableRes icon: Int, name: String, isSelected: Boolean,onItemSelected:(Boolean)->Unit) {
     val textColor = MaterialTheme.appColor.neutral0
     Column(
         modifier = Modifier
@@ -46,6 +47,7 @@ fun DeviceInfo(@DrawableRes icon: Int, name: String, ) {
         Text(
             text = name, color = textColor, style = MaterialTheme.montserratFamily.titleMedium
         )
+        Checkbox(checked= isSelected, onCheckedChange = onItemSelected)
     }
 }
 
@@ -53,6 +55,6 @@ fun DeviceInfo(@DrawableRes icon: Int, name: String, ) {
 @Composable
 fun DeviceInfoPreview() {
     val navController = rememberNavController()
-    DeviceInfo(R.drawable.ipad, "iPad")
+    DeviceInfo(R.drawable.ipad, "iPad", true,onItemSelected = {  })
 
 }
