@@ -17,7 +17,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Voltix"
-        tools:targetApi="31">
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".app.activity.MainActivity"
             android:exported="true"
@@ -29,6 +29,7 @@
         </activity>
         <service
             android:name=".mediator.MediatorService" android:enabled="true" />
+
     </application>
 
 </manifest>

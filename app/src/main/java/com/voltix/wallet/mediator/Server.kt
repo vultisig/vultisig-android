@@ -1,6 +1,5 @@
 package com.voltix.wallet.mediator
 
-import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.util.Log
@@ -11,49 +10,44 @@ import com.google.gson.reflect.TypeToken
 import spark.Request
 import spark.Response
 import spark.Service
-import spark.Spark.stop
 
-class Server(context: Context) {
-    private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
     private val port = 18080
     private val cache: Cache<String, Any> = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .build()
-    private val registrationListener = object : NsdManager.RegistrationListener {
-        override fun onServiceRegistered(serviceInfo: NsdServiceInfo) {
-            val serviceName = serviceInfo.serviceName
-            Log.d("Server", "Service registered: $serviceName")
-        }
-
-        override fun onRegistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-            Log.e("Server", "Service registration failed: $errorCode")
-        }
-
-        override fun onServiceUnregistered(serviceInfo: NsdServiceInfo) {
-            Log.d("Server", "Service unregistered: ${serviceInfo.serviceName}")
-        }
-
-        override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-            Log.e("Server", "Service unregistration failed: $errorCode")
-        }
-    }
+    private val service: Service = Service.ignite()
 
     fun startMediator(name: String) {
-        val httpService = Service.ignite()
-        httpService.port(port)
-        httpService.internalServerError("Internal Server Error")
-        setupRouting(httpService)
-        registerService(name)
-        Log.d("Server", "Server started on port $port")
+        try {
+            this.service.port(port)
+            this.service.internalServerError("Internal Server Error")
+            setupRouting(this.service)
+            registerService(name)
+            Log.d("Server", "Server started on port $port")
+        } catch (e: Exception) {
+            Log.e("Server", "Server start failed: ${e.message}")
+        }
     }
 
     private fun registerService(name: String) {
-        val serviceInfo = NsdServiceInfo().apply {
-            serviceName = name
-            serviceType = "_http._tcp"
+        try {
+            val serviceInfo = NsdServiceInfo().apply {
+                serviceName = name
+                serviceType = "_http._tcp"
+            }
+            serviceInfo.port = port
+            nsdManager.registerService(
+                serviceInfo,
+                NsdManager.PROTOCOL_DNS_SD,
+                this
+            )
+        } catch (e: IllegalArgumentException) {
+            Log.e("Server", "Service registration failed: ${e.message}")
+            this.nsdManager.unregisterService(this)
+        } catch(e: Exception) {
+            Log.e("Server", "Service registration failed: ${e.message}")
         }
-        serviceInfo.port = port
-        nsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, registrationListener)
     }
 
     private fun setupRouting(service: Service) {
@@ -351,9 +345,30 @@ class Server(context: Context) {
     }
 
     fun stopServer() {
-        stop()
-        // clear cache
-        cache.invalidateAll()
-        nsdManager.unregisterService(registrationListener)
+        try {
+            this.service.stop()
+            // clear cache
+            cache.invalidateAll()
+            nsdManager.unregisterService(this)
+        }catch (e: Exception) {
+            Log.e("Server", "Server stop failed: ${e.message}")
+        }
+    }
+
+    override fun onRegistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
+        Log.e("Server", "Service registration failed: $errorCode")
+    }
+
+    override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
+        Log.e("Server", "Service unregistration failed: $errorCode")
+    }
+
+    override fun onServiceRegistered(serviceInfo: NsdServiceInfo?) {
+        val serviceName = serviceInfo?.serviceName ?: ""
+        Log.d("Server", "Service registered: $serviceName")
+    }
+
+    override fun onServiceUnregistered(serviceInfo: NsdServiceInfo?) {
+        Log.d("Server", "Service unregistered: ${serviceInfo?.serviceName ?: ""}")
     }
 }

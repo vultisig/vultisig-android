@@ -20,8 +20,7 @@ class ParticipantDiscovery(
     private val localPartyID: String,
 ) {
     private var job: Job? = null
-    private val _participants: MutableLiveData<List<String>> =
-        MutableLiveData(listOf<String>())
+    private val _participants: MutableLiveData<List<String>> = MutableLiveData(listOf<String>())
 
     val participants: MutableLiveData<List<String>>
         get() = _participants
@@ -44,34 +43,37 @@ class ParticipantDiscovery(
 
 
     private fun getParticipants(): List<String> {
-        val url = "$serverAddr/$sessionID"
-        val requestURL = URL(url)
-        val conn = requestURL.openConnection() as HttpURLConnection
-        conn.requestMethod = "GET"
-        conn.setRequestProperty("Content-Type", "application/json")
-        when (val responseCode = conn.responseCode) {
-            HttpStatus.OK -> {
-                val result = conn.inputStream.bufferedReader().use { it.readText() }
-                Log.d("ParticipantDiscovery", "Response code: $responseCode, response: $result")
-                val listType = object : TypeToken<List<String>>() {}.type
-                return Gson().fromJson(result, listType)
-            }
+        try {
+            val url = "$serverAddr/$sessionID"
+            val requestURL = URL(url)
+            val conn = requestURL.openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.setRequestProperty("Content-Type", "application/json")
+            when (val responseCode = conn.responseCode) {
+                HttpStatus.OK -> {
+                    val result = conn.inputStream.bufferedReader().use { it.readText() }
+                    Log.d("ParticipantDiscovery", "Response code: $responseCode, response: $result")
+                    val listType = object : TypeToken<List<String>>() {}.type
+                    return Gson().fromJson(result, listType)
+                }
 
-            HttpStatus.NOT_FOUND -> {
-                Log.d(
-                    "ParticipantDiscovery",
-                    "Request failed with response code: $responseCode"
-                )
-                return emptyList()
-            }
+                HttpStatus.NOT_FOUND -> {
+                    Log.d(
+                        "ParticipantDiscovery", "Request failed with response code: $responseCode"
+                    )
+                    return emptyList()
+                }
 
-            else -> {
-                Log.d(
-                    "ParticipantDiscovery",
-                    "Request failed with response code: $responseCode"
-                )
-                return emptyList()
+                else -> {
+                    Log.d(
+                        "ParticipantDiscovery", "Request failed with response code: $responseCode"
+                    )
+                    return emptyList()
+                }
             }
+        } catch (e: Exception) {
+            Log.e("ParticipantDiscovery", "Error: ${e.message}")
+            return emptyList()
         }
     }
 
