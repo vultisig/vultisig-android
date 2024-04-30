@@ -89,4 +89,7 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.core.zxing)
     implementation(libs.zxing.android.embedded)
+    implementation(libs.androidx.room.runtime) 
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 }
