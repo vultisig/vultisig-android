@@ -47,6 +47,7 @@ import com.voltix.wallet.presenter.navigation.Screen
 fun KeygenPeerDiscovery(navController: NavHostController, vault: Vault) {
     val viewModel: KeygenDiscoveryViewModel = hiltViewModel()
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
+    val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
     val context = LocalContext.current.applicationContext
     LaunchedEffect(key1 = viewModel) {
         // start mediator server
@@ -88,14 +89,14 @@ fun KeygenPeerDiscovery(navController: NavHostController, vault: Vault) {
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginExtraLarge))
 
-        if (!viewModel.participants.value.isNullOrEmpty()) {
+        if (!participants.isNullOrEmpty()) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(100.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(viewModel.participants.value!!.size) { index ->
-                    val participant = viewModel.participants.value!![index]
+                items(participants.size) { index ->
+                    val participant = participants[index]
                     val isSelected = selectionState.contains(participant)
                     DeviceInfo(R.drawable.ipad, participant, isSelected = isSelected) { isChecked ->
                         when (isChecked) {

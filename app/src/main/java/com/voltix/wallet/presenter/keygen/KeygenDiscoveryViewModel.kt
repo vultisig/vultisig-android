@@ -25,13 +25,10 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.HttpURLConnection
-import java.net.URL
 import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
@@ -42,7 +39,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
     private val voltixRelay: VoltixRelay,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
-    val serviceName: String = "VoltixApp-${Random.nextInt(1, 1000)}"
+    private val serviceName: String = "VoltixApp-${Random.nextInt(1, 1000)}"
     private var serverAddress: String = "http://127.0.0.1:18080" // local mediator server
     private var participantDiscovery: ParticipantDiscovery? = null
     private var action: TssAction = TssAction.KEYGEN
@@ -148,13 +145,17 @@ class KeygenDiscoveryViewModel @Inject constructor(
                 .build()
             val request = okhttp3.Request.Builder()
                 .url("$serverAddr/$sessionID")
-                .post(Gson().toJson(listOf(localPartyID)).toRequestBody("application/json".toMediaType()))
+                .post(
+                    Gson().toJson(listOf(localPartyID))
+                        .toRequestBody("application/json".toMediaType())
+                )
                 .build()
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_CREATED -> {
                         Log.d("KeygenDiscoveryViewModel", "startSession: Session started")
                     }
+
                     else ->
                         Log.d(
                             "KeygenDiscoveryViewModel",

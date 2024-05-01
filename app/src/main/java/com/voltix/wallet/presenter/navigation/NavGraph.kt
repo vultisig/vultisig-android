@@ -53,9 +53,8 @@ fun SetupNavGraph(
         }
 
 
-        composable(route = Screen.DeviceList.route) { navBackStackEntry ->
-            val itemCount = navBackStackEntry.arguments?.getString("count")?.toInt() ?: 2
-            DeviceList(navController, itemCount)
+        composable(route = Screen.DeviceList.route) {
+            DeviceList(navController)
         }
 
 
