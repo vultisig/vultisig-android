@@ -3,6 +3,7 @@ package com.voltix.wallet.service
 import com.google.gson.Gson
 import com.voltix.wallet.common.Endpoints
 import com.voltix.wallet.common.SettingsCurrency
+import com.voltix.wallet.data.common.data_store.AppDataStore
 import com.voltix.wallet.models.Coin
 import com.voltix.wallet.models.Coins
 import com.voltix.wallet.models.CryptoPrice
@@ -13,8 +14,11 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.URL
 import java.util.Date
+import javax.inject.Inject
 
-object CryptoPriceService {
+class CryptoPriceService @Inject constructor(
+    private val appDataStore: AppDataStore
+) {
     private val cache: MutableMap<String, Pair<CryptoPrice, Date>> = mutableMapOf()
 
     suspend fun getPrice(priceProviderId: String): Double {
@@ -26,7 +30,7 @@ object CryptoPriceService {
             if (priceCoinGecko != null) {
                 price = priceCoinGecko
                     .prices[priceProviderId]
-                    ?.get(SettingsCurrency.currency.currencyCode) ?: 0.0
+                    ?.get(SettingsCurrency.getCurrency(appDataStore).name) ?: 0.0
             }
         }
 
