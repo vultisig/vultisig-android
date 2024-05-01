@@ -33,6 +33,9 @@ import java.util.Date
 
 data class VaultEntity(
     @PrimaryKey()
+    @ColumnInfo("id")
+    var Id: String = "",
+
     @ColumnInfo("local_party_id")
     var localPartyID: String = "",
 
@@ -54,6 +57,9 @@ data class VaultEntity(
 )
 data class KeyShareEntity(
     @PrimaryKey()
+    @ColumnInfo("id")
+    var Id: String = "",
+
     @ColumnInfo("vault_local_party_id")
     val vaultId: String,
 
@@ -71,6 +77,9 @@ data class KeyShareEntity(
 data class CoinEntity(
 
     @PrimaryKey()
+    @ColumnInfo("id")
+    var Id: String = "",
+
     @ColumnInfo("vault_local_party_id")
     val vaultId: String,
 
