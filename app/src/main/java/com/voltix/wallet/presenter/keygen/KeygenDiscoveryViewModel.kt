@@ -25,6 +25,11 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.SecureRandom
@@ -138,19 +143,25 @@ class KeygenDiscoveryViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val url = "$serverAddr/$sessionID"
-            val requestURL = URL(url)
-            val conn = requestURL.openConnection() as HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.doOutput = true
-            val payload = listOf(localPartyID)
-            Gson().toJson(payload).also {
-                conn.outputStream.write(it.toByteArray())
+            val client = OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .build()
+            val request = okhttp3.Request.Builder()
+                .url("$serverAddr/$sessionID")
+                .post(Gson().toJson(listOf(localPartyID)).toRequestBody("application/json".toMediaType()))
+                .build()
+            client.newCall(request).execute().use { response ->
+                when (response.code) {
+                    HttpURLConnection.HTTP_CREATED -> {
+                        Log.d("KeygenDiscoveryViewModel", "startSession: Session started")
+                    }
+                    else ->
+                        Log.d(
+                            "KeygenDiscoveryViewModel",
+                            "startSession: Response code: ${response.code}"
+                        )
+                }
             }
-            val responseCode = conn.responseCode
-            Log.d("KeygenDiscoveryViewModel", "startSession: Response code: $responseCode")
-            conn.disconnect()
         } catch (e: Exception) {
             Log.e("KeygenDiscoveryViewModel", "startSession: ${e.stackTraceToString()}")
         }

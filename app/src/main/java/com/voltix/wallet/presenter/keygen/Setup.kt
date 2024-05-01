@@ -96,15 +96,6 @@ fun Setup(navController: NavHostController) {
             ),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
-//        Button(
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = MaterialTheme.appColor.turquoise600Main,
-//                contentColor =  MaterialTheme.appColor.oxfordBlue600Main),
-//            onClick = {
-//            navController.navigate(Screen.KeygenQr.route)
-//        }, modifier = Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.dimens.marginMedium)) {
-//            Text(text = "Start")
-//        }
         MultiColorButton(
             text = "Start",
             backgroundColor = MaterialTheme.appColor.turquoise600Main,
@@ -121,16 +112,6 @@ fun Setup(navController: NavHostController) {
         ) {
             navController.navigate(Screen.KeygenQr.route)
         }
-//        Spacer(modifier = Modifier.height(MaterialTheme.dimens.extraSmall))
-//        Button(
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = MaterialTheme.appColor.turquoise600Main,
-//                contentColor =  MaterialTheme.appColor.oxfordBlue600Main),
-//            onClick = {
-//                         navController.navigate(Screen.Pair.route)
-//        }, modifier = Modifier.fillMaxWidth().padding(horizontal = MaterialTheme.dimens.marginMedium)) {
-//            Text(text = "Join")
-//        }
 
         MultiColorButton(
             text = "Join",
@@ -148,7 +129,7 @@ fun Setup(navController: NavHostController) {
                     bottom = MaterialTheme.dimens.buttonMargin,
                 )
         ) {
-            navController.navigate(Screen.Pair.route)
+            navController.navigate(Screen.JoinKeygen.route)
         }
     }
 }

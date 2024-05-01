@@ -6,11 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.voltix.wallet.models.Vault
+import com.voltix.wallet.presenter.home.HomeScreen
+import com.voltix.wallet.presenter.import_file.ImportFile
 import com.voltix.wallet.presenter.keygen.CreateNewVault
 import com.voltix.wallet.presenter.keygen.DeviceList
 import com.voltix.wallet.presenter.keygen.GeneratingKeyGen
-import com.voltix.wallet.presenter.home.HomeScreen
-import com.voltix.wallet.presenter.import_file.ImportFile
+import com.voltix.wallet.presenter.keygen.JoinKeygenView
 import com.voltix.wallet.presenter.keygen.KeygenPeerDiscovery
 import com.voltix.wallet.presenter.keygen.Setup
 import com.voltix.wallet.presenter.pair.Pair
@@ -25,8 +26,7 @@ fun SetupNavGraph(
 ) {
 
     NavHost(
-        navController = navController,
-        startDestination = startDestination
+        navController = navController, startDestination = startDestination
     ) {
         composable(route = Screen.Welcome.route) {
             WelcomeScreen(navController = navController)
@@ -35,12 +35,12 @@ fun SetupNavGraph(
             HomeScreen(navController)
         }
 
-
-        /*----------*/
         composable(route = Screen.CreateNewVault.route) {
             CreateNewVault(navController)
         }
-
+        composable(route = Screen.JoinKeygen.route) {
+             JoinKeygenView(navController,Vault("New Vault"))
+        }
 
         composable(route = Screen.Setup.route) {
             Setup(navController)
@@ -48,6 +48,7 @@ fun SetupNavGraph(
 
 
         composable(route = Screen.KeygenQr.route) { backStackEntry ->
+            // TODO: later on will need to deal with reshare
             KeygenPeerDiscovery(navController, Vault("New Vault"))
         }
 
