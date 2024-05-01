@@ -1,5 +1,8 @@
 package com.voltix.wallet.service
 
+import android.util.Log
+import com.google.common.cache.Cache
+import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
 import com.voltix.wallet.common.Endpoints
 import com.voltix.wallet.common.SettingsCurrency
@@ -19,7 +22,10 @@ import javax.inject.Inject
 class CryptoPriceService @Inject constructor(
     private val appDataStore: AppDataStore
 ) {
-    private val cache: MutableMap<String, Pair<CryptoPrice, Date>> = mutableMapOf()
+    private val cache: Cache<String, Pair<CryptoPrice, Date>> =
+        CacheBuilder
+            .newBuilder()
+            .build()
 
     suspend fun getPrice(priceProviderId: String): Double {
         var price = 0.0
@@ -48,16 +54,17 @@ class CryptoPriceService @Inject constructor(
     ): CryptoPrice? {
         val cacheKey = "$coin-$fiat"
 
-        if (cache.containsKey(cacheKey) && isCacheValid(cacheKey)) {
-            return cache[cacheKey]?.first
+        if (isCacheValid(cacheKey)) {
+            return cache.getIfPresent(cacheKey)?.first
         }
 
         return try {
             val response = fetchPrices(coin, fiat)
             val decodedData = Gson().fromJson(response.toString(), CryptoPrice::class.java)
-            cache[cacheKey] = Pair(decodedData, Date())
+            cache.put(cacheKey, Pair(decodedData, Date()))
             decodedData
         } catch (e: Exception) {
+            Log.d(ERROR_CRYPTO_SERVICE, "${e.message}")
             null
         }
     }
@@ -85,8 +92,12 @@ class CryptoPriceService @Inject constructor(
     }
 
     private fun isCacheValid(key: String): Boolean {
-        val cacheEntry = cache[key]
-        val elapsedTime = Date().time - (cacheEntry?.second?.time ?: 0)
+        val cacheEntry = cache.getIfPresent(key)?.second
+        val elapsedTime = Date().time - (cacheEntry?.time ?: 0)
         return elapsedTime <= 300
+    }
+
+    private companion object {
+        const val ERROR_CRYPTO_SERVICE = "ERROR CRYPTO SERVICE"
     }
 }
