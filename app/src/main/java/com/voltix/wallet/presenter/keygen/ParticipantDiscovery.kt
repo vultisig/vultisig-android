@@ -34,7 +34,7 @@ class ParticipantDiscovery(
                     if (p == localPartyID) continue
                     val currentList = _participants.value ?: emptyList()
                     if (currentList.contains(p)) continue
-                    _participants.value = currentList + p
+                    _participants.postValue(currentList + p)
                 }
                 Thread.sleep(1000) // back off a second
             }

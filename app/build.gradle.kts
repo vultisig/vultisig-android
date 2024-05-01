@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.voltix.wallet"
-        minSdk = 33
+        minSdk = 34
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -89,4 +89,5 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.core.zxing)
     implementation(libs.zxing.android.embedded)
+    implementation(libs.okhttp)
 }

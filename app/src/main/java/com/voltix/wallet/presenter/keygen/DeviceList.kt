@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
@@ -21,19 +22,16 @@ import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.app.ui.theme.montserratFamily
+import com.voltix.wallet.common.Utils
 import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.keygen.components.DeviceInfoItem
 import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
-fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
+fun DeviceList(navController: NavHostController) {
+    val viewModel: KeygenDiscoveryViewModel = hiltViewModel()
     val textColor = MaterialTheme.appColor.neutral0
-    val items = listOf(
-        "1- iPad Pro 6th generation (This Device)",
-        "2- iPad Pro (Pair Device)",
-        "3- iPad Pro (Pair Device)",
-        "4- iPad Pro (Backup Device)",
-    ).subList(0, itemCount)
+    val items = viewModel.selection.value!!
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -52,7 +50,7 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
 
         Text(
-            text = "2 of 2 Vault",
+            text = "${Utils.getThreshold(items.count())} of ${items.count()} Vault",
             color = textColor,
             style = MaterialTheme.montserratFamily.bodyLarge
         )
@@ -78,16 +76,17 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
 
         Text(
             style = MaterialTheme.menloFamily.bodyMedium,
-            text = "You can only send transactions with these two devices present.",
+            text = "You can only send transactions with these ${Utils.getThreshold(items.count())} devices present.",
             color = textColor
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
-        Text(
-            style = MaterialTheme.menloFamily.bodyMedium,
-            text = "You do not have a 3rd backup device - so you should backup one vault share securely later.",
-            color = textColor
-        )
-
+        if(items.count() < 3) {
+            Text(
+                style = MaterialTheme.menloFamily.bodyMedium,
+                text = "You do not have a 3rd backup device - so you should backup one vault share securely later.",
+                color = textColor
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1.0f))
 
@@ -105,33 +104,10 @@ fun DeviceList(navController: NavHostController, itemCount: Int = 4) {
                     bottom = MaterialTheme.dimens.marginMedium,
                 )
         ) {
-            if (itemCount + 1 <= 4) {
-                navController.navigate(
-                    Screen.DeviceList.route.replace(
-                        oldValue = "{count}", newValue = "${itemCount + 1}"
-                    )
-                )
-            } else {
-                navController.navigate(
-                    Screen.GeneratingKeyGen.route
-                )
-            }
+            navController.navigate(
+                Screen.GeneratingKeyGen.route
+            )
         }
-//        Button(onClick = {
-//            if (itemCount + 1 <= 4) {
-//                navController.navigate(
-//                    Screen.DeviceList.route.replace(
-//                        oldValue = "{count}", newValue = "${itemCount + 1}"
-//                    )
-//                )
-//            } else {
-//                navController.navigate(
-//                    Screen.GeneratingKeyGen.route
-//                )
-//            }
-//        }, modifier = Modifier.fillMaxWidth().padding(MaterialTheme.dimens.marginMedium)) {
-//            Text(text = "Continue")
-//        }
     }
 }
 
