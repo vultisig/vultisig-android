@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -65,7 +66,7 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         when (viewModel.currentState.value) {
             JoinKeygenState.DiscoveryingSessionID -> {
-                Column {
+                Row {
                     Text(
                         text = "Discovering Session ID",
                         color = MaterialTheme.appColor.neutral0,
@@ -81,7 +82,7 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
             JoinKeygenState.DiscoverService -> {
                 val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
                 viewModel.discoveryMediator(nsdManager)
-                Column {
+                Row {
                     Text(
                         text = "Discovering Service",
                         color = MaterialTheme.appColor.neutral0,
@@ -95,11 +96,11 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
 
             }
 
-            JoinKeygenState.JOINKeygen -> {
+            JoinKeygenState.JoinKeygen -> {
                 LaunchedEffect(key1 = viewModel) {
                     viewModel.joinKeygen()
                 }
-                Column {
+                Row {
                     Text(
                         text = "Joining Keygen",
                         color = MaterialTheme.appColor.neutral0,
@@ -114,7 +115,7 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
             }
 
             JoinKeygenState.WaitingForKeygenStart -> {
-                Column {
+                Row {
                     Text(
                         text = "Waiting for Keygen to start",
                         color = MaterialTheme.appColor.neutral0,
@@ -126,8 +127,17 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
                     )
                 }
             }
+            JoinKeygenState.Keygen->{
+                Row {
+                    Text(
+                        text = "Keygen started",
+                        color = MaterialTheme.appColor.neutral0,
+                        style = MaterialTheme.menloFamily.bodyMedium
+                    )
+                }
+            }
             JoinKeygenState.FailedToStart -> {
-                Column {
+                Row {
                     Text(
                         text = "Failed to start,error: ${viewModel.errorMessage.value}",
                         color = MaterialTheme.appColor.neutral0,
@@ -136,7 +146,7 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
                 }
             }
             JoinKeygenState.ERROR -> {
-                Column {
+                Row {
                     Text(
                         text = "Error: ${viewModel.errorMessage.value}",
                         color = MaterialTheme.appColor.neutral0,

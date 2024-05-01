@@ -21,8 +21,9 @@ import java.net.URL
 enum class JoinKeygenState {
     DiscoveryingSessionID,
     DiscoverService,
-    JOINKeygen,
+    JoinKeygen,
     WaitingForKeygenStart,
+    Keygen,
     FailedToStart,
     ERROR
 }
@@ -86,7 +87,7 @@ class JoinKeygenViewModel : ViewModel() {
             }
             if (_useVoltixRelay) {
                 this._serverAddress = Endpoints.VOLTIX_RELAY
-                currentState.value = JoinKeygenState.JOINKeygen
+                currentState.value = JoinKeygenState.JoinKeygen
             } else {
                 currentState.value = JoinKeygenState.DiscoverService
             }
@@ -99,7 +100,7 @@ class JoinKeygenViewModel : ViewModel() {
 
     private fun onServerAddressDiscovered(addr: String) {
         _serverAddress = addr
-        currentState.value = JoinKeygenState.JOINKeygen
+        currentState.value = JoinKeygenState.JoinKeygen
         // discovery finished
         _discoveryListener?.let { _nsdManager?.stopServiceDiscovery(it) }
     }

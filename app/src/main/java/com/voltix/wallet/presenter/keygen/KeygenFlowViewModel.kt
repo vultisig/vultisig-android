@@ -34,8 +34,16 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
 
+enum class KeygenFlowState {
+    PEER_DISCOVERY,
+    DEVICE_CONFIRMATION,
+    KEYGEN,
+    ERROR,
+    SUCCESS
+}
+
 @HiltViewModel
-class KeygenDiscoveryViewModel @Inject constructor(
+class KeygenFlowViewModel @Inject constructor(
     private val voltixRelay: VoltixRelay,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
@@ -44,12 +52,31 @@ class KeygenDiscoveryViewModel @Inject constructor(
     private var participantDiscovery: ParticipantDiscovery? = null
     private var action: TssAction = TssAction.KEYGEN
     private var vault: Vault = Vault("New Vault")
+    private val _keygenPayload: MutableState<String> = mutableStateOf("")
+    private val _encryptionKeyHex: String = Utils.encryptionKeyHex
+
+    var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
+    var errorMessage: MutableState<String> = mutableStateOf("")
+
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: State<String>
         get() = _keygenPayload
-    private val _keygenPayload: MutableState<String> = mutableStateOf("")
+
+    val localPartyID: String
+        get() = vault.LocalPartyID
     val participants: MutableLiveData<List<String>>
         get() = participantDiscovery?.participants ?: MutableLiveData(listOf())
+
+    val generatingKeyViewModel: GeneratingKeyViewModel
+        get() = GeneratingKeyViewModel(
+            vault,
+            this.action,
+            selection.value ?: emptyList(),
+            vault.signers,
+            serverAddress,
+            sessionID,
+            _encryptionKeyHex
+        )
 
     fun setData(action: TssAction, vault: Vault, context: Context) {
         this.action = action
@@ -73,7 +100,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
                         sessionID = sessionID,
                         hexChainCode = vault.HexChainCode,
                         serviceName = serviceName,
-                        encryptionKeyHex = Utils.encryptionKeyHex,
+                        encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
                     )
                 ).toJson()
@@ -87,7 +114,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
                         serviceName = serviceName,
                         pubKeyECDSA = vault.PubKeyECDSA,
                         oldParties = vault.signers,
-                        encryptionKeyHex = Utils.encryptionKeyHex,
+                        encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
                     )
                 ).toJson()
@@ -176,5 +203,27 @@ class KeygenDiscoveryViewModel @Inject constructor(
 
     fun removeParticipant(participant: String) {
         selection.value = selection.value?.minus(participant)
+    }
+
+    fun moveToNextView() {
+        when (currentState.value) {
+            KeygenFlowState.PEER_DISCOVERY -> {
+                currentState.value = KeygenFlowState.DEVICE_CONFIRMATION
+            }
+
+            KeygenFlowState.DEVICE_CONFIRMATION -> {
+                currentState.value = KeygenFlowState.KEYGEN
+            }
+
+            KeygenFlowState.KEYGEN -> {
+                currentState.value = KeygenFlowState.SUCCESS
+            }
+
+            KeygenFlowState.ERROR -> {
+                currentState.value = KeygenFlowState.ERROR
+            }
+
+            KeygenFlowState.SUCCESS -> TODO()
+        }
     }
 }

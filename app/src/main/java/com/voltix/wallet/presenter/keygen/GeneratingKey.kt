@@ -11,6 +11,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -27,7 +28,11 @@ import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.presenter.common.TopBar
 
 @Composable
-fun GeneratingKeyGen(navController: NavHostController) {
+fun GeneratingKey(navController: NavHostController, parentViewModel: KeygenFlowViewModel) {
+    val viewModel: GeneratingKeyViewModel = parentViewModel.generatingKeyViewModel
+    LaunchedEffect(key1 = viewModel) {
+
+    }
     val textColor = MaterialTheme.appColor.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -69,12 +74,4 @@ fun GeneratingKeyGen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GeneratingKeyGenPreview() {
-    val navController = rememberNavController()
-    GeneratingKeyGen(navController)
-
 }
