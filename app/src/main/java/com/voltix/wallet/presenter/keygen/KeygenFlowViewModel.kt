@@ -34,8 +34,16 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
 
+enum class KeygenFlowState {
+    PEER_DISCOVERY,
+    DEVICE_CONFIRMATION,
+    KEYGEN,
+    ERROR,
+    SUCCESS
+}
+
 @HiltViewModel
-class KeygenDiscoveryViewModel @Inject constructor(
+class KeygenFlowViewModel @Inject constructor(
     private val voltixRelay: VoltixRelay,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
@@ -44,12 +52,31 @@ class KeygenDiscoveryViewModel @Inject constructor(
     private var participantDiscovery: ParticipantDiscovery? = null
     private var action: TssAction = TssAction.KEYGEN
     private var vault: Vault = Vault("New Vault")
+    private val _keygenPayload: MutableState<String> = mutableStateOf("")
+    private val _encryptionKeyHex: String = Utils.encryptionKeyHex
+
+    var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
+    var errorMessage: MutableState<String> = mutableStateOf("")
+
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: State<String>
         get() = _keygenPayload
-    private val _keygenPayload: MutableState<String> = mutableStateOf("")
+
+    val localPartyID: String
+        get() = vault.LocalPartyID
     val participants: MutableLiveData<List<String>>
         get() = participantDiscovery?.participants ?: MutableLiveData(listOf())
+
+    val generatingKeyViewModel: GeneratingKeyViewModel
+        get() = GeneratingKeyViewModel(
+            vault,
+            this.action,
+            selection.value ?: emptyList(),
+            vault.signers,
+            serverAddress,
+            sessionID,
+            _encryptionKeyHex
+        )
 
     fun setData(action: TssAction, vault: Vault, context: Context) {
         this.action = action
@@ -73,7 +100,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
                         sessionID = sessionID,
                         hexChainCode = vault.HexChainCode,
                         serviceName = serviceName,
-                        encryptionKeyHex = Utils.encryptionKeyHex,
+                        encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
                     )
                 ).toJson()
@@ -87,7 +114,7 @@ class KeygenDiscoveryViewModel @Inject constructor(
                         serviceName = serviceName,
                         pubKeyECDSA = vault.PubKeyECDSA,
                         oldParties = vault.signers,
-                        encryptionKeyHex = Utils.encryptionKeyHex,
+                        encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
                     )
                 ).toJson()
@@ -105,6 +132,9 @@ class KeygenDiscoveryViewModel @Inject constructor(
         }
     }
 
+    fun stopParticipantDiscovery() {
+        participantDiscovery?.stop()
+    }
     @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -176,5 +206,33 @@ class KeygenDiscoveryViewModel @Inject constructor(
 
     fun removeParticipant(participant: String) {
         selection.value = selection.value?.minus(participant)
+    }
+
+    fun moveToState(nextState: KeygenFlowState) {
+        currentState.value = nextState
+    }
+
+    fun startKeygen() {
+        try {
+            val keygenCommittee = selection.value ?: emptyList()
+            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+            val payload = Gson().toJson(keygenCommittee)
+            val request = okhttp3.Request
+                .Builder()
+                .url("$serverAddress/start/$sessionID")
+                .post(payload.toRequestBody("application/json".toMediaType())).build()
+            client.newCall(request).execute().use { response ->
+                if (response.code == HttpURLConnection.HTTP_OK) {
+                    Log.d("KeygenDiscoveryViewModel", "startKeygen: Keygen started")
+                } else {
+                    Log.e(
+                        "KeygenDiscoveryViewModel",
+                        "startKeygen: Response code: ${response.code}"
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("KeygenDiscoveryViewModel", "startKeygen: ${e.stackTraceToString()}")
+        }
     }
 }

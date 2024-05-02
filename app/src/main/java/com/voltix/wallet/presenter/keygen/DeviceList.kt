@@ -13,10 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -25,11 +22,12 @@ import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.common.Utils
 import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.keygen.components.DeviceInfoItem
-import com.voltix.wallet.presenter.navigation.Screen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
-fun DeviceList(navController: NavHostController) {
-    val viewModel: KeygenDiscoveryViewModel = hiltViewModel()
+fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel) {
     val textColor = MaterialTheme.appColor.neutral0
     val items = viewModel.selection.value!!
     Column(
@@ -65,9 +63,17 @@ fun DeviceList(navController: NavHostController) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
 
         LazyColumn {
-            items.forEach {
+            val thresholds = Utils.getThreshold(items.count())
+            items.forEachIndexed() { index, item ->
                 item {
-                    DeviceInfoItem(it)
+                    if (item == viewModel.localPartyID) {
+                        DeviceInfoItem("$index. $item (This Device)")
+                    } else {
+                        if (index < thresholds)
+                            DeviceInfoItem("$index. $item (Pair Device)")
+                        else
+                            DeviceInfoItem("$index. $item (Backup Device)")
+                    }
                 }
             }
         }
@@ -80,13 +86,13 @@ fun DeviceList(navController: NavHostController) {
             color = textColor
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
-        if(items.count() < 3) {
-            Text(
-                style = MaterialTheme.menloFamily.bodyMedium,
-                text = "You do not have a 3rd backup device - so you should backup one vault share securely later.",
-                color = textColor
-            )
-        }
+
+        Text(
+            style = MaterialTheme.menloFamily.bodyMedium,
+            text = if (items.count() < 3) "You do not have a 3rd backup device - so you should backup one vault share securely later." else "Your backup device is not needed unless you lose one of your main devices.",
+            color = textColor
+        )
+
 
         Spacer(modifier = Modifier.weight(1.0f))
 
@@ -104,17 +110,10 @@ fun DeviceList(navController: NavHostController) {
                     bottom = MaterialTheme.dimens.marginMedium,
                 )
         ) {
-            navController.navigate(
-                Screen.GeneratingKeyGen.route
-            )
+            CoroutineScope(Dispatchers.IO).launch {
+                viewModel.startKeygen()
+                viewModel.moveToState(KeygenFlowState.KEYGEN)
+            }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DeviceListPreview() {
-    val navController = rememberNavController()
-    DeviceList(navController)
-
 }

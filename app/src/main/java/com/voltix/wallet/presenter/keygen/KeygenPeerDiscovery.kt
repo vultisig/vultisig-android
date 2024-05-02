@@ -23,13 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
@@ -41,11 +38,13 @@ import com.voltix.wallet.models.Vault
 import com.voltix.wallet.presenter.common.QRCodeKeyGenImage
 import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.keygen.components.DeviceInfo
-import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
-fun KeygenPeerDiscovery(navController: NavHostController, vault: Vault) {
-    val viewModel: KeygenDiscoveryViewModel = hiltViewModel()
+fun KeygenPeerDiscovery(
+    navController: NavHostController,
+    vault: Vault,
+    viewModel: KeygenFlowViewModel,
+) {
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
     val context = LocalContext.current.applicationContext
@@ -143,19 +142,8 @@ fun KeygenPeerDiscovery(navController: NavHostController, vault: Vault) {
                     bottom = MaterialTheme.dimens.buttonMargin,
                 )
         ) {
-            navController.navigate(
-                Screen.DeviceList.route.replace(
-                    oldValue = "{count}", newValue = "2"
-                )
-            )
+            viewModel.stopParticipantDiscovery()
+            viewModel.moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun KeygenQrPreview() {
-    val navController = rememberNavController()
-    KeygenPeerDiscovery(navController, Vault("new vault"))
-
 }

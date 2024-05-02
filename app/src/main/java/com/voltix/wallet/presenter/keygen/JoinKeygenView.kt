@@ -6,8 +6,11 @@ import android.net.nsd.NsdManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -15,11 +18,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
@@ -49,6 +55,54 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
         integrator.setPrompt("Scan the QR code on your main device")
         scanQrCodeLauncher.launch(integrator.createScanIntent())
     }
+
+    when (viewModel.currentState.value) {
+        JoinKeygenState.DiscoveryingSessionID -> {
+            DiscoveryingSessionID(navController = navController)
+        }
+
+        JoinKeygenState.DiscoverService -> {
+            val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+            viewModel.discoveryMediator(nsdManager)
+            DiscoverService(navController = navController)
+        }
+
+        JoinKeygenState.JoinKeygen -> {
+            LaunchedEffect(key1 = viewModel) {
+                viewModel.joinKeygen()
+            }
+            JoiningKeygen(navController = navController)
+        }
+
+        JoinKeygenState.WaitingForKeygenStart -> {
+            LaunchedEffect(key1 = viewModel) {
+                viewModel.waitForKeygenToStart()
+            }
+            WaitingForKeygenToStart(navController = navController)
+        }
+
+        JoinKeygenState.Keygen -> {
+            GeneratingKey(navController = navController, viewModel.generatingKeyViewModel)
+        }
+
+        JoinKeygenState.FailedToStart -> {
+            KeygenFailedToStart(
+                navController = navController,
+                errorMessage = viewModel.errorMessage.value
+            )
+        }
+
+        JoinKeygenState.ERROR -> {
+            KeygenFailedToStart(
+                navController = navController,
+                errorMessage = viewModel.errorMessage.value
+            )
+        }
+    }
+}
+
+@Composable
+fun DiscoveryingSessionID(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -63,87 +117,159 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
-        when (viewModel.currentState.value) {
-            JoinKeygenState.DiscoveryingSessionID -> {
-                Column {
-                    Text(
-                        text = "Discovering Session ID",
-                        color = MaterialTheme.appColor.neutral0,
-                        style = MaterialTheme.menloFamily.bodyMedium
-                    )
-                    CircularProgressIndicator(
-                        color = MaterialTheme.appColor.neutral0,
-                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                    )
-                }
-            }
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Discovering Session ID",
+                color = MaterialTheme.appColor.neutral0,
+                style = MaterialTheme.menloFamily.bodyMedium
+            )
+            CircularProgressIndicator(
+                color = MaterialTheme.appColor.neutral0,
+                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+            )
+        }
+    }
+}
 
-            JoinKeygenState.DiscoverService -> {
-                val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-                viewModel.discoveryMediator(nsdManager)
-                Column {
-                    Text(
-                        text = "Discovering Service",
-                        color = MaterialTheme.appColor.neutral0,
-                        style = MaterialTheme.menloFamily.bodyMedium
-                    )
-                    CircularProgressIndicator(
-                        color = MaterialTheme.appColor.neutral0,
-                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                    )
-                }
+@Preview(showBackground = true)
+@Composable
+fun PreviewDiscoveryingSessionID() {
+    val navController = rememberNavController()
+    DiscoveryingSessionID(navController = navController)
+}
 
-            }
+@Composable
+fun DiscoverService(navController: NavHostController) {
+    Column(
+        horizontalAlignment = CenterHorizontally,
+        modifier = Modifier
+            .background(MaterialTheme.appColor.oxfordBlue800)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
+    ) {
+        TopBar(
+            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            navController = navController
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Discovering Service",
+                color = MaterialTheme.appColor.neutral0,
+                style = MaterialTheme.menloFamily.bodyMedium
+            )
+            CircularProgressIndicator(
+                color = MaterialTheme.appColor.neutral0,
+                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+            )
+        }
+    }
+}
 
-            JoinKeygenState.JOINKeygen -> {
-                LaunchedEffect(key1 = viewModel) {
-                    viewModel.joinKeygen()
-                }
-                Column {
-                    Text(
-                        text = "Joining Keygen",
-                        color = MaterialTheme.appColor.neutral0,
-                        style = MaterialTheme.menloFamily.bodyMedium
-                    )
-                    CircularProgressIndicator(
-                        color = MaterialTheme.appColor.neutral0,
-                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                    )
-                }
+@Composable
+fun JoiningKeygen(navController: NavHostController) {
+    Column(
+        horizontalAlignment = CenterHorizontally,
+        modifier = Modifier
+            .background(MaterialTheme.appColor.oxfordBlue800)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
+    ) {
+        TopBar(
+            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            navController = navController
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Joining Keygen",
+                color = MaterialTheme.appColor.neutral0,
+                style = MaterialTheme.menloFamily.bodyMedium
+            )
+            CircularProgressIndicator(
+                color = MaterialTheme.appColor.neutral0,
+                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+            )
+        }
+    }
+}
 
-            }
+@Composable
+fun WaitingForKeygenToStart(navController: NavHostController) {
+    Column(
+        horizontalAlignment = CenterHorizontally,
+        modifier = Modifier
+            .background(MaterialTheme.appColor.oxfordBlue800)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
+    ) {
+        TopBar(
+            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            navController = navController
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Waiting for Keygen to start",
+                color = MaterialTheme.appColor.neutral0,
+                style = MaterialTheme.menloFamily.bodyMedium
+            )
+            CircularProgressIndicator(
+                color = MaterialTheme.appColor.neutral0,
+                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+            )
+        }
+    }
+}
 
-            JoinKeygenState.WaitingForKeygenStart -> {
-                Column {
-                    Text(
-                        text = "Waiting for Keygen to start",
-                        color = MaterialTheme.appColor.neutral0,
-                        style = MaterialTheme.menloFamily.bodyMedium
-                    )
-                    CircularProgressIndicator(
-                        color = MaterialTheme.appColor.neutral0,
-                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                    )
-                }
-            }
-            JoinKeygenState.FailedToStart -> {
-                Column {
-                    Text(
-                        text = "Failed to start,error: ${viewModel.errorMessage.value}",
-                        color = MaterialTheme.appColor.neutral0,
-                        style = MaterialTheme.menloFamily.bodyMedium
-                    )
-                }
-            }
-            JoinKeygenState.ERROR -> {
-                Column {
-                    Text(
-                        text = "Error: ${viewModel.errorMessage.value}",
-                        color = MaterialTheme.appColor.neutral0,
-                        style = MaterialTheme.menloFamily.bodyMedium
-                    )
-                }
-            }
+@Composable
+fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) {
+    Column(
+        horizontalAlignment = CenterHorizontally,
+        modifier = Modifier
+            .background(MaterialTheme.appColor.oxfordBlue800)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
+    ) {
+        TopBar(
+            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            navController = navController
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Failed to start,error: $errorMessage",
+                color = MaterialTheme.appColor.neutral0,
+                style = MaterialTheme.menloFamily.bodyMedium
+            )
         }
     }
 }

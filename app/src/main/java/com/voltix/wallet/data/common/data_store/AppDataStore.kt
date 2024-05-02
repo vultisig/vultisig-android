@@ -35,4 +35,3 @@ class AppDataStore @Inject constructor(@ApplicationContext context: Context) {
             preferences[key] ?: defaultValue
         }
 }
-

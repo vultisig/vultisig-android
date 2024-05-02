@@ -110,7 +110,7 @@ fun Setup(navController: NavHostController) {
                     bottom = MaterialTheme.dimens.marginMedium,
                 )
         ) {
-            navController.navigate(Screen.KeygenQr.route)
+            navController.navigate(Screen.KeygenFlow.route)
         }
 
         MultiColorButton(

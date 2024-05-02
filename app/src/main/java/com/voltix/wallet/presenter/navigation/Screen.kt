@@ -8,8 +8,8 @@ sealed class Screen(val route: String) {
     data object JoinKeygen : Screen(route = "join_keygen")
     data object ImportFile : Screen(route = "import_file/{has_file}")
     data object Setup : Screen(route = "setup")
-    data object KeygenQr : Screen(route = "keygen_qr")
-    data object DeviceList : Screen(route = "device_list")
+    data object KeygenFlow : Screen(route = "keygen_flow")
+
     data object Pair : Screen(route = "pair")
     data object GeneratingKeyGen : Screen(route = "generating_key_gen")
     data object SigningError : Screen(route = "signing_error")

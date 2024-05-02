@@ -1,18 +1,19 @@
 package com.voltix.wallet.presenter.navigation
 
+import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.voltix.wallet.data.on_board.db.VaultDB
 import com.voltix.wallet.models.Vault
 import com.voltix.wallet.presenter.home.HomeScreen
 import com.voltix.wallet.presenter.import_file.ImportFile
 import com.voltix.wallet.presenter.keygen.CreateNewVault
-import com.voltix.wallet.presenter.keygen.DeviceList
-import com.voltix.wallet.presenter.keygen.GeneratingKeyGen
 import com.voltix.wallet.presenter.keygen.JoinKeygenView
-import com.voltix.wallet.presenter.keygen.KeygenPeerDiscovery
+import com.voltix.wallet.presenter.keygen.KeygenFlowView
 import com.voltix.wallet.presenter.keygen.Setup
 import com.voltix.wallet.presenter.pair.Pair
 import com.voltix.wallet.presenter.signing_error.SigningError
@@ -24,7 +25,7 @@ fun SetupNavGraph(
     navController: NavHostController,
     startDestination: String,
 ) {
-
+    val context: Context = LocalContext.current
     NavHost(
         navController = navController, startDestination = startDestination
     ) {
@@ -39,34 +40,25 @@ fun SetupNavGraph(
             CreateNewVault(navController)
         }
         composable(route = Screen.JoinKeygen.route) {
-             JoinKeygenView(navController,Vault("New Vault"))
+            val vaultDB = VaultDB(context)
+            val allVaults = vaultDB.selectAll()
+            JoinKeygenView(navController, Vault("New Vault ${allVaults.size + 1}"))
         }
 
         composable(route = Screen.Setup.route) {
             Setup(navController)
         }
 
-
-        composable(route = Screen.KeygenQr.route) { backStackEntry ->
+        composable(route = Screen.KeygenFlow.route) { backStackEntry ->
+            val vaultDB = VaultDB(context)
+            val allVaults = vaultDB.selectAll()
             // TODO: later on will need to deal with reshare
-            KeygenPeerDiscovery(navController, Vault("New Vault"))
+            KeygenFlowView(navController, Vault("New Vault ${allVaults.size + 1}"))
         }
-
-
-        composable(route = Screen.DeviceList.route) {
-            DeviceList(navController)
-        }
-
 
         composable(route = Screen.Pair.route) {
             Pair(navController)
         }
-
-
-        composable(route = Screen.GeneratingKeyGen.route) {
-            GeneratingKeyGen(navController)
-        }
-
 
         composable(route = Screen.SigningError.route) {
             SigningError(navController)
