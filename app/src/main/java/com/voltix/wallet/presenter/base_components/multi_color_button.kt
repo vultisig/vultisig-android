@@ -13,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -33,7 +32,6 @@ fun MultiColorButton(
     trailingIcon: Int? = null,
     iconColor: Color? = null,
     backgroundColor: Color? = null,
-    disabled: Boolean? = false,
     foregroundColor: Color? = null,
     borderColor: Color? = null,
     iconSize: Dp? = null,
@@ -66,33 +64,31 @@ fun MultiColorButton(
         modifier = innerModifier
             .clip(shape = RoundedCornerShape(60.dp))
             .background(
-                color = if (disabled == true) MaterialTheme.appColor.neutral600 else backgroundColor
-                    ?: MaterialTheme.appColor.turquoise600Main
+                color = backgroundColor ?: MaterialTheme.appColor.turquoise600Main,
             )
             .defaultMinSize(
                 minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
                 minHeight = minHeight ?: MaterialTheme.dimens.medium2
             )
             .clickable(onClick = onClick)
+
     ) {
         Icon(
             painter = painterResource(startIcon ?: R.drawable.check),
             contentDescription = null,
-            tint = if (disabled == true && trailingIcon==null) MaterialTheme.appColor.neutral600 else if(disabled == true) MaterialTheme.appColor.neutral800 else iconColor
-                ?: MaterialTheme.appColor.turquoise600Main,
+            tint = iconColor ?: MaterialTheme.appColor.turquoise600Main,
             modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
         )
         Text(
             text = text,
-            color = if (disabled == true) MaterialTheme.appColor.neutral800 else textColor
-                ?: MaterialTheme.appColor.turquoise600Main,
+
+            color = textColor ?: MaterialTheme.appColor.oxfordBlue600Main,
             style = textStyle ?: MaterialTheme.montserratFamily.titleLarge
         )
         Icon(
             painter = painterResource(trailingIcon ?: R.drawable.check),
             contentDescription = null,
-            tint = if (disabled == true && trailingIcon==null) MaterialTheme.appColor.neutral600 else if(disabled == true) MaterialTheme.appColor.neutral800 else iconColor
-                ?: MaterialTheme.appColor.turquoise600Main,
+            tint = iconColor ?: MaterialTheme.appColor.turquoise600Main,
             modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
         )
     }
