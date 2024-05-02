@@ -18,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,7 +26,6 @@ import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
@@ -62,11 +60,10 @@ fun HomeScreen(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(CircleShape)
-                            .background(Color(R.color.blue600))
                     ) {
                         Text(
                             text = it.name,
-                            fontWeight = FontWeight.Bold ,
+                            fontWeight = FontWeight.Bold,
                             color = textColor,
                             style = MaterialTheme.menloFamily.bodyLarge,
                             modifier = Modifier
