@@ -142,7 +142,8 @@ fun KeygenPeerDiscovery(
                     bottom = MaterialTheme.dimens.buttonMargin,
                 )
         ) {
-            viewModel.moveToNextView()
+            viewModel.stopParticipantDiscovery()
+            viewModel.moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
         }
     }
 }

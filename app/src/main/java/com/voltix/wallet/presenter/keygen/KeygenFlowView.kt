@@ -19,7 +19,7 @@ fun KeygenFlowView(navController: NavHostController, vault: Vault) {
         }
 
         KeygenFlowState.KEYGEN -> {
-            GeneratingKey(navController,viewModel)
+            GeneratingKey(navController,viewModel.generatingKeyViewModel)
         }
 
         KeygenFlowState.ERROR -> {

@@ -132,6 +132,9 @@ class KeygenFlowViewModel @Inject constructor(
         }
     }
 
+    fun stopParticipantDiscovery() {
+        participantDiscovery?.stop()
+    }
     @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -205,25 +208,31 @@ class KeygenFlowViewModel @Inject constructor(
         selection.value = selection.value?.minus(participant)
     }
 
-    fun moveToNextView() {
-        when (currentState.value) {
-            KeygenFlowState.PEER_DISCOVERY -> {
-                currentState.value = KeygenFlowState.DEVICE_CONFIRMATION
-            }
+    fun moveToState(nextState: KeygenFlowState) {
+        currentState.value = nextState
+    }
 
-            KeygenFlowState.DEVICE_CONFIRMATION -> {
-                currentState.value = KeygenFlowState.KEYGEN
+    fun startKeygen() {
+        try {
+            val keygenCommittee = selection.value ?: emptyList()
+            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+            val payload = Gson().toJson(keygenCommittee)
+            val request = okhttp3.Request
+                .Builder()
+                .url("$serverAddress/start/$sessionID")
+                .post(payload.toRequestBody("application/json".toMediaType())).build()
+            client.newCall(request).execute().use { response ->
+                if (response.code == HttpURLConnection.HTTP_OK) {
+                    Log.d("KeygenDiscoveryViewModel", "startKeygen: Keygen started")
+                } else {
+                    Log.e(
+                        "KeygenDiscoveryViewModel",
+                        "startKeygen: Response code: ${response.code}"
+                    )
+                }
             }
-
-            KeygenFlowState.KEYGEN -> {
-                currentState.value = KeygenFlowState.SUCCESS
-            }
-
-            KeygenFlowState.ERROR -> {
-                currentState.value = KeygenFlowState.ERROR
-            }
-
-            KeygenFlowState.SUCCESS -> TODO()
+        } catch (e: Exception) {
+            Log.e("KeygenDiscoveryViewModel", "startKeygen: ${e.stackTraceToString()}")
         }
     }
 }

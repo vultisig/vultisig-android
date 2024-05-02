@@ -22,6 +22,9 @@ import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.common.Utils
 import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.keygen.components.DeviceInfoItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel) {
@@ -107,7 +110,10 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
                     bottom = MaterialTheme.dimens.marginMedium,
                 )
         ) {
-            viewModel.moveToNextView()
+            CoroutineScope(Dispatchers.IO).launch {
+                viewModel.startKeygen()
+                viewModel.moveToState(KeygenFlowState.KEYGEN)
+            }
         }
     }
 }

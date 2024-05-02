@@ -28,10 +28,10 @@ import com.voltix.wallet.app.ui.theme.menloFamily
 import com.voltix.wallet.presenter.common.TopBar
 
 @Composable
-fun GeneratingKey(navController: NavHostController, parentViewModel: KeygenFlowViewModel) {
-    val viewModel: GeneratingKeyViewModel = parentViewModel.generatingKeyViewModel
+fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyViewModel) {
     LaunchedEffect(key1 = viewModel) {
-
+        // kick it off to generate key
+        viewModel.generateKey()
     }
     val textColor = MaterialTheme.appColor.neutral0
     Column(
@@ -46,7 +46,65 @@ fun GeneratingKey(navController: NavHostController, parentViewModel: KeygenFlowV
         TopBar(centerText = "Keygen", navController = navController)
 
         Spacer(modifier = Modifier.weight(1.0f))
-        Text(text = "generating", color = textColor, style = MaterialTheme.menloFamily.bodyMedium)
+        when(viewModel.currentState.value){
+            KeygenState.CreatingInstance -> {
+                Text(
+                    text = "Creating TSS Instance",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
+                )
+            }
+            KeygenState.KeygenECDSA -> {
+                Text(
+                    text = "Generating ECDSA Key",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
+                )
+            }
+            KeygenState.KeygenEdDSA -> {
+                Text(
+                    text = "Generateing EDDSA key",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
+                )
+            }
+            KeygenState.ReshareECDSA -> {
+                Text(
+                    text = "Reshare ECDSA Key",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
+                )
+            }
+            KeygenState.ReshareEdDSA -> {
+                Text(
+                    text = "Reshare EdDSA Key",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
+                )
+            }
+            KeygenState.Success -> {
+                // TODO: add animation
+                Text(
+                    text = "Keygen Success",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
+                )
+            }
+            KeygenState.ERROR -> {
+                Text(
+                    text = "Keygen Failed",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+                Text(
+                    text = viewModel.errorMessage.value,
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.bodyMedium
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Image(
             painterResource(id = R.drawable.generating),
@@ -55,7 +113,6 @@ fun GeneratingKey(navController: NavHostController, parentViewModel: KeygenFlowV
         )
 
         Spacer(modifier = Modifier.weight(1.0f))
-
 
         Icon(
             painter = painterResource(id = R.drawable.wifi),

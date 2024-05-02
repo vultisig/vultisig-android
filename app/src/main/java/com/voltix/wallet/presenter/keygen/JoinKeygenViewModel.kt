@@ -6,14 +6,17 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.voltix.wallet.common.Endpoints
 import com.voltix.wallet.common.Utils
 import com.voltix.wallet.models.PeerDiscoveryPayload
 import com.voltix.wallet.models.TssAction
 import com.voltix.wallet.models.Vault
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 import java.net.HttpURLConnection
 import java.net.Inet4Address
 import java.net.URL
@@ -41,10 +44,21 @@ class JoinKeygenViewModel : ViewModel() {
     private var _serverAddress: String = ""
     private var _nsdManager: NsdManager? = null
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
+    private var _keygenCommittee: List<String> = emptyList()
 
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
     var errorMessage: MutableState<String> = mutableStateOf("")
+    val generatingKeyViewModel: GeneratingKeyViewModel
+        get() = GeneratingKeyViewModel(
+            _vault,
+            _action,
+            _keygenCommittee,
+            _vault.signers,
+            _serverAddress,
+            _sessionID,
+            _encryptionKeyHex
+        )
     fun setData(vault: Vault) {
         _vault = vault
         if (_vault.LocalPartyID.isEmpty()) {
@@ -139,6 +153,49 @@ class JoinKeygenViewModel : ViewModel() {
                 currentState.value = JoinKeygenState.FailedToStart
             }
         }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    suspend fun waitForKeygenToStart() {
+        withContext(Dispatchers.IO) {
+            while (true) {
+                if (checkKeygenStarted()) {
+                    currentState.value = JoinKeygenState.Keygen
+                    return@withContext
+                }
+            }
+        }
+    }
+
+    private fun checkKeygenStarted(): Boolean {
+        try {
+            val serverURL = "$_serverAddress/start/$_sessionID"
+            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+            val request = okhttp3.Request.Builder().url(serverURL).get().build()
+            client.newCall(request).execute().use { response ->
+                when (response.code) {
+                    HttpURLConnection.HTTP_OK -> {
+                        Log.d("JoinKeygenViewModel", "Keygen started")
+                        response.body?.let {
+                            val result = it.string()
+                            val tokenType = object : TypeToken<List<String>>() {}.type
+                            this._keygenCommittee = Gson().fromJson(result, tokenType)
+                            return true
+                        }
+                    }
+
+                    else -> {
+                        Log.d(
+                            "JoinKeygenViewModel",
+                            "Failed to check start keygen: Response code: ${response.code}"
+                        )
+                    }
+                }
+            }
+        }catch (e: Exception) {
+            Log.e("JoinKeygenViewModel", "Failed to check keygen start: ${e.stackTraceToString()}")
+        }
+        return false
     }
 }
 
