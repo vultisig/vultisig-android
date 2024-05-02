@@ -40,33 +40,44 @@ class TssMessagePuller(
     }
 
     private fun getMessagesFromServer(messageID: String?) {
-        val client = OkHttpClient
-            .Builder()
-            .retryOnConnectionFailure(true)
-            .build()
-        val request = okhttp3.Request.Builder()
-            .url(serverURL)
-            .get()
-            .addHeader("Content-Type", "application/json")
-            .build()
-        client.newCall(request).execute().use { response ->
-            if (response.code == 200) {
-                response.body?.let {
-                    val messages = Gson().fromJson(it.string(), Array<Message>::class.java)
-                    for (msg in messages.sortedBy { it.sequenceNo }) {
-                        val key = messageID?.let { "$sessionID-$localPartyKey-${msg.hash}" }
-                            ?: run { "$sessionID-$localPartyKey-$messageID-${msg.hash}" }
-                        // when the message is already in the cache, skip it
-                        if (cache.getIfPresent(key) != null) continue
-                        cache.put(key, msg)
-                        val decryptedBody = msg.body.Decrypt(hexEncryptionKey)
-                        this.service.applyData(decryptedBody)
-                        deleteMessageFromServer(msg.hash, messageID)
+        try {
+            val client = OkHttpClient
+                .Builder()
+                .retryOnConnectionFailure(true)
+                .build()
+            val request = okhttp3.Request.Builder()
+                .url(serverURL)
+                .get()
+                .addHeader("Content-Type", "application/json")
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (response.code == 200) {
+                    response.body?.let {
+                        val messages = Gson().fromJson(it.string(), Array<Message>::class.java)
+                        for (msg in messages.sortedBy { it.sequenceNo }) {
+                            val key = messageID?.let { "$sessionID-$localPartyKey-${msg.hash}" }
+                                ?: run { "$sessionID-$localPartyKey-$messageID-${msg.hash}" }
+                            // when the message is already in the cache, skip it
+                            if (cache.getIfPresent(key) != null) {
+                                Log.d("TssMessagePuller", "skip message: $key, applied already")
+                                continue
+                            }
+                            cache.put(key, msg)
+                            val decryptedBody = msg.body.Decrypt(hexEncryptionKey)
+                            this.service.applyData(decryptedBody)
+                            deleteMessageFromServer(msg.hash, messageID)
+                        }
                     }
+                } else {
+                    Log.e(
+                        "TssMessagePuller",
+                        "fail to get messages from server,${response.message} , ${response.code}"
+                    )
                 }
-            } else {
-                Log.e("TssMessagePuller", "fail to get messages from server,${response.message} , ${response.code}")
             }
+        }catch (e: Exception) {
+            Log.e("TssMessagePuller", "fail to get messages from server: ${e.stackTraceToString()}")
         }
     }
 

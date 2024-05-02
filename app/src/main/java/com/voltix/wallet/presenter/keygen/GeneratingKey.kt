@@ -1,35 +1,44 @@
 package com.voltix.wallet.presenter.keygen
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.menloFamily
+import com.voltix.wallet.presenter.common.KeepScreenOn
 import com.voltix.wallet.presenter.common.TopBar
+import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
 fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyViewModel) {
-    LaunchedEffect(key1 = viewModel) {
+    KeepScreenOn()
+    val context: Context = LocalContext.current.applicationContext
+    LaunchedEffect(key1 = Unit) {
         // kick it off to generate key
         viewModel.generateKey()
     }
@@ -46,51 +55,116 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
         TopBar(centerText = "Keygen", navController = navController)
 
         Spacer(modifier = Modifier.weight(1.0f))
-        when(viewModel.currentState.value){
+        when (viewModel.currentState.value) {
             KeygenState.CreatingInstance -> {
-                Text(
-                    text = "Creating TSS Instance",
-                    color = textColor,
-                    style = MaterialTheme.menloFamily.headlineSmall
-                )
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Creating TSS Instance",
+                        color = textColor,
+                        style = MaterialTheme.menloFamily.headlineSmall
+                    )
+                    CircularProgressIndicator(
+                        color = MaterialTheme.appColor.neutral0,
+                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                    )
+                }
             }
+
             KeygenState.KeygenECDSA -> {
-                Text(
-                    text = "Generating ECDSA Key",
-                    color = textColor,
-                    style = MaterialTheme.menloFamily.headlineSmall
-                )
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Generating ECDSA Key",
+                        color = textColor,
+                        style = MaterialTheme.menloFamily.headlineSmall
+                    )
+                    CircularProgressIndicator(
+                        color = MaterialTheme.appColor.neutral0,
+                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                    )
+                }
             }
+
             KeygenState.KeygenEdDSA -> {
-                Text(
-                    text = "Generateing EDDSA key",
-                    color = textColor,
-                    style = MaterialTheme.menloFamily.headlineSmall
-                )
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Generating EdDSA key",
+                        color = textColor,
+                        style = MaterialTheme.menloFamily.headlineSmall
+                    )
+                    CircularProgressIndicator(
+                        color = MaterialTheme.appColor.neutral0,
+                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                    )
+                }
             }
+
             KeygenState.ReshareECDSA -> {
-                Text(
-                    text = "Reshare ECDSA Key",
-                    color = textColor,
-                    style = MaterialTheme.menloFamily.headlineSmall
-                )
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Reshare ECDSA Key",
+                        color = textColor,
+                        style = MaterialTheme.menloFamily.headlineSmall
+                    )
+                    CircularProgressIndicator(
+                        color = MaterialTheme.appColor.neutral0,
+                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                    )
+                }
             }
+
             KeygenState.ReshareEdDSA -> {
-                Text(
-                    text = "Reshare EdDSA Key",
-                    color = textColor,
-                    style = MaterialTheme.menloFamily.headlineSmall
-                )
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Reshare EdDSA Key",
+                        color = textColor,
+                        style = MaterialTheme.menloFamily.headlineSmall
+                    )
+                    CircularProgressIndicator(
+                        color = MaterialTheme.appColor.neutral0,
+                        modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                    )
+                }
             }
+
             KeygenState.Success -> {
-                // TODO: add animation
+                LaunchedEffect(key1 = viewModel) {
+                    viewModel.saveVault(context)
+                    viewModel.stopService(context)
+                    Thread.sleep(2000) // wait for 2 seconds
+                    navController.navigate(Screen.Home.route)
+                }
                 Text(
                     text = "Keygen Success",
                     color = textColor,
                     style = MaterialTheme.menloFamily.headlineSmall
                 )
             }
+
             KeygenState.ERROR -> {
+                LaunchedEffect(key1 = viewModel) {
+                    // stop the service , restart it when user need it
+                    viewModel.stopService(context)
+                }
                 Text(
                     text = "Keygen Failed",
                     color = textColor,

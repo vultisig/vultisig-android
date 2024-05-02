@@ -1,8 +1,13 @@
 package com.voltix.wallet.presenter.keygen
 
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.voltix.wallet.data.on_board.db.VaultDB
+import com.voltix.wallet.mediator.MediatorService
 import com.voltix.wallet.models.TssAction
 import com.voltix.wallet.models.Vault
 import com.voltix.wallet.tss.LocalStateAccessor
@@ -60,10 +65,10 @@ class GeneratingKeyViewModel(
                 keygenVerifier.markLocalPartyComplete()
                 keygenVerifier.checkCompletedParties()
             }
-            //TODO  save the vault to file
             currentState.value = KeygenState.Success
+            this._messagePuller?.stop()
         } catch (e: Exception) {
-
+            Log.d("GeneratingKeyViewModel", "generateKey error: ${e.stackTraceToString()}")
             errorMessage.value = e.message ?: "Unknown error"
             currentState.value = KeygenState.ERROR
         }
@@ -169,5 +174,18 @@ class GeneratingKeyViewModel(
                 }
             }
         }
+    }
+
+    fun saveVault(context: Context) {
+        val vaultDB = VaultDB(context)
+        vaultDB.upsert(this.vault)
+        Log.d("GeneratingKeyViewModel", "saveVault: success,name:${vault.name}")
+    }
+    fun stopService(context: Context){
+        // start mediator service
+        val intent = Intent(context, MediatorService::class.java)
+        context.stopService(intent)
+        Log.d("KeygenDiscoveryViewModel", "startMediatorService: Mediator service started")
+
     }
 }

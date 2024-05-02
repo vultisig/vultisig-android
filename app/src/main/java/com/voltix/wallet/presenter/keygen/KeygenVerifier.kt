@@ -48,6 +48,7 @@ class KeygenVerifier(
                     }
                 }
             }
+            Thread.sleep(1000)
         }
         return false
     }

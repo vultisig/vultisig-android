@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             OnBoardingComposeTheme {
+                mainViewModel.setData(context)
                 val screen by mainViewModel.startDestination
                 val navController = rememberNavController()
                 SetupNavGraph(navController = navController, startDestination = screen)

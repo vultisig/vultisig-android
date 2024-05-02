@@ -163,6 +163,8 @@ class JoinKeygenViewModel : ViewModel() {
                     currentState.value = JoinKeygenState.Keygen
                     return@withContext
                 }
+                // backoff 1s
+                Thread.sleep(1000)
             }
         }
     }
