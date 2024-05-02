@@ -21,7 +21,7 @@ data class ColorsPalette(
     val darkPurple800: Color = Color.Unspecified,
     val darkPurple500: Color = Color.Unspecified,
 //-------------------------------------------------------
-    val oxfordBlue800: Color = Color.Unspecified,
+    val oxfordBlue800: Color = Color(0xFF02122B),
     val oxfordBlue600Main: Color = Color.Unspecified,
     val oxfordBlue400: Color = Color.Unspecified,
     val oxfordBlue200: Color = Color.Unspecified,

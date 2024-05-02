@@ -15,7 +15,6 @@ import com.voltix.wallet.presenter.keygen.CreateNewVault
 import com.voltix.wallet.presenter.keygen.JoinKeygenView
 import com.voltix.wallet.presenter.keygen.KeygenFlowView
 import com.voltix.wallet.presenter.keygen.Setup
-import com.voltix.wallet.presenter.pair.Pair
 import com.voltix.wallet.presenter.signing_error.SigningError
 import com.voltix.wallet.presenter.welcome.WelcomeScreen
 
@@ -54,10 +53,6 @@ fun SetupNavGraph(
             val allVaults = vaultDB.selectAll()
             // TODO: later on will need to deal with reshare
             KeygenFlowView(navController, Vault("New Vault ${allVaults.size + 1}"))
-        }
-
-        composable(route = Screen.Pair.route) {
-            Pair(navController)
         }
 
         composable(route = Screen.SigningError.route) {
