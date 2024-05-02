@@ -10,8 +10,6 @@ sealed class Screen(val route: String) {
     data object Setup : Screen(route = "setup")
     data object KeygenFlow : Screen(route = "keygen_flow")
 
-    data object Pair : Screen(route = "pair")
-    data object GeneratingKeyGen : Screen(route = "generating_key_gen")
     data object SigningError : Screen(route = "signing_error")
 
 }

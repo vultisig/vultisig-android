@@ -26,7 +26,7 @@ import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
 
 @Composable
-public fun MultiColorButton(
+fun MultiColorButton(
     text: String = "",
     startIcon: Int? = null,
     trailingIcon: Int? = null,
