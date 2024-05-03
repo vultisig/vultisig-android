@@ -4,4 +4,9 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class VoltixApplication : Application()
+class VoltixApplication : Application(){
+    override fun onCreate() {
+        super.onCreate()
+        WalletCoreLoader
+    }
+}
