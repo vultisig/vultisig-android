@@ -11,7 +11,11 @@ import com.voltix.wallet.on_board.OnBoardRepository
 import com.voltix.wallet.presenter.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import java.util.logging.Level
+import java.util.logging.Logger
 import javax.inject.Inject
+
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -24,11 +28,12 @@ class MainViewModel @Inject constructor(
     private val _startDestination: MutableState<String> = mutableStateOf(Screen.Welcome.route)
     val startDestination: State<String> = _startDestination
 
-    fun setData(context: Context){
+    fun setData(context: Context) {
         viewModelScope.launch {
+            Logger.getLogger(OkHttpClient::class.java.name).setLevel(Level.FINE)
             val vaultDB = VaultDB(context)
             val listVaults = vaultDB.selectAll()
-            if(listVaults.isNotEmpty()){
+            if (listVaults.isNotEmpty()) {
                 _startDestination.value = Screen.Home.route
                 return@launch
             }

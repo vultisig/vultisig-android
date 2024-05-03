@@ -55,16 +55,6 @@ class GeneratingKeyViewModel(
             this.tssInstance?.let {
                 keygenWithRetry(it, 1)
             }
-            val keygenVerifier = KeygenVerifier(
-                this.serverAddress,
-                this.sessionId,
-                vault.LocalPartyID,
-                this.keygenCommittee
-            )
-            withContext(Dispatchers.IO) {
-                keygenVerifier.markLocalPartyComplete()
-                keygenVerifier.checkCompletedParties()
-            }
             currentState.value = KeygenState.Success
             this._messagePuller?.stop()
         } catch (e: Exception) {
@@ -119,6 +109,19 @@ class GeneratingKeyViewModel(
                     reshareRequest.newResharePrefix = vault.ResharePrefix
                     val eddsaResp = tssReshare(service, reshareRequest, TssKeyType.EDDSA)
                     vault.PubKeyEDDSA = eddsaResp.pubKey
+                }
+            }
+            // here is the keygen process is done
+            val keygenVerifier = KeygenVerifier(
+                this.serverAddress,
+                this.sessionId,
+                vault.LocalPartyID,
+                this.keygenCommittee
+            )
+            withContext(Dispatchers.IO) {
+                keygenVerifier.markLocalPartyComplete()
+                if (!keygenVerifier.checkCompletedParties()){
+                    throw Exception("another party failed to complete the keygen process")
                 }
             }
         } catch (e: Exception) {

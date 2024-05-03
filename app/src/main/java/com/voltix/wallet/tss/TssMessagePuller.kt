@@ -65,6 +65,10 @@ class TssMessagePuller(
                             }
                             cache.put(key, msg)
                             val decryptedBody = msg.body.Decrypt(hexEncryptionKey)
+                            Log.d(
+                                "TssMessagePuller",
+                                "apply message to TSS: hash: ${msg.hash}, messageID: $key"
+                            )
                             this.service.applyData(decryptedBody)
                             deleteMessageFromServer(msg.hash, messageID)
                         }
@@ -76,7 +80,7 @@ class TssMessagePuller(
                     )
                 }
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("TssMessagePuller", "fail to get messages from server: ${e.stackTraceToString()}")
         }
     }

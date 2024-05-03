@@ -13,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -45,6 +44,7 @@ fun MultiColorButton(
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
+    val emptyClickAction: () -> Unit = {}
     var innerModifier = modifier
     if (borderSize != null)
         innerModifier = innerModifier.then(
@@ -73,12 +73,12 @@ fun MultiColorButton(
                 minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
                 minHeight = minHeight ?: MaterialTheme.dimens.medium2
             )
-            .clickable(onClick = onClick)
+            .clickable(onClick = if (disabled == false) onClick else emptyClickAction)
     ) {
         Icon(
             painter = painterResource(startIcon ?: R.drawable.check),
             contentDescription = null,
-            tint = if (disabled == true && trailingIcon==null) MaterialTheme.appColor.neutral600 else if(disabled == true) MaterialTheme.appColor.neutral800 else iconColor
+            tint = if (disabled == true && trailingIcon == null) MaterialTheme.appColor.neutral600 else if (disabled == true) MaterialTheme.appColor.neutral800 else iconColor
                 ?: MaterialTheme.appColor.turquoise600Main,
             modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
         )
@@ -91,7 +91,7 @@ fun MultiColorButton(
         Icon(
             painter = painterResource(trailingIcon ?: R.drawable.check),
             contentDescription = null,
-            tint = if (disabled == true && trailingIcon==null) MaterialTheme.appColor.neutral600 else if(disabled == true) MaterialTheme.appColor.neutral800 else iconColor
+            tint = if (disabled == true && trailingIcon == null) MaterialTheme.appColor.neutral600 else if (disabled == true) MaterialTheme.appColor.neutral800 else iconColor
                 ?: MaterialTheme.appColor.turquoise600Main,
             modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
         )
