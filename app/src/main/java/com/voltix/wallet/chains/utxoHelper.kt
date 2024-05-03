@@ -56,8 +56,8 @@ class utxoHelper(
             coinType.derivationPath()
         )
         val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val addr = coinType.deriveAddressFromPublicKey(publicKey)
-        return Coins.getCoin(ticker, addr, derivedPublicKey, coinType)
+        val address = coinType.deriveAddressFromPublicKey(publicKey)
+        return Coins.getCoin(ticker, address, derivedPublicKey, coinType)
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
@@ -70,7 +70,7 @@ class utxoHelper(
     @OptIn(ExperimentalStdlibApi::class)
     fun getSigningInputData(
         keysignPayload: KeysignPayload,
-        signingInput: wallet.core.jni.proto.Bitcoin.SigningInput.Builder,
+        signingInput: Bitcoin.SigningInput.Builder,
     ): ByteArray {
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         signingInput.setByteFee(utxo.byteFee.toLong())
@@ -207,7 +207,7 @@ class utxoHelper(
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
         val publicKeys = DataVector()
-        val allSignitures = DataVector()
+        val allSignatures = DataVector()
         for (item in preSigningOutput.hashPublicKeysList) {
             val preImageHash = item.dataHash
             val key = Numeric.toHexString(preImageHash.toByteArray())
@@ -220,7 +220,7 @@ class utxoHelper(
                     Log.d("utxoHelper", "Invalid signature")
                     throw Exception("Invalid signature")
                 }
-                allSignitures.add(it.derSignature.hexToByteArray())
+                allSignatures.add(it.derSignature.hexToByteArray())
                 publicKeys.add(publicKey.data())
             }
         }
@@ -228,7 +228,7 @@ class utxoHelper(
         val compiledWithSignature = TransactionCompiler.compileWithSignatures(
             coinType,
             inputData,
-            allSignitures,
+            allSignatures,
             publicKeys
         )
         val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature)
