@@ -134,6 +134,7 @@ fun KeygenPeerDiscovery(
             textColor = MaterialTheme.appColor.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
             textStyle = MaterialTheme.montserratFamily.titleLarge,
+            disabled = selectionState.size < 2,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(

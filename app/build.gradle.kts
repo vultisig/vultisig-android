@@ -90,4 +90,5 @@ dependencies {
     implementation(libs.core.zxing)
     implementation(libs.zxing.android.embedded)
     implementation(libs.okhttp)
+    implementation(libs.wallet.core)
 }
