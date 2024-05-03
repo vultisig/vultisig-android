@@ -39,7 +39,7 @@ fun QRCodeKeyGenImage(
 ) {
 
     Image(
-        painter = rememberQrBitmapPainter(
+        painter = rememberQRBitmapPainter(
             qrCodeContent = qrCodeContent,
             imageWidthInDp = imageWidthInDp,
             imageHeightInDp = imageHeightInDp
@@ -63,7 +63,7 @@ fun QRCodeKeyGenImage(
 }
 
 @Composable
-fun rememberQrBitmapPainter(
+fun rememberQRBitmapPainter(
     qrCodeContent: String,
     imageWidthInDp: Dp,
     imageHeightInDp: Dp,
@@ -130,6 +130,6 @@ fun rememberQrBitmapPainter(
 
 @Preview
 @Composable
-fun QrCodeKeyGenImagePreview() {
+fun QRCodeKeyGenImagePreview() {
     QRCodeKeyGenImage(qrCodeContent = "")
 }
