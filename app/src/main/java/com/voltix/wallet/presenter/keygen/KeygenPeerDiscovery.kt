@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -48,9 +49,14 @@ fun KeygenPeerDiscovery(
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
     val context = LocalContext.current.applicationContext
-    LaunchedEffect(key1 = viewModel) {
+    LaunchedEffect(Unit) {
         // start mediator server
         viewModel.setData(TssAction.KEYGEN, vault, context)
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopParticipantDiscovery()
+        }
     }
     val textColor = MaterialTheme.appColor.neutral0
     Column(
@@ -134,6 +140,7 @@ fun KeygenPeerDiscovery(
             textColor = MaterialTheme.appColor.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
             textStyle = MaterialTheme.montserratFamily.titleLarge,
+            disabled = selectionState.size < 2,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(

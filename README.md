@@ -2,6 +2,19 @@
 
 voltix android app
 
+## Setup GITHUB personal token
+This project use [Trust Wallet WalletCore](https://github.com/trustwallet/wallet-core), the WalletCore library is host on github , in order for gradle to access it , you need to have a github personal token and then set the following two ENV variables
+You can also add it to your `~/.bashrc` or `~/.zshrc` file, more detail refer to [this guid] (https://developer.trustwallet.com/developer/wallet-core/integration-guide/android-guide)
+```bash
+export GITHUB_USER=your_github_user
+export GITHUB_TOKEN=your_github_token 
+```
+
+[How to get a personal github token?] (https://github.com/settings/tokens)
+
+```bash
+
+
 ## Test keygen with emulator
 
 When keygen started , the main device will start a mediator server on port 18080, in order for your
@@ -27,4 +40,3 @@ socat TCP-LISTEN:18080,bind=192.168.1.35,reuseaddr,fork TCP:localhost:18080
    find address as `10.0.2.16`, need to override it to your host machine's ip , in file https://github.com/voltix-vault/voltix-android/blob/main/app/src/main/java/com/voltix/wallet/presenter/keygen/JoinKeygenViewModel.kt
   
 
-```bash

@@ -59,6 +59,7 @@ class JoinKeygenViewModel : ViewModel() {
             _sessionID,
             _encryptionKeyHex
         )
+
     fun setData(vault: Vault) {
         _vault = vault
         if (_vault.LocalPartyID.isEmpty()) {
@@ -194,7 +195,7 @@ class JoinKeygenViewModel : ViewModel() {
                     }
                 }
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("JoinKeygenViewModel", "Failed to check keygen start: ${e.stackTraceToString()}")
         }
         return false
@@ -218,9 +219,7 @@ class MediatorServiceDiscoveryListener(
         if (service.serviceName == serviceName) {
             Log.d(
                 "JoinKeygenViewModel",
-                "Service found: ${service.serviceName}, address: ${
-                    service.hostAddresses.joinToString(",")
-                }, port:${service.port}"
+                "Service found: ${service.serviceName}"
             )
             nsdManager.resolveService(
                 service,
@@ -232,9 +231,7 @@ class MediatorServiceDiscoveryListener(
     override fun onServiceLost(service: NsdServiceInfo) {
         Log.d(
             "JoinKeygenViewModel",
-            "Service lost: ${service.serviceName}, address: ${
-                service.hostAddresses.joinToString(",")
-            }, port:${service.port}"
+            "Service lost: ${service.serviceName}, port:${service.port}"
         )
     }
 
@@ -264,32 +261,32 @@ class MediatorServiceDiscoveryListener(
     }
 
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
+
         Log.d(
             "JoinKeygenViewModel",
             "Service resolved: ${serviceInfo?.serviceName}, address: ${
-                serviceInfo?.hostAddresses?.joinToString(",")
+                serviceInfo?.host?.address.toString()
             }, port:${serviceInfo?.port}"
         )
         serviceInfo?.let {
-            for (addr in serviceInfo.hostAddresses) {
-                if (addr !is Inet4Address) {
-                    continue
-                }
-
-                if (addr.isLoopbackAddress) {
-                    continue
-                }
-                addr.hostAddress?.let {
-                    // This is a workaround for the emulator
-                    if (it == "10.0.2.16") {
-                        onServerAddressDiscovered("http://192.168.1.35:18080")
-                        return
-                    }
-                    onServerAddressDiscovered("http://${it}:${serviceInfo.port}")
-                }
-
+            val addr = it.host
+            if (addr !is Inet4Address) {
+                return
             }
+            if (addr.isLoopbackAddress) {
+                return
+            }
+            addr.hostAddress?.let {
+                // This is a workaround for the emulator
+                if (it == "10.0.2.16") {
+                    onServerAddressDiscovered("http://192.168.1.35:18080")
+                    return
+                }
+                onServerAddressDiscovered("http://${it}:${serviceInfo.port}")
+            }
+
         }
+
     }
 
 }

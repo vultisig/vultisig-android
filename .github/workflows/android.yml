@@ -23,4 +23,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
+      env:
+        GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
+        GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
       run: ./gradlew build

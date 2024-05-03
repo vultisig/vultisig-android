@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +31,7 @@ import com.voltix.wallet.R
 import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
+import com.voltix.wallet.presenter.common.TopBar
 import com.voltix.wallet.presenter.navigation.Screen
 
 @Composable
@@ -40,16 +42,16 @@ fun CreateNewVault(navController: NavHostController) {
             .fillMaxSize()
             .background(MaterialTheme.appColor.oxfordBlue800)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.question),
-            contentDescription = "question",
-            modifier = Modifier
-                .align(TopEnd)
-                .padding(19.dp)
-        )
+
         Column(
-            modifier = Modifier.align(Center), horizontalAlignment = CenterHorizontally
+            modifier = Modifier.align(Center).fillMaxHeight(),
+            horizontalAlignment = CenterHorizontally
         ) {
+            TopBar(navController = navController,
+                centerText = "",
+                startIcon = R.drawable.caret_left,
+                endIcon = R.drawable.question)
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
             Image(
                 painter = painterResource(id = R.drawable.voltix), contentDescription = "voltix"
             )

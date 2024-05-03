@@ -1,5 +1,6 @@
 package com.voltix.wallet.models
 
+import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -9,7 +10,7 @@ data class Coin(
     val logo: String,
     var address: String,
     val decimal: Int,
-    val HexPublicKey: String,
+    var hexPublicKey: String,
     val feeUnit: String,
     val feeDefault: BigDecimal,
     val priceProviderID: String,
@@ -17,7 +18,31 @@ data class Coin(
     var rawBalance: BigInteger,
     val isNativeToken: Boolean,
     var priceRate: BigDecimal,
-)
+) {
+    val coinType: CoinType
+        get() = when (chain) {
+            Chain.bitcoin -> CoinType.BITCOIN
+            Chain.bitcoinCash -> CoinType.BITCOINCASH
+            Chain.litecoin -> CoinType.LITECOIN
+            Chain.dogecoin -> CoinType.DOGECOIN
+            Chain.dash -> CoinType.DASH
+            Chain.thorChain -> CoinType.THORCHAIN
+            Chain.mayaChain -> CoinType.THORCHAIN
+            Chain.ethereum -> CoinType.ETHEREUM
+            Chain.solana -> CoinType.SOLANA
+            Chain.avalanche -> CoinType.AVALANCHECCHAIN
+            Chain.base -> CoinType.BASE
+            Chain.blast -> CoinType.BLAST
+            Chain.arbitrum -> CoinType.ARBITRUM
+            Chain.polygon -> CoinType.POLYGON
+            Chain.optimism -> CoinType.OPTIMISM
+            Chain.bscChain -> CoinType.SMARTCHAIN
+            Chain.gaiaChain -> CoinType.COSMOS
+            Chain.kujira -> CoinType.KUJIRA
+            Chain.cronosChain -> CoinType.CRONOSCHAIN
+        }
+
+}
 
 object Coins {
     val SupportedCoins = listOf(
@@ -27,7 +52,7 @@ object Coins {
             logo = "btc",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Sats/vbytes",
             feeDefault = BigDecimal(20),
             priceProviderID = "bitcoin",
@@ -42,7 +67,7 @@ object Coins {
             logo = "bch",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Sats/vbytes",
             feeDefault = BigDecimal(20),
             priceProviderID = "bitcoin-cash",
@@ -57,7 +82,7 @@ object Coins {
             logo = "ltc",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Lits/vbytes",
             feeDefault = BigDecimal(1000),
             priceProviderID = "litecoin",
@@ -72,7 +97,7 @@ object Coins {
             logo = "doge",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Doge/vbytes",
             feeDefault = BigDecimal(1000000),
             priceProviderID = "dogecoin",
@@ -87,7 +112,7 @@ object Coins {
             logo = "dash",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Sats/vbytes",
             feeDefault = BigDecimal(20),
             priceProviderID = "dash",
@@ -102,7 +127,7 @@ object Coins {
             logo = "rune",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Rune",
             feeDefault = BigDecimal(0.02),
             priceProviderID = "thorchain",
@@ -117,7 +142,7 @@ object Coins {
             logo = "cacao",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "cacao",
             feeDefault = BigDecimal(0.02),
             priceProviderID = "cacao",
@@ -132,7 +157,7 @@ object Coins {
             logo = "maya",
             address = "",
             decimal = 8,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "cacao",
             feeDefault = BigDecimal(0.02),
             priceProviderID = "maya",
@@ -147,7 +172,7 @@ object Coins {
             logo = "eth",
             address = "",
             decimal = 18,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Gwei",
             feeDefault = BigDecimal(23000),
             priceProviderID = "ethereum",
@@ -162,7 +187,7 @@ object Coins {
             logo = "sol",
             address = "",
             decimal = 9,
-            HexPublicKey = "",
+            hexPublicKey = "",
             feeUnit = "Lamports",
             feeDefault = BigDecimal(7000),
             priceProviderID = "solana",
@@ -172,4 +197,11 @@ object Coins {
             priceRate = BigDecimal.ZERO
         ),
     )
+
+    fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
+        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType}?.apply {
+            this.address = address
+            this.hexPublicKey = hexPublicKey
+        }
+    }
 }
