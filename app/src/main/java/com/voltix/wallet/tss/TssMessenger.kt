@@ -29,6 +29,7 @@ class TssMessenger(
                 this.messageID?.let {
                     request.addHeader("message_id", it)
                 }
+                Log.d("TssMessenger", "sending message from: $from to: $to, hash: ${message.hash}")
                 client.newCall(request.build()).execute().use { response ->
                     if (response.code == 201) {
                         Log.d("TssMessenger", "send message success")
