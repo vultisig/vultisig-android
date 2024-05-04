@@ -1,9 +1,12 @@
 package com.voltix.wallet.models
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 
+@Parcelize
 data class Coin(
     val chain: Chain,
     val ticker: String,
@@ -18,7 +21,7 @@ data class Coin(
     var rawBalance: BigInteger,
     val isNativeToken: Boolean,
     var priceRate: BigDecimal,
-) {
+) : Parcelable{
     val coinType: CoinType
         get() = when (chain) {
             Chain.bitcoin -> CoinType.BITCOIN

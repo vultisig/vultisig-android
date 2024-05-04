@@ -7,23 +7,28 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.asFlow
@@ -48,6 +53,7 @@ fun KeygenPeerDiscovery(
 ) {
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
+    val keygenPayload = viewModel.keygenPayloadState
     val context = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
         // start mediator server
@@ -81,18 +87,21 @@ fun KeygenPeerDiscovery(
             )
         }
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
-
         Text(
             text = "Pair with other devices:",
             color = textColor,
             style = MaterialTheme.montserratFamily.bodyMedium
         )
-        Spacer(modifier = Modifier.weight(1.0f))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         if (viewModel.keygenPayloadState.value.isNotEmpty()) {
             QRCodeKeyGenImage(viewModel.keygenPayloadState.value)
         }
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginExtraLarge))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
+        NetworkPrompts(networkPromptOption = viewModel.networkOption.value) {
+            viewModel.changeNetworkPromptOption(it, context)
+        }
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         if (!participants.isNullOrEmpty()) {
             LazyVerticalGrid(
@@ -153,4 +162,63 @@ fun KeygenPeerDiscovery(
             viewModel.moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
         }
     }
+}
+
+@Composable
+fun NetworkPrompts(
+    networkPromptOption: NetworkPromptOption = NetworkPromptOption.WIFI,
+    onChange: (NetworkPromptOption) -> Unit = {},
+) {
+    Row {
+        FilterChip(selected = networkPromptOption == NetworkPromptOption.WIFI, onClick = {
+            onChange(NetworkPromptOption.WIFI)
+        }, label = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = R.drawable.wifi),
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
+                Text(text = "Wifi")
+            }
+        })
+
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
+
+        FilterChip(
+            selected = networkPromptOption == NetworkPromptOption.HOTSPOT,
+            onClick = { onChange(NetworkPromptOption.HOTSPOT) },
+            label = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_wifi_tethering_24),
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
+                    Text(text = "Hotspot")
+                }
+            })
+
+        Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
+
+        FilterChip(
+            selected = networkPromptOption == NetworkPromptOption.CELLULAR,
+            onClick = { onChange(NetworkPromptOption.CELLULAR) },
+            label = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.baseline_signal_cellular_alt_24),
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
+                    Text(text = "Cellular")
+                }
+            })
+    }
+}
+
+@Preview
+@Composable
+fun PreviewNetworkPrompts() {
+    NetworkPrompts()
 }

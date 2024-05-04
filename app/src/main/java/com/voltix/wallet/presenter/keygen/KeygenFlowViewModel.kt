@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,6 +24,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -55,18 +55,20 @@ class KeygenFlowViewModel @Inject constructor(
     private val _keygenPayload: MutableState<String> = mutableStateOf("")
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
 
+
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
 
     val selection = MutableLiveData<List<String>>()
-    val keygenPayloadState: State<String>
+    val keygenPayloadState: MutableState<String>
         get() = _keygenPayload
 
     val localPartyID: String
-        get() = vault.LocalPartyID
+        get() = vault.localPartyID
     val participants: MutableLiveData<List<String>>
         get() = participantDiscovery?.participants ?: MutableLiveData(listOf())
 
+    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.WIFI)
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
             vault,
@@ -78,27 +80,37 @@ class KeygenFlowViewModel @Inject constructor(
             _encryptionKeyHex
         )
 
-    fun setData(action: TssAction, vault: Vault, context: Context) {
+    suspend fun setData(action: TssAction, vault: Vault, context: Context) {
+        if (voltixRelay.IsRelayEnabled) {
+            serverAddress = Endpoints.VOLTIX_RELAY
+            networkOption.value = NetworkPromptOption.CELLULAR
+        }
         this.action = action
         this.vault = vault
-        if (this.vault.HexChainCode.isEmpty()) {
+        if (this.vault.hexChainCode.isEmpty()) {
             val secureRandom = SecureRandom()
             val randomBytes = ByteArray(32)
             secureRandom.nextBytes(randomBytes)
-            this.vault.HexChainCode = randomBytes.joinToString("") { "%02x".format(it) }
+            this.vault.hexChainCode = randomBytes.joinToString("") { "%02x".format(it) }
         }
-        if (this.vault.LocalPartyID.isEmpty()) {
-            this.vault.LocalPartyID = Utils.deviceName
+        if (this.vault.localPartyID.isEmpty()) {
+            this.vault.localPartyID = Utils.deviceName
         }
-        this.selection.value = listOf(this.vault.LocalPartyID)
+        this.selection.value = listOf(this.vault.localPartyID)
+        updateKeygenPayload(context)
+    }
+
+    private suspend fun updateKeygenPayload(context: Context) {
+        // stop participant discovery
+        stopParticipantDiscovery()
         this.participantDiscovery =
-            ParticipantDiscovery(serverAddress, sessionID, this.vault.LocalPartyID)
+            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID)
         when (action) {
             TssAction.KEYGEN -> {
-                _keygenPayload.value = PeerDiscoveryPayload.Keygen(
+                _keygenPayload.value = "voltix:?type=NewVault&tssType=Keygen&jsonData=" + PeerDiscoveryPayload.Keygen(
                     keygenMessage = KeygenMessage(
                         sessionID = sessionID,
-                        hexChainCode = vault.HexChainCode,
+                        hexChainCode = vault.hexChainCode,
                         serviceName = serviceName,
                         encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
@@ -107,12 +119,12 @@ class KeygenFlowViewModel @Inject constructor(
             }
 
             TssAction.ReShare -> {
-                _keygenPayload.value = PeerDiscoveryPayload.Reshare(
+                _keygenPayload.value = "voltix:?type=NewVault&tssType=Reshare&jsonData="+ PeerDiscoveryPayload.Reshare(
                     reshareMessage = ReshareMessage(
                         sessionID = sessionID,
-                        hexChainCode = vault.HexChainCode,
+                        hexChainCode = vault.hexChainCode,
                         serviceName = serviceName,
-                        pubKeyECDSA = vault.PubKeyECDSA,
+                        pubKeyECDSA = vault.pubKeyECDSA,
                         oldParties = vault.signers,
                         encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
@@ -120,13 +132,16 @@ class KeygenFlowViewModel @Inject constructor(
                 ).toJson()
             }
         }
+
         if (!voltixRelay.IsRelayEnabled)
         // when relay is disabled, start the mediator service
             startMediatorService(context)
         else {
             serverAddress = Endpoints.VOLTIX_RELAY
             // start the session
-            startSession(serverAddress, sessionID, vault.LocalPartyID)
+            withContext(Dispatchers.IO) {
+                startSession(serverAddress, sessionID, vault.localPartyID)
+            }
             // kick off discovery
             participantDiscovery?.discoveryParticipants()
         }
@@ -135,6 +150,7 @@ class KeygenFlowViewModel @Inject constructor(
     fun stopParticipantDiscovery() {
         participantDiscovery?.stop()
     }
+
     @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -143,7 +159,7 @@ class KeygenFlowViewModel @Inject constructor(
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
                     Thread.sleep(1000) // back off a second
-                    startSession(serverAddress, sessionID, vault.LocalPartyID)
+                    startSession(serverAddress, sessionID, vault.localPartyID)
                 }
                 // kick off discovery
                 participantDiscovery?.discoveryParticipants()
@@ -233,6 +249,28 @@ class KeygenFlowViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("KeygenDiscoveryViewModel", "startKeygen: ${e.stackTraceToString()}")
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
+        if (networkOption.value == option) return
+        when (option) {
+            NetworkPromptOption.WIFI, NetworkPromptOption.HOTSPOT -> {
+                voltixRelay.IsRelayEnabled = false
+                serverAddress = "http://127.0.0.1:18080"
+                networkOption.value = option
+            }
+
+            NetworkPromptOption.CELLULAR -> {
+                voltixRelay.IsRelayEnabled = true
+                serverAddress = Endpoints.VOLTIX_RELAY
+                networkOption.value = option
+            }
+        }
+
+        GlobalScope.launch(Dispatchers.IO) {
+            updateKeygenPayload(context)
         }
     }
 }

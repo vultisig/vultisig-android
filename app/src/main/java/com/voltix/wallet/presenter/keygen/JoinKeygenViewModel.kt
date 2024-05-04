@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
+import com.voltix.wallet.common.DeepLinkHelper
 import com.voltix.wallet.common.Endpoints
 import com.voltix.wallet.common.Utils
 import com.voltix.wallet.models.PeerDiscoveryPayload
@@ -62,20 +63,24 @@ class JoinKeygenViewModel : ViewModel() {
 
     fun setData(vault: Vault) {
         _vault = vault
-        if (_vault.LocalPartyID.isEmpty()) {
-            _vault.LocalPartyID = Utils.deviceName
+        if (_vault.localPartyID.isEmpty()) {
+            _vault.localPartyID = Utils.deviceName
         }
-        _localPartyID = _vault.LocalPartyID
+        _localPartyID = _vault.localPartyID
     }
 
     fun setScanResult(content: String) {
         try {
-            when (val payload = PeerDiscoveryPayload.fromJson(content)) {
+            val qrCodeContent = DeepLinkHelper(content).getJsonData(content)
+            qrCodeContent ?: run {
+                throw Exception("invalid QR code")
+            }
+            when (val payload = PeerDiscoveryPayload.fromJson(qrCodeContent)) {
                 is PeerDiscoveryPayload.Keygen -> {
                     this._action = TssAction.KEYGEN
                     this._sessionID = payload.keygenMessage.sessionID
                     this._hexChainCode = payload.keygenMessage.hexChainCode
-                    this._vault.HexChainCode = this._hexChainCode
+                    this._vault.hexChainCode = this._hexChainCode
                     this._serviceName = payload.keygenMessage.serviceName
                     this._useVoltixRelay = payload.keygenMessage.useVoltixRelay
                     this._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
@@ -85,15 +90,15 @@ class JoinKeygenViewModel : ViewModel() {
                     this._action = TssAction.ReShare
                     this._sessionID = payload.reshareMessage.sessionID
                     this._hexChainCode = payload.reshareMessage.hexChainCode
-                    this._vault.HexChainCode = this._hexChainCode
+                    this._vault.hexChainCode = this._hexChainCode
                     this._serviceName = payload.reshareMessage.serviceName
                     this._useVoltixRelay = payload.reshareMessage.useVoltixRelay
                     this._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
                     this._oldCommittee = payload.reshareMessage.oldParties
-                    if (_vault.PubKeyECDSA.isEmpty()) {
-                        _vault.HexChainCode = payload.reshareMessage.hexChainCode
+                    if (_vault.pubKeyECDSA.isEmpty()) {
+                        _vault.hexChainCode = payload.reshareMessage.hexChainCode
                     } else {
-                        if (_vault.PubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
+                        if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                             errorMessage.value = "Wrong vault"
                             currentState.value = JoinKeygenState.FailedToStart
                         }
@@ -173,6 +178,7 @@ class JoinKeygenViewModel : ViewModel() {
     private fun checkKeygenStarted(): Boolean {
         try {
             val serverURL = "$_serverAddress/start/$_sessionID"
+            Log.d("JoinKeygenViewModel", "Checking keygen start at $serverURL")
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
             val request = okhttp3.Request.Builder().url(serverURL).get().build()
             client.newCall(request).execute().use { response ->
@@ -183,7 +189,9 @@ class JoinKeygenViewModel : ViewModel() {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
                             this._keygenCommittee = Gson().fromJson(result, tokenType)
-                            return true
+                            if (this._keygenCommittee.contains(_localPartyID)) {
+                                return true
+                            }
                         }
                     }
 

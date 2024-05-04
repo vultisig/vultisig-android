@@ -71,7 +71,7 @@ class GeneratingKeyViewModel(
                 service,
                 this.encryptionKeyHex,
                 serverAddress,
-                vault.LocalPartyID,
+                vault.localPartyID,
                 sessionId
             )
             _messagePuller?.pullMessages(null)
@@ -80,42 +80,42 @@ class GeneratingKeyViewModel(
                     // generate ECDSA
                     currentState.value = KeygenState.KeygenECDSA
                     val keygenRequest = tss.KeygenRequest()
-                    keygenRequest.localPartyID = vault.LocalPartyID
+                    keygenRequest.localPartyID = vault.localPartyID
                     keygenRequest.allParties = keygenCommittee.joinToString(",")
-                    keygenRequest.chainCodeHex = vault.HexChainCode
+                    keygenRequest.chainCodeHex = vault.hexChainCode
                     val ecdsaResp = tssKeygen(service, keygenRequest, TssKeyType.ECDSA)
-                    vault.PubKeyECDSA = ecdsaResp.pubKey
+                    vault.pubKeyECDSA = ecdsaResp.pubKey
                     Thread.sleep(1000) // backoff for 1 second
                     currentState.value = KeygenState.KeygenEdDSA
                     val eddsaResp = tssKeygen(service, keygenRequest, TssKeyType.EDDSA)
-                    vault.PubKeyEDDSA = eddsaResp.pubKey
+                    vault.pubKeyEDDSA = eddsaResp.pubKey
                 }
 
                 TssAction.ReShare -> {
                     currentState.value = KeygenState.ReshareECDSA
                     val reshareRequest = tss.ReshareRequest()
-                    reshareRequest.localPartyID = vault.LocalPartyID
-                    reshareRequest.pubKey = vault.PubKeyECDSA
+                    reshareRequest.localPartyID = vault.localPartyID
+                    reshareRequest.pubKey = vault.pubKeyECDSA
                     reshareRequest.oldParties = oldCommittee.joinToString(",")
                     reshareRequest.newParties = keygenCommittee.joinToString(",")
-                    reshareRequest.resharePrefix = vault.ResharePrefix
-                    reshareRequest.chainCodeHex = vault.HexChainCode
+                    reshareRequest.resharePrefix = vault.resharePrefix
+                    reshareRequest.chainCodeHex = vault.hexChainCode
                     val ecdsaResp = tssReshare(service, reshareRequest, TssKeyType.ECDSA)
-                    vault.PubKeyECDSA = ecdsaResp.pubKey
-                    vault.ResharePrefix = ecdsaResp.resharePrefix
+                    vault.pubKeyECDSA = ecdsaResp.pubKey
+                    vault.resharePrefix = ecdsaResp.resharePrefix
                     currentState.value = KeygenState.ReshareEdDSA
                     Thread.sleep(1000) // backoff for 1 second
-                    reshareRequest.pubKey = vault.PubKeyEDDSA
-                    reshareRequest.newResharePrefix = vault.ResharePrefix
+                    reshareRequest.pubKey = vault.pubKeyEDDSA
+                    reshareRequest.newResharePrefix = vault.resharePrefix
                     val eddsaResp = tssReshare(service, reshareRequest, TssKeyType.EDDSA)
-                    vault.PubKeyEDDSA = eddsaResp.pubKey
+                    vault.pubKeyEDDSA = eddsaResp.pubKey
                 }
             }
             // here is the keygen process is done
             val keygenVerifier = KeygenVerifier(
                 this.serverAddress,
                 this.sessionId,
-                vault.LocalPartyID,
+                vault.localPartyID,
                 this.keygenCommittee
             )
             withContext(Dispatchers.IO) {
