@@ -62,10 +62,10 @@ class JoinKeygenViewModel : ViewModel() {
 
     fun setData(vault: Vault) {
         _vault = vault
-        if (_vault.LocalPartyID.isEmpty()) {
-            _vault.LocalPartyID = Utils.deviceName
+        if (_vault.localPartyID.isEmpty()) {
+            _vault.localPartyID = Utils.deviceName
         }
-        _localPartyID = _vault.LocalPartyID
+        _localPartyID = _vault.localPartyID
     }
 
     fun setScanResult(content: String) {
@@ -75,7 +75,7 @@ class JoinKeygenViewModel : ViewModel() {
                     this._action = TssAction.KEYGEN
                     this._sessionID = payload.keygenMessage.sessionID
                     this._hexChainCode = payload.keygenMessage.hexChainCode
-                    this._vault.HexChainCode = this._hexChainCode
+                    this._vault.hexChainCode = this._hexChainCode
                     this._serviceName = payload.keygenMessage.serviceName
                     this._useVoltixRelay = payload.keygenMessage.useVoltixRelay
                     this._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
@@ -85,15 +85,15 @@ class JoinKeygenViewModel : ViewModel() {
                     this._action = TssAction.ReShare
                     this._sessionID = payload.reshareMessage.sessionID
                     this._hexChainCode = payload.reshareMessage.hexChainCode
-                    this._vault.HexChainCode = this._hexChainCode
+                    this._vault.hexChainCode = this._hexChainCode
                     this._serviceName = payload.reshareMessage.serviceName
                     this._useVoltixRelay = payload.reshareMessage.useVoltixRelay
                     this._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
                     this._oldCommittee = payload.reshareMessage.oldParties
-                    if (_vault.PubKeyECDSA.isEmpty()) {
-                        _vault.HexChainCode = payload.reshareMessage.hexChainCode
+                    if (_vault.pubKeyECDSA.isEmpty()) {
+                        _vault.hexChainCode = payload.reshareMessage.hexChainCode
                     } else {
-                        if (_vault.PubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
+                        if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                             errorMessage.value = "Wrong vault"
                             currentState.value = JoinKeygenState.FailedToStart
                         }

@@ -1,13 +1,16 @@
 package com.voltix.wallet.presenter.keysign
 
+import android.os.Parcelable
 import com.voltix.wallet.chains.UtxoInfo
 import com.voltix.wallet.models.Coin
 import com.voltix.wallet.models.ERC20ApprovePayload
 import com.voltix.wallet.models.THORChainSwapPayload
 import com.voltix.wallet.models.Vault
+import kotlinx.parcelize.Parcelize
 import java.math.BigInteger
 
-sealed class BlockChainSpecific {
+@Parcelize
+sealed class BlockChainSpecific:Parcelable {
     data class UTXO(val byteFee: BigInteger, val utxoes: List<UtxoInfo>) : BlockChainSpecific()
     data class Ethereum(
         val maxFeePerGasWei: BigInteger,
@@ -42,6 +45,7 @@ sealed class BlockChainSpecific {
     ) : BlockChainSpecific()
 }
 
+@Parcelize
 data class KeysignPayload(
     val coin: Coin,
     val toAddress: String,
@@ -51,7 +55,7 @@ data class KeysignPayload(
     val swapPayload: THORChainSwapPayload?,
     val approvePayload: ERC20ApprovePayload?,
     val vaultPublicKeyECDSA: String,
-) {
+) : Parcelable {
 
     fun getKeysignMessages(vault: Vault): List<String> {
         throw Exception("Not implemented")

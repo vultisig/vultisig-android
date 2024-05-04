@@ -63,7 +63,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Creating TSS Instance",
+                        text = "PREPARING VAULT....",
                         color = textColor,
                         style = MaterialTheme.menloFamily.headlineSmall
                     )
@@ -81,7 +81,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Generating ECDSA Key",
+                        text = "GENERATING ECDSA KEY",
                         color = textColor,
                         style = MaterialTheme.menloFamily.headlineSmall
                     )
@@ -99,7 +99,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Generating EdDSA key",
+                        text = "GENERATING EdDSA KEY",
                         color = textColor,
                         style = MaterialTheme.menloFamily.headlineSmall
                     )
@@ -117,7 +117,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Reshare ECDSA Key",
+                        text = "RESHARING ECDSA Key",
                         color = textColor,
                         style = MaterialTheme.menloFamily.headlineSmall
                     )
@@ -135,7 +135,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Reshare EdDSA Key",
+                        text = "RESHARING EdDSA Key",
                         color = textColor,
                         style = MaterialTheme.menloFamily.headlineSmall
                     )

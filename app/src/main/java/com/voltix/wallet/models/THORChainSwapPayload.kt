@@ -1,8 +1,11 @@
 package com.voltix.wallet.models
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import wallet.core.jni.proto.THORChainSwap.Asset
 import java.math.BigInteger
 
+@Parcelize
 data class THORChainSwapPayload(
     val fromAddress: String,
     val fromCoin: Coin,
@@ -15,7 +18,7 @@ data class THORChainSwapPayload(
     val steamingInterval: String,
     val streamingQuantity: String,
     val expirationTime: ULong,
-) {
+) : Parcelable{
     val toAddress: String
         get() = toCoin.address
 

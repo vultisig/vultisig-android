@@ -30,8 +30,8 @@ class utxoHelper(
                 Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> {
                     return utxoHelper(
                         coinType = CoinType.valueOf(coin.chain.name.uppercase()),
-                        vaultHexPublicKey = vault.PubKeyECDSA,
-                        vaultHexChainCode = vault.HexChainCode
+                        vaultHexPublicKey = vault.pubKeyECDSA,
+                        vaultHexChainCode = vault.hexChainCode
                     )
                 }
 

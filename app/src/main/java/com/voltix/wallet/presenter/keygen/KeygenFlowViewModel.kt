@@ -63,7 +63,7 @@ class KeygenFlowViewModel @Inject constructor(
         get() = _keygenPayload
 
     val localPartyID: String
-        get() = vault.LocalPartyID
+        get() = vault.localPartyID
     val participants: MutableLiveData<List<String>>
         get() = participantDiscovery?.participants ?: MutableLiveData(listOf())
 
@@ -81,24 +81,24 @@ class KeygenFlowViewModel @Inject constructor(
     fun setData(action: TssAction, vault: Vault, context: Context) {
         this.action = action
         this.vault = vault
-        if (this.vault.HexChainCode.isEmpty()) {
+        if (this.vault.hexChainCode.isEmpty()) {
             val secureRandom = SecureRandom()
             val randomBytes = ByteArray(32)
             secureRandom.nextBytes(randomBytes)
-            this.vault.HexChainCode = randomBytes.joinToString("") { "%02x".format(it) }
+            this.vault.hexChainCode = randomBytes.joinToString("") { "%02x".format(it) }
         }
-        if (this.vault.LocalPartyID.isEmpty()) {
-            this.vault.LocalPartyID = Utils.deviceName
+        if (this.vault.localPartyID.isEmpty()) {
+            this.vault.localPartyID = Utils.deviceName
         }
-        this.selection.value = listOf(this.vault.LocalPartyID)
+        this.selection.value = listOf(this.vault.localPartyID)
         this.participantDiscovery =
-            ParticipantDiscovery(serverAddress, sessionID, this.vault.LocalPartyID)
+            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID)
         when (action) {
             TssAction.KEYGEN -> {
                 _keygenPayload.value = PeerDiscoveryPayload.Keygen(
                     keygenMessage = KeygenMessage(
                         sessionID = sessionID,
-                        hexChainCode = vault.HexChainCode,
+                        hexChainCode = vault.hexChainCode,
                         serviceName = serviceName,
                         encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
@@ -110,9 +110,9 @@ class KeygenFlowViewModel @Inject constructor(
                 _keygenPayload.value = PeerDiscoveryPayload.Reshare(
                     reshareMessage = ReshareMessage(
                         sessionID = sessionID,
-                        hexChainCode = vault.HexChainCode,
+                        hexChainCode = vault.hexChainCode,
                         serviceName = serviceName,
-                        pubKeyECDSA = vault.PubKeyECDSA,
+                        pubKeyECDSA = vault.pubKeyECDSA,
                         oldParties = vault.signers,
                         encryptionKeyHex = this._encryptionKeyHex,
                         useVoltixRelay = voltixRelay.IsRelayEnabled
@@ -126,7 +126,7 @@ class KeygenFlowViewModel @Inject constructor(
         else {
             serverAddress = Endpoints.VOLTIX_RELAY
             // start the session
-            startSession(serverAddress, sessionID, vault.LocalPartyID)
+            startSession(serverAddress, sessionID, vault.localPartyID)
             // kick off discovery
             participantDiscovery?.discoveryParticipants()
         }
@@ -143,7 +143,7 @@ class KeygenFlowViewModel @Inject constructor(
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
                     Thread.sleep(1000) // back off a second
-                    startSession(serverAddress, sessionID, vault.LocalPartyID)
+                    startSession(serverAddress, sessionID, vault.localPartyID)
                 }
                 // kick off discovery
                 participantDiscovery?.discoveryParticipants()
