@@ -107,7 +107,7 @@ class KeygenFlowViewModel @Inject constructor(
             ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID)
         when (action) {
             TssAction.KEYGEN -> {
-                _keygenPayload.value = PeerDiscoveryPayload.Keygen(
+                _keygenPayload.value = "voltix:?type=NewVault&tssType=Keygen&jsonData=" + PeerDiscoveryPayload.Keygen(
                     keygenMessage = KeygenMessage(
                         sessionID = sessionID,
                         hexChainCode = vault.hexChainCode,
@@ -119,7 +119,7 @@ class KeygenFlowViewModel @Inject constructor(
             }
 
             TssAction.ReShare -> {
-                _keygenPayload.value = PeerDiscoveryPayload.Reshare(
+                _keygenPayload.value = "voltix:?type=NewVault&tssType=Reshare&jsonData="+ PeerDiscoveryPayload.Reshare(
                     reshareMessage = ReshareMessage(
                         sessionID = sessionID,
                         hexChainCode = vault.hexChainCode,

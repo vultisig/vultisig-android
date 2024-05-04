@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
+import com.voltix.wallet.common.DeepLinkHelper
 import com.voltix.wallet.common.Endpoints
 import com.voltix.wallet.common.Utils
 import com.voltix.wallet.models.PeerDiscoveryPayload
@@ -70,7 +71,11 @@ class JoinKeygenViewModel : ViewModel() {
 
     fun setScanResult(content: String) {
         try {
-            when (val payload = PeerDiscoveryPayload.fromJson(content)) {
+            val qrCodeContent = DeepLinkHelper(content).getJsonData(content)
+            qrCodeContent ?: run {
+                throw Exception("invalid QR code")
+            }
+            when (val payload = PeerDiscoveryPayload.fromJson(qrCodeContent)) {
                 is PeerDiscoveryPayload.Keygen -> {
                     this._action = TssAction.KEYGEN
                     this._sessionID = payload.keygenMessage.sessionID
@@ -184,7 +189,7 @@ class JoinKeygenViewModel : ViewModel() {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
                             this._keygenCommittee = Gson().fromJson(result, tokenType)
-                            if(this._keygenCommittee.contains(_localPartyID)) {
+                            if (this._keygenCommittee.contains(_localPartyID)) {
                                 return true
                             }
                         }
