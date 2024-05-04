@@ -173,6 +173,7 @@ class JoinKeygenViewModel : ViewModel() {
     private fun checkKeygenStarted(): Boolean {
         try {
             val serverURL = "$_serverAddress/start/$_sessionID"
+            Log.d("JoinKeygenViewModel", "Checking keygen start at $serverURL")
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
             val request = okhttp3.Request.Builder().url(serverURL).get().build()
             client.newCall(request).execute().use { response ->
@@ -183,7 +184,9 @@ class JoinKeygenViewModel : ViewModel() {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
                             this._keygenCommittee = Gson().fromJson(result, tokenType)
-                            return true
+                            if(this._keygenCommittee.contains(_localPartyID)) {
+                                return true
+                            }
                         }
                     }
 
