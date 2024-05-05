@@ -30,10 +30,20 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Handle local urls starting with "vultisig://vultisig.com" -->
+                <data android:scheme="vultisig"
+                    android:host="vultisig.com" />
+
+            </intent-filter>
         </activity>
         <service
             android:name=".mediator.MediatorService"
             android:enabled="true" />
+
 
     </application>
 

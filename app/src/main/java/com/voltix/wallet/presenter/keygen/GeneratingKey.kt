@@ -1,17 +1,16 @@
 package com.voltix.wallet.presenter.keygen
 
 import android.content.Context
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -54,160 +54,137 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
             )
     ) {
         TopBar(centerText = "Keygen", navController = navController)
-        Box {
-            Column (horizontalAlignment = CenterHorizontally
-            ){
-                Spacer(modifier = Modifier.weight(1.0f))
-                when (viewModel.currentState.value) {
-                    KeygenState.CreatingInstance -> {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "PREPARING VAULT....",
-                                color = textColor,
-                                style = MaterialTheme.menloFamily.headlineSmall
-                            )
-                            CircularProgressIndicator(
-                                color = MaterialTheme.appColor.neutral0,
-                                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                            )
-                        }
-                    }
 
-                    KeygenState.KeygenECDSA -> {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "GENERATING ECDSA KEY",
-                                color = textColor,
-                                style = MaterialTheme.menloFamily.headlineSmall
-                            )
-                            CircularProgressIndicator(
-                                color = MaterialTheme.appColor.neutral0,
-                                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                            )
-                        }
-                    }
 
-                    KeygenState.KeygenEdDSA -> {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "GENERATING EdDSA KEY",
-                                color = textColor,
-                                style = MaterialTheme.menloFamily.headlineSmall
-                            )
-                            CircularProgressIndicator(
-                                color = MaterialTheme.appColor.neutral0,
-                                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                            )
-                        }
-                    }
-
-                    KeygenState.ReshareECDSA -> {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "RESHARING ECDSA Key",
-                                color = textColor,
-                                style = MaterialTheme.menloFamily.headlineSmall
-                            )
-                            CircularProgressIndicator(
-                                color = MaterialTheme.appColor.neutral0,
-                                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                            )
-                        }
-                    }
-
-                    KeygenState.ReshareEdDSA -> {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "RESHARING EdDSA Key",
-                                color = textColor,
-                                style = MaterialTheme.menloFamily.headlineSmall
-                            )
-                            CircularProgressIndicator(
-                                color = MaterialTheme.appColor.neutral0,
-                                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-                            )
-                        }
-                    }
-
-                    KeygenState.Success -> {
-                        LaunchedEffect(key1 = viewModel) {
-                            viewModel.saveVault(context)
-                            viewModel.stopService(context)
-                            Thread.sleep(2000) // wait for 2 seconds
-                            navController.navigate(Screen.Home.route)
-                        }
-                        Text(
-                            text = "Keygen Success",
-                            color = textColor,
-                            style = MaterialTheme.menloFamily.headlineSmall
-                        )
-                    }
-
-                    KeygenState.ERROR -> {
-                        LaunchedEffect(key1 = viewModel) {
-                            // stop the service , restart it when user need it
-                            viewModel.stopService(context)
-                        }
-                        Text(
-                            text = "Keygen Failed",
-                            color = textColor,
-                            style = MaterialTheme.menloFamily.headlineSmall
-                        )
-                        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-                        Text(
-                            text = viewModel.errorMessage.value,
-                            color = textColor,
-                            style = MaterialTheme.menloFamily.bodyMedium
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-                Image(
-                    painterResource(id = R.drawable.generating),
-                    contentDescription = null,
-                    modifier = Modifier.size(100.dp)
+        when (viewModel.currentState.value) {
+            KeygenState.CreatingInstance -> {
+                KeygenIndicator(
+                    statusText = "PREPARING VAULT",
+                    progress = 0.25F,
+                    modifier = Modifier.fillMaxSize()
                 )
+            }
 
-                Spacer(modifier = Modifier.weight(1.0f))
+            KeygenState.KeygenECDSA -> {
+                KeygenIndicator(
+                    statusText = "GENERATING ECDSA KEY",
+                    progress = 0.5F,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-                Icon(
-                    painter = painterResource(id = R.drawable.wifi),
-                    contentDescription = null,
-                    tint = MaterialTheme.appColor.neutral0
+            KeygenState.KeygenEdDSA -> {
+                KeygenIndicator(
+                    statusText = "GENERATING EdDSA KEY",
+                    progress = 0.7F,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            KeygenState.ReshareECDSA -> {
+                KeygenIndicator(
+                    statusText = "RESHARING ECDSA Key",
+                    progress = 0.5F,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            KeygenState.ReshareEdDSA -> {
+                KeygenIndicator(
+                    statusText = "RESHARING EdDSA Key",
+                    progress = 0.75F,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            KeygenState.Success -> {
+                LaunchedEffect(key1 = viewModel) {
+                    viewModel.saveVault(context)
+                    viewModel.stopService(context)
+                    Thread.sleep(2000) // wait for 2 seconds
+                    navController.navigate(Screen.Home.route)
+                }
+                // TODO: play an animation
+                KeygenIndicator(
+                    statusText = "SUCCESS",
+                    progress = 1.0F,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            KeygenState.ERROR -> {
+                LaunchedEffect(key1 = viewModel) {
+                    // stop the service , restart it when user need it
+                    viewModel.stopService(context)
+                }
+                Text(
+                    text = "Keygen Failed",
+                    color = textColor,
+                    style = MaterialTheme.menloFamily.headlineSmall
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
                 Text(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-                    text = "Keep devices on the same WiFi Network with VOLTIX open.",
+                    text = viewModel.errorMessage.value,
                     color = textColor,
-                    style = MaterialTheme.menloFamily.headlineSmall.copy(
-                        textAlign = TextAlign.Center, fontSize = 13.sp
-                    ),
+                    style = MaterialTheme.menloFamily.bodyMedium
                 )
-
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
             }
         }
+
+        Spacer(modifier = Modifier.weight(1.0f))
+
+        Icon(
+            painter = painterResource(id = R.drawable.wifi),
+            contentDescription = null,
+            tint = MaterialTheme.appColor.neutral0
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+        Text(
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
+            text = "Keep devices on the same WiFi Network with VOLTIX open.",
+            color = textColor,
+            style = MaterialTheme.menloFamily.headlineSmall.copy(
+                textAlign = TextAlign.Center, fontSize = 13.sp
+            ),
+        )
+
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
     }
+}
+
+
+@Composable
+fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.fillMaxSize()
+    ) {
+        Text(
+            text = statusText,
+            modifier = Modifier.align(Alignment.Center),
+            color = MaterialTheme.appColor.neutral0
+        )
+        Column(
+            verticalArrangement = Arrangement.Center,
+            modifier = modifier.fillMaxSize()
+        ) {
+
+            CircularProgressIndicator(
+                progress = { progress },
+                strokeWidth = 16.dp,
+                color = MaterialTheme.appColor.turquoise600Main,
+                trackColor = MaterialTheme.appColor.oxfordBlue600Main,
+                modifier = modifier
+                    .padding(MaterialTheme.dimens.marginMedium)
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun GeneratingKeyPreview() {
+    KeygenIndicator("Generating ECDSA Key", 0.5f, Modifier.fillMaxSize())
 }

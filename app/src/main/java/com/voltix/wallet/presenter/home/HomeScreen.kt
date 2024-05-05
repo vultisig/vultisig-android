@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +38,7 @@ import com.voltix.wallet.app.ui.theme.appColor
 import com.voltix.wallet.app.ui.theme.dimens
 import com.voltix.wallet.app.ui.theme.montserratFamily
 import com.voltix.wallet.presenter.navigation.Screen
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
@@ -53,13 +55,52 @@ fun HomeScreen(navController: NavHostController) {
             .fillMaxSize()
             .background(MaterialTheme.appColor.oxfordBlue800)
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Scaffold(
+            topBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .background(MaterialTheme.appColor.oxfordBlue800),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(modifier = Modifier.padding(MaterialTheme.dimens.marginMedium))
+                    Text(
+                        text = "Vaults",
+                        style = MaterialTheme.montserratFamily.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor,
+                        fontSize = 24.sp,
+                        modifier = Modifier
+                            .padding(
+                                start = MaterialTheme.dimens.marginMedium,
+                                end = MaterialTheme.dimens.marginMedium,
+                            )
+                            .wrapContentHeight(align = Alignment.CenterVertically)
+                    )
+                }
+            },
+            bottomBar = {
+                MultiColorButton(
+                    text = "+ Add New Vault",
+                    minHeight = MaterialTheme.dimens.minHeightButton,
+                    backgroundColor = MaterialTheme.appColor.turquoise800,
+                    textColor = MaterialTheme.appColor.oxfordBlue800,
+                    iconColor = MaterialTheme.appColor.turquoise800,
+                    textStyle = MaterialTheme.montserratFamily.titleLarge,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = MaterialTheme.dimens.marginMedium,
+                            end = MaterialTheme.dimens.marginMedium,
+                            bottom = MaterialTheme.dimens.marginMedium,
+                        )
+                ) {
+                    navController.navigate(route = Screen.CreateNewVault.route)
+                }
+            }
         ) {
-            LazyColumn() {
+            LazyColumn(modifier= Modifier.padding(it)) {
                 items(vaults) {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.appColor.oxfordBlue400),
@@ -93,7 +134,6 @@ fun HomeScreen(navController: NavHostController) {
                             Image(
                                 painter = painterResource(R.drawable.caret_right),
                                 contentDescription = null,
-
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
                                     .padding(end = MaterialTheme.dimens.marginMedium)
@@ -103,25 +143,6 @@ fun HomeScreen(navController: NavHostController) {
                     }
                 }
             }
-            Spacer(modifier = Modifier.padding(MaterialTheme.dimens.marginMedium))
-            MultiColorButton(
-                text = "+ Add New Vault",
-                minHeight = MaterialTheme.dimens.minHeightButton,
-                backgroundColor = MaterialTheme.appColor.turquoise800,
-                textColor = MaterialTheme.appColor.oxfordBlue800,
-                iconColor = MaterialTheme.appColor.turquoise800,
-                textStyle = MaterialTheme.montserratFamily.titleLarge,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = MaterialTheme.dimens.marginMedium,
-                        end = MaterialTheme.dimens.marginMedium,
-                        bottom = MaterialTheme.dimens.marginMedium,
-                    )
-            ) {
-                navController.navigate(route = Screen.CreateNewVault.route)
-            }
-
         }
     }
 }
