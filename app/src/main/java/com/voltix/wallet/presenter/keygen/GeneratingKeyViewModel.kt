@@ -44,6 +44,8 @@ class GeneratingKeyViewModel(
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableState<KeygenState> = mutableStateOf(KeygenState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
+    val statusMessage: MutableState<String> = mutableStateOf("")
+    val progress: MutableState<Float> = mutableStateOf(0.0F)
     private var _messagePuller: TssMessagePuller? = null
     suspend fun generateKey() {
         currentState.value = KeygenState.CreatingInstance

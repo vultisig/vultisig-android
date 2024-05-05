@@ -37,7 +37,7 @@ val CompactSmallDimens = Dimens(
     logoSize = 36.dp,
     minWidth = 170.dp,
     buttonMargin = 30.dp,
-    minHeightButton = 40.dp,
+    minHeightButton = 44.dp,
 
 
     marginExtraSmall = 4.dp,
