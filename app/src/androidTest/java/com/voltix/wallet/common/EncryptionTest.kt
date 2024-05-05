@@ -1,4 +1,4 @@
-package com.voltix.wallet.common
+package com.vultisig.wallet.common
 
 import android.util.Log
 import org.junit.Test

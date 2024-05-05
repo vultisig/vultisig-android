@@ -27,6 +27,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Voltix"
+rootProject.name = "vultisig"
 include(":app")
  

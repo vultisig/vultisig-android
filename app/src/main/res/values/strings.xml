@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Voltix</string>
+    <string name="app_name">Vultisig</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
