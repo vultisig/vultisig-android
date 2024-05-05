@@ -6,11 +6,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.parcelize")
 }
 android {
-    namespace = "com.voltix.wallet"
+    namespace = "com.vultisig.wallet"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.voltix.wallet"
+        applicationId = "com.vultisig.wallet"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

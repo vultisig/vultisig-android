@@ -1,4 +1,4 @@
-package com.voltix.wallet
+package com.vultisig.wallet
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

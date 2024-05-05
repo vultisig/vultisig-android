@@ -1,12 +1,12 @@
-package com.voltix.wallet.common
+package com.vultisig.wallet.common
 
-import com.voltix.wallet.models.TssAction
+import com.vultisig.wallet.models.TssAction
 import org.junit.jupiter.api.Assertions.*
 
 import org.junit.Test
 
 class DeepLinkHelperTest {
-    private val testInput = "voltix:?type=NewVault&tssType=Reshare&jsonData=xxx"
+    private val testInput = "vultisig:?type=NewVault&tssType=Reshare&jsonData=xxx"
     @Test
     fun getJsonData() {
         val deepLinkHelper = DeepLinkHelper(testInput)

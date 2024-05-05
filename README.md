@@ -1,6 +1,6 @@
-# voltix-android
+# vultisig-android
 
-voltix android app
+vultisig android app
 
 ## Setup GITHUB personal token
 This project use [Trust Wallet WalletCore](https://github.com/trustwallet/wallet-core), the WalletCore library is host on github , in order for gradle to access it , you need to have a github personal token and then set the following two ENV variables
@@ -37,6 +37,6 @@ socat TCP-LISTEN:18080,bind=192.168.1.35,reuseaddr,fork TCP:localhost:18080
 
 3. Override service discovery address, when mediator start the service , it register itself, however
    the Ip it register is the emulator's local ip, which is `10.0.2.16`, so the pair device will only 
-   find address as `10.0.2.16`, need to override it to your host machine's ip , in file https://github.com/voltix-vault/voltix-android/blob/main/app/src/main/java/com/voltix/wallet/presenter/keygen/JoinKeygenViewModel.kt
+   find address as `10.0.2.16`, need to override it to your host machine's ip , in file https://github.com/vultisig-vault/vultisig-android/blob/main/app/src/main/java/com/vultisig/wallet/presenter/keygen/JoinKeygenViewModel.kt
   
 
