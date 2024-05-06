@@ -10,6 +10,7 @@ sealed class Screen(val route: String) {
     data object Setup : Screen(route = "setup")
     data object KeygenFlow : Screen(route = "keygen_flow")
     data object SigningError : Screen(route = "signing_error")
+    data object VaultListAndDetailsList : Screen(route = "vault_list_and_details_list")
     data object VaultDetail: Screen(route = "vault_detail/{vault_name}"){
         fun createRoute(vaultName: String): String {
             return "vault_detail/$vaultName"

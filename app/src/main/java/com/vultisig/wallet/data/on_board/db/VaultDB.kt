@@ -4,8 +4,11 @@ import com.vultisig.wallet.models.Vault
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import dagger.hilt.android.HiltAndroidApp
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-class VaultDB(private val context: Context) {
+class VaultDB @Inject constructor (@ApplicationContext private  val  context : Context) {
 
     private val gson = Gson()
     private val vaultsFolder = context.filesDir.resolve("vaults")

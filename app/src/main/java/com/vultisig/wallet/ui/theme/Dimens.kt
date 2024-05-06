@@ -17,12 +17,17 @@ data class Dimens(
     val minWidth: Dp = 0.dp,
     val buttonMargin: Dp = 0.dp,
     val minHeightButton: Dp = 0.dp,
-    val marginExtraSmall: Dp = 0.dp,
-    val marginSmall: Dp = 0.dp,
-    val marginMedium: Dp = 0.dp,
-    val marginLarge: Dp = 0.dp,
-    val marginExtraLarge: Dp = 0.dp,
-)
+    val marginExtraSmall:Dp = 0.dp,
+    val marginSmall:Dp = 0.dp,
+    val marginMedium:Dp = 0.dp,
+    val marginLarge:Dp = 0.dp,
+    val marginExtraLarge:Dp = 0.dp,
+    val qrWidthAndHeight :Dp = 0.dp,
+    val circularListIcon :Dp = 0.dp,
+    val circularMedium1 :Dp = 0.dp,
+    val pencilListIcon :Dp = 0.dp,
+
+    )
 
 val CompactSmallDimens = Dimens(
     extraSmall = 1.dp,
@@ -45,6 +50,11 @@ val CompactSmallDimens = Dimens(
     marginMedium = 12.dp,
     marginLarge = 16.dp,
     marginExtraLarge = 24.dp,
+    qrWidthAndHeight = 200.dp,
+    circularListIcon = 40.dp,
+    circularMedium1 = 50.dp,
+    pencilListIcon = 20.dp,
+
 )
 
 val CompactMediumDimens = Dimens(
@@ -67,7 +77,12 @@ val CompactMediumDimens = Dimens(
     marginMedium = 12.dp,
     marginLarge = 20.dp,
     marginExtraLarge = 24.dp,
-)
+    qrWidthAndHeight = 200.dp,
+    circularListIcon = 40.dp,
+    circularMedium1 = 50.dp,
+    pencilListIcon = 20.dp,
+
+    )
 
 val CompactDimens = Dimens(
     extraSmall = 1.dp,
@@ -89,7 +104,12 @@ val CompactDimens = Dimens(
     marginMedium = 16.dp,
     marginLarge = 24.dp,
     marginExtraLarge = 32.dp,
-)
+    qrWidthAndHeight = 200.dp,
+    circularListIcon = 40.dp,
+    circularMedium1 = 50.dp,
+    pencilListIcon = 20.dp,
+
+    )
 
 val MediumDimens = Dimens(
     extraSmall = 1.dp,
@@ -105,6 +125,16 @@ val MediumDimens = Dimens(
     minWidth = 170.dp,
     buttonMargin = 40.dp,
     minHeightButton = 55.dp,
+
+    marginExtraSmall = 6.dp,
+    marginSmall = 10.dp,
+    marginMedium = 16.dp,
+    marginLarge = 24.dp,
+    marginExtraLarge = 32.dp,
+    qrWidthAndHeight = 200.dp,
+    circularListIcon = 40.dp,
+    circularMedium1 = 50.dp,
+    pencilListIcon = 20.dp,
 
     )
 
@@ -125,7 +155,12 @@ val ExpandedDimens = Dimens(
 
     marginExtraSmall = 24.dp,
     marginSmall = 30.dp,
-    marginMedium = 60.dp,
+    marginMedium = 20.dp,
     marginLarge = 70.dp,
     marginExtraLarge = 84.dp,
-)
+    qrWidthAndHeight = 300.dp,
+    circularListIcon = 60.dp,
+    circularMedium1 = 70.dp,
+    pencilListIcon = 20.dp,
+
+    )

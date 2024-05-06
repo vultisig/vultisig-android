@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -23,10 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -45,7 +49,7 @@ import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
 @Composable
 fun WelcomeScreen(
     navController: NavHostController,
-    viewModel: WelcomeViewModel = hiltViewModel(),
+    viewModel: WelcomeViewModel = hiltViewModel()
 ) {
     val pages = viewModel.state.pages
     val pagerState = rememberPagerState(pageCount = { 3 })
@@ -56,10 +60,9 @@ fun WelcomeScreen(
                 is NavigateTo -> {
                     navController.navigate(uiEvent.screen.route)
                 }
-
                 is ScrollToNextPage -> {
-                    if (pagerState.currentPage < 2)
-                        pagerState.scrollToPage(pagerState.currentPage + 1)
+                    if(pagerState.currentPage<2)
+                        pagerState.scrollToPage(pagerState.currentPage+1)
                     else {
                         navController.popBackStack()
                         navController.navigate(uiEvent.screen.route)
@@ -74,12 +77,12 @@ fun WelcomeScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.appColor.oxfordBlue800),
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(MaterialTheme.appColor.oxfordBlue800),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginLarge))
         Image(
             painter = painterResource(R.drawable.vultisig_icon_text),
             contentDescription = "Pager Image"
@@ -113,13 +116,10 @@ fun WelcomeScreen(
                 )
             }
         }
-        Spacer(
-            modifier = Modifier
-                .weight(0.3f)
-        )
+        Spacer(modifier = Modifier
+            .height(MaterialTheme.dimens.marginSmall))
         MultiColorButton(
-            text = "Next",
-            textColor = MaterialTheme.appColor.oxfordBlue800,
+            text = stringResource(id = R.string.next),
             minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
                 .fillMaxWidth()
@@ -129,25 +129,33 @@ fun WelcomeScreen(
                 )
         ) {
             viewModel.onEvent(WelcomeEvent.NextPages)
+
         }
         Spacer(
             modifier = Modifier
                 .weight(0.3f)
         )
-        if (pagerState.currentPage < 2) {
-            MultiColorButton(
-                text = "Skip",
-                backgroundColor = MaterialTheme.appColor.oxfordBlue800,
-                textColor = MaterialTheme.appColor.turquoise800,
-                iconColor = MaterialTheme.appColor.oxfordBlue800,
-                minHeight = MaterialTheme.dimens.minHeightButton,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                viewModel.onEvent(WelcomeEvent.BoardCompleted)
-            }
+
+        MultiColorButton(
+            text = stringResource(id = R.string.skip),
+            backgroundColor = MaterialTheme.appColor.oxfordBlue800,
+            textColor = MaterialTheme.appColor.turquoise800,
+            iconColor = MaterialTheme.appColor.oxfordBlue800,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(if (pagerState.currentPage < 2) 1.0f else 0.0f)
+        ) {
+            viewModel.onEvent(WelcomeEvent.BoardCompleted)
         }
+
+        Spacer(
+            modifier = Modifier
+                .height(MaterialTheme.dimens.marginMedium)
+        )
+
     }
+
 }
 
 @Composable
@@ -163,14 +171,13 @@ fun PagerScreen(onBoardingPage: OnBoardPage) {
             painter = painterResource(id = onBoardingPage.image),
             contentDescription = "Pager Image"
         )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginExtraLarge))
         Text(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 40.dp)
-                .padding(top = 20.dp),
-            text = onBoardingPage.description,
-            style = MaterialTheme.montserratFamily.bodyLarge,
-            color = MaterialTheme.appColor.neutral0,
+                .fillMaxWidth(0.7f),
+            text = stringResource(id = onBoardingPage.description),
+            style = MaterialTheme.montserratFamily.bodyLarge.copy(lineHeight = 30.sp),
+            color =MaterialTheme.appColor.neutral0 ,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.weight(1.0f))
@@ -206,3 +213,4 @@ fun PagerScreen(onBoardingPage: OnBoardPage) {
 //        }
 //    }
 //}
+

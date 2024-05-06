@@ -18,7 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.presenter.common.TopBar
+//import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.tokens.item.TokenSelectionItem
 
 @Composable
@@ -34,10 +34,10 @@ fun ChainSelectionView(
     ) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
-        TopBar(
-            centerText = stringResource(R.string.chains), startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(
+//            centerText = stringResource(R.string.chains), startIcon = R.drawable.caret_left,
+//            navController = navController
+//        )
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 

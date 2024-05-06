@@ -21,15 +21,17 @@ val menloFamily = FontFamily(
 )
 
 val montserratFamily = FontFamily(
-    Font(R.font.montserrat_bold, weight = FontWeight.Bold),
-    Font(R.font.montserrat_bold, weight = FontWeight.SemiBold),
+    Font(R.font.montserrat_bold, weight = FontWeight.Bold,),
+    Font(R.font.montserrat_bold, weight = FontWeight.SemiBold ),
     Font(R.font.montserrat_regular, weight = FontWeight.Normal),
     Font(R.font.montserrat_regular, weight = FontWeight.Medium),
 )
 
+
 //-----------------------------------------------------------------------
 //---------------    Menlo Family Typography    -------------------------
 //-----------------------------------------------------------------------
+
 
 
 //menlo Family compact Small Typography
@@ -103,8 +105,7 @@ val compactSmallMenloFamilyTypography = Typography(
     ),
 
 
-    )
-
+)
 //menlo Family compact medium Typography
 val compactMediumMenloFamilyTypography = Typography(
     //equal  H1
@@ -174,7 +175,6 @@ val compactMediumMenloFamilyTypography = Typography(
         fontFamily = menloFamily,
     ),
 )
-
 //menlo Family compact Typography
 val compactMenloFamilyTypography = Typography(
     //equal  H1
@@ -244,7 +244,6 @@ val compactMenloFamilyTypography = Typography(
         fontFamily = menloFamily,
     ),
 )
-
 //menlo Family expanded Typography
 val expandedMenloFamilyTypography = Typography(
     //equal  H1
@@ -316,9 +315,14 @@ val expandedMenloFamilyTypography = Typography(
 )
 
 
+
+
+
+
 //----------------------------------------------------------------------------
 //---------------    montserrat Family Typography    -------------------------
 //----------------------------------------------------------------------------
+
 
 
 //montserrat Family compact Small Typography
@@ -389,8 +393,7 @@ val compactSmallMontserratFamilyTypography = Typography(
         fontSize = 12.sp,
         fontFamily = montserratFamily,
     ),
-)
-
+    )
 //montserrat Family compact medium Typography
 val compactMediumMontserratFamilyTypography = Typography(
     //equal  H1
@@ -461,7 +464,6 @@ val compactMediumMontserratFamilyTypography = Typography(
     ),
     //equal  H1
 )
-
 //montserrat Family compact Typography
 val compactMontserratFamilyTypography = Typography(
     //equal  H1
@@ -531,7 +533,6 @@ val compactMontserratFamilyTypography = Typography(
         fontFamily = montserratFamily,
     ),
 )
-
 //montserrat Family expanded Typography
 val expandedMontserratFamilyTypography = Typography(
     //equal  H1
@@ -578,7 +579,7 @@ val expandedMontserratFamilyTypography = Typography(
     ),
     //equal  body1
     bodyLarge = TextStyle(
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
         fontFamily = montserratFamily,
     ),

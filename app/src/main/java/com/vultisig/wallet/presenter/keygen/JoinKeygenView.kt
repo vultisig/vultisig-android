@@ -32,7 +32,7 @@ import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.common.TopBar
+//import com.vultisig.wallet.presenter.common.TopBar
 
 @Composable
 fun JoinKeygenView(navController: NavHostController, vault: Vault) {
@@ -112,10 +112,10 @@ fun DiscoveryingSessionID(navController: NavHostController) {
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(
+//            centerText = "Keygen", startIcon = R.drawable.caret_left,
+//            navController = navController
+//        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -153,10 +153,10 @@ fun DiscoverService(navController: NavHostController) {
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(
+//            centerText = "Keygen", startIcon = R.drawable.caret_left,
+//            navController = navController
+//        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -187,10 +187,10 @@ fun JoiningKeygen(navController: NavHostController) {
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(
+//            centerText = "Keygen", startIcon = R.drawable.caret_left,
+//            navController = navController
+//        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -221,10 +221,10 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(
+//            centerText = "Keygen", startIcon = R.drawable.caret_left,
+//            navController = navController
+//        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -255,10 +255,10 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(
+//            centerText = "Keygen", startIcon = R.drawable.caret_left,
+//            navController = navController
+//        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         Row(
             modifier = Modifier.fillMaxSize(),

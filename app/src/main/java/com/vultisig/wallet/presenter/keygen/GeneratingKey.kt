@@ -35,7 +35,7 @@ import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.common.TopBar
+//import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.navigation.Screen
 
 @Composable
@@ -56,8 +56,9 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(centerText = "Keygen", navController = navController)
-        Spacer(modifier = Modifier.weight(1f))
+//        TopBar(centerText = "Keygen", navController = navController)
+
+
         when (viewModel.currentState.value) {
             KeygenState.CreatingInstance -> {
                 KeygenIndicator(

@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WelcomeViewModel @Inject constructor(
-    private val repository: OnBoardRepository,
+    private val repository: OnBoardRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(WelcomeState())
@@ -42,7 +42,6 @@ class WelcomeViewModel @Inject constructor(
             BoardCompleted -> saveOnBoardingState()
         }
     }
-
     private fun getBoardPages() {
         state = state.copy(pages = repository.onBoardPages())
     }
@@ -54,12 +53,10 @@ class WelcomeViewModel @Inject constructor(
             _channel.send(PopBackStack)
         }
     }
-
     private fun scrollToNextPage() {
         viewModelScope.launch(Dispatchers.IO) {
             _channel.send(ScrollToNextPage(Screen.Home))
         }
     }
-
 
 }

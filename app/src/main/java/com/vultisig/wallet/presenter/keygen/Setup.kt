@@ -14,19 +14,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.vultisig.wallet.R
 import com.vultisig.wallet.R.drawable
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.app.ui.theme.montserratFamily
-import com.vultisig.wallet.presenter.common.TopBar
+//import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.navigation.Screen
+
 
 @Composable
 fun Setup(navController: NavHostController) {
@@ -35,69 +38,69 @@ fun Setup(navController: NavHostController) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
-            )
+            .padding(MaterialTheme.dimens.marginMedium)
     ) {
-        TopBar(
-            centerText = "Setup",
-            startIcon = drawable.caret_left,
-            endIcon = drawable.question,
-            navController = navController
-        )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+//        TopBar(
+//            navController = navController,
+//            centerText = "Setup",
+//            startIcon = drawable.caret_left,
+//            endIcon = drawable.question,
+//        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
             text = "2 of 3 Vault",
             color = textColor,
             style = MaterialTheme.montserratFamily.bodyLarge
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
 
         Text(
             text = "(Any 3 Devices)",
             color = textColor,
             style = MaterialTheme.montserratFamily.bodyMedium
         )
-        Spacer(modifier = Modifier.weight(1.0f))
+        Spacer(modifier = Modifier.weight(0.5f))
 
         Image(
             painter = painterResource(id = drawable.devices),
             contentDescription = "devices",
+            modifier = Modifier.weight(3.5f)
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
 
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.bodyMedium,
             text = "3 Devices to create a vault; ",
             color = textColor
         )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.bodyMedium,
             text = "2 devices to sign a transaction.",
             color = textColor
         )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.bodyMedium,
             text = "Automatically backed-up",
             color = textColor
         )
 
-        Spacer(modifier = Modifier.weight(1.0f))
+        Spacer(modifier = Modifier.weight(0.5f))
 
         Image(painter = painterResource(id = drawable.wifi), contentDescription = null)
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
         Text(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
             text = "Keep devices on the same WiFi Network with vultisig open.",
             color = textColor,
-            style = MaterialTheme.menloFamily.headlineSmall.copy(
-                textAlign = TextAlign.Center, fontSize = 13.sp
+            style = MaterialTheme.menloFamily.titleLarge.copy(
+                textAlign = TextAlign.Center
             ),
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
+        Spacer(modifier = Modifier.weight(1.0f))
         MultiColorButton(
-            text = "Start",
+            text = stringResource(id = R.string.start),
             backgroundColor = MaterialTheme.appColor.turquoise600Main,
             textColor = MaterialTheme.appColor.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
@@ -105,16 +108,17 @@ fun Setup(navController: NavHostController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.dimens.marginMedium,
-                    end = MaterialTheme.dimens.marginMedium,
-                    bottom = MaterialTheme.dimens.marginMedium,
+                    start = MaterialTheme.dimens.buttonMargin,
+                    end = MaterialTheme.dimens.buttonMargin
                 )
         ) {
             navController.navigate(Screen.KeygenFlow.route)
         }
 
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
+
         MultiColorButton(
-            text = "Join",
+            text = stringResource(id = R.string.join),
             backgroundColor = MaterialTheme.appColor.oxfordBlue600Main,
             textColor = MaterialTheme.appColor.turquoise600Main,
             iconColor = MaterialTheme.appColor.oxfordBlue600Main,
@@ -124,13 +128,16 @@ fun Setup(navController: NavHostController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.dimens.marginMedium,
-                    end = MaterialTheme.dimens.marginMedium,
-                    bottom = MaterialTheme.dimens.buttonMargin,
+                    start = MaterialTheme.dimens.buttonMargin,
+                    end = MaterialTheme.dimens.buttonMargin
                 )
         ) {
-            navController.navigate(Screen.JoinKeygen.route)
+//            navController.navigate(Screen.Pair.route)
         }
+        Spacer(
+            modifier = Modifier
+                .height(MaterialTheme.dimens.marginMedium)
+        )
     }
 }
 

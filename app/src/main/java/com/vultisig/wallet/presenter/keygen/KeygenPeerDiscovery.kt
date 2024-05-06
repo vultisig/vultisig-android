@@ -40,7 +40,7 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
-import com.vultisig.wallet.presenter.common.TopBar
+//import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
 
 @Composable
@@ -72,10 +72,10 @@ fun KeygenPeerDiscovery(
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(
+//            centerText = "Keygen", startIcon = R.drawable.caret_left,
+//            navController = navController
+//        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         if (!selectionState.isNullOrEmpty() && selectionState.count() > 1) {
             Text(

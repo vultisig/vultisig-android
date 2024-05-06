@@ -9,10 +9,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -23,7 +27,7 @@ import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
-import com.vultisig.wallet.presenter.common.TopBar
+//import com.vultisig.wallet.presenter.common.TopBar
 
 @Composable
 fun SigningError(navController: NavHostController) {
@@ -32,12 +36,9 @@ fun SigningError(navController: NavHostController) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
-            )
+            .padding(MaterialTheme.dimens.marginMedium)
     ) {
-        TopBar(centerText = "Keygen", navController = navController)
+//        TopBar(centerText = "Keygen", navController = navController)
 
         Spacer(modifier = Modifier.weight(1.0f))
         Image(
@@ -60,27 +61,24 @@ fun SigningError(navController: NavHostController) {
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.small1),
             text = "Keep devices on the same WiFi Network, correct vault and pair devices. \n" + "Make sure no other devices are \n" + "running vultisig.",
             color = textColor,
-            style = MaterialTheme.menloFamily.headlineSmall.copy(
-                textAlign = TextAlign.Center, fontSize = 13.sp
+            style = MaterialTheme.menloFamily.titleSmall.copy(
+                textAlign = TextAlign.Center
             ),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         MultiColorButton(
-            text = "Try Again",
+            text = stringResource(id = R.string.try_again),
             backgroundColor = MaterialTheme.appColor.turquoise600Main,
             textColor = MaterialTheme.appColor.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = MaterialTheme.dimens.marginMedium,
-                    end = MaterialTheme.dimens.marginMedium,
-                    bottom = MaterialTheme.dimens.buttonMargin,
-                )
+            modifier = Modifier.fillMaxWidth()
         ) {
 
         }
-
+        Spacer(
+            modifier = Modifier
+                .height(MaterialTheme.dimens.marginMedium)
+        )
     }
 }
 
@@ -88,6 +86,6 @@ fun SigningError(navController: NavHostController) {
 @Composable
 fun SigningErrorPreview() {
     val navController = rememberNavController()
-    SigningError(navController)
+    SigningError( navController)
 
 }

@@ -4,4 +4,18 @@
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
     <string name="chains">Chains</string>
+    <string name="intro_1">Voltix is a secure, multi-device crypto vault, compatible with 30+ chains and 10,000+ tokens. Voltix is fully self-custodial.</string>
+    <string name="intro_2">Voltix does not track your activities or require any registrations. Voltix is fully open-source, ensuring transparency and trust.</string>
+    <string name="intro_3">Voltix is audited and secure. Join thousands of users who trust Voltix with their digital assets. </string>
+    <string name="keygen_qr">Keep devices on the same WiFi Network with VOLTIX open.</string>
+    <string name="create_a_new_vault">Create a New Vault</string>
+    <string name="import_an_existing_vault">Import an Existing Vault</string>
+    <string name="continue_res">Continue</string>
+    <string name="add_new_vault">Add New Vault</string>
+    <string name="join_airdrop">Join Airdrop</string>
+    <string name="start">Start</string>
+    <string name="join">Join</string>
+    <string name="try_again">Try Again</string>
+    <string name="next">Next</string>
+    <string name="skip">Skip</string>
 </resources>

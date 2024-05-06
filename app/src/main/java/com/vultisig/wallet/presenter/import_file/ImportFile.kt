@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
@@ -41,7 +40,8 @@ import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.app.ui.theme.montserratFamily
-import com.vultisig.wallet.presenter.common.TopBar
+import com.vultisig.wallet.presenter.base_components.MultiColorButton
+
 import com.vultisig.wallet.presenter.navigation.Screen
 
 @Composable
@@ -52,19 +52,16 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginExtraLarge
-            )
+            .padding(MaterialTheme.dimens.marginMedium)
     ) {
-        TopBar(centerText = "Import", navController = navController)
+//        TopBar(centerText = "Import",navController = navController)
         Spacer(modifier = Modifier.height(48.dp))
         Text(
             text = "Enter your previously created vault share",
             color = textColor,
             style = MaterialTheme.menloFamily.bodyMedium
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
         Box(modifier = Modifier
             .fillMaxWidth()
             .height(220.dp)
@@ -73,12 +70,7 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
             )
             .clickable {
-                navController.navigate(
-                    Screen.ImportFile.route.replace(
-                        oldValue = "{has_file}",
-                        newValue = true.toString()
-                    )
-                )
+                navController.navigate(Screen.ImportFile.route.replace(oldValue = "{has_file}", newValue = true.toString()))
             }
             .drawBehind {
                 drawRoundRect(
@@ -104,7 +96,7 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
         }
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
         if (hasFile)
-            LazyColumn {
+            LazyColumn(modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginSmall)) {
                 item {
                     Row(verticalAlignment = CenterVertically) {
                         Image(
@@ -128,29 +120,34 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                     }
                 }
             }
+
         Spacer(modifier = Modifier.weight(1.0F))
-        Button(
-            onClick = {
-                navController.navigate(Screen.Setup.route)
-            },
-            enabled = hasFile,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors()
-                .copy(disabledContainerColor = MaterialTheme.colorScheme.surfaceDim),
+
+        MultiColorButton(
+            text = stringResource(id = R.string.continue_res),
+            backgroundColor = MaterialTheme.appColor.turquoise800,
+            textStyle = MaterialTheme.montserratFamily.titleLarge,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = MaterialTheme.dimens.buttonMargin,
+                    end = MaterialTheme.dimens.buttonMargin
+                )
         ) {
-            Text(
-                text = "Continue",
-                color = MaterialTheme.colorScheme.onPrimary,
-                style = MaterialTheme.montserratFamily.titleMedium,
-            )
+            navController.navigate(Screen.Setup.route)
         }
+        Spacer(
+            modifier = Modifier
+                .height(MaterialTheme.dimens.marginMedium)
+        )
+
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun ImportFilePreview() {
     val navController = rememberNavController()
-    ImportFile(navController, true)
+    ImportFile(navController,true)
 
 }

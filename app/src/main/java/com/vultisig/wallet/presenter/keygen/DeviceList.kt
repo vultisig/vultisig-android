@@ -12,7 +12,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
@@ -20,11 +25,12 @@ import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
-import com.vultisig.wallet.presenter.common.TopBar
+
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfoItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
 
 @Composable
 fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel) {
@@ -34,16 +40,9 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
-            )
+            .padding( MaterialTheme.dimens.marginMedium)
     ) {
-        TopBar(
-            centerText = "Keygen",
-            startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+//        TopBar(centerText = "Summery", startIcon = R.drawable.caret_left, navController = navController)
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
 
@@ -78,11 +77,12 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
             }
         }
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
 
         Text(
-            style = MaterialTheme.menloFamily.bodyMedium,
-            text = "You can only send transactions with these ${Utils.getThreshold(items.count())} devices present.",
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.menloFamily.titleLarge.copy(textAlign = TextAlign.Start),
+            text = "You can only send transactions with these two devices present.",
             color = textColor
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
@@ -97,7 +97,7 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
         Spacer(modifier = Modifier.weight(1.0f))
 
         MultiColorButton(
-            text = "Continue",
+            text = stringResource(R.string.continue_res),
             backgroundColor = MaterialTheme.appColor.turquoise600Main,
             textColor = MaterialTheme.appColor.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
@@ -105,9 +105,8 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.dimens.marginMedium,
-                    end = MaterialTheme.dimens.marginMedium,
-                    bottom = MaterialTheme.dimens.marginMedium,
+                    start = MaterialTheme.dimens.buttonMargin,
+                    end = MaterialTheme.dimens.buttonMargin
                 )
         ) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -115,5 +114,24 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
                 viewModel.moveToState(KeygenFlowState.KEYGEN)
             }
         }
+        Spacer(
+            modifier = Modifier
+                .height(MaterialTheme.dimens.marginMedium)
+        )
+//        Button(onClick = {
+//            if (itemCount + 1 <= 4) {
+//                navController.navigate(
+//                    Screen.DeviceList.route.replace(
+//                        oldValue = "{count}", newValue = "${itemCount + 1}"
+//                    )
+//                )
+//            } else {
+//                navController.navigate(
+//                    Screen.GeneratingKeyGen.route
+//                )
+//            }
+//        }, modifier = Modifier.fillMaxWidth().padding(MaterialTheme.dimens.marginMedium)) {
+//            Text(text = "Continue")
+//        }
     }
 }
