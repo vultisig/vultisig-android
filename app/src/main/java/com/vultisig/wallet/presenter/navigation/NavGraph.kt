@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.home.HomeScreen
+import com.vultisig.wallet.presenter.home.VaultDetail
 import com.vultisig.wallet.presenter.import_file.ImportFile
 import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
@@ -48,7 +49,7 @@ fun SetupNavGraph(
             Setup(navController)
         }
 
-        composable(route = Screen.KeygenFlow.route) { backStackEntry ->
+        composable(route = Screen.KeygenFlow.route) {
             val vaultDB = VaultDB(context)
             val allVaults = vaultDB.selectAll()
             // TODO: later on will need to deal with reshare
@@ -62,6 +63,13 @@ fun SetupNavGraph(
         composable(route = Screen.ImportFile.route) { navBackStackEntry ->
             val hasFile = navBackStackEntry.arguments?.getString("has_file")?.toBoolean() ?: false
             ImportFile(navController, hasFile)
+        }
+        composable(route = Screen.VaultDetail.route) {navBackStackEntry ->
+            val vaultName = navBackStackEntry.arguments?.getString("vault_name") ?: ""
+            val vaultDB = VaultDB(context)
+            vaultDB.select(vaultName)?.let {
+                 VaultDetail(navController, it)
+            }
         }
     }
 }

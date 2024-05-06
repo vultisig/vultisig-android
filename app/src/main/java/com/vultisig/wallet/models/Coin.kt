@@ -5,6 +5,7 @@ import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 @Parcelize
 data class Coin(
@@ -21,7 +22,7 @@ data class Coin(
     var rawBalance: BigInteger,
     val isNativeToken: Boolean,
     var priceRate: BigDecimal,
-) : Parcelable{
+) : Parcelable {
     val coinType: CoinType
         get() = when (chain) {
             Chain.bitcoin -> CoinType.BITCOIN
@@ -45,6 +46,13 @@ data class Coin(
             Chain.cronosChain -> CoinType.CRONOSCHAIN
         }
 
+}
+
+fun Coin.getBalance(): BigDecimal {
+    return BigDecimal(rawBalance)
+        .divide(BigDecimal(10).pow(decimal))
+        .multiply(priceRate)
+        .setScale(2, RoundingMode.HALF_UP)
 }
 
 object Coins {
@@ -202,7 +210,7 @@ object Coins {
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
-        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType}?.apply {
+        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType }?.apply {
             this.address = address
             this.hexPublicKey = hexPublicKey
         }
