@@ -27,10 +27,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
+import com.vultisig.wallet.models.TssAction
+import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.navigation.Screen
@@ -54,14 +57,13 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
             )
     ) {
         TopBar(centerText = "Keygen", navController = navController)
-
-
+        Spacer(modifier = Modifier.weight(1f))
         when (viewModel.currentState.value) {
             KeygenState.CreatingInstance -> {
                 KeygenIndicator(
                     statusText = "PREPARING VAULT",
                     progress = 0.25F,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -69,7 +71,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 KeygenIndicator(
                     statusText = "GENERATING ECDSA KEY",
                     progress = 0.5F,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -77,7 +79,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 KeygenIndicator(
                     statusText = "GENERATING EdDSA KEY",
                     progress = 0.7F,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -85,7 +87,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 KeygenIndicator(
                     statusText = "RESHARING ECDSA Key",
                     progress = 0.5F,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -93,7 +95,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 KeygenIndicator(
                     statusText = "RESHARING EdDSA Key",
                     progress = 0.75F,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -108,7 +110,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 KeygenIndicator(
                     statusText = "SUCCESS",
                     progress = 1.0F,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -130,9 +132,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 )
             }
         }
-
-        Spacer(modifier = Modifier.weight(1.0f))
-
+        Spacer(modifier = Modifier.weight(1f))
         Icon(
             painter = painterResource(id = R.drawable.wifi),
             contentDescription = null,
@@ -152,12 +152,26 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFF121212)
+@Composable
+fun PreviewGeneratingKey() {
+    val navController = rememberNavController()
+    val viewModelForReview = GeneratingKeyViewModel(
+        vault = Vault("new Vault"),
+        action = TssAction.KEYGEN,
+        keygenCommittee = listOf(""),
+        oldCommittee = listOf(""),
+        serverAddress = "http://127.0.0.1:18080",
+        sessionId = "123456",
+        encryptionKeyHex = ""
+    )
+    GeneratingKey(navController, viewModelForReview)
+}
 
 @Composable
 fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.fillMaxSize()
     ) {
         Text(
             text = statusText,
@@ -166,7 +180,7 @@ fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
         )
         Column(
             verticalArrangement = Arrangement.Center,
-            modifier = modifier.fillMaxSize()
+            modifier = modifier.fillMaxWidth()
         ) {
 
             CircularProgressIndicator(
@@ -185,6 +199,6 @@ fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
 
 @Preview
 @Composable
-fun GeneratingKeyPreview() {
+fun KeygenIndicatorPreview() {
     KeygenIndicator("Generating ECDSA Key", 0.5f, Modifier.fillMaxSize())
 }

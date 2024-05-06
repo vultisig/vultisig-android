@@ -9,7 +9,11 @@ sealed class Screen(val route: String) {
     data object ImportFile : Screen(route = "import_file/{has_file}")
     data object Setup : Screen(route = "setup")
     data object KeygenFlow : Screen(route = "keygen_flow")
-
     data object SigningError : Screen(route = "signing_error")
+    data object VaultDetail: Screen(route = "vault_detail/{vault_name}"){
+        fun createRoute(vaultName: String): String {
+            return "vault_detail/$vaultName"
+        }
+    }
 
 }

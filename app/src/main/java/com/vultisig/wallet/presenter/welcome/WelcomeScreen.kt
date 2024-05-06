@@ -119,6 +119,7 @@ fun WelcomeScreen(
         )
         MultiColorButton(
             text = "Next",
+            textColor = MaterialTheme.appColor.oxfordBlue800,
             minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
                 .fillMaxWidth()
@@ -128,7 +129,6 @@ fun WelcomeScreen(
                 )
         ) {
             viewModel.onEvent(WelcomeEvent.NextPages)
-
         }
         Spacer(
             modifier = Modifier
