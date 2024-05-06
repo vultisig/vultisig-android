@@ -1,6 +1,7 @@
 package com.vultisig.wallet.models
 
 import android.os.Parcelable
+import com.vultisig.wallet.R
 import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
@@ -213,6 +214,22 @@ object Coins {
         return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType }?.apply {
             this.address = address
             this.hexPublicKey = hexPublicKey
+        }
+    }
+
+    fun getCoinLogo(logoName: String): Int {
+        return when (logoName) {
+            "btc" -> R.drawable.bitcoin
+            "bch" -> R.drawable.bitcoincash
+            "ltc" -> R.drawable.litecoin
+            "doge" -> R.drawable.doge
+            "dash" -> R.drawable.dash
+            "rune" -> R.drawable.rune
+            "eth" -> R.drawable.ethereum
+            "sol" -> R.drawable.solana
+            "cacao" -> R.drawable.danger
+            "maya" -> R.drawable.danger
+            else -> R.drawable.danger
         }
     }
 }

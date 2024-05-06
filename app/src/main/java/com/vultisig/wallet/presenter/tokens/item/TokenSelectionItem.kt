@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,7 +60,7 @@ fun TokenSelectionItem(
                     )
                     .size(32.dp)
                     .clip(CircleShape),
-                painter = painterResource(id = R.drawable.qr),
+                painter = getCoinLogo(logoName = token.logo),
                 contentDescription = stringResource(R.string.token_logo),
                 contentScale = ContentScale.Crop
             )
@@ -106,6 +107,13 @@ fun TokenSelectionItem(
         }
     }
 }
+
+@Composable
+private fun getCoinLogo(logoName: String): Painter {
+    val coinLogoID = Coins.getCoinLogo(logoName = logoName)
+    return painterResource(id = coinLogoID)
+}
+
 
 @Preview
 @Composable
