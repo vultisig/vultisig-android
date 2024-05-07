@@ -22,7 +22,6 @@ class THORChainService {
                 .addHeader(xClientID, xClientIDValue)
                 .build()
             val response = client.newCall(request).execute()
-
             val resp = Gson().fromJson(response.body?.string(), CosmosBalanceResponse::class.java)
             return resp.balances
         } catch (e: Exception) {

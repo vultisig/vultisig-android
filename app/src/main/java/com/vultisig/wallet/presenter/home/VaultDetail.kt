@@ -43,11 +43,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
-import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.getBalance
-import com.vultisig.wallet.models.getBalanceInFiatString
 import com.vultisig.wallet.models.logo
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,9 +53,10 @@ fun VaultDetail(navHostController: NavHostController, vault: Vault) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
     val viewModel: VaultDetailViewModel = hiltViewModel()
-    val coins: List<Coin> = viewModel.coins.asFlow().collectAsState(initial = emptyList()).value
+    val coins: List<CoinWrapper> =
+        viewModel.coins.asFlow().collectAsState(initial = emptyList()).value
 
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = viewModel) {
         viewModel.setData(vault)
     }
     Scaffold(topBar = {
@@ -113,7 +111,7 @@ fun VaultDetail(navHostController: NavHostController, vault: Vault) {
 }
 
 @Composable
-fun ChainCeil(navHostController: NavHostController, coin: Coin) {
+fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -122,7 +120,7 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
     ) {
         Row(Modifier.background(MaterialTheme.appColor.oxfordBlue400)) {
             Image(
-                painter = painterResource(id = coin.chain.logo),
+                painter = painterResource(id = coin.coin.chain.logo),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(10.dp)
@@ -132,7 +130,7 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = coin.chain.raw,
+                        text = coin.coin.chain.raw,
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -141,7 +139,7 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = coin.getBalance().toString(),
+                        text = coin.coinBalance.value.toString(),
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -149,7 +147,7 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                             .align(Alignment.CenterVertically)
                     )
                     Text(
-                        text = coin.getBalanceInFiatString(),
+                        text = coin.coinBalanceInFiat.value,
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -158,7 +156,7 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                     )
                 }
                 Text(
-                    text = coin.address,
+                    text = coin.coin.address,
                     style = MaterialTheme.montserratFamily.titleSmall,
                     color = MaterialTheme.appColor.turquoise800,
                     modifier = Modifier.padding(10.dp)
@@ -172,5 +170,5 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
 @Composable
 fun PreviewChainCeil() {
     val navHostController = rememberNavController()
-    ChainCeil(navHostController, Coins.SupportedCoins[0])
+    ChainCeil(navHostController, CoinWrapper(Coins.SupportedCoins[0]))
 }

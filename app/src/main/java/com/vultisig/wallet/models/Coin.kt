@@ -17,17 +17,17 @@ data class Coin(
     val chain: Chain,
     val ticker: String,
     val logo: String,
-    var address: String,
+    val address: String,
     val decimal: Int,
-    var hexPublicKey: String,
+    val hexPublicKey: String,
     val feeUnit: String,
     val feeDefault: BigDecimal,
     val priceProviderID: String,
-    var contractAddress: String,
-    var rawBalance: BigInteger,
+    val contractAddress: String,
+    val rawBalance: BigInteger,
     val isNativeToken: Boolean,
-    var priceRate: BigDecimal,
-    var currency: SettingsCurrency = SettingsCurrency.USD
+    val priceRate: BigDecimal,
+    val currency: SettingsCurrency = SettingsCurrency.USD,
 ) : Parcelable {
     val coinType: CoinType
         get() = when (chain) {
@@ -227,10 +227,9 @@ object Coins {
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
-        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType }?.apply {
-            this.address = address
-            this.hexPublicKey = hexPublicKey
-        }
+        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType }
+            ?.copy(address = address, hexPublicKey = hexPublicKey)
+
     }
 
     fun getCoinLogo(logoName: String): Int {
