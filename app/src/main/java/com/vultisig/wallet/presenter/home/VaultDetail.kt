@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -47,7 +46,6 @@ import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.models.getBalance
 import com.vultisig.wallet.models.logo
-import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +129,8 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                         text = coin.chain.raw,
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(6.dp)
+                        modifier = Modifier
+                            .padding(6.dp)
                             .weight(1f)
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -139,7 +138,8 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                         text = coin.getBalance().toString(),
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(6.dp)
+                        modifier = Modifier
+                            .padding(6.dp)
                             .align(Alignment.CenterVertically)
                     )
                 }

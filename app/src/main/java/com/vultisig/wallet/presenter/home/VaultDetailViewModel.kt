@@ -1,5 +1,6 @@
 package com.vultisig.wallet.presenter.home
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.vultisig.wallet.chains.utxoHelper
@@ -22,15 +23,17 @@ class VaultDetailViewModel @Inject constructor(
     val coins: MutableLiveData<List<Coin>>
         get() = _coins
 
-    suspend  fun getCurrentPrice(coin:Coin) :BigDecimal {
+    suspend fun getCurrentPrice(coin: Coin): BigDecimal {
         return priceService.getPrice(coin.priceProviderID)
     }
+
     suspend fun setData(vault: Vault) {
         applyDefaultChains(vault)
         _coins.value = vault.coins
         priceService.updatePriceProviderIDs(vault.coins.map { it.priceProviderID })
         vault.coins.forEach() {
             it.priceRate = getCurrentPrice(it)
+            Log.d("VaultDetailViewModel", "priceRate: ${it.priceRate}")
         }
     }
 
