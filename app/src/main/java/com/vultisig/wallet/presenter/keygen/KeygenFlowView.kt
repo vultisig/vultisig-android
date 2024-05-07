@@ -15,15 +15,15 @@ fun KeygenFlowView(navController: NavHostController, vault: Vault) {
         }
 
         KeygenFlowState.DEVICE_CONFIRMATION -> {
-            DeviceList(navController,viewModel)
+            DeviceList(navController, viewModel)
         }
 
         KeygenFlowState.KEYGEN -> {
-            GeneratingKey(navController,viewModel.generatingKeyViewModel)
+            GeneratingKey(navController, viewModel.generatingKeyViewModel)
         }
 
         KeygenFlowState.ERROR -> {
-            Text(text = "Error")
+            KeyGenErrorScreen(navController)
         }
 
         KeygenFlowState.SUCCESS -> {
