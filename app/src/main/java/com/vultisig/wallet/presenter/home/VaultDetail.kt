@@ -47,6 +47,7 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.models.getBalance
+import com.vultisig.wallet.models.getBalanceInFiatString
 import com.vultisig.wallet.models.logo
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,6 +142,14 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = coin.getBalance().toString(),
+                        style = MaterialTheme.montserratFamily.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier
+                            .padding(6.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+                    Text(
+                        text = coin.getBalanceInFiatString(),
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier

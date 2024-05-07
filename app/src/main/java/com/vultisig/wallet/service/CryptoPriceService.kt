@@ -38,6 +38,7 @@ class CryptoPriceService @Inject constructor(
         }
     }
 
+    suspend fun getSettingCurrency(): SettingsCurrency = SettingsCurrency.getCurrency(appDataStore)
     suspend fun getPrice(priceProviderId: String): BigDecimal {
         val currency = SettingsCurrency.getCurrency(appDataStore).name
         cache.getIfPresent(priceProviderId)?.let {
