@@ -39,30 +39,15 @@ fun KeyGenErrorScreen(
             .fillMaxSize()
             .background(MaterialTheme.appColor.oxfordBlue800)
     ) {
-        Column(
-            modifier = Modifier.align(Alignment.TopCenter)
-        ) {
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
-            TopBar(
-                centerText = stringResource(R.string.keysign),
-                startIcon = null,
-                navController = rememberNavController()
-            )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = MaterialTheme.dimens.marginExtraLarge,
-                        start = MaterialTheme.dimens.small2,
-                        end = MaterialTheme.dimens.small2
-                    ),
-                painter = painterResource(id = R.drawable.status_bar_mobile_almost_completed),
-                contentScale = ContentScale.Crop,
-                contentDescription = stringResource(R.string.status_bar_almost_completed)
-            )
-        }
+        TopBar(
+            modifier = Modifier.align(Alignment.TopCenter),
+            centerText = stringResource(R.string.keygen),
+            startIcon = null,
+            navController = rememberNavController()
+        )
 
         Column(
             Modifier
@@ -93,11 +78,8 @@ fun KeyGenErrorScreen(
         ) {
             Text(
                 modifier = Modifier
-                    .padding(
-                        top = 150.dp,
-                        start = 50.dp,
-                        end = 50.dp
-                    ),
+                    .padding(top = 150.dp)
+                    .align(Alignment.CenterHorizontally),
                 text = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
                 style = MaterialTheme.menloFamily.labelMedium,
                 color = MaterialTheme.appColor.neutral0,

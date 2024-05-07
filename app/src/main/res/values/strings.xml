@@ -5,9 +5,9 @@
     <string name="tokens">Tokens</string>
     <string name="chains">Chains</string>
     <string name="keysign">Keysign</string>
-    <string name="status_bar_almost_completed">Status bar almost completed icon</string>
+    <string name="keygen">Keygen</string>
     <string name="danger_icon">Danger Icon</string>
     <string name="signing_error_please_try_again">Signing Error. Please try again.</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network, correct vault and pair devices. Make sure no other devices are running Vultisig.</string>
+    <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network,\n correct vault and pair devices.\n Make sure no other devices are\n running Vultisig.</string>
     <string name="try_again">Try again</string>
 </resources>
