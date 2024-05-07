@@ -1,9 +1,9 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("org.jetbrains.kotlin.plugin.parcelize")
     kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.daggerHiltAndroid)
+    id("org.jetbrains.kotlin.plugin.parcelize")
 }
 android {
     namespace = "com.vultisig.wallet"
@@ -81,6 +81,9 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.material3.window)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.hilt.android)
+
+    kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.spark.core)
     implementation(libs.gson)
@@ -89,7 +92,6 @@ dependencies {
     implementation(libs.zxing.android.embedded)
     implementation(libs.okhttp)
     implementation(libs.wallet.core)
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+
 
 }
