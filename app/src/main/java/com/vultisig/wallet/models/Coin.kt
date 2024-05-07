@@ -1,27 +1,33 @@
 package com.vultisig.wallet.models
 
 import android.os.Parcelable
+import com.vultisig.wallet.R
+import com.vultisig.wallet.common.SettingsCurrency
 import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.text.NumberFormat
+import java.util.Currency
+import java.util.Locale
 
 @Parcelize
 data class Coin(
     val chain: Chain,
     val ticker: String,
     val logo: String,
-    var address: String,
+    val address: String,
     val decimal: Int,
-    var hexPublicKey: String,
+    val hexPublicKey: String,
     val feeUnit: String,
     val feeDefault: BigDecimal,
     val priceProviderID: String,
-    var contractAddress: String,
-    var rawBalance: BigInteger,
+    val contractAddress: String,
+    val rawBalance: BigInteger,
     val isNativeToken: Boolean,
-    var priceRate: BigDecimal,
+    val priceRate: BigDecimal,
+    val currency: SettingsCurrency = SettingsCurrency.USD,
 ) : Parcelable {
     val coinType: CoinType
         get() = when (chain) {
@@ -51,8 +57,19 @@ data class Coin(
 fun Coin.getBalance(): BigDecimal {
     return BigDecimal(rawBalance)
         .divide(BigDecimal(10).pow(decimal))
+        .setScale(2, RoundingMode.HALF_UP)
+}
+
+fun Coin.getBalanceInFiat(): BigDecimal {
+    return getBalance()
         .multiply(priceRate)
         .setScale(2, RoundingMode.HALF_UP)
+}
+
+fun Coin.getBalanceInFiatString(): String {
+    val format = NumberFormat.getCurrencyInstance(Locale.getDefault())
+    format.currency = Currency.getInstance(currency.name)
+    return format.format(getBalanceInFiat())
 }
 
 object Coins {
@@ -210,9 +227,24 @@ object Coins {
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
-        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType }?.apply {
-            this.address = address
-            this.hexPublicKey = hexPublicKey
+        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType }
+            ?.copy(address = address, hexPublicKey = hexPublicKey)
+
+    }
+
+    fun getCoinLogo(logoName: String): Int {
+        return when (logoName) {
+            "btc" -> R.drawable.bitcoin
+            "bch" -> R.drawable.bitcoincash
+            "ltc" -> R.drawable.litecoin
+            "doge" -> R.drawable.doge
+            "dash" -> R.drawable.dash
+            "rune" -> R.drawable.rune
+            "eth" -> R.drawable.ethereum
+            "sol" -> R.drawable.solana
+            "cacao" -> R.drawable.danger
+            "maya" -> R.drawable.danger
+            else -> R.drawable.danger
         }
     }
 }
