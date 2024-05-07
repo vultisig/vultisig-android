@@ -2,6 +2,7 @@ package com.vultisig.wallet.presenter.home
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.vultisig.wallet.chains.thorchainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
@@ -16,15 +17,16 @@ import javax.inject.Inject
 class VaultDetailViewModel @Inject constructor(
     private val priceService: CryptoPriceService,
 ) : ViewModel() {
-    private val _defaultChains = listOf(Chain.bitcoin)
+    private val _defaultChains = listOf(Chain.bitcoin, Chain.thorChain)
     private val _coins = MutableLiveData<List<Coin>>()
 
     val coins: MutableLiveData<List<Coin>>
         get() = _coins
 
-    suspend  fun getCurrentPrice(coin:Coin) :BigDecimal {
+    suspend fun getCurrentPrice(coin: Coin): BigDecimal {
         return priceService.getPrice(coin.priceProviderID)
     }
+
     suspend fun setData(vault: Vault) {
         applyDefaultChains(vault)
         _coins.value = vault.coins
@@ -36,13 +38,20 @@ class VaultDetailViewModel @Inject constructor(
 
     private fun applyDefaultChains(vault: Vault) {
         if (vault.coins.isNotEmpty()) return
-
         for (item in _defaultChains) {
             when (item) {
                 Chain.bitcoin -> {
                     val btcHelper =
                         utxoHelper(CoinType.BITCOIN, vault.pubKeyECDSA, vault.hexChainCode)
                     btcHelper.getCoin()?.let {
+                        vault.coins.add(it)
+                    }
+                }
+
+                Chain.thorChain -> {
+                    val thorHelper =
+                        thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                    thorHelper.getCoin()?.let {
                         vault.coins.add(it)
                     }
                 }

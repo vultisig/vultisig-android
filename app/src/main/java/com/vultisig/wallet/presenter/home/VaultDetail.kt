@@ -6,9 +6,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -47,7 +48,6 @@ import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.models.getBalance
 import com.vultisig.wallet.models.logo
-import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,7 +123,10 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
             Image(
                 painter = painterResource(id = coin.chain.logo),
                 contentDescription = null,
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier
+                    .padding(10.dp)
+                    .width(32.dp)
+                    .height(32.dp)
             )
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(modifier = Modifier.fillMaxWidth()) {
@@ -131,7 +134,8 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                         text = coin.chain.raw,
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(6.dp)
+                        modifier = Modifier
+                            .padding(6.dp)
                             .weight(1f)
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -139,7 +143,8 @@ fun ChainCeil(navHostController: NavHostController, coin: Coin) {
                         text = coin.getBalance().toString(),
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(6.dp)
+                        modifier = Modifier
+                            .padding(6.dp)
                             .align(Alignment.CenterVertically)
                     )
                 }
