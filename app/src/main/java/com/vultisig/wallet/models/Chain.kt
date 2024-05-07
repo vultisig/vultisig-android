@@ -1,6 +1,5 @@
 package com.vultisig.wallet.models
 
-import android.graphics.drawable.Drawable
 import com.vultisig.wallet.R
 
 enum class Chain(val raw: String) {
@@ -70,26 +69,26 @@ val Chain.SwapAsset: String
         Chain.cronosChain -> "cro"
     }
 val Chain.logo: Int
-    get() = when(this){
-        Chain.thorChain -> TODO()
-        Chain.solana -> TODO()
-        Chain.ethereum -> TODO()
-        Chain.avalanche -> TODO()
-        Chain.base -> TODO()
-        Chain.blast -> TODO()
-        Chain.arbitrum -> TODO()
-        Chain.polygon -> TODO()
-        Chain.optimism -> TODO()
-        Chain.bscChain -> TODO()
+    get() = when (this) {
+        Chain.thorChain -> R.drawable.rune
+        Chain.solana -> R.drawable.solana
+        Chain.ethereum -> R.drawable.ethereum
+        Chain.avalanche -> R.drawable.avax
+        Chain.base -> R.drawable.eth_base
+        Chain.blast -> R.drawable.eth_blast
+        Chain.arbitrum -> R.drawable.eth_arbitrum
+        Chain.polygon -> R.drawable.eth_polygon
+        Chain.optimism -> R.drawable.eth_optimism
+        Chain.bscChain -> R.drawable.bsc
         Chain.bitcoin -> R.drawable.bitcoin
-        Chain.bitcoinCash -> TODO()
-        Chain.litecoin -> TODO()
-        Chain.dogecoin -> TODO()
-        Chain.dash -> TODO()
-        Chain.gaiaChain -> TODO()
-        Chain.kujira -> TODO()
-        Chain.mayaChain -> TODO()
-        Chain.cronosChain -> TODO()
+        Chain.bitcoinCash -> R.drawable.bitcoincash
+        Chain.litecoin -> R.drawable.litecoin
+        Chain.dogecoin -> R.drawable.doge
+        Chain.dash -> R.drawable.dash
+        Chain.gaiaChain -> R.drawable.atom
+        Chain.kujira -> R.drawable.kuji
+        Chain.mayaChain -> R.drawable.cacao
+        Chain.cronosChain -> R.drawable.eth_cro
 
     }
 val Chain.IsSwapSupported: Boolean

@@ -27,7 +27,7 @@ class CryptoPriceService @Inject constructor(
             .build()
 
     private var _priceProviderIDs = listOf<String>()
-    suspend fun updatePriceProviderIDs(priceProviderIds: List<String>) {
+    fun updatePriceProviderIDs(priceProviderIds: List<String>) {
         var needRefresh = false
         if (_priceProviderIDs.containsAll(priceProviderIds).not()) {
             _priceProviderIDs = priceProviderIds
@@ -38,6 +38,7 @@ class CryptoPriceService @Inject constructor(
         }
     }
 
+    suspend fun getSettingCurrency(): SettingsCurrency = SettingsCurrency.getCurrency(appDataStore)
     suspend fun getPrice(priceProviderId: String): BigDecimal {
         val currency = SettingsCurrency.getCurrency(appDataStore).name
         cache.getIfPresent(priceProviderId)?.let {
@@ -51,17 +52,19 @@ class CryptoPriceService @Inject constructor(
             _priceProviderIDs = _priceProviderIDs.plus(priceProviderId)
         }
         getAllCryptoPricesCoinGecko()
-        return cache.getIfPresent(priceProviderId)?.first?.get(currency.lowercase()) ?: BigDecimal.ZERO
+        return cache.getIfPresent(priceProviderId)?.first?.get(currency.lowercase())
+            ?: BigDecimal.ZERO
     }
 
     private suspend fun getAllCryptoPricesCoinGecko() {
+
         val priceProviderIds = _priceProviderIDs.joinToString(",")
         val fiats = SettingsCurrency.entries.joinToString(",")
         try {
             val response = fetchPrices(priceProviderIds, fiats)
             val type: Type = object : TypeToken<Map<String, Map<String, BigDecimal>>>() {}.type
             val decodedData: Map<String, Map<String, BigDecimal>> =
-                Gson().fromJson(response.toString(), type)
+                Gson().fromJson(response, type)
             decodedData.forEach {
                 cache.put(it.key, Pair(it.value, Date()))
             }
