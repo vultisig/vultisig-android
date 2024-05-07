@@ -57,8 +57,6 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
             )
     ) {
 //        TopBar(centerText = "Keygen", navController = navController)
-
-
         when (viewModel.currentState.value) {
             KeygenState.CreatingInstance -> {
                 KeygenIndicator(

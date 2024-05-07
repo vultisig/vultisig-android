@@ -179,6 +179,8 @@ fun NewVault(navController: NavHostController, onNavigate: () -> Unit) {
             ) {
                 navController.navigate(Screen.ImportFile.route)
             }
+
+
             Spacer(
                 modifier = Modifier
                     .height(MaterialTheme.dimens.marginMedium)
@@ -190,5 +192,5 @@ fun NewVault(navController: NavHostController, onNavigate: () -> Unit) {
 @Composable
 fun CreateNewVaultPreview() {
     val navController = rememberNavController()
-    CreateNewVault( navController)
+    CreateNewVault(navController)
 }

@@ -41,7 +41,6 @@ import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
-
 import com.vultisig.wallet.presenter.navigation.Screen
 
 @Composable
@@ -70,7 +69,12 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
             )
             .clickable {
-                navController.navigate(Screen.ImportFile.route.replace(oldValue = "{has_file}", newValue = true.toString()))
+                navController.navigate(
+                    Screen.ImportFile.route.replace(
+                        oldValue = "{has_file}",
+                        newValue = true.toString()
+                    )
+                )
             }
             .drawBehind {
                 drawRoundRect(
@@ -120,7 +124,6 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                     }
                 }
             }
-
         Spacer(modifier = Modifier.weight(1.0F))
 
         MultiColorButton(
@@ -144,10 +147,11 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
 
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun ImportFilePreview() {
     val navController = rememberNavController()
-    ImportFile(navController,true)
+    ImportFile(navController, true)
 
 }

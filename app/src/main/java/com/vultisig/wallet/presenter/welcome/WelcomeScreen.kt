@@ -49,7 +49,7 @@ import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
 @Composable
 fun WelcomeScreen(
     navController: NavHostController,
-    viewModel: WelcomeViewModel = hiltViewModel()
+    viewModel: WelcomeViewModel = hiltViewModel(),
 ) {
     val pages = viewModel.state.pages
     val pagerState = rememberPagerState(pageCount = { 3 })
@@ -60,9 +60,10 @@ fun WelcomeScreen(
                 is NavigateTo -> {
                     navController.navigate(uiEvent.screen.route)
                 }
+
                 is ScrollToNextPage -> {
-                    if(pagerState.currentPage<2)
-                        pagerState.scrollToPage(pagerState.currentPage+1)
+                    if (pagerState.currentPage < 2)
+                        pagerState.scrollToPage(pagerState.currentPage + 1)
                     else {
                         navController.popBackStack()
                         navController.navigate(uiEvent.screen.route)
@@ -77,10 +78,10 @@ fun WelcomeScreen(
         }
     }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .background(MaterialTheme.appColor.oxfordBlue800),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.appColor.oxfordBlue800),
     ) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginLarge))
         Image(
@@ -129,7 +130,6 @@ fun WelcomeScreen(
                 )
         ) {
             viewModel.onEvent(WelcomeEvent.NextPages)
-
         }
         Spacer(
             modifier = Modifier
@@ -155,7 +155,6 @@ fun WelcomeScreen(
         )
 
     }
-
 }
 
 @Composable
@@ -213,4 +212,3 @@ fun PagerScreen(onBoardingPage: OnBoardPage) {
 //        }
 //    }
 //}
-

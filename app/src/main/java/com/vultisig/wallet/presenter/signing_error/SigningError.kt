@@ -86,6 +86,6 @@ fun SigningError(navController: NavHostController) {
 @Composable
 fun SigningErrorPreview() {
     val navController = rememberNavController()
-    SigningError( navController)
+    SigningError(navController)
 
 }

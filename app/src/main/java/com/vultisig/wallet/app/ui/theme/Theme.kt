@@ -52,12 +52,12 @@ fun OnBoardingComposeTheme(
                 menloFamilyTypography = compactMediumMenloFamilyTypography
                 montserratFamilyTypography = compactMediumMontserratFamilyTypography
             } else {
-
                 appDimens = CompactDimens
                 menloFamilyTypography = compactMenloFamilyTypography
                 montserratFamilyTypography = compactMontserratFamilyTypography
             }
         }
+
         else -> {
             appDimens = ExpandedDimens
             menloFamilyTypography = expandedMenloFamilyTypography
