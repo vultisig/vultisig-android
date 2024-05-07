@@ -6,6 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.on_board.OnBoardRepository
 import com.vultisig.wallet.presenter.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,12 +15,11 @@ import okhttp3.OkHttpClient
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.inject.Inject
-import com.vultisig.wallet.data.on_board.db.VaultDB
 
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repository: OnBoardRepository
+    private val repository: OnBoardRepository,
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
