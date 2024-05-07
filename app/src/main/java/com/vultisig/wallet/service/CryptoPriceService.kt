@@ -8,14 +8,11 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.SettingsCurrency
 import com.vultisig.wallet.data.common.data_store.AppDataStore
-import com.vultisig.wallet.models.CryptoPrice
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import okhttp3.OkHttpClient
 import java.lang.reflect.Type
 import java.math.BigDecimal
-import java.net.URL
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,13 +21,13 @@ import javax.inject.Singleton
 class CryptoPriceService @Inject constructor(
     private val appDataStore: AppDataStore,
 ) {
-    private val cache: Cache<String, Pair<CryptoPrice, Date>> =
+    private val cache: Cache<String, Pair<Map<String, BigDecimal>, Date>> =
         CacheBuilder
             .newBuilder()
             .build()
 
     private var _priceProviderIDs = listOf<String>()
-    suspend fun updatePriceProviderIDs(priceProviderIds: List<String>) {
+    fun updatePriceProviderIDs(priceProviderIds: List<String>) {
         var needRefresh = false
         if (_priceProviderIDs.containsAll(priceProviderIds).not()) {
             _priceProviderIDs = priceProviderIds
@@ -44,9 +41,9 @@ class CryptoPriceService @Inject constructor(
     suspend fun getPrice(priceProviderId: String): BigDecimal {
         val currency = SettingsCurrency.getCurrency(appDataStore).name
         cache.getIfPresent(priceProviderId)?.let {
-            if ((Date().time - it.second.time) <= 300000) {
+            if ((Date().time - it.second.time) <= 300 * 1000) {
                 // exist in cache and not expired
-                return it.first.prices[currency.lowercase()] ?: BigDecimal.ZERO
+                return it.first.get(currency.lowercase()) ?: BigDecimal.ZERO
             }
         }
         // when it get to here , means we need to reload the price from the server
@@ -54,7 +51,7 @@ class CryptoPriceService @Inject constructor(
             _priceProviderIDs = _priceProviderIDs.plus(priceProviderId)
         }
         getAllCryptoPricesCoinGecko()
-        return cache.getIfPresent(priceProviderId)?.first?.prices?.get(currency.lowercase())
+        return cache.getIfPresent(priceProviderId)?.first?.get(currency.lowercase())
             ?: BigDecimal.ZERO
     }
 
@@ -64,8 +61,9 @@ class CryptoPriceService @Inject constructor(
         val fiats = SettingsCurrency.entries.joinToString(",")
         try {
             val response = fetchPrices(priceProviderIds, fiats)
-            val type: Type = object : TypeToken<Map<String, CryptoPrice>>() {}.type
-            val decodedData: Map<String, CryptoPrice> = Gson().fromJson(response.toString(), type)
+            val type: Type = object : TypeToken<Map<String, Map<String, BigDecimal>>>() {}.type
+            val decodedData: Map<String, Map<String, BigDecimal>> =
+                Gson().fromJson(response, type)
             decodedData.forEach {
                 cache.put(it.key, Pair(it.value, Date()))
             }
@@ -77,19 +75,17 @@ class CryptoPriceService @Inject constructor(
     private suspend fun fetchPrices(
         coins: String,
         fiats: String,
-    ): StringBuilder {
-        val response = StringBuilder()
+    ): String {
+        return withContext(Dispatchers.IO) {
+            val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true)
+            val request = okhttp3.Request.Builder()
+                .url(Endpoints.fetchCryptoPrices(coins, fiats))
+                .addHeader("Content-Type", "application/json")
+                .build()
+            val response = client.build().newCall(request).execute()
 
-        withContext(Dispatchers.IO) {
-            var line: String
-            val connection = URL(Endpoints.fetchCryptoPrices(coins, fiats)).openConnection()
-            val reader = BufferedReader(InputStreamReader(connection.inputStream))
-            while (reader.readLine().also { line = it } != null) {
-                response.append(line)
-            }
+            return@withContext response.body?.string() ?: ""
         }
-
-        return response
     }
 
     private companion object {
