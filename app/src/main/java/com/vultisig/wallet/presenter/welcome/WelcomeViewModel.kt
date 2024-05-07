@@ -55,8 +55,7 @@ class WelcomeViewModel @Inject constructor(
         }
     }
 
-    private fun scrollToNextPage() {import androidx.compose.runtime.Immutable
-            import androidx.compose.runtime.staticCompositionLocalOf
+    private fun scrollToNextPage() {
         viewModelScope.launch(Dispatchers.IO) {
             _channel.send(ScrollToNextPage(Screen.Home))
         }
