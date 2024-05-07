@@ -41,28 +41,24 @@ fun OnBoardingComposeTheme(
     var menloFamilyTypography = compactMenloFamilyTypography
     var montserratFamilyTypography = compactMontserratFamilyTypography
     var appDimens = CompactDimens
-    when(window.widthSizeClass)
-    {
-        WindowWidthSizeClass.Compact->{
-            if (config.screenWidthDp <= 360)
-            {
-                appDimens= CompactSmallDimens
-                menloFamilyTypography =compactSmallMenloFamilyTypography
+    when (window.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            if (config.screenWidthDp <= 360) {
+                appDimens = CompactSmallDimens
+                menloFamilyTypography = compactSmallMenloFamilyTypography
                 montserratFamilyTypography = compactSmallMontserratFamilyTypography
-            }
-            else if (config.screenWidthDp <= 599)
-            {
+            } else if (config.screenWidthDp <= 599) {
                 appDimens = CompactMediumDimens
                 menloFamilyTypography = compactMediumMenloFamilyTypography
                 montserratFamilyTypography = compactMediumMontserratFamilyTypography
-            }else
-            {
+            } else {
+
                 appDimens = CompactDimens
                 menloFamilyTypography = compactMenloFamilyTypography
                 montserratFamilyTypography = compactMontserratFamilyTypography
             }
         }
-        else->{
+        else -> {
             appDimens = ExpandedDimens
             menloFamilyTypography = expandedMenloFamilyTypography
             montserratFamilyTypography = expandedMontserratFamilyTypography
@@ -92,7 +88,7 @@ fun OnBoardingComposeTheme(
         )
     }
     if (Build.VERSION.SDK_INT >= 21) {
-        val window = (LocalContext.current as Activity). window
+        val window = (LocalContext.current as Activity).window
         if (darkTheme) {
             window.statusBarColor = appColors.oxfordBlue800.toArgb()
         } else {
@@ -100,7 +96,7 @@ fun OnBoardingComposeTheme(
             window.statusBarColor = appColors.oxfordBlue800.toArgb()
         }
     }
-    
+
 }
 
 // create an extension value for LocalAppDimens.current
@@ -114,7 +110,7 @@ val MaterialTheme.dimens
 
 val MaterialTheme.appColor
     @Composable
-    get()= LocalAppColors.current
+    get() = LocalAppColors.current
 
 val MaterialTheme.menloFamily
     @Composable

@@ -49,6 +49,6 @@ val LocalAppColors = compositionLocalOf {
 val LocalMenloFamilyTypography = compositionLocalOf {
     compactMenloFamilyTypography
 }
-val LocalMontserratFamilyTypography =  compositionLocalOf {
+val LocalMontserratFamilyTypography = compositionLocalOf {
     compactMontserratFamilyTypography
 }
