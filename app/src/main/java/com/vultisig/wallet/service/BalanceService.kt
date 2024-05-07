@@ -18,9 +18,9 @@ class BalanceService @Inject constructor(
                 val balance =
                     listCosmosBalance.find { it.denom.equals(coin.ticker, ignoreCase = true) }
                 return if (balance != null) {
-                    coin.rawBalance = balance.amount.toBigInteger()
-                    val balanceInFiat = coin.getBalanceInFiat()
-                    Balance(balance.amount, balanceInFiat, coin.getBalance())
+                    val newCoin = coin.copy(rawBalance = balance.amount.toBigInteger())
+                    val balanceInFiat = newCoin.getBalanceInFiat()
+                    Balance(balance.amount, balanceInFiat, newCoin.getBalance())
                 } else {
                     Balance("0", BigDecimal.ZERO, BigDecimal.ZERO)
                 }
