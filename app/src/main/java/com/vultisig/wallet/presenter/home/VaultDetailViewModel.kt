@@ -7,8 +7,11 @@ import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.service.BalanceService
 import com.vultisig.wallet.service.CryptoPriceService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -16,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class VaultDetailViewModel @Inject constructor(
     private val priceService: CryptoPriceService,
+    private val balanceService: BalanceService,
 ) : ViewModel() {
     private val _defaultChains = listOf(Chain.bitcoin, Chain.thorChain)
     private val _coins = MutableLiveData<List<Coin>>()
@@ -33,6 +37,10 @@ class VaultDetailViewModel @Inject constructor(
         priceService.updatePriceProviderIDs(vault.coins.map { it.priceProviderID })
         vault.coins.forEach() {
             it.priceRate = getCurrentPrice(it)
+            withContext(Dispatchers.IO) {
+                val balance = balanceService.getBalance(it)
+                it.rawBalance = balance.rawBalance.toBigInteger()
+            }
         }
     }
 

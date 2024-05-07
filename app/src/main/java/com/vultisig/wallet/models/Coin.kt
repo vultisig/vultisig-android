@@ -52,6 +52,11 @@ data class Coin(
 fun Coin.getBalance(): BigDecimal {
     return BigDecimal(rawBalance)
         .divide(BigDecimal(10).pow(decimal))
+        .setScale(2, RoundingMode.HALF_UP)
+}
+
+fun Coin.getBalanceInFiat(): BigDecimal {
+    return getBalance()
         .multiply(priceRate)
         .setScale(2, RoundingMode.HALF_UP)
 }

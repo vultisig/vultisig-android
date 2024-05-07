@@ -9,9 +9,6 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.SettingsCurrency
 import com.vultisig.wallet.data.common.data_store.AppDataStore
 import com.vultisig.wallet.models.CryptoPrice
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -47,9 +44,9 @@ class CryptoPriceService @Inject constructor(
     suspend fun getPrice(priceProviderId: String): BigDecimal {
         val currency = SettingsCurrency.getCurrency(appDataStore).name
         cache.getIfPresent(priceProviderId)?.let {
-            if ((Date().time - it.second.time) <= 300) {
+            if ((Date().time - it.second.time) <= 300000) {
                 // exist in cache and not expired
-                return it.first.prices[currency] ?: BigDecimal.ZERO
+                return it.first.prices[currency.lowercase()] ?: BigDecimal.ZERO
             }
         }
         // when it get to here , means we need to reload the price from the server
@@ -57,10 +54,12 @@ class CryptoPriceService @Inject constructor(
             _priceProviderIDs = _priceProviderIDs.plus(priceProviderId)
         }
         getAllCryptoPricesCoinGecko()
-        return cache.getIfPresent(priceProviderId)?.first?.prices?.get(currency) ?: BigDecimal.ZERO
+        return cache.getIfPresent(priceProviderId)?.first?.prices?.get(currency.lowercase())
+            ?: BigDecimal.ZERO
     }
 
     private suspend fun getAllCryptoPricesCoinGecko() {
+
         val priceProviderIds = _priceProviderIDs.joinToString(",")
         val fiats = SettingsCurrency.entries.joinToString(",")
         try {
