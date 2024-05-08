@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -92,7 +94,7 @@ fun KeygenPeerDiscovery(
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         if (viewModel.keygenPayloadState.value.isNotEmpty()) {
-            QRCodeKeyGenImage(viewModel.keygenPayloadState.value)
+            QRCodeKeyGenImage(viewModel.keygenPayloadState.value, (LocalConfiguration.current.screenWidthDp/2).toInt().dp,(LocalConfiguration.current.screenWidthDp/2).toInt().dp)
         }
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
@@ -142,7 +144,7 @@ fun KeygenPeerDiscovery(
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         MultiColorButton(
-            text = "Start",
+            text = "Continue",
             backgroundColor = MaterialTheme.appColor.turquoise600Main,
             textColor = MaterialTheme.appColor.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
