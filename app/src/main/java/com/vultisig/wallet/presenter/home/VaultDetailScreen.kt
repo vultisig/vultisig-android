@@ -45,11 +45,15 @@ import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
-import com.vultisig.wallet.presenter.navigation.Screen
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
+import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
+import com.vultisig.wallet.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,76 +70,73 @@ internal fun VaultDetailScreen(
     LaunchedEffect(key1 = viewModel) {
         viewModel.loadData(vaultId)
     }
-    BoxWithSwipeRefresh(onSwipe = viewModel::refreshData, isRefreshing = viewModel.isRefreshing) {
-        Scaffold(topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = state.vaultName,
-                        style = MaterialTheme.montserratFamily.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor,
-                        modifier = Modifier
-                            .padding(
-                                start = MaterialTheme.dimens.marginMedium,
-                                end = MaterialTheme.dimens.marginMedium,
-                            )
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                    )
-                },
-
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.appColor.oxfordBlue800,
-                    titleContentColor = textColor
-                ),
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navHostController.popBackStack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "settings", tint = Color.White
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(
+            title = {
+                Text(
+                    text = state.vaultName,
+                    style = MaterialTheme.montserratFamily.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    modifier = Modifier
+                        .padding(
+                            start = MaterialTheme.dimens.marginMedium,
+                            end = MaterialTheme.dimens.marginMedium,
                         )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        Toast.makeText(context, "edit vault", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_edit_square_24),
-                            contentDescription = "search",
-                            tint = Color.White
+                        .wrapContentHeight(align = Alignment.CenterVertically)
+                )
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.appColor.oxfordBlue800,
+                titleContentColor = textColor
+            ),
+            navigationIcon = {
+                IconButton(onClick = {
+                    navHostController.popBackStack()
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "settings", tint = Color.White
+                    )
+                }
+            },
+            actions = {
+                IconButton(onClick = {
+                    Toast.makeText(context, "edit vault", Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_edit_square_24),
+                        contentDescription = "search",
+                        tint = Color.White
+                    )
+                }
+            }
+        )
+    }, bottomBar = {}) {
+        LazyColumn(
+            modifier = Modifier.padding(it),
+            contentPadding = PaddingValues(
+                all = 16.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            items(state.accounts) { account ->
+                ChainCeil(
+                    account = account
+                )
+            }
+            item {
+                UiSpacer(
+                    size = 16.dp,
+                )
+                UiPlusButton(
+                    title = stringResource(R.string.vault_choose_chains),
+                    onClick = {
+                        navHostController.navigate(
+                            Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
                         )
-                    }
-                }
-            )
-        }, bottomBar = {}) {
-            LazyColumn(
-                modifier = Modifier.padding(it),
-                contentPadding = PaddingValues(
-                    all = 16.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                items(state.accounts) { account ->
-                    ChainCeil(
-                        account = account
-                    )
-                }
-                item {
-                    UiSpacer(
-                        size = 16.dp,
-                    )
-                    UiPlusButton(
-                        title = stringResource(R.string.vault_choose_chains),
-                        onClick = {
-                            navHostController.navigate(
-                                Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
-                            )
-                        },
-                    )
-                }
+                    },
+                )
             }
         }
     }
