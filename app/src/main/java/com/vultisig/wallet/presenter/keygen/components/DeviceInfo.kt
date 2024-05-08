@@ -43,8 +43,8 @@ fun DeviceInfo(
 ) {
     Column(
         modifier = Modifier
-            .width(80.dp)
-            .height(120.dp)
+            .width(122.dp)
+            .height(165.dp)
             .clip(shape = RoundedCornerShape(size = MaterialTheme.dimens.small1))
             .background(MaterialTheme.appColor.oxfordBlue600Main)
             .clickable {
@@ -96,6 +96,7 @@ fun DeviceInfo(
             modifier = Modifier.align(CenterHorizontally),
             text = name,
             overflow = TextOverflow.Ellipsis,
+            maxLines = 2,
             color = MaterialTheme.appColor.neutral0,
             style = MaterialTheme.montserratFamily.titleMedium,
             textAlign = TextAlign.Center
