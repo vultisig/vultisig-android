@@ -117,6 +117,7 @@ fun KeygenPeerDiscovery(
                             true -> viewModel.addParticipant(participant)
                             false -> viewModel.removeParticipant(participant)
                         }
+
                     }
                 }
             }
@@ -129,6 +130,17 @@ fun KeygenPeerDiscovery(
         }
 
         Spacer(modifier = Modifier.weight(1.0f))
+
+        Image(painter = painterResource(id = R.drawable.wifi), contentDescription = null)
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
+        Text(
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
+            text = "Keep all devices on same WiFi with vultisig App open. (May not work on hotel/airport WiFi)",
+            color = textColor,
+            style = MaterialTheme.menloFamily.headlineSmall.copy(
+                textAlign = TextAlign.Center, fontSize = 13.sp
+            ),
+        )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         MultiColorButton(
