@@ -15,5 +15,6 @@ sealed class Screen(val route: String) {
             return "vault_detail/$vaultName"
         }
     }
+    data object KeysignFlow: Screen(route = "keysign_flow")
 
 }

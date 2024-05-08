@@ -91,4 +91,5 @@ dependencies {
     implementation(libs.zxing.android.embedded)
     implementation(libs.okhttp)
     implementation(libs.wallet.core)
+    implementation(libs.lifecycle.viewmodel.compose)
 }

@@ -8,9 +8,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.app.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.presenter.navigation.SetupNavGraph
 import dagger.hilt.android.AndroidEntryPoint
 

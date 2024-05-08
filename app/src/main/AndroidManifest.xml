@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
-        android:name="com.vultisig.wallet.app.vultisigApplication"
+        android:name="com.vultisig.wallet.app.VultisigApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

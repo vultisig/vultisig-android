@@ -53,11 +53,13 @@ class VaultDetailViewModel @Inject constructor(
     val coins: MutableLiveData<List<CoinWrapper>>
         get() = _coins
 
+    val currentVault: MutableLiveData<Vault> = MutableLiveData(Vault("empty"))
     suspend fun getCurrentPrice(coin: Coin): BigDecimal {
         return priceService.getPrice(coin.priceProviderID)
     }
 
     suspend fun setData(vault: Vault) {
+        this.currentVault.value = vault
         applyDefaultChains(vault)
         _coins.value = vault.coins.map { CoinWrapper(it) }
         priceService.updatePriceProviderIDs(vault.coins.map { it.priceProviderID })

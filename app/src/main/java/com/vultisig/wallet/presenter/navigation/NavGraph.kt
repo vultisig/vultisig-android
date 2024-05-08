@@ -16,6 +16,7 @@ import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
+import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 
@@ -26,6 +27,7 @@ fun SetupNavGraph(
     startDestination: String,
 ) {
     val context: Context = LocalContext.current
+
     NavHost(
         navController = navController, startDestination = startDestination
     ) {
@@ -64,12 +66,15 @@ fun SetupNavGraph(
             val hasFile = navBackStackEntry.arguments?.getString("has_file")?.toBoolean() ?: false
             ImportFile(navController, hasFile)
         }
-        composable(route = Screen.VaultDetail.route) {navBackStackEntry ->
+        composable(route = Screen.VaultDetail.route) { navBackStackEntry ->
             val vaultName = navBackStackEntry.arguments?.getString("vault_name") ?: ""
             val vaultDB = VaultDB(context)
             vaultDB.select(vaultName)?.let {
-                 VaultDetail(navController, it)
+                VaultDetail(navController, it)
             }
+        }
+        composable(route = Screen.KeysignFlow.route) {
+            KeysignFlowView(navController)
         }
     }
 }

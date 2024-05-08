@@ -1,6 +1,6 @@
 package com.vultisig.wallet.presenter.home
 
-import android.widget.Toast
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -37,22 +37,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
+import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
+import com.vultisig.wallet.presenter.navigation.Screen
+import java.math.BigInteger
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun VaultDetail(navHostController: NavHostController, vault: Vault) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
     val viewModel: VaultDetailViewModel = hiltViewModel()
+    val keysignShareViewModel: KeysignShareViewModel =
+        viewModel(context as MainActivity)
     val coins: List<CoinWrapper> =
         viewModel.coins.asFlow().collectAsState(initial = emptyList()).value
 
@@ -91,7 +100,25 @@ fun VaultDetail(navHostController: NavHostController, vault: Vault) {
             },
             actions = {
                 IconButton(onClick = {
-                    Toast.makeText(context, "edit vault", Toast.LENGTH_SHORT).show()
+                    val coin = viewModel.currentVault.value?.coins?.first() { it.ticker == "RUNE" }
+                    coin?.let {
+                        keysignShareViewModel.vault = viewModel.currentVault.value
+                        keysignShareViewModel.keysignPayload = KeysignPayload(
+                            coin = it,
+                            toAddress = "my to address",
+                            toAmount = BigInteger("10000000"),
+                            blockChainSpecific = BlockChainSpecific.THORChain(
+                                BigInteger("0"),
+                                BigInteger("0")
+                            ),
+                            memo = null,
+                            swapPayload = null,
+                            approvePayload = null,
+                            vaultPublicKeyECDSA = vault.pubKeyECDSA
+                        )
+                        navHostController.navigate(Screen.KeysignFlow.route)
+                    }
+
                 }) {
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_edit_square_24),
