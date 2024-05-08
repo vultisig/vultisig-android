@@ -14,8 +14,29 @@ data class KeysignMesssage(
 ) : Parcelable {
     fun toJson(): String {
         val gson = GsonBuilder()
+            .registerTypeAdapter(KeysignPayload::class.java, KeysignPayloadSerializer())
             .registerTypeAdapter(
-                BlockChainSpecific::class.java,
+                BlockChainSpecific.UTXO::class.java,
+                BlockChainSpecificSerializer()
+            )
+            .registerTypeAdapter(
+                BlockChainSpecific.Cosmos::class.java,
+                BlockChainSpecificSerializer()
+            )
+            .registerTypeAdapter(
+                BlockChainSpecific.THORChain::class.java,
+                BlockChainSpecificSerializer()
+            ).registerTypeAdapter(
+                BlockChainSpecific.Sui::class.java,
+                BlockChainSpecificSerializer()
+            ).registerTypeAdapter(
+                BlockChainSpecific.Polkadot::class.java,
+                BlockChainSpecificSerializer()
+            ).registerTypeAdapter(
+                BlockChainSpecific.Solana::class.java,
+                BlockChainSpecificSerializer()
+            ).registerTypeAdapter(
+                BlockChainSpecific.Ethereum::class.java,
                 BlockChainSpecificSerializer()
             )
             .create()
@@ -28,6 +49,10 @@ data class KeysignMesssage(
                 .registerTypeAdapter(
                     BlockChainSpecific::class.java,
                     BlockChainSpecificDeserializer()
+                )
+                .registerTypeAdapter(
+                    KeysignPayload::class.java,
+                    KeysignPayloadDeserializer()
                 )
                 .create()
             return gson.fromJson(json, KeysignMesssage::class.java)

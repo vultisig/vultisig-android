@@ -1,12 +1,12 @@
 package com.vultisig.wallet.presenter.keysign
 
 import android.os.Parcelable
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
@@ -18,7 +18,6 @@ import com.vultisig.wallet.models.Vault
 import kotlinx.parcelize.Parcelize
 import java.lang.reflect.Type
 import java.math.BigInteger
-
 
 
 @Parcelize
@@ -34,17 +33,48 @@ data class KeysignPayload(
     val vaultPublicKeyECDSA: String,
 ) : Parcelable {
 
+    fun toJson(): String {
+        val gson = GsonBuilder()
+            .registerTypeAdapter(
+                BlockChainSpecific::class.java,
+                BlockChainSpecificSerializer()
+            ).registerTypeAdapter(
+                KeysignPayload::class.java,
+                KeysignPayloadSerializer()
+            )
+            .create()
+        return gson.toJson(this)
+    }
+
+    companion object {
+        fun fromJson(json: String): KeysignPayload {
+            val gson = GsonBuilder()
+                .registerTypeAdapter(
+                    KeysignPayload::class.java,
+                    KeysignPayloadDeserializer()
+                )
+                .registerTypeAdapter(
+                    BlockChainSpecific::class.java,
+                    BlockChainSpecificDeserializer()
+                )
+                .create()
+            return gson.fromJson(json, KeysignPayload::class.java)
+        }
+    }
+
     fun getKeysignMessages(vault: Vault): List<String> {
         throw Exception("Not implemented")
     }
 
 }
+
 fun BigInteger.toJson(): JsonArray {
     val jsonArray = JsonArray()
     jsonArray.add("+")
     jsonArray.add(this)
     return jsonArray
 }
+
 class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
     override fun serialize(
         src: KeysignPayload,

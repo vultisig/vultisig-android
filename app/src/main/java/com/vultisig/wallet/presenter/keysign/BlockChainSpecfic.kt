@@ -14,7 +14,7 @@ import java.math.BigInteger
 
 @Parcelize
 sealed class BlockChainSpecific : Parcelable {
-    data class UTXO(val byteFee: BigInteger) : BlockChainSpecific()
+    data class UTXO(val byteFee: BigInteger, val sendMaxAmount: Boolean) : BlockChainSpecific()
     data class Ethereum(
         val maxFeePerGasWei: BigInteger,
         val priorityFeeWei: BigInteger,
@@ -29,8 +29,7 @@ sealed class BlockChainSpecific : Parcelable {
         val accountNumber: BigInteger,
         val sequence: BigInteger,
         val gas: BigInteger,
-    ) :
-        BlockChainSpecific()
+    ) : BlockChainSpecific()
 
     data class Solana(val recentBlockHash: String, val priorityFee: BigInteger) :
         BlockChainSpecific()
@@ -58,16 +57,17 @@ class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific> {
         when (src) {
             is BlockChainSpecific.UTXO -> {
                 val utxoJSON = JsonObject()
-                utxoJSON.addProperty("byteFee", src.byteFee)
+                utxoJSON.add("byteFee", src.byteFee.toJson())
+                utxoJSON.addProperty("sendMaxAmount", src.sendMaxAmount)
                 jsonObject.add("UTXO", utxoJSON)
             }
 
             is BlockChainSpecific.Ethereum -> {
                 val ethereumJSON = JsonObject()
-                ethereumJSON.addProperty("maxFeePerGasWei", src.maxFeePerGasWei)
-                ethereumJSON.addProperty("priorityFeeWei", src.priorityFeeWei)
+                ethereumJSON.add("maxFeePerGasWei", src.maxFeePerGasWei.toJson())
+                ethereumJSON.add("priorityFeeWei", src.priorityFeeWei.toJson())
                 ethereumJSON.addProperty("nonce", src.nonce)
-                ethereumJSON.addProperty("gasLimit", src.gasLimit)
+                ethereumJSON.add("gasLimit", src.gasLimit.toJson())
                 jsonObject.add("Ethereum", ethereumJSON)
             }
 
@@ -89,13 +89,13 @@ class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific> {
             is BlockChainSpecific.Solana -> {
                 val solanaJSON = JsonObject()
                 solanaJSON.addProperty("recentBlockHash", src.recentBlockHash)
-                solanaJSON.addProperty("priorityFee", src.priorityFee)
+                solanaJSON.add("priorityFee", src.priorityFee.toJson())
                 jsonObject.add("Solana", solanaJSON)
             }
 
             is BlockChainSpecific.Sui -> {
                 val suiJSON = JsonObject()
-                suiJSON.addProperty("referenceGasPrice", src.referenceGasPrice)
+                suiJSON.add("referenceGasPrice", src.referenceGasPrice.toJson())
                 suiJSON.add("coins", context?.serialize(src.coins))
                 jsonObject.add("Sui", suiJSON)
             }
@@ -104,7 +104,7 @@ class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific> {
                 val polkadotJSON = JsonObject()
                 polkadotJSON.addProperty("recentBlockHash", src.recentBlockHash)
                 polkadotJSON.addProperty("nonce", src.nonce)
-                polkadotJSON.addProperty("currentBlockNumber", src.currentBlockNumber)
+                polkadotJSON.add("currentBlockNumber", src.currentBlockNumber.toJson())
                 polkadotJSON.addProperty("specVersion", src.specVersion.toLong())
                 polkadotJSON.addProperty("transactionVersion", src.transactionVersion.toLong())
                 polkadotJSON.addProperty("genesisHash", src.genesisHash)
@@ -125,39 +125,59 @@ class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
         val jsonObject = json.asJsonObject
 
         return when {
-            jsonObject.has("UTXO") -> context.deserialize<BlockChainSpecific.UTXO>(
-                jsonObject.get("UTXO"),
-                BlockChainSpecific.UTXO::class.java
-            )
+            jsonObject.has("UTXO") -> {
+                val obj = jsonObject.get("UTXO").asJsonObject
+                return BlockChainSpecific.UTXO(
+                    byteFee = obj.get("byteFee").asJsonArray[1].asBigInteger,
+                    sendMaxAmount = obj.get("sendMaxAmount").asBoolean
+                )
+            }
 
-            jsonObject.has("Ethereum") -> context.deserialize<BlockChainSpecific.Ethereum>(
-                jsonObject.get("Ethereum"),
-                BlockChainSpecific.Ethereum::class.java
-            )
+            jsonObject.has("Ethereum") -> {
+                val obj = jsonObject.get("Ethereum").asJsonObject
+                return BlockChainSpecific.Ethereum(
+                    maxFeePerGasWei = obj.get("maxFeePerGasWei").asJsonArray[1].asBigInteger,
+                    priorityFeeWei = obj.get("priorityFeeWei").asJsonArray[1].asBigInteger,
+                    nonce = obj.get("nonce").asLong,
+                    gasLimit = obj.get("gasLimit").asJsonArray[1].asBigInteger
+                )
+            }
 
-            jsonObject.has("THORChain") -> context.deserialize<BlockChainSpecific.THORChain>(
-                jsonObject.get("THORChain"),
-                BlockChainSpecific.THORChain::class.java
-            )
+            jsonObject.has("THORChain") -> {
+                val obj = jsonObject.get("THORChain").asJsonObject
+                return BlockChainSpecific.THORChain(
+                    accountNumber = obj.get("accountNumber").asBigInteger,
+                    sequence = obj.get("sequence").asBigInteger
+                )
+            }
 
-            jsonObject.has("Cosmos") -> context.deserialize<BlockChainSpecific.Cosmos>(
-                jsonObject.get("Cosmos"),
-                BlockChainSpecific.Cosmos::class.java
-            )
+            jsonObject.has("Cosmos") -> {
+                val obj = jsonObject.get("Cosmos").asJsonObject
+                return BlockChainSpecific.Cosmos(
+                    accountNumber = obj.get("accountNumber").asBigInteger,
+                    sequence = obj.get("sequence").asBigInteger,
+                    gas = obj.get("gas").asBigInteger
+                )
+            }
 
-            jsonObject.has("Solana") -> context.deserialize<BlockChainSpecific.Solana>(
-                jsonObject.get("Solana"),
-                BlockChainSpecific.Solana::class.java
-            )
+            jsonObject.has("Solana") -> {
+                val obj = jsonObject.get("Solana").asJsonObject
+                return BlockChainSpecific.Solana(
+                    recentBlockHash = obj.get("recentBlockHash").asString,
+                    priorityFee = obj.get("priorityFee").asJsonArray[1].asBigInteger
+                )
+            }
 
-            jsonObject.has("Sui") -> context.deserialize<BlockChainSpecific.Sui>(
-                jsonObject.get("Sui"),
-                BlockChainSpecific.Sui::class.java
-            )
+            jsonObject.has("Sui") -> {
+                val obj = jsonObject.get("Sui").asJsonObject
+                return BlockChainSpecific.Sui(
+                    referenceGasPrice = obj.get("referenceGasPrice").asJsonArray[1].asBigInteger,
+                    coins = context.deserialize(obj.get("coins"), List::class.java)
+                )
+            }
 
             jsonObject.has("Polkadot") -> context.deserialize<BlockChainSpecific.Polkadot>(
-                jsonObject.get("Polkadot"),
-                BlockChainSpecific.Polkadot::class.java
+                jsonObject.get("Polkadot"), BlockChainSpecific.Polkadot::class.java
             )
 
             else -> throw JsonParseException("Not a valid BlockChainSpecific type")
