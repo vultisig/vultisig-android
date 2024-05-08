@@ -16,7 +16,4 @@ class Vault(
     var resharePrefix: String = "",
     var keyshares: List<KeyShare> = listOf(),
     var coins: MutableList<Coin> = mutableListOf(),
-) : Parcelable {
-
-}
-
+) : Parcelable

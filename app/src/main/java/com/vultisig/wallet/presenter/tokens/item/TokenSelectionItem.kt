@@ -16,10 +16,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
@@ -37,10 +33,10 @@ import com.vultisig.wallet.models.Coins
 
 @Composable
 fun TokenSelectionItem(
-    token: Coin
+    token: Coin,
+    isChecked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
-    var checked by remember { mutableStateOf(true) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -99,9 +95,9 @@ fun TokenSelectionItem(
                     uncheckedBorderColor = MaterialTheme.appColor.oxfordBlue400,
                     uncheckedTrackColor = MaterialTheme.appColor.oxfordBlue400
                 ),
-                checked = checked,
+                checked = isChecked,
                 onCheckedChange = { isChecked ->
-                    checked = isChecked
+                    onCheckedChange?.invoke(isChecked)
                 },
             )
         }
@@ -119,6 +115,7 @@ private fun getCoinLogo(logoName: String): Painter {
 @Composable
 fun TokenSelectionItemPreview() {
     TokenSelectionItem(
-        token = Coins.SupportedCoins[0]
+        token = Coins.SupportedCoins[0],
+        isChecked = false,
     )
 }
