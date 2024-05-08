@@ -10,7 +10,7 @@ class DeepLinkHelperTest {
     @Test
     fun getJsonData() {
         val deepLinkHelper = DeepLinkHelper(testInput)
-        assertEquals("xxx", deepLinkHelper.getJsonData(testInput))
+        assertEquals("xxx", deepLinkHelper.getJsonData())
     }
 
     @Test

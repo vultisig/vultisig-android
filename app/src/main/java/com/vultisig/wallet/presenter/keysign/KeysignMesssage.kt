@@ -1,7 +1,7 @@
 package com.vultisig.wallet.presenter.keysign
 
 import android.os.Parcelable
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -13,6 +13,24 @@ data class KeysignMesssage(
     val usevultisigRelay: Boolean,
 ) : Parcelable {
     fun toJson(): String {
-        return Gson().toJson(this)
+        val gson = GsonBuilder()
+            .registerTypeAdapter(
+                BlockChainSpecific::class.java,
+                BlockChainSpecificSerializer()
+            )
+            .create()
+        return gson.toJson(this)
+    }
+
+    companion object {
+        fun fromJson(json: String): KeysignMesssage {
+            val gson = GsonBuilder()
+                .registerTypeAdapter(
+                    BlockChainSpecific::class.java,
+                    BlockChainSpecificDeserializer()
+                )
+                .create()
+            return gson.fromJson(json, KeysignMesssage::class.java)
+        }
     }
 }

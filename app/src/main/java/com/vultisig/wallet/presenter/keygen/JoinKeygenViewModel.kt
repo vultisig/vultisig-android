@@ -71,7 +71,7 @@ class JoinKeygenViewModel : ViewModel() {
 
     fun setScanResult(content: String) {
         try {
-            val qrCodeContent = DeepLinkHelper(content).getJsonData(content)
+            val qrCodeContent = DeepLinkHelper(content).getJsonData()
             qrCodeContent ?: run {
                 throw Exception("invalid QR code")
             }

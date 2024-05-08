@@ -77,7 +77,7 @@ class utxoHelper(
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setUseMaxAmount(false)
             .setByteFee(utxo.byteFee.toLong())
-        for (item in utxo.utxoes) {
+        for (item in keysignPayload.utxos) {
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
             val output = Bitcoin.OutPoint.newBuilder()
@@ -139,7 +139,7 @@ class utxoHelper(
             input.setOutputOpReturn(ByteString.copyFromUtf8(it))
         }
 
-        for (item in utxo.utxoes) {
+        for (item in keysignPayload.utxos) {
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
             val output = Bitcoin.OutPoint.newBuilder()

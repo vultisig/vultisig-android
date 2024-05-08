@@ -15,7 +15,7 @@ class DeepLinkHelper(private val input: String) {
         }
     }
 
-    fun getJsonData(input: String): String? {
+    fun getJsonData(): String? {
         return parameters["jsonData"]
     }
 
@@ -33,9 +33,5 @@ class DeepLinkHelper(private val input: String) {
         }
         return null
     }
-    fun getRawQRCodeData(): String? {
-        val jsonData = getJsonData(input)
-        return null
-        //Gson().
-    }
+
 }
