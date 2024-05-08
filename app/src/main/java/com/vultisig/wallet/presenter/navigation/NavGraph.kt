@@ -5,19 +5,23 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.home.HomeScreen
-import com.vultisig.wallet.presenter.home.VaultDetail
+import com.vultisig.wallet.presenter.home.VaultDetailScreen
 import com.vultisig.wallet.presenter.import_file.ImportFile
 import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
+import com.vultisig.wallet.presenter.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
+import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 
 @ExperimentalAnimationApi
 @Composable
@@ -64,12 +68,24 @@ fun SetupNavGraph(
             val hasFile = navBackStackEntry.arguments?.getString("has_file")?.toBoolean() ?: false
             ImportFile(navController, hasFile)
         }
-        composable(route = Screen.VaultDetail.route) {navBackStackEntry ->
-            val vaultName = navBackStackEntry.arguments?.getString("vault_name") ?: ""
-            val vaultDB = VaultDB(context)
-            vaultDB.select(vaultName)?.let {
-                 VaultDetail(navController, it)
-            }
+        composable(
+            route = Screen.VaultDetail.route,
+        ) { navBackStackEntry ->
+            val vaultId = navBackStackEntry.arguments?.getString("vault_name") ?: ""
+            VaultDetailScreen(
+                vaultId = vaultId,
+                navHostController = navController,
+            )
+        }
+        composable(
+            route = AddChainAccount.route,
+            arguments = listOf(
+                navArgument(AddChainAccount.ARG_VAULT_ID) { type = NavType.StringType }
+            )
+        ) {
+            ChainSelectionScreen(
+                navController = navController
+            )
         }
     }
 }

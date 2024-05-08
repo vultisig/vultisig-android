@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.chain
+package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,12 +21,14 @@ import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.tokens.item.TokenSelectionItem
+import com.vultisig.wallet.ui.models.ChainSelectionViewModel
 
 @Composable
-fun ChainSelectionView(
-    navController: NavHostController
+internal fun ChainSelectionScreen(
+    navController: NavHostController,
+    viewModel: ChainSelectionViewModel = hiltViewModel(),
 ) {
-    val viewModel: ChainSelectionViewModel = hiltViewModel()
+    val state = viewModel.uiState.collectAsState().value
 
     Column(
         modifier = Modifier
@@ -42,8 +45,19 @@ fun ChainSelectionView(
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         LazyColumn {
-            items(viewModel.tokenList.value) { token ->
-                TokenSelectionItem(token)
+            items(state.chains) { chain ->
+                val token = chain.coin
+                TokenSelectionItem(
+                    token = token,
+                    isChecked = chain.isEnabled,
+                    onCheckedChange = { checked ->
+                        if (checked) {
+                            viewModel.enableAccount(token)
+                        } else {
+                            viewModel.disableAccount(token)
+                        }
+                    }
+                )
             }
         }
     }
@@ -52,7 +66,7 @@ fun ChainSelectionView(
 @Preview
 @Composable
 fun ChainSelectionViewPreview() {
-    ChainSelectionView(
+    ChainSelectionScreen(
         navController = rememberNavController()
     )
 }
