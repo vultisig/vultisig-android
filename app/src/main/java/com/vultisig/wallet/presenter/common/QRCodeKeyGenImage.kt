@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
 import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.Dispatchers
@@ -54,11 +55,11 @@ fun QRCodeKeyGenImage(
                 drawRoundRect(
                     color = Color("#33e6bf".toColorInt()), style = Stroke(
                         width = 8f,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 50f), 0.0f)
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(50f,50f), 0.0f)
                     ), cornerRadius = CornerRadius(16.dp.toPx())
                 )
             }
-            .padding(20.dp)
+            .padding(10.dp)
     )
 }
 
@@ -81,13 +82,14 @@ fun rememberQRBitmapPainter(
 
         launch(Dispatchers.IO) {
             val qrCodeWriter = QRCodeWriter()
-
+            val hintMap = mapOf(EncodeHintType.MARGIN to 0)
             val bitmapMatrix = try {
                 qrCodeWriter.encode(
                     qrCodeContent,
                     BarcodeFormat.QR_CODE,
                     imageWidthPx,
-                    imageHeightPx
+                    imageHeightPx,
+                    hintMap
                 )
             } catch (ex: WriterException) {
                 null

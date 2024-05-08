@@ -43,8 +43,8 @@ fun DeviceInfo(
 ) {
     Column(
         modifier = Modifier
-            .width(122.dp)
-            .height(165.dp)
+            .width(80.dp)
+            .height(120.dp)
             .clip(shape = RoundedCornerShape(size = MaterialTheme.dimens.small1))
             .background(MaterialTheme.appColor.oxfordBlue600Main)
             .clickable {
@@ -63,8 +63,8 @@ fun DeviceInfo(
             Box(
                 modifier = Modifier
                     .clip(shape = CircleShape)
-                    .height(MaterialTheme.dimens.small3)
-                    .width(MaterialTheme.dimens.small3),
+                    .height(MaterialTheme.dimens.medium1)
+                    .width(MaterialTheme.dimens.medium1)
             ) {
                 Checkbox(
                     modifier = Modifier.clip(shape = CircleShape),
