@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
@@ -17,11 +18,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Immutable
 internal data class VaultDetailUiModel(
     val vaultName: String = "",
     val accounts: List<ChainAccountUiModel> = emptyList(),
 )
 
+@Immutable
 internal data class ChainAccountUiModel(
     val chainName: String,
     @DrawableRes val logo: Int,
