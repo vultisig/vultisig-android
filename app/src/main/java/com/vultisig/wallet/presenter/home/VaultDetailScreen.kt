@@ -43,18 +43,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.chains.thorchainHelper
+import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
-import com.vultisig.wallet.presenter.navigation.Screen
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
+import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.montserratFamily
 import java.math.BigInteger
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
@@ -74,92 +75,94 @@ internal fun VaultDetailScreen(
     LaunchedEffect(key1 = viewModel) {
         viewModel.loadData(vaultId)
     }
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(
-            title = {
-                Text(
-                    text = state.vaultName,
-                    style = MaterialTheme.montserratFamily.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = textColor,
-                    modifier = Modifier
-                        .padding(
-                            start = MaterialTheme.dimens.marginMedium,
-                            end = MaterialTheme.dimens.marginMedium,
-                        )
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.appColor.oxfordBlue800,
-                titleContentColor = textColor
-            ),
-            navigationIcon = {
-                IconButton(onClick = {
-                    navHostController.popBackStack()
-                }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "settings", tint = Color.White
+    BoxWithSwipeRefresh(onSwipe = viewModel::refreshData, isRefreshing = viewModel.isRefreshing) {
+        Scaffold(topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = state.vaultName,
+                        style = MaterialTheme.montserratFamily.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor,
+                        modifier = Modifier
+                            .padding(
+                                start = MaterialTheme.dimens.marginMedium,
+                                end = MaterialTheme.dimens.marginMedium,
+                            )
+                            .wrapContentHeight(align = Alignment.CenterVertically)
                     )
-                }
-            },
-            actions = {
-                IconButton(onClick = {
-                    val vault = viewModel.currentVault.value
-                    val coin = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
-                    coin?.let {
-                        keysignShareViewModel.vault = viewModel.currentVault.value
-                        keysignShareViewModel.keysignPayload = KeysignPayload(
-                            coin = it,
-                            toAddress = "thor1f04877jfmm2sxmxyqkj3m9xtak8he0gg7ypuzz",
-                            toAmount = BigInteger("10000000"),
-                            blockChainSpecific = BlockChainSpecific.THORChain(
-                                BigInteger("1024"),
-                                BigInteger("0")
-                            ),
-                            memo = null,
-                            swapPayload = null,
-                            approvePayload = null,
-                            vaultPublicKeyECDSA = viewModel.currentVault.value.pubKeyECDSA
-                        )
-                        navHostController.navigate(Screen.KeysignFlow.route)
-                    }
+                },
 
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_edit_square_24),
-                        contentDescription = "search",
-                        tint = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.appColor.oxfordBlue800,
+                    titleContentColor = textColor
+                ),
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navHostController.popBackStack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "settings", tint = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val vault = viewModel.currentVault.value
+                        val coin = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
+                        coin?.let {
+                            keysignShareViewModel.vault = viewModel.currentVault.value
+                            keysignShareViewModel.keysignPayload = KeysignPayload(
+                                coin = it,
+                                toAddress = "thor1f04877jfmm2sxmxyqkj3m9xtak8he0gg7ypuzz",
+                                toAmount = BigInteger("10000000"),
+                                blockChainSpecific = BlockChainSpecific.THORChain(
+                                    BigInteger("1024"),
+                                    BigInteger("0")
+                                ),
+                                memo = null,
+                                swapPayload = null,
+                                approvePayload = null,
+                                vaultPublicKeyECDSA = viewModel.currentVault.value.pubKeyECDSA
+                            )
+                            navHostController.navigate(Screen.KeysignFlow.route)
+                        }
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_edit_square_24),
+                            contentDescription = "search",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
+        }, bottomBar = {}) {
+            LazyColumn(
+                modifier = Modifier.padding(it),
+                contentPadding = PaddingValues(
+                    all = 16.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                items(state.accounts) { account ->
+                    ChainCeil(
+                        account = account
                     )
                 }
-            }
-        )
-    }, bottomBar = {}) {
-        LazyColumn(
-            modifier = Modifier.padding(it),
-            contentPadding = PaddingValues(
-                all = 16.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            items(state.accounts) { account ->
-                ChainCeil(
-                    account = account
-                )
-            }
-            item {
-                UiSpacer(
-                    size = 16.dp,
-                )
-                UiPlusButton(
-                    title = stringResource(R.string.vault_choose_chains),
-                    onClick = {
-                        navHostController.navigate(
-                            Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
-                        )
-                    },
-                )
+                item {
+                    UiSpacer(
+                        size = 16.dp,
+                    )
+                    UiPlusButton(
+                        title = stringResource(R.string.vault_choose_chains),
+                        onClick = {
+                            navHostController.navigate(
+                                Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
+                            )
+                        },
+                    )
+                }
             }
         }
     }
@@ -212,7 +215,7 @@ internal fun ChainCeil(
                 }
                 Text(
                     text = account.address,
-                    style = MaterialTheme.montserratFamily.titleSmall,
+                    style = MaterialTheme.montserratFamily.body1,
                     color = MaterialTheme.appColor.turquoise800,
                     modifier = Modifier.padding(10.dp)
                 )

@@ -1,21 +1,16 @@
-package com.vultisig.wallet.app.ui.theme
+package com.vultisig.wallet.ui.theme
 
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
-import com.vultisig.wallet.ui.theme.ColorsPalette
-import com.vultisig.wallet.ui.theme.CompactDimens
-import com.vultisig.wallet.ui.theme.Dimens
-import com.vultisig.wallet.ui.theme.OnLightCustomColorsPalette
 
 @Composable
-fun AppUtils(
+internal fun AppUtils(
     appDimens: Dimens,
     appColor: ColorsPalette,
-    menloFamilyTypography: Typography,
-    montserratFamilyTypography: Typography,
+    menloTypography: VultisigTypography,
+    montserratTypography: VultisigTypography,
     content: @Composable () -> Unit,
 ) {
     val appDimens = remember {
@@ -25,10 +20,10 @@ fun AppUtils(
         appColor
     }
     val menloFamilyTypography = remember {
-        menloFamilyTypography
+        menloTypography
     }
     val montserratFamilyTypography = remember {
-        montserratFamilyTypography
+        montserratTypography
     }
     CompositionLocalProvider(
         LocalAppDimens provides appDimens,
@@ -47,9 +42,9 @@ val LocalAppDimens = compositionLocalOf {
 val LocalAppColors = compositionLocalOf {
     OnLightCustomColorsPalette
 }
-val LocalMenloFamilyTypography = compositionLocalOf {
-    compactMenloFamilyTypography
+internal val LocalMenloFamilyTypography = compositionLocalOf {
+    menloTypography
 }
-val LocalMontserratFamilyTypography = compositionLocalOf {
-    compactMontserratFamilyTypography
+internal val LocalMontserratFamilyTypography = compositionLocalOf {
+    montserratTypography
 }

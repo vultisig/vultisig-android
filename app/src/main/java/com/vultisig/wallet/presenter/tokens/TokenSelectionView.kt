@@ -16,10 +16,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
+import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.presenter.tokens.item.TokenSelectionItem
+import com.vultisig.wallet.ui.components.TokenSelectionItem
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 fun TokenSelectionView(
@@ -44,7 +45,9 @@ fun TokenSelectionView(
         LazyColumn {
             items(viewModel.tokenList.value) { token ->
                 TokenSelectionItem(
-                    token = token,
+                    title = token.ticker,
+                    subtitle = token.priceProviderID,
+                    logo = Coins.getCoinLogo(logoName = token.logo),
                     isChecked = false,
                 )
             }

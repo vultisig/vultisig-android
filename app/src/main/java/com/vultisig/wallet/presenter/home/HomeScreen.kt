@@ -33,11 +33,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

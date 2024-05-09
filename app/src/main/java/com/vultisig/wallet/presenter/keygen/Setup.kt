@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keygen
 
-import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,12 +21,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R.drawable
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.menloFamily
-import com.vultisig.wallet.app.ui.theme.montserratFamily
+import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun Setup(navController: NavHostController) {
@@ -71,17 +70,17 @@ fun Setup(navController: NavHostController) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
 
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.body3,
             text = "3 Devices to create a vault; ",
             color = textColor
         )
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.body3,
             text = "2 devices to sign a transaction.",
             color = textColor
         )
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.body3,
             text = "Automatically backed-up",
             color = textColor
         )

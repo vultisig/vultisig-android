@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.common.data_store.AppDataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import timber.log.Timber
 import java.lang.reflect.Type
 import java.math.BigDecimal
 import java.util.Date
@@ -20,6 +21,7 @@ import javax.inject.Singleton
 @Singleton
 class CryptoPriceService @Inject constructor(
     private val appDataStore: AppDataStore,
+    private val gson: Gson,
 ) {
     private val cache: Cache<String, Pair<Map<String, BigDecimal>, Date>> =
         CacheBuilder
@@ -64,12 +66,12 @@ class CryptoPriceService @Inject constructor(
             val response = fetchPrices(priceProviderIds, fiats)
             val type: Type = object : TypeToken<Map<String, Map<String, BigDecimal>>>() {}.type
             val decodedData: Map<String, Map<String, BigDecimal>> =
-                Gson().fromJson(response, type)
+                gson.fromJson(response, type)
             decodedData.forEach {
                 cache.put(it.key, Pair(it.value, Date()))
             }
         } catch (e: Exception) {
-            Log.d(ERROR_CRYPTO_SERVICE, "${e.message}")
+            Timber.d(ERROR_CRYPTO_SERVICE, "${e.message}")
         }
     }
 

@@ -3,6 +3,7 @@ package com.vultisig.wallet.presenter.keysign
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.google.gson.Gson
 import com.vultisig.wallet.chains.thorchainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
@@ -48,7 +49,7 @@ class KeysignViewModel(
     private var _messagePuller: TssMessagePuller? = null
     private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
     val txHash: MutableState<String> = mutableStateOf("")
-    suspend fun setData() {
+    suspend fun startKeysign() {
         withContext(Dispatchers.IO) {
             signAndBroadcast()
         }
@@ -128,9 +129,10 @@ class KeysignViewModel(
         val signedTransaction = getSignedTransaction()
         when (keysignPayload.coin.chain) {
             Chain.thorChain -> {
-                THORChainService().broadcastTransaction(signedTransaction.rawTransaction)?.let {
-                    txHash.value = it
-                }
+                THORChainService(Gson()).broadcastTransaction(signedTransaction.rawTransaction)
+                    ?.let {
+                        txHash.value = it
+                    }
             }
 
             else -> {

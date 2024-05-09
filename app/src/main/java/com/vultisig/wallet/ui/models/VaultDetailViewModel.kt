@@ -1,6 +1,9 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -10,6 +13,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountsRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.models.mappers.ChainAccountToChainAccountUiModelMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -35,12 +39,21 @@ internal class VaultDetailViewModel @Inject constructor(
     private val chainAccountsRepository: ChainAccountsRepository,
     private val chainAccountToUiModelMapper: ChainAccountToChainAccountUiModelMapper,
 ) : ViewModel() {
+    var isRefreshing: Boolean by mutableStateOf(false)
 
     val uiState = MutableStateFlow(VaultDetailUiModel())
     var currentVault: MutableState<Vault> = mutableStateOf(Vault("temp"))
     fun loadData(vaultId: String) {
         loadVaultName(vaultId)
         loadAccounts(vaultId)
+    }
+    fun refreshData() {
+        viewModelScope.launch {
+            isRefreshing = true
+            // TODO: add refresh logic here
+            delay(3000)
+            isRefreshing = false
+        }
     }
 
     private fun loadVaultName(vaultId: String) {

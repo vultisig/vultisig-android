@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.navigation
+package com.vultisig.wallet.ui.navigation
 
 import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -18,22 +18,31 @@ import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
-import com.vultisig.wallet.presenter.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
+import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
+import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
+import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
+import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 
 @ExperimentalAnimationApi
 @Composable
-fun SetupNavGraph(
+internal fun SetupNavGraph(
     navController: NavHostController,
     startDestination: String,
 ) {
     val context: Context = LocalContext.current
 
     NavHost(
-        navController = navController, startDestination = startDestination
+        navController = navController,
+        startDestination = startDestination,
+        enterTransition = slideInFromEndEnterTransition(),
+        exitTransition = slideOutToStartExitTransition(),
+        popEnterTransition = slideInFromStartEnterTransition(),
+        popExitTransition = slideOutToEndExitTransition(),
     ) {
         composable(route = Screen.Welcome.route) {
             WelcomeScreen(navController = navController)

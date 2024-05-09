@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.on_board.OnBoardRepository
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient

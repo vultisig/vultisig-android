@@ -191,7 +191,7 @@ object Coins {
             priceProviderID = "maya",
             contractAddress = "",
             rawBalance = BigInteger.ZERO,
-            isNativeToken = true,
+            isNativeToken = false,
             priceRate = BigDecimal.ZERO
         ),
         Coin(

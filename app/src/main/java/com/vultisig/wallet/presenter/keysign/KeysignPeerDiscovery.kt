@@ -28,16 +28,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.asFlow
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.menloFamily
-import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.keygen.NetworkPrompts
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun KeysignPeerDiscovery(
@@ -124,10 +124,10 @@ fun KeysignPeerDiscovery(
                             participant,
                             isSelected = isSelected
                         ) { isChecked ->
-                        when (isChecked) {
-                            true -> viewModel.addParticipant(participant)
-                            false -> viewModel.removeParticipant(participant)
-                        }
+                            when (isChecked) {
+                                true -> viewModel.addParticipant(participant)
+                                false -> viewModel.removeParticipant(participant)
+                            }
 
                         }
                     }

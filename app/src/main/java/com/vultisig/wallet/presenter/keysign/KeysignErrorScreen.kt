@@ -22,13 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.menloFamily
-import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
+
 
 @Composable
 fun KeysignErrorScreen(navController: NavController) {

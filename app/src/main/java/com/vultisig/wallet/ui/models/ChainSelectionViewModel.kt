@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.navigation.Screen.VaultDetail.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -66,16 +66,19 @@ internal class ChainSelectionViewModel @Inject constructor(
             val coins = Coins.SupportedCoins
             val enabledChains = vaultDb.select(vaultId)
                 ?.coins
+                ?.filter { it.isNativeToken }
                 ?.map { it.chain }
                 ?.toSet()
                 ?: emptySet()
 
-            val chains = coins.map { coin ->
-                ChainUiModel(
-                    isEnabled = coin.chain in enabledChains,
-                    coin = coin,
-                )
-            }
+            val chains = coins
+                .filter { it.isNativeToken }
+                .map { coin ->
+                    ChainUiModel(
+                        isEnabled = coin.chain in enabledChains,
+                        coin = coin,
+                    )
+                }
 
             uiState.update { it.copy(chains = chains) }
         }

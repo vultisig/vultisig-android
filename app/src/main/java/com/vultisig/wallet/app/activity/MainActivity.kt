@@ -2,19 +2,17 @@ package com.vultisig.wallet.app.activity
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
-import com.vultisig.wallet.app.ui.theme.OnBoardingComposeTheme
-import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
-import com.vultisig.wallet.presenter.navigation.SetupNavGraph
+import com.vultisig.wallet.ui.navigation.SetupNavGraph
+import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @ExperimentalAnimationApi
 @AndroidEntryPoint
@@ -43,11 +41,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        Log.d("MainActivity", "onPause: user is not active")
+        Timber.d("onPause: user is not active")
     }
 
     override fun onDestroy() {
-        Log.d("MainActivity", "onDestroy: ")
+        Timber.d("onDestroy: ")
         super.onDestroy()
     }
 }

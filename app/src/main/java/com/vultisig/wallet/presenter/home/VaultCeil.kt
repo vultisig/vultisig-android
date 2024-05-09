@@ -20,11 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun VaultCeil(navHostController: NavHostController, vault: Vault) {
