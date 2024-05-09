@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.navigation
+package com.vultisig.wallet.ui.navigation
 
 sealed class Screen(val route: String) {
     data object Welcome : Screen(route = "welcome_screen")

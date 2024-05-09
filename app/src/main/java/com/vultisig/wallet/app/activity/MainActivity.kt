@@ -11,7 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.app.ui.theme.OnBoardingComposeTheme
-import com.vultisig.wallet.presenter.navigation.SetupNavGraph
+import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import dagger.hilt.android.AndroidEntryPoint
 
 @ExperimentalAnimationApi

@@ -42,7 +42,7 @@ import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
 
 @Composable
 fun ImportFile(navController: NavHostController, hasFile: Boolean) {

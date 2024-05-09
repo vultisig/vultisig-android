@@ -10,7 +10,7 @@ import com.vultisig.wallet.presenter.common.UiEvent
 import com.vultisig.wallet.presenter.common.UiEvent.NavigateTo
 import com.vultisig.wallet.presenter.common.UiEvent.PopBackStack
 import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.presenter.welcome.WelcomeEvent.BoardCompleted
 import com.vultisig.wallet.presenter.welcome.WelcomeEvent.InitPages
 import com.vultisig.wallet.presenter.welcome.WelcomeEvent.NextPages
