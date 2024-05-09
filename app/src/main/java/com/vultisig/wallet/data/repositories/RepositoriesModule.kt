@@ -8,21 +8,44 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal abstract class RepositoriesModule {
+internal interface RepositoriesModule {
 
     @Binds
-    abstract fun bindChainAccountsRepository(
+    @Singleton
+    fun bindAppCurrencyRepository(
+        impl: AppCurrencyRepositoryImpl,
+    ): AppCurrencyRepository
+
+    @Binds
+    @Singleton
+    fun bindTokenPriceRepository(
+        impl: TokenPriceRepositoryImpl,
+    ): TokenPriceRepository
+
+    @Binds
+    @Singleton
+    fun bindChainAccountsRepository(
         impl: ChainAccountsRepositoryImpl,
     ): ChainAccountsRepository
 
+    @Binds
+    @Singleton
+    fun bindBalanceRepositoryImpl(
+        impl: BalanceRepositoryImpl,
+    ): BalanceRepository
+
     companion object {
+
         @Provides
+        @Singleton
         fun provideVaultDb(
             @ApplicationContext context: Context,
         ) = VaultDB(context)
+
     }
 
 }
