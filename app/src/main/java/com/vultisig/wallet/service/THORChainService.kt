@@ -10,7 +10,9 @@ import com.vultisig.wallet.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.models.swap.THORChainSwapQuote
 import okhttp3.OkHttpClient
 
-class THORChainService {
+class THORChainService(
+    private val gson: Gson,
+) {
     private val xClientID = "X-Client-ID"
     private val xClientIDValue = "vultisig"
     fun getBalance(address: String): List<CosmosBalance> {
@@ -22,7 +24,7 @@ class THORChainService {
                 .addHeader(xClientID, xClientIDValue)
                 .build()
             val response = client.newCall(request).execute()
-            val resp = Gson().fromJson(response.body?.string(), CosmosBalanceResponse::class.java)
+            val resp = gson.fromJson(response.body?.string(), CosmosBalanceResponse::class.java)
             return resp.balances
         } catch (e: Exception) {
             Log.d("THORChainService", "Error getting $address balance: ${e.message}")
@@ -39,10 +41,10 @@ class THORChainService {
                 .addHeader(xClientID, xClientIDValue)
                 .build()
             val response = client.newCall(request).execute()
-            val jsonObject = Gson().fromJson(response.body?.string(), JsonObject::class.java)
+            val jsonObject = gson.fromJson(response.body?.string(), JsonObject::class.java)
             val valueObject = jsonObject.get("result")?.asJsonObject?.get("value")?.asJsonObject
             valueObject?.let {
-                return Gson().fromJson(valueObject, THORChainAccountValue::class.java)
+                return gson.fromJson(valueObject, THORChainAccountValue::class.java)
             }
 
         } catch (e: Exception) {
@@ -74,7 +76,7 @@ class THORChainService {
                 .addHeader(xClientID, xClientIDValue)
                 .build()
             val response = client.newCall(request).execute()
-            return Gson().fromJson(response.body?.string(), THORChainSwapQuote::class.java)
+            return gson.fromJson(response.body?.string(), THORChainSwapQuote::class.java)
         } catch (e: Exception) {
             Log.d("THORChainService", "Error getting swap quotes: ${e.message}")
             throw e
