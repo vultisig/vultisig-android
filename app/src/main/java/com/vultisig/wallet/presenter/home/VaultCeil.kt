@@ -24,7 +24,7 @@ import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
 
 @Composable
 fun VaultCeil(navHostController: NavHostController, vault: Vault) {

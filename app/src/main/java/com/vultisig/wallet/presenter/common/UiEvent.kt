@@ -1,6 +1,6 @@
 package com.vultisig.wallet.presenter.common
 
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
 
 sealed class UiEvent {
     data object PopBackStack : UiEvent()

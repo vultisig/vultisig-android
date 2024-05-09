@@ -36,7 +36,7 @@ import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen
 
 @Composable
 fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyViewModel) {

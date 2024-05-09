@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.navigation.Screen.VaultDetail.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
