@@ -43,7 +43,10 @@ fun TokenSelectionView(
 
         LazyColumn {
             items(viewModel.tokenList.value) { token ->
-                TokenSelectionItem(token)
+                TokenSelectionItem(
+                    token = token,
+                    isChecked = false,
+                )
             }
         }
     }

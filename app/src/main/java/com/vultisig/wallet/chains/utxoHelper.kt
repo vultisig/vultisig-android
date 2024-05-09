@@ -48,7 +48,7 @@ class utxoHelper(
             CoinType.LITECOIN -> "LTC"
             CoinType.DOGECOIN -> "DOGE"
             CoinType.DASH -> "DASH"
-            else -> throw Exception("Unsupported coin")
+            else -> throw Exception("Unsupported coin ${coinType.name}")
         }
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,

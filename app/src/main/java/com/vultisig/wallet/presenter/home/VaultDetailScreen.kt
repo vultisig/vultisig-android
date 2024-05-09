@@ -3,7 +3,9 @@ package com.vultisig.wallet.presenter.home
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,47 +34,51 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
-import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.chains.thorchainHelper
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.presenter.navigation.Screen
+import com.vultisig.wallet.ui.components.UiPlusButton
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.models.ChainAccountUiModel
+import com.vultisig.wallet.ui.models.VaultDetailViewModel
 import java.math.BigInteger
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
-fun VaultDetail(navHostController: NavHostController, vault: Vault) {
+internal fun VaultDetailScreen(
+    vaultId: String,
+    navHostController: NavHostController,
+    viewModel: VaultDetailViewModel = hiltViewModel(),
+) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
-    val viewModel: VaultDetailViewModel = hiltViewModel()
     val keysignShareViewModel: KeysignShareViewModel =
         viewModel(context as MainActivity)
-    val coins: List<CoinWrapper> =
-        viewModel.coins.asFlow().collectAsState(initial = emptyList()).value
+
+    val state = viewModel.uiState.collectAsState().value
 
     LaunchedEffect(key1 = viewModel) {
-        viewModel.setData(vault)
+        viewModel.loadData(vaultId)
     }
     Scaffold(topBar = {
         CenterAlignedTopAppBar(
             title = {
                 Text(
-                    text = vault.name,
+                    text = state.vaultName,
                     style = MaterialTheme.montserratFamily.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = textColor,
@@ -100,21 +106,22 @@ fun VaultDetail(navHostController: NavHostController, vault: Vault) {
             },
             actions = {
                 IconButton(onClick = {
-                    val coin = viewModel.currentVault.value?.coins?.first() { it.ticker == "RUNE" }
+                    val vault = viewModel.currentVault.value
+                    val coin = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
                     coin?.let {
                         keysignShareViewModel.vault = viewModel.currentVault.value
                         keysignShareViewModel.keysignPayload = KeysignPayload(
                             coin = it,
-                            toAddress = "my to address",
+                            toAddress = "thor1f04877jfmm2sxmxyqkj3m9xtak8he0gg7ypuzz",
                             toAmount = BigInteger("10000000"),
                             blockChainSpecific = BlockChainSpecific.THORChain(
-                                BigInteger("0"),
+                                BigInteger("1024"),
                                 BigInteger("0")
                             ),
                             memo = null,
                             swapPayload = null,
                             approvePayload = null,
-                            vaultPublicKeyECDSA = vault.pubKeyECDSA
+                            vaultPublicKeyECDSA = viewModel.currentVault.value.pubKeyECDSA
                         )
                         navHostController.navigate(Screen.KeysignFlow.route)
                     }
@@ -129,25 +136,46 @@ fun VaultDetail(navHostController: NavHostController, vault: Vault) {
             }
         )
     }, bottomBar = {}) {
-        LazyColumn(modifier = Modifier.padding(it)) {
-            items(coins) { coin ->
-                ChainCeil(navHostController, coin = coin)
+        LazyColumn(
+            modifier = Modifier.padding(it),
+            contentPadding = PaddingValues(
+                all = 16.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            items(state.accounts) { account ->
+                ChainCeil(
+                    account = account
+                )
+            }
+            item {
+                UiSpacer(
+                    size = 16.dp,
+                )
+                UiPlusButton(
+                    title = stringResource(R.string.vault_choose_chains),
+                    onClick = {
+                        navHostController.navigate(
+                            Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
+                        )
+                    },
+                )
             }
         }
     }
 }
 
 @Composable
-fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper) {
+internal fun ChainCeil(
+    account: ChainAccountUiModel,
+) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-            .background(MaterialTheme.appColor.oxfordBlue400)
+            .fillMaxWidth(),
     ) {
         Row(Modifier.background(MaterialTheme.appColor.oxfordBlue400)) {
             Image(
-                painter = painterResource(id = coin.coin.chain.logo),
+                painter = painterResource(id = account.logo),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(10.dp)
@@ -157,7 +185,7 @@ fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = coin.coin.chain.raw,
+                        text = account.chainName,
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -166,7 +194,7 @@ fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper) {
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = coin.coinBalance.value.toString(),
+                        text = account.nativeTokenAmount ?: "",
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -174,7 +202,7 @@ fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper) {
                             .align(Alignment.CenterVertically)
                     )
                     Text(
-                        text = coin.coinBalanceInFiat.value,
+                        text = account.fiatAmount ?: "",
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -183,7 +211,7 @@ fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper) {
                     )
                 }
                 Text(
-                    text = coin.coin.address,
+                    text = account.address,
                     style = MaterialTheme.montserratFamily.titleSmall,
                     color = MaterialTheme.appColor.turquoise800,
                     modifier = Modifier.padding(10.dp)
@@ -196,6 +224,13 @@ fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper) {
 @Preview
 @Composable
 fun PreviewChainCeil() {
-    val navHostController = rememberNavController()
-    ChainCeil(navHostController, CoinWrapper(Coins.SupportedCoins[0]))
+    ChainCeil(
+        ChainAccountUiModel(
+            chainName = "Bitcoin",
+            logo = R.drawable.bitcoin,
+            address = "123abc456bca123abc456bca123abc456bca",
+            nativeTokenAmount = "0.01",
+            fiatAmount = "1000$",
+        )
+    )
 }

@@ -10,4 +10,10 @@
     <string name="signing_error_please_try_again">Signing Error. Please try again.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network,\n correct vault and pair devices.\n Make sure no other devices are\n running Vultisig.</string>
     <string name="try_again">Try again</string>
+    <string name="vault_choose_chains">Choose Chains</string>
+    <string name="plus_icon">Plus Icon</string>
+    <string name="joinkeysign_wrongvault">Wrong Vault or Pair Device.</string>
+    <string name="joinkeysign_discovery_service">Discovering Service</string>
+    <string name="joinkeysign_waiting_keysign_start">Waiting for Keysign to start.</string>
+    <string name="joinkeysign_fail_to_start">Failed to start,error: </string>
 </resources>
