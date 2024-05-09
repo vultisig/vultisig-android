@@ -18,6 +18,7 @@ import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
+import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
@@ -97,6 +98,13 @@ internal fun SetupNavGraph(
             ChainSelectionScreen(
                 navController = navController
             )
+        }
+        composable(route = Screen.JoinKeysign.route,
+            arguments = listOf(
+                navArgument(Screen.JoinKeysign.ARG_VAULT_ID) { type = NavType.StringType }
+            )
+        ) {
+            JoinKeysignView(navController)
         }
         composable(route = Screen.KeysignFlow.route) {
             KeysignFlowView(navController)

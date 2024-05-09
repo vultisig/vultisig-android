@@ -4,14 +4,19 @@ import android.net.nsd.NsdManager
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.keygen.JoinKeygenState
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
+import com.vultisig.wallet.tss.TssKeyType
+import com.vultisig.wallet.ui.navigation.Screen
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -19,6 +24,7 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.net.HttpURLConnection
 import java.net.URL
+import javax.inject.Inject
 
 enum class JoinKeysignState {
     DiscoveryingSessionID,
@@ -30,7 +36,13 @@ enum class JoinKeysignState {
     Error
 }
 
-class JoinKeysignViewModel : ViewModel() {
+@HiltViewModel
+class JoinKeysignViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val vaultDB: VaultDB,
+) : ViewModel() {
+    private val vaultId: String =
+        requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
     private var _currentVault: Vault = Vault("temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveryingSessionID)
@@ -44,9 +56,25 @@ class JoinKeysignViewModel : ViewModel() {
     private var _keysignCommittee: List<String> = emptyList()
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _nsdManager: NsdManager? = null
-    fun setData(vault: Vault) {
-        _currentVault = vault
-        _localPartyID = vault.localPartyID
+    private var _keysignPayload: KeysignPayload? = null
+
+    val keysignViewModel: KeysignViewModel
+        get() = KeysignViewModel(
+            vault = _currentVault,
+            keysignCommittee = _keysignCommittee,
+            serverAddress = _serverAddress,
+            sessionId = _sessionID,
+            encryptionKeyHex = _encryptionKeyHex,
+            messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault),
+            keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
+            keysignPayload = _keysignPayload!!
+        )
+
+    fun setData() {
+        vaultDB.select(vaultId)?.let {
+            _currentVault = it
+            _localPartyID = it.localPartyID
+        }
     }
 
     fun setScanResult(content: String) {
@@ -115,6 +143,7 @@ class JoinKeysignViewModel : ViewModel() {
             }
         }
     }
+
     suspend fun waitForKeysignToStart() {
         withContext(Dispatchers.IO) {
             while (true) {
@@ -127,6 +156,7 @@ class JoinKeysignViewModel : ViewModel() {
             }
         }
     }
+
     private fun checkKeygenStarted(): Boolean {
         try {
             val serverURL = "$_serverAddress/start/$_sessionID"
@@ -156,7 +186,10 @@ class JoinKeysignViewModel : ViewModel() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("JoinKeysignViewModel", "Failed to check keysign start: ${e.stackTraceToString()}")
+            Log.e(
+                "JoinKeysignViewModel",
+                "Failed to check keysign start: ${e.stackTraceToString()}"
+            )
         }
         return false
     }

@@ -1,7 +1,6 @@
 package com.vultisig.wallet.common
 
 import com.google.protobuf.ByteString
-import java.security.MessageDigest
 
 fun ByteArray.toHex(): String {
     return Numeric.toHexString(this)

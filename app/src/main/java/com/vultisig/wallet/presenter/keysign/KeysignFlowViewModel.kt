@@ -14,9 +14,11 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
 import com.vultisig.wallet.mediator.MediatorService
+import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
+import com.vultisig.wallet.tss.TssKeyType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +42,7 @@ enum class KeysignFlowState {
 @HiltViewModel
 class KeysignFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
-): ViewModel() {
+) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
     private var _serverAddress: String = "http://127.0.0.1:18080" // local mediator server
@@ -61,6 +63,18 @@ class KeysignFlowViewModel @Inject constructor(
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
     val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.WIFI)
+
+    val keysignViewModel: KeysignViewModel
+        get() = KeysignViewModel(
+            vault = _currentVault!!,
+            keysignCommittee = participants.value!!,
+            serverAddress = _serverAddress,
+            sessionId = _sessionID,
+            encryptionKeyHex = _encryptionKeyHex,
+            messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!),
+            keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
+            keysignPayload = _keysignPayload!!
+        )
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
         _currentVault = vault

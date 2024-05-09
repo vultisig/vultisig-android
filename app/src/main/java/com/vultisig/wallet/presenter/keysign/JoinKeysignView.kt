@@ -23,12 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.vultisig.wallet.R
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
@@ -37,9 +36,8 @@ import com.vultisig.wallet.ui.theme.menloFamily
 @Composable
 fun JoinKeysignView(
     navController: NavHostController,
-    vault: Vault,
 ) {
-    val viewModel: JoinKeysignViewModel = viewModel()
+    val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
     val scanQrCodeLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
@@ -51,7 +49,7 @@ fun JoinKeysignView(
             }
         }
     LaunchedEffect(key1 = viewModel) {
-        viewModel.setData(vault)
+        viewModel.setData()
         val integrator = IntentIntegrator(context as Activity)
         integrator.setBarcodeImageEnabled(true)
         integrator.setOrientationLocked(true)
@@ -83,7 +81,9 @@ fun JoinKeysignView(
             WaitingForKeysignToStart(navController = navController)
         }
 
-        JoinKeysignState.Keysign -> TODO()
+        JoinKeysignState.Keysign -> {
+            Keysign(navController = navController, viewModel = viewModel.keysignViewModel)
+        }
         JoinKeysignState.FailedToStart -> {
             KeysignFailedToStart(
                 navController = navController,

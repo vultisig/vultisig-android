@@ -32,7 +32,6 @@ data class KeysignPayload(
     val approvePayload: ERC20ApprovePayload? = null,
     val vaultPublicKeyECDSA: String,
 ) : Parcelable {
-
     fun toJson(): String {
         val gson = GsonBuilder()
             .registerTypeAdapter(
@@ -65,8 +64,8 @@ data class KeysignPayload(
     fun getKeysignMessages(vault: Vault): List<String> {
         throw Exception("Not implemented")
     }
-
 }
+
 
 fun BigInteger.toJson(): JsonArray {
     val jsonArray = JsonArray()
