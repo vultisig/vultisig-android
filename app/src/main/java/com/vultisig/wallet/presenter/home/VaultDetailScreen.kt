@@ -44,7 +44,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
-import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
@@ -52,7 +51,6 @@ import com.vultisig.wallet.ui.models.VaultDetailViewModel
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.models.logo
-import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
