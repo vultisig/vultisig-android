@@ -1,6 +1,7 @@
 package com.vultisig.wallet.presenter.tokens.item
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
@@ -26,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
@@ -39,20 +40,20 @@ fun TokenSelectionItem(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = MaterialTheme.dimens.small1),
-        shape = RoundedCornerShape(8.dp),
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.appColor.oxfordBlue600Main
         )
     ) {
-        Row(Modifier.padding(12.dp)) {
+        Row(
+            modifier = Modifier.padding(all = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Image(
                 modifier = Modifier
                     .padding(
-                        start = 16.dp,
-                        top = 20.dp,
-                        bottom = 20.dp
+                        end = 12.dp,
                     )
                     .size(32.dp)
                     .clip(CircleShape),
@@ -61,32 +62,23 @@ fun TokenSelectionItem(
                 contentScale = ContentScale.Crop
             )
             Column(
-                modifier = Modifier.padding(
-                    start = 12.dp
-                )
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    modifier = Modifier.padding(top = 12.dp),
                     text = token.ticker,
                     color = MaterialTheme.appColor.neutral100,
-                    style = MaterialTheme.montserratFamily.titleLarge,
+                    style = MaterialTheme.montserratFamily.subtitle1,
                 )
                 Text(
-                    modifier = Modifier.padding(top = 8.dp),
-                    text = token.priceProviderID,
+                    text = token.chain.raw,
                     color = MaterialTheme.appColor.neutral100,
-                    style = MaterialTheme.montserratFamily.bodyMedium,
+                    style = MaterialTheme.montserratFamily.body3,
                 )
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
             Switch(
-                modifier = Modifier
-                    .padding(
-                        top = 12.dp,
-                        end = 12.dp
-                    ),
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.appColor.neutral0,
                     checkedBorderColor = MaterialTheme.appColor.turquoise800,

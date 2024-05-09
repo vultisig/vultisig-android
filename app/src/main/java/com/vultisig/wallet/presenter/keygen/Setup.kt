@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keygen
 
-import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,7 @@ import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.menloFamily
 import com.vultisig.wallet.app.ui.theme.montserratFamily
+import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
 
@@ -70,17 +70,17 @@ fun Setup(navController: NavHostController) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
 
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.body3,
             text = "3 Devices to create a vault; ",
             color = textColor
         )
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.body3,
             text = "2 devices to sign a transaction.",
             color = textColor
         )
         Text(
-            style = MaterialTheme.montserratFamily.bodySmall,
+            style = MaterialTheme.montserratFamily.body3,
             text = "Automatically backed-up",
             color = textColor
         )

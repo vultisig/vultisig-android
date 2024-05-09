@@ -191,7 +191,7 @@ internal fun ChainCeil(
                 }
                 Text(
                     text = account.address,
-                    style = MaterialTheme.montserratFamily.titleSmall,
+                    style = MaterialTheme.montserratFamily.body1,
                     color = MaterialTheme.appColor.turquoise800,
                     modifier = Modifier.padding(10.dp)
                 )

@@ -66,7 +66,7 @@ fun CreateNewVault(navController: NavHostController) {
             Spacer(modifier = Modifier.height(40.dp))
             Text(
                 text = "SECURE CRYPTO VAULT", color = textColor,
-                style = MaterialTheme.montserratFamily.bodySmall.copy(
+                style = MaterialTheme.montserratFamily.body3.copy(
                     letterSpacing = 2.sp, fontWeight = FontWeight.Bold
                 ),
             )
