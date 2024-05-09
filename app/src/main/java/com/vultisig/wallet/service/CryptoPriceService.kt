@@ -20,6 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class CryptoPriceService @Inject constructor(
     private val appDataStore: AppDataStore,
+    private val gson: Gson,
 ) {
     private val cache: Cache<String, Pair<Map<String, BigDecimal>, Date>> =
         CacheBuilder
@@ -64,7 +65,7 @@ class CryptoPriceService @Inject constructor(
             val response = fetchPrices(priceProviderIds, fiats)
             val type: Type = object : TypeToken<Map<String, Map<String, BigDecimal>>>() {}.type
             val decodedData: Map<String, Map<String, BigDecimal>> =
-                Gson().fromJson(response, type)
+                gson.fromJson(response, type)
             decodedData.forEach {
                 cache.put(it.key, Pair(it.value, Date()))
             }
