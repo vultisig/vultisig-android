@@ -1,13 +1,11 @@
 package com.vultisig.wallet.presenter.keygen
 
-import com.vultisig.wallet.presenter.base_components.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -34,16 +32,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.menloFamily
-import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun KeygenPeerDiscovery(

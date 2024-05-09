@@ -30,14 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.dimens
-import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.data.on_board.models.OnBoardPage
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.UiEvent.NavigateTo
 import com.vultisig.wallet.presenter.common.UiEvent.PopBackStack
 import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -1,4 +1,4 @@
-package com.vultisig.wallet.app.ui.theme
+package com.vultisig.wallet.ui.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
@@ -8,14 +8,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 
-internal val menloFamily = FontFamily(
+private val menloFontFamily = FontFamily(
     Font(R.font.menlo_bold, weight = FontWeight.Bold),
     Font(R.font.menlo_bold, weight = FontWeight.SemiBold),
     Font(R.font.menlo_regular, weight = FontWeight.Normal),
     Font(R.font.menlo_regular, weight = FontWeight.Medium)
 )
 
-internal val montserratFamily = FontFamily(
+private val montserratFontFamily = FontFamily(
     Font(R.font.montserrat_bold, weight = FontWeight.Bold),
     Font(R.font.montserrat_bold, weight = FontWeight.SemiBold),
     Font(R.font.montserrat_regular, weight = FontWeight.Normal),
@@ -93,7 +93,7 @@ internal data class VultisigTypography(
                 ),
                 body1 = TextStyle(
                     fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
+                    fontSize = 12.sp,
                     fontFamily = fontFamily,
                 ),
                 body2 = TextStyle(
@@ -120,6 +120,6 @@ internal data class VultisigTypography(
     }
 }
 
-internal val menloTypography = VultisigTypography.createFrom(menloFamily)
+internal val menloTypography = VultisigTypography.createFrom(menloFontFamily)
 
-internal val montserratTypography = VultisigTypography.createFrom(montserratFamily)
+internal val montserratTypography = VultisigTypography.createFrom(montserratFontFamily)
