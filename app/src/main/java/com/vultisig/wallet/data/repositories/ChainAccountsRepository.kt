@@ -6,6 +6,7 @@ import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.data.mappers.CoinToChainAccountMapper
 import com.vultisig.wallet.data.models.ChainAccount
 import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.service.BalanceService
 import com.vultisig.wallet.service.CryptoPriceService
@@ -55,10 +56,14 @@ internal class ChainAccountsRepositoryImpl @Inject constructor(
                         btcHelper.getCoin()
                     }
                 }
-            }.distinctBy { it.chain }
+            }
             .toMutableList()
 
-        val accounts = vault.coins.mapTo(mutableListOf()) { coinToChainAccountMapper.map(it) }
+        val chainListMap: Map<String, List<Coin>> = vault.coins.groupBy { it.chain.raw }
+
+        val accounts: MutableList<ChainAccount> = vault.coins.distinct().mapTo(mutableListOf()) { coinToChainAccountMapper.map(it).also { chainAccount: ChainAccount ->
+            chainAccount.coins.addAll(chainListMap[chainAccount.chainName]?.toList()?: emptyList())
+        } }
 
         emit(accounts)
 

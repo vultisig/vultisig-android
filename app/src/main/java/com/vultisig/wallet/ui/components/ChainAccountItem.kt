@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.theme.montserratFamily
 @Composable
 internal fun ChainAccountItem(
     account: ChainAccountUiModel,
+    onClick: () -> Unit = {},
 ) {
     Card(
         shape = RoundedCornerShape(10.dp),
@@ -33,6 +34,7 @@ internal fun ChainAccountItem(
             containerColor = MaterialTheme.appColor.oxfordBlue600Main,
         ),
         modifier = Modifier
+            .clickable(onClick = onClick)
             .fillMaxWidth(),
     ) {
         Row(

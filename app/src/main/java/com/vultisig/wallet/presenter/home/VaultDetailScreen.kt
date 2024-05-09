@@ -1,6 +1,8 @@
 package com.vultisig.wallet.presenter.home
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -30,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
@@ -108,10 +111,18 @@ internal fun VaultDetailScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                items(state.accounts) { account ->
+                items(state.accounts) { account: ChainAccountUiModel ->
                     ChainAccountItem(
                         account = account
-                    )
+                    ) {
+                        val gson = Gson()
+                        val route = Screen.ChainCoin.createRoute(
+                            Uri.encode(gson.toJson(account)),
+                            Uri.encode(gson.toJson(viewModel.vault)),
+                            Uri.encode(gson.toJson(account.coins)),
+                        )
+                        navHostController.navigate(route)
+                    }
                 }
                 item {
                     UiSpacer(
