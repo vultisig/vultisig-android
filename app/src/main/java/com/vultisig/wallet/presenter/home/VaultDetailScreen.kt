@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,6 +51,7 @@ import com.vultisig.wallet.ui.models.VaultDetailViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.menloFamily
 import com.vultisig.wallet.ui.theme.montserratFamily
 import java.math.BigInteger
 
@@ -153,6 +155,15 @@ internal fun VaultDetailScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                item {
+                    Text(
+                        text = state.totalFiatValue ?: "",
+                        style = MaterialTheme.menloFamily.subtitle1,
+                        color = MaterialTheme.appColor.neutral100,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillParentMaxWidth(),
+                    )
+                }
                 items(state.accounts) { account: ChainAccountUiModel ->
                     ChainAccountItem(
                         account = account

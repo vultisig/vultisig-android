@@ -15,6 +15,6 @@ internal data class ChainAccount(
     amount of native token for this chain on the address in fiat,
     null if unknown yet
      */
-    val fiatAmount: String?,
+    val fiatValue: FiatValue?,
     val coins: MutableList<Coin> = emptyList<Coin>().toMutableList()
 )

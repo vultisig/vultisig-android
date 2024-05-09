@@ -7,11 +7,6 @@ import com.vultisig.wallet.tss.TssKeyType
 import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
-import java.math.BigInteger
-import java.math.RoundingMode
-import java.text.NumberFormat
-import java.util.Currency
-import java.util.Locale
 
 @Parcelize
 data class Coin(
@@ -25,10 +20,7 @@ data class Coin(
     val feeDefault: BigDecimal,
     val priceProviderID: String,
     val contractAddress: String,
-    val rawBalance: BigInteger,
     val isNativeToken: Boolean,
-    val priceRate: BigDecimal,
-    val currency: SettingsCurrency = SettingsCurrency.USD,
 ) : Parcelable {
     val coinType: CoinType
         get() = when (chain) {
@@ -108,9 +100,7 @@ object Coins {
             feeDefault = BigDecimal(20),
             priceProviderID = "bitcoin",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.bitcoinCash,
@@ -123,9 +113,7 @@ object Coins {
             feeDefault = BigDecimal(20),
             priceProviderID = "bitcoin-cash",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.litecoin,
@@ -138,9 +126,7 @@ object Coins {
             feeDefault = BigDecimal(1000),
             priceProviderID = "litecoin",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.dogecoin,
@@ -153,9 +139,7 @@ object Coins {
             feeDefault = BigDecimal(1000000),
             priceProviderID = "dogecoin",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.dash,
@@ -168,9 +152,7 @@ object Coins {
             feeDefault = BigDecimal(20),
             priceProviderID = "dash",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.thorChain,
@@ -183,9 +165,7 @@ object Coins {
             feeDefault = BigDecimal(0.02),
             priceProviderID = "thorchain",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.mayaChain,
@@ -198,9 +178,7 @@ object Coins {
             feeDefault = BigDecimal(0.02),
             priceProviderID = "cacao",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.mayaChain,
@@ -213,9 +191,7 @@ object Coins {
             feeDefault = BigDecimal(0.02),
             priceProviderID = "maya",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = false,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.ethereum,
@@ -228,9 +204,7 @@ object Coins {
             feeDefault = BigDecimal(23000),
             priceProviderID = "ethereum",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
         Coin(
             chain = Chain.solana,
@@ -243,9 +217,7 @@ object Coins {
             feeDefault = BigDecimal(7000),
             priceProviderID = "solana",
             contractAddress = "",
-            rawBalance = BigInteger.ZERO,
             isNativeToken = true,
-            priceRate = BigDecimal.ZERO
         ),
     )
 

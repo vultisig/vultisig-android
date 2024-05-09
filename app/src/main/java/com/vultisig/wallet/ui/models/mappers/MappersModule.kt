@@ -16,4 +16,10 @@ internal interface MappersModule {
         impl: ChainAccountToChainAccountUiModelMapperImpl
     ): ChainAccountToChainAccountUiModelMapper
 
+    @Binds
+    @Singleton
+    fun bindFiatValueToStringMapper(
+        impl: FiatValueToStringMapperImpl
+    ): FiatValueToStringMapper
+
 }
