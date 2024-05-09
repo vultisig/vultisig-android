@@ -10,6 +10,7 @@ import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import tss.KeysignResponse
 import wallet.core.java.AnySigner
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
@@ -192,7 +193,10 @@ class utxoHelper(
         val signingInput = getBitcoinSigningInput(keysignPayload)
         return AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
     }
-
+    fun getSignedTransaction(keysignPayload: KeysignPayload,signatures: Map<String, KeysignResponse>):SignedTransactionResult{
+        val inputData = getBitcoinPreSigningInputData(keysignPayload)
+        return getSignedTransaction(inputData,signatures)
+    }
     @OptIn(ExperimentalStdlibApi::class)
     fun getSignedTransaction(
         inputData: ByteArray,
