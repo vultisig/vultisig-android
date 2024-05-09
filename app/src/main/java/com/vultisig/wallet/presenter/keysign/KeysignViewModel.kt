@@ -10,6 +10,7 @@ import com.vultisig.wallet.common.toHexBytes
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.service.THORChainService
 import com.vultisig.wallet.tss.LocalStateAccessor
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
@@ -46,6 +47,7 @@ class KeysignViewModel(
     val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
     private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
+    val txHash: MutableState<String> = mutableStateOf("")
     suspend fun setData() {
         withContext(Dispatchers.IO) {
             signAndBroadcast()
@@ -69,6 +71,7 @@ class KeysignViewModel(
             this.messagesToSign.forEach() { message ->
                 signMessageWithRetry(this.tssInstance!!, message, 1)
             }
+            broadcastTransaction()
             currentState.value = KeysignState.KeysignFinished
             this._messagePuller?.stop()
         } catch (e: Exception) {
@@ -121,12 +124,22 @@ class KeysignViewModel(
         }
     }
 
-    fun broadcastTransaction() {
+    private fun broadcastTransaction() {
         val signedTransaction = getSignedTransaction()
-        
+        when (keysignPayload.coin.chain) {
+            Chain.thorChain -> {
+                THORChainService().broadcastTransaction(signedTransaction.rawTransaction)?.let {
+                    txHash.value = it
+                }
+            }
+
+            else -> {
+                throw Exception("Not implemented")
+            }
+        }
     }
 
-    fun getSignedTransaction(): SignedTransactionResult {
+    private fun getSignedTransaction(): SignedTransactionResult {
         if (keysignPayload.swapPayload != null) {
             // TODO deal with swap
         }
