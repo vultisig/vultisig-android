@@ -1,6 +1,6 @@
 package com.vultisig.wallet.app.ui.theme
 
-import androidx.compose.material3.Typography
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -8,596 +8,118 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 
-//-----------------------------------------------------------------------
-//---------------    Font Family     ------------------------------------
-//-----------------------------------------------------------------------
-
-
-val menloFamily = FontFamily(
+internal val menloFamily = FontFamily(
     Font(R.font.menlo_bold, weight = FontWeight.Bold),
     Font(R.font.menlo_bold, weight = FontWeight.SemiBold),
     Font(R.font.menlo_regular, weight = FontWeight.Normal),
     Font(R.font.menlo_regular, weight = FontWeight.Medium)
 )
 
-val montserratFamily = FontFamily(
+internal val montserratFamily = FontFamily(
     Font(R.font.montserrat_bold, weight = FontWeight.Bold),
     Font(R.font.montserrat_bold, weight = FontWeight.SemiBold),
     Font(R.font.montserrat_regular, weight = FontWeight.Normal),
     Font(R.font.montserrat_regular, weight = FontWeight.Medium),
 )
 
-//-----------------------------------------------------------------------
-//---------------    Menlo Family Typography    -------------------------
-//-----------------------------------------------------------------------
+@Immutable
+internal data class VultisigTypography(
+    val heading1: TextStyle,
+    val heading2: TextStyle,
+    val heading3: TextStyle,
+    val heading4: TextStyle,
+    val heading5: TextStyle,
+    val subtitle1: TextStyle,
+    val subtitle2: TextStyle,
+    val body1: TextStyle,
+    val body2: TextStyle,
+    val body3: TextStyle,
+    val caption: TextStyle,
+    val overline: TextStyle,
+) {
+    // TODO: aliases for old typography use, should be removed once not used
+    val headlineLarge: TextStyle
+        get() = heading3
+    val headlineSmall: TextStyle
+        get() = heading5
+    val titleLarge: TextStyle
+        get() = subtitle1
+    val titleMedium: TextStyle
+        get() = subtitle2
+    val bodyLarge: TextStyle
+        get() = body1
+    val bodyMedium: TextStyle
+        get() = body2
+    val labelMedium: TextStyle
+        get() = overline
 
+    companion object {
+        fun createFrom(fontFamily: FontFamily): VultisigTypography =
+            VultisigTypography(
+                heading1 = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 50.sp,
+                    fontFamily = fontFamily,
+                ),
+                heading2 = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 40.sp,
+                    fontFamily = fontFamily,
+                ),
+                heading3 = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 40.sp,
+                    fontFamily = fontFamily,
+                ),
+                heading4 = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    fontFamily = fontFamily,
+                ),
+                heading5 = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    fontFamily = fontFamily,
+                ),
+                subtitle1 = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    fontFamily = fontFamily,
+                ),
+                subtitle2 = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    fontFamily = fontFamily,
+                ),
+                body1 = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    fontFamily = fontFamily,
+                ),
+                body2 = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    fontFamily = fontFamily,
+                ),
+                body3 = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    fontFamily = fontFamily,
+                ),
+                caption = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    fontFamily = fontFamily,
+                ),
+                overline = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.sp,
+                    fontFamily = fontFamily,
+                ),
+            )
+    }
+}
 
-//menlo Family compact Small Typography
-val compactSmallMenloFamilyTypography = Typography(
+internal val menloTypography = VultisigTypography.createFrom(menloFamily)
 
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-
-
-    )
-
-//menlo Family compact medium Typography
-val compactMediumMenloFamilyTypography = Typography(
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-)
-
-//menlo Family compact Typography
-val compactMenloFamilyTypography = Typography(
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-)
-
-//menlo Family expanded Typography
-val expandedMenloFamilyTypography = Typography(
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        fontFamily = menloFamily,
-    ),
-)
-
-
-//----------------------------------------------------------------------------
-//---------------    montserrat Family Typography    -------------------------
-//----------------------------------------------------------------------------
-
-
-//montserrat Family compact Small Typography
-val compactSmallMontserratFamilyTypography = Typography(
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-)
-
-//montserrat Family compact medium Typography
-val compactMediumMontserratFamilyTypography = Typography(
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H1
-)
-
-//montserrat Family compact Typography
-val compactMontserratFamilyTypography = Typography(
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-)
-
-//montserrat Family expanded Typography
-val expandedMontserratFamilyTypography = Typography(
-    //equal  H1
-    displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 50.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H2
-    displaySmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H3
-    headlineLarge = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 40.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H4
-    headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  H5
-    headlineSmall = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle1
-    titleLarge = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  subtitle2
-    titleMedium = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body1
-    bodyLarge = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  body2
-    bodyMedium = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  caption
-    labelLarge = TextStyle(
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-    //equal  overline
-    labelMedium = TextStyle(
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        fontFamily = montserratFamily,
-    ),
-)
+internal val montserratTypography = VultisigTypography.createFrom(montserratFamily)

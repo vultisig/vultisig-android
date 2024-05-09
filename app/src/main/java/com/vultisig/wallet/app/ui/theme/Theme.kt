@@ -38,30 +38,20 @@ fun OnBoardingComposeTheme(
     }
     val window = calculateWindowSizeClass(activity = activity)
     val config = LocalConfiguration.current
-    var menloFamilyTypography = compactMenloFamilyTypography
-    var montserratFamilyTypography = compactMontserratFamilyTypography
     var appDimens = CompactDimens
     when (window.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
             if (config.screenWidthDp <= 360) {
                 appDimens = CompactSmallDimens
-                menloFamilyTypography = compactSmallMenloFamilyTypography
-                montserratFamilyTypography = compactSmallMontserratFamilyTypography
             } else if (config.screenWidthDp <= 599) {
                 appDimens = CompactMediumDimens
-                menloFamilyTypography = compactMediumMenloFamilyTypography
-                montserratFamilyTypography = compactMediumMontserratFamilyTypography
             } else {
                 appDimens = CompactDimens
-                menloFamilyTypography = compactMenloFamilyTypography
-                montserratFamilyTypography = compactMontserratFamilyTypography
             }
         }
 
         else -> {
             appDimens = ExpandedDimens
-            menloFamilyTypography = expandedMenloFamilyTypography
-            montserratFamilyTypography = expandedMontserratFamilyTypography
         }
 
     }
@@ -69,20 +59,17 @@ fun OnBoardingComposeTheme(
     AppUtils(
         appDimens = appDimens,
         appColor = appColors,
-        menloFamilyTypography = menloFamilyTypography,
-        montserratFamilyTypography = montserratFamilyTypography,
+        menloTypography = menloTypography,
+        montserratTypography = montserratTypography,
     ) {
         MaterialTheme(
-            //typography = typography,
-            colorScheme =
-            lightColorScheme(
+            colorScheme = lightColorScheme(
                 background = Color("#02122a".toColorInt()),
                 onBackground = Color.White,
                 primary = Color("#33e6bf".toColorInt()),
                 onPrimary = Color("#02122a".toColorInt()),
                 surfaceDim = Color("#1f9183".toColorInt())
             ),
-//            typography = typography,
             shapes = Shapes,
             content = content
         )
@@ -112,10 +99,10 @@ val MaterialTheme.appColor
     @Composable
     get() = LocalAppColors.current
 
-val MaterialTheme.menloFamily
+internal val MaterialTheme.menloFamily
     @Composable
     get() = LocalMenloFamilyTypography.current
 
-val MaterialTheme.montserratFamily
+internal val MaterialTheme.montserratFamily
     @Composable
     get() = LocalMontserratFamilyTypography.current

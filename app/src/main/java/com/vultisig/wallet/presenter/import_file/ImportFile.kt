@@ -98,7 +98,7 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                 Text(
                     text = "Upload file, text or image",
                     color = textColor,
-                    style = MaterialTheme.menloFamily.bodySmall
+                    style = MaterialTheme.menloFamily.body3
                 )
             }
         }
