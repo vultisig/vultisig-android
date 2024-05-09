@@ -37,12 +37,12 @@ import androidx.core.graphics.toColorInt
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.app.ui.theme.appColor
+import com.vultisig.wallet.app.ui.theme.dimens
+import com.vultisig.wallet.app.ui.theme.menloFamily
+import com.vultisig.wallet.app.ui.theme.montserratFamily
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.theme.appColor
-import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun ImportFile(navController: NavHostController, hasFile: Boolean) {
@@ -98,7 +98,7 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                 Text(
                     text = "Upload file, text or image",
                     color = textColor,
-                    style = MaterialTheme.menloFamily.body3
+                    style = MaterialTheme.menloFamily.bodySmall
                 )
             }
         }

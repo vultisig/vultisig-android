@@ -66,19 +66,16 @@ internal class ChainSelectionViewModel @Inject constructor(
             val coins = Coins.SupportedCoins
             val enabledChains = vaultDb.select(vaultId)
                 ?.coins
-                ?.filter { it.isNativeToken }
                 ?.map { it.chain }
                 ?.toSet()
                 ?: emptySet()
 
-            val chains = coins
-                .filter { it.isNativeToken }
-                .map { coin ->
-                    ChainUiModel(
-                        isEnabled = coin.chain in enabledChains,
-                        coin = coin,
-                    )
-                }
+            val chains = coins.map { coin ->
+                ChainUiModel(
+                    isEnabled = coin.chain in enabledChains,
+                    coin = coin,
+                )
+            }
 
             uiState.update { it.copy(chains = chains) }
         }

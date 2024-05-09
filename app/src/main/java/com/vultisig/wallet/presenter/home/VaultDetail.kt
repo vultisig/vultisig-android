@@ -1,13 +1,10 @@
 package com.vultisig.wallet.presenter.home
 
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,45 +33,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
-import com.google.gson.Gson
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.ui.theme.appColor
 import com.vultisig.wallet.app.ui.theme.dimens
 import com.vultisig.wallet.app.ui.theme.montserratFamily
+import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
-import com.vultisig.wallet.ui.components.UiPlusButton
-import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.ChainAccountUiModel
-import com.vultisig.wallet.ui.models.VaultDetailViewModel
-import com.vultisig.wallet.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun VaultDetailScreen(
-    vaultId: String,
-    navHostController: NavHostController,
-    viewModel: VaultDetailViewModel = hiltViewModel(),
-) {
+fun VaultDetail(navHostController: NavHostController, vault: Vault) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
-
-    val state = viewModel.uiState.collectAsState().value
+    val viewModel: VaultDetailViewModel = hiltViewModel()
+    val coins: List<CoinWrapper> =
+        viewModel.coins.asFlow().collectAsState(initial = emptyList()).value
 
     LaunchedEffect(key1 = viewModel) {
-        viewModel.loadData(vaultId)
+        viewModel.setData(vault)
     }
     BoxWithSwipeRefresh(onSwipe = viewModel::refreshData, isRefreshing = viewModel.isRefreshing) {
         Scaffold(topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = state.vaultName,
+                        text = vault.name,
                         style = MaterialTheme.montserratFamily.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = textColor,
@@ -86,7 +78,6 @@ internal fun VaultDetailScreen(
                             .wrapContentHeight(align = Alignment.CenterVertically)
                     )
                 },
-
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.appColor.oxfordBlue800,
                     titleContentColor = textColor
@@ -114,38 +105,9 @@ internal fun VaultDetailScreen(
                 }
             )
         }, bottomBar = {}) {
-            LazyColumn(
-                modifier = Modifier.padding(it),
-                contentPadding = PaddingValues(
-                    all = 16.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                items(state.accounts) { account: ChainAccountUiModel ->
-                    ChainCeil(
-                        account = account
-                    ) {
-                        val gson = Gson()
-                        val route = Screen.ChainCoin.createRoute(
-                            Uri.encode(gson.toJson(account)),
-                            Uri.encode(gson.toJson(viewModel.vault)),
-                            Uri.encode(gson.toJson(account.coins)),
-                        )
-                        navHostController.navigate(route)
-                    }
-                }
-                item {
-                    UiSpacer(
-                        size = 16.dp,
-                    )
-                    UiPlusButton(
-                        title = stringResource(R.string.vault_choose_chains),
-                        onClick = {
-                            navHostController.navigate(
-                                Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
-                            )
-                        },
-                    )
+            LazyColumn(modifier = Modifier.padding(it)) {
+                items(coins) { coin ->
+                    ChainCeil(navHostController, coin = coin){}
                 }
             }
         }
@@ -153,18 +115,17 @@ internal fun VaultDetailScreen(
 }
 
 @Composable
-internal fun ChainCeil(
-    account: ChainAccountUiModel,
-    onClick: () -> Unit = {},
-) {
+fun ChainCeil(navHostController: NavHostController, coin: CoinWrapper, onChainClick: ()->Unit) {
     Card(
         modifier = Modifier
-            .clickable(onClick = onClick)
-            .fillMaxWidth(),
+            .clickable(onClick = onChainClick::invoke)
+            .fillMaxWidth()
+            .padding(10.dp)
+            .background(MaterialTheme.appColor.oxfordBlue400)
     ) {
         Row(Modifier.background(MaterialTheme.appColor.oxfordBlue400)) {
             Image(
-                painter = painterResource(id = account.logo),
+                painter = painterResource(id = coin.coin.chain.logo),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(10.dp)
@@ -174,7 +135,7 @@ internal fun ChainCeil(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = account.chainName,
+                        text = coin.coin.chain.raw,
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -183,7 +144,7 @@ internal fun ChainCeil(
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = account.nativeTokenAmount ?: "",
+                        text = coin.coinBalance.value.toString(),
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -191,7 +152,7 @@ internal fun ChainCeil(
                             .align(Alignment.CenterVertically)
                     )
                     Text(
-                        text = account.fiatAmount ?: "",
+                        text = coin.coinBalanceInFiat.value,
                         style = MaterialTheme.montserratFamily.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
@@ -200,7 +161,7 @@ internal fun ChainCeil(
                     )
                 }
                 Text(
-                    text = account.address,
+                    text = coin.coin.address,
                     style = MaterialTheme.montserratFamily.titleSmall,
                     color = MaterialTheme.appColor.turquoise800,
                     modifier = Modifier.padding(10.dp)
@@ -212,14 +173,7 @@ internal fun ChainCeil(
 
 @Preview
 @Composable
-fun PreviewInternalChainCeil() {
-    ChainCeil(
-        ChainAccountUiModel(
-            chainName = "Bitcoin",
-            logo = R.drawable.bitcoin,
-            address = "123abc456bca123abc456bca123abc456bca",
-            nativeTokenAmount = "0.01",
-            fiatAmount = "1000$",
-        )
-    )
+fun PreviewChainCeil() {
+    val navHostController = rememberNavController()
+    ChainCeil(navHostController, CoinWrapper(Coins.SupportedCoins[0])){}
 }

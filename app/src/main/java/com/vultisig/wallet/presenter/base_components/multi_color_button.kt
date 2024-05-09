@@ -22,9 +22,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.theme.appColor
-import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.montserratFamily
+import com.vultisig.wallet.app.ui.theme.appColor
+import com.vultisig.wallet.app.ui.theme.dimens
+import com.vultisig.wallet.app.ui.theme.montserratFamily
 
 @Composable
 fun MultiColorButton(
@@ -43,6 +43,7 @@ fun MultiColorButton(
     textStyle: TextStyle? = null,
     textColor: Color? = null,
     modifier: Modifier,
+    centerContent : (@Composable ()->Unit)? = null,
     onClick: () -> Unit,
 ) {
     val emptyClickAction: () -> Unit = {}
@@ -83,7 +84,7 @@ fun MultiColorButton(
                 ?: MaterialTheme.appColor.turquoise600Main,
             modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
         )
-        Text(
+        centerContent?.invoke() ?: Text(
             text = text,
             color = if (disabled == true) MaterialTheme.appColor.neutral800 else textColor
                 ?: MaterialTheme.appColor.turquoise600Main,

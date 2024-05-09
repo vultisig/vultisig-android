@@ -1,19 +1,17 @@
-package com.vultisig.wallet.ui.navigation
+package com.vultisig.wallet.presenter.navigation
 
 import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.chain_coin.ChainCoinScreen
 import com.vultisig.wallet.presenter.home.HomeScreen
-import com.vultisig.wallet.presenter.home.VaultDetailScreen
+import com.vultisig.wallet.presenter.home.VaultDetail
 import com.vultisig.wallet.presenter.import_file.ImportFile
 import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
@@ -21,27 +19,16 @@ import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
-import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
-import com.vultisig.wallet.ui.screens.ChainSelectionScreen
-import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
-import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
-import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
-import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 
 @ExperimentalAnimationApi
 @Composable
-internal fun SetupNavGraph(
+fun SetupNavGraph(
     navController: NavHostController,
     startDestination: String,
 ) {
     val context: Context = LocalContext.current
     NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        enterTransition = slideInFromEndEnterTransition(),
-        exitTransition = slideOutToStartExitTransition(),
-        popEnterTransition = slideInFromStartEnterTransition(),
-        popExitTransition = slideOutToEndExitTransition(),
+        navController = navController, startDestination = startDestination
     ) {
         composable(route = Screen.Welcome.route) {
             WelcomeScreen(navController = navController)
@@ -78,27 +65,12 @@ internal fun SetupNavGraph(
             val hasFile = navBackStackEntry.arguments?.getString("has_file")?.toBoolean() ?: false
             ImportFile(navController, hasFile)
         }
-        composable(
-            route = Screen.VaultDetail.route,
-        ) { navBackStackEntry ->
-            val vaultId = navBackStackEntry.arguments?.getString("vault_name") ?: ""
-            VaultDetailScreen(
-                vaultId = vaultId,
-                navHostController = navController,
-            )
-        }
-        composable(
-            route = AddChainAccount.route,
-            arguments = listOf(
-                navArgument(AddChainAccount.ARG_VAULT_ID) { type = NavType.StringType }
-            )
-        ) {
-            ChainSelectionScreen(
-                navController = navController
-            )
-        }
-        composable(route = Screen.ChainCoin.route) { navBackStackEntry ->
-            ChainCoinScreen(navController)
+        composable(route = Screen.VaultDetail.route) {navBackStackEntry ->
+            val vaultName = navBackStackEntry.arguments?.getString("vault_name") ?: ""
+            val vaultDB = VaultDB(context)
+            vaultDB.select(vaultName)?.let {
+                 VaultDetail(navController, it)
+            }
         }
     }
 }

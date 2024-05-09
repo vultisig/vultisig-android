@@ -10,7 +10,6 @@ import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
-import timber.log.Timber
 import wallet.core.java.AnySigner
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
@@ -218,7 +217,7 @@ class utxoHelper(
                         preImageHash.toByteArray()
                     )
                 ) {
-                    Timber.d("Invalid signature")
+                    Log.d("utxoHelper", "Invalid signature")
                     throw Exception("Invalid signature")
                 }
                 allSignatures.add(it.derSignature.hexToByteArray())

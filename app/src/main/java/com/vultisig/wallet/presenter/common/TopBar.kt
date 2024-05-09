@@ -7,20 +7,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.vultisig.wallet.ui.theme.montserratFamily
+import com.vultisig.wallet.app.ui.theme.dimens
+import com.vultisig.wallet.app.ui.theme.montserratFamily
 
 @Composable
-internal fun TopBar(
+fun TopBar(
     navController: NavController,
     centerText: String,
     modifier: Modifier = Modifier,
@@ -29,36 +28,25 @@ internal fun TopBar(
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = CenterVertically
     ) {
-        val iconModifier = Modifier
-            .size(24.dp)
-
         startIcon?.let { id ->
             Image(
                 painter = painterResource(id = id),
                 contentDescription = null,
-                modifier = iconModifier
-                    .clickable { navController.popBackStack() },
-            )
-        } ?: Spacer(modifier = iconModifier)
-
+                modifier = Modifier.clickable {
+                    navController.popBackStack()
+                })
+        } ?: Spacer(modifier = Modifier)
         Text(
             text = centerText,
             color = textColor,
-            style = MaterialTheme.montserratFamily.heading5,
+            style = MaterialTheme.montserratFamily.headlineMedium.copy(fontSize = MaterialTheme.dimens.medium1.value.sp)
         )
-
         endIcon?.let { id ->
-            Image(
-                painter = painterResource(id = id),
-                contentDescription = null,
-                modifier = iconModifier,
-            )
-        } ?: Spacer(modifier = iconModifier)
+            Image(painter = painterResource(id = id), contentDescription = null)
+        } ?: Spacer(modifier = Modifier)
     }
 }

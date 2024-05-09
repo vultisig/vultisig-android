@@ -40,7 +40,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.12"
@@ -56,46 +55,17 @@ hilt {
 
 }
 dependencies {
-    implementation(files("libs/mobile-tss-lib.aar"))
 
-    // kotlinx
-    implementation(libs.kotlinx.coroutines.core)
-
-    // androidx
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.annotation)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.datastore.preferences)
-
-    // compose
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.material3.window)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-
-    // hilt di
-    implementation(libs.hilt.android)
-    implementation(libs.androidx.hilt.navigation.compose)
-    kapt(libs.hilt.android.compiler)
-
-    // other
-    implementation(libs.spark.core)
-    implementation(libs.gson)
-    implementation(libs.guava)
-    implementation(libs.core.zxing)
-    implementation(libs.zxing.android.embedded)
-    implementation(libs.okhttp)
-    implementation(libs.wallet.core)
-    implementation(libs.timber)
-
-    // test
+    implementation(files("libs/mobile-tss-lib.aar"))
+    implementation(libs.androidx.annotation)
     testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
     androidTestImplementation(libs.androidx.junit)
@@ -103,4 +73,22 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.junit.jupiter)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.material3.window)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.hilt.android)
+
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.spark.core)
+    implementation(libs.gson)
+    implementation(libs.guava)
+    implementation(libs.core.zxing)
+    implementation(libs.zxing.android.embedded)
+    implementation(libs.okhttp)
+    implementation(libs.wallet.core)
 }

@@ -9,9 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.theme.appColor
-import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.app.ui.theme.appColor
+import com.vultisig.wallet.app.ui.theme.dimens
+import com.vultisig.wallet.app.ui.theme.menloFamily
 
 @Composable
 fun DeviceInfoItem(info: String) {

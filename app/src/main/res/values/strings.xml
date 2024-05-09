@@ -12,4 +12,5 @@
     <string name="try_again">Try again</string>
     <string name="vault_choose_chains">Choose Chains</string>
     <string name="plus_icon">Plus Icon</string>
+    <string name="choose_tokens">Choose Tokens</string>
 </resources>
