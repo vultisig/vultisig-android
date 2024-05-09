@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.common.data_store.AppDataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import timber.log.Timber
 import java.lang.reflect.Type
 import java.math.BigDecimal
 import java.util.Date
@@ -70,7 +71,7 @@ class CryptoPriceService @Inject constructor(
                 cache.put(it.key, Pair(it.value, Date()))
             }
         } catch (e: Exception) {
-            Log.d(ERROR_CRYPTO_SERVICE, "${e.message}")
+            Timber.d(ERROR_CRYPTO_SERVICE, "${e.message}")
         }
     }
 
