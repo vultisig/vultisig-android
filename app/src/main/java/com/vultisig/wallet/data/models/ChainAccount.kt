@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.models.Coin
+
 internal data class ChainAccount(
     val chainName: String,
     val logo: Int,
@@ -14,4 +16,5 @@ internal data class ChainAccount(
     null if unknown yet
      */
     val fiatAmount: String?,
+    val coins: MutableList<Coin> = emptyList<Coin>().toMutableList()
 )

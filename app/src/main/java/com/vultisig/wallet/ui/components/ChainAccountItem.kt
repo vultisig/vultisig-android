@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +27,7 @@ import com.vultisig.wallet.ui.theme.montserratFamily
 @Composable
 internal fun ChainAccountItem(
     account: ChainAccountUiModel,
+    onClick: () -> Unit = {},
 ) {
     Card(
         shape = RoundedCornerShape(10.dp),
@@ -33,6 +35,7 @@ internal fun ChainAccountItem(
             containerColor = MaterialTheme.appColor.oxfordBlue600Main,
         ),
         modifier = Modifier
+            .clickable(onClick = onClick)
             .fillMaxWidth(),
     ) {
         Row(
