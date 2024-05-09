@@ -22,6 +22,7 @@ sparkCore = "2.9.4"
 annotation = "1.7.1"
 walletCore = "4.0.40"
 zxingAndroidEmbedded = "4.2.0"
+timber = "5.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -55,6 +56,7 @@ spark-core = { module = "com.sparkjava:spark-core", version.ref = "sparkCore" }
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
 wallet-core = { module = "com.trustwallet:wallet-core", version.ref = "walletCore" }
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

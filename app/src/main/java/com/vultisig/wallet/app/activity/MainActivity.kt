@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.app.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @ExperimentalAnimationApi
 @AndroidEntryPoint
@@ -41,11 +42,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        Log.d("MainActivity", "onPause: user is not active")
+        Timber.d("onPause: user is not active")
     }
 
     override fun onDestroy() {
-        Log.d("MainActivity", "onDestroy: ")
+        Timber.d("onDestroy: ")
         super.onDestroy()
     }
 }
