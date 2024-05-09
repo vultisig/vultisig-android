@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -17,10 +18,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
+import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.presenter.tokens.item.TokenSelectionItem
+import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
+import com.vultisig.wallet.ui.theme.appColor
 
 @Composable
 internal fun ChainSelectionScreen(
@@ -32,6 +34,7 @@ internal fun ChainSelectionScreen(
     Column(
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
+            .fillMaxSize(),
     ) {
         TopBar(
             centerText = stringResource(R.string.chains), startIcon = R.drawable.caret_left,
@@ -45,7 +48,9 @@ internal fun ChainSelectionScreen(
             items(state.chains) { chain ->
                 val token = chain.coin
                 TokenSelectionItem(
-                    token = token,
+                    title = token.ticker,
+                    subtitle = token.chain.raw,
+                    logo = token.chain.logo,
                     isChecked = chain.isEnabled,
                     onCheckedChange = { checked ->
                         if (checked) {

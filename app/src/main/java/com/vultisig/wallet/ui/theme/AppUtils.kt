@@ -1,13 +1,9 @@
-package com.vultisig.wallet.app.ui.theme
+package com.vultisig.wallet.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
-import com.vultisig.wallet.ui.theme.ColorsPalette
-import com.vultisig.wallet.ui.theme.CompactDimens
-import com.vultisig.wallet.ui.theme.Dimens
-import com.vultisig.wallet.ui.theme.OnLightCustomColorsPalette
 
 @Composable
 internal fun AppUtils(

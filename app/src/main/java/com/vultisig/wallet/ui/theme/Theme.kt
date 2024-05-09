@@ -1,4 +1,4 @@
-package com.vultisig.wallet.app.ui.theme
+package com.vultisig.wallet.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -16,13 +16,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.toColorInt
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.theme.CompactDimens
-import com.vultisig.wallet.ui.theme.CompactMediumDimens
-import com.vultisig.wallet.ui.theme.CompactSmallDimens
-import com.vultisig.wallet.ui.theme.ExpandedDimens
-import com.vultisig.wallet.ui.theme.OnDarkCustomColorsPalette
-import com.vultisig.wallet.ui.theme.OnLightCustomColorsPalette
-import com.vultisig.wallet.ui.theme.Shapes
+import com.vultisig.wallet.ui.theme.menloTypography
+import com.vultisig.wallet.ui.theme.montserratTypography
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable

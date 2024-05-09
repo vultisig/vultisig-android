@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.vultisig.wallet.app.ui.theme.montserratFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 internal fun TopBar(

@@ -1,5 +1,6 @@
-package com.vultisig.wallet.presenter.tokens.item
+package com.vultisig.wallet.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,21 +21,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.ui.theme.appColor
-import com.vultisig.wallet.app.ui.theme.montserratFamily
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
-fun TokenSelectionItem(
-    token: Coin,
+internal fun TokenSelectionItem(
+    title: String,
+    subtitle: String,
+    @DrawableRes logo: Int,
     isChecked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
@@ -57,7 +57,7 @@ fun TokenSelectionItem(
                     )
                     .size(32.dp)
                     .clip(CircleShape),
-                painter = getCoinLogo(logoName = token.logo),
+                painter = painterResource(id = logo),
                 contentDescription = stringResource(R.string.token_logo),
                 contentScale = ContentScale.Crop
             )
@@ -65,12 +65,12 @@ fun TokenSelectionItem(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = token.ticker,
+                    text = title,
                     color = MaterialTheme.appColor.neutral100,
                     style = MaterialTheme.montserratFamily.subtitle1,
                 )
                 Text(
-                    text = token.chain.raw,
+                    text = subtitle,
                     color = MaterialTheme.appColor.neutral100,
                     style = MaterialTheme.montserratFamily.body3,
                 )
@@ -96,18 +96,13 @@ fun TokenSelectionItem(
     }
 }
 
-@Composable
-private fun getCoinLogo(logoName: String): Painter {
-    val coinLogoID = Coins.getCoinLogo(logoName = logoName)
-    return painterResource(id = coinLogoID)
-}
-
-
 @Preview
 @Composable
 fun TokenSelectionItemPreview() {
     TokenSelectionItem(
-        token = Coins.SupportedCoins[0],
+        title = "ETH",
+        subtitle = "Ethereum",
+        logo = R.drawable.ethereum,
         isChecked = false,
     )
 }
