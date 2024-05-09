@@ -291,7 +291,7 @@ private fun CoinItem(coin: Coin) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = coin.getBalance().toPlainString(),
-                style = MaterialTheme.menloFamily.titleSmall,
+                style = MaterialTheme.menloFamily.titleLarge,
                 color = appColor.neutral0
             )
         }
