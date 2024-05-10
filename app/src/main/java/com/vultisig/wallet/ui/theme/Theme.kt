@@ -10,7 +10,9 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -90,14 +92,46 @@ val MaterialTheme.dimens
     @Composable
     get() = LocalAppDimens.current
 
+@Deprecated(
+    "Use Theme.colors instead of MaterialTheme.appColor",
+    ReplaceWith("Theme.colors")
+)
 val MaterialTheme.appColor
     @Composable
     get() = LocalAppColors.current
 
+@Deprecated(
+    "Use Theme.menlo instead of MaterialTheme.menloFamily",
+    ReplaceWith("Theme.menlo")
+)
 internal val MaterialTheme.menloFamily
     @Composable
     get() = LocalMenloFamilyTypography.current
 
+@Deprecated(
+    "Use Theme.montserrat instead of MaterialTheme.montserratFamily",
+    ReplaceWith("Theme.montserrat")
+)
 internal val MaterialTheme.montserratFamily
     @Composable
     get() = LocalMontserratFamilyTypography.current
+
+internal object Theme {
+    val colors: ColorsPalette
+        @Composable
+        get() = LocalAppColors.current
+
+    val menlo: VultisigTypography
+        @Composable
+        get() = LocalMenloFamilyTypography.current
+
+    val montserrat: VultisigTypography
+        @Composable
+        get() = LocalMontserratFamilyTypography.current
+
+}
+
+
+internal val Theme.cursorBrush: Brush
+    @Composable
+    get() = SolidColor(Theme.colors.neutral100)

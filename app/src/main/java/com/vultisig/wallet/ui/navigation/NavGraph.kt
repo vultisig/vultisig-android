@@ -27,6 +27,7 @@ import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
@@ -132,6 +133,11 @@ internal fun SetupNavGraph(
             TokenSelectionScreen(
                 navController = navController
             )
+        }
+        composable(
+            route = Screen.ChainCoin.Send.route
+        ) {
+            SendScreen(navController = navController)
         }
     }
 }
