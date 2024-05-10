@@ -35,7 +35,7 @@ internal fun TokenSelectionItem(
     title: String,
     subtitle: String,
     @DrawableRes logo: Int,
-    isChecked: Boolean,
+    isChecked: Boolean = false,
     onCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
     Card(

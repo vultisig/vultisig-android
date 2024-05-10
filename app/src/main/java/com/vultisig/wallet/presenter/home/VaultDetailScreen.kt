@@ -3,15 +3,12 @@ package com.vultisig.wallet.presenter.home
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,15 +34,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.chains.thorchainHelper
 import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
+import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
@@ -159,10 +157,18 @@ internal fun VaultDetailScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                items(state.accounts) { account ->
-                    ChainCeil(
+                items(state.accounts) { account: ChainAccountUiModel ->
+                    ChainAccountItem(
                         account = account
-                    )
+                    ) {
+                        val gson = Gson()
+                        val route = Screen.ChainCoin.createRoute(
+                            Uri.encode(gson.toJson(account)),
+                            Uri.encode(gson.toJson(viewModel.vault)),
+                            Uri.encode(gson.toJson(account.coins)),
+                        )
+                        navHostController.navigate(route)
+                    }
                 }
                 item {
                     UiSpacer(
@@ -180,74 +186,4 @@ internal fun VaultDetailScreen(
             }
         }
     }
-}
-
-@Composable
-internal fun ChainCeil(
-    account: ChainAccountUiModel,
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-    ) {
-        Row(Modifier.background(MaterialTheme.appColor.oxfordBlue400)) {
-            Image(
-                painter = painterResource(id = account.logo),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(10.dp)
-                    .width(32.dp)
-                    .height(32.dp)
-            )
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = account.chainName,
-                        style = MaterialTheme.montserratFamily.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .padding(6.dp)
-                            .weight(1f)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = account.nativeTokenAmount ?: "",
-                        style = MaterialTheme.montserratFamily.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .padding(6.dp)
-                            .align(Alignment.CenterVertically)
-                    )
-                    Text(
-                        text = account.fiatAmount ?: "",
-                        style = MaterialTheme.montserratFamily.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier
-                            .padding(6.dp)
-                            .align(Alignment.CenterVertically)
-                    )
-                }
-                Text(
-                    text = account.address,
-                    style = MaterialTheme.montserratFamily.body1,
-                    color = MaterialTheme.appColor.turquoise800,
-                    modifier = Modifier.padding(10.dp)
-                )
-            }
-        }
-    }
-}
-
-@Preview
-@Composable
-fun PreviewChainCeil() {
-    ChainCeil(
-        ChainAccountUiModel(
-            chainName = "Bitcoin",
-            logo = R.drawable.bitcoin,
-            address = "123abc456bca123abc456bca123abc456bca",
-            nativeTokenAmount = "0.01",
-            fiatAmount = "1000$",
-        )
-    )
 }

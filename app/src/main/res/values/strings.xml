@@ -20,4 +20,5 @@
     <string name="joinkeysign_to">To:</string>
     <string name="joinkeysign_amount">Amount:</string>
     <string name="joinkeysign">Join Keysign</string>
+    <string name="choose_tokens">Choose Tokens</string>
 </resources>

@@ -31,6 +31,7 @@ internal data class VultisigTypography(
     val heading5: TextStyle,
     val subtitle1: TextStyle,
     val subtitle2: TextStyle,
+    val subtitle3: TextStyle,
     val body1: TextStyle,
     val body2: TextStyle,
     val body3: TextStyle,
@@ -42,6 +43,10 @@ internal data class VultisigTypography(
         get() = heading3
     val headlineSmall: TextStyle
         get() = heading5
+    val headlineMedium: TextStyle
+        get() = heading4
+    val titleSmall: TextStyle
+        get() = subtitle3
     val titleLarge: TextStyle
         get() = subtitle1
     val titleMedium: TextStyle
@@ -72,8 +77,8 @@ internal data class VultisigTypography(
                     fontFamily = fontFamily,
                 ),
                 heading4 = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 28.sp,
                     fontFamily = fontFamily,
                 ),
                 heading5 = TextStyle(
@@ -88,6 +93,11 @@ internal data class VultisigTypography(
                 ),
                 subtitle2 = TextStyle(
                     fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    fontFamily = fontFamily,
+                ),
+                subtitle3 = TextStyle(
+                    fontWeight = FontWeight.Medium,
                     fontSize = 14.sp,
                     fontFamily = fontFamily,
                 ),

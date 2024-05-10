@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.presenter.chain_coin.ChainCoinScreen
 import com.vultisig.wallet.presenter.home.HomeScreen
 import com.vultisig.wallet.presenter.home.VaultDetailScreen
 import com.vultisig.wallet.presenter.import_file.ImportFile
@@ -108,6 +109,9 @@ internal fun SetupNavGraph(
         }
         composable(route = Screen.KeysignFlow.route) {
             KeysignFlowView(navController)
+        }
+        composable(route = Screen.ChainCoin.route) { navBackStackEntry ->
+            ChainCoinScreen(navController)
         }
     }
 }
