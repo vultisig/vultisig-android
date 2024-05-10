@@ -1,7 +1,6 @@
 package com.vultisig.wallet.presenter.keysign
 
 import android.os.Parcelable
-import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -9,8 +8,8 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
-import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.chains.THORCHainHelper
+import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.toJson
 import com.vultisig.wallet.models.Chain
@@ -35,26 +34,6 @@ data class KeysignPayload(
     val approvePayload: ERC20ApprovePayload? = null,
     val vaultPublicKeyECDSA: String,
 ) : Parcelable {
-    fun toJson(): String {
-        val gson = GsonBuilder().registerTypeAdapter(
-                BlockChainSpecific::class.java, BlockChainSpecificSerializer()
-            ).registerTypeAdapter(
-                KeysignPayload::class.java, KeysignPayloadSerializer()
-            ).create()
-        return gson.toJson(this)
-    }
-
-    companion object {
-        fun fromJson(json: String): KeysignPayload {
-            val gson = GsonBuilder().registerTypeAdapter(
-                    KeysignPayload::class.java, KeysignPayloadDeserializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific::class.java, BlockChainSpecificDeserializer()
-                ).create()
-            return gson.fromJson(json, KeysignPayload::class.java)
-        }
-    }
-
     fun getKeysignMessages(vault: Vault): List<String> {
         when (coin.chain) {
             Chain.thorChain -> {

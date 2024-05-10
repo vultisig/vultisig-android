@@ -35,14 +35,13 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 enum class KeysignFlowState {
-    PEER_DISCOVERY,
-    KEYSIGN,
-    ERROR,
+    PEER_DISCOVERY, KEYSIGN, ERROR,
 }
 
 @HiltViewModel
 class KeysignFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
+    private val gson: Gson,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -74,7 +73,8 @@ class KeysignFlowViewModel @Inject constructor(
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!),
             keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
-            keysignPayload = _keysignPayload!!
+            keysignPayload = _keysignPayload!!,
+            gson = gson
         )
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
@@ -100,16 +100,19 @@ class KeysignFlowViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             vault.localPartyID,
+            gson
         )
 
         _keysignMessage.value =
-            "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" + KeysignMesssage(
-                sessionID = _sessionID,
-                serviceName = _serviceName,
-                payload = _keysignPayload!!,
-                encryptionKeyHex = _encryptionKeyHex,
-                usevultisigRelay = vultisigRelay.IsRelayEnabled
-            ).toJson()
+            "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" + gson.toJson(
+                KeysignMesssage(
+                    sessionID = _sessionID,
+                    serviceName = _serviceName,
+                    payload = _keysignPayload!!,
+                    encryptionKeyHex = _encryptionKeyHex,
+                    usevultisigRelay = vultisigRelay.IsRelayEnabled
+                )
+            )
         if (!vultisigRelay.IsRelayEnabled) {
             startMediatorService(context)
         } else {
@@ -141,13 +144,15 @@ class KeysignFlowViewModel @Inject constructor(
             }
         }
     }
-    fun stopService(context: Context){
+
+    fun stopService(context: Context) {
         // start mediator service
         val intent = Intent(context, MediatorService::class.java)
         context.stopService(intent)
         Timber.d("stopService: Mediator service stopped")
 
     }
+
     private fun startMediatorService(context: Context) {
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)
@@ -167,31 +172,24 @@ class KeysignFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val client = OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
-                .build()
-            val request = okhttp3.Request.Builder()
-                .url("$serverAddr/$sessionID")
-                .post(
-                    Gson().toJson(listOf(localPartyID))
-                        .toRequestBody("application/json".toMediaType())
-                )
-                .build()
+            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+            val request = okhttp3.Request.Builder().url("$serverAddr/$sessionID").post(
+                gson.toJson(listOf(localPartyID))
+                    .toRequestBody("application/json".toMediaType())
+            ).build()
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_CREATED -> {
-                        Log.d("KeysignFlowViewModel", "startSession: Session started")
+                        Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
                     }
 
-                    else ->
-                        Log.d(
-                            "KeysignFlowViewModel",
-                            "startSession: Response code: ${response.code}"
-                        )
+                    else -> Timber.tag("KeysignFlowViewModel").d(
+                        "startSession: Response code: ${response.code}"
+                    )
                 }
             }
         } catch (e: Exception) {
-            Log.e("KeysignFlowViewModel", "startSession: ${e.stackTraceToString()}")
+            Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
         }
     }
 
@@ -240,10 +238,8 @@ class KeysignFlowViewModel @Inject constructor(
             try {
                 val keygenCommittee = selection.value ?: emptyList()
                 val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-                val payload = Gson().toJson(keygenCommittee)
-                val request = okhttp3.Request
-                    .Builder()
-                    .url("$_serverAddress/start/$_sessionID")
+                val payload = gson.toJson(keygenCommittee)
+                val request = okhttp3.Request.Builder().url("$_serverAddress/start/$_sessionID")
                     .post(payload.toRequestBody("application/json".toMediaType())).build()
                 client.newCall(request).execute().use { response ->
                     if (response.code == HttpURLConnection.HTTP_OK) {

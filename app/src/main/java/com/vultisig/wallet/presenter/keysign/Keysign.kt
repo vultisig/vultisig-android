@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.Coins
@@ -162,7 +163,7 @@ fun PreviewKeysign() {
                 ),
                 utxos = emptyList(),
                 vaultPublicKeyECDSA = ""
-            )
+            ), gson = Gson()
 
         )
     )

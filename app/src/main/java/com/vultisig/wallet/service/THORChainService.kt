@@ -1,12 +1,12 @@
 package com.vultisig.wallet.service
 
-import android.util.Log
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.models.cosmos.CosmosTransactionBroadcastResponse
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import timber.log.Timber
 
 class THORChainService(
     private val gson: Gson,
@@ -24,7 +24,7 @@ class THORChainService(
                 .build()
             val response = client.newCall(request).execute()
             val responseRawString = response.body?.string()
-            val result = Gson().fromJson(
+            val result = gson.fromJson(
                 responseRawString,
                 CosmosTransactionBroadcastResponse::class.java
             )
@@ -35,7 +35,7 @@ class THORChainService(
                 throw Exception("Error broadcasting transaction: $responseRawString")
             }
         } catch (e: Exception) {
-            Log.d("THORChainService", "Error broadcasting transaction: ${e.message}")
+            Timber.tag("THORChainService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
         return null

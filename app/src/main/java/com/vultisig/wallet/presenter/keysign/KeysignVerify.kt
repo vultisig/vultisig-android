@@ -7,38 +7,38 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import timber.log.Timber
 
 class KeysignVerify(
-    private val serverAddr: String,
-    private val sessionId: String,
+    serverAddr: String,
+    sessionId: String,
+    private val gson: Gson,
 ) {
     private val serverURL = "$serverAddr/complete/$sessionId/keysign"
     suspend fun markLocalPartyKeysignComplete(message: String, sig: tss.KeysignResponse) {
         withContext(Dispatchers.IO) {
             try {
                 val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true).build()
-                val jsonResult = Gson().toJson(sig)
+                val jsonResult = gson.toJson(sig)
                 val request = okhttp3.Request.Builder()
                     .url(serverURL)
                     .header("message_id", message)
                     .post(jsonResult.toRequestBody("application/json".toMediaType()))
                     .build()
                 client.newCall(request).execute().use {
-                    Log.d(
-                        "KeysignVerify",
+                    Timber.tag("KeysignVerify").d(
                         "markLocalPartyKeysignComplete: Response code: ${it.code}"
                     )
                 }
             } catch (e: Exception) {
-                Log.d(
-                    "KeysignVerify",
+                Timber.tag("KeysignVerify").d(
                     "markLocalPartyKeysignComplete error: ${e.stackTraceToString()}"
                 )
             }
         }
     }
 
-    suspend fun checkKeysignComplete(message: String): tss.KeysignResponse?{
+    suspend fun checkKeysignComplete(message: String): tss.KeysignResponse? {
         return withContext(Dispatchers.IO) {
             try {
                 val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true).build()
@@ -47,13 +47,13 @@ class KeysignVerify(
                     .header("message_id", message)
                     .get()
                     .build()
-                val result =  client.newCall(request)
+                val result = client.newCall(request)
                     .execute()
                     .use { response ->
                         when (response.code) {
                             200 -> response.body?.let {
                                 val result = it.string()
-                                Gson().fromJson(result, tss.KeysignResponse::class.java)
+                                gson.fromJson(result, tss.KeysignResponse::class.java)
                             }
 
                             else -> {

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.google.gson.Gson
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssAction
@@ -20,13 +21,7 @@ import tss.ServiceImpl
 import tss.Tss
 
 enum class KeygenState {
-    CreatingInstance,
-    KeygenECDSA,
-    KeygenEdDSA,
-    ReshareECDSA,
-    ReshareEdDSA,
-    Success,
-    ERROR
+    CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
 }
 
 class GeneratingKeyViewModel(
@@ -37,6 +32,7 @@ class GeneratingKeyViewModel(
     private val serverAddress: String,
     private val sessionId: String,
     private val encryptionKeyHex: String,
+    private val gson: Gson,
 ) {
     private var tssInstance: tss.ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -70,11 +66,7 @@ class GeneratingKeyViewModel(
     private suspend fun keygenWithRetry(service: ServiceImpl, attempt: Int = 1) {
         try {
             _messagePuller = TssMessagePuller(
-                service,
-                this.encryptionKeyHex,
-                serverAddress,
-                vault.localPartyID,
-                sessionId
+                service, this.encryptionKeyHex, serverAddress, vault.localPartyID, sessionId
             )
             _messagePuller?.pullMessages(null)
             when (this.action) {
@@ -118,7 +110,7 @@ class GeneratingKeyViewModel(
                 this.serverAddress,
                 this.sessionId,
                 vault.localPartyID,
-                this.keygenCommittee
+                this.keygenCommittee, gson = gson,
             )
             withContext(Dispatchers.IO) {
                 keygenVerifier.markLocalPartyComplete()

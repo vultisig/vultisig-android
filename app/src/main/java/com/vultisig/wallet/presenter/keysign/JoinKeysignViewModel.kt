@@ -32,13 +32,7 @@ import java.net.URL
 import javax.inject.Inject
 
 enum class JoinKeysignState {
-    DiscoveryingSessionID,
-    DiscoverService,
-    JoinKeysign,
-    WaitingForKeysignStart,
-    Keysign,
-    FailedToStart,
-    Error
+    DiscoveryingSessionID, DiscoverService, JoinKeysign, WaitingForKeysignStart, Keysign, FailedToStart, Error
 }
 
 
@@ -46,9 +40,9 @@ enum class JoinKeysignState {
 class JoinKeysignViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val vaultDB: VaultDB,
+    private val gson: Gson,
 ) : ViewModel() {
-    private val vaultId: String =
-        requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
+    private val vaultId: String = requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
     private var _currentVault: Vault = Vault("temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveryingSessionID)
@@ -76,7 +70,8 @@ class JoinKeysignViewModel @Inject constructor(
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault),
             keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
-            keysignPayload = _keysignPayload!!
+            keysignPayload = _keysignPayload!!,
+            gson = gson
         )
 
     fun setData() {
@@ -92,7 +87,7 @@ class JoinKeysignViewModel @Inject constructor(
             qrCodeContent ?: run {
                 throw Exception("Invalid QR code content")
             }
-            val payload = KeysignMesssage.fromJson(qrCodeContent)
+            val payload = gson.fromJson(qrCodeContent, KeysignMesssage::class.java)
             if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
                 errorMessage.value = "Wrong vault"
                 currentState.value = JoinKeysignState.Error
@@ -109,8 +104,7 @@ class JoinKeysignViewModel @Inject constructor(
             } else {
                 currentState.value = JoinKeysignState.DiscoverService
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             errorMessage.value = "Invalid QR code content"
             currentState.value = JoinKeysignState.Error
         }
@@ -128,9 +122,7 @@ class JoinKeysignViewModel @Inject constructor(
             MediatorServiceDiscoveryListener(nsdManager, _serviceName, ::onServerAddressDiscovered)
         _nsdManager = nsdManager
         nsdManager.discoverServices(
-            "_http._tcp.",
-            NsdManager.PROTOCOL_DNS_SD,
-            _discoveryListener
+            "_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener
         )
     }
 
@@ -142,13 +134,9 @@ class JoinKeysignViewModel @Inject constructor(
                 val payload = listOf(_localPartyID)
 
                 val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true).build()
-                val request = okhttp3.Request.Builder()
-                    .method(
-                        "POST",
-                        Gson().toJson(payload).toRequestBody("application/json".toMediaType())
-                    )
-                    .url(serverUrl)
-                    .build()
+                val request = okhttp3.Request.Builder().method(
+                        "POST", gson.toJson(payload).toRequestBody("application/json".toMediaType())
+                    ).url(serverUrl).build()
                 val resp = client.newCall(request).execute().use {
                     Log.d("JoinKeysignViewModel", "Join keysign: Response code: ${it.code}")
                 }
@@ -160,9 +148,11 @@ class JoinKeysignViewModel @Inject constructor(
             }
         }
     }
-    fun cleanUp(){
+
+    fun cleanUp() {
         _jobWaitingForKeysignStart?.cancel()
     }
+
     suspend fun waitForKeysignToStart() {
         _jobWaitingForKeysignStart = viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -191,7 +181,7 @@ class JoinKeysignViewModel @Inject constructor(
                         response.body?.let {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
-                            this._keysignCommittee = Gson().fromJson(result, tokenType)
+                            this._keysignCommittee = gson.fromJson(result, tokenType)
                             Timber.d("Keysign committee: $_keysignCommittee")
                             Timber.d("local party: $_localPartyID")
                             if (this._keysignCommittee.contains(_localPartyID)) {

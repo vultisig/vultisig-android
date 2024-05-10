@@ -7,7 +7,6 @@ import com.vultisig.wallet.data.mappers.CoinWithFiatValue
 import com.vultisig.wallet.data.models.ChainAccount
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.on_board.db.VaultDB
-import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first

@@ -1,6 +1,13 @@
 package com.vultisig.wallet.data
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecificDeserializer
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecificSerializer
+import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import com.vultisig.wallet.presenter.keysign.KeysignPayloadDeserializer
+import com.vultisig.wallet.presenter.keysign.KeysignPayloadSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,7 +24,42 @@ interface DataModule {
 
         @Provides
         @Singleton
-        fun provideGson(): Gson = Gson()
+        fun provideGson(): Gson {
+            return GsonBuilder()
+                .registerTypeAdapter(KeysignPayload::class.java, KeysignPayloadSerializer())
+                .registerTypeAdapter(
+                    BlockChainSpecific.UTXO::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific.Cosmos::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific.THORChain::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific.Sui::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific.Polkadot::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific.Solana::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific.Ethereum::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific::class.java, BlockChainSpecificSerializer()
+                ) .registerTypeAdapter(
+                    BlockChainSpecific::class.java,
+                    BlockChainSpecificDeserializer()
+                )
+                .registerTypeAdapter(
+                    KeysignPayload::class.java,
+                    KeysignPayloadDeserializer()
+                )
+                .create()
+        }
 
         @Provides
         @Singleton
