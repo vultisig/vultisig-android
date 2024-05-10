@@ -22,6 +22,13 @@ sealed class Screen(val route: String) {
             }
         }
 
+        data object VaultSettings : Screen(route = "vault_detail/{vault_id}/settings") {
+            const val ARG_VAULT_ID = "vault_id"
+            fun createRoute(vaultId: String): String {
+                return "vault_detail/$vaultId/settings"
+            }
+        }
+
     }
 
     data object ChainCoin : Screen(route = "chainCoin/{$CHAIN_COIN_ACCOUNT_JSON}/{$CHAIN_COIN_VAULT_JSON}/{$CHAIN_COIN_COINS_JSON}"){
