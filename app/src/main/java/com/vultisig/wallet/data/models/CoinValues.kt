@@ -4,6 +4,11 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 
+internal data class TokenBalance(
+    val tokenValue: TokenValue?,
+    val fiatValue: FiatValue?,
+)
+
 internal data class TokenValue(
     val value: BigInteger,
     val decimals: Int,

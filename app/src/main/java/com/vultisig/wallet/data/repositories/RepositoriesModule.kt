@@ -35,8 +35,8 @@ internal interface RepositoriesModule {
     @Binds
     @Singleton
     fun bindChainAccountsRepository(
-        impl: ChainAccountsRepositoryImpl,
-    ): ChainAccountsRepository
+        impl: AccountsRepositoryImpl,
+    ): AccountsRepository
 
     @Binds
     @Singleton
