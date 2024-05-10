@@ -43,6 +43,16 @@ sealed class Screen(val route: String) {
         fun createRoute(accountJson: String, vaultJson: String, coinsJson:String): String {
             return "chainCoin/$accountJson/$vaultJson/$coinsJson"
         }
+
+        data object SelectTokens : Screen(route = "vault_detail/{vault_id}/account/{account_id}/select_tokens") {
+            const val ARG_VAULT_ID = "vault_id"
+            const val ARG_ACCOUNT_ID = "account_id"
+            fun createRoute(
+                vaultId: String,
+                accountId: String,
+            ): String = "vault_detail/${vaultId}/account/${accountId}/select_tokens"
+        }
+
     }
 
     companion object {

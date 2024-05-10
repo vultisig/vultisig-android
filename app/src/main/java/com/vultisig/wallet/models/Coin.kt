@@ -21,6 +21,9 @@ data class Coin(
     val contractAddress: String,
     val isNativeToken: Boolean,
 ) : Parcelable {
+    val id: String
+        get() = ticker
+
     val coinType: CoinType
         get() = when (chain) {
             Chain.bitcoin -> CoinType.BITCOIN
@@ -224,8 +227,8 @@ object Coins {
             "rune" -> R.drawable.rune
             "eth" -> R.drawable.ethereum
             "sol" -> R.drawable.solana
-            "cacao" -> R.drawable.danger
-            "maya" -> R.drawable.danger
+            "cacao" -> R.drawable.cacao
+            "maya" -> R.drawable.cacao
             else -> R.drawable.danger
         }
     }

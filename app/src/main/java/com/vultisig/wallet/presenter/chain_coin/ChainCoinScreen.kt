@@ -56,8 +56,10 @@ import com.vultisig.wallet.models.getBalance
 import com.vultisig.wallet.models.getBalanceInFiat
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
+import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.SelectTokens
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -188,27 +190,18 @@ fun ChainCoinScreen(navController: NavHostController) {
                     }
                 }
 
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(
-                        horizontal = dimens.marginMedium, vertical = 12.dp
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.plus),
-                        contentDescription = null,
-                        modifier = Modifier.width(dimens.small3),
-                        tint = appColor.turquoise600Main
-                    )
-                    Spacer(modifier = Modifier.width(dimens.marginSmall))
-                    Text(
-                        text = stringResource(R.string.choose_tokens),
-                        color = appColor.turquoise600Main,
-                        style = MaterialTheme.montserratFamily.titleMedium
-                    )
-                }
-
+                UiPlusButton(
+                    title = stringResource(R.string.choose_tokens),
+                    onClick = {
+                        navController.navigate(
+                            route = SelectTokens.createRoute(
+                                "", "0" // TODO mock data
+                            )
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(all = 16.dp)
+                )
             }
         }
     }
