@@ -1,28 +1,41 @@
 package com.vultisig.wallet.presenter.chain_coin
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.google.gson.Gson
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.getBalanceInFiat
-import com.vultisig.wallet.ui.models.ChainAccountUiModel
-import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_CHAIN_RAW
+import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
 @HiltViewModel
-internal class ChainCoinViewmodel @Inject constructor(savedStateHandle: SavedStateHandle) : ViewModel() {
-    private val gson = Gson()
-    private val accountJson: String = savedStateHandle.get<String>(Screen.CHAIN_COIN_ACCOUNT_JSON)!!
-    private val vaultJson: String = savedStateHandle.get<String>(Screen.CHAIN_COIN_VAULT_JSON)!!
-    private val coinsJson: String = savedStateHandle.get<String>(Screen.CHAIN_COIN_COINS_JSON)!!
+internal class ChainCoinViewmodel @Inject constructor(
+    private val vaultDB: VaultDB,
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
+    private val chainRaw: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_CHAIN_RAW)!!
+    private val vaultId: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_VAULT_ID)!!
 
-    val selectedChainAccount: ChainAccountUiModel = gson.fromJson(accountJson, ChainAccountUiModel::class.java)
-    val vault: Vault = gson.fromJson(vaultJson, Vault::class.java)
-    val coins:List<Coin> = gson.fromJson(coinsJson, Array<Coin>::class.java).asList()
-    val totalPrice: BigDecimal = coins.sumOf { it.getBalanceInFiat() }.setScale(2, RoundingMode.HALF_UP)
+    var uiModel by mutableStateOf(ChainCoinUiModel())
+
+    fun loadData() {
+        val vault = vaultDB.select(vaultId)
+        val coins = vault?.coins?.filter { it.chain.raw == chainRaw }?.toList() ?: emptyList()
+        val chainAddress = coins.firstOrNull()?.address ?: ""
+        val totalPrice = coins.sumOf { it.getBalanceInFiat() }
+            .setScale(2, RoundingMode.HALF_UP).toPlainString()
+
+        uiModel = uiModel.copy(
+            chainName = chainRaw,
+            chainAddress = chainAddress,
+            coins = coins,
+            totalPrice = totalPrice
+        )
+    }
 
 }

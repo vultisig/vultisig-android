@@ -46,10 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.theme.appColor
-import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.getBalance
@@ -58,17 +54,25 @@ import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.models.ChainAccountUiModel
 import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.SelectTokens
+import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.dimens
+import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChainCoinScreen(navController: NavHostController) {
     val viewmodel = hiltViewModel<ChainCoinViewmodel>()
+    val uiModel = viewmodel.uiModel
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = MaterialTheme.appColor
     val dimens = MaterialTheme.dimens
+
+    LaunchedEffect(key1 = Unit) {
+        viewmodel.loadData()
+    }
 
 
     Box(
@@ -81,7 +85,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = viewmodel.selectedChainAccount.chainName,
+                            text = uiModel.chainName,
                             style = MaterialTheme.montserratFamily.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = textColor,
@@ -183,9 +187,9 @@ fun ChainCoinScreen(navController: NavHostController) {
                         .clip(MaterialTheme.shapes.large),
                 ) {
                     item {
-                        CoinListHeader(selectedChainAccount = viewmodel.selectedChainAccount,viewmodel.totalPrice.toPlainString())
+                        CoinListHeader(uiModel.chainAddress,uiModel.chainName,uiModel.totalPrice)
                     }
-                    items(items = viewmodel.coins) { coin ->
+                    items(items = uiModel.coins) { coin ->
                         CoinItem(coin)
                     }
                 }
@@ -208,16 +212,16 @@ fun ChainCoinScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun CoinListHeader(selectedChainAccount: ChainAccountUiModel, totalPrice: String) {
+private fun CoinListHeader(address:String,name:String, totalPrice: String) {
     val appColor = MaterialTheme.appColor
     val dimens = MaterialTheme.dimens
     LaunchedEffect(key1 = Unit) {
-        Timber.d(selectedChainAccount.address)
+        Timber.d(address)
     }
     Column(modifier = Modifier.padding(vertical = 20.dp, horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = selectedChainAccount.chainName,
+                text = name,
                 style = MaterialTheme.montserratFamily.headlineMedium,
                 color = appColor.neutral0
             )
@@ -240,7 +244,7 @@ private fun CoinListHeader(selectedChainAccount: ChainAccountUiModel, totalPrice
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = selectedChainAccount.address,
+            text = address,
             style = MaterialTheme.montserratFamily.titleSmall,
             color = appColor.turquoise800,
             modifier = Modifier.padding(top = dimens.marginSmall)

@@ -16,5 +16,4 @@ internal data class ChainAccount(
     null if unknown yet
      */
     val fiatValue: FiatValue?,
-    val coins: MutableList<Coin> = emptyList<Coin>().toMutableList()
 )

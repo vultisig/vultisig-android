@@ -168,11 +168,9 @@ internal fun VaultDetailScreen(
                     ChainAccountItem(
                         account = account
                     ) {
-                        val gson = Gson()
                         val route = Screen.ChainCoin.createRoute(
-                            Uri.encode(gson.toJson(account)),
-                            Uri.encode(gson.toJson(viewModel.vault)),
-                            Uri.encode(gson.toJson(account.coins)),
+                            chainRaw = account.chainName,
+                            vaultId = viewModel.vault?.name?:"",
                         )
                         navHostController.navigate(route)
                     }
