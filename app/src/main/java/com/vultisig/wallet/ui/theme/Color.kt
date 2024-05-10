@@ -33,6 +33,7 @@ data class ColorsPalette(
     val turquoise600Main: Color = Color.Unspecified,
     val turquoise400: Color = Color.Unspecified,
     val turquoise200: Color = Color.Unspecified,
+    val red: Color,
 )
 
 val OnLightCustomColorsPalette = ColorsPalette(
@@ -66,6 +67,7 @@ val OnLightCustomColorsPalette = ColorsPalette(
     turquoise600Main = Color(0xff33E6BF),
     turquoise400 = Color(0xff81F8DE),
     turquoise200 = Color(0xffA6FBE8),
+    red = Color(0xffFF4040),
 )
 
 val OnDarkCustomColorsPalette = ColorsPalette(
@@ -99,4 +101,5 @@ val OnDarkCustomColorsPalette = ColorsPalette(
     turquoise600Main = Color(0xff33E6BF),
     turquoise400 = Color(0xff81F8DE),
     turquoise200 = Color(0xffA6FBE8),
+    red = Color(0xffFF4040),
 )
