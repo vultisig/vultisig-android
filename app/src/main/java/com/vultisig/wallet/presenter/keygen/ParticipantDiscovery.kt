@@ -18,6 +18,7 @@ class ParticipantDiscovery(
     private val serverAddr: String,
     private val sessionID: String,
     private val localPartyID: String,
+    private val gson: Gson,
 ) {
     private var job: Job? = null
     private val _participants: MutableLiveData<List<String>> = MutableLiveData(listOf<String>())
@@ -54,7 +55,7 @@ class ParticipantDiscovery(
                     val result = conn.inputStream.bufferedReader().use { it.readText() }
                     Log.d("ParticipantDiscovery", "Response code: $responseCode, response: $result")
                     val listType = object : TypeToken<List<String>>() {}.type
-                    return Gson().fromJson(result, listType)
+                    return gson.fromJson(result, listType)
                 }
 
                 HttpStatus.NOT_FOUND -> {

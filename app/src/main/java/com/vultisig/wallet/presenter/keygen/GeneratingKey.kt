@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
@@ -163,7 +164,7 @@ fun PreviewGeneratingKey() {
         oldCommittee = listOf(""),
         serverAddress = "http://127.0.0.1:18080",
         sessionId = "123456",
-        encryptionKeyHex = ""
+        encryptionKeyHex = "", gson = Gson(),
     )
     GeneratingKey(navController, viewModelForReview)
 }

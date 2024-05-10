@@ -35,9 +35,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 enum class KeysignFlowState {
-    PEER_DISCOVERY,
-    KEYSIGN,
-    ERROR,
+    PEER_DISCOVERY, KEYSIGN, ERROR,
 }
 
 @HiltViewModel
@@ -75,7 +73,8 @@ class KeysignFlowViewModel @Inject constructor(
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!),
             keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
-            keysignPayload = _keysignPayload!!
+            keysignPayload = _keysignPayload!!,
+            gson = gson
         )
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
@@ -101,6 +100,7 @@ class KeysignFlowViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             vault.localPartyID,
+            gson
         )
 
         _keysignMessage.value =
@@ -172,31 +172,24 @@ class KeysignFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val client = OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
-                .build()
-            val request = okhttp3.Request.Builder()
-                .url("$serverAddr/$sessionID")
-                .post(
-                    Gson().toJson(listOf(localPartyID))
-                        .toRequestBody("application/json".toMediaType())
-                )
-                .build()
+            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+            val request = okhttp3.Request.Builder().url("$serverAddr/$sessionID").post(
+                gson.toJson(listOf(localPartyID))
+                    .toRequestBody("application/json".toMediaType())
+            ).build()
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_CREATED -> {
-                        Log.d("KeysignFlowViewModel", "startSession: Session started")
+                        Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
                     }
 
-                    else ->
-                        Log.d(
-                            "KeysignFlowViewModel",
-                            "startSession: Response code: ${response.code}"
-                        )
+                    else -> Timber.tag("KeysignFlowViewModel").d(
+                        "startSession: Response code: ${response.code}"
+                    )
                 }
             }
         } catch (e: Exception) {
-            Log.e("KeysignFlowViewModel", "startSession: ${e.stackTraceToString()}")
+            Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
         }
     }
 
@@ -245,10 +238,8 @@ class KeysignFlowViewModel @Inject constructor(
             try {
                 val keygenCommittee = selection.value ?: emptyList()
                 val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-                val payload = Gson().toJson(keygenCommittee)
-                val request = okhttp3.Request
-                    .Builder()
-                    .url("$_serverAddress/start/$_sessionID")
+                val payload = gson.toJson(keygenCommittee)
+                val request = okhttp3.Request.Builder().url("$_serverAddress/start/$_sessionID")
                     .post(payload.toRequestBody("application/json".toMediaType())).build()
                 client.newCall(request).execute().use { response ->
                     if (response.code == HttpURLConnection.HTTP_OK) {

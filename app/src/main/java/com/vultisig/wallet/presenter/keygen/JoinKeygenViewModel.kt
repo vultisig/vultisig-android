@@ -29,19 +29,13 @@ import java.net.URL
 import javax.inject.Inject
 
 enum class JoinKeygenState {
-    DiscoveryingSessionID,
-    DiscoverService,
-    JoinKeygen,
-    WaitingForKeygenStart,
-    Keygen,
-    FailedToStart,
-    ERROR
+    DiscoveryingSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart, ERROR
 }
 
 @HiltViewModel
 class JoinKeygenViewModel @Inject constructor(
-    private val gson: Gson
-)  : ViewModel() {
+    private val gson: Gson,
+) : ViewModel() {
     private var _vault: Vault = Vault("new vault")
     private var _localPartyID: String = ""
     private var _action: TssAction = TssAction.KEYGEN
@@ -68,7 +62,8 @@ class JoinKeygenViewModel @Inject constructor(
             _vault.signers,
             _serverAddress,
             _sessionID,
-            _encryptionKeyHex
+            _encryptionKeyHex,
+            gson = gson
         )
 
     fun setData(vault: Vault) {
@@ -85,7 +80,7 @@ class JoinKeygenViewModel @Inject constructor(
             qrCodeContent ?: run {
                 throw Exception("invalid QR code")
             }
-            when (val payload = PeerDiscoveryPayload.fromJson(gson,qrCodeContent)) {
+            when (val payload = PeerDiscoveryPayload.fromJson(gson, qrCodeContent)) {
                 is PeerDiscoveryPayload.Keygen -> {
                     this._action = TssAction.KEYGEN
                     this._sessionID = payload.keygenMessage.sessionID
@@ -140,9 +135,7 @@ class JoinKeygenViewModel @Inject constructor(
             MediatorServiceDiscoveryListener(nsdManager, _serviceName, ::onServerAddressDiscovered)
         _nsdManager = nsdManager
         nsdManager.discoverServices(
-            "_http._tcp.",
-            NsdManager.PROTOCOL_DNS_SD,
-            _discoveryListener
+            "_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener
         )
     }
 
@@ -156,7 +149,7 @@ class JoinKeygenViewModel @Inject constructor(
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
                 val payload = listOf(_localPartyID)
-                Gson().toJson(payload).also {
+                gson.toJson(payload).also {
                     conn.outputStream.write(it.toByteArray())
                 }
                 val responseCode = conn.responseCode
@@ -203,7 +196,7 @@ class JoinKeygenViewModel @Inject constructor(
                         response.body?.let {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
-                            this._keygenCommittee = Gson().fromJson(result, tokenType)
+                            this._keygenCommittee = gson.fromJson(result, tokenType)
                             if (this._keygenCommittee.contains(_localPartyID)) {
                                 return true
                             }
@@ -236,13 +229,11 @@ class MediatorServiceDiscoveryListener(
 
     override fun onServiceFound(service: NsdServiceInfo) {
         Log.d(
-            "JoinKeygenViewModel",
-            "Service found: ${service.serviceName}"
+            "JoinKeygenViewModel", "Service found: ${service.serviceName}"
         )
         if (service.serviceName == serviceName) {
             Log.d(
-                "JoinKeygenViewModel",
-                "Service found: ${service.serviceName}"
+                "JoinKeygenViewModel", "Service found: ${service.serviceName}"
             )
             nsdManager.resolveService(
                 service,
@@ -253,8 +244,7 @@ class MediatorServiceDiscoveryListener(
 
     override fun onServiceLost(service: NsdServiceInfo) {
         Log.d(
-            "JoinKeygenViewModel",
-            "Service lost: ${service.serviceName}, port:${service.port}"
+            "JoinKeygenViewModel", "Service lost: ${service.serviceName}, port:${service.port}"
         )
     }
 
@@ -264,15 +254,13 @@ class MediatorServiceDiscoveryListener(
 
     override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
         Log.d(
-            "JoinKeygenViewModel",
-            "Failed to start discovery: $serviceType, error: $errorCode"
+            "JoinKeygenViewModel", "Failed to start discovery: $serviceType, error: $errorCode"
         )
     }
 
     override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
         Log.d(
-            "JoinKeygenViewModel",
-            "Failed to stop discovery: $serviceType, error: $errorCode"
+            "JoinKeygenViewModel", "Failed to stop discovery: $serviceType, error: $errorCode"
         )
     }
 
@@ -286,8 +274,7 @@ class MediatorServiceDiscoveryListener(
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
 
         Log.d(
-            "JoinKeygenViewModel",
-            "Service resolved: ${serviceInfo?.serviceName}, address: ${
+            "JoinKeygenViewModel", "Service resolved: ${serviceInfo?.serviceName}, address: ${
                 serviceInfo?.host?.address.toString()
             }, port:${serviceInfo?.port}"
         )

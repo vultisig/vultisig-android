@@ -36,11 +36,7 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 enum class KeygenFlowState {
-    PEER_DISCOVERY,
-    DEVICE_CONFIRMATION,
-    KEYGEN,
-    ERROR,
-    SUCCESS
+    PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
 }
 
 @HiltViewModel
@@ -79,7 +75,8 @@ class KeygenFlowViewModel @Inject constructor(
             vault.signers,
             serverAddress,
             sessionID,
-            _encryptionKeyHex
+            _encryptionKeyHex,
+            gson
         )
 
     suspend fun setData(action: TssAction, vault: Vault, context: Context) {
@@ -106,7 +103,7 @@ class KeygenFlowViewModel @Inject constructor(
         // stop participant discovery
         stopParticipantDiscovery()
         this.participantDiscovery =
-            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID)
+            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, gson)
         when (action) {
             TssAction.KEYGEN -> {
                 _keygenPayload.value =
@@ -190,24 +187,18 @@ class KeygenFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val client = OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
-                .build()
-            val request = okhttp3.Request.Builder()
-                .url("$serverAddr/$sessionID")
-                .post(
-                    Gson().toJson(listOf(localPartyID))
-                        .toRequestBody("application/json".toMediaType())
-                )
-                .build()
+            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+            val request = okhttp3.Request.Builder().url("$serverAddr/$sessionID").post(
+                gson.toJson(listOf(localPartyID))
+                    .toRequestBody("application/json".toMediaType())
+            ).build()
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_CREATED -> {
                         Timber.d("startSession: Session started")
                     }
 
-                    else ->
-                        Timber.d("startSession: Response code: " + response.code)
+                    else -> Timber.d("startSession: Response code: " + response.code)
                 }
             }
         } catch (e: Exception) {
@@ -233,18 +224,15 @@ class KeygenFlowViewModel @Inject constructor(
         try {
             val keygenCommittee = selection.value ?: emptyList()
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val payload = Gson().toJson(keygenCommittee)
-            val request = okhttp3.Request
-                .Builder()
-                .url("$serverAddress/start/$sessionID")
+            val payload = gson.toJson(keygenCommittee)
+            val request = okhttp3.Request.Builder().url("$serverAddress/start/$sessionID")
                 .post(payload.toRequestBody("application/json".toMediaType())).build()
             client.newCall(request).execute().use { response ->
                 if (response.code == HttpURLConnection.HTTP_OK) {
                     Log.d("KeygenDiscoveryViewModel", "startKeygen: Keygen started")
                 } else {
                     Log.e(
-                        "KeygenDiscoveryViewModel",
-                        "startKeygen: Response code: ${response.code}"
+                        "KeygenDiscoveryViewModel", "startKeygen: Response code: ${response.code}"
                     )
                 }
             }

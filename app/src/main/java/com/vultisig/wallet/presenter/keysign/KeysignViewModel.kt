@@ -43,6 +43,7 @@ class KeysignViewModel(
     private val messagesToSign: List<String>,
     private val keyType: TssKeyType,
     private val keysignPayload: KeysignPayload,
+    private val gson: Gson,
 ) {
     private var tssInstance: tss.ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -87,7 +88,7 @@ class KeysignViewModel(
     }
 
     private suspend fun signMessageWithRetry(service: ServiceImpl, message: String, attempt: Int) {
-        val keysignVerify = KeysignVerify(serverAddress, sessionId)
+        val keysignVerify = KeysignVerify(serverAddress, sessionId, gson)
         try {
             Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()
@@ -134,7 +135,7 @@ class KeysignViewModel(
         val signedTransaction = getSignedTransaction()
         when (keysignPayload.coin.chain) {
             Chain.thorChain -> {
-                THORChainService(Gson()).broadcastTransaction(signedTransaction.rawTransaction)
+                THORChainService(gson).broadcastTransaction(signedTransaction.rawTransaction)
                     ?.let {
                         txHash.value = it
                         Timber.d("transaction hash:$it")
