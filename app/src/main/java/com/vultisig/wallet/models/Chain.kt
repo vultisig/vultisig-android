@@ -1,6 +1,7 @@
 package com.vultisig.wallet.models
 
 import com.vultisig.wallet.R
+import wallet.core.jni.CoinType
 
 enum class Chain(val raw: String) {
     thorChain("THORChain"),
@@ -23,6 +24,29 @@ enum class Chain(val raw: String) {
     mayaChain("Maya Chain"),
     cronosChain("Cronos Chain"),
 }
+
+val Chain.coinType: CoinType
+    get() = when (this) {
+        Chain.bitcoin -> CoinType.BITCOIN
+        Chain.bitcoinCash -> CoinType.BITCOINCASH
+        Chain.litecoin -> CoinType.LITECOIN
+        Chain.dogecoin -> CoinType.DOGECOIN
+        Chain.dash -> CoinType.DASH
+        Chain.thorChain -> CoinType.THORCHAIN
+        Chain.mayaChain -> CoinType.THORCHAIN
+        Chain.ethereum -> CoinType.ETHEREUM
+        Chain.solana -> CoinType.SOLANA
+        Chain.avalanche -> CoinType.AVALANCHECCHAIN
+        Chain.base -> CoinType.BASE
+        Chain.blast -> CoinType.BLAST
+        Chain.arbitrum -> CoinType.ARBITRUM
+        Chain.polygon -> CoinType.POLYGON
+        Chain.optimism -> CoinType.OPTIMISM
+        Chain.bscChain -> CoinType.SMARTCHAIN
+        Chain.gaiaChain -> CoinType.COSMOS
+        Chain.kujira -> CoinType.KUJIRA
+        Chain.cronosChain -> CoinType.CRONOSCHAIN
+    }
 
 val Chain.Ticker: String
     get() = when (this) {

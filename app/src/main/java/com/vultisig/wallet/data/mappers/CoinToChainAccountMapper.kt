@@ -1,30 +1,31 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.models.ChainAccount
-import com.vultisig.wallet.data.models.FiatValue
-import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.logo
 import javax.inject.Inject
 
 internal data class ChainAddressValue(
+    val token: Coin,
     val chain: Chain,
     val address: String,
-    val tokenValue: TokenValue?,
-    val fiatValue: FiatValue?,
+    val balance: TokenBalance?,
 )
 
-internal interface CoinToChainAccountMapper : Mapper<ChainAddressValue, ChainAccount>
+internal interface CoinToChainAccountMapper : Mapper<ChainAddressValue, Account>
 
 internal class CoinToChainAccountMapperImpl @Inject constructor() : CoinToChainAccountMapper {
 
-    override fun map(from: ChainAddressValue): ChainAccount =
-        ChainAccount(
+    override fun map(from: ChainAddressValue): Account =
+        Account(
+            token = from.token,
             chainName = from.chain.raw,
             logo = from.chain.logo,
             address = from.address,
-            nativeTokenAmount = from.tokenValue?.balance?.toString(),
-            fiatValue = from.fiatValue,
+            tokenAmount = from.balance?.tokenValue?.balance?.toString(),
+            fiatValue = from.balance?.fiatValue,
         )
 
 }

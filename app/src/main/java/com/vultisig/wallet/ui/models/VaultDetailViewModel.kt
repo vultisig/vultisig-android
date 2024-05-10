@@ -8,11 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.AppCurrency
-import com.vultisig.wallet.data.models.ChainAccount
-import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.calculateTotalFiatValue
 import com.vultisig.wallet.data.on_board.db.VaultDB
-import com.vultisig.wallet.data.repositories.ChainAccountsRepository
+import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.models.mappers.ChainAccountToChainAccountUiModelMapper
@@ -22,7 +20,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Immutable
@@ -44,7 +41,7 @@ internal data class ChainAccountUiModel(
 @HiltViewModel
 internal class VaultDetailViewModel @Inject constructor(
     private val vaultDb: VaultDB,
-    private val chainAccountsRepository: ChainAccountsRepository,
+    private val accountsRepository: AccountsRepository,
     private val chainAccountToUiModelMapper: ChainAccountToChainAccountUiModelMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
 ) : ViewModel() {
@@ -78,9 +75,9 @@ internal class VaultDetailViewModel @Inject constructor(
 
     private fun loadAccounts(vaultId: String) {
         viewModelScope.launch {
-            chainAccountsRepository.loadChainAccounts(vaultId)
+            accountsRepository.loadAccounts(vaultId)
                 .collect { accounts ->
-                    val totalFiatValue = calculateTotalFiatValue(accounts)
+                    val totalFiatValue = accounts.calculateTotalFiatValue()
                         ?.let(fiatValueToStringMapper::map)
                     val accountsUiModel = accounts.map(chainAccountToUiModelMapper::map)
 
@@ -93,12 +90,5 @@ internal class VaultDetailViewModel @Inject constructor(
                 }
         }
     }
-
-    private fun calculateTotalFiatValue(accounts: List<ChainAccount>): FiatValue? =
-        accounts.fold(FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)) { acc, account ->
-            // if any account dont have fiat value, return null, as in "not loaded yet"
-            val fiatValue = account.fiatValue ?: return@calculateTotalFiatValue null
-            FiatValue(acc.value + fiatValue.value, fiatValue.currency)
-        }
 
 }

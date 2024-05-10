@@ -25,34 +25,9 @@ data class Coin(
         get() = ticker
 
     val coinType: CoinType
-        get() = when (chain) {
-            Chain.bitcoin -> CoinType.BITCOIN
-            Chain.bitcoinCash -> CoinType.BITCOINCASH
-            Chain.litecoin -> CoinType.LITECOIN
-            Chain.dogecoin -> CoinType.DOGECOIN
-            Chain.dash -> CoinType.DASH
-            Chain.thorChain -> CoinType.THORCHAIN
-            Chain.mayaChain -> CoinType.THORCHAIN
-            Chain.ethereum -> CoinType.ETHEREUM
-            Chain.solana -> CoinType.SOLANA
-            Chain.avalanche -> CoinType.AVALANCHECCHAIN
-            Chain.base -> CoinType.BASE
-            Chain.blast -> CoinType.BLAST
-            Chain.arbitrum -> CoinType.ARBITRUM
-            Chain.polygon -> CoinType.POLYGON
-            Chain.optimism -> CoinType.OPTIMISM
-            Chain.bscChain -> CoinType.SMARTCHAIN
-            Chain.gaiaChain -> CoinType.COSMOS
-            Chain.kujira -> CoinType.KUJIRA
-            Chain.cronosChain -> CoinType.CRONOSCHAIN
-        }
+        get() = chain.coinType
 
 }
-
-// TODO this is mock data, we should update chain coin screen
-fun Coin.getBalance(): BigDecimal = BigDecimal.ZERO
-
-fun Coin.getBalanceInFiat(): BigDecimal = BigDecimal.ZERO
 
 val Coin.TssKeysignType: TssKeyType
     get()= when(chain){

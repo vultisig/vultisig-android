@@ -1,5 +1,6 @@
 package com.vultisig.wallet.presenter.chain_coin
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,11 +50,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.models.getBalance
-import com.vultisig.wallet.models.getBalanceInFiat
-import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.navigation.Screen
@@ -66,7 +62,7 @@ import timber.log.Timber
 @Composable
 fun ChainCoinScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<ChainCoinViewModel>()
-    val uiModel by viewModel.uiModel.collectAsState()
+    val uiModel by viewModel.uiState.collectAsState()
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
@@ -192,10 +188,20 @@ fun ChainCoinScreen(navController: NavHostController) {
                         .clip(MaterialTheme.shapes.large),
                 ) {
                     item {
-                        CoinListHeader(uiModel.chainAddress, uiModel.chainName, uiModel.totalPrice)
+                        CoinListHeader(
+                            uiModel.chainAddress,
+                            uiModel.chainName,
+                            uiModel.totalBalance
+                        )
                     }
-                    items(items = uiModel.coins) { coin ->
-                        CoinItem(coin)
+                    items(items = uiModel.tokens) { token ->
+                        CoinItem(
+                            title = token.name,
+                            balance = token.balance ?: "",
+                            fiatBalance = token.fiatBalance ?: "",
+                            tokenLogo = token.tokenLogo,
+                            chainLogo = token.chainLogo,
+                        )
                     }
                 }
 
@@ -211,7 +217,11 @@ fun ChainCoinScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun CoinListHeader(address: String, name: String, totalPrice: String) {
+private fun CoinListHeader(
+    address: String,
+    name: String,
+    totalBalance: String
+) {
     val appColor = MaterialTheme.appColor
     val dimens = MaterialTheme.dimens
     LaunchedEffect(key1 = Unit) {
@@ -236,7 +246,7 @@ private fun CoinListHeader(address: String, name: String, totalPrice: String) {
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "\$$totalPrice",
+                text = totalBalance,
                 style = Theme.menlo.headlineMedium,
                 color = appColor.neutral0
             )
@@ -257,19 +267,25 @@ private fun CoinListHeader(address: String, name: String, totalPrice: String) {
 }
 
 @Composable
-private fun CoinItem(coin: Coin) {
+private fun CoinItem(
+    title: String,
+    balance: String,
+    fiatBalance: String,
+    @DrawableRes tokenLogo: Int,
+    @DrawableRes chainLogo: Int,
+) {
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
     Column(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.width(48.dp)) {
                 Image(
-                    painter = painterResource(id = Coins.getCoinLogo(logoName = coin.logo)),
+                    painter = painterResource(id = tokenLogo),
                     contentDescription = null,
                     Modifier.width(48.dp)
                 )
                 Image(
-                    painter = painterResource(id = coin.chain.logo),
+                    painter = painterResource(id = chainLogo),
                     contentDescription = null,
                     Modifier
                         .width(16.dp)
@@ -285,25 +301,24 @@ private fun CoinItem(coin: Coin) {
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = coin.ticker,
+                text = title,
                 style = Theme.montserrat.headlineSmall,
                 color = appColor.neutral100
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = coin.getBalance().toPlainString(),
+                text = balance,
                 style = Theme.menlo.titleLarge,
                 color = appColor.neutral0
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "\$${coin.getBalanceInFiat().toPlainString()}",
+            text = fiatBalance,
             style = Theme.menlo.titleSmall,
             color = appColor.neutral100,
             modifier = Modifier.padding(top = dimens.marginSmall)
         )
-
     }
 }
 

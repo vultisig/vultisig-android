@@ -1,43 +1,78 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.models.Chain.bitcoin
-import com.vultisig.wallet.models.Chain.bitcoinCash
-import com.vultisig.wallet.models.Chain.dash
-import com.vultisig.wallet.models.Chain.dogecoin
-import com.vultisig.wallet.models.Chain.litecoin
 import com.vultisig.wallet.models.Chain.thorChain
 import com.vultisig.wallet.models.Coin
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.zip
+import java.math.RoundingMode
 import javax.inject.Inject
 
 
 internal interface BalanceRepository {
 
-    fun getBalance(coin: Coin): Flow<TokenValue>
+    fun getTokenBalance(
+        address: String,
+        coin: Coin,
+    ): Flow<TokenBalance>
+
+    fun getTokenValue(
+        address: String,
+        coin: Coin
+    ): Flow<TokenValue>
 
 }
 
 internal class BalanceRepositoryImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
+    private val tokenPriceRepository: TokenPriceRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
 ) : BalanceRepository {
 
-    override fun getBalance(coin: Coin): Flow<TokenValue> = flow {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun getTokenBalance(
+        address: String,
+        coin: Coin,
+    ): Flow<TokenBalance> =
+        appCurrencyRepository
+            .currency
+            .flatMapConcat { currency ->
+                tokenPriceRepository
+                    .getPrice(coin.priceProviderID, currency)
+                    .zip(getTokenValue(address, coin)) { price, balance ->
+                        TokenBalance(
+                            tokenValue = balance,
+                            fiatValue = FiatValue(
+                                value = balance.balance
+                                    .multiply(price)
+                                    .setScale(2, RoundingMode.HALF_UP),
+                                currency = currency.ticker,
+                            )
+                        )
+                    }
+            }
+
+
+    override fun getTokenValue(
+        address: String,
+        coin: Coin,
+    ): Flow<TokenValue> = flow {
         emit(TokenValue(when (coin.chain) {
             thorChain -> {
-                val listCosmosBalance = thorChainApi.getBalance(coin.address)
+                val listCosmosBalance = thorChainApi.getBalance(address)
                 val balance = listCosmosBalance
                     .find { it.denom.equals(coin.ticker, ignoreCase = true) }
 
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            bitcoin, litecoin, bitcoinCash, dogecoin, dash ->
-                0.toBigInteger()
-
-            else -> 0.toBigInteger()
+            else -> 0.toBigInteger() // TODO support other chains
         }, coin.decimal))
     }
 
