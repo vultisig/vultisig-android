@@ -22,7 +22,9 @@ import com.vultisig.wallet.presenter.keygen.Setup
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.screens.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -94,6 +96,16 @@ internal fun SetupNavGraph(
             )
         ) {
             ChainSelectionScreen(
+                navController = navController
+            )
+        }
+        composable(
+            route = VaultSettings.route,
+            arguments = listOf(
+                navArgument(VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+            )
+        ) {
+            VaultSettingsScreen(
                 navController = navController
             )
         }

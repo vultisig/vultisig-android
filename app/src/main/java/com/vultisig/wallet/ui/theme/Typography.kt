@@ -37,6 +37,7 @@ internal data class VultisigTypography(
     val body3: TextStyle,
     val caption: TextStyle,
     val overline: TextStyle,
+    val overline2: TextStyle,
 ) {
     // TODO: aliases for old typography use, should be removed once not used
     val headlineLarge: TextStyle
@@ -122,6 +123,11 @@ internal data class VultisigTypography(
                     fontFamily = fontFamily,
                 ),
                 overline = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.sp,
+                    fontFamily = fontFamily,
+                ),
+                overline2 = TextStyle(
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
                     fontFamily = fontFamily,
