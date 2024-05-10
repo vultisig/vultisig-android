@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.on_board.OnBoardRepository
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -18,8 +20,9 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+internal class MainViewModel @Inject constructor(
     private val repository: OnBoardRepository,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -27,6 +30,8 @@ class MainViewModel @Inject constructor(
 
     private val _startDestination: MutableState<String> = mutableStateOf(Screen.Welcome.route)
     val startDestination: State<String> = _startDestination
+
+    val destination = navigator.destination
 
     fun setData(context: Context) {
         viewModelScope.launch {
