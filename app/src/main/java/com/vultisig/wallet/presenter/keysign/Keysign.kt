@@ -31,8 +31,8 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.tss.TssKeyType
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 import io.ktor.client.HttpClient

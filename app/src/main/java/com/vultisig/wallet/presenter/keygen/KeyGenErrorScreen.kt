@@ -22,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.base_components.MultiColorButton
-import com.vultisig.wallet.presenter.common.TopBar
+import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens

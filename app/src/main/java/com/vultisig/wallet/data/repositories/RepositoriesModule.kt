@@ -44,6 +44,12 @@ internal interface RepositoriesModule {
         impl: BalanceRepositoryImpl,
     ): BalanceRepository
 
+    @Singleton
+    @Binds
+    abstract fun bindOnBoardRepository(
+        impl: DataStoreRepositoryImpl,
+    ): OnBoardRepository
+
     companion object {
 
         @Provides

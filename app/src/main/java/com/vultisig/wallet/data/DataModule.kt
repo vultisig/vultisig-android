@@ -2,12 +2,14 @@ package com.vultisig.wallet.data
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecificDeserializer
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecificSerializer
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignPayloadDeserializer
 import com.vultisig.wallet.presenter.keysign.KeysignPayloadSerializer
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +20,13 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface DataModule {
+internal interface DataModule {
+
+    @Binds
+    @Singleton
+    fun provideAppDataStore(
+        impl: AppDataStore
+    ): AppDataStore
 
     companion object {
 

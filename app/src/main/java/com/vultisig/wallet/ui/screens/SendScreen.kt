@@ -25,12 +25,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.base_components.MultiColorButton
-import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.components.FormEntry
 import com.vultisig.wallet.ui.components.FormTextFieldCard
 import com.vultisig.wallet.ui.components.FormTokenCard
+import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TokenCard
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
 import com.vultisig.wallet.ui.components.UiSpacer

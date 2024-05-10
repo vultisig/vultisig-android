@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.on_board.models
+package com.vultisig.wallet.data.models
 
 import androidx.annotation.DrawableRes
 

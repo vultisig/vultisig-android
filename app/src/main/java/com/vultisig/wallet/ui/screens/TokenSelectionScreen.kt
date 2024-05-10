@@ -19,9 +19,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.ui.models.TokenSelectionViewModel
 import com.vultisig.wallet.ui.components.TokenSelectionItem
+import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.models.TokenSelectionViewModel
 import com.vultisig.wallet.ui.theme.appColor
 
 @Composable
