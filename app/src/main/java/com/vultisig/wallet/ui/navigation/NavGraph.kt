@@ -152,7 +152,7 @@ internal fun SetupNavGraph(
             route = Destination.SelectTokens.staticRoute,
             arguments = listOf(
                 navArgument(Destination.SelectTokens.ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(Destination.SelectTokens.ARG_ACCOUNT_ID) { type = NavType.StringType }
+                navArgument(Destination.SelectTokens.ARG_CHAIN_ID) { type = NavType.StringType }
             )
         ) {
             TokenSelectionScreen(

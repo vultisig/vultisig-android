@@ -22,4 +22,10 @@ internal interface MappersModule {
         impl: FiatValueToStringMapperImpl
     ): FiatValueToStringMapper
 
+    @Binds
+    @Singleton
+    fun bindAccountToTokenBalanceUiModelMapper(
+        impl: AccountToTokenBalanceUiModelMapperImpl
+    ): AccountToTokenBalanceUiModelMapper
+
 }

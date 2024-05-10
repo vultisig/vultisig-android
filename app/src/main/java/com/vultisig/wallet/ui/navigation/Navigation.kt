@@ -4,23 +4,31 @@ internal sealed class Destination(
     val route: String,
 ) {
 
-    data object Send : Destination(
-        route = "send"
+    data class Send(
+        val vaultId: String,
+        val chainId: String,
+    ) : Destination(
+        route = "vault_detail/${vaultId}/account/${chainId}/send"
     ) {
-        const val staticRoute = "send"
+        companion object {
+            const val ARG_VAULT_ID = "vault_id"
+            const val ARG_CHAIN_ID = "chain_id"
+            const val staticRoute =
+                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send"
+        }
     }
 
     data class SelectTokens(
         val vaultId: String,
-        val accountId: String,
+        val chainId: String,
     ) : Destination(
-        route = "vault_detail/${vaultId}/account/${accountId}/select_tokens"
+        route = "vault_detail/${vaultId}/account/${chainId}/select_tokens"
     ) {
         companion object {
             const val ARG_VAULT_ID = "vault_id"
-            const val ARG_ACCOUNT_ID = "account_id"
+            const val ARG_CHAIN_ID = "chain_id"
             const val staticRoute =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_ACCOUNT_ID}/select_tokens"
+                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/select_tokens"
         }
     }
 
