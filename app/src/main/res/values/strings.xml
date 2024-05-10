@@ -42,4 +42,6 @@
     <string name="send_amount_currency_hint">Enter Amount</string>
     <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Continue</string>
+    <string name="chain_account_view_send">SEND</string>
+    <string name="chain_account_view_swap">SWAP</string>
 </resources>

@@ -5,11 +5,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.SelectTokens
+import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -34,9 +33,10 @@ internal class TokenSelectionViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val vaultId: String =
-        requireNotNull(savedStateHandle[SelectTokens.ARG_VAULT_ID])
+        requireNotNull(savedStateHandle[Destination.SelectTokens.ARG_VAULT_ID])
 
-    private val chain: Chain = Chain.mayaChain // todo mock
+    private val chainId: String =
+        requireNotNull(savedStateHandle[Destination.SelectTokens.ARG_ACCOUNT_ID])
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
 
@@ -70,7 +70,7 @@ internal class TokenSelectionViewModel @Inject constructor(
     private fun loadChains() {
         viewModelScope.launch {
             val coins = Coins.SupportedCoins
-                .filter { it.chain == chain }
+                .filter { it.chain.raw == chainId }
 
             val enabledTokens = vaultDb.select(vaultId)
                 ?.coins

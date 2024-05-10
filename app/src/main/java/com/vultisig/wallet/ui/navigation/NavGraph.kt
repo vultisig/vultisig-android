@@ -22,12 +22,12 @@ import com.vultisig.wallet.presenter.keygen.Setup
 import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.signing_error.SigningError
-import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.SendScreen
+import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
@@ -128,14 +128,18 @@ internal fun SetupNavGraph(
             ChainCoinScreen(navController)
         }
         composable(
-            route = Screen.ChainCoin.SelectTokens.route,
+            route = Destination.SelectTokens.staticRoute,
+            arguments = listOf(
+                navArgument(Destination.SelectTokens.ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(Destination.SelectTokens.ARG_ACCOUNT_ID) { type = NavType.StringType }
+            )
         ) {
             TokenSelectionScreen(
                 navController = navController
             )
         }
         composable(
-            route = Screen.ChainCoin.Send.route
+            route = Destination.Send.staticRoute,
         ) {
             SendScreen(navController = navController)
         }

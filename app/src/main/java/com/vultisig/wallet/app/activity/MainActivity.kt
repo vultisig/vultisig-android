@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
@@ -29,8 +30,19 @@ class MainActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 mainViewModel.setData(context)
                 val screen by mainViewModel.startDestination
+
                 val navController = rememberNavController()
-                SetupNavGraph(navController = navController, startDestination = screen)
+
+                LaunchedEffect(Unit) {
+                    mainViewModel.destination.collect {
+                        navController.navigate(it.route)
+                    }
+                }
+
+                SetupNavGraph(
+                    navController = navController,
+                    startDestination = screen,
+                )
             }
         }
     }

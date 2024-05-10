@@ -3,6 +3,7 @@ package com.vultisig.wallet.presenter.chain_coin
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,26 +57,23 @@ import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.SelectTokens
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChainCoinScreen(navController: NavHostController) {
-    val viewmodel = hiltViewModel<ChainCoinViewmodel>()
-    val uiModel by viewmodel.uiModel.collectAsState()
+    val viewModel = hiltViewModel<ChainCoinViewmodel>()
+    val uiModel by viewModel.uiModel.collectAsState()
     val textColor = MaterialTheme.colorScheme.onBackground
-    val appColor = MaterialTheme.appColor
+    val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
 
     LaunchedEffect(key1 = Unit) {
-        viewmodel.loadData()
+        viewModel.loadData()
     }
-
 
     Box(
         modifier = Modifier
@@ -88,7 +86,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                     title = {
                         Text(
                             text = uiModel.chainName,
-                            style = MaterialTheme.montserratFamily.titleLarge,
+                            style = Theme.montserrat.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = textColor,
                             modifier = Modifier
@@ -130,7 +128,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                     backgroundColor = appColor.turquoise800,
                     textColor = appColor.oxfordBlue800,
                     iconColor = appColor.turquoise800,
-                    textStyle = MaterialTheme.montserratFamily.titleLarge,
+                    textStyle = Theme.montserrat.titleLarge,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -152,7 +150,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                             Text(
                                 text = "BUY \$VTX",
                                 color = MaterialTheme.colorScheme.onPrimary,
-                                style = MaterialTheme.montserratFamily.titleLarge
+                                style = Theme.montserrat.titleLarge
                             )
                         }
                     }
@@ -167,13 +165,18 @@ fun ChainCoinScreen(navController: NavHostController) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Spacer(modifier = Modifier.width(dimens.marginMedium))
-                    VaultAction("SEND", appColor.turquoise600Main)
+                    VaultAction(
+                        text = stringResource(R.string.chain_account_view_send),
+                        color = appColor.turquoise600Main,
+                        onClick = viewModel::send,
+                    )
 
                     Spacer(modifier = Modifier.width(24.dp))
-                    VaultAction("SWAP", appColor.persianBlue200)
-
-                    Spacer(modifier = Modifier.width(24.dp))
-                    VaultAction("DEPOSIT", appColor.mediumPurple)
+                    VaultAction(
+                        text = stringResource(R.string.chain_account_view_swap),
+                        color = appColor.persianBlue200,
+                        onClick = viewModel::swap
+                    )
 
                     Spacer(modifier = Modifier.width(dimens.marginMedium))
                 }
@@ -189,7 +192,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                         .clip(MaterialTheme.shapes.large),
                 ) {
                     item {
-                        CoinListHeader(uiModel.chainAddress,uiModel.chainName,uiModel.totalPrice)
+                        CoinListHeader(uiModel.chainAddress, uiModel.chainName, uiModel.totalPrice)
                     }
                     items(items = uiModel.coins) { coin ->
                         CoinItem(coin)
@@ -198,13 +201,7 @@ fun ChainCoinScreen(navController: NavHostController) {
 
                 UiPlusButton(
                     title = stringResource(R.string.choose_tokens),
-                    onClick = {
-                        navController.navigate(
-                            route = SelectTokens.createRoute(
-                                "", "0" // TODO mock data
-                            )
-                        )
-                    },
+                    onClick = viewModel::selectTokens,
                     modifier = Modifier
                         .padding(all = 16.dp)
                 )
@@ -214,7 +211,7 @@ fun ChainCoinScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun CoinListHeader(address:String,name:String, totalPrice: String) {
+private fun CoinListHeader(address: String, name: String, totalPrice: String) {
     val appColor = MaterialTheme.appColor
     val dimens = MaterialTheme.dimens
     LaunchedEffect(key1 = Unit) {
@@ -224,7 +221,7 @@ private fun CoinListHeader(address:String,name:String, totalPrice: String) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = name,
-                style = MaterialTheme.montserratFamily.headlineMedium,
+                style = Theme.montserrat.headlineMedium,
                 color = appColor.neutral0
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -240,14 +237,14 @@ private fun CoinListHeader(address:String,name:String, totalPrice: String) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = "\$$totalPrice",
-                style = MaterialTheme.menloFamily.headlineMedium,
+                style = Theme.menlo.headlineMedium,
                 color = appColor.neutral0
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = address,
-            style = MaterialTheme.montserratFamily.titleSmall,
+            style = Theme.montserrat.titleSmall,
             color = appColor.turquoise800,
             modifier = Modifier.padding(top = dimens.marginSmall)
         )
@@ -261,7 +258,7 @@ private fun CoinListHeader(address:String,name:String, totalPrice: String) {
 
 @Composable
 private fun CoinItem(coin: Coin) {
-    val appColor = MaterialTheme.appColor
+    val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
     Column(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -289,20 +286,20 @@ private fun CoinItem(coin: Coin) {
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = coin.ticker,
-                style = MaterialTheme.montserratFamily.headlineSmall,
+                style = Theme.montserrat.headlineSmall,
                 color = appColor.neutral100
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = coin.getBalance().toPlainString(),
-                style = MaterialTheme.menloFamily.titleLarge,
+                style = Theme.menlo.titleLarge,
                 color = appColor.neutral0
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "\$${coin.getBalanceInFiat().toPlainString()}",
-            style = MaterialTheme.menloFamily.titleSmall,
+            style = Theme.menlo.titleSmall,
             color = appColor.neutral100,
             modifier = Modifier.padding(top = dimens.marginSmall)
         )
@@ -311,22 +308,28 @@ private fun CoinItem(coin: Coin) {
 }
 
 @Composable
-private fun RowScope.VaultAction(text: String, color: Color) {
+private fun RowScope.VaultAction(
+    text: String,
+    color: Color,
+    onClick: () -> Unit,
+) {
     Text(
-        text = text, modifier = Modifier
+        text = text,
+        textAlign = TextAlign.Center,
+        color = color,
+        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier
             .border(
                 width = 1.dp, brush = Brush.horizontalGradient(
                     colors = listOf(
-                        MaterialTheme.appColor.turquoise600Main,
-                        MaterialTheme.appColor.persianBlue600Main
+                        Theme.colors.turquoise600Main,
+                        Theme.colors.persianBlue600Main
                     )
                 ), shape = MaterialTheme.shapes.extraLarge
             )
             .padding(vertical = 8.dp)
-            .weight(1f),
-        textAlign = TextAlign.Center,
-        color = color,
-        style = MaterialTheme.typography.titleSmall
+            .weight(1f)
+            .clickable(onClick = onClick),
     )
 }
 
@@ -334,7 +337,11 @@ private fun RowScope.VaultAction(text: String, color: Color) {
 @Preview
 private fun VaultActionPreview() {
     Row {
-        VaultAction("SEND", MaterialTheme.appColor.turquoise600Main)
+        VaultAction(
+            "SEND",
+            Theme.colors.turquoise600Main,
+            {}
+        )
     }
 }
 
