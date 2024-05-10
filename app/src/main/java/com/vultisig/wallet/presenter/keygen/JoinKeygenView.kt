@@ -17,6 +17,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -55,7 +56,11 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
         integrator.setPrompt("Scan the QR code on your main device")
         scanQrCodeLauncher.launch(integrator.createScanIntent())
     }
-
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            viewModel.cleanUp()
+        }
+    }
     when (viewModel.currentState.value) {
         JoinKeygenState.DiscoveryingSessionID -> {
             DiscoveryingSessionID(navController = navController)

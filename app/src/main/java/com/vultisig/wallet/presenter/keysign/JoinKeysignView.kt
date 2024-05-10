@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -53,13 +54,18 @@ fun JoinKeysignView(
                 viewModel.setScanResult(qrCodeContent)
             }
         }
-    LaunchedEffect(key1 = viewModel) {
+    LaunchedEffect(key1 = Unit) {
         viewModel.setData()
         val integrator = IntentIntegrator(context as Activity)
         integrator.setBarcodeImageEnabled(true)
         integrator.setOrientationLocked(true)
         integrator.setPrompt("Scan the QR code on your main device")
         scanQrCodeLauncher.launch(integrator.createScanIntent())
+    }
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            viewModel.cleanUp()
+        }
     }
     when (viewModel.currentState.value) {
         JoinKeysignState.DiscoveryingSessionID -> {
@@ -213,7 +219,7 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
                 Text(
                     text = viewModel.keysignPayload?.coin?.address ?: "",
                     color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.menloFamily.bodyMedium,
+                    style = MaterialTheme.montserratFamily.body1,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }
@@ -234,7 +240,7 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
                 Text(
                     text = viewModel.keysignPayload?.toAddress ?: "",
                     color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.menloFamily.bodyMedium,
+                    style = MaterialTheme.montserratFamily.body1,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }
@@ -255,7 +261,7 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
                 Text(
                     text = viewModel.keysignPayload?.toAmount.toString() ?: "0",
                     color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.menloFamily.bodyMedium,
+                    style = MaterialTheme.montserratFamily.body1,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }

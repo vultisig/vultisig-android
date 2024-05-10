@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
@@ -14,10 +15,13 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.Inet4Address
 import java.net.URL
@@ -46,6 +50,7 @@ class JoinKeygenViewModel : ViewModel() {
     private var _nsdManager: NsdManager? = null
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _keygenCommittee: List<String> = emptyList()
+    private var jobWaitingForKeygenStart: Job? = null
 
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
@@ -140,7 +145,7 @@ class JoinKeygenViewModel : ViewModel() {
         withContext(Dispatchers.IO) {
             try {
                 val serverUrl = URL("${_serverAddress}/$_sessionID")
-                Log.d("JoinKeygenViewModel", "Joining keygen at $serverUrl")
+                Timber.d("Joining keygen at $serverUrl")
                 val conn = serverUrl.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -161,18 +166,23 @@ class JoinKeygenViewModel : ViewModel() {
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     suspend fun waitForKeygenToStart() {
-        withContext(Dispatchers.IO) {
-            while (true) {
-                if (checkKeygenStarted()) {
-                    currentState.value = JoinKeygenState.Keygen
-                    return@withContext
+        jobWaitingForKeygenStart = viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                while (isActive) {
+                    if (checkKeygenStarted()) {
+                        currentState.value = JoinKeygenState.Keygen
+                        return@withContext
+                    }
+                    // backoff 1s
+                    Thread.sleep(1000)
                 }
-                // backoff 1s
-                Thread.sleep(1000)
             }
         }
+    }
+
+    fun cleanUp() {
+        jobWaitingForKeygenStart?.cancel()
     }
 
     private fun checkKeygenStarted(): Boolean {

@@ -10,7 +10,7 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.chains.UtxoInfo
-import com.vultisig.wallet.chains.thorchainHelper
+import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.toJson
 import com.vultisig.wallet.models.Chain
@@ -58,7 +58,7 @@ data class KeysignPayload(
     fun getKeysignMessages(vault: Vault): List<String> {
         when (coin.chain) {
             Chain.thorChain -> {
-                val thorHelper = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return thorHelper.getPreSignedImageHash(this)
             }
 

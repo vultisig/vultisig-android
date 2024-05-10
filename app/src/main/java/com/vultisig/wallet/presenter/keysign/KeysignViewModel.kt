@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
-import com.vultisig.wallet.chains.thorchainHelper
+import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.common.toHexBytes
@@ -157,7 +157,7 @@ class KeysignViewModel(
             }
 
             Chain.thorChain -> {
-                val thorHelper = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 

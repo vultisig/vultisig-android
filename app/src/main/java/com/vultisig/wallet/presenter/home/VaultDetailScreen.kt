@@ -2,10 +2,7 @@ package com.vultisig.wallet.presenter.home
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import android.net.Uri
-import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -15,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,7 +37,7 @@ import androidx.navigation.NavHostController
 import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.chains.thorchainHelper
+import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
@@ -109,7 +105,7 @@ internal fun VaultDetailScreen(
                 actions = {
                     IconButton(onClick = {
                         val vault = viewModel.currentVault.value
-                        val coin = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
+                        val coin = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
                         coin?.let {
                             keysignShareViewModel.vault = viewModel.currentVault.value
                             keysignShareViewModel.keysignPayload = KeysignPayload(

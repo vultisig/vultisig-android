@@ -6,6 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
@@ -18,6 +19,9 @@ import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -59,6 +63,7 @@ class JoinKeysignViewModel @Inject constructor(
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
+    private var _jobWaitingForKeysignStart: Job? = null
 
     val keysignPayload: KeysignPayload?
         get() = _keysignPayload
@@ -149,16 +154,20 @@ class JoinKeysignViewModel @Inject constructor(
             }
         }
     }
-
+    fun cleanUp(){
+        _jobWaitingForKeysignStart?.cancel()
+    }
     suspend fun waitForKeysignToStart() {
-        withContext(Dispatchers.IO) {
-            while (true) {
-                if (checkKeygenStarted()) {
-                    currentState.value = JoinKeysignState.Keysign
-                    return@withContext
+        _jobWaitingForKeysignStart = viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                while (isActive) {
+                    if (checkKeygenStarted()) {
+                        currentState.value = JoinKeysignState.Keysign
+                        return@withContext
+                    }
+                    // backoff 1s
+                    Thread.sleep(1000)
                 }
-                // backoff 1s
-                Thread.sleep(1000)
             }
         }
     }

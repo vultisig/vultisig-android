@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import android.content.Context
-import com.vultisig.wallet.chains.thorchainHelper
+import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.data.mappers.CoinToChainAccountMapper
 import com.vultisig.wallet.data.models.ChainAccount
@@ -43,7 +43,7 @@ internal class ChainAccountsRepositoryImpl @Inject constructor(
             .mapNotNull {
                 when (it.coinType) {
                     CoinType.THORCHAIN -> {
-                        val thorHelper = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                        val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                         thorHelper.getCoin()
                     }
 
@@ -93,7 +93,7 @@ internal class ChainAccountsRepositoryImpl @Inject constructor(
         val btcHelper = utxoHelper(CoinType.BITCOIN, vault.pubKeyECDSA, vault.hexChainCode)
         btcHelper.getCoin()?.let(vault.coins::add)
 
-        val thorHelper = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+        val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
         thorHelper.getCoin()?.let(vault.coins::add)
     }
 

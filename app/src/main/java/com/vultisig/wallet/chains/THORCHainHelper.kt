@@ -21,7 +21,7 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
 
 @OptIn(ExperimentalStdlibApi::class)
-class thorchainHelper(
+class THORCHainHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {

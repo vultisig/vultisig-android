@@ -15,11 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
@@ -53,7 +53,11 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(centerText = "Keygen", navController = navController)
+        TopBar(
+            centerText = stringResource(id = R.string.keysign),
+            navController = navController,
+            startIcon = R.drawable.caret_left,
+        )
         Spacer(modifier = Modifier.weight(1f))
 
         when (viewModel.currentState.value) {
@@ -100,7 +104,7 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
             KeysignState.ERROR -> {
                 Text(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
-                    text = "Error! Please try again.",
+                    text = "Error! Please try again. $viewModel.errorMessage.value",
                     style = MaterialTheme.menloFamily.titleLarge,
                     color = MaterialTheme.appColor.neutral0,
                     textAlign = TextAlign.Center
