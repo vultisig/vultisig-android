@@ -31,6 +31,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
@@ -65,7 +67,7 @@ import timber.log.Timber
 @Composable
 fun ChainCoinScreen(navController: NavHostController) {
     val viewmodel = hiltViewModel<ChainCoinViewmodel>()
-    val uiModel = viewmodel.uiModel
+    val uiModel by viewmodel.uiModel.collectAsState()
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = MaterialTheme.appColor
     val dimens = MaterialTheme.dimens
