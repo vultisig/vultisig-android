@@ -47,7 +47,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 header(xClientID, xClientIDValue)
             }
         val resp = gson.fromJson(response.bodyAsText(), CosmosBalanceResponse::class.java)
-        return resp.balances
+        return resp.balances ?: emptyList()
     }
 
     override suspend fun getSwapQuotes(

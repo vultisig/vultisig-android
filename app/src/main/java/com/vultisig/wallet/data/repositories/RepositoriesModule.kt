@@ -22,6 +22,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindChainAccountAddressRepository(
+        impl: ChainAccountAddressRepositoryImpl
+    ): ChainAccountAddressRepository
+
+    @Binds
+    @Singleton
     fun bindTokenPriceRepository(
         impl: TokenPriceRepositoryImpl,
     ): TokenPriceRepository
