@@ -55,6 +55,15 @@ sealed class Screen(val route: String) {
             ): String = "vault_detail/${vaultId}/account/${accountId}/select_tokens"
         }
 
+        data object Send : Screen(route = "vault_detail/{vault_id}/account/{account_id}/send") {
+            const val ARG_VAULT_ID = "vault_id"
+            const val ARG_ACCOUNT_ID = "account_id"
+            fun createRoute(
+                vaultId: String,
+                accountId: String,
+            ): String = "vault_detail/${vaultId}/account/${accountId}/send"
+        }
+
     }
 
 
