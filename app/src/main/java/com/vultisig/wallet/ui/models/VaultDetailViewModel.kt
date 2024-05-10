@@ -32,7 +32,7 @@ internal data class VaultDetailUiModel(
     val accounts: List<ChainAccountUiModel> = emptyList(),
 )
 
-data class ChainAccountUiModel(
+internal data class ChainAccountUiModel(
     val chainName: String,
     @DrawableRes val logo: Int,
     val address: String,

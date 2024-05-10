@@ -14,7 +14,7 @@ import java.math.RoundingMode
 import javax.inject.Inject
 
 @HiltViewModel
-class ChainCoinViewmodel @Inject constructor(savedStateHandle: SavedStateHandle) : ViewModel() {
+internal class ChainCoinViewmodel @Inject constructor(savedStateHandle: SavedStateHandle) : ViewModel() {
     private val gson = Gson()
     private val accountJson: String = savedStateHandle.get<String>(Screen.CHAIN_COIN_ACCOUNT_JSON)!!
     private val vaultJson: String = savedStateHandle.get<String>(Screen.CHAIN_COIN_VAULT_JSON)!!

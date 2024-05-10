@@ -31,9 +31,10 @@ private fun UiPlusButtonPreview() {
 internal fun UiPlusButton(
     title: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clickable(enabled = true, onClick = onClick)
     ) {
         Image(
