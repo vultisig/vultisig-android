@@ -15,6 +15,7 @@ import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
 
@@ -121,7 +122,7 @@ class GeneratingKeyViewModel(
             )
             withContext(Dispatchers.IO) {
                 keygenVerifier.markLocalPartyComplete()
-                if (!keygenVerifier.checkCompletedParties()){
+                if (!keygenVerifier.checkCompletedParties()) {
                     throw Exception("another party failed to complete the keygen process")
                 }
             }
@@ -183,13 +184,14 @@ class GeneratingKeyViewModel(
     fun saveVault(context: Context) {
         val vaultDB = VaultDB(context)
         vaultDB.upsert(this.vault)
-        Log.d("GeneratingKeyViewModel", "saveVault: success,name:${vault.name}")
+        Timber.d("saveVault: success,name:${vault.name}")
     }
-    fun stopService(context: Context){
+
+    fun stopService(context: Context) {
         // start mediator service
         val intent = Intent(context, MediatorService::class.java)
         context.stopService(intent)
-        Log.d("KeygenDiscoveryViewModel", "startMediatorService: Mediator service started")
+        Timber.d("stop MediatorService: Mediator service stopped")
 
     }
 }

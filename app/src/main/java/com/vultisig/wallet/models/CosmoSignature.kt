@@ -7,8 +7,8 @@ import java.security.MessageDigest
 data class CosmoSignature(val mode: String, val tx_bytes: String) {
 }
 
-fun CosmoSignature.TransactionHash(): String {
+fun CosmoSignature.transactionHash(): String {
     val decodedBytes = tx_bytes.decodeBase64()?.toByteArray() ?: run { return "" }
     val digest = MessageDigest.getInstance("SHA-256").digest(decodedBytes)
-    return Numeric.toHexString(digest)
+    return Numeric.toHexStringNoPrefix(digest)
 }

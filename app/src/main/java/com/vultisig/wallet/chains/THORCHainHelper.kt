@@ -7,7 +7,7 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.CosmoSignature
 import com.vultisig.wallet.models.SignedTransactionResult
-import com.vultisig.wallet.models.TransactionHash
+import com.vultisig.wallet.models.transactionHash
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignatureWithRecoveryID
@@ -21,7 +21,7 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
 
 @OptIn(ExperimentalStdlibApi::class)
-class thorchainHelper(
+class THORCHainHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {
@@ -68,12 +68,28 @@ class thorchainHelper(
         if (keysignPayload.coin.ticker != "RUNE") {
             throw Exception("Coin is not RUNE")
         }
-        val fromAddress = AnyAddress(keysignPayload.coin.address, coinType)
-        val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
+        val fromAddress = AnyAddress(keysignPayload.coin.address, coinType).data()
+        val toAddress = AnyAddress(keysignPayload.toAddress, coinType).data()
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.THORChain
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
-            PublicKey(keysignPayload.vaultPublicKeyECDSA.hexToByteArray(), PublicKeyType.SECP256K1)
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+
+        val sendAmount = Cosmos.Amount.newBuilder().apply {
+            this.denom = "rune"
+            this.amount = keysignPayload.toAmount.toString()
+        }.build()
+
+        val msgSend = Cosmos.Message.THORChainSend.newBuilder().apply {
+            this.fromAddress = ByteString.copyFrom(fromAddress)
+            this.toAddress = ByteString.copyFrom(toAddress)
+            this.addAllAmounts(listOf(sendAmount))
+        }.build()
+
+        val feeAmount = Cosmos.Amount.newBuilder().apply {
+            this.denom = "rune"
+            this.amount = THORChainGasUnit.toString()
+        }.build()
         val input = Cosmos.SigningInput.newBuilder().apply {
             this.publicKey = ByteString.copyFrom(publicKey.data())
             this.signingMode = Cosmos.SigningMode.Protobuf
@@ -84,22 +100,14 @@ class thorchainHelper(
             keysignPayload.memo?.let {
                 this.memo = it
             }
-            this.addMessages(Cosmos.Message.newBuilder().apply {
-                this.thorchainSendMessage = Cosmos.Message.THORChainSend.newBuilder().apply {
-                    this.fromAddress = ByteString.copyFrom(fromAddress.data())
-                    this.toAddress = ByteString.copyFrom(toAddress.data())
-                    this.addAmounts(Cosmos.Amount.newBuilder().apply {
-                        this.denom = "rune"
-                        this.amount = keysignPayload.toAmount.toString()
-                    })
-                }.build()
-            })
+
+            this.addAllMessages(listOf(Cosmos.Message.newBuilder().apply {
+                this.thorchainSendMessage = msgSend
+            }.build()))
+
             this.fee = Cosmos.Fee.newBuilder().apply {
                 this.gas = THORChainGasUnit
-                this.amountsList.add(Cosmos.Amount.newBuilder().apply {
-                    this.denom = "rune"
-                    this.amount = THORChainGasUnit.toString()
-                }.build())
+                this.addAllAmounts(listOf(feeAmount))
             }.build()
         }.build()
         return input.toByteArray()
@@ -110,14 +118,15 @@ class thorchainHelper(
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
-        return listOf(Numeric.toHexString(preSigningOutput.dataHash.toByteArray()))
+        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
-        throw Exception("Not implemented")
+        val inputData = getPreSignInputData(keysignPayload)
+        return getSignedTransaction(inputData, signatures)
     }
 
     fun getSignedTransaction(
@@ -135,7 +144,7 @@ class thorchainHelper(
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
-        val key = Numeric.toHexString(preSigningOutput.dataHash.toByteArray())
+        val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
         val signature = signatures[key]?.getSignatureWithRecoveryID()
             ?: throw Exception("Signature not found")
 
@@ -151,10 +160,10 @@ class thorchainHelper(
             allPublicKeys
         )
         val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
-        val cosmosSig = Gson().fromJson(output.json, CosmoSignature::class.java)
+        val cosmosSig = Gson().fromJson(output.serialized, CosmoSignature::class.java)
         return SignedTransactionResult(
             output.serialized,
-            cosmosSig.TransactionHash(),
+            cosmosSig.transactionHash(),
         )
     }
 }

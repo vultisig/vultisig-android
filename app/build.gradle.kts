@@ -94,6 +94,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.wallet.core)
     implementation(libs.timber)
+    implementation(libs.lifecycle.viewmodel.compose)
 
     // test
     testImplementation(libs.junit)
@@ -103,4 +104,5 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.junit.jupiter)
+
 }

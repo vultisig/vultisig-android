@@ -31,6 +31,14 @@ sealed class Screen(val route: String) {
 
     }
 
+    data object KeysignFlow : Screen(route = "keysign_flow")
+    data object JoinKeysign : Screen(route = "join_keysign/{vault_id}"){
+        const val ARG_VAULT_ID = "vault_id"
+        fun createRoute(vaultId: String): String {
+            return "join_keysign/$vaultId"
+        }
+    }
+
     data object ChainCoin : Screen(route = "chainCoin/{$CHAIN_COIN_ACCOUNT_JSON}/{$CHAIN_COIN_VAULT_JSON}/{$CHAIN_COIN_COINS_JSON}"){
         fun createRoute(accountJson: String, vaultJson: String, coinsJson:String): String {
             return "chainCoin/$accountJson/$vaultJson/$coinsJson"

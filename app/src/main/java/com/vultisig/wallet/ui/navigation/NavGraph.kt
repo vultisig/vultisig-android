@@ -19,6 +19,8 @@ import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
+import com.vultisig.wallet.presenter.keysign.JoinKeysignView
+import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
@@ -37,6 +39,7 @@ internal fun SetupNavGraph(
     startDestination: String,
 ) {
     val context: Context = LocalContext.current
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -109,7 +112,17 @@ internal fun SetupNavGraph(
                 navController = navController
             )
         }
-          composable(route = Screen.ChainCoin.route) { navBackStackEntry ->
+        composable(route = Screen.JoinKeysign.route,
+            arguments = listOf(
+                navArgument(Screen.JoinKeysign.ARG_VAULT_ID) { type = NavType.StringType }
+            )
+        ) {
+            JoinKeysignView(navController)
+        }
+        composable(route = Screen.KeysignFlow.route) {
+            KeysignFlowView(navController)
+        }
+        composable(route = Screen.ChainCoin.route) { navBackStackEntry ->
             ChainCoinScreen(navController)
         }
     }

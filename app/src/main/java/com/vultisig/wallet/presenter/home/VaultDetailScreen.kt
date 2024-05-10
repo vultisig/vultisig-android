@@ -1,8 +1,8 @@
 package com.vultisig.wallet.presenter.home
 
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.Image
 import android.net.Uri
-import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,11 +32,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.gson.Gson
 import com.vultisig.wallet.R
+import com.vultisig.wallet.app.activity.MainActivity
+import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
+import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
@@ -44,8 +51,9 @@ import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.montserratFamily
+import java.math.BigInteger
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 internal fun VaultDetailScreen(
     vaultId: String,
@@ -54,6 +62,8 @@ internal fun VaultDetailScreen(
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val context = LocalContext.current
+    val keysignShareViewModel: KeysignShareViewModel =
+        viewModel(context as MainActivity)
 
     val state = viewModel.uiState.collectAsState().value
 
@@ -94,7 +104,25 @@ internal fun VaultDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        Toast.makeText(context, "edit vault", Toast.LENGTH_SHORT).show()
+                        val vault = viewModel.currentVault.value
+                        val coin = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
+                        coin?.let {
+                            keysignShareViewModel.vault = viewModel.currentVault.value
+                            keysignShareViewModel.keysignPayload = KeysignPayload(
+                                coin = it,
+                                toAddress = "thor1f04877jfmm2sxmxyqkj3m9xtak8he0gg7ypuzz",
+                                toAmount = BigInteger("10000000"),
+                                blockChainSpecific = BlockChainSpecific.THORChain(
+                                    BigInteger("105501"),
+                                    BigInteger("0")
+                                ),
+                                memo = null,
+                                swapPayload = null,
+                                approvePayload = null,
+                                vaultPublicKeyECDSA = viewModel.currentVault.value.pubKeyECDSA
+                            )
+                            navHostController.navigate(Screen.KeysignFlow.route)
+                        }
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_edit_square_24),
@@ -104,7 +132,20 @@ internal fun VaultDetailScreen(
                     }
                 }
             )
-        }, bottomBar = {}) {
+        }, bottomBar = {},
+            floatingActionButton = {
+                Button(onClick = {
+                    navHostController.navigate(
+                        Screen.JoinKeysign.createRoute(vaultId)
+                    )
+                }) {
+                    Image(
+                        painter = painterResource(id = R.drawable.camera),
+                        contentDescription = "join keysign"
+                    )
+                }
+
+            }) {
             LazyColumn(
                 modifier = Modifier.padding(it),
                 contentPadding = PaddingValues(

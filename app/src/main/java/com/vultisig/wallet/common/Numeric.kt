@@ -63,4 +63,8 @@ object Numeric {
     fun toHexString(input: ByteArray?): String {
         return toHexString(input, 0, input!!.size, true)
     }
+
+    fun toHexStringNoPrefix(input: ByteArray?): String {
+        return toHexString(input, 0, input!!.size, false)
+    }
 }

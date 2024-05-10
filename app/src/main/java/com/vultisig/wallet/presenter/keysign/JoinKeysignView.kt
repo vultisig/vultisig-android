@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.keygen
+package com.vultisig.wallet.presenter.keysign
 
 import android.app.Activity
 import android.content.Context
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,25 +20,30 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.vultisig.wallet.R
-import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
+import kotlinx.coroutines.launch
 
 @Composable
-fun JoinKeygenView(navController: NavHostController, vault: Vault) {
-    val viewModel: JoinKeygenViewModel = viewModel()
+fun JoinKeysignView(
+    navController: NavHostController,
+) {
+    val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
     val scanQrCodeLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
@@ -48,8 +54,8 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
                 viewModel.setScanResult(qrCodeContent)
             }
         }
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.setData(vault)
+    LaunchedEffect(key1 = Unit) {
+        viewModel.setData()
         val integrator = IntentIntegrator(context as Activity)
         integrator.setBarcodeImageEnabled(true)
         integrator.setOrientationLocked(true)
@@ -62,43 +68,40 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
         }
     }
     when (viewModel.currentState.value) {
-        JoinKeygenState.DiscoveryingSessionID -> {
-            DiscoveryingSessionID(navController = navController)
+        JoinKeysignState.DiscoveryingSessionID -> {
+            KeysignDiscoveryingSessionID(navController = navController)
         }
 
-        JoinKeygenState.DiscoverService -> {
+        JoinKeysignState.DiscoverService -> {
             val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
             viewModel.discoveryMediator(nsdManager)
-            DiscoverService(navController = navController)
+            KeysignDiscoverService(navController = navController)
         }
 
-        JoinKeygenState.JoinKeygen -> {
+        JoinKeysignState.JoinKeysign -> {
+            JoiningKeysign(navController = navController, viewModel = viewModel)
+        }
+
+        JoinKeysignState.WaitingForKeysignStart -> {
             LaunchedEffect(key1 = viewModel) {
-                viewModel.joinKeygen()
+                viewModel.waitForKeysignToStart()
             }
-            JoiningKeygen(navController = navController)
+            WaitingForKeysignToStart(navController = navController)
         }
 
-        JoinKeygenState.WaitingForKeygenStart -> {
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.waitForKeygenToStart()
-            }
-            WaitingForKeygenToStart(navController = navController)
+        JoinKeysignState.Keysign -> {
+            Keysign(navController = navController, viewModel = viewModel.keysignViewModel)
         }
 
-        JoinKeygenState.Keygen -> {
-            GeneratingKey(navController = navController, viewModel.generatingKeyViewModel)
-        }
-
-        JoinKeygenState.FailedToStart -> {
-            KeygenFailedToStart(
+        JoinKeysignState.FailedToStart -> {
+            KeysignFailedToStart(
                 navController = navController,
                 errorMessage = viewModel.errorMessage.value
             )
         }
 
-        JoinKeygenState.ERROR -> {
-            KeygenFailedToStart(
+        JoinKeysignState.Error -> {
+            KeysignFailedToStart(
                 navController = navController,
                 errorMessage = viewModel.errorMessage.value
             )
@@ -107,9 +110,9 @@ fun JoinKeygenView(navController: NavHostController, vault: Vault) {
 }
 
 @Composable
-fun DiscoveryingSessionID(navController: NavHostController) {
+fun KeysignDiscoveryingSessionID(navController: NavHostController) {
     Column(
-        horizontalAlignment = CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
             .padding(
@@ -118,7 +121,7 @@ fun DiscoveryingSessionID(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.keysign), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -144,13 +147,13 @@ fun DiscoveryingSessionID(navController: NavHostController) {
 @Composable
 fun PreviewDiscoveryingSessionID() {
     val navController = rememberNavController()
-    DiscoveryingSessionID(navController = navController)
+    KeysignDiscoveryingSessionID(navController = navController)
 }
 
 @Composable
-fun DiscoverService(navController: NavHostController) {
+fun KeysignDiscoverService(navController: NavHostController) {
     Column(
-        horizontalAlignment = CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
             .padding(
@@ -159,7 +162,7 @@ fun DiscoverService(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.keysign), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -169,7 +172,7 @@ fun DiscoverService(navController: NavHostController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Discovering Service",
+                text = stringResource(id = R.string.joinkeysign_discovery_service),
                 color = MaterialTheme.appColor.neutral0,
                 style = MaterialTheme.menloFamily.bodyMedium
             )
@@ -182,9 +185,115 @@ fun DiscoverService(navController: NavHostController) {
 }
 
 @Composable
-fun JoiningKeygen(navController: NavHostController) {
+fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewModel) {
+    val coroutineScope = rememberCoroutineScope()
     Column(
-        horizontalAlignment = CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .background(MaterialTheme.appColor.oxfordBlue800)
+            .padding(
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
+            )
+            .fillMaxSize()
+    ) {
+        TopBar(
+            centerText = stringResource(id = R.string.keysign), startIcon = R.drawable.caret_left,
+            navController = navController
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.marginMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.joinkeysign_from),
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Text(
+                    text = viewModel.keysignPayload?.coin?.address ?: "",
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.montserratFamily.body1,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.marginMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.joinkeysign_to),
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Text(
+                    text = viewModel.keysignPayload?.toAddress ?: "",
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.montserratFamily.body1,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.marginMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.joinkeysign_amount),
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Text(
+                    text = viewModel.keysignPayload?.toAmount.toString() ?: "0",
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.montserratFamily.body1,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            MultiColorButton(
+                text = stringResource(id = R.string.joinkeysign),
+                minHeight = MaterialTheme.dimens.minHeightButton,
+                backgroundColor = MaterialTheme.appColor.turquoise800,
+                textColor = MaterialTheme.appColor.oxfordBlue800,
+                iconColor = MaterialTheme.appColor.turquoise800,
+                textStyle = MaterialTheme.montserratFamily.titleLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = MaterialTheme.dimens.marginMedium,
+                        end = MaterialTheme.dimens.marginMedium,
+                        bottom = MaterialTheme.dimens.marginMedium,
+                    )
+            ) {
+                coroutineScope.launch {
+                    viewModel.joinKeysign()
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun WaitingForKeysignToStart(navController: NavHostController) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
             .padding(
@@ -193,7 +302,7 @@ fun JoiningKeygen(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.keysign), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -203,7 +312,7 @@ fun JoiningKeygen(navController: NavHostController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Joining Keygen",
+                text = stringResource(id = R.string.joinkeysign_waiting_keysign_start),
                 color = MaterialTheme.appColor.neutral0,
                 style = MaterialTheme.menloFamily.bodyMedium
             )
@@ -216,9 +325,9 @@ fun JoiningKeygen(navController: NavHostController) {
 }
 
 @Composable
-fun WaitingForKeygenToStart(navController: NavHostController) {
+fun KeysignFailedToStart(navController: NavHostController, errorMessage: String) {
     Column(
-        horizontalAlignment = CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .background(MaterialTheme.appColor.oxfordBlue800)
             .padding(
@@ -227,7 +336,7 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.keysign), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -237,41 +346,7 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Waiting for Keygen to start",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
-            )
-            CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
-                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-            )
-        }
-    }
-}
-
-@Composable
-fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) {
-    Column(
-        horizontalAlignment = CenterHorizontally,
-        modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
-            .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
-            )
-    ) {
-        TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
-            navController = navController
-        )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Failed to start,error: $errorMessage",
+                text = "${stringResource(id = R.string.joinkeysign_fail_to_start)}$errorMessage",
                 color = MaterialTheme.appColor.neutral0,
                 style = MaterialTheme.menloFamily.bodyMedium
             )

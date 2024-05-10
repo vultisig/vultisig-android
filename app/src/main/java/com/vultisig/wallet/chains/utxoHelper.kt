@@ -1,6 +1,5 @@
 package com.vultisig.wallet.chains
 
-import android.util.Log
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.models.Chain
@@ -11,6 +10,7 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import timber.log.Timber
+import tss.KeysignResponse
 import wallet.core.java.AnySigner
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
@@ -65,7 +65,7 @@ class utxoHelper(
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
-        return preSigningOutput.hashPublicKeysList.map { Numeric.toHexString(it.dataHash.toByteArray()) }
+        return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -78,7 +78,7 @@ class utxoHelper(
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setUseMaxAmount(false)
             .setByteFee(utxo.byteFee.toLong())
-        for (item in utxo.utxoes) {
+        for (item in keysignPayload.utxos) {
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
             val output = Bitcoin.OutPoint.newBuilder()
@@ -140,7 +140,7 @@ class utxoHelper(
             input.setOutputOpReturn(ByteString.copyFromUtf8(it))
         }
 
-        for (item in utxo.utxoes) {
+        for (item in keysignPayload.utxos) {
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
             val output = Bitcoin.OutPoint.newBuilder()
@@ -181,7 +181,7 @@ class utxoHelper(
         return input
     }
 
-    fun getBitcoinPreSigningInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getBitcoinPreSigningInputData(keysignPayload: KeysignPayload): ByteArray {
         val signingInput = getBitcoinSigningInput(keysignPayload)
         val plan: Bitcoin.TransactionPlan =
             AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
@@ -192,6 +192,14 @@ class utxoHelper(
     fun getBitcoinTransactionPlan(keysignPayload: KeysignPayload): Bitcoin.TransactionPlan {
         val signingInput = getBitcoinSigningInput(keysignPayload)
         return AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
+    }
+
+    fun getSignedTransaction(
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>,
+    ): SignedTransactionResult {
+        val inputData = getBitcoinPreSigningInputData(keysignPayload)
+        return getSignedTransaction(inputData, signatures)
     }
 
     @OptIn(ExperimentalStdlibApi::class)

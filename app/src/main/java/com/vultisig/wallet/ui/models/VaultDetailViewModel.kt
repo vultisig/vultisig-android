@@ -1,10 +1,11 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
@@ -45,11 +46,12 @@ internal class VaultDetailViewModel @Inject constructor(
     var isRefreshing: Boolean by mutableStateOf(false)
 
     val uiState = MutableStateFlow(VaultDetailUiModel())
-
+    var currentVault: MutableState<Vault> = mutableStateOf(Vault("temp"))
     fun loadData(vaultId: String) {
         loadVaultName(vaultId)
         loadAccounts(vaultId)
     }
+
     fun refreshData() {
         viewModelScope.launch {
             isRefreshing = true
@@ -62,6 +64,7 @@ internal class VaultDetailViewModel @Inject constructor(
     private fun loadVaultName(vaultId: String) {
         viewModelScope.launch {
             val vault = requireNotNull(vaultDb.select(vaultId))
+            currentVault.value = vault
             this@VaultDetailViewModel.vault = vault
             uiState.update { it.copy(vaultName = vault.name) }
         }

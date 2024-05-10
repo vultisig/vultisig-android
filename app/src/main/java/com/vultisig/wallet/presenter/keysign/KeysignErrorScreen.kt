@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.keygen
+package com.vultisig.wallet.presenter.keysign
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,16 +24,14 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.menloFamily
 import com.vultisig.wallet.ui.theme.montserratFamily
 
+
 @Composable
-fun KeyGenErrorScreen(
-    navController: NavController,
-) {
+fun KeysignErrorScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -44,9 +42,9 @@ fun KeyGenErrorScreen(
 
         TopBar(
             modifier = Modifier.align(Alignment.TopCenter),
-            centerText = stringResource(R.string.keygen),
-            startIcon = null,
-            navController = rememberNavController()
+            centerText = stringResource(R.string.keysign),
+            startIcon = R.drawable.caret_left,
+            navController = navController
         )
 
         Column(
@@ -102,17 +100,14 @@ fun KeyGenErrorScreen(
                         bottom = MaterialTheme.dimens.small2
                     )
             ) {
-                navController.navigate(Screen.CreateNewVault.route)
+                navController.popBackStack()
             }
         }
     }
 }
 
-
-@Preview
+@Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable
-fun KeyGenErrorScreenPreview() {
-    KeyGenErrorScreen(
-        navController = rememberNavController()
-    )
+fun PreviewKeysignError() {
+    KeysignErrorScreen(navController = rememberNavController())
 }
