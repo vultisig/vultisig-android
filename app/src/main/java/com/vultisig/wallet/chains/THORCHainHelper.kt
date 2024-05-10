@@ -73,7 +73,7 @@ class THORCHainHelper(
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.THORChain
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
-            PublicKey(keysignPayload.vaultPublicKeyECDSA.hexToByteArray(), PublicKeyType.SECP256K1)
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
 
         val sendAmount = Cosmos.Amount.newBuilder().apply {
             this.denom = "rune"

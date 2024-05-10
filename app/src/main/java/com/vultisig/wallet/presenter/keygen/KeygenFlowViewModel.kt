@@ -19,7 +19,6 @@ import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.ReshareMessage
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +28,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import timber.log.Timber
 import java.net.HttpURLConnection
 import java.security.SecureRandom
 import java.util.UUID
@@ -108,29 +108,31 @@ class KeygenFlowViewModel @Inject constructor(
             ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID)
         when (action) {
             TssAction.KEYGEN -> {
-                _keygenPayload.value = "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" + PeerDiscoveryPayload.Keygen(
-                    keygenMessage = KeygenMessage(
-                        sessionID = sessionID,
-                        hexChainCode = vault.hexChainCode,
-                        serviceName = serviceName,
-                        encryptionKeyHex = this._encryptionKeyHex,
-                        usevultisigRelay = vultisigRelay.IsRelayEnabled
-                    )
-                ).toJson()
+                _keygenPayload.value =
+                    "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" + PeerDiscoveryPayload.Keygen(
+                        keygenMessage = KeygenMessage(
+                            sessionID = sessionID,
+                            hexChainCode = vault.hexChainCode,
+                            serviceName = serviceName,
+                            encryptionKeyHex = this._encryptionKeyHex,
+                            usevultisigRelay = vultisigRelay.IsRelayEnabled
+                        )
+                    ).toJson()
             }
 
             TssAction.ReShare -> {
-                _keygenPayload.value = "vultisig://vultisig.com?type=NewVault&tssType=Reshare&jsonData="+ PeerDiscoveryPayload.Reshare(
-                    reshareMessage = ReshareMessage(
-                        sessionID = sessionID,
-                        hexChainCode = vault.hexChainCode,
-                        serviceName = serviceName,
-                        pubKeyECDSA = vault.pubKeyECDSA,
-                        oldParties = vault.signers,
-                        encryptionKeyHex = this._encryptionKeyHex,
-                        usevultisigRelay = vultisigRelay.IsRelayEnabled
-                    )
-                ).toJson()
+                _keygenPayload.value =
+                    "vultisig://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" + PeerDiscoveryPayload.Reshare(
+                        reshareMessage = ReshareMessage(
+                            sessionID = sessionID,
+                            hexChainCode = vault.hexChainCode,
+                            serviceName = serviceName,
+                            pubKeyECDSA = vault.pubKeyECDSA,
+                            oldParties = vault.signers,
+                            encryptionKeyHex = this._encryptionKeyHex,
+                            usevultisigRelay = vultisigRelay.IsRelayEnabled
+                        )
+                    ).toJson()
             }
         }
 
@@ -156,7 +158,7 @@ class KeygenFlowViewModel @Inject constructor(
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == MediatorService.SERVICE_ACTION) {
-                Log.d("KeygenDiscoveryViewModel", "onReceive: Mediator service started")
+                Timber.d( "onReceive: Mediator service started")
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
                     Thread.sleep(1000) // back off a second
@@ -177,7 +179,7 @@ class KeygenFlowViewModel @Inject constructor(
         val intent = Intent(context, MediatorService::class.java)
         intent.putExtra("serverName", serviceName)
         context.startService(intent)
-        Log.d("KeygenDiscoveryViewModel", "startMediatorService: Mediator service started")
+        Timber.d("startMediatorService: Mediator service started")
     }
 
     private fun startSession(
@@ -200,18 +202,15 @@ class KeygenFlowViewModel @Inject constructor(
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_CREATED -> {
-                        Log.d("KeygenDiscoveryViewModel", "startSession: Session started")
+                        Timber.d("startSession: Session started")
                     }
 
                     else ->
-                        Log.d(
-                            "KeygenDiscoveryViewModel",
-                            "startSession: Response code: ${response.code}"
-                        )
+                        Timber.d("startSession: Response code: " + response.code)
                 }
             }
         } catch (e: Exception) {
-            Log.e("KeygenDiscoveryViewModel", "startSession: ${e.stackTraceToString()}")
+            Timber.e("startSession: ${e.stackTraceToString()}")
         }
     }
 

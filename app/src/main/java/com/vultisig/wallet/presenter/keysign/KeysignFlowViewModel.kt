@@ -141,7 +141,13 @@ class KeysignFlowViewModel @Inject constructor(
             }
         }
     }
+    fun stopService(context: Context){
+        // start mediator service
+        val intent = Intent(context, MediatorService::class.java)
+        context.stopService(intent)
+        Timber.d("stopService: Mediator service stopped")
 
+    }
     private fun startMediatorService(context: Context) {
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)

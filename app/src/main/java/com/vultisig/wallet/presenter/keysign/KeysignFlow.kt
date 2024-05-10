@@ -2,6 +2,7 @@ package com.vultisig.wallet.presenter.keysign
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -13,10 +14,16 @@ import com.vultisig.wallet.app.activity.MainActivity
 @Composable
 fun KeysignFlowView(navController: NavController) {
     val viewModel: KeysignFlowViewModel = hiltViewModel()
+    val context = LocalContext.current.applicationContext
     val sharedViewModel: KeysignShareViewModel = viewModel(LocalContext.current as MainActivity)
     if (sharedViewModel.vault == null || sharedViewModel.keysignPayload == null) {
         // information is not available, go back
         viewModel.moveToState(KeysignFlowState.ERROR)
+    }
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            viewModel.stopService(context)
+        }
     }
     when (viewModel.currentState.value) {
         KeysignFlowState.PEER_DISCOVERY -> {

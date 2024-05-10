@@ -1,5 +1,7 @@
 package com.vultisig.wallet.presenter.keysign
 
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +10,7 @@ import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.common.toHexBytes
+import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.Vault
@@ -134,6 +137,7 @@ class KeysignViewModel(
                 THORChainService(Gson()).broadcastTransaction(signedTransaction.rawTransaction)
                     ?.let {
                         txHash.value = it
+                        Timber.d("transaction hash:$it")
                     }
             }
 
@@ -181,5 +185,13 @@ class KeysignViewModel(
                 throw Exception("Not implemented")
             }
         }
+    }
+
+    fun stopService(context: Context) {
+        // start mediator service
+        val intent = Intent(context, MediatorService::class.java)
+        context.stopService(intent)
+        Timber.d("stop MediatorService: Mediator service stopped")
+
     }
 }

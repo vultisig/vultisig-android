@@ -87,26 +87,32 @@ class JoinKeysignViewModel @Inject constructor(
     }
 
     fun setScanResult(content: String) {
-        val qrCodeContent = DeepLinkHelper(content).getJsonData()
-        qrCodeContent ?: run {
-            throw Exception("Invalid QR code content")
+        try {
+            val qrCodeContent = DeepLinkHelper(content).getJsonData()
+            qrCodeContent ?: run {
+                throw Exception("Invalid QR code content")
+            }
+            val payload = KeysignMesssage.fromJson(qrCodeContent)
+            if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
+                errorMessage.value = "Wrong vault"
+                currentState.value = JoinKeysignState.Error
+                return
+            }
+            this._keysignPayload = payload.payload
+            this._sessionID = payload.sessionID
+            this._serviceName = payload.serviceName
+            this._useVultisigRelay = payload.usevultisigRelay
+            this._encryptionKeyHex = payload.encryptionKeyHex
+            if (_useVultisigRelay) {
+                this._serverAddress = Endpoints.VULTISIG_RELAY
+                currentState.value = JoinKeysignState.JoinKeysign
+            } else {
+                currentState.value = JoinKeysignState.DiscoverService
+            }
         }
-        val payload = KeysignMesssage.fromJson(qrCodeContent)
-        if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-            errorMessage.value = "Wrong vault"
+        catch (e: Exception) {
+            errorMessage.value = "Invalid QR code content"
             currentState.value = JoinKeysignState.Error
-            return
-        }
-        this._keysignPayload = payload.payload
-        this._sessionID = payload.sessionID
-        this._serviceName = payload.serviceName
-        this._useVultisigRelay = payload.usevultisigRelay
-        this._encryptionKeyHex = payload.encryptionKeyHex
-        if (_useVultisigRelay) {
-            this._serverAddress = Endpoints.VULTISIG_RELAY
-            currentState.value = JoinKeysignState.JoinKeysign
-        } else {
-            currentState.value = JoinKeysignState.DiscoverService
         }
     }
 

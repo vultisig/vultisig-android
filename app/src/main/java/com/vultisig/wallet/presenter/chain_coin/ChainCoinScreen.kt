@@ -30,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
@@ -57,6 +58,7 @@ import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -216,6 +218,9 @@ fun ChainCoinScreen(navController: NavHostController) {
 private fun CoinListHeader(selectedChainAccount: ChainAccountUiModel, totalPrice: String) {
     val appColor = MaterialTheme.appColor
     val dimens = MaterialTheme.dimens
+    LaunchedEffect(key1 = Unit) {
+        Timber.d(selectedChainAccount.address)
+    }
     Column(modifier = Modifier.padding(vertical = 20.dp, horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(

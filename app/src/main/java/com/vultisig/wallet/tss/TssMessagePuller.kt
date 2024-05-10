@@ -85,7 +85,7 @@ class TssMessagePuller(
         }
     }
 
-    fun deleteMessageFromServer(msgHash: String, messageID: String?) {
+    private fun deleteMessageFromServer(msgHash: String, messageID: String?) {
         val client = OkHttpClient
             .Builder()
             .retryOnConnectionFailure(true)

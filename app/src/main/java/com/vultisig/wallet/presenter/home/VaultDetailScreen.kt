@@ -113,7 +113,7 @@ internal fun VaultDetailScreen(
                                 toAddress = "thor1f04877jfmm2sxmxyqkj3m9xtak8he0gg7ypuzz",
                                 toAmount = BigInteger("10000000"),
                                 blockChainSpecific = BlockChainSpecific.THORChain(
-                                    BigInteger("1024"),
+                                    BigInteger("105501"),
                                     BigInteger("0")
                                 ),
                                 memo = null,

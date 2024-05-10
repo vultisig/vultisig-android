@@ -102,8 +102,8 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
             KeygenState.Success -> {
                 LaunchedEffect(key1 = viewModel) {
                     viewModel.saveVault(context)
-                    viewModel.stopService(context)
                     Thread.sleep(2000) // wait for 2 seconds
+                    viewModel.stopService(context)
                     navController.navigate(Screen.Home.route)
                 }
                 // TODO: play an animation
