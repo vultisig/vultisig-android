@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,9 +36,11 @@ internal fun SettingsItem(
     subtitle: String,
     @DrawableRes icon: Int,
     colorTint: Color? = null,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
+            .clickable(onClick = onClick)
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(

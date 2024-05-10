@@ -20,6 +20,14 @@ class VaultDB(private val context: Context) {
         file.writeText(gson.toJson(vault))
     }
 
+    fun updateVaultName(oldVaultName: String, newVault: Vault) {
+        val file = vaultsFolder.resolve("${newVault.name}-vault.dat")
+        file.writeText(gson.toJson(newVault))
+        if (file.exists() && file.length() > 0) {
+            delete(oldVaultName)
+        }
+    }
+
     // Delete operation
     fun delete(vaultName: String) {
         val file = vaultsFolder.resolve("${vaultName}-vault.dat")

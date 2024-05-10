@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditScreen
 import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
@@ -22,6 +23,7 @@ import com.vultisig.wallet.presenter.keygen.Setup
 import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.signing_error.SigningError
+import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
@@ -114,6 +116,25 @@ internal fun SetupNavGraph(
                 navController = navController
             )
         }
+        composable(
+            route = VaultSettings.Details.route,
+            arguments = listOf(
+                navArgument(VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+            )
+        ) {
+            VaultDetailScreen(navController)
+        }
+
+        composable(
+            route = VaultSettings.Rename.route,
+            arguments = listOf(
+                navArgument(VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+            )
+        ) {
+            VaultEditScreen(navController)
+        }
+
+
         composable(route = Screen.JoinKeysign.route,
             arguments = listOf(
                 navArgument(Screen.JoinKeysign.ARG_VAULT_ID) { type = NavType.StringType }
@@ -124,7 +145,7 @@ internal fun SetupNavGraph(
         composable(route = Screen.KeysignFlow.route) {
             KeysignFlowView(navController)
         }
-        composable(route = Screen.ChainCoin.route) { navBackStackEntry ->
+        composable(route = Screen.ChainCoin.route) {
             ChainCoinScreen(navController)
         }
         composable(

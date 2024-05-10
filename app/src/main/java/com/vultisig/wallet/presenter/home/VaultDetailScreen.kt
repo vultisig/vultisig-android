@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
 import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.menloFamily
@@ -107,7 +108,8 @@ internal fun VaultDetailScreen(
                 actions = {
                     IconButton(onClick = {
                         val vault = viewModel.currentVault.value
-                        val coin = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
+                        navHostController.navigate(VaultSettings.createRoute(vault.name))
+                        /*val coin = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
                         coin?.let {
                             keysignShareViewModel.vault = viewModel.currentVault.value
                             keysignShareViewModel.keysignPayload = KeysignPayload(
@@ -124,7 +126,7 @@ internal fun VaultDetailScreen(
                                 vaultPublicKeyECDSA = viewModel.currentVault.value.pubKeyECDSA
                             )
                             navHostController.navigate(Screen.KeysignFlow.route)
-                        }
+                        }*/
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_edit_square_24),
