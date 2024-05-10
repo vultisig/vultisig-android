@@ -8,6 +8,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import com.vultisig.wallet.common.toJson
 import kotlinx.parcelize.Parcelize
 import java.lang.reflect.Type
 import java.math.BigInteger

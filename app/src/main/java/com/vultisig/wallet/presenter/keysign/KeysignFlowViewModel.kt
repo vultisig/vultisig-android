@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import timber.log.Timber
 import java.net.HttpURLConnection
 import java.util.UUID
 import javax.inject.Inject
@@ -67,7 +68,7 @@ class KeysignFlowViewModel @Inject constructor(
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
             vault = _currentVault!!,
-            keysignCommittee = participants.value!!,
+            keysignCommittee = selection.value!!,
             serverAddress = _serverAddress,
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
@@ -225,6 +226,30 @@ class KeysignFlowViewModel @Inject constructor(
 
         GlobalScope.launch(Dispatchers.IO) {
             updateKeysignPayload(context)
+        }
+    }
+
+    suspend fun startKeysign() {
+        withContext(Dispatchers.IO) {
+            try {
+                val keygenCommittee = selection.value ?: emptyList()
+                val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
+                val payload = Gson().toJson(keygenCommittee)
+                val request = okhttp3.Request
+                    .Builder()
+                    .url("$_serverAddress/start/$_sessionID")
+                    .post(payload.toRequestBody("application/json".toMediaType())).build()
+                client.newCall(request).execute().use { response ->
+                    if (response.code == HttpURLConnection.HTTP_OK) {
+                        Timber.d("Keysign started")
+                    } else {
+                        Timber.e("Fail to start keysign: Response code: ${response.code}")
+
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e("Failed to start keysign: ${e.stackTraceToString()}")
+            }
         }
     }
 }

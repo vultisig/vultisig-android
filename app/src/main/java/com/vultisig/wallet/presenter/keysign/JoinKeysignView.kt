@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,10 +30,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.menloFamily
+import com.vultisig.wallet.ui.theme.montserratFamily
+import kotlinx.coroutines.launch
 
 @Composable
 fun JoinKeysignView(
@@ -68,10 +73,7 @@ fun JoinKeysignView(
         }
 
         JoinKeysignState.JoinKeysign -> {
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.joinKeysign()
-            }
-            JoiningKeysign(navController = navController)
+            JoiningKeysign(navController = navController, viewModel = viewModel)
         }
 
         JoinKeysignState.WaitingForKeysignStart -> {
@@ -84,6 +86,7 @@ fun JoinKeysignView(
         JoinKeysignState.Keysign -> {
             Keysign(navController = navController, viewModel = viewModel.keysignViewModel)
         }
+
         JoinKeysignState.FailedToStart -> {
             KeysignFailedToStart(
                 navController = navController,
@@ -176,7 +179,8 @@ fun KeysignDiscoverService(navController: NavHostController) {
 }
 
 @Composable
-fun JoiningKeysign(navController: NavHostController) {
+fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewModel) {
+    val coroutineScope = rememberCoroutineScope()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -185,27 +189,98 @@ fun JoiningKeysign(navController: NavHostController) {
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
             )
+            .fillMaxSize()
     ) {
         TopBar(
             centerText = stringResource(id = R.string.keysign), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Joining Keysign",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
-            )
-            CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
-                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
-            )
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.marginMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.joinkeysign_from),
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Text(
+                    text = viewModel.keysignPayload?.coin?.address ?: "",
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.marginMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.joinkeysign_to),
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Text(
+                    text = viewModel.keysignPayload?.toAddress ?: "",
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MaterialTheme.dimens.marginMedium),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.joinkeysign_amount),
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Text(
+                    text = viewModel.keysignPayload?.toAmount.toString() ?: "0",
+                    color = MaterialTheme.appColor.neutral0,
+                    style = MaterialTheme.menloFamily.bodyMedium,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            MultiColorButton(
+                text = stringResource(id = R.string.joinkeysign),
+                minHeight = MaterialTheme.dimens.minHeightButton,
+                backgroundColor = MaterialTheme.appColor.turquoise800,
+                textColor = MaterialTheme.appColor.oxfordBlue800,
+                iconColor = MaterialTheme.appColor.turquoise800,
+                textStyle = MaterialTheme.montserratFamily.titleLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = MaterialTheme.dimens.marginMedium,
+                        end = MaterialTheme.dimens.marginMedium,
+                        bottom = MaterialTheme.dimens.marginMedium,
+                    )
+            ) {
+                coroutineScope.launch {
+                    viewModel.joinKeysign()
+                }
+            }
         }
+
     }
 }
 

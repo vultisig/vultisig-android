@@ -18,6 +18,7 @@ import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
 import java.util.Base64
@@ -76,6 +77,7 @@ class KeysignViewModel(
             currentState.value = KeysignState.KeysignFinished
             this._messagePuller?.stop()
         } catch (e: Exception) {
+            Timber.e(e)
             currentState.value = KeysignState.ERROR
             errorMessage.value = e.message ?: "Unknown error"
         }
@@ -84,7 +86,7 @@ class KeysignViewModel(
     private suspend fun signMessageWithRetry(service: ServiceImpl, message: String, attempt: Int) {
         val keysignVerify = KeysignVerify(serverAddress, sessionId)
         try {
-            Log.d("KeysignViewModel", "signMessageWithRetry: $message, attempt: $attempt")
+            Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()
 
             this._messagePuller?.pullMessages(msgHash)

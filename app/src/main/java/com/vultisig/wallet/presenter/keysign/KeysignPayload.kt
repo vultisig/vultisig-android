@@ -2,7 +2,6 @@ package com.vultisig.wallet.presenter.keysign
 
 import android.os.Parcelable
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -11,6 +10,10 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.chains.UtxoInfo
+import com.vultisig.wallet.chains.thorchainHelper
+import com.vultisig.wallet.chains.utxoHelper
+import com.vultisig.wallet.common.toJson
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.THORChainSwapPayload
@@ -33,45 +36,44 @@ data class KeysignPayload(
     val vaultPublicKeyECDSA: String,
 ) : Parcelable {
     fun toJson(): String {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(
-                BlockChainSpecific::class.java,
-                BlockChainSpecificSerializer()
+        val gson = GsonBuilder().registerTypeAdapter(
+                BlockChainSpecific::class.java, BlockChainSpecificSerializer()
             ).registerTypeAdapter(
-                KeysignPayload::class.java,
-                KeysignPayloadSerializer()
-            )
-            .create()
+                KeysignPayload::class.java, KeysignPayloadSerializer()
+            ).create()
         return gson.toJson(this)
     }
 
     companion object {
         fun fromJson(json: String): KeysignPayload {
-            val gson = GsonBuilder()
-                .registerTypeAdapter(
-                    KeysignPayload::class.java,
-                    KeysignPayloadDeserializer()
-                )
-                .registerTypeAdapter(
-                    BlockChainSpecific::class.java,
-                    BlockChainSpecificDeserializer()
-                )
-                .create()
+            val gson = GsonBuilder().registerTypeAdapter(
+                    KeysignPayload::class.java, KeysignPayloadDeserializer()
+                ).registerTypeAdapter(
+                    BlockChainSpecific::class.java, BlockChainSpecificDeserializer()
+                ).create()
             return gson.fromJson(json, KeysignPayload::class.java)
         }
     }
 
     fun getKeysignMessages(vault: Vault): List<String> {
-        throw Exception("Not implemented")
+        when (coin.chain) {
+            Chain.thorChain -> {
+                val thorHelper = thorchainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return thorHelper.getPreSignedImageHash(this)
+            }
+
+            Chain.solana -> TODO()
+            Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.cronosChain -> TODO()
+            Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> {
+                val utxo = utxoHelper(this.coin.coinType, vault.pubKeyECDSA, vault.hexChainCode)
+                return utxo.getPreSignedImageHash(this)
+            }
+
+            Chain.gaiaChain -> TODO()
+            Chain.kujira -> TODO()
+            Chain.mayaChain -> TODO()
+        }
     }
-}
-
-
-fun BigInteger.toJson(): JsonArray {
-    val jsonArray = JsonArray()
-    jsonArray.add("+")
-    jsonArray.add(this)
-    return jsonArray
 }
 
 class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
@@ -105,22 +107,18 @@ class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
         val toAmount = jsonObject.get("toAmount").asJsonArray[1].asBigInteger
         val vaultPubKeyECDSA = jsonObject.get("vaultPubKeyECDSA").asString
         val chainSpecific = context?.deserialize<BlockChainSpecific>(
-            jsonObject.get("chainSpecific"),
-            BlockChainSpecific::class.java
+            jsonObject.get("chainSpecific"), BlockChainSpecific::class.java
         )!!
         val coin = context.deserialize<Coin>(jsonObject.get("coin"), Coin::class.java)
         val utxos = context.deserialize<List<UtxoInfo>>(
-            jsonObject.get("utxos"),
-            List::class.java
+            jsonObject.get("utxos"), List::class.java
         )
         val memo = jsonObject.get("memo")?.asString
         val swapPayload = context.deserialize<THORChainSwapPayload>(
-            jsonObject.get("swapPayload"),
-            THORChainSwapPayload::class.java
+            jsonObject.get("swapPayload"), THORChainSwapPayload::class.java
         )
         val approvePayload = context.deserialize<ERC20ApprovePayload>(
-            jsonObject.get("approvePayload"),
-            ERC20ApprovePayload::class.java
+            jsonObject.get("approvePayload"), ERC20ApprovePayload::class.java
         )
         return KeysignPayload(
             coin = coin,

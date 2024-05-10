@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject
@@ -35,6 +36,7 @@ enum class JoinKeysignState {
     FailedToStart,
     Error
 }
+
 
 @HiltViewModel
 class JoinKeysignViewModel @Inject constructor(
@@ -58,6 +60,8 @@ class JoinKeysignViewModel @Inject constructor(
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
 
+    val keysignPayload: KeysignPayload?
+        get() = _keysignPayload
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
             vault = _currentVault,
@@ -83,20 +87,22 @@ class JoinKeysignViewModel @Inject constructor(
             throw Exception("Invalid QR code content")
         }
         val payload = KeysignMesssage.fromJson(qrCodeContent)
+        if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
+            errorMessage.value = "Wrong vault"
+            currentState.value = JoinKeysignState.Error
+            return
+        }
+        this._keysignPayload = payload.payload
         this._sessionID = payload.sessionID
         this._serviceName = payload.serviceName
         this._useVultisigRelay = payload.usevultisigRelay
         this._encryptionKeyHex = payload.encryptionKeyHex
-        if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-            currentState.value = JoinKeysignState.Error
-        }
         if (_useVultisigRelay) {
             this._serverAddress = Endpoints.VULTISIG_RELAY
             currentState.value = JoinKeysignState.JoinKeysign
         } else {
             currentState.value = JoinKeysignState.DiscoverService
         }
-
     }
 
     private fun onServerAddressDiscovered(addr: String) {
@@ -166,11 +172,13 @@ class JoinKeysignViewModel @Inject constructor(
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_OK -> {
-                        Log.d("JoinKeysignViewModel", "Keygen started")
+                        Timber.d("Keysign started")
                         response.body?.let {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
                             this._keysignCommittee = Gson().fromJson(result, tokenType)
+                            Timber.d("Keysign committee: $_keysignCommittee")
+                            Timber.d("local party: $_localPartyID")
                             if (this._keysignCommittee.contains(_localPartyID)) {
                                 return true
                             }
@@ -178,16 +186,12 @@ class JoinKeysignViewModel @Inject constructor(
                     }
 
                     else -> {
-                        Log.d(
-                            "JoinKeysignViewModel",
-                            "Failed to check start keysign: Response code: ${response.code}"
-                        )
+                        Timber.d("Failed to check start keysign: Response code: ${response.code}")
                     }
                 }
             }
         } catch (e: Exception) {
-            Log.e(
-                "JoinKeysignViewModel",
+            Timber.e(
                 "Failed to check keysign start: ${e.stackTraceToString()}"
             )
         }

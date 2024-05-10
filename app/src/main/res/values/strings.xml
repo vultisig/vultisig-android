@@ -16,4 +16,8 @@
     <string name="joinkeysign_discovery_service">Discovering Service</string>
     <string name="joinkeysign_waiting_keysign_start">Waiting for Keysign to start.</string>
     <string name="joinkeysign_fail_to_start">Failed to start,error: </string>
+    <string name="joinkeysign_from">From:</string>
+    <string name="joinkeysign_to">To:</string>
+    <string name="joinkeysign_amount">Amount:</string>
+    <string name="joinkeysign">Join Keysign</string>
 </resources>

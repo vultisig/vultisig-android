@@ -1,6 +1,5 @@
 package com.vultisig.wallet.chains
 
-import android.util.Log
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.models.Chain
@@ -66,7 +65,7 @@ class utxoHelper(
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
-        return preSigningOutput.hashPublicKeysList.map { Numeric.toHexString(it.dataHash.toByteArray()) }
+        return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -182,7 +181,7 @@ class utxoHelper(
         return input
     }
 
-    fun getBitcoinPreSigningInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getBitcoinPreSigningInputData(keysignPayload: KeysignPayload): ByteArray {
         val signingInput = getBitcoinSigningInput(keysignPayload)
         val plan: Bitcoin.TransactionPlan =
             AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
@@ -194,10 +193,15 @@ class utxoHelper(
         val signingInput = getBitcoinSigningInput(keysignPayload)
         return AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
     }
-    fun getSignedTransaction(keysignPayload: KeysignPayload,signatures: Map<String, KeysignResponse>):SignedTransactionResult{
+
+    fun getSignedTransaction(
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>,
+    ): SignedTransactionResult {
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
-        return getSignedTransaction(inputData,signatures)
+        return getSignedTransaction(inputData, signatures)
     }
+
     @OptIn(ExperimentalStdlibApi::class)
     fun getSignedTransaction(
         inputData: ByteArray,

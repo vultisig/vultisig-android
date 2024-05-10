@@ -7,7 +7,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import com.vultisig.wallet.presenter.keysign.toJson
+import com.vultisig.wallet.common.toJson
 import kotlinx.parcelize.Parcelize
 import wallet.core.jni.proto.THORChainSwap.Asset
 import java.lang.reflect.Type
