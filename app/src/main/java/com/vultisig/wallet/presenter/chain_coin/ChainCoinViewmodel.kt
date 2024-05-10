@@ -1,8 +1,5 @@
 package com.vultisig.wallet.presenter.chain_coin
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.vultisig.wallet.data.on_board.db.VaultDB
@@ -10,6 +7,8 @@ import com.vultisig.wallet.models.getBalanceInFiat
 import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_CHAIN_RAW
 import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -21,7 +20,7 @@ internal class ChainCoinViewmodel @Inject constructor(
     private val chainRaw: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_CHAIN_RAW)!!
     private val vaultId: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_VAULT_ID)!!
 
-    var uiModel by mutableStateOf(ChainCoinUiModel())
+    val uiModel = MutableStateFlow(ChainCoinUiModel())
 
     fun loadData() {
         val vault = vaultDB.select(vaultId)
@@ -30,12 +29,14 @@ internal class ChainCoinViewmodel @Inject constructor(
         val totalPrice = coins.sumOf { it.getBalanceInFiat() }
             .setScale(2, RoundingMode.HALF_UP).toPlainString()
 
-        uiModel = uiModel.copy(
-            chainName = chainRaw,
-            chainAddress = chainAddress,
-            coins = coins,
-            totalPrice = totalPrice
-        )
+        uiModel.update {
+            it.copy(
+                chainName = chainRaw,
+                chainAddress = chainAddress,
+                coins = coins,
+                totalPrice = totalPrice
+            )
+        }
     }
 
 }
