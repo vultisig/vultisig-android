@@ -23,6 +23,7 @@ import javax.inject.Inject
 internal class MainViewModel @Inject constructor(
     private val repository: OnBoardRepository,
     private val navigator: Navigator<Destination>,
+    private val vaultDB: VaultDB,
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -36,7 +37,6 @@ internal class MainViewModel @Inject constructor(
     fun setData(context: Context) {
         viewModelScope.launch {
             Logger.getLogger(OkHttpClient::class.java.name).setLevel(Level.FINE)
-            val vaultDB = VaultDB(context)
             val listVaults = vaultDB.selectAll()
             if (listVaults.isNotEmpty()) {
                 _startDestination.value = Screen.Home.route

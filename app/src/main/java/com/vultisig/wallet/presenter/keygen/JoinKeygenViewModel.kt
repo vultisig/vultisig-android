@@ -12,6 +12,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
@@ -34,6 +35,7 @@ enum class JoinKeygenState {
 
 @HiltViewModel
 class JoinKeygenViewModel @Inject constructor(
+    private val vaultDB: VaultDB,
     private val gson: Gson,
 ) : ViewModel() {
     private var _vault: Vault = Vault("new vault")
@@ -63,7 +65,8 @@ class JoinKeygenViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             _encryptionKeyHex,
-            gson = gson
+            gson = gson,
+            vaultDB = vaultDB
         )
 
     fun setData(vault: Vault) {

@@ -19,17 +19,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.asFlow
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -41,15 +39,13 @@ import com.vultisig.wallet.ui.theme.montserratFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {
-    val viewModel: HomeViewModel = viewModel()
+internal fun HomeScreen(
+    navController: NavHostController,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
     val vaults = viewModel.vaults.asFlow().collectAsState(initial = emptyList()).value
-    val context = LocalContext.current
     val textColor = MaterialTheme.colorScheme.onBackground
 
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.setData(context)
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
