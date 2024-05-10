@@ -2,7 +2,6 @@ package com.vultisig.wallet.models
 
 import android.os.Parcelable
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.SettingsCurrency
 import com.vultisig.wallet.tss.TssKeyType
 import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
@@ -47,23 +46,11 @@ data class Coin(
 
 }
 
-fun Coin.getBalance(): BigDecimal {
-    return BigDecimal(rawBalance)
-        .divide(BigDecimal(10).pow(decimal))
-        .setScale(2, RoundingMode.HALF_UP)
-}
+// TODO this is mock data, we should update chain coin screen
+fun Coin.getBalance(): BigDecimal = BigDecimal.ZERO
 
-fun Coin.getBalanceInFiat(): BigDecimal {
-    return getBalance()
-        .multiply(priceRate)
-        .setScale(2, RoundingMode.HALF_UP)
-}
+fun Coin.getBalanceInFiat(): BigDecimal = BigDecimal.ZERO
 
-fun Coin.getBalanceInFiatString(): String {
-    val format = NumberFormat.getCurrencyInstance(Locale.getDefault())
-    format.currency = Currency.getInstance(currency.name)
-    return format.format(getBalanceInFiat())
-}
 val Coin.TssKeysignType: TssKeyType
     get()= when(chain){
         Chain.bitcoin -> TssKeyType.ECDSA

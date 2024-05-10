@@ -59,11 +59,9 @@ internal class ChainAccountsRepositoryImpl @Inject constructor(
             }
             .toMutableList()
 
-        val chainListMap: Map<String, List<Coin>> = vault.coins.groupBy { it.chain.raw }
-
-        val accounts: MutableList<ChainAccount> = vault.coins.distinct().mapTo(mutableListOf()) { coinToChainAccountMapper.map(CoinWithFiatValue(it, null, null)).also { chainAccount: ChainAccount ->
-            chainAccount.coins.addAll(chainListMap[chainAccount.chainName]?.toList()?: emptyList())
-        } }
+        val accounts = vault.coins.mapTo(mutableListOf()) {
+            coinToChainAccountMapper.map(CoinWithFiatValue(it, null, null))
+        }
 
         emit(accounts)
 
