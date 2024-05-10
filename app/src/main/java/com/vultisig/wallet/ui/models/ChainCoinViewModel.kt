@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.chain_coin
+package com.vultisig.wallet.ui.models
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable

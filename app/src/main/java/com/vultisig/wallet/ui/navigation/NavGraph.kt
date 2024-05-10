@@ -11,9 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.chain_coin.ChainCoinScreen
 import com.vultisig.wallet.presenter.home.HomeScreen
-import com.vultisig.wallet.presenter.home.VaultDetailScreen
 import com.vultisig.wallet.presenter.import_file.ImportFile
 import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
@@ -25,9 +23,11 @@ import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
+import com.vultisig.wallet.ui.screens.ChainCoinScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
+import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition

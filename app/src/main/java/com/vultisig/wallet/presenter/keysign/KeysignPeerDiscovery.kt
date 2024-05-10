@@ -29,11 +29,11 @@ import androidx.lifecycle.asFlow
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
-import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.keygen.NetworkPrompts
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
+import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.menloFamily

@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.base_components
+package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -13,7 +13,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BoxWithSwipeRefresh(
+internal fun BoxWithSwipeRefresh(
     onSwipe: () -> Unit,
     isRefreshing: Boolean,
     modifier: Modifier = Modifier,

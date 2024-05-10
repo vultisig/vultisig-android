@@ -34,7 +34,7 @@ import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.common.TopBar
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens

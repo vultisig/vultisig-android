@@ -5,15 +5,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.on_board.OnBoardRepository
+import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.presenter.common.UiEvent
 import com.vultisig.wallet.presenter.common.UiEvent.NavigateTo
 import com.vultisig.wallet.presenter.common.UiEvent.PopBackStack
 import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.presenter.welcome.WelcomeEvent.BoardCompleted
 import com.vultisig.wallet.presenter.welcome.WelcomeEvent.InitPages
 import com.vultisig.wallet.presenter.welcome.WelcomeEvent.NextPages
+import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel

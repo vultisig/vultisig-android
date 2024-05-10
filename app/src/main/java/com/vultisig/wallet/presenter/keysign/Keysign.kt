@@ -27,8 +27,8 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.tss.TssKeyType
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.menloFamily
