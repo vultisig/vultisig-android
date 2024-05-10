@@ -46,6 +46,7 @@ enum class JoinKeysignState {
 class JoinKeysignViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val vaultDB: VaultDB,
+    private val gson: Gson,
 ) : ViewModel() {
     private val vaultId: String =
         requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
@@ -92,7 +93,7 @@ class JoinKeysignViewModel @Inject constructor(
             qrCodeContent ?: run {
                 throw Exception("Invalid QR code content")
             }
-            val payload = KeysignMesssage.fromJson(qrCodeContent)
+            val payload = gson.fromJson(qrCodeContent, KeysignMesssage::class.java)
             if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
                 errorMessage.value = "Wrong vault"
                 currentState.value = JoinKeysignState.Error
@@ -109,8 +110,7 @@ class JoinKeysignViewModel @Inject constructor(
             } else {
                 currentState.value = JoinKeysignState.DiscoverService
             }
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             errorMessage.value = "Invalid QR code content"
             currentState.value = JoinKeysignState.Error
         }
@@ -160,9 +160,11 @@ class JoinKeysignViewModel @Inject constructor(
             }
         }
     }
-    fun cleanUp(){
+
+    fun cleanUp() {
         _jobWaitingForKeysignStart?.cancel()
     }
+
     suspend fun waitForKeysignToStart() {
         _jobWaitingForKeysignStart = viewModelScope.launch {
             withContext(Dispatchers.IO) {

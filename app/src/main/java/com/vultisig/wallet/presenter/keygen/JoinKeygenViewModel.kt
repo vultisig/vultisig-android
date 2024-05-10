@@ -15,6 +15,7 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -25,6 +26,7 @@ import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.Inet4Address
 import java.net.URL
+import javax.inject.Inject
 
 enum class JoinKeygenState {
     DiscoveryingSessionID,
@@ -36,7 +38,10 @@ enum class JoinKeygenState {
     ERROR
 }
 
-class JoinKeygenViewModel : ViewModel() {
+@HiltViewModel
+class JoinKeygenViewModel @Inject constructor(
+    private val gson: Gson
+)  : ViewModel() {
     private var _vault: Vault = Vault("new vault")
     private var _localPartyID: String = ""
     private var _action: TssAction = TssAction.KEYGEN
@@ -80,7 +85,7 @@ class JoinKeygenViewModel : ViewModel() {
             qrCodeContent ?: run {
                 throw Exception("invalid QR code")
             }
-            when (val payload = PeerDiscoveryPayload.fromJson(qrCodeContent)) {
+            when (val payload = PeerDiscoveryPayload.fromJson(gson,qrCodeContent)) {
                 is PeerDiscoveryPayload.Keygen -> {
                     this._action = TssAction.KEYGEN
                     this._sessionID = payload.keygenMessage.sessionID
@@ -117,7 +122,7 @@ class JoinKeygenViewModel : ViewModel() {
                 currentState.value = JoinKeygenState.DiscoverService
             }
         } catch (e: Exception) {
-            Log.d("JoinKeygenViewModel", "Failed to parse QR code, error: $e")
+            Timber.d("Failed to parse QR code, error: $e")
             errorMessage.value = "Failed to parse QR code"
             currentState.value = JoinKeygenState.FailedToStart
         }
@@ -155,11 +160,11 @@ class JoinKeygenViewModel : ViewModel() {
                     conn.outputStream.write(it.toByteArray())
                 }
                 val responseCode = conn.responseCode
-                Log.d("KeygenDiscoveryViewModel", "Join Keygen: Response code: $responseCode")
+                Timber.d("Join Keygen: Response code: $responseCode")
                 conn.disconnect()
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
-                Log.e("JoinKeygenViewModel", "Failed to join keygen: ${e.stackTraceToString()}")
+                Timber.e("Failed to join keygen: ${e.stackTraceToString()}")
                 errorMessage.value = "Failed to join keygen"
                 currentState.value = JoinKeygenState.FailedToStart
             }
@@ -188,7 +193,7 @@ class JoinKeygenViewModel : ViewModel() {
     private fun checkKeygenStarted(): Boolean {
         try {
             val serverURL = "$_serverAddress/start/$_sessionID"
-            Log.d("JoinKeygenViewModel", "Checking keygen start at $serverURL")
+            Timber.d("Checking keygen start at $serverURL")
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
             val request = okhttp3.Request.Builder().url(serverURL).get().build()
             client.newCall(request).execute().use { response ->

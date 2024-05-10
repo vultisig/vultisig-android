@@ -43,6 +43,7 @@ enum class KeysignFlowState {
 @HiltViewModel
 class KeysignFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
+    private val gson: Gson,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -103,13 +104,15 @@ class KeysignFlowViewModel @Inject constructor(
         )
 
         _keysignMessage.value =
-            "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" + KeysignMesssage(
-                sessionID = _sessionID,
-                serviceName = _serviceName,
-                payload = _keysignPayload!!,
-                encryptionKeyHex = _encryptionKeyHex,
-                usevultisigRelay = vultisigRelay.IsRelayEnabled
-            ).toJson()
+            "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" + gson.toJson(
+                KeysignMesssage(
+                    sessionID = _sessionID,
+                    serviceName = _serviceName,
+                    payload = _keysignPayload!!,
+                    encryptionKeyHex = _encryptionKeyHex,
+                    usevultisigRelay = vultisigRelay.IsRelayEnabled
+                )
+            )
         if (!vultisigRelay.IsRelayEnabled) {
             startMediatorService(context)
         } else {
@@ -141,13 +144,15 @@ class KeysignFlowViewModel @Inject constructor(
             }
         }
     }
-    fun stopService(context: Context){
+
+    fun stopService(context: Context) {
         // start mediator service
         val intent = Intent(context, MediatorService::class.java)
         context.stopService(intent)
         Timber.d("stopService: Mediator service stopped")
 
     }
+
     private fun startMediatorService(context: Context) {
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)

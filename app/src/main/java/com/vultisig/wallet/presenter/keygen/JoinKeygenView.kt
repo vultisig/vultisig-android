@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -37,7 +38,7 @@ import com.vultisig.wallet.ui.theme.menloFamily
 
 @Composable
 fun JoinKeygenView(navController: NavHostController, vault: Vault) {
-    val viewModel: JoinKeygenViewModel = viewModel()
+    val viewModel: JoinKeygenViewModel = hiltViewModel()
     val context = LocalContext.current
     val scanQrCodeLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->

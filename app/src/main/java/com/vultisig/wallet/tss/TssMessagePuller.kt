@@ -1,6 +1,5 @@
 package com.vultisig.wallet.tss
 
-import android.util.Log
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
@@ -13,6 +12,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import okhttp3.Callback
 import okhttp3.OkHttpClient
+import timber.log.Timber
 import java.io.IOException
 
 class TssMessagePuller(
@@ -60,28 +60,26 @@ class TssMessagePuller(
                                 ?: run { "$sessionID-$localPartyKey-$messageID-${msg.hash}" }
                             // when the message is already in the cache, skip it
                             if (cache.getIfPresent(key) != null) {
-                                Log.d("TssMessagePuller", "skip message: $key, applied already")
+                                Timber.tag("TssMessagePuller")
+                                    .d("skip message: $key, applied already")
                                 continue
                             }
                             cache.put(key, msg)
                             val decryptedBody = msg.body.Decrypt(hexEncryptionKey)
-                            Log.d(
-                                "TssMessagePuller",
-                                "apply message to TSS: hash: ${msg.hash}, messageID: $key"
-                            )
+                            Timber.d("apply message to TSS: hash: " + msg.hash + ", messageID: " + key)
                             this.service.applyData(decryptedBody)
                             deleteMessageFromServer(msg.hash, messageID)
                         }
                     }
                 } else {
-                    Log.e(
-                        "TssMessagePuller",
+                    Timber.tag("TssMessagePuller").e(
                         "fail to get messages from server,${response.message} , ${response.code}"
                     )
                 }
             }
         } catch (e: Exception) {
-            Log.e("TssMessagePuller", "fail to get messages from server: ${e.stackTraceToString()}")
+            Timber.tag("TssMessagePuller")
+                .e("fail to get messages from server: ${e.stackTraceToString()}")
         }
     }
 
@@ -99,12 +97,13 @@ class TssMessagePuller(
         }
         client.newCall(request.build()).enqueue(object : Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
-                Log.e("TssMessagePuller", "fail to delete message: ${e.stackTraceToString()}")
+                Timber.tag("TssMessagePuller")
+                    .e("fail to delete message: ${e.stackTraceToString()}")
             }
 
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
                 if (response.code == 200) {
-                    Log.d("TssMessagePuller", "delete message success")
+                    Timber.tag("TssMessagePuller").d("delete message success")
                 }
             }
         })

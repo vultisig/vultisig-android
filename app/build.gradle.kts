@@ -52,9 +52,7 @@ android {
         }
     }
 }
-hilt {
 
-}
 dependencies {
     implementation(files("libs/mobile-tss-lib.aar"))
 

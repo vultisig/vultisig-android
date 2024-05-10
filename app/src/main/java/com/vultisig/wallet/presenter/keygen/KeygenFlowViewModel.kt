@@ -46,6 +46,7 @@ enum class KeygenFlowState {
 @HiltViewModel
 class KeygenFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
+    private val gson: Gson,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -117,7 +118,7 @@ class KeygenFlowViewModel @Inject constructor(
                             encryptionKeyHex = this._encryptionKeyHex,
                             usevultisigRelay = vultisigRelay.IsRelayEnabled
                         )
-                    ).toJson()
+                    ).toJson(gson)
             }
 
             TssAction.ReShare -> {
@@ -132,7 +133,7 @@ class KeygenFlowViewModel @Inject constructor(
                             encryptionKeyHex = this._encryptionKeyHex,
                             usevultisigRelay = vultisigRelay.IsRelayEnabled
                         )
-                    ).toJson()
+                    ).toJson(gson)
             }
         }
 
@@ -158,7 +159,7 @@ class KeygenFlowViewModel @Inject constructor(
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == MediatorService.SERVICE_ACTION) {
-                Timber.d( "onReceive: Mediator service started")
+                Timber.d("onReceive: Mediator service started")
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
                     Thread.sleep(1000) // back off a second
