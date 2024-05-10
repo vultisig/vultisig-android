@@ -28,7 +28,7 @@ class VaultDetailViewmodel @Inject constructor(
                     name = vault.name,
                     pubKeyECDSA = vault.pubKeyECDSA,
                     pubKeyEDDSA = vault.pubKeyEDDSA,
-                    deviceList = listOf("SM-G990E-243","iPad-04C (this device)")
+                    deviceList  = vault.signers
                 )
             }
         }
