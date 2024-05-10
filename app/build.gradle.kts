@@ -85,6 +85,10 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.hilt.android.compiler)
 
+    // ktor
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
+
     // other
     implementation(libs.spark.core)
     implementation(libs.gson)
