@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.on_board.db
 
-import com.vultisig.wallet.models.Vault
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.vultisig.wallet.models.Vault
 
 class VaultDB(private val context: Context) {
 
@@ -38,7 +38,7 @@ class VaultDB(private val context: Context) {
         }
     }
 
-    fun selectAll(): MutableList<Vault> {
+    fun selectAll(): List<Vault> {
         val allVaults = mutableListOf<Vault>()
         val vaultFiles = vaultsFolder.listFiles()
         vaultFiles?.forEach { file ->

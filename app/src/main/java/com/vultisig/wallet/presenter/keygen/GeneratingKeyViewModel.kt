@@ -33,6 +33,7 @@ class GeneratingKeyViewModel(
     private val sessionId: String,
     private val encryptionKeyHex: String,
     private val gson: Gson,
+    private val vaultDB: VaultDB,
 ) {
     private var tssInstance: tss.ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -173,8 +174,7 @@ class GeneratingKeyViewModel(
         }
     }
 
-    fun saveVault(context: Context) {
-        val vaultDB = VaultDB(context)
+    fun saveVault() {
         vaultDB.upsert(this.vault)
         Timber.d("saveVault: success,name:${vault.name}")
     }

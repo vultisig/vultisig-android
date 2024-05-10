@@ -19,13 +19,12 @@ object PublicKeyHelper {
         hexPublicKey: String,
         hexChainCode: String,
         coinType: CoinType,
-    ): PublicKey {
-        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
+    ): PublicKey = PublicKey(
+        getDerivedPublicKey(
             hexPublicKey,
             hexChainCode,
             coinType.derivationPath()
-        )
-        return PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-    }
+        ).hexToByteArray(), PublicKeyType.SECP256K1
+    )
 
 }

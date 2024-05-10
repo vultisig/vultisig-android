@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 import java.util.Date
 
 @Parcelize
-class Vault(
+data class Vault(
     var name: String,
     var pubKeyECDSA: String = "",
     var pubKeyEDDSA: String = "",
@@ -15,5 +15,5 @@ class Vault(
     var signers: List<String> = listOf(),
     var resharePrefix: String = "",
     var keyshares: List<KeyShare> = listOf(),
-    var coins: MutableList<Coin> = mutableListOf(),
+    val coins: List<Coin> = emptyList(),
 ) : Parcelable

@@ -13,6 +13,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.KeygenMessage
 import com.vultisig.wallet.models.PeerDiscoveryPayload
@@ -41,6 +42,7 @@ enum class KeygenFlowState {
 
 @HiltViewModel
 class KeygenFlowViewModel @Inject constructor(
+    private val vaultDB: VaultDB,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
 ) : ViewModel() {
@@ -76,7 +78,8 @@ class KeygenFlowViewModel @Inject constructor(
             serverAddress,
             sessionID,
             _encryptionKeyHex,
-            gson
+            gson,
+            vaultDB
         )
 
     suspend fun setData(action: TssAction, vault: Vault, context: Context) {

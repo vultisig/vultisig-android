@@ -45,21 +45,19 @@ internal class TokenSelectionViewModel @Inject constructor(
     }
 
     fun enableToken(coin: Coin) {
-        val vault = checkNotNull(vaultDb.select(vaultId)) {
+        commitVault(checkNotNull(vaultDb.select(vaultId)) {
             "No vault with $vaultId"
-        }
-
-        vault.coins.add(coin)
-        commitVault(vault)
+        }.let { vault ->
+            vault.copy(coins = vault.coins + coin)
+        })
     }
 
     fun disableToken(coin: Coin) {
-        val vault = checkNotNull(vaultDb.select(vaultId)) {
+        commitVault(checkNotNull(vaultDb.select(vaultId)) {
             "No vault with $vaultId"
-        }
-
-        vault.coins.removeIf { it.ticker == coin.ticker }
-        commitVault(vault)
+        }.let { vault ->
+            vault.copy(coins = vault.coins.filter { it.id != coin.id })
+        })
     }
 
     private fun commitVault(vault: Vault) {

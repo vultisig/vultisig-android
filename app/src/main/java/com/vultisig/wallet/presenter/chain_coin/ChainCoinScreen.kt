@@ -65,7 +65,7 @@ import timber.log.Timber
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChainCoinScreen(navController: NavHostController) {
-    val viewModel = hiltViewModel<ChainCoinViewmodel>()
+    val viewModel = hiltViewModel<ChainCoinViewModel>()
     val uiModel by viewModel.uiModel.collectAsState()
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
