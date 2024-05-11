@@ -5,8 +5,12 @@ import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
+import com.vultisig.wallet.chains.THORCHainHelper
+import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.mediator.MediatorService
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.tss.LocalStateAccessor
@@ -18,6 +22,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
+import wallet.core.jni.CoinType
 
 enum class KeygenState {
     CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
@@ -41,6 +46,10 @@ class GeneratingKeyViewModel(
     val currentState: MutableState<KeygenState> = mutableStateOf(KeygenState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
+
+    private val defaultChains =
+        listOf(Chain.thorChain, Chain.bitcoin, Chain.bscChain, Chain.ethereum, Chain.solana)
+
     suspend fun generateKey() {
         currentState.value = KeygenState.CreatingInstance
         withContext(Dispatchers.IO) {
@@ -172,7 +181,40 @@ class GeneratingKeyViewModel(
 
     fun saveVault() {
         // save the vault
-        vaultDB.upsert(this.vault)
+        val coins: MutableList<Coin> = mutableListOf()
+        defaultChains.forEach { chain ->
+            vault.apply { }
+            when (chain) {
+                Chain.thorChain -> {
+                    THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()?.let { coin ->
+                        coins.add(coin)
+                    }
+                }
+
+                Chain.bitcoin -> {
+                    utxoHelper.getHelper(vault, CoinType.BITCOIN).getCoin()?.let { coin ->
+                        coins.add(coin)
+                    }
+                }
+
+                Chain.bscChain -> {
+                    // TODO: add it
+                }
+
+                Chain.ethereum -> {
+                    // TODO: add it
+                }
+
+                Chain.solana -> {
+                    // TODO: add it
+                }
+
+                else -> {
+                    //do nothing
+                }
+            }
+        }
+        vaultDB.upsert(this.vault.copy(coins = coins))
         Timber.d("saveVault: success,name:${vault.name}")
     }
 
