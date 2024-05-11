@@ -29,9 +29,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun CreateNewVault(navController: NavHostController) {
@@ -39,7 +38,7 @@ fun CreateNewVault(navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
     ) {
 
         Column(
@@ -61,12 +60,12 @@ fun CreateNewVault(navController: NavHostController) {
             Text(
                 text = "vultisig",
                 color = textColor,
-                style = MaterialTheme.montserratFamily.headlineLarge.copy(fontSize = 50.sp)
+                style = Theme.montserrat.headlineLarge.copy(fontSize = 50.sp)
             )
             Spacer(modifier = Modifier.height(40.dp))
             Text(
                 text = "SECURE CRYPTO VAULT", color = textColor,
-                style = MaterialTheme.montserratFamily.body3.copy(
+                style = Theme.montserrat.body3.copy(
                     letterSpacing = 2.sp, fontWeight = FontWeight.Bold
                 ),
             )
@@ -80,10 +79,10 @@ fun CreateNewVault(navController: NavHostController) {
             MultiColorButton(
                 text = "Create a New Vault",
                 minHeight = MaterialTheme.dimens.minHeightButton,
-                backgroundColor = MaterialTheme.appColor.turquoise800,
-                textColor = MaterialTheme.appColor.oxfordBlue800,
-                iconColor = MaterialTheme.appColor.turquoise800,
-                textStyle = MaterialTheme.montserratFamily.titleLarge,
+                backgroundColor = Theme.colors.turquoise800,
+                textColor = Theme.colors.oxfordBlue800,
+                iconColor = Theme.colors.turquoise800,
+                textStyle = Theme.montserrat.titleLarge,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -97,11 +96,11 @@ fun CreateNewVault(navController: NavHostController) {
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.extraSmall))
             MultiColorButton(
                 text = "Import an Existing Vault",
-                backgroundColor = MaterialTheme.appColor.oxfordBlue800,
-                textColor = MaterialTheme.appColor.turquoise800,
-                iconColor = MaterialTheme.appColor.oxfordBlue800,
+                backgroundColor = Theme.colors.oxfordBlue800,
+                textColor = Theme.colors.turquoise800,
+                iconColor = Theme.colors.oxfordBlue800,
                 borderSize = 1.dp,
-                textStyle = MaterialTheme.montserratFamily.titleLarge,
+                textStyle = Theme.montserrat.titleLarge,
                 minHeight = MaterialTheme.dimens.minHeightButton,
                 modifier = Modifier
                     .fillMaxWidth()

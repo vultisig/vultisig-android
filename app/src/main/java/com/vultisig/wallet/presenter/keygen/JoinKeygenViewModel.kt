@@ -1,8 +1,8 @@
 package com.vultisig.wallet.presenter.keygen
 
+import android.annotation.SuppressLint
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -186,6 +186,7 @@ class JoinKeygenViewModel @Inject constructor(
         jobWaitingForKeygenStart?.cancel()
     }
 
+    @SuppressLint("BinaryOperationInTimber")
     private fun checkKeygenStarted(): Boolean {
         try {
             val serverURL = "$_serverAddress/start/$_sessionID"
@@ -195,7 +196,7 @@ class JoinKeygenViewModel @Inject constructor(
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_OK -> {
-                        Log.d("JoinKeygenViewModel", "Keygen started")
+                        Timber.tag("JoinKeygenViewModel").d("Keygen started")
                         response.body?.let {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
@@ -207,15 +208,14 @@ class JoinKeygenViewModel @Inject constructor(
                     }
 
                     else -> {
-                        Log.d(
-                            "JoinKeygenViewModel",
-                            "Failed to check start keygen: Response code: ${response.code}"
-                        )
+                        Timber.tag("JoinKeygenViewModel")
+                            .d("Failed to check start keygen: Response code: ${response.code}")
                     }
                 }
             }
         } catch (e: Exception) {
-            Log.e("JoinKeygenViewModel", "Failed to check keygen start: ${e.stackTraceToString()}")
+            Timber.tag("JoinKeygenViewModel")
+                .e("Failed to check keygen start: ${e.stackTraceToString()}")
         }
         return false
     }
@@ -227,17 +227,13 @@ class MediatorServiceDiscoveryListener(
     private val onServerAddressDiscovered: (String) -> Unit,
 ) : NsdManager.DiscoveryListener, NsdManager.ResolveListener {
     override fun onDiscoveryStarted(regType: String) {
-        Log.d("JoinKeygenViewModel", "Service discovery started, regType: $regType")
+        Timber.tag("JoinKeygenViewModel").d("Service discovery started, regType: $regType")
     }
 
     override fun onServiceFound(service: NsdServiceInfo) {
-        Log.d(
-            "JoinKeygenViewModel", "Service found: ${service.serviceName}"
-        )
+        Timber.tag("JoinKeygenViewModel").d("Service found: %s", service.serviceName)
         if (service.serviceName == serviceName) {
-            Log.d(
-                "JoinKeygenViewModel", "Service found: ${service.serviceName}"
-            )
+            Timber.tag("JoinKeygenViewModel").d("Service found: %s", service.serviceName)
             nsdManager.resolveService(
                 service,
                 MediatorServiceDiscoveryListener(nsdManager, serviceName, onServerAddressDiscovered)
@@ -246,41 +242,32 @@ class MediatorServiceDiscoveryListener(
     }
 
     override fun onServiceLost(service: NsdServiceInfo) {
-        Log.d(
-            "JoinKeygenViewModel", "Service lost: ${service.serviceName}, port:${service.port}"
-        )
+        Timber.tag("JoinKeygenViewModel")
+            .d("Service lost: %s, port: %d", service.serviceName, service.port)
     }
 
     override fun onDiscoveryStopped(serviceType: String) {
-        Log.d("JoinKeygenViewModel", "Discovery stopped: $serviceType")
+        Timber.tag("JoinKeygenViewModel").d("Discovery stopped: $serviceType")
     }
 
     override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
-        Log.d(
-            "JoinKeygenViewModel", "Failed to start discovery: $serviceType, error: $errorCode"
-        )
+        Timber.tag("JoinKeygenViewModel")
+            .d("Failed to start discovery: $serviceType, error: $errorCode")
     }
 
     override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {
-        Log.d(
-            "JoinKeygenViewModel", "Failed to stop discovery: $serviceType, error: $errorCode"
-        )
+        Timber.tag("JoinKeygenViewModel")
+            .d("Failed to stop discovery: $serviceType, error: $errorCode")
     }
 
     override fun onResolveFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-        Log.d(
-            "JoinKeygenViewModel",
-            "Failed to resolve service: ${serviceInfo?.serviceName}, error: $errorCode"
-        )
+        Timber.tag("JoinKeygenViewModel")
+            .d("Failed to resolve service: ${serviceInfo?.serviceName} , error: $errorCode")
     }
 
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
-
-        Log.d(
-            "JoinKeygenViewModel", "Service resolved: ${serviceInfo?.serviceName}, address: ${
-                serviceInfo?.host?.address.toString()
-            }, port:${serviceInfo?.port}"
-        )
+        Timber.tag("JoinKeygenViewModel")
+            .d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.host?.address.toString()} , port: ${serviceInfo?.port}")
         serviceInfo?.let {
             val addr = it.host
             if (addr !is Inet4Address) {

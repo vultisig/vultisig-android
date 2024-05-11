@@ -2,7 +2,6 @@ package com.vultisig.wallet.presenter.keygen
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
@@ -35,14 +34,12 @@ class GeneratingKeyViewModel(
     private val gson: Gson,
     private val vaultDB: VaultDB,
 ) {
-    private var tssInstance: tss.ServiceImpl? = null
+    private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableState<KeygenState> = mutableStateOf(KeygenState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
-    val statusMessage: MutableState<String> = mutableStateOf("")
-    val progress: MutableState<Float> = mutableStateOf(0.0F)
     private var _messagePuller: TssMessagePuller? = null
     suspend fun generateKey() {
         currentState.value = KeygenState.CreatingInstance
@@ -52,12 +49,13 @@ class GeneratingKeyViewModel(
 
         try {
             this.tssInstance?.let {
+                vault.signers = keygenCommittee
                 keygenWithRetry(it, 1)
             }
             currentState.value = KeygenState.Success
             this._messagePuller?.stop()
         } catch (e: Exception) {
-            Log.d("GeneratingKeyViewModel", "generateKey error: ${e.stackTraceToString()}")
+            Timber.tag("GeneratingKeyViewModel").d("generateKey error: %s", e.stackTraceToString())
             errorMessage.value = e.message ?: "Unknown error"
             currentState.value = KeygenState.ERROR
         }
@@ -121,10 +119,8 @@ class GeneratingKeyViewModel(
             }
         } catch (e: Exception) {
             this._messagePuller?.stop()
-            Log.e(
-                "GeneratingKeyViewModel",
-                "attempt $attempt,keygenWithRetry: ${e.stackTraceToString()}"
-            )
+            Timber.tag("GeneratingKeyViewModel")
+                .e("attempt $attempt keygenWithRetry: ${e.stackTraceToString()}")
             if (attempt < 3) {
                 keygenWithRetry(service, attempt + 1)
             } else {
@@ -139,7 +135,7 @@ class GeneratingKeyViewModel(
     }
 
     private suspend fun tssKeygen(
-        service: tss.ServiceImpl,
+        service: ServiceImpl,
         keygenRequest: tss.KeygenRequest,
         tssKeyType: TssKeyType,
     ): tss.KeygenResponse {
@@ -157,7 +153,7 @@ class GeneratingKeyViewModel(
     }
 
     private suspend fun tssReshare(
-        service: tss.ServiceImpl,
+        service: ServiceImpl,
         reshareRequest: tss.ReshareRequest,
         tssKeyType: TssKeyType,
     ): tss.ReshareResponse {

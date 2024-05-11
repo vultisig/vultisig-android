@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -232,15 +231,14 @@ class KeygenFlowViewModel @Inject constructor(
                 .post(payload.toRequestBody("application/json".toMediaType())).build()
             client.newCall(request).execute().use { response ->
                 if (response.code == HttpURLConnection.HTTP_OK) {
-                    Log.d("KeygenDiscoveryViewModel", "startKeygen: Keygen started")
+                    Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
                 } else {
-                    Log.e(
-                        "KeygenDiscoveryViewModel", "startKeygen: Response code: ${response.code}"
-                    )
+                    Timber.tag("KeygenDiscoveryViewModel")
+                        .e("startKeygen: Response code: %s", response.code)
                 }
             }
         } catch (e: Exception) {
-            Log.e("KeygenDiscoveryViewModel", "startKeygen: ${e.stackTraceToString()}")
+            Timber.tag("KeygenDiscoveryViewModel").e("startKeygen: %s", e.stackTraceToString())
         }
     }
 

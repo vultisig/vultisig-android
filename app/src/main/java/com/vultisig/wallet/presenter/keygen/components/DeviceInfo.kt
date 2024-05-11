@@ -29,9 +29,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 
 @Composable
@@ -39,14 +38,14 @@ fun DeviceInfo(
     @DrawableRes icon: Int,
     name: String,
     isSelected: Boolean,
-    onItemSelected: (Boolean) -> Unit
+    onItemSelected: (Boolean) -> Unit,
 ) {
     Column(
         modifier = Modifier
             .width(122.dp)
             .height(165.dp)
             .clip(shape = RoundedCornerShape(size = MaterialTheme.dimens.small1))
-            .background(MaterialTheme.appColor.oxfordBlue600Main)
+            .background(Theme.colors.oxfordBlue600Main)
             .clickable {
                 onItemSelected(!isSelected)
             },
@@ -73,9 +72,9 @@ fun DeviceInfo(
                         onItemSelected(isChecked)
                     },
                     colors = CheckboxDefaults.colors(
-                        uncheckedColor = MaterialTheme.appColor.oxfordBlue600Main,
-                        checkedColor = MaterialTheme.appColor.neutral0,
-                        checkmarkColor = MaterialTheme.appColor.oxfordBlue600Main
+                        uncheckedColor = Theme.colors.oxfordBlue600Main,
+                        checkedColor = Theme.colors.neutral0,
+                        checkmarkColor = Theme.colors.oxfordBlue600Main
                     )
                 )
             }
@@ -97,8 +96,8 @@ fun DeviceInfo(
             text = name,
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
-            color = MaterialTheme.appColor.neutral0,
-            style = MaterialTheme.montserratFamily.titleMedium,
+            color = Theme.colors.neutral0,
+            style = Theme.montserrat.titleMedium,
             textAlign = TextAlign.Center
         )
     }

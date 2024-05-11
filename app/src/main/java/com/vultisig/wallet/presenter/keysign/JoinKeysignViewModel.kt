@@ -1,7 +1,6 @@
 package com.vultisig.wallet.presenter.keysign
 
 import android.net.nsd.NsdManager
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
@@ -11,6 +10,7 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
@@ -38,9 +38,10 @@ enum class JoinKeysignState {
 
 @HiltViewModel
 class JoinKeysignViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val vaultDB: VaultDB,
     private val gson: Gson,
+    private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
     private var _currentVault: Vault = Vault("temp vault")
@@ -71,7 +72,8 @@ class JoinKeysignViewModel @Inject constructor(
             messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault),
             keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
-            gson = gson
+            gson = gson,
+            thorChainApi = thorChainApi,
         )
 
     fun setData() {
@@ -130,19 +132,20 @@ class JoinKeysignViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 val serverUrl = URL("${_serverAddress}/$_sessionID")
-                Log.d("JoinKeysignViewModel", "Joining keysign at $serverUrl")
+                Timber.tag("JoinKeysignViewModel").d("Joining keysign at $serverUrl")
                 val payload = listOf(_localPartyID)
 
                 val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true).build()
                 val request = okhttp3.Request.Builder().method(
-                        "POST", gson.toJson(payload).toRequestBody("application/json".toMediaType())
-                    ).url(serverUrl).build()
-                val resp = client.newCall(request).execute().use {
-                    Log.d("JoinKeysignViewModel", "Join keysign: Response code: ${it.code}")
+                    "POST", gson.toJson(payload).toRequestBody("application/json".toMediaType())
+                ).url(serverUrl).build()
+                client.newCall(request).execute().use {
+                    Timber.tag("JoinKeysignViewModel").d("Join keysign: Response code: %s", it.code)
                 }
                 currentState.value = JoinKeysignState.WaitingForKeysignStart
             } catch (e: Exception) {
-                Log.e("JoinKeysignViewModel", "Failed to join keysign: ${e.stackTraceToString()}")
+                Timber.tag("JoinKeysignViewModel")
+                    .e("Failed to join keysign: %s", e.stackTraceToString())
                 errorMessage.value = "Failed to join keysign"
                 currentState.value = JoinKeysignState.FailedToStart
             }
@@ -171,7 +174,7 @@ class JoinKeysignViewModel @Inject constructor(
     private fun checkKeygenStarted(): Boolean {
         try {
             val serverURL = "$_serverAddress/start/$_sessionID"
-            Log.d("JoinKeysignViewModel", "Checking keysign start at $serverURL")
+            Timber.tag("JoinKeysignViewModel").d("Checking keysign start at %s", serverURL)
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
             val request = okhttp3.Request.Builder().url(serverURL).get().build()
             client.newCall(request).execute().use { response ->

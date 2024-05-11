@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keygen
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -11,6 +10,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -53,27 +53,26 @@ class ParticipantDiscovery(
             when (val responseCode = conn.responseCode) {
                 HttpStatus.OK -> {
                     val result = conn.inputStream.bufferedReader().use { it.readText() }
-                    Log.d("ParticipantDiscovery", "Response code: $responseCode, response: $result")
+                    Timber.tag("ParticipantDiscovery")
+                        .d("Response code: $responseCode, response: $result")
                     val listType = object : TypeToken<List<String>>() {}.type
                     return gson.fromJson(result, listType)
                 }
 
                 HttpStatus.NOT_FOUND -> {
-                    Log.d(
-                        "ParticipantDiscovery", "Request failed with response code: $responseCode"
-                    )
+                    Timber.tag("ParticipantDiscovery")
+                        .d("Request failed with response code: $responseCode")
                     return emptyList()
                 }
 
                 else -> {
-                    Log.d(
-                        "ParticipantDiscovery", "Request failed with response code: $responseCode"
-                    )
+                    Timber.tag("ParticipantDiscovery")
+                        .d("Request failed with response code: $responseCode")
                     return emptyList()
                 }
             }
         } catch (e: Exception) {
-            Log.e("ParticipantDiscovery", "Error: ${e.message}")
+            Timber.tag("ParticipantDiscovery").e("Error: %s", e.message)
             return emptyList()
         }
     }

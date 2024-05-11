@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -13,6 +12,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
@@ -42,6 +42,7 @@ enum class KeysignFlowState {
 class KeysignFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
+    private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -74,7 +75,8 @@ class KeysignFlowViewModel @Inject constructor(
             messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!),
             keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
-            gson = gson
+            gson = gson,
+            thorChainApi = thorChainApi,
         )
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
@@ -128,7 +130,7 @@ class KeysignFlowViewModel @Inject constructor(
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == MediatorService.SERVICE_ACTION) {
-                Log.d("KeysignFlowViewModel", "onReceive: Mediator service started")
+                Timber.tag("KeysignFlowViewModel").d("onReceive: Mediator service started")
                 if (_currentVault == null) {
                     errorMessage.value = "Vault is not set"
                     moveToState(KeysignFlowState.ERROR)
@@ -162,7 +164,7 @@ class KeysignFlowViewModel @Inject constructor(
         val intent = Intent(context, MediatorService::class.java)
         intent.putExtra("serverName", _serviceName)
         context.startService(intent)
-        Log.d("KeysignFlowViewModel", "startMediatorService: Mediator service started")
+        Timber.tag("KeysignFlowViewModel").d("startMediatorService: Mediator service started")
     }
 
     private fun startSession(

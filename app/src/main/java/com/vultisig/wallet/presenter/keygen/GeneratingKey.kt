@@ -36,9 +36,8 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
 
 @Composable
 fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyViewModel) {
@@ -48,11 +47,11 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
         // kick it off to generate key
         viewModel.generateKey()
     }
-    val textColor = MaterialTheme.appColor.neutral0
+    val textColor = Theme.colors.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -124,13 +123,13 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 Text(
                     text = "Keygen Failed",
                     color = textColor,
-                    style = MaterialTheme.menloFamily.headlineSmall
+                    style = Theme.menlo.headlineSmall
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
                 Text(
                     text = viewModel.errorMessage.value,
                     color = textColor,
-                    style = MaterialTheme.menloFamily.bodyMedium
+                    style = Theme.menlo.bodyMedium
                 )
             }
         }
@@ -138,14 +137,14 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
         Icon(
             painter = painterResource(id = R.drawable.wifi),
             contentDescription = null,
-            tint = MaterialTheme.appColor.neutral0
+            tint = Theme.colors.neutral0
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
             text = "Keep devices on the same WiFi Network with vultisig open.",
             color = textColor,
-            style = MaterialTheme.menloFamily.headlineSmall.copy(
+            style = Theme.menlo.headlineSmall.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
             ),
         )
@@ -180,7 +179,7 @@ fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
         Text(
             text = statusText,
             modifier = Modifier.align(Alignment.Center),
-            color = MaterialTheme.appColor.neutral0
+            color = Theme.colors.neutral0
         )
         Column(
             verticalArrangement = Arrangement.Center,
@@ -190,8 +189,8 @@ fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
             CircularProgressIndicator(
                 progress = { progress },
                 strokeWidth = 16.dp,
-                color = MaterialTheme.appColor.turquoise600Main,
-                trackColor = MaterialTheme.appColor.oxfordBlue600Main,
+                color = Theme.colors.turquoise600Main,
+                trackColor = Theme.colors.oxfordBlue600Main,
                 modifier = modifier
                     .padding(MaterialTheme.dimens.marginMedium)
                     .fillMaxWidth()
