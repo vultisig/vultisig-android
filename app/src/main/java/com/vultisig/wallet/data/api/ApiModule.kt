@@ -13,13 +13,19 @@ internal interface ApiModule {
     @Binds
     @Singleton
     fun bindCoinGeckoApi(
-        impl: CoinGeckoApiImpl
+        impl: CoinGeckoApiImpl,
     ): CoinGeckoApi
 
     @Binds
     @Singleton
     fun bindThorChainApi(
-        impl: ThorChainApiImpl
+        impl: ThorChainApiImpl,
     ): ThorChainApi
+
+    @Binds
+    @Singleton
+    fun bindBlockChairApi(
+        impl: BlockChairApiImp,
+    ): BlockChairApi
 
 }
