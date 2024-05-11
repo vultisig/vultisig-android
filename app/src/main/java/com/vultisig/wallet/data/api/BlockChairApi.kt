@@ -11,11 +11,12 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
+import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface BlockChairApi {
-    suspend fun getAddressInfo(coin: Coin): BlockchairInfo
+    suspend fun getAddressInfo(coin: Coin): BlockchairInfo?
     suspend fun getBlockchairStats(coin: Coin): BigInteger
 }
 
@@ -41,24 +42,29 @@ internal class BlockChairApiImp @Inject constructor(
 
     }
 
-    override suspend fun getAddressInfo(coin: Coin): BlockchairInfo {
-        cache.getIfPresent(coin.address)?.let {
-            return it
-        }
-        val response =
-            httpClient.get("https://api.blockchair.com/${getChainName(coin)}/dashboards/address/${coin.address}") {
-                header("Content-Type", "application/json")
+    override suspend fun getAddressInfo(coin: Coin): BlockchairInfo? {
+        try {
+            cache.getIfPresent(coin.address)?.let {
+                return it
             }
-        val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-        val data = rootObject.getAsJsonObject("data").getAsJsonObject().get("address")
-        val blockchairInfo = gson.fromJson(data, BlockchairInfo::class.java)
-        cache.put(coin.address, blockchairInfo)
-        return blockchairInfo
+            val response =
+                httpClient.get("https://api.voltix.org/blockchair/${getChainName(coin)}/dashboards/address/${coin.address}") {
+                    header("Content-Type", "application/json")
+                }
+            val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
+            val data = rootObject.getAsJsonObject("data").getAsJsonObject().get(coin.address)
+            val blockchairInfo = gson.fromJson(data, BlockchairInfo::class.java)
+            cache.put(coin.address, blockchairInfo)
+            return blockchairInfo
+        } catch (e: Exception) {
+            Timber.e("fail to get address info from blockchair: ${e.message}")
+        }
+        return null
     }
 
     override suspend fun getBlockchairStats(coin: Coin): BigInteger {
         val response =
-            httpClient.get("https://api.blockchair.com/${getChainName(coin)}/stats") {
+            httpClient.get("https://api.voltix.org/blockchair/${getChainName(coin)}/stats") {
                 header("Content-Type", "application/json")
             }
         val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)

@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.models
 import com.google.gson.annotations.SerializedName
 
 data class BlockchairAddress(
-    val balance: ULong,
+    val balance: String,
     @SerializedName("unspent_output_count") val unspentOutputCount: Int,
 )
 
