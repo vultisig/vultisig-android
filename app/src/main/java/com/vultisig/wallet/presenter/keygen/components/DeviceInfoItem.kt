@@ -9,24 +9,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
 
 @Composable
 fun DeviceInfoItem(info: String) {
-    val textColor = MaterialTheme.appColor.neutral0
+    val textColor = Theme.colors.neutral0
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 10.dp)
-            .background(MaterialTheme.appColor.oxfordBlue600Main)
+            .background(Theme.colors.oxfordBlue600Main)
             .padding(
                 horizontal = MaterialTheme.dimens.small2, vertical = MaterialTheme.dimens.medium1
             )
     ) {
         Text(
-            text = info, color = textColor, style = MaterialTheme.menloFamily.bodyMedium
+            text = info, color = textColor, style = Theme.menlo.bodyMedium
         )
     }
 }

@@ -2,7 +2,6 @@ package com.vultisig.wallet.presenter.keysign
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
@@ -10,11 +9,11 @@ import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.common.toHexBytes
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.service.THORChainService
 import com.vultisig.wallet.tss.LocalStateAccessor
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
@@ -34,7 +33,7 @@ enum class KeysignState {
     ERROR
 }
 
-class KeysignViewModel(
+internal class KeysignViewModel(
     private val vault: Vault,
     private val keysignCommittee: List<String>,
     private val serverAddress: String,
@@ -44,8 +43,9 @@ class KeysignViewModel(
     private val keyType: TssKeyType,
     private val keysignPayload: KeysignPayload,
     private val gson: Gson,
+    private val thorChainApi: ThorChainApi,
 ) {
-    private var tssInstance: tss.ServiceImpl? = null
+    private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
@@ -118,7 +118,8 @@ class KeysignViewModel(
             Thread.sleep(1000) // backoff for 1 second
         } catch (e: Exception) {
             this._messagePuller?.stop()
-            Log.d("KeysignViewModel", "signMessageWithRetry error: ${e.stackTraceToString()}")
+            Timber.tag("KeysignViewModel")
+                .d("signMessageWithRetry error: %s", e.stackTraceToString())
             val resp = keysignVerify.checkKeysignComplete(message)
             resp?.let {
                 this.signatures[message] = it
@@ -131,11 +132,11 @@ class KeysignViewModel(
         }
     }
 
-    private fun broadcastTransaction() {
+    private suspend fun broadcastTransaction() {
         val signedTransaction = getSignedTransaction()
         when (keysignPayload.coin.chain) {
             Chain.thorChain -> {
-                THORChainService(gson).broadcastTransaction(signedTransaction.rawTransaction)
+                this.thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
                     ?.let {
                         txHash.value = it
                         Timber.d("transaction hash:$it")
@@ -150,14 +151,14 @@ class KeysignViewModel(
 
     private fun getSignedTransaction(): SignedTransactionResult {
         if (keysignPayload.swapPayload != null) {
-            // TODO deal with swap
+            throw Exception("Not implemented")
         }
         if (keysignPayload.approvePayload != null) {
-            // TODO: deal with EVM ERC20 approval
+            throw Exception("Not implemented")
         }
         when (keysignPayload.coin.chain) {
             Chain.bitcoin, Chain.dash, Chain.bitcoinCash, Chain.dogecoin, Chain.litecoin -> {
-                val utxo = utxoHelper.getHelper(vault, keysignPayload.coin)
+                val utxo = utxoHelper.getHelper(vault, keysignPayload.coin.coinType)
                 return utxo.getSignedTransaction(keysignPayload, signatures)
             }
 

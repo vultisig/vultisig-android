@@ -1,27 +1,19 @@
 package com.vultisig.wallet.models
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.tss.TssKeyType
 import wallet.core.jni.CoinType
 
 enum class Chain(val raw: String) {
-    thorChain("THORChain"),
-    solana("Solana"),
-    ethereum("Ethereum"),
-    avalanche("Avalanche"),
-    base("Base"),
-    blast("Blast"),
-    arbitrum("Arbitrum"),
-    polygon("Polygon"),
-    optimism("Optimism"),
-    bscChain("BSC"),
-    bitcoin("Bitcoin"),
-    bitcoinCash("Bitcoin Cash"),
-    litecoin("Litecoin"),
-    dogecoin("Dogecoin"),
-    dash("Dash"),
-    gaiaChain("Gaia Chain"),
-    kujira("Kujira"),
-    mayaChain("Maya Chain"),
+    thorChain("THORChain"), solana("Solana"), ethereum("Ethereum"), avalanche("Avalanche"), base("Base"), blast(
+        "Blast"
+    ),
+    arbitrum("Arbitrum"), polygon("Polygon"), optimism("Optimism"), bscChain("BSC"), bitcoin("Bitcoin"), bitcoinCash(
+        "Bitcoin Cash"
+    ),
+    litecoin("Litecoin"), dogecoin("Dogecoin"), dash("Dash"), gaiaChain("Gaia Chain"), kujira("Kujira"), mayaChain(
+        "Maya Chain"
+    ),
     cronosChain("Cronos Chain"),
 }
 
@@ -47,7 +39,11 @@ val Chain.coinType: CoinType
         Chain.kujira -> CoinType.KUJIRA
         Chain.cronosChain -> CoinType.CRONOSCHAIN
     }
-
+val Chain.TssKeysignType: TssKeyType
+    get() = when (this) {
+        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash, Chain.thorChain, Chain.mayaChain, Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.gaiaChain, Chain.kujira, Chain.cronosChain -> TssKeyType.ECDSA
+        Chain.solana -> TssKeyType.EDDSA
+    }
 val Chain.Ticker: String
     get() = when (this) {
         Chain.thorChain -> "RUNE"

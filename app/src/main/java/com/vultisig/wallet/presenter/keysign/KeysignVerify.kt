@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keysign
 
-import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -57,17 +56,19 @@ class KeysignVerify(
                             }
 
                             else -> {
-                                Log.d(
-                                    "KeysignVerify",
-                                    "checkKeysignComplete: Failed to check keysign complete: Response code: ${response.code}"
-                                )
+                                Timber.tag("KeysignVerify")
+                                    .d(
+                                        "checkKeysignComplete: Failed to check keysign complete: Response code: %s",
+                                        response.code
+                                    )
                                 null
                             }
                         }
                     }
                 return@withContext result
             } catch (e: Exception) {
-                Log.d("KeysignVerify", "checkKeysignComplete error: ${e.stackTraceToString()}")
+                Timber.tag("KeysignVerify")
+                    .d("checkKeysignComplete error: %s", e.stackTraceToString())
             }
             return@withContext null
         }

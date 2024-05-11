@@ -24,31 +24,32 @@ import androidx.navigation.compose.rememberNavController
 import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.data.api.ThorChainApiImpl
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.tss.TssKeyType
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
+import io.ktor.client.HttpClient
 import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.UUID
 
 @Composable
-fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
+internal fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
     KeepScreenOn()
     val context: Context = LocalContext.current.applicationContext
     LaunchedEffect(key1 = Unit) {
         // kick it off to generate key
         viewModel.startKeysign()
     }
-    val textColor = MaterialTheme.appColor.neutral0
+    val textColor = Theme.colors.neutral0
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -66,8 +67,8 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
                 Text(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                     text = "PREPARING VAULT...",
-                    style = MaterialTheme.menloFamily.titleLarge,
-                    color = MaterialTheme.appColor.neutral0,
+                    style = Theme.menlo.titleLarge,
+                    color = Theme.colors.neutral0,
                     textAlign = TextAlign.Center
                 )
             }
@@ -76,8 +77,8 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
                 Text(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                     text = "Signing with ECDSA...",
-                    style = MaterialTheme.menloFamily.titleLarge,
-                    color = MaterialTheme.appColor.neutral0,
+                    style = Theme.menlo.titleLarge,
+                    color = Theme.colors.neutral0,
                     textAlign = TextAlign.Center
                 )
             }
@@ -86,8 +87,8 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
                 Text(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                     text = "Signing with EdDSA...",
-                    style = MaterialTheme.menloFamily.titleLarge,
-                    color = MaterialTheme.appColor.neutral0,
+                    style = Theme.menlo.titleLarge,
+                    color = Theme.colors.neutral0,
                     textAlign = TextAlign.Center
                 )
             }
@@ -96,8 +97,8 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
                 Text(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                     text = "Keysign Finished!",
-                    style = MaterialTheme.menloFamily.titleLarge,
-                    color = MaterialTheme.appColor.neutral0,
+                    style = Theme.menlo.titleLarge,
+                    color = Theme.colors.neutral0,
                     textAlign = TextAlign.Center
                 )
             }
@@ -109,8 +110,8 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
                 Text(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                     text = "Error! Please try again. $viewModel.errorMessage.value",
-                    style = MaterialTheme.menloFamily.titleLarge,
-                    color = MaterialTheme.appColor.neutral0,
+                    style = Theme.menlo.titleLarge,
+                    color = Theme.colors.neutral0,
                     textAlign = TextAlign.Center
                 )
             }
@@ -120,14 +121,14 @@ fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
         Icon(
             painter = painterResource(id = R.drawable.wifi),
             contentDescription = null,
-            tint = MaterialTheme.appColor.neutral0
+            tint = Theme.colors.neutral0
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
             text = "Keep devices on the same WiFi Network with vultisig open.",
             color = textColor,
-            style = MaterialTheme.menloFamily.headlineSmall.copy(
+            style = Theme.menlo.headlineSmall.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
             ),
         )
@@ -163,7 +164,9 @@ fun PreviewKeysign() {
                 ),
                 utxos = emptyList(),
                 vaultPublicKeyECDSA = ""
-            ), gson = Gson()
+            ), gson = Gson(), thorChainApi = ThorChainApiImpl(
+                gson = Gson(), httpClient = HttpClient()
+            )
 
         )
     )

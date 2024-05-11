@@ -2,12 +2,15 @@ package com.vultisig.wallet.presenter.keygen
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
+import com.vultisig.wallet.chains.THORCHainHelper
+import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.mediator.MediatorService
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.tss.LocalStateAccessor
@@ -19,6 +22,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
+import wallet.core.jni.CoinType
 
 enum class KeygenState {
     CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
@@ -35,15 +39,17 @@ class GeneratingKeyViewModel(
     private val gson: Gson,
     private val vaultDB: VaultDB,
 ) {
-    private var tssInstance: tss.ServiceImpl? = null
+    private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableState<KeygenState> = mutableStateOf(KeygenState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
-    val statusMessage: MutableState<String> = mutableStateOf("")
-    val progress: MutableState<Float> = mutableStateOf(0.0F)
     private var _messagePuller: TssMessagePuller? = null
+
+    private val defaultChains =
+        listOf(Chain.thorChain, Chain.bitcoin, Chain.bscChain, Chain.ethereum, Chain.solana)
+
     suspend fun generateKey() {
         currentState.value = KeygenState.CreatingInstance
         withContext(Dispatchers.IO) {
@@ -52,12 +58,13 @@ class GeneratingKeyViewModel(
 
         try {
             this.tssInstance?.let {
+                vault.signers = keygenCommittee
                 keygenWithRetry(it, 1)
             }
             currentState.value = KeygenState.Success
             this._messagePuller?.stop()
         } catch (e: Exception) {
-            Log.d("GeneratingKeyViewModel", "generateKey error: ${e.stackTraceToString()}")
+            Timber.tag("GeneratingKeyViewModel").d("generateKey error: %s", e.stackTraceToString())
             errorMessage.value = e.message ?: "Unknown error"
             currentState.value = KeygenState.ERROR
         }
@@ -121,10 +128,8 @@ class GeneratingKeyViewModel(
             }
         } catch (e: Exception) {
             this._messagePuller?.stop()
-            Log.e(
-                "GeneratingKeyViewModel",
-                "attempt $attempt,keygenWithRetry: ${e.stackTraceToString()}"
-            )
+            Timber.tag("GeneratingKeyViewModel")
+                .e("attempt $attempt keygenWithRetry: ${e.stackTraceToString()}")
             if (attempt < 3) {
                 keygenWithRetry(service, attempt + 1)
             } else {
@@ -133,13 +138,13 @@ class GeneratingKeyViewModel(
         }
     }
 
-    private suspend fun createInstance() {
+    private fun createInstance() {
         // this will take a while
         this.tssInstance = Tss.newService(this.tssMessenger, this.localStateAccessor, true)
     }
 
     private suspend fun tssKeygen(
-        service: tss.ServiceImpl,
+        service: ServiceImpl,
         keygenRequest: tss.KeygenRequest,
         tssKeyType: TssKeyType,
     ): tss.KeygenResponse {
@@ -157,7 +162,7 @@ class GeneratingKeyViewModel(
     }
 
     private suspend fun tssReshare(
-        service: tss.ServiceImpl,
+        service: ServiceImpl,
         reshareRequest: tss.ReshareRequest,
         tssKeyType: TssKeyType,
     ): tss.ReshareResponse {
@@ -175,7 +180,41 @@ class GeneratingKeyViewModel(
     }
 
     fun saveVault() {
-        vaultDB.upsert(this.vault)
+        // save the vault
+        val coins: MutableList<Coin> = mutableListOf()
+        defaultChains.forEach { chain ->
+            vault.apply { }
+            when (chain) {
+                Chain.thorChain -> {
+                    THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()?.let { coin ->
+                        coins.add(coin)
+                    }
+                }
+
+                Chain.bitcoin -> {
+                    utxoHelper.getHelper(vault, CoinType.BITCOIN).getCoin()?.let { coin ->
+                        coins.add(coin)
+                    }
+                }
+
+                Chain.bscChain -> {
+                    // TODO: add it
+                }
+
+                Chain.ethereum -> {
+                    // TODO: add it
+                }
+
+                Chain.solana -> {
+                    // TODO: add it
+                }
+
+                else -> {
+                    //do nothing
+                }
+            }
+        }
+        vaultDB.upsert(this.vault.copy(coins = coins))
         Timber.d("saveVault: success,name:${vault.name}")
     }
 

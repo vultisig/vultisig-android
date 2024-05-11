@@ -25,16 +25,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
 
 @Composable
 fun JoinKeygenView(navController: NavHostController, vault: Vault) {
@@ -112,7 +110,7 @@ fun DiscoveryingSessionID(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -130,11 +128,11 @@ fun DiscoveryingSessionID(navController: NavHostController) {
         ) {
             Text(
                 text = "Discovering Session ID",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
             CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
+                color = Theme.colors.neutral0,
                 modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
             )
         }
@@ -153,7 +151,7 @@ fun DiscoverService(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -171,11 +169,11 @@ fun DiscoverService(navController: NavHostController) {
         ) {
             Text(
                 text = "Discovering Service",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
             CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
+                color = Theme.colors.neutral0,
                 modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
             )
         }
@@ -187,7 +185,7 @@ fun JoiningKeygen(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -205,11 +203,11 @@ fun JoiningKeygen(navController: NavHostController) {
         ) {
             Text(
                 text = "Joining Keygen",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
             CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
+                color = Theme.colors.neutral0,
                 modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
             )
         }
@@ -221,7 +219,7 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -239,11 +237,11 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
         ) {
             Text(
                 text = "Waiting for Keygen to start",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
             CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
+                color = Theme.colors.neutral0,
                 modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
             )
         }
@@ -255,7 +253,7 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -273,8 +271,8 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
         ) {
             Text(
                 text = "Failed to start,error: $errorMessage",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
         }
     }

@@ -39,10 +39,8 @@ import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun KeygenPeerDiscovery(
@@ -52,7 +50,6 @@ fun KeygenPeerDiscovery(
 ) {
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
-    val keygenPayload = viewModel.keygenPayloadState
     val context = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
         // start mediator server
@@ -63,11 +60,11 @@ fun KeygenPeerDiscovery(
             viewModel.stopParticipantDiscovery()
         }
     }
-    val textColor = MaterialTheme.appColor.neutral0
+    val textColor = Theme.colors.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -82,18 +79,22 @@ fun KeygenPeerDiscovery(
             Text(
                 text = "${Utils.getThreshold(selectionState.count())} of ${selectionState.count()} Vault",
                 color = textColor,
-                style = MaterialTheme.montserratFamily.bodyLarge
+                style = Theme.montserrat.bodyLarge
             )
         }
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         Text(
             text = "Pair with other devices:",
             color = textColor,
-            style = MaterialTheme.montserratFamily.bodyMedium
+            style = Theme.montserrat.bodyMedium
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         if (viewModel.keygenPayloadState.value.isNotEmpty()) {
-            QRCodeKeyGenImage(viewModel.keygenPayloadState.value, (LocalConfiguration.current.screenWidthDp/2).toInt().dp,(LocalConfiguration.current.screenWidthDp/2).toInt().dp)
+            QRCodeKeyGenImage(
+                viewModel.keygenPayloadState.value,
+                (LocalConfiguration.current.screenWidthDp / 2).dp,
+                (LocalConfiguration.current.screenWidthDp / 2).dp
+            )
         }
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
@@ -124,7 +125,7 @@ fun KeygenPeerDiscovery(
             Text(
                 text = "Waiting for other devices to connect...",
                 color = textColor,
-                style = MaterialTheme.montserratFamily.bodyMedium
+                style = Theme.montserrat.bodyMedium
             )
         }
 
@@ -136,7 +137,7 @@ fun KeygenPeerDiscovery(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
             text = "Keep all devices on same WiFi with vultisig App open. (May not work on hotel/airport WiFi)",
             color = textColor,
-            style = MaterialTheme.menloFamily.headlineSmall.copy(
+            style = Theme.menlo.headlineSmall.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
             ),
         )
@@ -144,10 +145,10 @@ fun KeygenPeerDiscovery(
 
         MultiColorButton(
             text = "Continue",
-            backgroundColor = MaterialTheme.appColor.turquoise600Main,
-            textColor = MaterialTheme.appColor.oxfordBlue600Main,
+            backgroundColor = Theme.colors.turquoise600Main,
+            textColor = Theme.colors.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
-            textStyle = MaterialTheme.montserratFamily.titleLarge,
+            textStyle = Theme.montserrat.titleLarge,
             disabled = selectionState.size < 2,
             modifier = Modifier
                 .fillMaxWidth()

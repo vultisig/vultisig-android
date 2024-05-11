@@ -25,10 +25,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun KeyGenErrorScreen(
@@ -37,7 +35,7 @@ fun KeyGenErrorScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
     ) {
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
@@ -66,8 +64,8 @@ fun KeyGenErrorScreen(
             Text(
                 modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                 text = stringResource(R.string.signing_error_please_try_again),
-                style = MaterialTheme.menloFamily.titleLarge,
-                color = MaterialTheme.appColor.neutral0,
+                style = Theme.menlo.titleLarge,
+                color = Theme.colors.neutral0,
                 textAlign = TextAlign.Center
             )
         }
@@ -81,18 +79,18 @@ fun KeyGenErrorScreen(
                     .padding(top = 150.dp)
                     .align(Alignment.CenterHorizontally),
                 text = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
-                style = MaterialTheme.menloFamily.labelMedium,
-                color = MaterialTheme.appColor.neutral0,
+                style = Theme.menlo.labelMedium,
+                color = Theme.colors.neutral0,
                 textAlign = TextAlign.Center
             )
 
             MultiColorButton(
                 text = stringResource(R.string.try_again),
                 minHeight = MaterialTheme.dimens.minHeightButton,
-                backgroundColor = MaterialTheme.appColor.turquoise800,
-                textColor = MaterialTheme.appColor.oxfordBlue800,
-                iconColor = MaterialTheme.appColor.turquoise800,
-                textStyle = MaterialTheme.montserratFamily.titleLarge,
+                backgroundColor = Theme.colors.turquoise800,
+                textColor = Theme.colors.oxfordBlue800,
+                iconColor = Theme.colors.turquoise800,
+                textStyle = Theme.montserrat.titleLarge,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(

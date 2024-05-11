@@ -33,10 +33,8 @@ import com.google.zxing.integration.android.IntentIntegrator
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 import kotlinx.coroutines.launch
 
 @Composable
@@ -114,7 +112,7 @@ fun KeysignDiscoveryingSessionID(navController: NavHostController) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -132,11 +130,11 @@ fun KeysignDiscoveryingSessionID(navController: NavHostController) {
         ) {
             Text(
                 text = "Discovering Session ID",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
             CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
+                color = Theme.colors.neutral0,
                 modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
             )
         }
@@ -155,7 +153,7 @@ fun KeysignDiscoverService(navController: NavHostController) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -173,11 +171,11 @@ fun KeysignDiscoverService(navController: NavHostController) {
         ) {
             Text(
                 text = stringResource(id = R.string.joinkeysign_discovery_service),
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
             CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
+                color = Theme.colors.neutral0,
                 modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
             )
         }
@@ -185,12 +183,12 @@ fun KeysignDiscoverService(navController: NavHostController) {
 }
 
 @Composable
-fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewModel) {
+internal fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewModel) {
     val coroutineScope = rememberCoroutineScope()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -212,14 +210,14 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
             ) {
                 Text(
                     text = stringResource(id = R.string.joinkeysign_from),
-                    color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.menloFamily.bodyMedium,
+                    color = Theme.colors.neutral0,
+                    style = Theme.menlo.bodyMedium,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Text(
                     text = viewModel.keysignPayload?.coin?.address ?: "",
-                    color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.montserratFamily.body1,
+                    color = Theme.colors.neutral0,
+                    style = Theme.montserrat.body1,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }
@@ -233,14 +231,14 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
             ) {
                 Text(
                     text = stringResource(id = R.string.joinkeysign_to),
-                    color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.menloFamily.bodyMedium,
+                    color = Theme.colors.neutral0,
+                    style = Theme.menlo.bodyMedium,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Text(
                     text = viewModel.keysignPayload?.toAddress ?: "",
-                    color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.montserratFamily.body1,
+                    color = Theme.colors.neutral0,
+                    style = Theme.montserrat.body1,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }
@@ -254,14 +252,14 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
             ) {
                 Text(
                     text = stringResource(id = R.string.joinkeysign_amount),
-                    color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.menloFamily.bodyMedium,
+                    color = Theme.colors.neutral0,
+                    style = Theme.menlo.bodyMedium,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Text(
-                    text = viewModel.keysignPayload?.toAmount.toString() ?: "0",
-                    color = MaterialTheme.appColor.neutral0,
-                    style = MaterialTheme.montserratFamily.body1,
+                    text = viewModel.keysignPayload?.toAmount.toString(),
+                    color = Theme.colors.neutral0,
+                    style = Theme.montserrat.body1,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
             }
@@ -269,10 +267,10 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
             MultiColorButton(
                 text = stringResource(id = R.string.joinkeysign),
                 minHeight = MaterialTheme.dimens.minHeightButton,
-                backgroundColor = MaterialTheme.appColor.turquoise800,
-                textColor = MaterialTheme.appColor.oxfordBlue800,
-                iconColor = MaterialTheme.appColor.turquoise800,
-                textStyle = MaterialTheme.montserratFamily.titleLarge,
+                backgroundColor = Theme.colors.turquoise800,
+                textColor = Theme.colors.oxfordBlue800,
+                iconColor = Theme.colors.turquoise800,
+                textStyle = Theme.montserrat.titleLarge,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -295,7 +293,7 @@ fun WaitingForKeysignToStart(navController: NavHostController) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -313,11 +311,11 @@ fun WaitingForKeysignToStart(navController: NavHostController) {
         ) {
             Text(
                 text = stringResource(id = R.string.joinkeysign_waiting_keysign_start),
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
             CircularProgressIndicator(
-                color = MaterialTheme.appColor.neutral0,
+                color = Theme.colors.neutral0,
                 modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
             )
         }
@@ -329,7 +327,7 @@ fun KeysignFailedToStart(navController: NavHostController, errorMessage: String)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -347,8 +345,8 @@ fun KeysignFailedToStart(navController: NavHostController, errorMessage: String)
         ) {
             Text(
                 text = "${stringResource(id = R.string.joinkeysign_fail_to_start)}$errorMessage",
-                color = MaterialTheme.appColor.neutral0,
-                style = MaterialTheme.menloFamily.bodyMedium
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.bodyMedium
             )
         }
     }

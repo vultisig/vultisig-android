@@ -18,22 +18,20 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfoItem
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel) {
-    val textColor = MaterialTheme.appColor.neutral0
+    val textColor = Theme.colors.neutral0
     val items = viewModel.selection.value!!
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
@@ -50,14 +48,14 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
         Text(
             text = "${Utils.getThreshold(items.count())} of ${items.count()} Vault",
             color = textColor,
-            style = MaterialTheme.montserratFamily.bodyLarge
+            style = Theme.montserrat.bodyLarge
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         Text(
             text = "With these devices",
             color = textColor,
-            style = MaterialTheme.montserratFamily.bodyMedium
+            style = Theme.montserrat.bodyMedium
         )
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
@@ -81,14 +79,14 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
 
         Text(
-            style = MaterialTheme.menloFamily.bodyMedium,
+            style = Theme.menlo.bodyMedium,
             text = "You can only send transactions with these ${Utils.getThreshold(items.count())} devices present.",
             color = textColor
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
 
         Text(
-            style = MaterialTheme.menloFamily.bodyMedium,
+            style = Theme.menlo.bodyMedium,
             text = if (items.count() < 3) "You do not have a 3rd backup device - so you should backup one vault share securely later." else "Your backup device is not needed unless you lose one of your main devices.",
             color = textColor
         )
@@ -98,10 +96,10 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
 
         MultiColorButton(
             text = "Continue",
-            backgroundColor = MaterialTheme.appColor.turquoise600Main,
-            textColor = MaterialTheme.appColor.oxfordBlue600Main,
+            backgroundColor = Theme.colors.turquoise600Main,
+            textColor = Theme.colors.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
-            textStyle = MaterialTheme.montserratFamily.titleLarge,
+            textStyle = Theme.montserrat.titleLarge,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(

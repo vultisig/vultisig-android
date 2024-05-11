@@ -34,13 +34,11 @@ import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.presenter.keygen.NetworkPrompts
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
-fun KeysignPeerDiscovery(
+internal fun KeysignPeerDiscovery(
     navController: NavController,
     vault: Vault,
     keysignPayload: KeysignPayload,
@@ -59,7 +57,7 @@ fun KeysignPeerDiscovery(
         }
     }
 
-    val textColor = MaterialTheme.appColor.neutral0
+    val textColor = Theme.colors.neutral0
     Scaffold(
         topBar = {
             TopBar(
@@ -71,10 +69,10 @@ fun KeysignPeerDiscovery(
         bottomBar = {
             MultiColorButton(
                 text = "Start",
-                backgroundColor = MaterialTheme.appColor.turquoise600Main,
-                textColor = MaterialTheme.appColor.oxfordBlue600Main,
+                backgroundColor = Theme.colors.turquoise600Main,
+                textColor = Theme.colors.oxfordBlue600Main,
                 minHeight = MaterialTheme.dimens.minHeightButton,
-                textStyle = MaterialTheme.montserratFamily.titleLarge,
+                textStyle = Theme.montserrat.titleLarge,
                 disabled = selectionState.size < 2,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -88,25 +86,25 @@ fun KeysignPeerDiscovery(
                 viewModel.moveToState(KeysignFlowState.KEYSIGN)
             }
         }
-    ) {
+    ) { it ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .background(MaterialTheme.appColor.oxfordBlue800)
+                .background(Theme.colors.oxfordBlue800)
                 .padding(it)
         ) {
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
             Text(
                 text = "Pair with other devices:",
                 color = textColor,
-                style = MaterialTheme.montserratFamily.bodyMedium
+                style = Theme.montserrat.bodyMedium
             )
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
             if (viewModel.keysignMessage.value.isNotEmpty()) {
                 QRCodeKeyGenImage(viewModel.keysignMessage.value)
             }
-            NetworkPrompts(networkPromptOption = viewModel.networkOption.value) {
-                viewModel.changeNetworkPromptOption(it, context)
+            NetworkPrompts(networkPromptOption = viewModel.networkOption.value) { networOption ->
+                viewModel.changeNetworkPromptOption(networOption, context)
             }
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
@@ -136,7 +134,7 @@ fun KeysignPeerDiscovery(
                 Text(
                     text = "Waiting for other devices to connect...",
                     color = textColor,
-                    style = MaterialTheme.montserratFamily.bodyMedium
+                    style = Theme.montserrat.bodyMedium
                 )
             }
 
@@ -148,7 +146,7 @@ fun KeysignPeerDiscovery(
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
                 text = "Keep all devices on same WiFi with vultisig App open. (May not work on hotel/airport WiFi)",
                 color = textColor,
-                style = MaterialTheme.menloFamily.headlineSmall.copy(
+                style = Theme.menlo.headlineSmall.copy(
                     textAlign = TextAlign.Center, fontSize = 13.sp
                 ),
             )
