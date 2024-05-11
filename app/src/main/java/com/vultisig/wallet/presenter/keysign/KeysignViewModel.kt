@@ -158,7 +158,7 @@ class KeysignViewModel(
         }
         when (keysignPayload.coin.chain) {
             Chain.bitcoin, Chain.dash, Chain.bitcoinCash, Chain.dogecoin, Chain.litecoin -> {
-                val utxo = utxoHelper.getHelper(vault, keysignPayload.coin)
+                val utxo = utxoHelper.getHelper(vault, keysignPayload.coin.coinType)
                 return utxo.getSignedTransaction(keysignPayload, signatures)
             }
 
