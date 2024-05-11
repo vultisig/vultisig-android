@@ -129,7 +129,7 @@ class GeneratingKeyViewModel(
         }
     }
 
-    private suspend fun createInstance() {
+    private fun createInstance() {
         // this will take a while
         this.tssInstance = Tss.newService(this.tssMessenger, this.localStateAccessor, true)
     }
@@ -171,6 +171,7 @@ class GeneratingKeyViewModel(
     }
 
     fun saveVault() {
+        // save the vault
         vaultDB.upsert(this.vault)
         Timber.d("saveVault: success,name:${vault.name}")
     }

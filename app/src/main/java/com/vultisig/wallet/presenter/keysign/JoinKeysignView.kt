@@ -183,7 +183,7 @@ fun KeysignDiscoverService(navController: NavHostController) {
 }
 
 @Composable
-fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewModel) {
+internal fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewModel) {
     val coroutineScope = rememberCoroutineScope()
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -257,7 +257,7 @@ fun JoiningKeysign(navController: NavHostController, viewModel: JoinKeysignViewM
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Text(
-                    text = viewModel.keysignPayload?.toAmount.toString() ?: "0",
+                    text = viewModel.keysignPayload?.toAmount.toString(),
                     color = Theme.colors.neutral0,
                     style = Theme.montserrat.body1,
                     modifier = Modifier.align(Alignment.CenterVertically)

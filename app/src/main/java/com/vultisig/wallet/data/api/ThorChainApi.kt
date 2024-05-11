@@ -20,7 +20,7 @@ import io.ktor.http.contentType
 import timber.log.Timber
 import javax.inject.Inject
 
-interface ThorChainApi {
+internal interface ThorChainApi {
 
     suspend fun getBalance(
         address: String,

@@ -38,7 +38,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
-fun KeysignPeerDiscovery(
+internal fun KeysignPeerDiscovery(
     navController: NavController,
     vault: Vault,
     keysignPayload: KeysignPayload,

@@ -53,7 +53,7 @@ internal class ChainSelectionViewModel @Inject constructor(
             }.let { vault ->
                 // When user add a coin to the vault , we need to derive the public key and address
                 // and save the address and public key with the coin , thus don't need to derive in the future
-                when (coin.TssKeysignType) {
+                when (coin.chain.TssKeysignType) {
                     TssKeyType.ECDSA -> {
                         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
                             vault.pubKeyECDSA,

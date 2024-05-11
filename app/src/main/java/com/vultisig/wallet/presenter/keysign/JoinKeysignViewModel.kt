@@ -37,7 +37,7 @@ enum class JoinKeysignState {
 
 
 @HiltViewModel
-class JoinKeysignViewModel @Inject constructor(
+internal class JoinKeysignViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultDB: VaultDB,
     private val gson: Gson,
@@ -70,7 +70,7 @@ class JoinKeysignViewModel @Inject constructor(
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault),
-            keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
+            keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
             gson = gson,
             thorChainApi = thorChainApi,

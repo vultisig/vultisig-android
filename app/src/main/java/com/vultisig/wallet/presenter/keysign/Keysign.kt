@@ -38,7 +38,7 @@ import java.math.BigInteger
 import java.util.UUID
 
 @Composable
-fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
+internal fun Keysign(navController: NavController, viewModel: KeysignViewModel) {
     KeepScreenOn()
     val context: Context = LocalContext.current.applicationContext
     LaunchedEffect(key1 = Unit) {

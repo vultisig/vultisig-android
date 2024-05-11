@@ -33,7 +33,7 @@ enum class KeysignState {
     ERROR
 }
 
-class KeysignViewModel(
+internal class KeysignViewModel(
     private val vault: Vault,
     private val keysignCommittee: List<String>,
     private val serverAddress: String,

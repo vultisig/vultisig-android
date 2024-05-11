@@ -2,7 +2,6 @@ package com.vultisig.wallet.models
 
 import android.os.Parcelable
 import com.vultisig.wallet.R
-import com.vultisig.wallet.tss.TssKeyType
 import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
 import java.math.BigDecimal
@@ -28,29 +27,6 @@ data class Coin(
         get() = chain.coinType
 
 }
-
-val Coin.TssKeysignType: TssKeyType
-    get()= when(chain){
-        Chain.bitcoin -> TssKeyType.ECDSA
-        Chain.bitcoinCash -> TssKeyType.ECDSA
-        Chain.litecoin -> TssKeyType.ECDSA
-        Chain.dogecoin -> TssKeyType.ECDSA
-        Chain.dash -> TssKeyType.ECDSA
-        Chain.thorChain -> TssKeyType.ECDSA
-        Chain.mayaChain -> TssKeyType.ECDSA
-        Chain.ethereum -> TssKeyType.ECDSA
-        Chain.solana -> TssKeyType.EDDSA
-        Chain.avalanche -> TssKeyType.ECDSA
-        Chain.base -> TssKeyType.ECDSA
-        Chain.blast -> TssKeyType.ECDSA
-        Chain.arbitrum -> TssKeyType.ECDSA
-        Chain.polygon -> TssKeyType.ECDSA
-        Chain.optimism -> TssKeyType.ECDSA
-        Chain.bscChain -> TssKeyType.ECDSA
-        Chain.gaiaChain -> TssKeyType.ECDSA
-        Chain.kujira -> TssKeyType.ECDSA
-        Chain.cronosChain -> TssKeyType.ECDSA
-    }
 
 object Coins {
     val SupportedCoins = listOf(

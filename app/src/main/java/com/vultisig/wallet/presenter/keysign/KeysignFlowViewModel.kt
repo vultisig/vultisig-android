@@ -39,7 +39,7 @@ enum class KeysignFlowState {
 }
 
 @HiltViewModel
-class KeysignFlowViewModel @Inject constructor(
+internal class KeysignFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
@@ -73,7 +73,7 @@ class KeysignFlowViewModel @Inject constructor(
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!),
-            keyType = _keysignPayload?.coin?.TssKeysignType ?: TssKeyType.ECDSA,
+            keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
             gson = gson,
             thorChainApi = thorChainApi,
