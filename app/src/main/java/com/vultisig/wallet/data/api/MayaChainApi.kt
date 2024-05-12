@@ -109,7 +109,7 @@ internal class MayaChainApiImp @Inject constructor(
                 throw Exception("Error broadcasting transaction: $responseRawString")
             }
         } catch (e: Exception) {
-            Timber.tag("THORChainService").e("Error broadcasting transaction: ${e.message}")
+            Timber.tag("MayaChainService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
         return null
