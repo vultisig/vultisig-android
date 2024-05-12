@@ -24,6 +24,12 @@ internal interface ApiModule {
 
     @Binds
     @Singleton
+    fun bindMayaChainApi(
+        impl: MayaChainApiImp,
+    ): MayaChainApi
+
+    @Binds
+    @Singleton
     fun bindBlockChairApi(
         impl: BlockChairApiImp,
     ): BlockChairApi

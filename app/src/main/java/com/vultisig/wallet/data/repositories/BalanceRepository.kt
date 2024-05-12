@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
@@ -16,6 +17,7 @@ import com.vultisig.wallet.models.Chain.dash
 import com.vultisig.wallet.models.Chain.dogecoin
 import com.vultisig.wallet.models.Chain.ethereum
 import com.vultisig.wallet.models.Chain.litecoin
+import com.vultisig.wallet.models.Chain.mayaChain
 import com.vultisig.wallet.models.Chain.optimism
 import com.vultisig.wallet.models.Chain.polygon
 import com.vultisig.wallet.models.Chain.thorChain
@@ -47,6 +49,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val blockchairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
+    private val mayaChainApi: MayaChainApi,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
 ) : BalanceRepository {
@@ -82,6 +85,13 @@ internal class BalanceRepositoryImpl @Inject constructor(
         emit(TokenValue(when (coin.chain) {
             thorChain -> {
                 val listCosmosBalance = thorChainApi.getBalance(address)
+                val balance = listCosmosBalance
+                    .find { it.denom.equals(coin.ticker, ignoreCase = true) }
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            mayaChain -> {
+                val listCosmosBalance = mayaChainApi.getBalance(address)
                 val balance = listCosmosBalance
                     .find { it.denom.equals(coin.ticker, ignoreCase = true) }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()

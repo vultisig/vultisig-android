@@ -4,9 +4,11 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.chains.PublicKeyHelper
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.TssKeysignType
@@ -64,16 +66,31 @@ internal class TokenSelectionViewModel @Inject constructor(
                             vault.hexChainCode,
                             coin.coinType.derivationPath()
                         )
-                        val address = chainAccountAddressRepository.getAddress(
-                            coin.coinType,
-                            PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-                        )
-                        vault.copy(
-                            coins = vault.coins + coin.copy(
-                                address = address,
-                                hexPublicKey = derivedPublicKey
+                        if (coin.chain == Chain.mayaChain) {
+                            vault.copy(
+                                coins = vault.coins + coin.copy(
+                                    address = MayaChainHelper(
+                                        vault.pubKeyECDSA,
+                                        vault.hexChainCode
+                                    ).getCoin()?.address ?: "",
+                                    hexPublicKey = derivedPublicKey
+                                )
                             )
-                        )
+                        } else {
+                            val address = chainAccountAddressRepository.getAddress(
+                                coin.coinType,
+                                PublicKey(
+                                    derivedPublicKey.hexToByteArray(),
+                                    PublicKeyType.SECP256K1
+                                )
+                            )
+                            vault.copy(
+                                coins = vault.coins + coin.copy(
+                                    address = address,
+                                    hexPublicKey = derivedPublicKey
+                                )
+                            )
+                        }
                     }
 
                     TssKeyType.EDDSA -> {

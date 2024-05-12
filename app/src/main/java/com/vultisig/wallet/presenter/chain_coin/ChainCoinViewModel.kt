@@ -5,14 +5,12 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.chains.PublicKeyHelper
 import com.vultisig.wallet.data.models.calculateTotalFiatValue
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.models.coinType
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -61,20 +59,9 @@ internal class ChainCoinViewModel @Inject constructor(
             val vault = requireNotNull(vaultDB.select(vaultId))
 
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
-
-            val address = addressRepository.getAddress(
-                chain.coinType,
-                PublicKeyHelper.getPublicKey(
-                    vault.pubKeyECDSA,
-                    vault.hexChainCode,
-                    chain.coinType
-                ),
-            )
-
             accountsRepository.loadChainAccounts(
                 vaultId = vaultId,
                 chain = chain,
-                address = address,
             ).collect { accounts ->
                 val totalFiatValue = accounts.calculateTotalFiatValue()
 
@@ -92,7 +79,7 @@ internal class ChainCoinViewModel @Inject constructor(
                 uiState.update {
                     it.copy(
                         chainName = chainRaw,
-                        chainAddress = address,
+                        chainAddress = accounts.firstOrNull()?.address ?: "",
                         tokens = tokens,
                         totalBalance = totalFiatValue
                             ?.let(fiatValueToStringMapper::map) ?: ""
