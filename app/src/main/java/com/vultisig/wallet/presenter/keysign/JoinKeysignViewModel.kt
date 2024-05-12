@@ -10,6 +10,7 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.TssKeysignType
@@ -42,6 +43,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val vaultDB: VaultDB,
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
+    private val blockChairApi: BlockChairApi,
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
     private var _currentVault: Vault = Vault("temp vault")
@@ -74,6 +76,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             keysignPayload = _keysignPayload!!,
             gson = gson,
             thorChainApi = thorChainApi,
+            blockChairApi = blockChairApi,
         )
 
     fun setData() {

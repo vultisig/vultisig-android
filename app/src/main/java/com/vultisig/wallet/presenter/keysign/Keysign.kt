@@ -24,7 +24,10 @@ import androidx.navigation.compose.rememberNavController
 import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.ThorChainApiImpl
+import com.vultisig.wallet.data.models.BlockchairInfo
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
@@ -164,10 +167,27 @@ fun PreviewKeysign() {
                 ),
                 utxos = emptyList(),
                 vaultPublicKeyECDSA = ""
-            ), gson = Gson(), thorChainApi = ThorChainApiImpl(
+            ),
+            gson = Gson(),
+            thorChainApi = ThorChainApiImpl(
                 gson = Gson(), httpClient = HttpClient()
-            )
+            ),
+            blockChairApi = object : BlockChairApi {
+                override suspend fun getAddressInfo(coin: Coin): BlockchairInfo? {
+                    return null
+                }
 
+                override suspend fun getBlockchairStats(coin: Coin): BigInteger {
+                    return BigInteger.ZERO
+                }
+
+                override suspend fun broadcastTransaction(
+                    coin: Coin,
+                    signedTransaction: String,
+                ): String {
+                    return ""
+                }
+            }
         )
     )
 }

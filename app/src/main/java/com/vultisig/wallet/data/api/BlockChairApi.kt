@@ -10,7 +10,10 @@ import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -18,6 +21,7 @@ import javax.inject.Inject
 internal interface BlockChairApi {
     suspend fun getAddressInfo(coin: Coin): BlockchairInfo?
     suspend fun getBlockchairStats(coin: Coin): BigInteger
+    suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String
 }
 
 internal class BlockChairApiImp @Inject constructor(
@@ -70,5 +74,21 @@ internal class BlockChairApiImp @Inject constructor(
         val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
         return rootObject.getAsJsonObject("data")
             .get("suggested_transaction_fee_per_byte_sat").asBigInteger
+    }
+
+    override suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("data", signedTransaction)
+        val response =
+            httpClient.put("https://api.voltix.org/blockchair/${getChainName(coin)}/push/transaction/$signedTransaction") {
+                header("Content-Type", "application/json")
+                setBody(gson.toJson(jsonObject))
+            }
+        if (response.status != HttpStatusCode.OK) {
+            Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
+            throw Exception("fail to broadcast transaction")
+        }
+        val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
+        return rootObject.getAsJsonObject("data").get("transaction_hash").asString
     }
 }

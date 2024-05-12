@@ -1,0 +1,148 @@
+package com.vultisig.wallet.chains
+
+import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.common.toByteString
+import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.models.SignedTransactionResult
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
+import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import com.vultisig.wallet.tss.getSignatureWithRecoveryID
+import org.bouncycastle.jcajce.provider.digest.Keccak
+import wallet.core.jni.CoinType
+import wallet.core.jni.DataVector
+import wallet.core.jni.PublicKey
+import wallet.core.jni.PublicKeyType
+import wallet.core.jni.TransactionCompiler
+import wallet.core.jni.proto.Ethereum
+
+@OptIn(ExperimentalStdlibApi::class)
+internal class EvmHelper(
+    private val coinType: CoinType,
+    private val vaultHexPublicKey: String,
+    private val vaultHexChainCode: String,
+) {
+    val DefaultETHTransferGasUnits: ULong =
+        23000UL // Increased to 23000 to support swaps and transfers with memo
+    val DefaultERC20TransferGasUnits: ULong = 120000UL
+
+    fun getCoin(): Coin? {
+        val ticker = when (coinType) {
+            CoinType.ETHEREUM -> "ETH"
+            CoinType.CRONOSCHAIN -> "CRO"
+            CoinType.POLYGON -> "MATIC"
+            CoinType.AVALANCHECCHAIN -> "AVAX"
+            CoinType.SMARTCHAIN -> "BNB"
+            else -> throw Exception("Unsupported coin ${coinType.name}")
+        }
+        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
+            vaultHexPublicKey,
+            vaultHexChainCode,
+            coinType.derivationPath()
+        )
+        val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        val address = coinType.deriveAddressFromPublicKey(publicKey)
+        return Coins.getCoin(ticker, address, derivedPublicKey, coinType)
+    }
+
+    fun getPreSignedInputData(
+        signingInput: Ethereum.SigningInput,
+        keysignPayload: KeysignPayload,
+    ): ByteArray {
+        val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
+            ?: throw Exception("Invalid blockChainSpecific")
+
+        signingInput.toBuilder().apply {
+            chainId = coinType.chainId().toByteString()
+            nonce = ethSpecifc.nonce.toString().toByteString()
+            gasLimit = ethSpecifc.gasLimit.toString().toByteString()
+            maxFeePerGas = ethSpecifc.maxFeePerGasWei.toString().toByteString()
+            maxInclusionFeePerGas = ethSpecifc.priorityFeeWei.toString().toByteString()
+            txMode = Ethereum.TransactionMode.Enveloped
+        }
+        return signingInput.toByteArray()
+    }
+
+    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+        val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
+            ?: throw Exception("Invalid blockChainSpecific")
+        val input = Ethereum.SigningInput.newBuilder()
+        input.apply {
+            chainId = coinType.chainId().toByteString()
+            nonce = ethSpecifc.nonce.toString().toByteString()
+            gasLimit = ethSpecifc.gasLimit.toString().toByteString()
+            maxFeePerGas = ethSpecifc.maxFeePerGasWei.toString().toByteString()
+            maxInclusionFeePerGas = ethSpecifc.priorityFeeWei.toString().toByteString()
+            toAddress = keysignPayload.toAddress
+            txMode = Ethereum.TransactionMode.Enveloped
+            transaction = Ethereum.Transaction.newBuilder().apply {
+                transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
+                    amount = keysignPayload.toAmount.toString().toByteString()
+                    keysignPayload.memo?.let {
+                        data = it.toByteString()
+                    }
+                }.build()
+            }.build()
+        }
+        return input.build().toByteArray()
+    }
+
+    fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
+        val result = getPreSignedInputData(keysignPayload)
+        val hashes = TransactionCompiler.preImageHashes(coinType, result)
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
+    }
+
+    fun getSignedTransaction(
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, tss.KeysignResponse>,
+    ): SignedTransactionResult {
+        val inputData = getPreSignedInputData(keysignPayload)
+        return getSignedTransaction(inputData, signatures)
+    }
+
+    private fun getSignedTransaction(
+        inputData: ByteArray,
+        signatures: Map<String, tss.KeysignResponse>,
+    ): SignedTransactionResult {
+        val ethPublicKey = PublicKeyHelper.getDerivedPublicKey(
+            vaultHexPublicKey,
+            vaultHexChainCode,
+            coinType.derivationPath()
+        )
+        val publicKey = PublicKey(ethPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
+        val allSignatures = DataVector()
+        val allPublicKeys = DataVector()
+        val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
+        val signature = signatures[key]?.getSignatureWithRecoveryID()
+            ?: throw Exception("Signature not found")
+        if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
+            throw Exception("Signature verification failed")
+        }
+        allSignatures.add(signature)
+        allPublicKeys.add(publicKey.data())
+        val compileWithSignature = TransactionCompiler.compileWithSignatures(
+            coinType,
+            inputData,
+            allSignatures,
+            allPublicKeys
+        )
+        val output = Ethereum.SigningOutput.parseFrom(compileWithSignature)
+        return SignedTransactionResult(
+            rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
+            transactionHash = keccak256Hash(output.encoded.toByteArray())
+        )
+    }
+
+    fun keccak256Hash(input: ByteArray): String {
+        val digest = Keccak.Digest256()
+        val hash = digest.digest(input)
+        return Numeric.toHexString(hash)
+    }
+
+}

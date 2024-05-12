@@ -9,6 +9,7 @@ import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.common.toHexBytes
+import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
@@ -44,6 +45,7 @@ internal class KeysignViewModel(
     private val keysignPayload: KeysignPayload,
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
+    private val blockChairApi: BlockChairApi,
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -133,19 +135,35 @@ internal class KeysignViewModel(
     }
 
     private suspend fun broadcastTransaction() {
-        val signedTransaction = getSignedTransaction()
-        when (keysignPayload.coin.chain) {
-            Chain.thorChain -> {
-                this.thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
-                    ?.let {
+        try {
+            val signedTransaction = getSignedTransaction()
+            when (keysignPayload.coin.chain) {
+                Chain.thorChain -> {
+                    this.thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
+                        ?.let {
+                            txHash.value = it
+                            Timber.d("transaction hash:$it")
+                        }
+                }
+
+                Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> {
+                    this.blockChairApi.broadcastTransaction(
+                        keysignPayload.coin,
+                        signedTransaction.rawTransaction
+                    ).let {
                         txHash.value = it
                         Timber.d("transaction hash:$it")
                     }
-            }
+                }
 
-            else -> {
-                throw Exception("Not implemented")
+                else -> {
+                    throw Exception("Not implemented")
+                }
             }
+        } catch (e: Exception) {
+            Timber.e(e)
+            errorMessage.value = e.message ?: "Unknown error"
+            currentState.value = KeysignState.ERROR
         }
     }
 
