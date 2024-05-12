@@ -52,7 +52,7 @@ internal class BlockChairApiImp @Inject constructor(
                 return it
             }
             val response =
-                httpClient.get("https://api.voltix.org/blockchair/${getChainName(coin)}/dashboards/address/${coin.address}") {
+                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(coin)}/dashboards/address/${coin.address}") {
                     header("Content-Type", "application/json")
                 }
             val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
@@ -68,7 +68,7 @@ internal class BlockChairApiImp @Inject constructor(
 
     override suspend fun getBlockchairStats(coin: Coin): BigInteger {
         val response =
-            httpClient.get("https://api.voltix.org/blockchair/${getChainName(coin)}/stats") {
+            httpClient.get("https://api.vultisig.com/blockchair/${getChainName(coin)}/stats") {
                 header("Content-Type", "application/json")
             }
         val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
@@ -80,7 +80,7 @@ internal class BlockChairApiImp @Inject constructor(
         val jsonObject = JsonObject()
         jsonObject.addProperty("data", signedTransaction)
         val response =
-            httpClient.put("https://api.voltix.org/blockchair/${getChainName(coin)}/push/transaction/$signedTransaction") {
+            httpClient.put("https://api.vultisig.com/blockchair/${getChainName(coin)}/push/transaction/$signedTransaction") {
                 header("Content-Type", "application/json")
                 setBody(gson.toJson(jsonObject))
             }

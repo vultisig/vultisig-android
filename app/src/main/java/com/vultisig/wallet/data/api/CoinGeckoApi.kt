@@ -43,7 +43,7 @@ internal class CoinGeckoApiImpl @Inject constructor(
         coins: String,
         fiats: String,
     ): String = http
-        .get("https://api.voltix.org/coingeicko/api/v3/simple/price") {
+        .get("https://api.vultisig.com/coingeicko/api/v3/simple/price") {
             parameter("ids", coins)
             parameter("vs_currencies", fiats)
             header("Content-Type", "application/json")
