@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
-import com.vultisig.wallet.ui.screens.VaultSettingsScreen
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition

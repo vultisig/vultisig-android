@@ -16,12 +16,12 @@ class VaultDB(private val context: Context) {
     }
 
     fun upsert(vault: Vault) {
-        val file = vaultsFolder.resolve("${vault.name}-vault.dat")
+        val file = vaultsFolder.resolve("${vault.name}${FILE_POSTFIX}")
         file.writeText(gson.toJson(vault))
     }
 
     fun updateVaultName(oldVaultName: String, newVault: Vault) {
-        val file = vaultsFolder.resolve("${newVault.name}-vault.dat")
+        val file = vaultsFolder.resolve("${newVault.name}${FILE_POSTFIX}")
         file.writeText(gson.toJson(newVault))
         if (file.exists() && file.length() > 0) {
             delete(oldVaultName)
@@ -30,7 +30,7 @@ class VaultDB(private val context: Context) {
 
     // Delete operation
     fun delete(vaultName: String) {
-        val file = vaultsFolder.resolve("${vaultName}-vault.dat")
+        val file = vaultsFolder.resolve("${vaultName}${FILE_POSTFIX}")
         if (file.exists()) {
             file.delete()
         }
@@ -38,7 +38,7 @@ class VaultDB(private val context: Context) {
 
     // Select operation
     fun select(vaultName: String): Vault? {
-        val file = vaultsFolder.resolve("${vaultName}-vault.dat")
+        val file = vaultsFolder.resolve("${vaultName}${FILE_POSTFIX}")
         return if (file.exists()) {
             gson.fromJson(file.readText(), Vault::class.java)
         } else {
@@ -63,5 +63,9 @@ class VaultDB(private val context: Context) {
             }
         }
         return allVaults
+    }
+
+    companion object{
+        const val FILE_POSTFIX = "-vault.dat"
     }
 }
