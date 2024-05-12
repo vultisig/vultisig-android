@@ -3,9 +3,12 @@ package com.vultisig.wallet.presenter.vault_setting.vault_edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.common.UiEvent
+import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText.StringResource
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.NavigateToScreen
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.ShowSnackBar
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -26,7 +29,7 @@ class VaultEditViewModel @Inject constructor(
 
     val uiModel = MutableStateFlow(VaultEditUiModel())
 
-    private val channel = Channel<UiEvent>()
+    private val channel = Channel<VaultEditUiEvent>()
     val channelFlow = channel.receiveAsFlow()
     fun loadData() {
         vault?.let {
@@ -45,9 +48,16 @@ class VaultEditViewModel @Inject constructor(
 
     private fun saveName() {
         viewModelScope.launch {
-            vault?.let {
-                vaultDB.updateVaultName(it.name, it.copy(name = uiModel.value.name))
-                channel.send(UiEvent.NavigateUp)
+            vault?.let { vault ->
+                val newName = uiModel.value.name
+                val isNameAlreadyExist =
+                    vaultDB.selectAll().map { v -> v.name }.any { it == newName }
+                if (isNameAlreadyExist) {
+                    channel.send(ShowSnackBar(StringResource(R.string.vault_edit_this_name_already_exist)))
+                    return@launch
+                }
+                vaultDB.updateVaultName(vault.name, vault.copy(name = newName))
+                channel.send(NavigateToScreen(Screen.Home.route))
             }
         }
     }

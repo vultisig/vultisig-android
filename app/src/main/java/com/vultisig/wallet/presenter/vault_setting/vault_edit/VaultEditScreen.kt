@@ -22,25 +22,31 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiEvent
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.base_components.MultiColorButton
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditEvent.OnNameChange
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditEvent.OnSave
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.NavigateToScreen
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.ShowSnackBar
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -49,14 +55,15 @@ import com.vultisig.wallet.ui.theme.dimens
 fun VaultEditScreen(navHostController: NavHostController) {
     val viewmodel = hiltViewModel<VaultEditViewModel>()
     val uiModel by viewmodel.uiModel.collectAsState()
+    val snackBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
     LaunchedEffect(key1 = Unit) {
         viewmodel.loadData()
         viewmodel.channelFlow.collect { event ->
             when (event) {
-                is UiEvent.NavigateToScreen -> navHostController.navigate(event.route)
-                UiEvent.NavigateUp -> {
-                    navHostController.popBackStack()
-                }
+                is NavigateToScreen -> navHostController.navigate(event.route)
+                is ShowSnackBar -> snackBarHostState.showSnackbar(event.message.asString(context))
             }
         }
     }
@@ -67,6 +74,9 @@ fun VaultEditScreen(navHostController: NavHostController) {
     val dimens = MaterialTheme.dimens
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(snackBarHostState)
+        },
         bottomBar = {
             Box(Modifier.imePadding()) {
                 MultiColorButton(
@@ -150,11 +160,9 @@ fun VaultEditScreen(navHostController: NavHostController) {
                     },
                     modifier = Modifier
                         .padding(12.dp)
-                        .imePadding()
-                    ,
+                        .imePadding(),
                     textStyle = Theme.montserrat.body2.copy(color = Theme.colors.neutral100),
-
-                )
+                    )
             }
         }
     }

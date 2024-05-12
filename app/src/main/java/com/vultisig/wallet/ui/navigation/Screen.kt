@@ -36,7 +36,7 @@ sealed class Screen(val route: String) {
                 }
             }
 
-            data object Rename:Screen (route = "vault_detail/{vault_id}/settings/rename"){
+            data object Rename:Screen (route = "${VaultSettings.route}/rename"){
                 fun createRoute(): String {
                     return "${createRoute(vaultId!!)}/rename"
                 }
