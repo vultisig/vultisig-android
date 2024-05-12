@@ -28,4 +28,9 @@ internal interface ApiModule {
         impl: BlockChairApiImp,
     ): BlockChairApi
 
+    @Binds
+    @Singleton
+    fun bindEvmApi(
+        impl: EvmApiFactoryImp,
+    ): EvmApiFactory
 }
