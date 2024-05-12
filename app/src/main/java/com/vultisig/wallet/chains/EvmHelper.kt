@@ -2,6 +2,7 @@ package com.vultisig.wallet.chains
 
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toByteString
+import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.SignedTransactionResult
@@ -125,7 +126,7 @@ internal class EvmHelper(
             throw Exception("Signature verification failed")
         }
         allSignatures.add(signature)
-        allPublicKeys.add(publicKey.data())
+
         val compileWithSignature = TransactionCompiler.compileWithSignatures(
             coinType,
             inputData,
@@ -135,14 +136,8 @@ internal class EvmHelper(
         val output = Ethereum.SigningOutput.parseFrom(compileWithSignature)
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
-            transactionHash = keccak256Hash(output.encoded.toByteArray())
+            transactionHash = output.encoded.toByteArray().toKeccak256()
         )
-    }
-
-    fun keccak256Hash(input: ByteArray): String {
-        val digest = Keccak.Digest256()
-        val hash = digest.digest(input)
-        return Numeric.toHexString(hash)
     }
 
 }
