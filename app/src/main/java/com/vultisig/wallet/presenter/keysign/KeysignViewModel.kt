@@ -5,6 +5,11 @@ import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
+import com.vultisig.wallet.chains.AtomHelper
+import com.vultisig.wallet.chains.EvmHelper
+import com.vultisig.wallet.chains.KujiraHelper
+import com.vultisig.wallet.chains.MayaChainHelper
+import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
@@ -174,6 +179,7 @@ internal class KeysignViewModel(
         if (keysignPayload.approvePayload != null) {
             throw Exception("Not implemented")
         }
+        // we could define an interface to make the following more simpler,but I will leave it for later
         when (keysignPayload.coin.chain) {
             Chain.bitcoin, Chain.dash, Chain.bitcoinCash, Chain.dogecoin, Chain.litecoin -> {
                 val utxo = utxoHelper.getHelper(vault, keysignPayload.coin.coinType)
@@ -186,23 +192,32 @@ internal class KeysignViewModel(
             }
 
             Chain.gaiaChain -> {
-                throw Exception("Not implemented")
+                val atomHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return atomHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.kujira -> {
-                throw Exception("Not implemented")
+                val kujiraHelper = KujiraHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return kujiraHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.solana -> {
-                throw Exception("Not implemented")
+                val solanaHelper = SolanaHelper(vault.pubKeyEDDSA)
+                return solanaHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.cronosChain, Chain.blast, Chain.arbitrum, Chain.optimism, Chain.polygon, Chain.base -> {
-                throw Exception("Not implemented")
+                val evmHelper = EvmHelper(
+                    keysignPayload.coin.coinType,
+                    vault.pubKeyECDSA,
+                    vault.hexChainCode
+                )
+                return evmHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.mayaChain -> {
-                throw Exception("Not implemented")
+                val mayaHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return mayaHelper.getSignedTransaction(keysignPayload, signatures)
             }
         }
     }

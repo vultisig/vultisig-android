@@ -433,6 +433,32 @@ object Coins {
             contractAddress = "",
             isNativeToken = true,
         ),
+        Coin(
+            chain = Chain.gaiaChain,
+            ticker = "ATOM",
+            logo = "atom",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            feeUnit = "uatom",
+            feeDefault = BigDecimal(200000),
+            priceProviderID = "cosmos",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.kujira,
+            ticker = "KUJI",
+            logo = "kuji",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            feeUnit = "ukuji",
+            feeDefault = BigDecimal(200000),
+            priceProviderID = "kujira",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
@@ -469,6 +495,8 @@ object Coins {
             "blast" -> R.drawable.eth_blast
             "cro" -> R.drawable.eth_cro
             "arbitrum" -> R.drawable.eth_arbitrum
+            "kuji" -> R.drawable.kuji
+            "atom" -> R.drawable.atom
             else -> R.drawable.danger
         }
     }

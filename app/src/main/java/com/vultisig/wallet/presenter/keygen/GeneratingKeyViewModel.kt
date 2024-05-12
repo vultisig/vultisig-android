@@ -5,6 +5,8 @@ import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
+import com.vultisig.wallet.chains.EvmHelper
+import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.data.on_board.db.VaultDB
@@ -183,7 +185,6 @@ class GeneratingKeyViewModel(
         // save the vault
         val coins: MutableList<Coin> = mutableListOf()
         defaultChains.forEach { chain ->
-            vault.apply { }
             when (chain) {
                 Chain.thorChain -> {
                     THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()?.let { coin ->
@@ -198,15 +199,23 @@ class GeneratingKeyViewModel(
                 }
 
                 Chain.bscChain -> {
-                    // TODO: add it
+                    EvmHelper(CoinType.SMARTCHAIN, vault.pubKeyECDSA, vault.hexChainCode).getCoin()
+                        ?.let { coin ->
+                            coins.add(coin)
+                        }
                 }
 
                 Chain.ethereum -> {
-                    // TODO: add it
+                    EvmHelper(CoinType.ETHEREUM, vault.pubKeyECDSA, vault.hexChainCode).getCoin()
+                        ?.let { coin ->
+                            coins.add(coin)
+                        }
                 }
 
                 Chain.solana -> {
-                    // TODO: add it
+                    SolanaHelper(vault.pubKeyEDDSA).getCoin()?.let { coin ->
+                        coins.add(coin)
+                    }
                 }
 
                 else -> {

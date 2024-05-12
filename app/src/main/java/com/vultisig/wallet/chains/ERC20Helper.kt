@@ -14,7 +14,7 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
 
-class ERC20Helper(
+internal class ERC20Helper(
     private val coinType: CoinType,
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
