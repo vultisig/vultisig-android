@@ -5,15 +5,24 @@ import com.vultisig.wallet.tss.TssKeyType
 import wallet.core.jni.CoinType
 
 enum class Chain(val raw: String) {
-    thorChain("THORChain"), solana("Solana"), ethereum("Ethereum"), avalanche("Avalanche"), base("Base"), blast(
-        "Blast"
-    ),
-    arbitrum("Arbitrum"), polygon("Polygon"), optimism("Optimism"), bscChain("BSC"), bitcoin("Bitcoin"), bitcoinCash(
-        "Bitcoin Cash"
-    ),
-    litecoin("Litecoin"), dogecoin("Dogecoin"), dash("Dash"), gaiaChain("Gaia Chain"), kujira("Kujira"), mayaChain(
-        "Maya Chain"
-    ),
+    thorChain("THORChain"),
+    solana("Solana"),
+    ethereum("Ethereum"),
+    avalanche("Avalanche"),
+    base("Base"),
+    blast("Blast"),
+    arbitrum("Arbitrum"),
+    polygon("Polygon"),
+    optimism("Optimism"),
+    bscChain("BSC"),
+    bitcoin("Bitcoin"),
+    bitcoinCash("Bitcoin Cash"),
+    litecoin("Litecoin"),
+    dogecoin("Dogecoin"),
+    dash("Dash"),
+    gaiaChain("Gaia Chain"),
+    kujira("Kujira"),
+    mayaChain("Maya Chain"),
     cronosChain("Cronos Chain"),
 }
 

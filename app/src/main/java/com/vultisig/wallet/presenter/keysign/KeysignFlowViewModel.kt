@@ -12,6 +12,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssKeysignType
@@ -43,6 +44,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
+    private val blockChairApi: BlockChairApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -77,6 +79,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             keysignPayload = _keysignPayload!!,
             gson = gson,
             thorChainApi = thorChainApi,
+            blockChairApi = blockChairApi,
         )
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {

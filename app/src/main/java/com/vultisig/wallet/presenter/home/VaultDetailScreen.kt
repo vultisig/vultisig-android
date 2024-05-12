@@ -2,7 +2,6 @@ package com.vultisig.wallet.presenter.home
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -35,26 +34,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
-import com.vultisig.wallet.ui.components.ChainAccountItem
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
+import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
-import java.math.BigInteger
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -79,7 +71,7 @@ internal fun VaultDetailScreen(
                 title = {
                     Text(
                         text = state.vaultName,
-                        style = MaterialTheme.montserratFamily.titleLarge,
+                        style = Theme.montserrat.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = textColor,
                         modifier = Modifier
@@ -92,7 +84,7 @@ internal fun VaultDetailScreen(
                 },
 
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.appColor.oxfordBlue800,
+                    containerColor = Theme.colors.oxfordBlue800,
                     titleContentColor = textColor
                 ),
                 navigationIcon = {
@@ -160,8 +152,8 @@ internal fun VaultDetailScreen(
                 item {
                     Text(
                         text = state.totalFiatValue ?: "",
-                        style = MaterialTheme.menloFamily.subtitle1,
-                        color = MaterialTheme.appColor.neutral100,
+                        style = Theme.menlo.subtitle1,
+                        color = Theme.colors.neutral100,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillParentMaxWidth(),
                     )
@@ -172,7 +164,7 @@ internal fun VaultDetailScreen(
                     ) {
                         val route = Screen.ChainCoin.createRoute(
                             chainRaw = account.chainName,
-                            vaultId = viewModel.vault?.name?:"",
+                            vaultId = viewModel.vault?.name ?: "",
                         )
                         navHostController.navigate(route)
                     }

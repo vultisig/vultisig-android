@@ -20,7 +20,6 @@ internal interface AccountsRepository {
     fun loadChainAccounts(
         vaultId: String,
         chain: Chain,
-        address: String,
     ): Flow<List<Account>>
 
 }
@@ -60,7 +59,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
     override fun loadChainAccounts(
         vaultId: String,
         chain: Chain,
-        address: String,
     ): Flow<List<Account>> = flow {
         val vault = getVault(vaultId)
 
@@ -68,7 +66,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         val accounts = coins.mapTo(mutableListOf()) {
             coinToChainAccountMapper.map(
-                ChainAddressValue(it, chain, address, null)
+                ChainAddressValue(it, chain, it.address, null)
             )
         }
 
