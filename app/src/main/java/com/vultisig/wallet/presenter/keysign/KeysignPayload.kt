@@ -8,6 +8,12 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
+import com.vultisig.wallet.chains.AtomHelper
+import com.vultisig.wallet.chains.ERC20Helper
+import com.vultisig.wallet.chains.EvmHelper
+import com.vultisig.wallet.chains.KujiraHelper
+import com.vultisig.wallet.chains.MayaChainHelper
+import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.chains.utxoHelper
@@ -41,16 +47,46 @@ data class KeysignPayload(
                 return thorHelper.getPreSignedImageHash(this)
             }
 
-            Chain.solana -> TODO()
-            Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.cronosChain -> TODO()
+            Chain.solana -> {
+                val solanaHelper = SolanaHelper(vault.pubKeyEDDSA)
+                return solanaHelper.getPreSignedImageHash(this)
+            }
+
+            Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.cronosChain -> {
+                return if (coin.isNativeToken) {
+                    EvmHelper(
+                        coin.coinType,
+                        vault.pubKeyECDSA,
+                        vault.hexChainCode
+                    ).getPreSignedImageHash(this)
+                } else {
+                    ERC20Helper(
+                        coin.coinType,
+                        vault.pubKeyECDSA,
+                        vault.hexChainCode
+                    ).getPreSignedImageHash(this)
+                }
+            }
+
             Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> {
                 val utxo = utxoHelper(this.coin.coinType, vault.pubKeyECDSA, vault.hexChainCode)
                 return utxo.getPreSignedImageHash(this)
             }
 
-            Chain.gaiaChain -> TODO()
-            Chain.kujira -> TODO()
-            Chain.mayaChain -> TODO()
+            Chain.gaiaChain -> {
+                val atomHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return atomHelper.getPreSignedImageHash(this)
+            }
+
+            Chain.kujira -> {
+                val kujiraHelper = KujiraHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return kujiraHelper.getPreSignedImageHash(this)
+            }
+
+            Chain.mayaChain -> {
+                val mayachainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return mayachainHelper.getPreSignedImageHash(this)
+            }
         }
     }
 }

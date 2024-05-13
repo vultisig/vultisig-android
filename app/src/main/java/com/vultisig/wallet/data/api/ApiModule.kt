@@ -39,4 +39,16 @@ internal interface ApiModule {
     fun bindEvmApi(
         impl: EvmApiFactoryImp,
     ): EvmApiFactory
+
+    @Binds
+    @Singleton
+    fun bindCosmosApi(
+        impl: CosmosApiFactoryImp,
+    ): CosmosApiFactory
+
+    @Binds
+    @Singleton
+    fun bindSolanaApi(
+        impl: SolanaApiImp,
+    ): SolanaApi
 }
