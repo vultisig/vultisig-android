@@ -6,13 +6,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,6 +33,7 @@ internal data class TokenUiModel(
 internal class TokenSelectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultDb: VaultDB,
+    private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
 
@@ -82,24 +85,20 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
-            val coins = Coins.SupportedCoins
-                .filter { it.chain.raw == chainId }
-
-            val enabledTokens = vaultDb.select(vaultId)
-                ?.coins
-                ?.map { it.id }
-                ?.toSet()
-                ?: emptySet()
-
-            val chains = coins
-                .map { coin ->
-                    TokenUiModel(
-                        isEnabled = coin.id in enabledTokens,
-                        coin = coin,
-                    )
+            tokenRepository.getChainTokens(vaultId, chainId)
+                .zip(
+                    tokenRepository.getEnabledTokens(vaultId)
+                        .map { enabled -> enabled.map { it.id }.toSet() }
+                ) { tokens, enabledTokens ->
+                    tokens.map { token ->
+                        TokenUiModel(
+                            isEnabled = token.id in enabledTokens,
+                            coin = token,
+                        )
+                    }
+                }.collect { tokens ->
+                    uiState.update { it.copy(tokens = tokens) }
                 }
-
-            uiState.update { it.copy(tokens = chains) }
         }
     }
 

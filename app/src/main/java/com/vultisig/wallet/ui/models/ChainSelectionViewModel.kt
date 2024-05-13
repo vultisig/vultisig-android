@@ -5,13 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,6 +29,7 @@ internal data class ChainUiModel(
 internal class ChainSelectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultDb: VaultDB,
+    private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
 
@@ -75,24 +77,17 @@ internal class ChainSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
-            val coins = Coins.SupportedCoins
-            val enabledChains = vaultDb.select(vaultId)
-                ?.coins
-                ?.filter { it.isNativeToken }
-                ?.map { it.chain }
-                ?.toSet()
-                ?: emptySet()
-
-            val chains = coins
-                .filter { it.isNativeToken }
-                .map { coin ->
-                    ChainUiModel(
-                        isEnabled = coin.chain in enabledChains,
-                        coin = coin,
-                    )
+            tokenRepository.nativeTokens
+                .zip(tokenRepository.getEnabledChains(vaultId)) { native, enabledChains ->
+                    native.map { nativeToken ->
+                        ChainUiModel(
+                            isEnabled = nativeToken.chain in enabledChains,
+                            coin = nativeToken,
+                        )
+                    }
+                }.collect { chains ->
+                    uiState.update { it.copy(chains = chains) }
                 }
-
-            uiState.update { it.copy(chains = chains) }
         }
     }
 

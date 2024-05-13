@@ -23,7 +23,10 @@ enum class Chain(val raw: String) {
     gaiaChain("Gaia Chain"),
     kujira("Kujira"),
     mayaChain("Maya Chain"),
-    cronosChain("Cronos Chain"),
+    cronosChain("Cronos Chain");
+
+    val id: String
+        get() = raw
 }
 
 val Chain.coinType: CoinType
