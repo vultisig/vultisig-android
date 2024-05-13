@@ -10,6 +10,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.GasFee
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -87,6 +90,8 @@ internal class SendViewModel @Inject constructor(
             appCurrencyRepository.defaultCurrency,
         )
 
+    private val gasFee = MutableStateFlow<GasFee?>(null)
+
     private var lastToken = ""
     private var lastFiat = ""
 
@@ -107,6 +112,8 @@ internal class SendViewModel @Inject constructor(
     private fun calculateGasFees() {
         viewModelScope.launch {
             val gasFee = gasFeeRepository.getGasFee(chain)
+
+            this@SendViewModel.gasFee.value = gasFee
 
             uiState.update {
                 it.copy(fee = "${gasFee.value.decimal.toPlainString()} ${gasFee.unit}")
@@ -130,13 +137,20 @@ internal class SendViewModel @Inject constructor(
     }
 
     fun chooseMaxTokenAmount() {
-        val selectedAccountTokenAmount = selectedAccount.value
-            ?.tokenValue
-            ?.decimal
-            ?.toPlainString()
-            ?: return
+        val selectedAccount = selectedAccount.value ?: return
+        val selectedTokenValue = selectedAccount.tokenValue ?: return
+        val gasFee = gasFee.value ?: return
 
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(selectedAccountTokenAmount)
+        val max = if (selectedAccount.token.isNativeToken) {
+            TokenValue(
+                value = maxOf(BigInteger.ZERO, selectedTokenValue.value - gasFee.value.value),
+                decimals = selectedTokenValue.decimals,
+            )
+        } else {
+            selectedTokenValue
+        }.decimal.toPlainString()
+
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max)
     }
 
     private fun loadTokens() {
