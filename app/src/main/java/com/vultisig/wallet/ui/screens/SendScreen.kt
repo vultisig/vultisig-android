@@ -76,10 +76,12 @@ internal fun SendScreen(
                 // size 0 but still adds margin because of verticalArrangement
                 UiSpacer(size = 0.dp)
 
+                val selectedToken = state.selectedCoin
+
                 FormTokenCard(
-                    selectedTitle = state.selectedCoin?.title ?: "",
-                    availableToken = state.selectedCoin?.balance ?: "",
-                    selectedIcon = state.selectedCoin?.logo
+                    selectedTitle = selectedToken?.title ?: "",
+                    availableToken = selectedToken?.balance ?: "",
+                    selectedIcon = selectedToken?.logo
                         ?: R.drawable.ethereum,
                     isExpanded = state.isTokensExpanded,
                     onClick = viewModel::toggleTokens,
@@ -94,6 +96,9 @@ internal fun SendScreen(
                         TokenCard(
                             title = token.title,
                             icon = token.logo,
+                            actionIcon = if (token == selectedToken)
+                                R.drawable.check
+                            else null,
                             onClick = { viewModel.selectToken(token) }
                         )
                     }
