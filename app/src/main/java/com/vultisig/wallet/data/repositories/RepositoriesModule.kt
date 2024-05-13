@@ -56,6 +56,12 @@ internal interface RepositoriesModule {
         impl: TokenRepositoryImpl,
     ): TokenRepository
 
+    @Binds
+    @Singleton
+    fun bindGasFeesRepository(
+        impl: GasFeeRepositoryImpl,
+    ): GasFeeRepository
+
     companion object {
 
         @Provides

@@ -24,7 +24,7 @@ internal class CoinToChainAccountMapperImpl @Inject constructor() : CoinToChainA
             chainName = from.chain.raw,
             logo = from.chain.logo,
             address = from.address,
-            tokenAmount = from.balance?.tokenValue?.balance,
+            tokenValue = from.balance?.tokenValue,
             fiatValue = from.balance?.fiatValue,
         )
 

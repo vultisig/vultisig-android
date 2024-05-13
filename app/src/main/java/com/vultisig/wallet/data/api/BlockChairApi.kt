@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 internal interface BlockChairApi {
     suspend fun getAddressInfo(coin: Coin): BlockchairInfo?
-    suspend fun getBlockchairStats(coin: Coin): BigInteger
+    suspend fun getBlockchairStats(chain: Chain): BigInteger
     suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String
 }
 
@@ -34,17 +34,16 @@ internal class BlockChairApiImp @Inject constructor(
         .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
         .build()
 
-    private fun getChainName(coin: Coin): String {
-        return when (coin.chain) {
-            Chain.bitcoin -> "bitcoin"
-            Chain.bitcoinCash -> "bitcoin-cash"
-            Chain.litecoin -> "litecoin"
-            Chain.dogecoin -> "dogecoin"
-            Chain.dash -> "dash"
-            else -> throw IllegalArgumentException("Unsupported chain ${coin.chain}")
-        }
-
+    private fun getChainName(chain: Chain): String = when (chain) {
+        Chain.bitcoin -> "bitcoin"
+        Chain.bitcoinCash -> "bitcoin-cash"
+        Chain.litecoin -> "litecoin"
+        Chain.dogecoin -> "dogecoin"
+        Chain.dash -> "dash"
+        else -> throw IllegalArgumentException("Unsupported chain ${chain}")
     }
+
+    private fun getChainName(coin: Coin): String = getChainName(coin.chain)
 
     override suspend fun getAddressInfo(coin: Coin): BlockchairInfo? {
         try {
@@ -66,9 +65,9 @@ internal class BlockChairApiImp @Inject constructor(
         return null
     }
 
-    override suspend fun getBlockchairStats(coin: Coin): BigInteger {
+    override suspend fun getBlockchairStats(chain: Chain): BigInteger {
         val response =
-            httpClient.get("https://api.vultisig.com/blockchair/${getChainName(coin)}/stats") {
+            httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/stats") {
                 header("Content-Type", "application/json")
             }
         val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
