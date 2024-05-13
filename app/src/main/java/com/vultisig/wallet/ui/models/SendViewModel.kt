@@ -9,6 +9,8 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.GasFee
 import com.vultisig.wallet.data.models.TokenValue
@@ -57,7 +59,12 @@ internal data class SendUiModel(
     val fiatAmount: String = "",
     val fiatCurrency: String = "",
     val fee: String? = null,
+    val errorText: UiText? = null,
 )
+
+private data class InvalidTransactionDataException(
+    val text: UiText,
+) : Exception()
 
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
@@ -92,6 +99,8 @@ internal class SendViewModel @Inject constructor(
 
     private val gasFee = MutableStateFlow<GasFee?>(null)
 
+    private var nativeTokenAccount: Account? = null
+
     private var lastToken = ""
     private var lastFiat = ""
 
@@ -107,18 +116,6 @@ internal class SendViewModel @Inject constructor(
         collectSelectedAccount()
         collectAmountChanges()
         calculateGasFees()
-    }
-
-    private fun calculateGasFees() {
-        viewModelScope.launch {
-            val gasFee = gasFeeRepository.getGasFee(chain)
-
-            this@SendViewModel.gasFee.value = gasFee
-
-            uiState.update {
-                it.copy(fee = "${gasFee.value.decimal.toPlainString()} ${gasFee.unit}")
-            }
-        }
     }
 
     fun selectToken(token: TokenBalanceUiModel) {
@@ -153,6 +150,88 @@ internal class SendViewModel @Inject constructor(
         tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max)
     }
 
+    fun dismissError() {
+        uiState.update { it.copy(errorText = null) }
+    }
+
+    fun send() {
+        viewModelScope.launch {
+            try {
+                val selectedAccount = selectedAccount.value
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
+                    )
+
+                val gasFee = gasFee.value
+
+                if (gasFee == null || gasFee.value.value <= BigInteger.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                    )
+                }
+
+                val address = addressFieldState.text.toString()
+
+                if (address.isBlank() || !chainAccountAddressRepository.isValid(chain, address)) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+                }
+
+                val tokenAmount = tokenAmountFieldState.text
+                    .toString()
+                    .toBigDecimalOrNull()
+
+                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_amount)
+                    )
+                }
+
+                val selectedTokenValue = selectedAccount.tokenValue
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
+                    )
+
+                val selectedToken = selectedAccount.token
+
+                val tokenAmountInt =
+                    tokenAmount
+                        .movePointRight(selectedToken.decimal)
+                        .toBigInteger()
+
+                if (selectedToken.isNativeToken) {
+                    if (tokenAmountInt + gasFee.value.value > selectedTokenValue.value) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    }
+                } else {
+                    val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_token)
+                        )
+
+                    if (selectedTokenValue.value < tokenAmountInt
+                        || nativeTokenValue < gasFee.value.value
+                    ) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    }
+                }
+
+                // TODO navigate to keysign
+            } catch (e: InvalidTransactionDataException) {
+                showError(e.text)
+            }
+        }
+    }
+
+    private fun showError(text: UiText) {
+        uiState.update { it.copy(errorText = text) }
+    }
+
     private fun loadTokens() {
         viewModelScope.launch {
             val vault = requireNotNull(vaultDb.select(vaultId))
@@ -174,6 +253,7 @@ internal class SendViewModel @Inject constructor(
                 ) {
                     selectedAccount.value = accountOfNativeToken
                 }
+                nativeTokenAccount = accountOfNativeToken
 
                 uiState.update {
                     it.copy(
@@ -181,6 +261,18 @@ internal class SendViewModel @Inject constructor(
                         availableTokens = tokenUiModels,
                     )
                 }
+            }
+        }
+    }
+
+    private fun calculateGasFees() {
+        viewModelScope.launch {
+            val gasFee = gasFeeRepository.getGasFee(chain)
+
+            this@SendViewModel.gasFee.value = gasFee
+
+            uiState.update {
+                it.copy(fee = "${gasFee.value.decimal.toPlainString()} ${gasFee.unit}")
             }
         }
     }
