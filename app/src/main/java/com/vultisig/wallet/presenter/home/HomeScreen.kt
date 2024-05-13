@@ -73,7 +73,7 @@ internal fun HomeScreen(
                         titleContentColor = textColor
                     ),
                     navigationIcon = {
-                        IconButton(onClick = {}) {
+                        IconButton(onClick = viewModel::navigateToSettingsScreen) {
                             Icon(
                                 imageVector = Icons.Filled.Menu,
                                 contentDescription = "settings", tint = Color.White
