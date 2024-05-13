@@ -23,8 +23,10 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
-import com.vultisig.wallet.ui.navigation.Destination.Send.Companion.ARG_CHAIN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Send.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -70,14 +72,15 @@ private data class InvalidTransactionDataException(
 @HiltViewModel
 internal class SendViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
+    private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
+
     private val vaultDb: VaultDB,
     private val accountsRepository: AccountsRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val gasFeeRepository: GasFeeRepository,
-
-    private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -221,7 +224,15 @@ internal class SendViewModel @Inject constructor(
                     }
                 }
 
-                // TODO navigate to keysign
+                navigator.navigate(
+                    Destination.Keysign(
+                        vaultId = vaultId,
+                        chainId = chain.raw,
+                        tokenId = selectedToken.id,
+                        dstAddress = address,
+                        amount = tokenAmountInt.toString(),
+                    )
+                )
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             }

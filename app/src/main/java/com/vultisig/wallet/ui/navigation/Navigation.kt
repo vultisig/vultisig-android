@@ -4,6 +4,43 @@ internal sealed class Destination(
     val route: String,
 ) {
 
+    companion object {
+        const val ARG_VAULT_ID = "vault_id"
+        const val ARG_CHAIN_ID = "chain_id"
+        const val ARG_TOKEN_ID = "token_id"
+    }
+
+    data class Keysign(
+        val vaultId: String,
+        val chainId: String,
+        val tokenId: String,
+        val dstAddress: String,
+        val amount: String,
+    ) : Destination(
+        route = buildRoute(vaultId, chainId, tokenId, dstAddress, amount)
+    ) {
+        companion object {
+            const val ARG_DST_ADDRESS = "dst_address"
+            const val ARG_AMOUNT = "amount"
+            val staticRoute = buildRoute(
+                "{$ARG_VAULT_ID}",
+                "{$ARG_CHAIN_ID}",
+                "{$ARG_TOKEN_ID}",
+                "{$ARG_DST_ADDRESS}",
+                "{$ARG_AMOUNT}",
+            )
+
+            private fun buildRoute(
+                vaultId: String,
+                chainId: String,
+                tokenId: String,
+                dstAddress: String,
+                amount: String,
+            ) = "vault_detail/${vaultId}/account/${chainId}/" +
+                    "send/${tokenId}/sign?dst_address=${dstAddress}&amount=${amount}"
+        }
+    }
+
     data class Send(
         val vaultId: String,
         val chainId: String,
@@ -11,8 +48,6 @@ internal sealed class Destination(
         route = "vault_detail/${vaultId}/account/${chainId}/send"
     ) {
         companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val ARG_CHAIN_ID = "chain_id"
             const val staticRoute =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send"
         }
@@ -25,8 +60,6 @@ internal sealed class Destination(
         route = "vault_detail/${vaultId}/account/${chainId}/select_tokens"
     ) {
         companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val ARG_CHAIN_ID = "chain_id"
             const val staticRoute =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/select_tokens"
         }
