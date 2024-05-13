@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.common.data_store
+package com.vultisig.wallet.data.sources
 
 import android.content.Context
 import androidx.datastore.core.DataStore

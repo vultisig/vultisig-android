@@ -1,7 +1,7 @@
 package com.vultisig.wallet.common
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import com.vultisig.wallet.data.common.data_store.AppDataStore
+import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject

@@ -24,8 +24,8 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.common.downloadVault
-import com.vultisig.wallet.presenter.common.TopBar
 import com.vultisig.wallet.ui.components.SettingsItem
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Backup

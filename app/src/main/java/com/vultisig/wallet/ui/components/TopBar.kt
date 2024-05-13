@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.common
+package com.vultisig.wallet.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

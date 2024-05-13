@@ -19,7 +19,6 @@ import androidx.compose.foundation.text2.input.TextFieldLineLimits
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,6 +37,7 @@ internal fun FormTokenCard(
     availableToken: String,
     isExpanded: Boolean,
     onClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
 ) {
     FormCard {
         TokenCard(
@@ -50,29 +50,7 @@ internal fun FormTokenCard(
 
         AnimatedVisibility(visible = isExpanded) {
             Column {
-                HorizontalDivider(
-                    color = Theme.colors.oxfordBlue200,
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp),
-                )
-
-                TokenCard(
-                    title = "RUNE", // TODO mock data
-                    icon = R.drawable.rune,
-                    onClick = onClick,
-                )
-
-                HorizontalDivider(
-                    color = Theme.colors.oxfordBlue200,
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp),
-                )
-
-                TokenCard(
-                    title = "RUNE", // TODO mock data
-                    icon = R.drawable.rune,
-                    onClick = onClick,
-                )
+                content()
             }
         }
     }

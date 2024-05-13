@@ -30,7 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.zxing.integration.android.IntentIntegrator
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.common.TopBar
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 

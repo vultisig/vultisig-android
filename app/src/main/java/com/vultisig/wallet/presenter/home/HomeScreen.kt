@@ -31,7 +31,7 @@ import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.base_components.MultiColorButton
+import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens

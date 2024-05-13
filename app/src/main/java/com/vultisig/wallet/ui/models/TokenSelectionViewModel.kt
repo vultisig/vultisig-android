@@ -38,7 +38,7 @@ internal class TokenSelectionViewModel @Inject constructor(
         requireNotNull(savedStateHandle[Destination.SelectTokens.ARG_VAULT_ID])
 
     private val chainId: String =
-        requireNotNull(savedStateHandle[Destination.SelectTokens.ARG_ACCOUNT_ID])
+        requireNotNull(savedStateHandle[Destination.SelectTokens.ARG_CHAIN_ID])
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
 

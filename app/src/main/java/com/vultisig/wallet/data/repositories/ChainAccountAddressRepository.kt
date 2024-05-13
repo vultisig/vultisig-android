@@ -6,12 +6,24 @@ import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.models.coinType
 import com.vultisig.wallet.tss.TssKeyType
+import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import javax.inject.Inject
 
 internal interface ChainAccountAddressRepository {
+
+    suspend fun getAddress(
+        chain: Chain,
+        vault: Vault,
+    ): String
+
+    suspend fun getAddress(
+        type: CoinType,
+        publicKey: PublicKey,
+    ): String
 
     suspend fun getAddress(
         coin: Coin,
@@ -22,6 +34,23 @@ internal interface ChainAccountAddressRepository {
 
 internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     ChainAccountAddressRepository {
+
+    override suspend fun getAddress(
+        chain: Chain,
+        vault: Vault,
+    ): String = getAddress(
+        chain.coinType,
+        PublicKeyHelper.getPublicKey(
+            vault.pubKeyECDSA,
+            vault.hexChainCode,
+            chain.coinType,
+        )
+    )
+
+    override suspend fun getAddress(
+        type: CoinType,
+        publicKey: PublicKey,
+    ): String = type.deriveAddressFromPublicKey(publicKey)
 
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun getAddress(
