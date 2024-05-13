@@ -27,6 +27,7 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.ThorChainApiImpl
 import com.vultisig.wallet.data.models.BlockchairInfo
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.Vault
@@ -177,7 +178,7 @@ fun PreviewKeysign() {
                     return null
                 }
 
-                override suspend fun getBlockchairStats(coin: Coin): BigInteger {
+                override suspend fun getBlockchairStats(chain: Chain): BigInteger {
                     return BigInteger.ZERO
                 }
 

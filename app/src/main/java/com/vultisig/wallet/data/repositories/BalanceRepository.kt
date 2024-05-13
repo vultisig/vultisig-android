@@ -76,7 +76,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                         TokenBalance(
                             tokenValue = balance,
                             fiatValue = FiatValue(
-                                value = balance.balance
+                                value = balance.decimal
                                     .multiply(price)
                                     .setScale(2, RoundingMode.HALF_UP),
                                 currency = currency.ticker,
