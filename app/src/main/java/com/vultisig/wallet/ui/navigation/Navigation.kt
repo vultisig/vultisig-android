@@ -36,4 +36,24 @@ internal sealed class Destination(
         route = ""
     )
 
+    data object Home : Destination(route = "home_screen")
+    data class VaultSettings(val vaultId: String) : Destination(route = "vault_detail/$vaultId/settings") {
+
+        companion object {
+            const val ARG_VAULT_ID = "vault_id"
+            const val STATIC_ROUTE = "vault_detail/{vault_id}/settings"
+        }
+    }
+    data class Details(val vaultId: String) : Destination(route = "vault_detail/$vaultId/settings/details") {
+        companion object {
+            const val STATIC_ROUTE = VaultSettings.STATIC_ROUTE + "/details"
+        }
+    }
+
+    data class Rename(val vaultId: String) : Destination(route = "vault_detail/$vaultId/settings/rename") {
+        companion object {
+            const val STATIC_ROUTE = VaultSettings.STATIC_ROUTE + "/rename"
+        }
+    }
+
 }

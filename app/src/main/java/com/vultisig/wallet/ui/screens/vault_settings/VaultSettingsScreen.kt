@@ -22,16 +22,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.common.downloadVault
 import com.vultisig.wallet.ui.components.SettingsItem
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Backup
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Delete
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ErrorDownloadFile
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.SuccessBackup
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.*
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -46,18 +46,22 @@ internal fun VaultSettingsScreen(
     LaunchedEffect(key1 = Unit) {
         viewModel.channelFlow.collect { event ->
             when (event) {
-                is VaultSettingsUiEvent.NavigateToScreen ->
-                    navController.navigate(event.route)
-
-                is VaultSettingsUiEvent.ShowSnackBar ->
+                is BackupSuccess ->
                     snackBarHostState.showSnackbar(
                         context.getString(
                             R.string.vault_settings_success_backup_file,
-                            event.message.asString(context)
+                            event.vaultName
                         )
                     )
 
-                is VaultSettingsUiEvent.BackupFile ->
+                BackupFailed ->
+                    snackBarHostState.showSnackbar(
+                        context.getString(
+                            R.string.vault_settings_error_backup_file,
+                        )
+                    )
+
+                is BackupFile ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         val isSuccess = context.downloadVault(event.vaultName)
                         if (isSuccess)
@@ -97,7 +101,8 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_details_subtitle),
                     icon = android.R.drawable.ic_menu_info_details,
                 ) {
-                    navController.navigate(VaultSettings.Details.createRoute())
+                    viewModel.vault?.name?.let { vaultName ->
+                        navController.navigate(Destination.Details(vaultName).route)}
                 }
 
                 SettingsItem(
@@ -113,7 +118,8 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_rename_subtitle),
                     icon = R.drawable.pencil
                 ) {
-                    navController.navigate(VaultSettings.Rename.createRoute())
+                    viewModel.vault?.name?.let { vaultName ->
+                        navController.navigate(Destination.Rename(vaultName).route)}
                 }
 
                 SettingsItem(

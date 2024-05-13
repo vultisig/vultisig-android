@@ -7,9 +7,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText.StringResource
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.NavigateToScreen
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.ShowSnackBar
-import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.VaultSettings.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,12 +20,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class VaultEditViewModel @Inject constructor(
+internal class VaultEditViewModel @Inject constructor(
     private val vaultDB: VaultDB,
+    private val navigator: Navigator<Destination>,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val vaultId: String = savedStateHandle.get<String>(Screen.VaultDetail.VaultSettings.ARG_VAULT_ID)!!
+    private val vaultId: String = savedStateHandle.get<String>(ARG_VAULT_ID)!!
     val vault: Vault? = vaultDB.select(vaultId)
 
     val uiModel = MutableStateFlow(VaultEditUiModel())
@@ -57,7 +59,7 @@ class VaultEditViewModel @Inject constructor(
                     return@launch
                 }
                 vaultDB.updateVaultName(vault.name, vault.copy(name = newName))
-                channel.send(NavigateToScreen(Screen.Home.route))
+                navigator.navigate(Destination.Home)
             }
         }
     }

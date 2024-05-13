@@ -99,6 +99,11 @@ internal class ChainCoinViewModel @Inject constructor(
         // TODO navigate to swap screen
     }
 
+
+    fun deposit() {
+
+    }
+
     fun selectTokens() {
         viewModelScope.launch {
             navigator.navigate(
