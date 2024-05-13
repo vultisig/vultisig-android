@@ -43,8 +43,8 @@ import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainAccountUiModel
 import com.vultisig.wallet.ui.models.VaultDetailViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -100,7 +100,7 @@ internal fun VaultDetailScreen(
                 actions = {
                     IconButton(onClick = {
                         val vault = viewModel.currentVault.value
-                        navHostController.navigate(VaultSettings.createRoute(vault.name))
+                        navHostController.navigate(Destination.VaultSettings(vault.name).route)
                         /*val coin = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()
                         coin?.let {
                             keysignShareViewModel.vault = viewModel.currentVault.value

@@ -24,7 +24,6 @@ import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
-import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.VaultSettings
 import com.vultisig.wallet.ui.screens.ChainCoinScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.SendScreen
@@ -107,9 +106,9 @@ internal fun SetupNavGraph(
             )
         }
         composable(
-            route = VaultSettings.route,
+            route = Destination.VaultSettings.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(Destination.VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
             VaultSettingsScreen(
@@ -117,18 +116,18 @@ internal fun SetupNavGraph(
             )
         }
         composable(
-            route = VaultSettings.Details.route,
+            route = Destination.Details.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(Destination.VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
             VaultDetailScreen(navController)
         }
 
         composable(
-            route = VaultSettings.Rename.route,
+            route = Destination.Rename.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(Destination.VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
             VaultEditScreen(navController)
