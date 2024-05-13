@@ -20,6 +20,12 @@ import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
 import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
+import com.vultisig.wallet.presenter.settings.SettingsScreen
+import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
+import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
+import com.vultisig.wallet.presenter.settings.faq_setting.FAQSettingScreen
+import com.vultisig.wallet.presenter.settings.language_setting.LanguageSettingScreen
+import com.vultisig.wallet.presenter.settings.vultisig_token_setting.VultisigTokenScreen
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
@@ -162,6 +168,51 @@ internal fun SetupNavGraph(
             route = Destination.Send.staticRoute,
         ) {
             SendScreen(navController = navController)
+        }
+        composable(
+            route = Destination.Settings.route,
+        ) {
+            SettingsScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.DefaultChainSetting.route,
+        ) {
+            DefaultChainSetting(navController = navController)
+        }
+
+        composable(
+            route = Destination.FAQSetting.route,
+        ) {
+            FAQSettingScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.VultisigToken.route,
+        ) {
+            VultisigTokenScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.LanguageSetting.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(Destination.LanguageSetting.ARG_LANG_ID){
+                    type = NavType.IntType
+                }
+            )
+        ) {
+            LanguageSettingScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.CurrencyUnitSetting.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(Destination.CurrencyUnitSetting.ARG_CURRENCY_ID){
+                    type = NavType.IntType
+                }
+            )
+        ) {
+            CurrencyUnitSettingScreen(navController = navController)
         }
     }
 }
