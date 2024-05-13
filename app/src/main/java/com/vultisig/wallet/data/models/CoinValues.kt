@@ -12,7 +12,7 @@ internal data class TokenValue(
     val value: BigInteger,
     val decimals: Int,
 ) {
-    val balance: BigDecimal
+    val decimal: BigDecimal
         get() = BigDecimal(value)
             .divide(BigDecimal(10).pow(decimals))
 

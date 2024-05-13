@@ -1,29 +1,42 @@
 package com.vultisig.wallet.models
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.TokenStandard.BITCOIN
+import com.vultisig.wallet.data.models.TokenStandard.ERC20
+import com.vultisig.wallet.data.models.TokenStandard.UNKNOWN
 import com.vultisig.wallet.tss.TssKeyType
 import wallet.core.jni.CoinType
 
-enum class Chain(val raw: String) {
-    thorChain("THORChain"),
-    solana("Solana"),
-    ethereum("Ethereum"),
-    avalanche("Avalanche"),
-    base("Base"),
-    blast("Blast"),
-    arbitrum("Arbitrum"),
-    polygon("Polygon"),
-    optimism("Optimism"),
-    bscChain("BSC"),
-    bitcoin("Bitcoin"),
-    bitcoinCash("Bitcoin Cash"),
-    litecoin("Litecoin"),
-    dogecoin("Dogecoin"),
-    dash("Dash"),
-    gaiaChain("Gaia Chain"),
-    kujira("Kujira"),
-    mayaChain("Maya Chain"),
-    cronosChain("Cronos Chain");
+enum class Chain(
+    val raw: String,
+    val standard: TokenStandard,
+    val feeUnit: String,
+) {
+    thorChain("THORChain", UNKNOWN, "Rune"),
+
+    // ERC20
+    arbitrum("Arbitrum", ERC20, "Gwei"),
+    avalanche("Avalanche", ERC20, "Gwei"),
+    base("Base", ERC20, "Gwei"),
+    cronosChain("Cronos Chain", ERC20, "Gwei"),
+    bscChain("BSC", ERC20, "Gwei"),
+    blast("Blast", ERC20, "Gwei"),
+    ethereum("Ethereum", ERC20, "Gwei"),
+    optimism("Optimism", ERC20, "Gwei"),
+    polygon("Polygon", ERC20, "Gwei"),
+
+    // BITCOIN
+    bitcoin("Bitcoin", BITCOIN, "Sats/vbytes"),
+    bitcoinCash("Bitcoin Cash", BITCOIN, "Sats/vbytes"),
+    litecoin("Litecoin", BITCOIN, "Lits/vbytes"),
+    dogecoin("Dogecoin", BITCOIN, "Doge/vbytes"),
+    dash("Dash", BITCOIN, "Sats/vbytes"),
+
+    solana("Solana", UNKNOWN, "Lamports"),
+    gaiaChain("Gaia Chain", UNKNOWN, "uatom"),
+    kujira("Kujira", UNKNOWN, "ukuji"),
+    mayaChain("Maya Chain", UNKNOWN, "cacao");
 
     val id: String
         get() = raw

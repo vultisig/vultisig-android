@@ -17,29 +17,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.google.gson.Gson
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.data.api.BlockChairApi
-import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.ThorChainApiImpl
-import com.vultisig.wallet.data.models.BlockchairInfo
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import io.ktor.client.HttpClient
-import wallet.core.jni.CoinType
-import java.math.BigInteger
-import java.util.UUID
 
 @Composable
 internal fun Keysign(navController: NavController, viewModel: KeysignViewModel) {

@@ -68,7 +68,7 @@ internal class ChainCoinViewModel @Inject constructor(
                 val tokens = accounts.map { account ->
                     ChainTokenUiModel(
                         name = account.token.ticker,
-                        balance = account.tokenAmount?.toPlainString(),
+                        balance = account.tokenValue?.decimal?.toPlainString(),
                         fiatBalance = account.fiatValue
                             ?.let(fiatValueToStringMapper::map),
                         tokenLogo = Coins.getCoinLogo(account.token.logo),

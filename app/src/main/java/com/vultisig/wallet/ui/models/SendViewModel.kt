@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
@@ -64,13 +65,18 @@ internal class SendViewModel @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPriceRepository: TokenPriceRepository,
+    private val gasFeeRepository: GasFeeRepository,
+
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
 ) : ViewModel() {
 
     private val vaultId: String =
         requireNotNull(savedStateHandle[ARG_VAULT_ID])
-    private val chainRaw: String =
-        requireNotNull(savedStateHandle[ARG_CHAIN_ID])
+
+    private val chain: Chain = requireNotNull(savedStateHandle[ARG_CHAIN_ID]).let { chainRaw ->
+        Chain.entries.first { it.raw == chainRaw }
+    }
+
 
     private val selectedAccount = MutableStateFlow<Account?>(null)
     private val appCurrency = appCurrencyRepository
@@ -95,6 +101,17 @@ internal class SendViewModel @Inject constructor(
         loadSelectedCurrency()
         collectSelectedAccount()
         collectAmountChanges()
+        calculateGasFees()
+    }
+
+    private fun calculateGasFees() {
+        viewModelScope.launch {
+            val gasFee = gasFeeRepository.getGasFee(chain)
+
+            uiState.update {
+                it.copy(fee = "${gasFee.value.decimal.toPlainString()} ${gasFee.unit}")
+            }
+        }
     }
 
     fun selectToken(token: TokenBalanceUiModel) {
@@ -114,7 +131,8 @@ internal class SendViewModel @Inject constructor(
 
     fun chooseMaxTokenAmount() {
         val selectedAccountTokenAmount = selectedAccount.value
-            ?.tokenAmount
+            ?.tokenValue
+            ?.decimal
             ?.toPlainString()
             ?: return
 
@@ -124,8 +142,6 @@ internal class SendViewModel @Inject constructor(
     private fun loadTokens() {
         viewModelScope.launch {
             val vault = requireNotNull(vaultDb.select(vaultId))
-
-            val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
 
             val address = chainAccountAddressRepository.getAddress(chain, vault)
 
@@ -241,3 +257,4 @@ internal class SendViewModel @Inject constructor(
     }
 
 }
+

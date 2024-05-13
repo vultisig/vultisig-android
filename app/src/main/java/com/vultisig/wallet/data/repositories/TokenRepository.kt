@@ -18,6 +18,8 @@ internal interface TokenRepository {
 
     fun getChainTokens(vaultId: String, chainId: String): Flow<List<Coin>>
 
+    suspend fun getNativeToken(chainId: String): Flow<Coin>
+
     val allTokens: Flow<List<Coin>>
 
     val nativeTokens: Flow<List<Coin>>
@@ -45,6 +47,9 @@ internal class TokenRepositoryImpl @Inject constructor(
         .map { allTokens ->
             allTokens.filter { it.chain.id == chainId }
         }
+
+    override suspend fun getNativeToken(chainId: String): Flow<Coin> =
+        nativeTokens.map { it.first { it.chain.id == chainId } }
 
     override val allTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
 
