@@ -55,5 +55,21 @@ internal sealed class Destination(
             const val STATIC_ROUTE = VaultSettings.STATIC_ROUTE + "/rename"
         }
     }
+    data object Settings : Destination(route = "settings")
+    data object DefaultChainSetting : Destination(route = "settings/default_chains")
+    data object FAQSetting : Destination(route = "settings/faq")
+    data object VultisigToken : Destination(route = "settings/vultisig_token")
+    data class LanguageSetting(val langId:Int) : Destination(route = "settings/language/$langId"){
+        companion object {
+            const val ARG_LANG_ID = "lang_id"
+            const val STATIC_ROUTE = "settings/language/{$ARG_LANG_ID}"
+        }
+    }
+    data class CurrencyUnitSetting(val currencyId:Int) : Destination(route = "settings/currency/$currencyId"){
+        companion object {
+            const val ARG_CURRENCY_ID = "currency_id"
+            const val STATIC_ROUTE = "settings/currency/{$ARG_CURRENCY_ID}"
+        }
+    }
 
 }
