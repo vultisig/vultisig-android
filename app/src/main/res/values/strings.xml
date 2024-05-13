@@ -38,7 +38,7 @@
     <string name="send_to_address_hint">Enter Address</string>
     <string name="send_amount">Amount</string>
     <string name="send_amount_hint">Enter Amount</string>
-    <string name="send_amount_currency">Amount (in USD)</string>
+    <string name="send_amount_currency">Amount (in %s)</string>
     <string name="send_amount_currency_hint">Enter Amount</string>
     <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Continue</string>
@@ -48,4 +48,5 @@
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">this name already exist</string>
+    <string name="send_screen_max">MAX</string>
 </resources>

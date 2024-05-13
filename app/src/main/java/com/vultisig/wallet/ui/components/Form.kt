@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text2.BasicTextField2
 import androidx.compose.foundation.text2.input.TextFieldLineLimits
 import androidx.compose.foundation.text2.input.TextFieldState
@@ -24,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
@@ -37,7 +39,7 @@ internal fun FormTokenCard(
     availableToken: String,
     isExpanded: Boolean,
     onClick: () -> Unit,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     FormCard {
         TokenCard(
@@ -112,6 +114,7 @@ internal fun TokenCard(
 internal fun FormTextFieldCard(
     title: String,
     hint: String,
+    keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
@@ -134,6 +137,9 @@ internal fun FormTextFieldCard(
                 textStyle = Theme.menlo.body1
                     .copy(color = Theme.colors.neutral100),
                 cursorBrush = Theme.cursorBrush,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = keyboardType,
+                ),
                 modifier = Modifier
                     .weight(1f),
                 decorator = { textField ->

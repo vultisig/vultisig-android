@@ -12,7 +12,7 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor() :
 
     override fun map(from: Account) = TokenBalanceUiModel(
         title = from.token.ticker,
-        balance = from.tokenAmount,
+        balance = from.tokenAmount?.toPlainString(),
         logo = from.logo,
         model = from,
     )

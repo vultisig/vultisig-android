@@ -7,6 +7,8 @@ import javax.inject.Inject
 
 internal interface AppCurrencyRepository {
 
+    val defaultCurrency: AppCurrency
+
     val currency: Flow<AppCurrency>
 
     fun setCurrency(currency: AppCurrency)
@@ -15,7 +17,9 @@ internal interface AppCurrencyRepository {
 
 internal class AppCurrencyRepositoryImpl @Inject constructor() : AppCurrencyRepository {
 
-    override val currency: Flow<AppCurrency> = flowOf(AppCurrency.USD)
+    override val defaultCurrency = AppCurrency.USD
+
+    override val currency: Flow<AppCurrency> = flowOf(defaultCurrency)
 
     override fun setCurrency(currency: AppCurrency) {
         // TODO set up saving to preferences datastore when needed

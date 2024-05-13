@@ -16,7 +16,7 @@ internal class ChainAccountToChainAccountUiModelMapperImpl @Inject constructor(
         chainName = from.chainName,
         logo = from.logo,
         address = from.address,
-        nativeTokenAmount = from.tokenAmount,
+        nativeTokenAmount = from.tokenAmount?.toPlainString(),
         fiatAmount = from.fiatValue?.let(fiatValueToStringMapper::map),
     )
 

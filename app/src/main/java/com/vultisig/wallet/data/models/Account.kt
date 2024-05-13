@@ -12,7 +12,7 @@ internal data class Account(
     amount of native token for this chain on the address,
     null if unknown yet
      */
-    val tokenAmount: String?,
+    val tokenAmount: BigDecimal?,
     /**
     amount of token for this chain on the address in fiat,
     null if unknown yet
