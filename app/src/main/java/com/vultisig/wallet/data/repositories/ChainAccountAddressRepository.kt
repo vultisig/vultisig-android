@@ -8,6 +8,7 @@ import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.models.coinType
 import com.vultisig.wallet.tss.TssKeyType
+import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
@@ -29,6 +30,11 @@ internal interface ChainAccountAddressRepository {
         coin: Coin,
         vault: Vault,
     ): Pair<String, String>
+
+    fun isValid(
+        chain: Chain,
+        address: String,
+    ): Boolean
 
 }
 
@@ -86,6 +92,15 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
             }
         }
 
+    }
+
+    override fun isValid(
+        chain: Chain,
+        address: String,
+    ): Boolean = if (chain == Chain.mayaChain) {
+        AnyAddress.isValidBech32(address, chain.coinType, "maya")
+    } else {
+        chain.coinType.validate(address)
     }
 
 }

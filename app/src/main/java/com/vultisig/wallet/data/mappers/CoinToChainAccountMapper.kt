@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.logo
 import javax.inject.Inject
 
@@ -22,7 +23,8 @@ internal class CoinToChainAccountMapperImpl @Inject constructor() : CoinToChainA
         Account(
             token = from.token,
             chainName = from.chain.raw,
-            logo = from.chain.logo,
+            logo = if (from.token.isNativeToken) from.chain.logo
+            else Coins.getCoinLogo(from.token.logo),
             address = from.address,
             tokenValue = from.balance?.tokenValue,
             fiatValue = from.balance?.fiatValue,
