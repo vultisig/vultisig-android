@@ -84,6 +84,7 @@ internal class SendViewModel @Inject constructor(
     private var lastToken = ""
     private var lastFiat = ""
 
+    val addressFieldState = TextFieldState()
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
 
@@ -105,6 +106,19 @@ internal class SendViewModel @Inject constructor(
         uiState.update {
             it.copy(isTokensExpanded = !it.isTokensExpanded)
         }
+    }
+
+    fun setOutputAddress(address: String) {
+        addressFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
+    fun chooseMaxTokenAmount() {
+        val selectedAccountTokenAmount = selectedAccount.value
+            ?.tokenAmount
+            ?.toPlainString()
+            ?: return
+
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(selectedAccountTokenAmount)
     }
 
     private fun loadTokens() {

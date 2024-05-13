@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text2.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -20,7 +20,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -117,12 +119,21 @@ internal fun SendScreen(
                 FormTextFieldCard(
                     title = stringResource(R.string.send_to_address),
                     hint = stringResource(R.string.send_to_address_hint),
-                    textFieldState = rememberTextFieldState(),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = viewModel.addressFieldState,
                 ) {
+                    val clipboard = LocalClipboardManager.current
+
                     UiIcon(
                         drawableResId = R.drawable.copy,
                         size = 20.dp,
+                        onClick = {
+                            clipboard.getText()
+                                ?.toString()
+                                ?.let(viewModel::setOutputAddress)
+                        }
                     )
+
                     UiSpacer(size = 8.dp)
                     UiIcon(
                         drawableResId = R.drawable.camera,
@@ -133,18 +144,22 @@ internal fun SendScreen(
                 FormTextFieldCard(
                     title = stringResource(R.string.send_amount),
                     hint = stringResource(R.string.send_amount_hint),
+                    keyboardType = KeyboardType.Number,
                     textFieldState = viewModel.tokenAmountFieldState,
                 ) {
                     Text(
                         text = stringResource(R.string.send_screen_max),
                         color = Theme.colors.neutral100,
                         style = Theme.menlo.body1,
+                        modifier = Modifier
+                            .clickable(onClick = viewModel::chooseMaxTokenAmount),
                     )
                 }
 
                 FormTextFieldCard(
                     title = stringResource(R.string.send_amount_currency, state.fiatCurrency),
                     hint = stringResource(R.string.send_amount_currency_hint),
+                    keyboardType = KeyboardType.Number,
                     textFieldState = viewModel.fiatAmountFieldState,
                 )
 

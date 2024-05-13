@@ -114,6 +114,7 @@ internal fun TokenCard(
 internal fun FormTextFieldCard(
     title: String,
     hint: String,
+    keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
@@ -137,7 +138,7 @@ internal fun FormTextFieldCard(
                     .copy(color = Theme.colors.neutral100),
                 cursorBrush = Theme.cursorBrush,
                 keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
+                    keyboardType = keyboardType,
                 ),
                 modifier = Modifier
                     .weight(1f),
