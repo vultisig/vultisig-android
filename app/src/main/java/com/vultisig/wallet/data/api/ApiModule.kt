@@ -45,4 +45,10 @@ internal interface ApiModule {
     fun bindCosmosApi(
         impl: CosmosApiFactoryImp,
     ): CosmosApiFactory
+
+    @Binds
+    @Singleton
+    fun bindSolanaApi(
+        impl: SolanaApiImp,
+    ): SolanaApi
 }
