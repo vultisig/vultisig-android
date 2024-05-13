@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -16,6 +17,8 @@ import com.vultisig.wallet.models.Chain.bscChain
 import com.vultisig.wallet.models.Chain.dash
 import com.vultisig.wallet.models.Chain.dogecoin
 import com.vultisig.wallet.models.Chain.ethereum
+import com.vultisig.wallet.models.Chain.gaiaChain
+import com.vultisig.wallet.models.Chain.kujira
 import com.vultisig.wallet.models.Chain.litecoin
 import com.vultisig.wallet.models.Chain.mayaChain
 import com.vultisig.wallet.models.Chain.optimism
@@ -50,6 +53,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val blockchairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
     private val mayaChainApi: MayaChainApi,
+    private val cosmosApiFactory: CosmosApiFactory,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
 ) : BalanceRepository {
@@ -104,6 +108,19 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
             ethereum, bscChain, avalanche, base, arbitrum, polygon, optimism -> {
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
+            }
+
+            gaiaChain, kujira -> {
+                val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
+                val listCosmosBalance = cosmosApi.getBalance(address)
+                val balance = listCosmosBalance
+                    .find {
+                        it.denom.equals(
+                            "u${coin.ticker.lowercase()}",
+                            ignoreCase = true
+                        )
+                    }
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
             else -> 0.toBigInteger() // TODO support other chains
