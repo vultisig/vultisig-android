@@ -25,8 +25,10 @@ class THORCHainHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {
-    private val coinType: CoinType = CoinType.THORCHAIN
-    private val THORChainGasUnit: Long = 2000000
+    companion object{
+        private val coinType: CoinType = CoinType.THORCHAIN
+        val THORChainGasUnit: Long = 2000000
+    }
 
 
     fun getCoin(): Coin? {

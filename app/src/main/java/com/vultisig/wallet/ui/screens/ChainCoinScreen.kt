@@ -175,6 +175,13 @@ fun ChainCoinScreen(navController: NavHostController) {
                         onClick = viewModel::swap
                     )
 
+                    Spacer(modifier = Modifier.width(24.dp))
+                    VaultAction(
+                        stringResource(R.string.chain_account_view_deposit),
+                        appColor.mediumPurple,
+                        onClick = viewModel::deposit
+                    )
+
                     Spacer(modifier = Modifier.width(dimens.marginMedium))
                 }
 

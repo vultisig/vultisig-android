@@ -44,7 +44,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditEvent.OnNameChange
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditEvent.OnSave
-import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.NavigateToScreen
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.ShowSnackBar
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.theme.Theme
@@ -62,7 +61,6 @@ fun VaultEditScreen(navHostController: NavHostController) {
         viewmodel.loadData()
         viewmodel.channelFlow.collect { event ->
             when (event) {
-                is NavigateToScreen -> navHostController.navigate(event.route)
                 is ShowSnackBar -> snackBarHostState.showSnackbar(event.message.asString(context))
             }
         }

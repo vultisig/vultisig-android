@@ -21,28 +21,6 @@ sealed class Screen(val route: String) {
                 return "vault_detail/$vaultId/add_account"
             }
         }
-
-        data object VaultSettings : Screen(route = "vault_detail/{vault_id}/settings") {
-            private var vaultId: String? = null
-            const val ARG_VAULT_ID = "vault_id"
-            fun createRoute(vaultId: String): String {
-                this.vaultId = vaultId
-                return "vault_detail/$vaultId/settings"
-            }
-
-            data object Details:Screen (route = "${VaultSettings.route}/details"){
-                fun createRoute(): String {
-                    return "${createRoute(vaultId!!)}/details"
-                }
-            }
-
-            data object Rename:Screen (route = "${VaultSettings.route}/rename"){
-                fun createRoute(): String {
-                    return "${createRoute(vaultId!!)}/rename"
-                }
-            }
-        }
-
     }
 
     data object KeysignFlow : Screen(route = "keysign_flow")
