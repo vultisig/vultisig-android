@@ -6,6 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
 import com.vultisig.wallet.chains.AtomHelper
+import com.vultisig.wallet.chains.ERC20Helper
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.KujiraHelper
 import com.vultisig.wallet.chains.MayaChainHelper
@@ -15,6 +16,10 @@ import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.common.toHexBytes
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CosmosApiFactory
+import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
@@ -51,6 +56,10 @@ internal class KeysignViewModel(
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
+    private val evmApiFactory: EvmApiFactory,
+    private val mayaChainApi: MayaChainApi,
+    private val cosmosApiFactory: CosmosApiFactory,
+    private val solanaApi: SolanaApi,
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -61,6 +70,8 @@ internal class KeysignViewModel(
     private var _messagePuller: TssMessagePuller? = null
     private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
     val txHash: MutableState<String> = mutableStateOf("")
+
+
     suspend fun startKeysign() {
         withContext(Dispatchers.IO) {
             signAndBroadcast()
@@ -161,8 +172,37 @@ internal class KeysignViewModel(
                     }
                 }
 
-                else -> {
-                    throw Exception("Not implemented")
+                Chain.ethereum, Chain.cronosChain, Chain.blast, Chain.bscChain, Chain.avalanche, Chain.base, Chain.polygon, Chain.optimism, Chain.arbitrum -> {
+                    val evmApi = evmApiFactory.createEvmApi(keysignPayload.coin.chain)
+                    val txid = evmApi.sendTransaction(signedTransaction.rawTransaction)
+                    txHash.value = txid
+                    Timber.d("transaction hash:$txHash")
+                }
+
+                Chain.solana -> {
+                    solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
+                        ?.let {
+                            txHash.value = it
+                            Timber.d("transaction hash:$it")
+                        }
+
+                }
+
+                Chain.gaiaChain, Chain.kujira -> {
+                    val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
+                    cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
+                        ?.let {
+                            txHash.value = it
+                            Timber.d("transaction hash:$it")
+                        }
+                }
+
+                Chain.mayaChain -> {
+                    mayaChainApi.broadcastTransaction(signedTransaction.rawTransaction)
+                        ?.let {
+                            txHash.value = it
+                            Timber.d("transaction hash:$it")
+                        }
                 }
             }
         } catch (e: Exception) {
@@ -207,12 +247,22 @@ internal class KeysignViewModel(
             }
 
             Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.cronosChain, Chain.blast, Chain.arbitrum, Chain.optimism, Chain.polygon, Chain.base -> {
-                val evmHelper = EvmHelper(
-                    keysignPayload.coin.coinType,
-                    vault.pubKeyECDSA,
-                    vault.hexChainCode
-                )
-                return evmHelper.getSignedTransaction(keysignPayload, signatures)
+                if (keysignPayload.coin.isNativeToken) {
+                    val evmHelper = EvmHelper(
+                        keysignPayload.coin.coinType,
+                        vault.pubKeyECDSA,
+                        vault.hexChainCode
+                    )
+                    return evmHelper.getSignedTransaction(keysignPayload, signatures)
+                } else {
+                    val erc20Helper = ERC20Helper(
+                        keysignPayload.coin.coinType,
+                        vault.pubKeyECDSA,
+                        vault.hexChainCode
+                    )
+                    return erc20Helper.getSignedTransaction(keysignPayload, signatures)
+                }
+
             }
 
             Chain.mayaChain -> {

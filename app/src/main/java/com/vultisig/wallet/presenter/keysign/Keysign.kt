@@ -25,6 +25,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApiImpl
 import com.vultisig.wallet.data.models.BlockchairInfo
 import com.vultisig.wallet.models.Coin
@@ -138,56 +139,4 @@ internal fun Keysign(navController: NavController, viewModel: KeysignViewModel) 
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
     }
-}
-
-@Preview(showBackground = true, name = "Keysign Preview")
-@Composable
-fun PreviewKeysign() {
-    Keysign(
-        navController = rememberNavController(), viewModel = KeysignViewModel(
-            vault = Vault("new vault"),
-            keysignCommittee = listOf("device1", "device2", "device3"),
-            serverAddress = "http://127.0.0.1:18080",
-            sessionId = UUID.randomUUID().toString(),
-            encryptionKeyHex = Utils.encryptionKeyHex,
-            messagesToSign = listOf("message1", "message2", "message3"),
-            keyType = TssKeyType.ECDSA,
-            keysignPayload = KeysignPayload(
-                coin = Coins.getCoin(
-                    "RUNE",
-                    "thor1q0j2z5x2g3v3x2z5x2g3v3x2z5x2g3v3x2z5x",
-                    "vaultPublicKey",
-                    coinType = CoinType.THORCHAIN
-                )!!,
-                toAddress = "",
-                toAmount = BigInteger.ZERO,
-                blockChainSpecific = BlockChainSpecific.THORChain(
-                    BigInteger.valueOf(1024),
-                    BigInteger.valueOf(0)
-                ),
-                utxos = emptyList(),
-                vaultPublicKeyECDSA = ""
-            ),
-            gson = Gson(),
-            thorChainApi = ThorChainApiImpl(
-                gson = Gson(), httpClient = HttpClient()
-            ),
-            blockChairApi = object : BlockChairApi {
-                override suspend fun getAddressInfo(coin: Coin): BlockchairInfo? {
-                    return null
-                }
-
-                override suspend fun getBlockchairStats(coin: Coin): BigInteger {
-                    return BigInteger.ZERO
-                }
-
-                override suspend fun broadcastTransaction(
-                    coin: Coin,
-                    signedTransaction: String,
-                ): String {
-                    return ""
-                }
-            }
-        )
-    )
 }
