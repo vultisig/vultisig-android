@@ -114,14 +114,14 @@ fun SettingsScreen(navController: NavHostController) {
                     painter = painterResource(id = R.drawable.settings_github),
                     contentDescription = "github",
                     modifier = Modifier.clickable {
-                        uriHandler.openUri("https://github.com/")
+                        uriHandler.openUri("https://github.com/vultisig")
                     }
                 )
                 Image(
                     painter = painterResource(id = R.drawable.settings_twitter),
                     contentDescription = "twitter",
                     modifier = Modifier.clickable {
-                        uriHandler.openUri("https://twitter.com/")
+                        uriHandler.openUri("https://twitter.com/vultisig")
                     }
                 )
             }
