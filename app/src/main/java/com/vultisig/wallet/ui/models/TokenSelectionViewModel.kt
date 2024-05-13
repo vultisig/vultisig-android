@@ -9,7 +9,8 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -38,10 +39,10 @@ internal class TokenSelectionViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val vaultId: String =
-        requireNotNull(savedStateHandle[Destination.SelectTokens.ARG_VAULT_ID])
+        requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
     private val chainId: String =
-        requireNotNull(savedStateHandle[Destination.SelectTokens.ARG_CHAIN_ID])
+        requireNotNull(savedStateHandle[ARG_CHAIN_ID])
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
 
@@ -49,7 +50,6 @@ internal class TokenSelectionViewModel @Inject constructor(
         loadChains()
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun enableToken(coin: Coin) {
         viewModelScope.launch {
             commitVault(checkNotNull(vaultDb.select(vaultId)) {

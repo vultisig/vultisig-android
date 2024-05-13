@@ -1,15 +1,16 @@
 package com.vultisig.wallet.ui.navigation
 
-import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditScreen
 import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.home.HomeScreen
@@ -18,8 +19,11 @@ import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
+import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.presenter.settings.SettingsScreen
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
@@ -28,7 +32,11 @@ import com.vultisig.wallet.presenter.settings.language_setting.LanguageSettingSc
 import com.vultisig.wallet.presenter.settings.vultisig_token_setting.VultisigTokenScreen
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.screens.ChainCoinScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
@@ -40,6 +48,7 @@ import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
+import java.math.BigInteger
 
 @ExperimentalAnimationApi
 @Composable
@@ -147,7 +156,44 @@ internal fun SetupNavGraph(
         ) {
             JoinKeysignView(navController)
         }
-        composable(route = Screen.KeysignFlow.route) {
+        composable(
+            route = Destination.Keysign.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+                navArgument(ARG_TOKEN_ID) { type = NavType.StringType },
+                navArgument(Destination.Keysign.ARG_DST_ADDRESS) { type = NavType.StringType },
+                navArgument(Destination.Keysign.ARG_AMOUNT) { type = NavType.StringType },
+            )
+        ) { entry ->
+            val vaultId = entry.arguments?.getString(ARG_VAULT_ID)!!
+            val chainId = entry.arguments?.getString(ARG_CHAIN_ID)!!
+            val tokenId = entry.arguments?.getString(ARG_TOKEN_ID)!!
+            val dstAddress = entry.arguments?.getString(Destination.Keysign.ARG_DST_ADDRESS)!!
+            val amount = entry.arguments?.getString(Destination.Keysign.ARG_AMOUNT)!!
+
+            val vaultDB = VaultDB(context)
+            val vault = vaultDB.select(vaultId)!!
+
+            val pubKeyECDSA = vault.pubKeyECDSA
+            val coin = vault.coins.find { it.id == tokenId && it.chain.id == chainId }!!
+
+            val keysignShareViewModel: KeysignShareViewModel =
+                viewModel(context as MainActivity)
+            keysignShareViewModel.vault = vault
+            keysignShareViewModel.keysignPayload = KeysignPayload(
+                coin = coin,
+                toAddress = dstAddress,
+                toAmount = BigInteger(amount),
+                blockChainSpecific = BlockChainSpecific.THORChain(
+                    BigInteger("105501"),
+                    BigInteger("0")
+                ),
+                memo = null,
+                swapPayload = null,
+                approvePayload = null,
+                vaultPublicKeyECDSA = pubKeyECDSA,
+            )
             KeysignFlowView(navController)
         }
         composable(route = Screen.ChainCoin.route) {
@@ -156,8 +202,8 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.SelectTokens.staticRoute,
             arguments = listOf(
-                navArgument(Destination.SelectTokens.ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(Destination.SelectTokens.ARG_CHAIN_ID) { type = NavType.StringType }
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) { type = NavType.StringType }
             )
         ) {
             TokenSelectionScreen(
