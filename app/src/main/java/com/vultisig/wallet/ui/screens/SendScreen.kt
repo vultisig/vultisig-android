@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text2.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,7 +64,8 @@ internal fun SendScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
-                    .padding(all = 16.dp),
+                    .padding(all = 16.dp)
+                    .verticalScroll(rememberScrollState()),
             ) {
                 UiLinearProgressIndicator(
                     progress = 0.25f,
@@ -130,19 +133,19 @@ internal fun SendScreen(
                 FormTextFieldCard(
                     title = stringResource(R.string.send_amount),
                     hint = stringResource(R.string.send_amount_hint),
-                    textFieldState = rememberTextFieldState(),
+                    textFieldState = viewModel.tokenAmountFieldState,
                 ) {
                     Text(
-                        text = "MAX",
+                        text = stringResource(R.string.send_screen_max),
                         color = Theme.colors.neutral100,
                         style = Theme.menlo.body1,
                     )
                 }
 
                 FormTextFieldCard(
-                    title = stringResource(R.string.send_amount_currency), // TODO add any currency
+                    title = stringResource(R.string.send_amount_currency, state.fiatCurrency),
                     hint = stringResource(R.string.send_amount_currency_hint),
-                    textFieldState = rememberTextFieldState(),
+                    textFieldState = viewModel.fiatAmountFieldState,
                 )
 
                 Row {
