@@ -84,7 +84,6 @@ internal class SendViewModel @Inject constructor(
             accountsRepository.loadChainAccounts(
                 vaultId = vaultId,
                 chain = chain,
-                address = address,
             ).collect { accounts ->
                 val tokenUiModels = accounts
                     .map(accountToTokenBalanceUiModelMapper::map)

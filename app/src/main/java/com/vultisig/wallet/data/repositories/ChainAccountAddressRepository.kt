@@ -1,16 +1,14 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.chains.PublicKeyHelper
-import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.coinType
 import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.chains.PublicKeyHelper
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.models.coinType
 import com.vultisig.wallet.tss.TssKeyType
+import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import javax.inject.Inject
@@ -55,7 +53,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     ): String = type.deriveAddressFromPublicKey(publicKey)
 
     @OptIn(ExperimentalStdlibApi::class)
-    suspend fun getAddress(
+    override suspend fun getAddress(
         coin: Coin,
         vault: Vault,
     ): Pair<String, String> {

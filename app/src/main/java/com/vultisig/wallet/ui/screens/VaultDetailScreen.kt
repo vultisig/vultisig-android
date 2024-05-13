@@ -36,12 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.presenter.base_components.BoxWithSwipeRefresh
-import com.vultisig.wallet.chains.THORCHainHelper
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
-import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiPlusButton
