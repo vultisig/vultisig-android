@@ -23,7 +23,7 @@ internal interface RepositoriesModule {
     @Binds
     @Singleton
     fun bindChainAccountAddressRepository(
-        impl: ChainAccountAddressRepositoryImpl
+        impl: ChainAccountAddressRepositoryImpl,
     ): ChainAccountAddressRepository
 
     @Binds
@@ -49,6 +49,12 @@ internal interface RepositoriesModule {
     abstract fun bindOnBoardRepository(
         impl: DataStoreRepositoryImpl,
     ): OnBoardRepository
+
+    @Binds
+    @Singleton
+    fun bindTokenRepository(
+        impl: TokenRepositoryImpl,
+    ): TokenRepository
 
     companion object {
 
