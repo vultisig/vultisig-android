@@ -9,8 +9,6 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,8 +33,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.components.UiBarContainer
 import timber.log.Timber
 
 internal const val ARG_QR_CODE = "qr_code"
@@ -47,25 +44,17 @@ internal fun ScanQrScreen(
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
-    Column(
-        modifier = Modifier
-            .background(Theme.colors.oxfordBlue800)
-            .fillMaxSize(),
+    UiBarContainer(
+        navController = navController,
+        title = stringResource(R.string.scan_qr_default_title),
     ) {
-        TopBar(
-            centerText = stringResource(R.string.scan_qr_default_title),
-            startIcon = R.drawable.caret_left,
-            navController = navController
-        )
-
         if (cameraPermissionState.status.isGranted) {
-            var isScanned by  remember { mutableStateOf(false) }
+            var isScanned by remember { mutableStateOf(false) }
             QrCameraScreen(
                 onSuccess = {
                     if (!isScanned) {
                         isScanned = true
                         val barcode = it.first()
-                        Timber.e("onSuccess: ${it.joinToString { it.rawValue.toString() }}")
                         navController.previousBackStackEntry
                             ?.savedStateHandle
                             ?.set(ARG_QR_CODE, barcode.rawValue)

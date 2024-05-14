@@ -12,13 +12,15 @@ import javax.inject.Inject
 
 internal interface TokenRepository {
 
+    fun getToken(tokenId: String): Flow<Coin>
+
     fun getEnabledTokens(vaultId: String): Flow<List<Coin>>
 
     fun getEnabledChains(vaultId: String): Flow<Set<Chain>>
 
     fun getChainTokens(vaultId: String, chainId: String): Flow<List<Coin>>
 
-    suspend fun getNativeToken(chainId: String): Flow<Coin>
+    fun getNativeToken(chainId: String): Flow<Coin>
 
     val allTokens: Flow<List<Coin>>
 
@@ -29,6 +31,9 @@ internal interface TokenRepository {
 internal class TokenRepositoryImpl @Inject constructor(
     private val vaultDB: VaultDB,
 ) : TokenRepository {
+
+    override fun getToken(tokenId: String): Flow<Coin> =
+        allTokens.map { it.first { it.id == tokenId } }
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
         emit(requireNotNull(vaultDB.select(vaultId)?.coins))
@@ -48,7 +53,7 @@ internal class TokenRepositoryImpl @Inject constructor(
             allTokens.filter { it.chain.id == chainId }
         }
 
-    override suspend fun getNativeToken(chainId: String): Flow<Coin> =
+    override fun getNativeToken(chainId: String): Flow<Coin> =
         nativeTokens.map { it.first { it.chain.id == chainId } }
 
     override val allTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)

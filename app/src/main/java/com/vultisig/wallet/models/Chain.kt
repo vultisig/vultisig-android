@@ -40,6 +40,11 @@ enum class Chain(
 
     val id: String
         get() = raw
+
+    companion object {
+        fun fromRaw(raw: String): Chain =
+            Chain.entries.first { it.raw == raw }
+    }
 }
 
 val Chain.coinType: CoinType

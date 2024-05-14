@@ -56,9 +56,6 @@ internal data class SendUiModel(
     val availableTokens: List<TokenBalanceUiModel> = emptyList(),
     val isTokensExpanded: Boolean = false,
     val from: String = "",
-    val to: String = "",
-    val tokenAmount: String = "",
-    val fiatAmount: String = "",
     val fiatCurrency: String = "",
     val fee: String? = null,
     val errorText: UiText? = null,
@@ -86,9 +83,8 @@ internal class SendViewModel @Inject constructor(
     private val vaultId: String =
         requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
-    private val chain: Chain = requireNotNull(savedStateHandle[ARG_CHAIN_ID]).let { chainRaw ->
-        Chain.entries.first { it.raw == chainRaw }
-    }
+    private val chain: Chain = requireNotNull(savedStateHandle.get<String>(ARG_CHAIN_ID))
+        .let(Chain::fromRaw)
 
     fun setAddressFromQrCode(qrCode: String?) {
         if (qrCode != null) {
@@ -236,7 +232,7 @@ internal class SendViewModel @Inject constructor(
                 }
 
                 navigator.navigate(
-                    Destination.Keysign(
+                    Destination.VerifyTransaction(
                         vaultId = vaultId,
                         chainId = chain.raw,
                         tokenId = selectedToken.id,
