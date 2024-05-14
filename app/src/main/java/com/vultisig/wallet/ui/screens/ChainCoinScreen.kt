@@ -360,7 +360,7 @@ private fun CoinItem(
 
 @Preview(showBackground = true, name = "chain coin screen")
 @Composable
-fun ChainCoinScreenPreview() {
+private fun ChainCoinScreenPreview() {
     ChainCoinScreen(navController = rememberNavController())
 }
 
