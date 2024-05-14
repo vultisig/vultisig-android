@@ -34,7 +34,9 @@ import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_AMOUNT
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
@@ -45,6 +47,7 @@ import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
+import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
@@ -160,19 +163,13 @@ internal fun SetupNavGraph(
         }
         composable(
             route = Destination.Keysign.staticRoute,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
-                navArgument(ARG_TOKEN_ID) { type = NavType.StringType },
-                navArgument(Destination.Keysign.ARG_DST_ADDRESS) { type = NavType.StringType },
-                navArgument(Destination.Keysign.ARG_AMOUNT) { type = NavType.StringType },
-            )
+            arguments = Destination.transactionArgs,
         ) { entry ->
             val vaultId = entry.arguments?.getString(ARG_VAULT_ID)!!
             val chainId = entry.arguments?.getString(ARG_CHAIN_ID)!!
             val tokenId = entry.arguments?.getString(ARG_TOKEN_ID)!!
-            val dstAddress = entry.arguments?.getString(Destination.Keysign.ARG_DST_ADDRESS)!!
-            val amount = entry.arguments?.getString(Destination.Keysign.ARG_AMOUNT)!!
+            val dstAddress = entry.arguments?.getString(ARG_DST_ADDRESS)!!
+            val amount = entry.arguments?.getString(ARG_AMOUNT)!!
 
             val vaultDB = VaultDB(context)
             val vault = vaultDB.select(vaultId)!!
@@ -233,6 +230,12 @@ internal fun SetupNavGraph(
             route = Destination.ScanQr.route,
         ) {
             ScanQrScreen(navController = navController)
+        }
+        composable(
+            route = Destination.VerifyTransaction.staticRoute,
+            arguments = Destination.transactionArgs,
+        ) {
+            VerifyTransactionScreen(navController = navController)
         }
 
         composable(

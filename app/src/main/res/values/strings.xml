@@ -73,4 +73,12 @@
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG TOKEN</string>
     <string name="scan_qr_default_title">Scan</string>
+    <string name="verify_transaction_title">Verify</string>
+    <string name="verify_transaction_screen_title">Verify</string>
+    <string name="verify_transaction_from_title">From</string>
+    <string name="verify_transaction_to_title">To</string>
+    <string name="verify_transaction_amount_title">Amount</string>
+    <string name="verify_transaction_fiat_amount_title">Amount in (%s)</string>
+    <string name="verify_transaction_gas_title">Gas</string>
+    <string name="verify_transaction_join_keysign">Join Keysign</string>
 </resources>

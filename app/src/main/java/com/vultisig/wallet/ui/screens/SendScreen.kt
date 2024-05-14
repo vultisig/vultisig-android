@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,8 +34,9 @@ import com.vultisig.wallet.ui.components.FormTextFieldCard
 import com.vultisig.wallet.ui.components.FormTokenCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TokenCard
-import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.ui.components.UiBarContainer
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -67,16 +66,10 @@ internal fun SendScreen(
         viewModel.setAddressFromQrCode(qrCodeResult)
     }
 
-    Column(
-        modifier = Modifier
-            .background(Theme.colors.oxfordBlue800)
-            .fillMaxSize(),
+    UiBarContainer(
+        navController = navController,
+        title = stringResource(R.string.send_screen_title),
     ) {
-        TopBar(
-            centerText = stringResource(R.string.send_screen_title),
-            startIcon = R.drawable.caret_left,
-            navController = navController
-        )
         Box(
             modifier = Modifier
                 .fillMaxSize(),
@@ -105,10 +98,9 @@ internal fun SendScreen(
                     onClick = viewModel::toggleTokens,
                 ) {
                     state.availableTokens.forEach { token ->
-                        HorizontalDivider(
-                            color = Theme.colors.oxfordBlue200,
+                        UiHorizontalDivider(
                             modifier = Modifier
-                                .padding(horizontal = 12.dp),
+                                .padding(horizontal = 12.dp)
                         )
 
                         TokenCard(

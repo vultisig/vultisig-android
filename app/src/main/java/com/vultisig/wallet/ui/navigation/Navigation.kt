@@ -1,5 +1,8 @@
 package com.vultisig.wallet.ui.navigation
 
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+
 internal sealed class Destination(
     val route: String,
 ) {
@@ -8,6 +11,17 @@ internal sealed class Destination(
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_TOKEN_ID = "token_id"
+        const val ARG_DST_ADDRESS = "dst_address"
+        const val ARG_AMOUNT = "amount"
+
+        val transactionArgs = listOf(
+            navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+            navArgument(ARG_TOKEN_ID) { type = NavType.StringType },
+            navArgument(ARG_DST_ADDRESS) { type = NavType.StringType },
+            navArgument(ARG_AMOUNT) { type = NavType.StringType },
+        )
+
     }
 
     data class Keysign(
@@ -20,8 +34,6 @@ internal sealed class Destination(
         route = buildRoute(vaultId, chainId, tokenId, dstAddress, amount)
     ) {
         companion object {
-            const val ARG_DST_ADDRESS = "dst_address"
-            const val ARG_AMOUNT = "amount"
             val staticRoute = buildRoute(
                 "{$ARG_VAULT_ID}",
                 "{$ARG_CHAIN_ID}",
@@ -50,6 +62,36 @@ internal sealed class Destination(
         companion object {
             const val staticRoute =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send"
+        }
+    }
+
+    data class VerifyTransaction(
+        val vaultId: String,
+        val chainId: String,
+        val tokenId: String,
+        val dstAddress: String,
+        val amount: String,
+    ) : Destination(
+        route = buildRoute(vaultId, chainId, tokenId, dstAddress, amount)
+    ) {
+        companion object {
+
+            val staticRoute = buildRoute(
+                "{$ARG_VAULT_ID}",
+                "{$ARG_CHAIN_ID}",
+                "{$ARG_TOKEN_ID}",
+                "{$ARG_DST_ADDRESS}",
+                "{$ARG_AMOUNT}",
+            )
+
+            private fun buildRoute(
+                vaultId: String,
+                chainId: String,
+                tokenId: String,
+                dstAddress: String,
+                amount: String,
+            ) = "vault_detail/${vaultId}/account/${chainId}/" +
+                    "send/${tokenId}/verify?dst_address=${dstAddress}&amount=${amount}"
         }
     }
 
