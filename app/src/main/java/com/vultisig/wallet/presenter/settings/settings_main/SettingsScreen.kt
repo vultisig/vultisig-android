@@ -136,7 +136,7 @@ fun SettingsScreen(navController: NavHostController) {
                     painter = painterResource(id = R.drawable.settings_discord),
                     contentDescription = "discord",
                     modifier = Modifier.clickable {
-                        uriHandler.openUri("https://discord.com/vultisig")
+                        uriHandler.openUri("https://discord.gg/54wEtGYxuv")
                     }
                 )
             }
