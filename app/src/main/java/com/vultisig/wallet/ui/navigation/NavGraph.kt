@@ -38,8 +38,10 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
+import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.ChainCoinScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
@@ -212,9 +214,27 @@ internal fun SetupNavGraph(
         }
         composable(
             route = Destination.Send.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+            )
         ) {
-            SendScreen(navController = navController)
+            val savedStateHandle = navController.currentBackStackEntry
+                ?.savedStateHandle
+            val qrCodeResult = savedStateHandle?.get<String>(ARG_QR_CODE)
+            savedStateHandle?.remove<String>(ARG_QR_CODE)
+
+            SendScreen(
+                navController = navController,
+                qrCodeResult = qrCodeResult
+            )
         }
+        composable(
+            route = Destination.ScanQr.route,
+        ) {
+            ScanQrScreen(navController = navController)
+        }
+
         composable(
             route = Destination.Settings.route,
         ) {
@@ -242,7 +262,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.LanguageSetting.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(Destination.LanguageSetting.ARG_LANG_ID){
+                navArgument(Destination.LanguageSetting.ARG_LANG_ID) {
                     type = NavType.IntType
                 }
             )
@@ -253,7 +273,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.CurrencyUnitSetting.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(Destination.CurrencyUnitSetting.ARG_CURRENCY_ID){
+                navArgument(Destination.CurrencyUnitSetting.ARG_CURRENCY_ID) {
                     type = NavType.IntType
                 }
             )

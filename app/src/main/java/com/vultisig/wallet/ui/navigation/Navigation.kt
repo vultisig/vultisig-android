@@ -65,6 +65,8 @@ internal sealed class Destination(
         }
     }
 
+    data object ScanQr : Destination(route = "scan_qr")
+
     data object Back : Destination(
         route = ""
     )

@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,6 +48,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun SendScreen(
     navController: NavController,
+    qrCodeResult: String?,
     viewModel: SendViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -59,6 +61,10 @@ internal fun SendScreen(
             confirmTitle = stringResource(R.string.try_again),
             onDismiss = viewModel::dismissError,
         )
+    }
+
+    LaunchedEffect(qrCodeResult) {
+        viewModel.setAddressFromQrCode(qrCodeResult)
     }
 
     Column(
@@ -155,6 +161,7 @@ internal fun SendScreen(
                     UiIcon(
                         drawableResId = R.drawable.camera,
                         size = 20.dp,
+                        onClick = viewModel::scanAddress,
                     )
                 }
 
@@ -215,6 +222,7 @@ internal fun SendScreen(
 @Composable
 private fun SendScreenPreview() {
     SendScreen(
-        navController = rememberNavController()
+        navController = rememberNavController(),
+        qrCodeResult = null,
     )
 }

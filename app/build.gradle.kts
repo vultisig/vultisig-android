@@ -79,6 +79,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // camera
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
     // hilt di
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
@@ -89,14 +94,16 @@ dependencies {
     implementation(libs.ktor.client.okhttp)
 
     // other
-    implementation(libs.spark.core)
+    implementation(libs.accompanist.permissions)
     implementation(libs.gson)
     implementation(libs.guava)
+    implementation(libs.mlkit.barcode)
+    implementation(libs.okhttp)
+    implementation(libs.timber)
+    implementation(libs.spark.core)
     implementation(libs.core.zxing)
     implementation(libs.zxing.android.embedded)
-    implementation(libs.okhttp)
     implementation(libs.wallet.core)
-    implementation(libs.timber)
     implementation(libs.lifecycle.viewmodel.compose)
 
     // test
