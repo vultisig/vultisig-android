@@ -31,7 +31,9 @@ import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Backup
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Delete
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ErrorDownloadFile
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.SuccessBackup
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.*
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFailed
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFile
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupSuccess
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -50,7 +52,7 @@ internal fun VaultSettingsScreen(
                     snackBarHostState.showSnackbar(
                         context.getString(
                             R.string.vault_settings_success_backup_file,
-                            event.vaultName
+                            event.backupFileName
                         )
                     )
 
@@ -63,9 +65,9 @@ internal fun VaultSettingsScreen(
 
                 is BackupFile ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val isSuccess = context.downloadVault(event.vaultName)
+                        val isSuccess = context.downloadVault(event.vaultName, event.backupFileName)
                         if (isSuccess)
-                            viewModel.onEvent(SuccessBackup(event.vaultName))
+                            viewModel.onEvent(SuccessBackup(event.backupFileName))
                         else
                             viewModel.onEvent(ErrorDownloadFile)
                     }
@@ -102,7 +104,8 @@ internal fun VaultSettingsScreen(
                     icon = android.R.drawable.ic_menu_info_details,
                 ) {
                     viewModel.vault?.name?.let { vaultName ->
-                        navController.navigate(Destination.Details(vaultName).route)}
+                        navController.navigate(Destination.Details(vaultName).route)
+                    }
                 }
 
                 SettingsItem(
@@ -119,7 +122,8 @@ internal fun VaultSettingsScreen(
                     icon = R.drawable.pencil
                 ) {
                     viewModel.vault?.name?.let { vaultName ->
-                        navController.navigate(Destination.Rename(vaultName).route)}
+                        navController.navigate(Destination.Rename(vaultName).route)
+                    }
                 }
 
                 SettingsItem(

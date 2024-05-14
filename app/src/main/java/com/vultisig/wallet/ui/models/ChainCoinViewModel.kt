@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.models.IsDepositSupported
+import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -28,7 +30,10 @@ data class ChainCoinUiModel(
     val chainName: String = "",
     val chainAddress: String = "",
     val totalBalance: String = "",
+    val explorerURL: String = "",
     val tokens: List<ChainTokenUiModel> = emptyList(),
+    val canDeposit: Boolean = true,
+    val canSwap: Boolean = true,
 )
 
 @Immutable
@@ -81,8 +86,11 @@ internal class ChainCoinViewModel @Inject constructor(
                         chainName = chainRaw,
                         chainAddress = accounts.firstOrNull()?.address ?: "",
                         tokens = tokens,
+                        explorerURL = accounts.firstOrNull()?.blockExplorerUrl ?: "",
                         totalBalance = totalFiatValue
-                            ?.let(fiatValueToStringMapper::map) ?: ""
+                            ?.let(fiatValueToStringMapper::map) ?: "",
+                        canDeposit = chain.IsDepositSupported,
+                        canSwap = chain.IsSwapSupported,
                     )
                 }
             }
@@ -114,5 +122,4 @@ internal class ChainCoinViewModel @Inject constructor(
             )
         }
     }
-
 }

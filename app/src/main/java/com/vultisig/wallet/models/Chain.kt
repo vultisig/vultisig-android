@@ -141,3 +141,8 @@ val Chain.IsSwapSupported: Boolean
         Chain.thorChain, Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.bitcoin, Chain.bitcoinCash, Chain.gaiaChain, Chain.litecoin, Chain.dogecoin -> true
         Chain.solana, Chain.dash, Chain.kujira, Chain.mayaChain, Chain.cronosChain, Chain.base, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.blast -> false
     }
+val Chain.IsDepositSupported: Boolean
+    get() = when (this) {
+        Chain.thorChain, Chain.mayaChain -> true
+        else -> false
+    }

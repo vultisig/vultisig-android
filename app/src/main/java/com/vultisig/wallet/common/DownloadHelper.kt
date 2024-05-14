@@ -11,19 +11,20 @@ import com.vultisig.wallet.data.on_board.db.VaultDB
 import java.net.URL
 
 @RequiresApi(Build.VERSION_CODES.Q)
-fun Context.downloadVault(vaultName: String):Boolean {
+fun Context.downloadVault(vaultName: String, backupFileName: String): Boolean {
 
-    val targetFile = filesDir.resolve("vaults").resolve(vaultName+VaultDB.FILE_POSTFIX)
+    val targetFile = filesDir.resolve("vaults").resolve(vaultName + VaultDB.FILE_POSTFIX)
 
     val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, targetFile.name)
+        put(MediaStore.MediaColumns.DISPLAY_NAME, backupFileName)
         put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
         put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
     }
 
     val resolver = contentResolver
 
-    val downloadUri: Uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
+    val downloadUri: Uri =
+        resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
 
     URL("file://" + targetFile.absolutePath).openStream().use { input ->
         try {
