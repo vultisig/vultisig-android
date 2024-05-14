@@ -90,6 +90,11 @@ internal class SendViewModel @Inject constructor(
         Chain.entries.first { it.raw == chainRaw }
     }
 
+    fun setAddressFromQrCode(qrCode: String?) {
+        if (qrCode != null) {
+            addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
+        }
+    }
 
     private val selectedAccount = MutableStateFlow<Account?>(null)
     private val appCurrency = appCurrencyRepository
@@ -134,6 +139,12 @@ internal class SendViewModel @Inject constructor(
 
     fun setOutputAddress(address: String) {
         addressFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
+    fun scanAddress() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.ScanQr)
+        }
     }
 
     fun chooseMaxTokenAmount() {
