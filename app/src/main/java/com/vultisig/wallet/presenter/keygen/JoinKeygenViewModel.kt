@@ -92,6 +92,7 @@ class JoinKeygenViewModel @Inject constructor(
                     this._serviceName = payload.keygenMessage.serviceName
                     this._usevultisigRelay = payload.keygenMessage.usevultisigRelay
                     this._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
+                    _vault.name = payload.keygenMessage.vaultName
                 }
 
                 is PeerDiscoveryPayload.Reshare -> {
