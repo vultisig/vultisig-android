@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.*
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -37,7 +38,7 @@ fun CurrencyUnitSettingScreen(navController: NavHostController) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.onEvent(CurrencyUnitSettingEvent.InitSelectedCurrencyUnit)
+        viewModel.onEvent(InitScreen)
     }
 
 
@@ -60,9 +61,9 @@ fun CurrencyUnitSettingScreen(navController: NavHostController) {
             state.currencyUnits.forEach { currencyUnit ->
                 CurrencyUnitSettingItem(
                     name = currencyUnit.name,
-                    isSelected = currencyUnit.id == state.selectedCurrencyUnitId,
+                    isSelected = currencyUnit == state.selectedCurrency,
                     onClick = {
-                        viewModel.onEvent(CurrencyUnitSettingEvent.ChangeCurrencyUnit(currencyUnit))
+                        viewModel.onEvent(ChangeCurrencyUnit(currencyUnit))
                     }
                 )
             }

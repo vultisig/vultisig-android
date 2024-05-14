@@ -1,14 +1,18 @@
 package com.vultisig.wallet.data.models
 
 
-internal sealed class AppCurrency(
+internal enum class AppCurrency(
     val ticker: String,
 ) {
-    data object USD : AppCurrency(
-        ticker = "USD",
-    )
+    USD (ticker = "USD"),
 
-    data object AUD : AppCurrency(
-        ticker = "AUD",
-    )
+    AUD(ticker = "AUD");
+
+    companion object{
+        fun String.fromTicker(): AppCurrency = when (this) {
+            "USD"-> USD
+            "AUD"-> AUD
+            else -> error("ticker name is not valid")
+        }
+    }
 }
