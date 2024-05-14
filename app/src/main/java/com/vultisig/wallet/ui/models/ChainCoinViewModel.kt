@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.models.IsDepositSupported
+import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -28,6 +30,7 @@ data class ChainCoinUiModel(
     val chainName: String = "",
     val chainAddress: String = "",
     val totalBalance: String = "",
+    val explorerURL: String = "",
     val tokens: List<ChainTokenUiModel> = emptyList(),
 )
 
@@ -53,12 +56,15 @@ internal class ChainCoinViewModel @Inject constructor(
     private val vaultId: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_VAULT_ID)!!
 
     val uiState = MutableStateFlow(ChainCoinUiModel())
-
+    val canSwap = MutableStateFlow(true)
+    val canDeposit = MutableStateFlow(true)
     fun loadData() {
         viewModelScope.launch {
             val vault = requireNotNull(vaultDB.select(vaultId))
 
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
+            canSwap.emit(chain.IsSwapSupported)
+            canDeposit.emit(chain.IsDepositSupported)
             accountsRepository.loadChainAccounts(
                 vaultId = vaultId,
                 chain = chain,
@@ -81,6 +87,7 @@ internal class ChainCoinViewModel @Inject constructor(
                         chainName = chainRaw,
                         chainAddress = accounts.firstOrNull()?.address ?: "",
                         tokens = tokens,
+                        explorerURL = accounts.firstOrNull()?.blockExplorerUrl ?: "",
                         totalBalance = totalFiatValue
                             ?.let(fiatValueToStringMapper::map) ?: ""
                     )
@@ -114,5 +121,4 @@ internal class ChainCoinViewModel @Inject constructor(
             )
         }
     }
-
 }

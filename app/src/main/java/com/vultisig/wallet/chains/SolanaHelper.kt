@@ -17,11 +17,14 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import java.math.BigInteger
 
-class SolanaHelper(
+internal class SolanaHelper(
     private val vaultHexPublicKey: String,
 ) {
-    private val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
+
     private val coinType = CoinType.SOLANA
+    companion object{
+        internal val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
+    }
     fun getCoin(): Coin? {
         val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
         val address = coinType.deriveAddressFromPublicKey(publicKey)
