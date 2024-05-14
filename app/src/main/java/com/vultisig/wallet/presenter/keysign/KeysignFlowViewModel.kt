@@ -13,6 +13,10 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CosmosApiFactory
+import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssKeysignType
@@ -45,6 +49,10 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
+    private val evmApiFactory: EvmApiFactory,
+    private val mayaChainApi: MayaChainApi,
+    private val cosmosApiFactory: CosmosApiFactory,
+    private val solanaApi: SolanaApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -80,6 +88,10 @@ internal class KeysignFlowViewModel @Inject constructor(
             gson = gson,
             thorChainApi = thorChainApi,
             blockChairApi = blockChairApi,
+            evmApiFactory = evmApiFactory,
+            mayaChainApi = mayaChainApi,
+            cosmosApiFactory = cosmosApiFactory,
+            solanaApi = solanaApi,
         )
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
