@@ -73,6 +73,8 @@ fun ChainCoinScreen(navController: NavHostController) {
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
     val buyVltiButtonVisible = false
+    val canDeposit by viewModel.canDeposit.collectAsState()
+    val canSwap by viewModel.canSwap.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadData()
@@ -175,7 +177,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                         color = appColor.turquoise600Main,
                         onClick = viewModel::send,
                     )
-                    if (viewModel.canSwap.value) {
+                    if (canSwap) {
                         Spacer(modifier = Modifier.width(24.dp))
                         VaultAction(
                             text = stringResource(R.string.chain_account_view_swap),
@@ -183,7 +185,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                             onClick = viewModel::swap
                         )
                     }
-                    if (viewModel.canDeposit.value) {
+                    if (canDeposit) {
                         Spacer(modifier = Modifier.width(24.dp))
                         VaultAction(
                             stringResource(R.string.chain_account_view_deposit),
