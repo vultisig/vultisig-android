@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.data.api.BlockChairApi
@@ -70,7 +69,6 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.solana -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id).first()
-                SolanaHelper
                 GasFee(
                     unit = chain.feeUnit,
                     value = TokenValue(

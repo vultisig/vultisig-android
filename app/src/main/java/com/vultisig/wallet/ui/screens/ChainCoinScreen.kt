@@ -1,8 +1,5 @@
 package com.vultisig.wallet.ui.screens
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,10 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -73,8 +72,6 @@ fun ChainCoinScreen(navController: NavHostController) {
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
     val buyVltiButtonVisible = false
-    val canDeposit by viewModel.canDeposit.collectAsState()
-    val canSwap by viewModel.canSwap.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadData()
@@ -154,7 +151,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
-                                    text = "BUY \$VTX",
+                                    text = stringResource(id = R.string.chain_account_buy_vtx),
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     style = Theme.montserrat.titleLarge
                                 )
@@ -177,7 +174,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                         color = appColor.turquoise600Main,
                         onClick = viewModel::send,
                     )
-                    if (canSwap) {
+                    if (uiModel.canSwap) {
                         Spacer(modifier = Modifier.width(24.dp))
                         VaultAction(
                             text = stringResource(R.string.chain_account_view_swap),
@@ -185,7 +182,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                             onClick = viewModel::swap
                         )
                     }
-                    if (canDeposit) {
+                    if (uiModel.canDeposit) {
                         Spacer(modifier = Modifier.width(24.dp))
                         VaultAction(
                             stringResource(R.string.chain_account_view_deposit),
@@ -247,6 +244,7 @@ private fun CoinListHeader(
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
     val uriHandler = LocalUriHandler.current
+    val clipboard = LocalClipboardManager.current
     LaunchedEffect(key1 = Unit) {
         Timber.d(address)
     }
@@ -259,10 +257,7 @@ private fun CoinListHeader(
             )
             Spacer(modifier = Modifier.width(16.dp))
             IconButton(onClick = {
-                val clipboard =
-                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("address", address)
-                clipboard.setPrimaryClip(clip)
+                clipboard.setText(AnnotatedString(address))
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.copy),

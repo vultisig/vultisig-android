@@ -32,6 +32,8 @@ data class ChainCoinUiModel(
     val totalBalance: String = "",
     val explorerURL: String = "",
     val tokens: List<ChainTokenUiModel> = emptyList(),
+    val canDeposit: Boolean = true,
+    val canSwap: Boolean = true,
 )
 
 @Immutable
@@ -56,15 +58,12 @@ internal class ChainCoinViewModel @Inject constructor(
     private val vaultId: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_VAULT_ID)!!
 
     val uiState = MutableStateFlow(ChainCoinUiModel())
-    val canSwap = MutableStateFlow(true)
-    val canDeposit = MutableStateFlow(true)
+
     fun loadData() {
         viewModelScope.launch {
             val vault = requireNotNull(vaultDB.select(vaultId))
 
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
-            canSwap.emit(chain.IsSwapSupported)
-            canDeposit.emit(chain.IsDepositSupported)
             accountsRepository.loadChainAccounts(
                 vaultId = vaultId,
                 chain = chain,
@@ -89,7 +88,9 @@ internal class ChainCoinViewModel @Inject constructor(
                         tokens = tokens,
                         explorerURL = accounts.firstOrNull()?.blockExplorerUrl ?: "",
                         totalBalance = totalFiatValue
-                            ?.let(fiatValueToStringMapper::map) ?: ""
+                            ?.let(fiatValueToStringMapper::map) ?: "",
+                        canDeposit = chain.IsDepositSupported,
+                        canSwap = chain.IsSwapSupported,
                     )
                 }
             }
