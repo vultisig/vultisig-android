@@ -131,7 +131,11 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
                     icon = R.drawable.share
                 ) {
-                    navController.navigate(Screen.CreateNewVault.route)
+                    navController.navigate(
+                        Screen.KeygenFlow.createRoute(
+                            viewModel.vault?.name ?: ""
+                        )
+                    )
                 }
 
                 SettingsItem(
