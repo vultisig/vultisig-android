@@ -44,7 +44,7 @@ class JoinKeygenViewModel @Inject constructor(
     private var _sessionID: String = ""
     private var _hexChainCode: String = ""
     private var _serviceName: String = ""
-    private var _usevultisigRelay: Boolean = false
+    private var _useVultisigRelay: Boolean = false
     private var _encryptionKeyHex: String = ""
     private var _oldCommittee: List<String> = emptyList()
     private var _serverAddress: String = ""
@@ -90,7 +90,7 @@ class JoinKeygenViewModel @Inject constructor(
                     this._hexChainCode = payload.keygenMessage.hexChainCode
                     this._vault.hexChainCode = this._hexChainCode
                     this._serviceName = payload.keygenMessage.serviceName
-                    this._usevultisigRelay = payload.keygenMessage.usevultisigRelay
+                    this._useVultisigRelay = payload.keygenMessage.useVultisigRelay
                     this._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
                     _vault.name = payload.keygenMessage.vaultName
                 }
@@ -101,7 +101,7 @@ class JoinKeygenViewModel @Inject constructor(
                     this._hexChainCode = payload.reshareMessage.hexChainCode
                     this._vault.hexChainCode = this._hexChainCode
                     this._serviceName = payload.reshareMessage.serviceName
-                    this._usevultisigRelay = payload.reshareMessage.usevultisigRelay
+                    this._useVultisigRelay = payload.reshareMessage.useVultisigRelay
                     this._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
                     this._oldCommittee = payload.reshareMessage.oldParties
                     if (_vault.pubKeyECDSA.isEmpty()) {
@@ -114,7 +114,7 @@ class JoinKeygenViewModel @Inject constructor(
                     }
                 }
             }
-            if (_usevultisigRelay) {
+            if (_useVultisigRelay) {
                 this._serverAddress = Endpoints.VULTISIG_RELAY
                 currentState.value = JoinKeygenState.JoinKeygen
             } else {

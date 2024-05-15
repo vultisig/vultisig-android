@@ -7,7 +7,7 @@ data class ReshareMessage(
     val pubKeyECDSA: String,
     val oldParties: List<String>,
     val encryptionKeyHex: String,
-    val usevultisigRelay: Boolean,
+    val useVultisigRelay: Boolean,
 ) {
 
 }

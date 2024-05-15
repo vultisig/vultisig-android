@@ -6,7 +6,7 @@ data class KeygenMessage(
     val hexChainCode: String,
     val serviceName: String,
     val encryptionKeyHex: String,
-    val usevultisigRelay: Boolean,
+    val useVultisigRelay: Boolean,
 ) {
 
 }
