@@ -60,9 +60,9 @@ fun LanguageSettingScreen(navController: NavHostController) {
         ) {
             state.languages.forEach { language ->
                 LanguageSettingItem(
-                    name = language.name,
+                    name = language.mainName,
                     englishName = language.englishName,
-                    isSelected = language.id == state.selectedLanguageId,
+                    isSelected = language == state.selectedLanguage,
                     onClick = {
                         viewModel.onEvent(LanguageSettingEvent.ChangeLanguage(language))
                     }

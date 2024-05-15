@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.settings
+package com.vultisig.wallet.presenter.settings.settings_main
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -20,6 +20,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +43,12 @@ import com.vultisig.wallet.ui.theme.Theme
 fun SettingsScreen(navController: NavHostController) {
     val colors = Theme.colors
     val viewModel = hiltViewModel<SettingsViewModel>()
+    val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.loadSettings()
+    }
 
     Scaffold(
         modifier = Modifier
@@ -59,17 +67,17 @@ fun SettingsScreen(navController: NavHostController) {
             ) {
             AppSettingItem(
                 R.drawable.settings_globe,
-                stringResource(R.string.settings_screen_language), "English"
+                stringResource(R.string.settings_screen_language), state.selectedLocal.mainName
             ){
-                viewModel.navigateTo(Destination.LanguageSetting(langId = 0))
+                viewModel.navigateTo(Destination.LanguageSetting)
             }
 
 
             AppSettingItem(
                 R.drawable.settings_dollar,
-                stringResource(R.string.settings_screen_currency), "USD"
+                stringResource(R.string.settings_screen_currency), state.selectedCurrency.name
             ){
-                viewModel.navigateTo(Destination.CurrencyUnitSetting(currencyId = 0))
+                viewModel.navigateTo(Destination.CurrencyUnitSetting)
             }
 
             AppSettingItem(
@@ -122,6 +130,13 @@ fun SettingsScreen(navController: NavHostController) {
                     contentDescription = "twitter",
                     modifier = Modifier.clickable {
                         uriHandler.openUri("https://twitter.com/vultisig")
+                    }
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.settings_discord),
+                    contentDescription = "discord",
+                    modifier = Modifier.clickable {
+                        uriHandler.openUri("https://discord.gg/54wEtGYxuv")
                     }
                 )
             }

@@ -24,7 +24,7 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
-import com.vultisig.wallet.presenter.settings.SettingsScreen
+import com.vultisig.wallet.presenter.settings.settings_main.SettingsScreen
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
 import com.vultisig.wallet.presenter.settings.faq_setting.FAQSettingScreen
@@ -260,23 +260,13 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.LanguageSetting.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(Destination.LanguageSetting.ARG_LANG_ID) {
-                    type = NavType.IntType
-                }
-            )
+           route = Destination.LanguageSetting.route,
         ) {
             LanguageSettingScreen(navController = navController)
         }
 
         composable(
-            route = Destination.CurrencyUnitSetting.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(Destination.CurrencyUnitSetting.ARG_CURRENCY_ID) {
-                    type = NavType.IntType
-                }
-            )
+             route = Destination.CurrencyUnitSetting.route,
         ) {
             CurrencyUnitSettingScreen(navController = navController)
         }

@@ -1,47 +1,49 @@
 package com.vultisig.wallet.presenter.settings.currency_unit_setting
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.vultisig.wallet.ui.navigation.Destination
+import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.AppCurrency.Companion.fromTicker
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.presenter.settings.settings_main.CurrencyUnit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class CurrencyUnitSettingViewModel @Inject constructor(savedStateHandle: SavedStateHandle) : ViewModel() {
+internal class CurrencyUnitSettingViewModel @Inject constructor(
+    private val appCurrencyRepository: AppCurrencyRepository
+) : ViewModel() {
 
-    private val selectedCurrencyUnitId = savedStateHandle.get<Int>(Destination.CurrencyUnitSetting.ARG_CURRENCY_ID)?:0
-    val state = MutableStateFlow(CurrencyUnitSettingUiModel())
+    val state = MutableStateFlow(
+        CurrencyUnitSettingUiModel(
+            currencyUnits = appCurrencyRepository.getAllCurrencies().map { CurrencyUnit(it.ticker) })
+    )
 
-    init {
-        state.update {
-            it.copy(
-                currencyUnits = listOf(
-                    CurrencyUnitItem(id = 0,"USD"),
-                    CurrencyUnitItem(id = 1,"AUD"),
-                ),
-                selectedCurrencyUnitId = 0
-            )
-        }
-    }
 
     fun onEvent(event: CurrencyUnitSettingEvent) {
         when (event) {
             is CurrencyUnitSettingEvent.ChangeCurrencyUnit -> changeCurrencyUnit(event.selectedCurrencyUnit)
-            CurrencyUnitSettingEvent.InitSelectedCurrencyUnit -> initSelectedCurrencyUnit()
+            CurrencyUnitSettingEvent.InitScreen -> initScreenUnit()
         }
     }
 
-    private fun initSelectedCurrencyUnit() {
-        state.update {
-            it.copy(selectedCurrencyUnitId = selectedCurrencyUnitId)
+    private fun initScreenUnit() {
+        viewModelScope.launch {
+            appCurrencyRepository.currency.collect {
+                state.update { state: CurrencyUnitSettingUiModel ->
+                    state.copy(
+                        selectedCurrency = CurrencyUnit(it.ticker),
+                    )
+                }
+            }
         }
     }
 
-    private fun changeCurrencyUnit(currencyUnit: CurrencyUnitItem) {
-        state.update {
-            it.copy(selectedCurrencyUnitId = currencyUnit.id)
+    private fun changeCurrencyUnit(currencyUnit: CurrencyUnit) {
+        viewModelScope.launch {
+            appCurrencyRepository.setCurrency(currencyUnit.name.fromTicker())
         }
     }
 

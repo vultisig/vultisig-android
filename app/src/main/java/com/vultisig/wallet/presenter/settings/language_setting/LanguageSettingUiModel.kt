@@ -1,13 +1,11 @@
 package com.vultisig.wallet.presenter.settings.language_setting
 
+import com.vultisig.wallet.presenter.settings.settings_main.Language
+
 
 data class LanguageSettingUiModel(
-    val languages: List<LanguageItem> = listOf(),
-    val selectedLanguageId: Int = 0,
+    val languages: List<Language> = listOf(),
+    val selectedLanguage: Language = Language(),
 )
 
-data class LanguageItem(
-    val id: Int = 0,
-    val name: String = "",
-    val englishName: String? = null
-)
+
