@@ -24,11 +24,11 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
-import com.vultisig.wallet.presenter.settings.settings_main.SettingsScreen
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
 import com.vultisig.wallet.presenter.settings.faq_setting.FAQSettingScreen
 import com.vultisig.wallet.presenter.settings.language_setting.LanguageSettingScreen
+import com.vultisig.wallet.presenter.settings.settings_main.SettingsScreen
 import com.vultisig.wallet.presenter.settings.vultisig_token_setting.VultisigTokenScreen
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
@@ -163,7 +163,13 @@ internal fun SetupNavGraph(
         }
         composable(
             route = Destination.Keysign.staticRoute,
-            arguments = Destination.transactionArgs,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+                navArgument(ARG_TOKEN_ID) { type = NavType.StringType },
+                navArgument(ARG_DST_ADDRESS) { type = NavType.StringType },
+                navArgument(ARG_AMOUNT) { type = NavType.StringType },
+            ),
         ) { entry ->
             val vaultId = entry.arguments?.getString(ARG_VAULT_ID)!!
             val chainId = entry.arguments?.getString(ARG_CHAIN_ID)!!

@@ -10,6 +10,7 @@ internal data class TokenBalance(
 
 internal data class TokenValue(
     val value: BigInteger,
+    val unit: String,
     val decimals: Int,
 ) {
     val decimal: BigDecimal
