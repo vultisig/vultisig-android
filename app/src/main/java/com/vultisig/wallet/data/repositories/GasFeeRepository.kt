@@ -4,7 +4,6 @@ import com.vultisig.wallet.chains.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.models.GasFee
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
@@ -15,7 +14,7 @@ internal interface GasFeeRepository {
 
     suspend fun getGasFee(
         chain: Chain,
-    ): GasFee
+    ): TokenValue
 
 }
 
@@ -25,56 +24,44 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private val tokenRepository: TokenRepository,
 ) : GasFeeRepository {
 
-    override suspend fun getGasFee(chain: Chain): GasFee = when {
+    override suspend fun getGasFee(chain: Chain): TokenValue = when {
         chain.standard == TokenStandard.ERC20 -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
-            GasFee(
-                unit = chain.feeUnit,
-                value = TokenValue(evmApi.getGasPrice(), 9)
-            )
+            TokenValue(evmApi.getGasPrice(), chain.feeUnit, 9)
         }
 
         chain.standard == TokenStandard.BITCOIN -> {
             val gas = blockChairApi.getBlockchairStats(chain)
 
             val nativeToken = tokenRepository.getNativeToken(chain.id).first()
-            GasFee(
-                unit = chain.feeUnit,
-                value = TokenValue(gas, nativeToken.decimal)
-            )
+            TokenValue(gas, chain.feeUnit, nativeToken.decimal)
         }
 
         else -> when (chain) {
             Chain.thorChain, Chain.mayaChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id).first()
-                GasFee(
+                TokenValue(
+                    value = THORCHainHelper.THORChainGasUnit.toBigInteger(),
                     unit = chain.feeUnit,
-                    value = TokenValue(
-                        value = THORCHainHelper.THORChainGasUnit.toBigInteger(),
-                        decimals = nativeToken.decimal,
-                    )
+                    decimals = nativeToken.decimal,
                 )
             }
 
             Chain.gaiaChain, Chain.kujira -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id).first()
-                GasFee(
+                TokenValue(
+                    value = 7500.toBigInteger(),
                     unit = chain.feeUnit,
-                    value = TokenValue(
-                        value = 7500.toBigInteger(),
-                        decimals = nativeToken.decimal,
-                    )
+                    decimals = nativeToken.decimal,
                 )
             }
 
             Chain.solana -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id).first()
-                GasFee(
+                TokenValue(
+                    value = DefaultFeeInLamports,
                     unit = chain.feeUnit,
-                    value = TokenValue(
-                        value = DefaultFeeInLamports,
-                        decimals = nativeToken.decimal,
-                    )
+                    decimals = nativeToken.decimal,
                 )
             }
 

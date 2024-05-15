@@ -13,19 +13,31 @@ internal interface MappersModule {
     @Binds
     @Singleton
     fun bindChainAccountToChainAccountUiModelMapper(
-        impl: ChainAccountToChainAccountUiModelMapperImpl
+        impl: ChainAccountToChainAccountUiModelMapperImpl,
     ): ChainAccountToChainAccountUiModelMapper
 
     @Binds
     @Singleton
     fun bindFiatValueToStringMapper(
-        impl: FiatValueToStringMapperImpl
+        impl: FiatValueToStringMapperImpl,
     ): FiatValueToStringMapper
 
     @Binds
     @Singleton
     fun bindAccountToTokenBalanceUiModelMapper(
-        impl: AccountToTokenBalanceUiModelMapperImpl
+        impl: AccountToTokenBalanceUiModelMapperImpl,
     ): AccountToTokenBalanceUiModelMapper
+
+    @Binds
+    @Singleton
+    fun bindGasFeeToStringMapper(
+        impl: TokenValueToStringMapperImpl,
+    ): TokenValueToStringMapper
+
+    @Binds
+    @Singleton
+    fun bindFiatValueToValueStringMapper(
+        impl: FiatValueToValueStringMapperImpl,
+    ): FiatValueToValueStringMapper
 
 }

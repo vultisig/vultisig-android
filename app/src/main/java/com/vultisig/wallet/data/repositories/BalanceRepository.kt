@@ -128,7 +128,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             }
 
             solana -> solanaApi.getBalance(address).toBigInteger()
-        }, coin.decimal))
+        }, coin.ticker, coin.decimal))
     }
 
 }

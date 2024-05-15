@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.navigation
 
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.vultisig.wallet.data.models.TransactionId
 
 internal sealed class Destination(
     val route: String,
@@ -13,13 +14,10 @@ internal sealed class Destination(
         const val ARG_TOKEN_ID = "token_id"
         const val ARG_DST_ADDRESS = "dst_address"
         const val ARG_AMOUNT = "amount"
+        const val ARG_TRANSACTION_ID = "transaction_id"
 
         val transactionArgs = listOf(
-            navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-            navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
-            navArgument(ARG_TOKEN_ID) { type = NavType.StringType },
-            navArgument(ARG_DST_ADDRESS) { type = NavType.StringType },
-            navArgument(ARG_AMOUNT) { type = NavType.StringType },
+            navArgument(ARG_TRANSACTION_ID) { type = NavType.StringType }
         )
 
     }
@@ -66,32 +64,19 @@ internal sealed class Destination(
     }
 
     data class VerifyTransaction(
-        val vaultId: String,
-        val chainId: String,
-        val tokenId: String,
-        val dstAddress: String,
-        val amount: String,
+        val transactionId: TransactionId,
     ) : Destination(
-        route = buildRoute(vaultId, chainId, tokenId, dstAddress, amount)
+        route = buildRoute(transactionId)
     ) {
         companion object {
 
             val staticRoute = buildRoute(
-                "{$ARG_VAULT_ID}",
-                "{$ARG_CHAIN_ID}",
-                "{$ARG_TOKEN_ID}",
-                "{$ARG_DST_ADDRESS}",
-                "{$ARG_AMOUNT}",
+                "{$ARG_TRANSACTION_ID}",
             )
 
             private fun buildRoute(
-                vaultId: String,
-                chainId: String,
-                tokenId: String,
-                dstAddress: String,
-                amount: String,
-            ) = "vault_detail/${vaultId}/account/${chainId}/" +
-                    "send/${tokenId}/verify?dst_address=${dstAddress}&amount=${amount}"
+                transactionId: TransactionId,
+            ) = "transaction/${transactionId}/verify"
         }
     }
 
@@ -114,24 +99,29 @@ internal sealed class Destination(
     )
 
     data object Home : Destination(route = "home_screen")
-    data class VaultSettings(val vaultId: String) : Destination(route = "vault_detail/$vaultId/settings") {
+    data class VaultSettings(val vaultId: String) :
+        Destination(route = "vault_detail/$vaultId/settings") {
 
         companion object {
             const val ARG_VAULT_ID = "vault_id"
             const val STATIC_ROUTE = "vault_detail/{vault_id}/settings"
         }
     }
-    data class Details(val vaultId: String) : Destination(route = "vault_detail/$vaultId/settings/details") {
+
+    data class Details(val vaultId: String) :
+        Destination(route = "vault_detail/$vaultId/settings/details") {
         companion object {
             const val STATIC_ROUTE = VaultSettings.STATIC_ROUTE + "/details"
         }
     }
 
-    data class Rename(val vaultId: String) : Destination(route = "vault_detail/$vaultId/settings/rename") {
+    data class Rename(val vaultId: String) :
+        Destination(route = "vault_detail/$vaultId/settings/rename") {
         companion object {
             const val STATIC_ROUTE = VaultSettings.STATIC_ROUTE + "/rename"
         }
     }
+
     data object Settings : Destination(route = "settings")
     data object DefaultChainSetting : Destination(route = "settings/default_chains")
     data object FAQSetting : Destination(route = "settings/faq")

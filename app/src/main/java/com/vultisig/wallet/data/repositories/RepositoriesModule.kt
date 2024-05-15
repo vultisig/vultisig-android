@@ -74,6 +74,12 @@ internal interface RepositoriesModule {
         impl: DefaultChainsRepositoryImpl,
     ): DefaultChainsRepository
 
+    @Binds
+    @Singleton
+    fun bindTransactionRepository(
+        impl: TransactionRepositoryImpl,
+    ): TransactionRepository
+
     companion object {
 
         @Provides

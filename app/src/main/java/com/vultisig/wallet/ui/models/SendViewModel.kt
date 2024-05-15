@@ -12,17 +12,20 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.Account
-import com.vultisig.wallet.data.models.GasFee
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -40,6 +43,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.util.UUID
 import javax.inject.Inject
 
 @Immutable
@@ -71,6 +75,7 @@ internal class SendViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
+    private val mapGasFeeToString: TokenValueToStringMapper,
 
     private val vaultDb: VaultDB,
     private val accountsRepository: AccountsRepository,
@@ -78,6 +83,7 @@ internal class SendViewModel @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val gasFeeRepository: GasFeeRepository,
+    private val transactionRepository: TransactionRepository,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -101,7 +107,7 @@ internal class SendViewModel @Inject constructor(
             appCurrencyRepository.defaultCurrency,
         )
 
-    private val gasFee = MutableStateFlow<GasFee?>(null)
+    private val gasFee = MutableStateFlow<TokenValue?>(null)
 
     private var nativeTokenAccount: Account? = null
 
@@ -150,7 +156,8 @@ internal class SendViewModel @Inject constructor(
 
         val max = if (selectedAccount.token.isNativeToken) {
             TokenValue(
-                value = maxOf(BigInteger.ZERO, selectedTokenValue.value - gasFee.value.value),
+                value = maxOf(BigInteger.ZERO, selectedTokenValue.value - gasFee.value),
+                unit = selectedTokenValue.unit,
                 decimals = selectedTokenValue.decimals,
             )
         } else {
@@ -174,15 +181,17 @@ internal class SendViewModel @Inject constructor(
 
                 val gasFee = gasFee.value
 
-                if (gasFee == null || gasFee.value.value <= BigInteger.ZERO) {
+                if (gasFee == null || gasFee.value <= BigInteger.ZERO) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
 
-                val address = addressFieldState.text.toString()
+                val dstAddress = addressFieldState.text.toString()
 
-                if (address.isBlank() || !chainAccountAddressRepository.isValid(chain, address)) {
+                if (dstAddress.isBlank() ||
+                    !chainAccountAddressRepository.isValid(chain, dstAddress)
+                ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
                     )
@@ -211,7 +220,7 @@ internal class SendViewModel @Inject constructor(
                         .toBigInteger()
 
                 if (selectedToken.isNativeToken) {
-                    if (tokenAmountInt + gasFee.value.value > selectedTokenValue.value) {
+                    if (tokenAmountInt + gasFee.value > selectedTokenValue.value) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
                         )
@@ -223,7 +232,7 @@ internal class SendViewModel @Inject constructor(
                         )
 
                     if (selectedTokenValue.value < tokenAmountInt
-                        || nativeTokenValue < gasFee.value.value
+                        || nativeTokenValue < gasFee.value
                     ) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
@@ -231,13 +240,36 @@ internal class SendViewModel @Inject constructor(
                     }
                 }
 
+                val vault = vaultDb.select(vaultId) ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_token)
+                )
+
+                val srcAddress = chainAccountAddressRepository.getAddress(chain, vault)
+
+                val transaction = Transaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    chainId = chain.raw,
+                    tokenId = selectedToken.id,
+                    srcAddress = srcAddress,
+                    dstAddress = dstAddress,
+                    tokenValue = TokenValue(
+                        value = tokenAmountInt,
+                        unit = selectedTokenValue.unit,
+                        decimals = selectedToken.decimal,
+                    ),
+                    fiatValue = FiatValue(
+                        value = fiatAmountFieldState.text.toString().toBigDecimal(),
+                        currency = appCurrency.value.ticker,
+                    ),
+                    gasFee = gasFee,
+                )
+
+                transactionRepository.addTransaction(transaction)
+
                 navigator.navigate(
                     Destination.VerifyTransaction(
-                        vaultId = vaultId,
-                        chainId = chain.raw,
-                        tokenId = selectedToken.id,
-                        dstAddress = address,
-                        amount = tokenAmountInt.toString(),
+                        transactionId = transaction.id,
                     )
                 )
             } catch (e: InvalidTransactionDataException) {
@@ -291,7 +323,7 @@ internal class SendViewModel @Inject constructor(
                 this@SendViewModel.gasFee.value = gasFee
 
                 uiState.update {
-                    it.copy(fee = "${gasFee.value.decimal.toPlainString()} ${gasFee.unit}")
+                    it.copy(fee = mapGasFeeToString(gasFee))
                 }
             } catch (e: Throwable) {
                 // TODO handle error when querying gas fee
