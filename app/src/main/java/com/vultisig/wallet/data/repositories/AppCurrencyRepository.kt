@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.vultisig.wallet.data.models.AppCurrency
-import com.vultisig.wallet.data.models.AppCurrency.Companion.fromTicker
 import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,13 +21,15 @@ internal interface AppCurrencyRepository {
 
 }
 
-internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataStore: AppDataStore) : AppCurrencyRepository {
+internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataStore: AppDataStore) :
+    AppCurrencyRepository {
 
     override val defaultCurrency = AppCurrency.USD
 
     override val currency: Flow<AppCurrency>
         get() =
-            dataStore.readData(stringPreferencesKey(CURRENCY_KEY), defaultCurrency.ticker).map { it.fromTicker() }
+            dataStore.readData(stringPreferencesKey(CURRENCY_KEY), defaultCurrency.ticker)
+                .map { AppCurrency.fromTicker(it) ?: defaultCurrency }
 
     override suspend fun setCurrency(currency: AppCurrency) {
         dataStore.editData { preferences ->
@@ -42,7 +43,7 @@ internal class AppCurrencyRepositoryImpl @Inject constructor(private val dataSto
     }
 
     companion object {
-        const val CURRENCY_KEY = "currency_key"
+        private const val CURRENCY_KEY = "currency_key"
     }
 
 }

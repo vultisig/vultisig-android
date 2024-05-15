@@ -2,7 +2,7 @@ package com.vultisig.wallet.presenter.settings.currency_unit_setting
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.AppCurrency.Companion.fromTicker
+import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.presenter.settings.settings_main.CurrencyUnit
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,7 +43,9 @@ internal class CurrencyUnitSettingViewModel @Inject constructor(
 
     private fun changeCurrencyUnit(currencyUnit: CurrencyUnit) {
         viewModelScope.launch {
-            appCurrencyRepository.setCurrency(currencyUnit.name.fromTicker())
+            val currency = AppCurrency.fromTicker(currencyUnit.name)
+                ?: return@launch
+            appCurrencyRepository.setCurrency(currency)
         }
     }
 

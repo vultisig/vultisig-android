@@ -285,12 +285,17 @@ internal class SendViewModel @Inject constructor(
 
     private fun calculateGasFees() {
         viewModelScope.launch {
-            val gasFee = gasFeeRepository.getGasFee(chain)
+            try {
+                val gasFee = gasFeeRepository.getGasFee(chain)
 
-            this@SendViewModel.gasFee.value = gasFee
+                this@SendViewModel.gasFee.value = gasFee
 
-            uiState.update {
-                it.copy(fee = "${gasFee.value.decimal.toPlainString()} ${gasFee.unit}")
+                uiState.update {
+                    it.copy(fee = "${gasFee.value.decimal.toPlainString()} ${gasFee.unit}")
+                }
+            } catch (e: Throwable) {
+                // TODO handle error when querying gas fee
+                Timber.e(e)
             }
         }
     }
