@@ -28,6 +28,7 @@ internal fun TopBar(
     modifier: Modifier = Modifier,
     @DrawableRes startIcon: Int? = null,
     @DrawableRes endIcon: Int? = null,
+    onEndIconClick: () -> Unit = {},
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
     Row(
@@ -59,7 +60,8 @@ internal fun TopBar(
             Image(
                 painter = painterResource(id = id),
                 contentDescription = null,
-                modifier = iconModifier,
+                modifier = iconModifier
+                    .clickable(onClick = onEndIconClick),
             )
         } ?: Spacer(modifier = iconModifier)
     }
