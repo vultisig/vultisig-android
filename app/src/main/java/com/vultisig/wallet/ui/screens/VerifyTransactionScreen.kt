@@ -15,18 +15,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.FormCard
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.UiCheckbox
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -40,7 +44,11 @@ internal fun VerifyTransactionScreen(
     VerifyTransactionScreen(
         navController = navController,
         state = state,
+        onConsentAddress = viewModel::checkConsentAddress,
+        onConsentAmount = viewModel::checkConsentAmount,
+        onConsentDst = viewModel::checkConsentDst,
         onConfirm = viewModel::joinKeysign,
+        onDismissError = viewModel::dismissError,
     )
 }
 
@@ -48,8 +56,21 @@ internal fun VerifyTransactionScreen(
 private fun VerifyTransactionScreen(
     navController: NavHostController,
     state: VerifyTransactionUiModel,
+    onConsentAddress: (Boolean) -> Unit,
+    onConsentAmount: (Boolean) -> Unit,
+    onConsentDst: (Boolean) -> Unit,
     onConfirm: () -> Unit,
+    onDismissError: () -> Unit,
 ) {
+    val errorText = state.errorText
+    if (errorText != null) {
+        UiAlertDialog(
+            title = stringResource(id = R.string.dialog_default_error_title),
+            text = errorText.asString(),
+            onDismiss = onDismissError
+        )
+    }
+
     UiBarContainer(
         title = stringResource(R.string.verify_transaction_screen_title),
         navController = navController,
@@ -109,6 +130,28 @@ private fun VerifyTransactionScreen(
                             divider = false
                         )
                     }
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    CheckField(
+                        title = stringResource(R.string.verify_transaction_consent_address),
+                        isChecked = state.consentAddress,
+                        onCheckedChange = onConsentAddress,
+                    )
+
+                    CheckField(
+                        title = stringResource(R.string.verify_transaction_consent_amount),
+                        isChecked = state.consentAmount,
+                        onCheckedChange = onConsentAmount,
+                    )
+
+                    CheckField(
+                        title = stringResource(R.string.verify_transaction_consent_correct_dst),
+                        isChecked = state.consentDst,
+                        onCheckedChange = onConsentDst,
+                    )
                 }
             }
 
@@ -172,9 +215,11 @@ private fun OtherField(
             )
 
             UiSpacer(weight = 1f)
+            UiSpacer(size = 8.dp)
 
             Text(
                 text = value,
+                textAlign = TextAlign.End,
                 color = Theme.colors.neutral100,
                 style = Theme.menlo.subtitle1,
             )
@@ -183,6 +228,36 @@ private fun OtherField(
         if (divider) {
             UiHorizontalDivider()
         }
+    }
+}
+
+@Composable
+private fun CheckField(
+    title: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 4.dp,
+                vertical = 8.dp,
+            ),
+    ) {
+        UiCheckbox(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange
+        )
+
+        UiSpacer(size = 8.dp)
+
+        Text(
+            text = title,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body2,
+        )
     }
 }
 
@@ -199,6 +274,10 @@ private fun VerifyTransactionScreenPreview() {
             fiatCurrency = "USD",
             gasValue = "1.1",
         ),
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onConsentDst = {},
         onConfirm = {},
+        onDismissError = {},
     )
 }

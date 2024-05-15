@@ -175,7 +175,13 @@ internal fun SetupNavGraph(
         }
         composable(
             route = Destination.Keysign.staticRoute,
-            arguments = Destination.transactionArgs,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+                navArgument(ARG_TOKEN_ID) { type = NavType.StringType },
+                navArgument(ARG_DST_ADDRESS) { type = NavType.StringType },
+                navArgument(ARG_AMOUNT) { type = NavType.StringType },
+            ),
         ) { entry ->
             val vaultId = entry.arguments?.getString(ARG_VAULT_ID)!!
             val chainId = entry.arguments?.getString(ARG_CHAIN_ID)!!
