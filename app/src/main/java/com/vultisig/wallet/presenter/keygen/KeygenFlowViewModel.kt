@@ -115,7 +115,7 @@ class KeygenFlowViewModel @Inject constructor(
                             hexChainCode = vault.hexChainCode,
                             serviceName = serviceName,
                             encryptionKeyHex = this._encryptionKeyHex,
-                            usevultisigRelay = vultisigRelay.IsRelayEnabled,
+                            useVultisigRelay = vultisigRelay.IsRelayEnabled,
                             vaultName = this.vault.name,
                         )
                     ).toJson(gson)
@@ -131,7 +131,7 @@ class KeygenFlowViewModel @Inject constructor(
                             pubKeyECDSA = vault.pubKeyECDSA,
                             oldParties = vault.signers,
                             encryptionKeyHex = this._encryptionKeyHex,
-                            usevultisigRelay = vultisigRelay.IsRelayEnabled
+                            useVultisigRelay = vultisigRelay.IsRelayEnabled
                         )
                     ).toJson(gson)
             }
