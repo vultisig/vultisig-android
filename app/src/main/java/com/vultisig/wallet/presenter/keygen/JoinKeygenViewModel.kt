@@ -61,7 +61,7 @@ class JoinKeygenViewModel @Inject constructor(
             _vault,
             _action,
             _keygenCommittee,
-            _vault.signers,
+            _oldCommittee.filter { _keygenCommittee.contains(it) },
             _serverAddress,
             _sessionID,
             _encryptionKeyHex,

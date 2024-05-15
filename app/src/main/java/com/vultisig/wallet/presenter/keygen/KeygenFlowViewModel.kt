@@ -72,7 +72,7 @@ class KeygenFlowViewModel @Inject constructor(
             vault,
             this.action,
             selection.value ?: emptyList(),
-            vault.signers,
+            vault.signers.filter { (selection.value ?: emptyList()).contains(it) },
             serverAddress,
             sessionID,
             _encryptionKeyHex,
