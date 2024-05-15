@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -14,6 +15,8 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun UiBarContainer(
     navController: NavController,
     title: String,
+    @DrawableRes endIcon: Int? = null,
+    onEndIconClick: () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -24,6 +27,8 @@ internal fun UiBarContainer(
         TopBar(
             centerText = title,
             startIcon = R.drawable.caret_left,
+            endIcon = endIcon,
+            onEndIconClick = onEndIconClick,
             navController = navController
         )
 

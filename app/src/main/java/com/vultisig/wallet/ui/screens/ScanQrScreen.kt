@@ -2,6 +2,9 @@
 
 package com.vultisig.wallet.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -43,24 +46,40 @@ internal fun ScanQrScreen(
     navController: NavHostController,
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+    val context = LocalContext.current
+
+    var isScanned by remember { mutableStateOf(false) }
+
+    val onSuccess: (List<Barcode>) -> Unit = { barcodes ->
+        if (barcodes.isNotEmpty()) {
+            isScanned = true
+            val barcode = barcodes.first()
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set(ARG_QR_CODE, barcode.rawValue)
+            navController.popBackStack()
+        }
+    }
+
+    val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        if (uri != null) {
+            createScanner()
+                .process(InputImage.fromFilePath(context, uri))
+                .addOnSuccessListener(onSuccess)
+        }
+    }
 
     UiBarContainer(
         navController = navController,
         title = stringResource(R.string.scan_qr_default_title),
+        endIcon = R.drawable.ic_gallery,
+        onEndIconClick = {
+            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+        }
     ) {
         if (cameraPermissionState.status.isGranted) {
-            var isScanned by remember { mutableStateOf(false) }
             QrCameraScreen(
-                onSuccess = {
-                    if (!isScanned) {
-                        isScanned = true
-                        val barcode = it.first()
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(ARG_QR_CODE, barcode.rawValue)
-                        navController.popBackStack()
-                    }
-                }
+                onSuccess = onSuccess,
             )
         } else if (cameraPermissionState.status.shouldShowRationale) {
             Text("Camera Permission permanently denied")
@@ -76,7 +95,8 @@ internal fun ScanQrScreen(
 @Composable
 private fun QrCameraScreen(
     onSuccess: (List<Barcode>) -> Unit,
-) {
+
+    ) {
     val localContext = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember {
@@ -119,11 +139,7 @@ private class BarcodeAnalyzer(
     private val onSuccess: (List<Barcode>) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
-    private val options = BarcodeScannerOptions.Builder()
-        .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
-        .build()
-
-    private val scanner = BarcodeScanning.getClient(options)
+    private val scanner = createScanner()
 
     @ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
@@ -141,3 +157,9 @@ private class BarcodeAnalyzer(
         }
     }
 }
+
+private fun createScanner() = BarcodeScanning.getClient(
+    BarcodeScannerOptions.Builder()
+        .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+        .build()
+)
