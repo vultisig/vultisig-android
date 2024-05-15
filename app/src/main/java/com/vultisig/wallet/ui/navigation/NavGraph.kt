@@ -13,7 +13,6 @@ import androidx.navigation.navArgument
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.home.HomeScreen
 import com.vultisig.wallet.presenter.import_file.ImportFile
 import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
@@ -43,6 +42,7 @@ import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.ChainCoinScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.screens.OverscrollHack2
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -75,7 +75,9 @@ internal fun SetupNavGraph(
             WelcomeScreen(navController = navController)
         }
         composable(route = Screen.Home.route) {
-            HomeScreen(navController)
+            OverscrollHack2()
+
+//            HomeScreen(navController)
         }
 
         composable(route = Screen.CreateNewVault.route) {
