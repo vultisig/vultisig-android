@@ -24,11 +24,11 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
-import com.vultisig.wallet.presenter.settings.settings_main.SettingsScreen
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
 import com.vultisig.wallet.presenter.settings.faq_setting.FAQSettingScreen
 import com.vultisig.wallet.presenter.settings.language_setting.LanguageSettingScreen
+import com.vultisig.wallet.presenter.settings.settings_main.SettingsScreen
 import com.vultisig.wallet.presenter.settings.vultisig_token_setting.VultisigTokenScreen
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
@@ -91,11 +91,23 @@ internal fun SetupNavGraph(
             Setup(navController)
         }
 
-        composable(route = Screen.KeygenFlow.route) {
+        composable(
+            route = Screen.KeygenFlow.route,
+            arguments = listOf(navArgument(Screen.KeygenFlow.ARG_VAULT_NAME) {
+                type = NavType.StringType
+                defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
+            })
+        ) { navBackStackEntry ->
             val vaultDB = VaultDB(context)
             val allVaults = vaultDB.selectAll()
-            // TODO: later on will need to deal with reshare
-            KeygenFlowView(navController, Vault("New Vault ${allVaults.size + 1}"))
+            val vaultId = navBackStackEntry.arguments?.getString("vault_name") ?: ""
+            val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
+                Vault("New Vault ${allVaults.size + 1}")
+            } else {
+                vaultDB.select(vaultId)
+            }
+
+            KeygenFlowView(navController, vault!!)
         }
 
         composable(route = Screen.SigningError.route) {
@@ -263,13 +275,13 @@ internal fun SetupNavGraph(
         }
 
         composable(
-           route = Destination.LanguageSetting.route,
+            route = Destination.LanguageSetting.route,
         ) {
             LanguageSettingScreen(navController = navController)
         }
 
         composable(
-             route = Destination.CurrencyUnitSetting.route,
+            route = Destination.CurrencyUnitSetting.route,
         ) {
             CurrencyUnitSettingScreen(navController = navController)
         }

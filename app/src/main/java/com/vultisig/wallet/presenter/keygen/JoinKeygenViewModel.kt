@@ -104,6 +104,15 @@ class JoinKeygenViewModel @Inject constructor(
                     this._useVultisigRelay = payload.reshareMessage.useVultisigRelay
                     this._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
                     this._oldCommittee = payload.reshareMessage.oldParties
+                    // trying to find out whether the device already have a vault with the same public key
+                    // if the device has a vault with the same public key , then automatically switch to it
+                    vaultDB.selectAll().forEach() {
+                        if (it.pubKeyECDSA == payload.reshareMessage.pubKeyECDSA) {
+                            _vault = it
+                            _localPartyID = it.localPartyID
+                            return@forEach
+                        }
+                    }
                     if (_vault.pubKeyECDSA.isEmpty()) {
                         _vault.hexChainCode = payload.reshareMessage.hexChainCode
                     } else {
