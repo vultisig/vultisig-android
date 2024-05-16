@@ -76,10 +76,18 @@ internal fun SetupNavGraph(
         composable(route = Screen.CreateNewVault.route) {
             CreateNewVault(navController)
         }
-        composable(route = Screen.JoinKeygen.route) {
+        composable(route = Screen.JoinKeygen.route) { entry ->
             val vaultDB = VaultDB(context)
             val allVaults = vaultDB.selectAll()
-            JoinKeygenView(navController, Vault("New Vault ${allVaults.size + 1}"))
+
+            val savedStateHandle = entry.savedStateHandle
+            val qrCodeResult = savedStateHandle.get<String>(ARG_QR_CODE)
+
+            JoinKeygenView(
+                navController = navController,
+                vault = Vault("New Vault ${allVaults.size + 1}"),
+                qrCodeResult = qrCodeResult,
+            )
         }
 
         composable(route = Screen.Setup.route) {
@@ -176,8 +184,14 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(Screen.JoinKeysign.ARG_VAULT_ID) { type = NavType.StringType }
             )
-        ) {
-            JoinKeysignView(navController)
+        ) { entry ->
+            val savedStateHandle = entry.savedStateHandle
+            val qrCodeResult = savedStateHandle.get<String>(ARG_QR_CODE)
+
+            JoinKeysignView(
+                navController = navController,
+                qrCodeResult = qrCodeResult,
+            )
         }
         composable(
             route = Destination.Keysign.staticRoute,

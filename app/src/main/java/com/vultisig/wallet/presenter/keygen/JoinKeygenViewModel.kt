@@ -11,12 +11,13 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,7 +36,8 @@ enum class JoinKeygenState {
 }
 
 @HiltViewModel
-class JoinKeygenViewModel @Inject constructor(
+internal class JoinKeygenViewModel @Inject constructor(
+    private val navigator: Navigator<Destination>,
     private val vaultDB: VaultDB,
     private val gson: Gson,
 ) : ViewModel() {
@@ -53,6 +55,8 @@ class JoinKeygenViewModel @Inject constructor(
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _keygenCommittee: List<String> = emptyList()
     private var jobWaitingForKeygenStart: Job? = null
+
+    private var isScanStarted = false
 
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
@@ -76,6 +80,14 @@ class JoinKeygenViewModel @Inject constructor(
             _vault.localPartyID = Utils.deviceName
         }
         _localPartyID = _vault.localPartyID
+    }
+    fun startScan() {
+        if (isScanStarted) return
+        isScanStarted = true
+
+        viewModelScope.launch {
+            navigator.navigate(Destination.ScanQr)
+        }
     }
 
     fun setScanResult(content: String) {

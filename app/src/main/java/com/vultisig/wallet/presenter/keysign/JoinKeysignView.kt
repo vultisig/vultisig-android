@@ -1,10 +1,7 @@
 package com.vultisig.wallet.presenter.keysign
 
-import android.app.Activity
 import android.content.Context
 import android.net.nsd.NsdManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.zxing.integration.android.IntentIntegrator
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
@@ -40,25 +36,21 @@ import kotlinx.coroutines.launch
 @Composable
 fun JoinKeysignView(
     navController: NavHostController,
+    qrCodeResult: String? = null,
 ) {
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
-    val scanQrCodeLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val scanResult =
-                    IntentIntegrator.parseActivityResult(result.resultCode, result.data)
-                val qrCodeContent = scanResult.contents
-                viewModel.setScanResult(qrCodeContent)
-            }
+
+    LaunchedEffect(qrCodeResult) {
+        if (qrCodeResult != null) {
+            viewModel.setScanResult(qrCodeResult)
+        } else {
+            viewModel.startScan()
         }
+    }
+
     LaunchedEffect(key1 = Unit) {
         viewModel.setData()
-        val integrator = IntentIntegrator(context as Activity)
-        integrator.setBarcodeImageEnabled(true)
-        integrator.setOrientationLocked(true)
-        integrator.setPrompt("Scan the QR code on your main device")
-        scanQrCodeLauncher.launch(integrator.createScanIntent())
     }
     DisposableEffect(key1 = Unit) {
         onDispose {

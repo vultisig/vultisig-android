@@ -41,6 +41,7 @@ import timber.log.Timber
 
 internal const val ARG_QR_CODE = "qr_code"
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun ScanQrScreen(
     navController: NavHostController,
@@ -51,7 +52,7 @@ internal fun ScanQrScreen(
     var isScanned by remember { mutableStateOf(false) }
 
     val onSuccess: (List<Barcode>) -> Unit = { barcodes ->
-        if (barcodes.isNotEmpty()) {
+        if (barcodes.isNotEmpty() && !isScanned) {
             isScanned = true
             val barcode = barcodes.first()
             navController.previousBackStackEntry

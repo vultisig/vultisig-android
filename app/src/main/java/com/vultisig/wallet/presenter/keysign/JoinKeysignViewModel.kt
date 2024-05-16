@@ -22,6 +22,8 @@ import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
@@ -46,6 +48,8 @@ enum class JoinKeysignState {
 @HiltViewModel
 internal class JoinKeysignViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
+
     private val vaultDB: VaultDB,
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
@@ -71,6 +75,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
     private var _jobWaitingForKeysignStart: Job? = null
+    private var isScanStarted = false
 
     val keysignPayload: KeysignPayload?
         get() = _keysignPayload
@@ -97,6 +102,15 @@ internal class JoinKeysignViewModel @Inject constructor(
         vaultDB.select(vaultId)?.let {
             _currentVault = it
             _localPartyID = it.localPartyID
+        }
+    }
+
+    fun startScan() {
+        if (isScanStarted) return
+        isScanStarted = true
+
+        viewModelScope.launch {
+            navigator.navigate(Destination.ScanQr)
         }
     }
 
