@@ -9,7 +9,6 @@ import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignatureWithRecoveryID
-import org.bouncycastle.jcajce.provider.digest.Keccak
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -104,7 +103,7 @@ internal class EvmHelper(
         return getSignedTransaction(inputData, signatures)
     }
 
-    private fun getSignedTransaction(
+    fun getSignedTransaction(
         inputData: ByteArray,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
