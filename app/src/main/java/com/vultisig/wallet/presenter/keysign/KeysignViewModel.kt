@@ -12,6 +12,7 @@ import com.vultisig.wallet.chains.KujiraHelper
 import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
+import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.common.toHexBytes
@@ -214,10 +215,16 @@ internal class KeysignViewModel(
 
     private fun getSignedTransaction(): SignedTransactionResult {
         if (keysignPayload.swapPayload != null) {
-            throw Exception("Not implemented")
+            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                .getSignedTransaction(keysignPayload.swapPayload, keysignPayload, signatures)
         }
         if (keysignPayload.approvePayload != null) {
-            throw Exception("Not implemented")
+            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                .getSignedApproveTransaction(
+                    keysignPayload.approvePayload,
+                    keysignPayload,
+                    signatures
+                )
         }
         // we could define an interface to make the following more simpler,but I will leave it for later
         when (keysignPayload.coin.chain) {

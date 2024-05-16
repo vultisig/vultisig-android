@@ -11,6 +11,7 @@ import com.vultisig.wallet.models.transactionHash
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignatureWithRecoveryID
+import tss.KeysignResponse
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -125,12 +126,12 @@ internal class AtomHelper(
     }
 
     fun getSignedTransaction(
+        input: ByteArray,
         keysignPayload: KeysignPayload,
-        signatures: Map<String, tss.KeysignResponse>,
+        signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val input = getPreSignedInputData(keysignPayload)
         val hashes = wallet.core.jni.TransactionCompiler.preImageHashes(coinType, input)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
@@ -155,6 +156,18 @@ internal class AtomHelper(
         return SignedTransactionResult(
             output.serialized,
             cosmosSig.transactionHash(),
+        )
+    }
+
+    fun getSignedTransaction(
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>,
+    ): SignedTransactionResult {
+        val inputData = getPreSignedInputData(keysignPayload)
+        return getSignedTransaction(
+            input = inputData,
+            keysignPayload = keysignPayload,
+            signatures = signatures
         )
     }
 }

@@ -15,6 +15,7 @@ import com.vultisig.wallet.chains.KujiraHelper
 import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
+import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.toJson
@@ -41,6 +42,18 @@ data class KeysignPayload(
     val vaultPublicKeyECDSA: String,
 ) : Parcelable {
     fun getKeysignMessages(vault: Vault): List<String> {
+        if (swapPayload != null) {
+            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode).getPreSignedImageHash(
+                swapPayload,
+                this
+            )
+        }
+        if (approvePayload != null) {
+            THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode).getPreSignedApproveImageHash(
+                approvePayload,
+                this
+            )
+        }
         when (coin.chain) {
             Chain.thorChain -> {
                 val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
