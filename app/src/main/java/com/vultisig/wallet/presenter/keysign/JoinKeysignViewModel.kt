@@ -10,6 +10,7 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.common.unzip
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -23,6 +24,7 @@ import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -104,7 +106,14 @@ internal class JoinKeysignViewModel @Inject constructor(
             qrCodeContent ?: run {
                 throw Exception("Invalid QR code content")
             }
-            val payload = gson.fromJson(qrCodeContent, KeysignMesssage::class.java)
+            val rawJson = qrCodeContent.decodeBase64Bytes().unzip().toString()
+            Timber.d(
+                "QR code content: %s", rawJson
+            )
+            val payload = gson.fromJson(
+                rawJson,
+                KeysignMesssage::class.java
+            )
             if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
                 errorMessage.value = "Wrong vault"
                 currentState.value = JoinKeysignState.Error

@@ -144,7 +144,7 @@ internal fun KeysignPeerDiscovery(
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
             Text(
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
-                text = "Keep all devices on same WiFi with vultisig App open. (May not work on hotel/airport WiFi)",
+                text = "Keep all devices on same network with vultisig App open. (May not work on hotel/airport WiFi)",
                 color = textColor,
                 style = Theme.menlo.headlineSmall.copy(
                     textAlign = TextAlign.Center, fontSize = 13.sp
