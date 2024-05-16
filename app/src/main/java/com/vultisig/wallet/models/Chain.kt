@@ -29,11 +29,11 @@ enum class Chain(
     polygon("Polygon", EVM, "Gwei"),
 
     // BITCOIN
-    bitcoin("Bitcoin", UTXO, "Sats/vbytes"),
-    bitcoinCash("Bitcoin Cash", UTXO, "Sats/vbytes"),
-    litecoin("Litecoin", UTXO, "Lits/vbytes"),
-    dogecoin("Dogecoin", UTXO, "Doge/vbytes"),
-    dash("Dash", UTXO, "Sats/vbytes"),
+    bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
+    bitcoinCash("Bitcoin Cash", UTXO, "Sats/vbyte"),
+    litecoin("Litecoin", UTXO, "LTC/vbyte"),
+    dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
+    dash("Dash", UTXO, "Sats/vbyte"),
 
     solana("Solana", SOL, "Lamports"),
     gaiaChain("Gaia Chain", COSMOS, "uatom"),
