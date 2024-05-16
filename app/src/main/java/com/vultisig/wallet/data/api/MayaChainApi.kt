@@ -27,7 +27,7 @@ internal interface MayaChainApi {
 
     suspend fun getAccountNumber(
         address: String,
-    ): THORChainAccountValue?
+    ): THORChainAccountValue
 
     suspend fun getSwapQuotes(
         address: String,
@@ -76,7 +76,7 @@ internal class MayaChainApiImp @Inject constructor(
         return gson.fromJson(response.bodyAsText(), THORChainSwapQuote::class.java)
     }
 
-    override suspend fun getAccountNumber(address: String): THORChainAccountValue? {
+    override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient
             .get("https://mayanode.mayachain.info/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
@@ -86,7 +86,7 @@ internal class MayaChainApiImp @Inject constructor(
 
         return valueObject?.let {
             gson.fromJson(valueObject, THORChainAccountValue::class.java)
-        }
+        } ?: error("Field value is not found in the response")
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {

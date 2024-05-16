@@ -19,7 +19,7 @@ sealed class BlockChainSpecific : Parcelable {
     data class Ethereum(
         val maxFeePerGasWei: BigInteger,
         val priorityFeeWei: BigInteger,
-        val nonce: Long,
+        val nonce: BigInteger,
         val gasLimit: BigInteger,
     ) : BlockChainSpecific()
 
@@ -139,7 +139,7 @@ class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
                 return BlockChainSpecific.Ethereum(
                     maxFeePerGasWei = obj.get("maxFeePerGasWei").asJsonArray[1].asBigInteger,
                     priorityFeeWei = obj.get("priorityFeeWei").asJsonArray[1].asBigInteger,
-                    nonce = obj.get("nonce").asLong,
+                    nonce = obj.get("nonce").asBigInteger,
                     gasLimit = obj.get("gasLimit").asJsonArray[1].asBigInteger
                 )
             }

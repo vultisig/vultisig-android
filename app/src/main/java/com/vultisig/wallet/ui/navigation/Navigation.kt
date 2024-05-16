@@ -23,31 +23,18 @@ internal sealed class Destination(
     }
 
     data class Keysign(
-        val vaultId: String,
-        val chainId: String,
-        val tokenId: String,
-        val dstAddress: String,
-        val amount: String,
+        val transactionId: TransactionId,
     ) : Destination(
-        route = buildRoute(vaultId, chainId, tokenId, dstAddress, amount)
+        route = buildRoute(transactionId)
     ) {
         companion object {
             val staticRoute = buildRoute(
-                "{$ARG_VAULT_ID}",
-                "{$ARG_CHAIN_ID}",
-                "{$ARG_TOKEN_ID}",
-                "{$ARG_DST_ADDRESS}",
-                "{$ARG_AMOUNT}",
+                "{$ARG_TRANSACTION_ID}",
             )
 
             private fun buildRoute(
-                vaultId: String,
-                chainId: String,
-                tokenId: String,
-                dstAddress: String,
-                amount: String,
-            ) = "vault_detail/${vaultId}/account/${chainId}/" +
-                    "send/${tokenId}/sign?dst_address=${dstAddress}&amount=${amount}"
+                transactionId: TransactionId,
+            ) = "send/${transactionId}/sign"
         }
     }
 

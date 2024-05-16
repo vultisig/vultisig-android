@@ -73,7 +73,7 @@ class utxoHelper(
         signingInput: Bitcoin.SigningInput.Builder,
     ): ByteArray {
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
-        signingInput.setByteFee(utxo.byteFee.toLong())
+        signingInput
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setUseMaxAmount(false)
             .setByteFee(utxo.byteFee.toLong())
@@ -127,7 +127,6 @@ class utxoHelper(
     fun getBitcoinSigningInput(keysignPayload: KeysignPayload): Bitcoin.SigningInput.Builder {
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         val input = Bitcoin.SigningInput.newBuilder()
-            .setByteFee(utxo.byteFee.toLong())
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setAmount(keysignPayload.toAmount.toLong())
             .setUseMaxAmount(false)

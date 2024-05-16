@@ -91,11 +91,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
                 navigator.navigate(
                     Destination.Keysign(
-                        vaultId = transaction.vaultId,
-                        chainId = transaction.chainId,
-                        tokenId = transaction.tokenId,
-                        dstAddress = transaction.dstAddress,
-                        amount = transaction.tokenValue.value.toString(),
+                        transactionId = transaction.id,
                     )
                 )
             }

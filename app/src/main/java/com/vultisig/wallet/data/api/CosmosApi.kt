@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 internal interface CosmosApi {
     suspend fun getBalance(address: String): List<CosmosBalance>
-    suspend fun getAccountNumber(address: String): THORChainAccountValue?
+    suspend fun getAccountNumber(address: String): THORChainAccountValue
     suspend fun broadcastTransaction(tx: String): String?
 }
 
@@ -53,7 +53,7 @@ internal class CosmosApiImp @Inject constructor(
         return resp.balances ?: emptyList()
     }
 
-    override suspend fun getAccountNumber(address: String): THORChainAccountValue? {
+    override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient
             .get("$rpcEndpoint/cosmos/auth/v1beta1/accounts/$address") {
             }
@@ -62,7 +62,7 @@ internal class CosmosApiImp @Inject constructor(
 
         return valueObject?.let {
             gson.fromJson(valueObject, THORChainAccountValue::class.java)
-        }
+        } ?: error("Error getting account")
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {

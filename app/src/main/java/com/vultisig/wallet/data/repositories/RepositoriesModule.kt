@@ -80,6 +80,12 @@ internal interface RepositoriesModule {
         impl: TransactionRepositoryImpl,
     ): TransactionRepository
 
+    @Binds
+    @Singleton
+    fun bindBlockChainSpecificRepository(
+        impl: BlockChainSpecificRepositoryImpl,
+    ): BlockChainSpecificRepository
+
     companion object {
 
         @Provides

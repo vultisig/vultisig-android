@@ -2,9 +2,10 @@ package com.vultisig.wallet.models
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.TokenStandard.BITCOIN
-import com.vultisig.wallet.data.models.TokenStandard.ERC20
-import com.vultisig.wallet.data.models.TokenStandard.UNKNOWN
+import com.vultisig.wallet.data.models.TokenStandard.COSMOS
+import com.vultisig.wallet.data.models.TokenStandard.EVM
+import com.vultisig.wallet.data.models.TokenStandard.SOL
+import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.tss.TssKeyType
 import wallet.core.jni.CoinType
 
@@ -13,30 +14,30 @@ enum class Chain(
     val standard: TokenStandard,
     val feeUnit: String,
 ) {
-    thorChain("THORChain", UNKNOWN, "Rune"),
+    thorChain("THORChain", TokenStandard.THORCHAIN, "Rune"),
+    mayaChain("Maya Chain", TokenStandard.THORCHAIN, "cacao"),
 
     // ERC20
-    arbitrum("Arbitrum", ERC20, "Gwei"),
-    avalanche("Avalanche", ERC20, "Gwei"),
-    base("Base", ERC20, "Gwei"),
-    cronosChain("Cronos Chain", ERC20, "Gwei"),
-    bscChain("BSC", ERC20, "Gwei"),
-    blast("Blast", ERC20, "Gwei"),
-    ethereum("Ethereum", ERC20, "Gwei"),
-    optimism("Optimism", ERC20, "Gwei"),
-    polygon("Polygon", ERC20, "Gwei"),
+    arbitrum("Arbitrum", EVM, "Gwei"),
+    avalanche("Avalanche", EVM, "Gwei"),
+    base("Base", EVM, "Gwei"),
+    cronosChain("Cronos Chain", EVM, "Gwei"),
+    bscChain("BSC", EVM, "Gwei"),
+    blast("Blast", EVM, "Gwei"),
+    ethereum("Ethereum", EVM, "Gwei"),
+    optimism("Optimism", EVM, "Gwei"),
+    polygon("Polygon", EVM, "Gwei"),
 
     // BITCOIN
-    bitcoin("Bitcoin", BITCOIN, "Sats/vbytes"),
-    bitcoinCash("Bitcoin Cash", BITCOIN, "Sats/vbytes"),
-    litecoin("Litecoin", BITCOIN, "Lits/vbytes"),
-    dogecoin("Dogecoin", BITCOIN, "Doge/vbytes"),
-    dash("Dash", BITCOIN, "Sats/vbytes"),
+    bitcoin("Bitcoin", UTXO, "Sats/vbytes"),
+    bitcoinCash("Bitcoin Cash", UTXO, "Sats/vbytes"),
+    litecoin("Litecoin", UTXO, "Lits/vbytes"),
+    dogecoin("Dogecoin", UTXO, "Doge/vbytes"),
+    dash("Dash", UTXO, "Sats/vbytes"),
 
-    solana("Solana", UNKNOWN, "Lamports"),
-    gaiaChain("Gaia Chain", UNKNOWN, "uatom"),
-    kujira("Kujira", UNKNOWN, "ukuji"),
-    mayaChain("Maya Chain", UNKNOWN, "cacao");
+    solana("Solana", SOL, "Lamports"),
+    gaiaChain("Gaia Chain", COSMOS, "uatom"),
+    kujira("Kujira", COSMOS, "ukuji");
 
     val id: String
         get() = raw
