@@ -87,7 +87,7 @@ internal fun TokenCard(
         Text(
             text = title,
             color = Theme.colors.neutral100,
-            style = Theme.montserrat.body1,
+            style = Theme.menlo.body1,
         )
 
         UiSpacer(weight = 1f)
@@ -95,7 +95,7 @@ internal fun TokenCard(
         Text(
             text = availableToken ?: "",
             color = Theme.colors.neutral100,
-            style = Theme.montserrat.body1,
+            style = Theme.menlo.body1,
         )
 
         if (actionIcon != null) {
@@ -147,7 +147,7 @@ internal fun FormTextFieldCard(
                         Text(
                             text = hint,
                             color = Theme.colors.neutral100,
-                            style = Theme.montserrat.body1,
+                            style = Theme.menlo.body1,
                         )
                     }
                     textField()

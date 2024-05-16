@@ -120,7 +120,7 @@ internal fun SendScreen(
                     Text(
                         text = state.from,
                         color = Theme.colors.neutral100,
-                        style = Theme.montserrat.body1,
+                        style = Theme.menlo.body1,
                         modifier = Modifier
                             .fillMaxWidth()
                             .defaultMinSize(minHeight = 48.dp)
