@@ -91,17 +91,16 @@ internal class SolanaApiImp @Inject constructor(
             setBody(gson.toJson(payload))
         }
         val responseContent = response.bodyAsText()
-        Timber.tag("solanaApiImp").d(responseContent)
+        Timber.d(responseContent)
         val rpcResp = gson.fromJson(responseContent, JsonObject::class.java)
 
         if (rpcResp.has("error")) {
-            Timber.tag("solanaApiImp")
-                .d("get high priority fee  error: ${rpcResp.get("error")}")
+            Timber.d("get high priority fee  error: ${rpcResp.get("error")}")
             return ""
         }
         val listType = object : TypeToken<List<SolanaFeeObject>>() {}.type
         val fees: List<SolanaFeeObject> = gson.fromJson(
-            rpcResp.getAsJsonObject("result"),
+            rpcResp["result"],
             listType
         )
         return fees.maxOf { it.prioritizationFee }.toString()

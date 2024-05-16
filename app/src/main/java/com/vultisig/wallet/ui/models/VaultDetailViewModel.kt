@@ -18,8 +18,10 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -76,6 +78,10 @@ internal class VaultDetailViewModel @Inject constructor(
     private fun loadAccounts(vaultId: String) {
         viewModelScope.launch {
             accountsRepository.loadAccounts(vaultId)
+                .catch {
+                    // TODO handle error
+                    Timber.e(it)
+                }
                 .collect { accounts ->
                     val totalFiatValue = accounts.calculateTotalFiatValue()
                         ?.let(fiatValueToStringMapper::map)

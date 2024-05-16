@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -33,9 +34,12 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -84,6 +88,7 @@ internal class SendViewModel @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val gasFeeRepository: GasFeeRepository,
     private val transactionRepository: TransactionRepository,
+    private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -263,7 +268,11 @@ internal class SendViewModel @Inject constructor(
                         currency = appCurrency.value.ticker,
                     ),
                     gasFee = gasFee,
+                    blockChainSpecific = blockChainSpecificRepository
+                        .getSpecific(chain, srcAddress, gasFee)
                 )
+
+                Timber.d("Transaction: $transaction")
 
                 transactionRepository.addTransaction(transaction)
 
@@ -317,18 +326,21 @@ internal class SendViewModel @Inject constructor(
 
     private fun calculateGasFees() {
         viewModelScope.launch {
-            try {
-                val gasFee = gasFeeRepository.getGasFee(chain)
-
-                this@SendViewModel.gasFee.value = gasFee
-
-                uiState.update {
-                    it.copy(fee = mapGasFeeToString(gasFee))
+            selectedAccount
+                .filterNotNull()
+                .map { account ->
+                    gasFeeRepository.getGasFee(chain, account.address)
+                }.catch {
+                    // TODO handle error when querying gas fee
+                    Timber.e(it)
                 }
-            } catch (e: Throwable) {
-                // TODO handle error when querying gas fee
-                Timber.e(e)
-            }
+                .collect { gasFee ->
+                    this@SendViewModel.gasFee.value = gasFee
+
+                    uiState.update {
+                        it.copy(fee = mapGasFeeToString(gasFee))
+                    }
+                }
         }
     }
 

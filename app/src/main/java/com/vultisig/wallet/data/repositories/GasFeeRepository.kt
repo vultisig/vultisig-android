@@ -1,19 +1,21 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.chains.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
 import kotlinx.coroutines.flow.first
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface GasFeeRepository {
 
     suspend fun getGasFee(
         chain: Chain,
+        address: String,
     ): TokenValue
 
 }
@@ -21,16 +23,20 @@ internal interface GasFeeRepository {
 internal class GasFeeRepositoryImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
     private val blockChairApi: BlockChairApi,
+    private val solanaApi: SolanaApi,
     private val tokenRepository: TokenRepository,
 ) : GasFeeRepository {
 
-    override suspend fun getGasFee(chain: Chain): TokenValue = when {
-        chain.standard == TokenStandard.ERC20 -> {
+    override suspend fun getGasFee(
+        chain: Chain,
+        address: String,
+    ): TokenValue = when (chain.standard) {
+        TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
             TokenValue(evmApi.getGasPrice(), chain.feeUnit, 9)
         }
 
-        chain.standard == TokenStandard.BITCOIN -> {
+        TokenStandard.UTXO -> {
             val gas = blockChairApi.getBlockchairStats(chain)
 
             val nativeToken = tokenRepository.getNativeToken(chain.id).first()
@@ -58,8 +64,9 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.solana -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                val fee = BigInteger(solanaApi.getHighPriorityFee(address))
                 TokenValue(
-                    value = DefaultFeeInLamports,
+                    value = fee,
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

@@ -6,7 +6,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.app.activity.MainActivity
 
@@ -15,7 +14,7 @@ import com.vultisig.wallet.app.activity.MainActivity
 fun KeysignFlowView(navController: NavController) {
     val viewModel: KeysignFlowViewModel = hiltViewModel()
     val context = LocalContext.current.applicationContext
-    val sharedViewModel: KeysignShareViewModel = viewModel(LocalContext.current as MainActivity)
+    val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     if (sharedViewModel.vault == null || sharedViewModel.keysignPayload == null) {
         // information is not available, go back
         viewModel.moveToState(KeysignFlowState.ERROR)

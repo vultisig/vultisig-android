@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
+
 typealias TransactionId = String
 
 internal data class Transaction(
@@ -12,4 +14,6 @@ internal data class Transaction(
     val tokenValue: TokenValue,
     val fiatValue: FiatValue,
     val gasFee: TokenValue,
+
+    val blockChainSpecific: BlockChainSpecific,
 )
