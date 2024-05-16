@@ -100,9 +100,20 @@ internal fun SetupNavGraph(
         ) { navBackStackEntry ->
             val vaultDB = VaultDB(context)
             val allVaults = vaultDB.selectAll()
-            val vaultId = navBackStackEntry.arguments?.getString("vault_name") ?: ""
+            val vaultId =
+                navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
+
             val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
-                Vault("New Vault ${allVaults.size + 1}")
+                var newVaultName = ""
+                var idx = 1
+                while (true) {
+                    newVaultName = "New Vault ${allVaults.size + idx}"
+                    if (allVaults.find { it.name == newVaultName } == null) {
+                        break
+                    }
+                    idx++
+                }
+                Vault(newVaultName)
             } else {
                 vaultDB.select(vaultId)
             }

@@ -11,6 +11,7 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.PeerDiscoveryPayload
@@ -117,7 +118,7 @@ class JoinKeygenViewModel @Inject constructor(
                         _vault.hexChainCode = payload.reshareMessage.hexChainCode
                     } else {
                         if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
-                            errorMessage.value = "Wrong vault"
+                            errorMessage.value =  "Wrong vault"
                             currentState.value = JoinKeygenState.FailedToStart
                         }
                     }
