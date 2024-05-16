@@ -11,6 +11,7 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.PeerDiscoveryPayload
@@ -61,7 +62,7 @@ class JoinKeygenViewModel @Inject constructor(
             _vault,
             _action,
             _keygenCommittee,
-            _vault.signers,
+            _oldCommittee.filter { _keygenCommittee.contains(it) },
             _serverAddress,
             _sessionID,
             _encryptionKeyHex,
@@ -104,11 +105,20 @@ class JoinKeygenViewModel @Inject constructor(
                     this._useVultisigRelay = payload.reshareMessage.useVultisigRelay
                     this._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
                     this._oldCommittee = payload.reshareMessage.oldParties
+                    // trying to find out whether the device already have a vault with the same public key
+                    // if the device has a vault with the same public key , then automatically switch to it
+                    vaultDB.selectAll().forEach() {
+                        if (it.pubKeyECDSA == payload.reshareMessage.pubKeyECDSA) {
+                            _vault = it
+                            _localPartyID = it.localPartyID
+                            return@forEach
+                        }
+                    }
                     if (_vault.pubKeyECDSA.isEmpty()) {
                         _vault.hexChainCode = payload.reshareMessage.hexChainCode
                     } else {
                         if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
-                            errorMessage.value = "Wrong vault"
+                            errorMessage.value =  "Wrong vault"
                             currentState.value = JoinKeygenState.FailedToStart
                         }
                     }

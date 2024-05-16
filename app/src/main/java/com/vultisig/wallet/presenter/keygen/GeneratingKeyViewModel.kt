@@ -60,9 +60,9 @@ class GeneratingKeyViewModel(
 
         try {
             this.tssInstance?.let {
-                vault.signers = keygenCommittee
                 keygenWithRetry(it, 1)
             }
+            vault.signers = keygenCommittee
             currentState.value = KeygenState.Success
             this._messagePuller?.stop()
         } catch (e: Exception) {

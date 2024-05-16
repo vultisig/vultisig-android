@@ -91,11 +91,34 @@ internal fun SetupNavGraph(
             Setup(navController)
         }
 
-        composable(route = Screen.KeygenFlow.route) {
+        composable(
+            route = Screen.KeygenFlow.route,
+            arguments = listOf(navArgument(Screen.KeygenFlow.ARG_VAULT_NAME) {
+                type = NavType.StringType
+                defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
+            })
+        ) { navBackStackEntry ->
             val vaultDB = VaultDB(context)
             val allVaults = vaultDB.selectAll()
-            // TODO: later on will need to deal with reshare
-            KeygenFlowView(navController, Vault("New Vault ${allVaults.size + 1}"))
+            val vaultId =
+                navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
+
+            val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
+                var newVaultName = ""
+                var idx = 1
+                while (true) {
+                    newVaultName = "New Vault ${allVaults.size + idx}"
+                    if (allVaults.find { it.name == newVaultName } == null) {
+                        break
+                    }
+                    idx++
+                }
+                Vault(newVaultName)
+            } else {
+                vaultDB.select(vaultId)
+            }
+
+            KeygenFlowView(navController, vault!!)
         }
 
         composable(route = Screen.SigningError.route) {
@@ -269,13 +292,13 @@ internal fun SetupNavGraph(
         }
 
         composable(
-           route = Destination.LanguageSetting.route,
+            route = Destination.LanguageSetting.route,
         ) {
             LanguageSettingScreen(navController = navController)
         }
 
         composable(
-             route = Destination.CurrencyUnitSetting.route,
+            route = Destination.CurrencyUnitSetting.route,
         ) {
             CurrencyUnitSettingScreen(navController = navController)
         }

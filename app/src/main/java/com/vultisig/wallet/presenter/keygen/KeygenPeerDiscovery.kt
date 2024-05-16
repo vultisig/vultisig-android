@@ -53,7 +53,11 @@ fun KeygenPeerDiscovery(
     val context = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
         // start mediator server
-        viewModel.setData(TssAction.KEYGEN, vault, context)
+        val action = if (vault.pubKeyECDSA.isEmpty())
+            TssAction.KEYGEN
+        else
+            TssAction.ReShare
+        viewModel.setData(action, vault, context)
     }
     DisposableEffect(Unit) {
         onDispose {
