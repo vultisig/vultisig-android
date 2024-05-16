@@ -269,7 +269,7 @@ internal class SendViewModel @Inject constructor(
                     ),
                     gasFee = gasFee,
                     blockChainSpecific = blockChainSpecificRepository
-                        .getSpecific(chain, srcAddress, gasFee)
+                        .getSpecific(chain, srcAddress, selectedToken, gasFee)
                 )
 
                 Timber.d("Transaction: $transaction")

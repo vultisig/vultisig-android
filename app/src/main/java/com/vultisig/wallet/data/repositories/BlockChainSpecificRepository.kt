@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import java.math.BigInteger
 import javax.inject.Inject
@@ -17,6 +18,7 @@ internal interface BlockChainSpecificRepository {
     suspend fun getSpecific(
         chain: Chain,
         address: String,
+        token: Coin,
         gasFee: TokenValue,
     ): BlockChainSpecific
 
@@ -33,6 +35,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     override suspend fun getSpecific(
         chain: Chain,
         address: String,
+        token: Coin,
         gasFee: TokenValue,
     ): BlockChainSpecific = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
@@ -51,7 +54,10 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
 
-            val gasLimit = 23000 // TODO gas limit may differ for chains
+            val gasLimit = BigInteger(
+                if (token.isNativeToken) "23000"
+                else "120000"
+            )
             val maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
             val nonce = evmApi.getNonce(address)
 
@@ -59,7 +65,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 maxFeePerGasWei = gasFee.value,
                 priorityFeeWei = maxPriorityFee,
                 nonce = nonce,
-                gasLimit = BigInteger.valueOf(gasLimit.toLong()),
+                gasLimit = gasLimit,
             )
         }
 
