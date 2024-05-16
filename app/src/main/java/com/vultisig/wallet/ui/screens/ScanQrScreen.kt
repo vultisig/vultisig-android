@@ -12,6 +12,7 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,10 +21,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
@@ -37,6 +40,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiBarContainer
+import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 
 internal const val ARG_QR_CODE = "qr_code"
@@ -82,12 +86,32 @@ internal fun ScanQrScreen(
                 onSuccess = onSuccess,
             )
         } else if (cameraPermissionState.status.shouldShowRationale) {
-            Text("Camera Permission permanently denied")
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    text = stringResource(R.string.camera_permission_denied),
+                    textAlign = TextAlign.Center,
+                    color = Theme.colors.neutral100,
+                    style = Theme.montserrat.titleMedium,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
         } else {
             SideEffect {
                 cameraPermissionState.launchPermissionRequest()
             }
-            Text("No Camera Permission")
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    text = stringResource(R.string.no_camera_permission),
+                    textAlign = TextAlign.Center,
+                    color = Theme.colors.neutral100,
+                    style = Theme.montserrat.titleMedium,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
         }
     }
 }
