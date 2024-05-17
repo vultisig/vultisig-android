@@ -249,7 +249,7 @@ internal class SendViewModel @Inject constructor(
                     UiText.StringResource(R.string.send_error_no_token)
                 )
 
-                val srcAddress = chainAccountAddressRepository.getAddress(chain, vault)
+                val srcAddress =  selectedToken.address
 
                 val transaction = Transaction(
                     id = UUID.randomUUID().toString(),
@@ -293,9 +293,6 @@ internal class SendViewModel @Inject constructor(
 
     private fun loadTokens() {
         viewModelScope.launch {
-            val vault = requireNotNull(vaultDb.select(vaultId))
-
-            val address = chainAccountAddressRepository.getAddress(chain, vault)
 
             accountsRepository.loadChainAccounts(
                 vaultId = vaultId,
@@ -316,7 +313,7 @@ internal class SendViewModel @Inject constructor(
 
                 uiState.update {
                     it.copy(
-                        from = address,
+                        from = accountOfNativeToken?.address ?: "",
                         availableTokens = tokenUiModels,
                     )
                 }

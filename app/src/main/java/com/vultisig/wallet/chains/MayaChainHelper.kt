@@ -63,8 +63,8 @@ internal class MayaChainHelper(
     }
 
     fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
-        val fromAddress = AnyAddress(keysignPayload.coin.address, coinType).data()
-        val toAddress = AnyAddress(keysignPayload.toAddress, coinType).data()
+        val fromAddress = AnyAddress(keysignPayload.coin.address, coinType,"maya").data()
+        val toAddress = AnyAddress(keysignPayload.toAddress, coinType,"maya").data()
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.THORChain
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
@@ -118,7 +118,7 @@ internal class MayaChainHelper(
 
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
-        signatures: Map<String, tss.KeysignResponse>,
+        signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val inputData = getPreSignInputData(keysignPayload)
         return getSignedTransaction(inputData, signatures)
