@@ -23,24 +23,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
+import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.rememberQRBitmapPainter
-import com.vultisig.wallet.ui.components.QrBorder
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QrAddressScreen(navController: NavHostController) {
+internal fun QrAddressScreen(navController: NavHostController) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
@@ -90,6 +95,7 @@ fun QrAddressScreen(navController: NavHostController) {
             val screenWidth = LocalConfiguration.current.screenWidthDp
             val address = viewmodel.address!!
             val qrBoxSize = ((screenWidth * .8).coerceAtMost(300.0)).dp
+            val segment = with(LocalDensity.current) { qrBoxSize.toPx() }.div(5)
             val imageAndBorderSpace = 30.dp
             val imageSizeInDp = qrBoxSize - 2 * imageAndBorderSpace
             val whiteSpace = 10.dp
@@ -104,15 +110,24 @@ fun QrAddressScreen(navController: NavHostController) {
 
             Box(
                 Modifier
-                    .clip(shape = RoundedCornerShape(qrBoxSize.div(10)))
+                    .clip(shape = RoundedCornerShape(16.dp))
                     .size(qrBoxSize)
-                    .background(Theme.colors.oxfordBlue600Main),
+                    .background(Theme.colors.oxfordBlue600Main)
+                    .drawBehind {
+                        drawRoundRect(
+                            color = Color("#33e6bf".toColorInt()), style = Stroke(
+                                width = 8f,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(segment, segment))
+                            ),
+                            cornerRadius = CornerRadius(16.dp.toPx())
+                        )
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
                         .size(imageSizeInDp + whiteSpace)
-                        .clip(RoundedCornerShape(qrBoxSize.div(20)))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(Theme.colors.neutral0),
                     contentAlignment = Alignment.Center
                 ) {
@@ -127,8 +142,6 @@ fun QrAddressScreen(navController: NavHostController) {
                         contentDescription = "coin address",
                     )
                 }
-
-                QrBorder(size = qrBoxSize, borderWidth = 6f)
             }
         }
     }
