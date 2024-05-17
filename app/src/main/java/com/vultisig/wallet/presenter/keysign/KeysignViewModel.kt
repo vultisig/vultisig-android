@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.SignedTransactionResult
@@ -34,6 +35,9 @@ import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -65,16 +69,25 @@ internal class KeysignViewModel(
     private val mayaChainApi: MayaChainApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
+    private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
-    val currentState: MutableStateFlow<KeysignState> = MutableStateFlow(KeysignState.CreatingInstance)
+    val currentState: MutableStateFlow<KeysignState> =
+        MutableStateFlow(KeysignState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
     private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
-    val txHash: MutableState<String> = mutableStateOf("")
+    val txHash = MutableStateFlow("")
+    val txLink = txHash.map {
+        explorerLinkRepository.getTransactionLink(keysignPayload.coin.chain, it)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(),
+        ""
+    )
 
 
     @Deprecated("Use startKeysign2 instead")

@@ -91,4 +91,7 @@
     <string name="no_camera_permission">No Camera Permission</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="qr_address_screen_title">Address</string>
+    <string name="transaction_done_title">Done</string>
+    <string name="transaction_done_complete">Complete</string>
+    <string name="transation_done_form_title">Transaction</string>
 </resources>

@@ -86,6 +86,12 @@ internal interface RepositoriesModule {
         impl: BlockChainSpecificRepositoryImpl,
     ): BlockChainSpecificRepository
 
+    @Binds
+    @Singleton
+    fun bindExplorerLinkRepository(
+        impl: ExplorerLinkRepositoryImpl,
+    ): ExplorerLinkRepository
+
     companion object {
 
         @Provides

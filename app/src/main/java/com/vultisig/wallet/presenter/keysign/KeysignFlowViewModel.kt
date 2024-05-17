@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
@@ -54,6 +55,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
+    private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -93,6 +95,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             mayaChainApi = mayaChainApi,
             cosmosApiFactory = cosmosApiFactory,
             solanaApi = solanaApi,
+            explorerLinkRepository = explorerLinkRepository,
         )
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {

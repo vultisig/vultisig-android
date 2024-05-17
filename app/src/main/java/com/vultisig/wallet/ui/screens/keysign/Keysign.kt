@@ -26,6 +26,7 @@ import com.vultisig.wallet.presenter.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
+import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -46,6 +47,9 @@ internal fun Keysign(
         KeysignScreen(
             state = viewModel.currentState.collectAsState().value,
             errorMessage = viewModel.errorMessage.value,
+            txHash = viewModel.txHash.collectAsState().value,
+            transactionLink = viewModel.txLink.collectAsState().value,
+            onComplete = navController::popBackStack,
         )
     }
 }
@@ -53,7 +57,10 @@ internal fun Keysign(
 @Composable
 internal fun KeysignScreen(
     state: KeysignState,
+    txHash: String,
+    transactionLink: String,
     errorMessage: String,
+    onComplete: () -> Unit,
 ) {
     KeepScreenOn()
 
@@ -71,34 +78,42 @@ internal fun KeysignScreen(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        UiSpacer(weight = 1f)
-        Text(
-            text = text,
-            color = Theme.colors.neutral0,
-            style = Theme.menlo.subtitle1
-        )
+        if (state == KeysignState.KeysignFinished) {
+            TransactionDoneView(
+                transactionHash = txHash,
+                transactionLink = transactionLink,
+                onComplete = onComplete,
+            )
+        } else {
+            UiSpacer(weight = 1f)
+            Text(
+                text = text,
+                color = Theme.colors.neutral0,
+                style = Theme.menlo.subtitle1
+            )
 
-        UiSpacer(size = 32.dp)
+            UiSpacer(size = 32.dp)
 
-        UiCirclesLoader()
+            UiCirclesLoader()
 
-        UiSpacer(weight = 1f)
+            UiSpacer(weight = 1f)
 
-        Icon(
-            painter = painterResource(id = R.drawable.wifi),
-            contentDescription = null,
-            tint = Theme.colors.turquoise600Main
-        )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-        Text(
-            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-            text = "Keep devices on the same WiFi Network with vultisig open.",
-            color = textColor,
-            style = Theme.menlo.body1,
-            textAlign = TextAlign.Center,
-        )
+            Icon(
+                painter = painterResource(id = R.drawable.wifi),
+                contentDescription = null,
+                tint = Theme.colors.turquoise600Main
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+            Text(
+                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
+                text = "Keep devices on the same WiFi Network with vultisig open.",
+                color = textColor,
+                style = Theme.menlo.body1,
+                textAlign = TextAlign.Center,
+            )
 
-        UiSpacer(size = 80.dp)
+            UiSpacer(size = 80.dp)
+        }
     }
 }
 
@@ -107,6 +122,9 @@ internal fun KeysignScreen(
 private fun KeysignPreview() {
     KeysignScreen(
         state = KeysignState.CreatingInstance,
-        errorMessage = "Error,"
+        errorMessage = "Error",
+        txHash = "0x1234567890",
+        transactionLink = "",
+        onComplete = {},
     )
 }

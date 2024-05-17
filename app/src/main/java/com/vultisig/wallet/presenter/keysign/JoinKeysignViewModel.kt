@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -76,6 +77,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
+    private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
     private var _currentVault: Vault = Vault("temp vault")
@@ -114,6 +116,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             mayaChainApi = mayaChainApi,
             cosmosApiFactory = cosmosApiFactory,
             solanaApi = solanaApi,
+            explorerLinkRepository = explorerLinkRepository,
         )
 
     val transactionUiModel = MutableStateFlow(VerifyTransactionUiModel())
