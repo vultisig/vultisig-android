@@ -22,6 +22,7 @@ import com.vultisig.wallet.presenter.keygen.Setup
 import com.vultisig.wallet.presenter.keysign.JoinKeysignView
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
+import com.vultisig.wallet.presenter.qr_address.QrAddressScreen
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
 import com.vultisig.wallet.presenter.settings.faq_setting.FAQSettingScreen
@@ -282,6 +283,12 @@ internal fun SetupNavGraph(
             route = Destination.CurrencyUnitSetting.route,
         ) {
             CurrencyUnitSettingScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.QrAddressScreen.STATIC_ROUTE,
+        ) {
+            QrAddressScreen(navController = navController)
         }
     }
 }

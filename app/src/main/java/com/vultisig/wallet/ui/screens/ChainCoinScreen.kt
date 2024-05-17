@@ -59,6 +59,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.models.ChainCoinViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 import timber.log.Timber
@@ -209,7 +210,9 @@ fun ChainCoinScreen(navController: NavHostController) {
                             uiModel.chainName,
                             uiModel.totalBalance,
                             uiModel.explorerURL,
-                        )
+                        ){
+                            navController.navigate(Destination.QrAddressScreen(uiModel.chainAddress).route)
+                        }
                     }
                     items(items = uiModel.tokens) { token ->
                         CoinItem(
@@ -239,6 +242,7 @@ private fun CoinListHeader(
     name: String,
     totalBalance: String,
     explorerURL: String,
+    onQrBtnClick:()->Unit = {}
 ) {
     val context = LocalContext.current
     val appColor = Theme.colors
@@ -266,10 +270,12 @@ private fun CoinListHeader(
             }
 
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                painter = painterResource(id = R.drawable.icon_qr),
-                contentDescription = null
-            )
+            IconButton(onClick = onQrBtnClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.icon_qr),
+                    contentDescription = null,
+                )
+            }
             Spacer(modifier = Modifier.width(16.dp))
             IconButton(onClick = {
                 uriHandler.openUri(explorerURL)
