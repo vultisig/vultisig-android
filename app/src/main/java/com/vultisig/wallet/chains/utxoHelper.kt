@@ -81,7 +81,7 @@ class utxoHelper(
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
             val output = Bitcoin.OutPoint.newBuilder()
-                .setHash(ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash)))
+                .setHash(ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash).reversedArray()))
                 .setIndex(item.index.toInt())
                 .setSequence(Long.MAX_VALUE.toInt())
                 .build()
@@ -142,7 +142,7 @@ class utxoHelper(
             val lockScript =
                 BitcoinScript.lockScriptForAddress(keysignPayload.coin.address, coinType)
             val output = Bitcoin.OutPoint.newBuilder()
-                .setHash(ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash)))
+                .setHash(ByteString.copyFrom(Numeric.hexStringToByteArray(item.hash).reversedArray()))
                 .setIndex(item.index.toInt())
                 .setSequence(Long.MAX_VALUE.toInt())
                 .build()
@@ -217,7 +217,7 @@ class utxoHelper(
         val allSignatures = DataVector()
         for (item in preSigningOutput.hashPublicKeysList) {
             val preImageHash = item.dataHash
-            val key = Numeric.toHexString(preImageHash.toByteArray())
+            val key = Numeric.toHexStringNoPrefix(preImageHash.toByteArray())
             signatures[key]?.let {
                 if (!publicKey.verifyAsDER(
                         it.derSignature.hexToByteArray(),
@@ -240,7 +240,7 @@ class utxoHelper(
         )
         val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature)
         return SignedTransactionResult(
-            rawTransaction = Numeric.toHexString(
+            rawTransaction = Numeric.toHexStringNoPrefix(
                 output.encoded.toByteArray()
             ),
             transactionHash = output.transactionId

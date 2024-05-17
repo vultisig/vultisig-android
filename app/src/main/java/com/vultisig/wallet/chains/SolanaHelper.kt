@@ -9,6 +9,7 @@ import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignature
 import io.ktor.util.encodeBase64
+import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -22,9 +23,11 @@ internal class SolanaHelper(
 ) {
 
     private val coinType = CoinType.SOLANA
-    companion object{
+
+    companion object {
         internal val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
     }
+
     fun getCoin(): Coin? {
         val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
         val address = coinType.deriveAddressFromPublicKey(publicKey)
@@ -56,9 +59,10 @@ internal class SolanaHelper(
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
-        val hashes = wallet.core.jni.TransactionCompiler.preImageHashes(coinType, result)
+        val hashes = TransactionCompiler.preImageHashes(coinType, result)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+        Timber.d("solana error:${preSigningOutput.errorMessage}")
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
     }
 
@@ -68,7 +72,7 @@ internal class SolanaHelper(
     ): SignedTransactionResult {
         val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
         val input = getPreSignedInputData(keysignPayload)
-        val hashes = wallet.core.jni.TransactionCompiler.preImageHashes(coinType, input)
+        val hashes = TransactionCompiler.preImageHashes(coinType, input)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())

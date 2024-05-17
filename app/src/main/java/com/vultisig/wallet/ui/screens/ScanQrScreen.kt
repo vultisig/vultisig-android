@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.screens
 
+import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
@@ -10,6 +11,8 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
@@ -133,14 +136,26 @@ private fun QrCameraScreen(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
             val previewView = PreviewView(context)
-            val preview = Preview.Builder().build()
+            val resolutionStrategy = ResolutionStrategy(
+                Size(1200, 1200),
+                ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER
+            )
+            val resolutionSelector = ResolutionSelector.Builder()
+                .setResolutionStrategy(resolutionStrategy)
+                .build()
+
+            val preview = Preview.Builder()
+                .setResolutionSelector(resolutionSelector)
+                .build()
             val selector = CameraSelector.Builder()
                 .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                 .build()
 
             preview.setSurfaceProvider(previewView.surfaceProvider)
 
-            val imageAnalysis = ImageAnalysis.Builder().build()
+            val imageAnalysis = ImageAnalysis.Builder()
+                .setResolutionSelector(resolutionSelector)
+                .build()
             imageAnalysis.setAnalyzer(
                 ContextCompat.getMainExecutor(context),
                 BarcodeAnalyzer(onSuccess)

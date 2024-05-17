@@ -15,5 +15,5 @@ data class BlockchairUtxoInfo(
 
 data class BlockchairInfo(
     val address: BlockchairAddress,
-    val utxos: List<BlockchairUtxoInfo>,
+    @SerializedName("utxo") val utxos: List<BlockchairUtxoInfo>,
 )
