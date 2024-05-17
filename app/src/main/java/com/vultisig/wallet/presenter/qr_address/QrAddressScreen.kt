@@ -30,12 +30,10 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
-import androidx.core.graphics.toColorInt
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -95,7 +93,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
             val screenWidth = LocalConfiguration.current.screenWidthDp
             val address = viewmodel.address!!
             val qrBoxSize = ((screenWidth * .8).coerceAtMost(300.0)).dp
-            val segment = with(LocalDensity.current) { qrBoxSize.toPx() }.div(5)
+            val borderColor = Theme.colors.turquoise600Main
             val imageAndBorderSpace = 30.dp
             val imageSizeInDp = qrBoxSize - 2 * imageAndBorderSpace
             val whiteSpace = 10.dp
@@ -114,8 +112,9 @@ internal fun QrAddressScreen(navController: NavHostController) {
                     .size(qrBoxSize)
                     .background(Theme.colors.oxfordBlue600Main)
                     .drawBehind {
+                        val segment =  qrBoxSize.div(5).toPx()
                         drawRoundRect(
-                            color = Color("#33e6bf".toColorInt()), style = Stroke(
+                            color = borderColor, style = Stroke(
                                 width = 8f,
                                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(segment, segment))
                             ),
