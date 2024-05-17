@@ -14,7 +14,7 @@ import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.home.HomeScreen
-import com.vultisig.wallet.presenter.import_file.ImportFile
+import com.vultisig.wallet.presenter.import_file.ImportFileScreen
 import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
@@ -70,7 +70,7 @@ internal fun SetupNavGraph(
         composable(route = Screen.Welcome.route) {
             WelcomeScreen(navController = navController)
         }
-        composable(route = Screen.Home.route) {
+        composable(route = Destination.Home.route) {
             HomeScreen(navController)
         }
 
@@ -129,9 +129,8 @@ internal fun SetupNavGraph(
             SigningError(navController)
         }
 
-        composable(route = Screen.ImportFile.route) { navBackStackEntry ->
-            val hasFile = navBackStackEntry.arguments?.getString("has_file")?.toBoolean() ?: false
-            ImportFile(navController, hasFile)
+        composable(route = Screen.ImportFile.route) {
+            ImportFileScreen(navController)
         }
         composable(
             route = Screen.VaultDetail.route,

@@ -1,5 +1,8 @@
 package com.vultisig.wallet.presenter.import_file
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,15 +14,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -30,28 +35,59 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.fileName
+import com.vultisig.wallet.common.fileContent
+import com.vultisig.wallet.presenter.import_file.ImportFileEvent.*
+import com.vultisig.wallet.presenter.import_file.ImportFileUiEvent.CopyFileToAppDir
+import com.vultisig.wallet.presenter.import_file.ImportFileUiEvent.FetchFileName
 import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
-fun ImportFile(navController: NavHostController, hasFile: Boolean) {
-    val textColor = MaterialTheme.appColor.neutral0
+fun ImportFileScreen(navController: NavHostController) {
+    val context = LocalContext.current
+    val viewmodel = hiltViewModel<ImportFileViewModel>()
+    val uiModel by viewmodel.uiModel.collectAsState()
+    val appColor = Theme.colors
+    val menloFamily = Theme.menlo
+    val montserratFamily = Theme.montserrat
+
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            viewmodel.onEvent(FileSelected(uri))
+        }
+
+    LaunchedEffect(key1 = Unit) {
+        viewmodel.channel.collect { uiEvent ->
+            when (uiEvent) {
+                is CopyFileToAppDir -> {
+                    val fileContent = uiEvent.uri.fileContent(context)
+                    viewmodel.onEvent(FileContentFetched(fileContent))
+                }
+
+                is FetchFileName -> {
+                    val fileName = uiEvent.uri.fileName(context)
+                    viewmodel.onEvent(FileNameFetched(fileName))
+                }
+            }
+        }
+    }
+
 
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(appColor.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginExtraLarge
@@ -61,8 +97,8 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
         Spacer(modifier = Modifier.height(48.dp))
         Text(
             text = "Enter your previously created vault share",
-            color = textColor,
-            style = MaterialTheme.menloFamily.bodyMedium
+            color = appColor.neutral0,
+            style = menloFamily.bodyMedium
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
         Box(modifier = Modifier
@@ -73,12 +109,7 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
             )
             .clickable {
-                navController.navigate(
-                    Screen.ImportFile.route.replace(
-                        oldValue = "{has_file}",
-                        newValue = true.toString()
-                    )
-                )
+                launcher.launch("application/octet-stream")
             }
             .drawBehind {
                 drawRoundRect(
@@ -90,50 +121,52 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
             }
 
         ) {
-            Column(Modifier.align(Center), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.align(Center), horizontalAlignment = CenterHorizontally) {
                 Image(
                     painterResource(id = R.drawable.file), contentDescription = "file"
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
                 Text(
                     text = "Upload file, text or image",
-                    color = textColor,
-                    style = MaterialTheme.menloFamily.body3
+                    color = appColor.neutral0,
+                    style = menloFamily.body3
                 )
             }
         }
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
-        if (hasFile)
-            LazyColumn {
-                item {
-                    Row(verticalAlignment = CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.drawable.file),
-                            contentDescription = "file icon",
-                            modifier = Modifier.width(MaterialTheme.dimens.medium1)
-                        )
-                        Spacer(modifier = Modifier.width(MaterialTheme.dimens.small1))
-                        Text(
-                            text = "vultisig-vault-share-jun2024.txt",
-                            color = textColor,
-                            style = MaterialTheme.menloFamily.bodyMedium
-                        )
-                        Spacer(modifier = Modifier.weight(1.0f))
-                        Icon(
-                            painter = painterResource(id = R.drawable.x),
-                            contentDescription = "X",
-                            tint = textColor
-                        )
-
-                    }
+        if (uiModel.fileName != null)
+            Row(verticalAlignment = CenterVertically) {
+                Image(
+                    painter = painterResource(id = R.drawable.file),
+                    contentDescription = "file icon",
+                    modifier = Modifier.width(MaterialTheme.dimens.medium1)
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.dimens.small1))
+                Text(
+                    text = uiModel.fileName!!,
+                    color = appColor.neutral0,
+                    style = menloFamily.bodyMedium,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                )
+                IconButton(onClick = {
+                    viewmodel.onEvent(RemoveSelectedFile)
+                }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.x),
+                        contentDescription = "X",
+                        tint = appColor.neutral0
+                    )
                 }
+
             }
         Spacer(modifier = Modifier.weight(1.0F))
         Button(
             onClick = {
-                navController.navigate(Screen.Setup.route)
+                viewmodel.onEvent(OnContinueClick)
             },
-            enabled = hasFile,
+            enabled = uiModel.fileName != null,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors()
                 .copy(disabledContainerColor = MaterialTheme.colorScheme.surfaceDim),
@@ -141,7 +174,7 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
             Text(
                 text = "Continue",
                 color = MaterialTheme.colorScheme.onPrimary,
-                style = MaterialTheme.montserratFamily.titleMedium,
+                style = montserratFamily.titleMedium,
             )
         }
     }
@@ -151,6 +184,6 @@ fun ImportFile(navController: NavHostController, hasFile: Boolean) {
 @Composable
 fun ImportFilePreview() {
     val navController = rememberNavController()
-    ImportFile(navController, true)
+    ImportFileScreen(navController)
 
 }
