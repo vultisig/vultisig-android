@@ -252,6 +252,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     client.newCall(request).execute().use {
                         Timber.tag("JoinKeysignViewModel").d("Join keysign: Response code: %s", it.code)
                     }
+                    waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
@@ -267,7 +268,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         _jobWaitingForKeysignStart?.cancel()
     }
 
-    suspend fun waitForKeysignToStart() {
+    private fun waitForKeysignToStart() {
         _jobWaitingForKeysignStart = viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 while (isActive) {

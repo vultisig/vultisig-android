@@ -19,6 +19,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.keysign.Keysign
 import com.vultisig.wallet.ui.screens.keysign.KeysignLoadingScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignSessionIdDiscoveryScreen
 import com.vultisig.wallet.ui.theme.Theme
@@ -70,9 +71,6 @@ internal fun JoinKeysignView(
         }
 
         JoinKeysignState.WaitingForKeysignStart -> {
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.waitForKeysignToStart()
-            }
             WaitingForKeysignToStart(navController = navController)
         }
 
