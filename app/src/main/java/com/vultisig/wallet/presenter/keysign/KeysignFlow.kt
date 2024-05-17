@@ -9,6 +9,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.ui.screens.keysign.Keysign
+import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
