@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -17,9 +18,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiBarContainer
+import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignLoadingScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignSessionIdDiscoveryScreen
-import com.vultisig.wallet.ui.screens.keysign.VerifyKeysignScreen
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -58,7 +59,14 @@ internal fun JoinKeysignView(
         }
 
         JoinKeysignState.JoinKeysign -> {
-            VerifyKeysignScreen(navController = navController, viewModel = viewModel)
+            val transaction = viewModel.transactionUiModel.collectAsState().value
+            VerifyTransactionScreen(
+                navController = navController,
+                state = transaction,
+                isConsentsEnabled = false,
+                confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
+                onConfirm = viewModel::joinKeysign,
+            )
         }
 
         JoinKeysignState.WaitingForKeysignStart -> {

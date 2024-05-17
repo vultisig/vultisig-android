@@ -8,8 +8,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
-import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TRANSACTION_ID
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -46,8 +45,7 @@ data class VerifyTransactionUiModel(
 internal class VerifyTransactionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val mapTokenValueToString: TokenValueToStringMapper,
+    private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     private val transactionRepository: TransactionRepository,
 ) : ViewModel() {
@@ -119,22 +117,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         viewModelScope.launch {
             val transaction = transaction.filterNotNull().first()
 
-            val tokenValue = transaction.tokenValue
-            val fiatValue = transaction.fiatValue
-            val gasFee = transaction.gasFee
-
-            val tokenValueString = mapTokenValueToString(tokenValue)
-            val fiatValueString = fiatValueToStringMapper.map(transaction.fiatValue)
-            val gasFeeString = mapTokenValueToString(gasFee)
-
-            val transactionUiModel = TransactionUiModel(
-                srcAddress = transaction.srcAddress,
-                dstAddress = transaction.dstAddress,
-                tokenValue = tokenValueString,
-                fiatValue = fiatValueString,
-                fiatCurrency = fiatValue.currency,
-                gasValue = gasFeeString,
-            )
+            val transactionUiModel = mapTransactionToUiModel(transaction)
 
             uiState.update {
                 it.copy(transaction = transactionUiModel)
