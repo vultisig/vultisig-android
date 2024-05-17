@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
@@ -38,7 +39,7 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
             )
     ) {
         TopBar(
-            centerText = "Keygen",
+            centerText = stringResource(R.string.device_list_screen_keygen),
             startIcon = R.drawable.caret_left,
             navController = navController
         )
@@ -46,14 +47,18 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
 
         Text(
-            text = "${Utils.getThreshold(items.count())} of ${items.count()} Vault",
+            text = stringResource(
+                R.string.device_list_of_vault,
+                Utils.getThreshold(items.count()),
+                items.count()
+            ),
             color = textColor,
             style = Theme.montserrat.bodyLarge
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         Text(
-            text = "With these devices",
+            text = stringResource(R.string.device_list_screen_with_these_devices),
             color = textColor,
             style = Theme.montserrat.bodyMedium
         )
@@ -65,12 +70,12 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
             items.forEachIndexed() { index, item ->
                 item {
                     if (item == viewModel.localPartyID) {
-                        DeviceInfoItem("$index. $item (This Device)")
+                        DeviceInfoItem("$index. $item ${stringResource(R.string.this_device)}")
                     } else {
                         if (index < thresholds)
-                            DeviceInfoItem("$index. $item (Pair Device)")
+                            DeviceInfoItem("$index. $item ${stringResource(R.string.pair_device)}")
                         else
-                            DeviceInfoItem("$index. $item (Backup Device)")
+                            DeviceInfoItem("$index. $item ${stringResource(R.string.backup_device)}")
                     }
                 }
             }
@@ -80,14 +85,19 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
 
         Text(
             style = Theme.menlo.bodyMedium,
-            text = "You can only send transactions with these ${Utils.getThreshold(items.count())} devices present.",
+            text = stringResource(
+                R.string.device_list_desc1,
+                Utils.getThreshold(items.count())
+            ),
             color = textColor
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
 
         Text(
             style = Theme.menlo.bodyMedium,
-            text = if (items.count() < 3) "You do not have a 3rd backup device - so you should backup one vault share securely later." else "Your backup device is not needed unless you lose one of your main devices.",
+            text = if (items.count() < 3) stringResource(R.string.device_list_desc2) else stringResource(
+                R.string.device_list_desc3
+            ),
             color = textColor
         )
 
@@ -95,7 +105,7 @@ fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel)
         Spacer(modifier = Modifier.weight(1.0f))
 
         MultiColorButton(
-            text = "Continue",
+            text = stringResource(R.string.device_list_screen_continue),
             backgroundColor = Theme.colors.turquoise600Main,
             textColor = Theme.colors.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,

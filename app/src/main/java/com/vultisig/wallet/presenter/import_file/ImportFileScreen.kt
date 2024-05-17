@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
@@ -73,10 +74,10 @@ fun ImportFileScreen(navController: NavHostController) {
                 horizontal = MaterialTheme.dimens.marginExtraLarge
             )
     ) {
-        TopBar(centerText = "Import", navController = navController)
+        TopBar(centerText = stringResource(R.string.import_file_screen_title), navController = navController)
         Spacer(modifier = Modifier.height(48.dp))
         Text(
-            text = "Enter your previously created vault share",
+            text = stringResource(R.string.import_file_screen_enter_your_previously_created_vault_share),
             color = appColor.neutral0,
             style = menloFamily.bodyMedium
         )
@@ -107,7 +108,7 @@ fun ImportFileScreen(navController: NavHostController) {
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
                 Text(
-                    text = "Upload file, text or image",
+                    text = stringResource(R.string.import_file_screen_upload_file_text_or_image),
                     color = appColor.neutral0,
                     style = menloFamily.body3
                 )
@@ -152,7 +153,7 @@ fun ImportFileScreen(navController: NavHostController) {
                 .copy(disabledContainerColor = MaterialTheme.colorScheme.surfaceDim),
         ) {
             Text(
-                text = "Continue",
+                text = stringResource(R.string.import_file_screen_continue),
                 color = MaterialTheme.colorScheme.onPrimary,
                 style = montserratFamily.titleMedium,
             )

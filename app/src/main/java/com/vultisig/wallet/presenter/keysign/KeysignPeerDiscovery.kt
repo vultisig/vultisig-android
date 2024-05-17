@@ -68,7 +68,7 @@ internal fun KeysignPeerDiscovery(
         },
         bottomBar = {
             MultiColorButton(
-                text = "Start",
+                text = stringResource(R.string.keysign_peer_discovery_start),
                 backgroundColor = Theme.colors.turquoise600Main,
                 textColor = Theme.colors.oxfordBlue600Main,
                 minHeight = MaterialTheme.dimens.minHeightButton,
@@ -95,7 +95,7 @@ internal fun KeysignPeerDiscovery(
         ) {
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
             Text(
-                text = "Pair with other devices:",
+                text = stringResource(R.string.keysign_peer_discovery_pair_with_other_devices),
                 color = textColor,
                 style = Theme.montserrat.bodyMedium
             )
@@ -132,7 +132,7 @@ internal fun KeysignPeerDiscovery(
                 }
             } else {
                 Text(
-                    text = "Waiting for other devices to connect...",
+                    text = stringResource(R.string.keysign_peer_discovery_waiting_for_other_devices_to_connect),
                     color = textColor,
                     style = Theme.montserrat.bodyMedium
                 )
@@ -144,7 +144,7 @@ internal fun KeysignPeerDiscovery(
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
             Text(
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
-                text = "Keep all devices on same network with vultisig App open. (May not work on hotel/airport WiFi)",
+                text = stringResource(R.string.keysign_peer_discovery_desc1),
                 color = textColor,
                 style = Theme.menlo.headlineSmall.copy(
                     textAlign = TextAlign.Center, fontSize = 13.sp

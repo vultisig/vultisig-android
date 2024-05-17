@@ -63,7 +63,7 @@ internal fun ScanQrScreen(
             isScanned = true
             val barcode = barcodes.first()
             val barcodeValue = barcode.rawValue
-            Timber.d("Successfully scanned barcode: $barcodeValue")
+            Timber.d(context.getString(R.string.successfully_scanned_barcode, barcodeValue))
             navController.previousBackStackEntry
                 ?.savedStateHandle
                 ?.set(ARG_QR_CODE, barcodeValue)
@@ -169,7 +169,7 @@ private fun QrCameraScreen(
                     imageAnalysis,
                 )
             } catch (e: Throwable) {
-                Timber.e("Camera bind error ${e.localizedMessage}", e)
+                Timber.e(context.getString(R.string.camera_bind_error, e.localizedMessage), e)
             }
 
             previewView

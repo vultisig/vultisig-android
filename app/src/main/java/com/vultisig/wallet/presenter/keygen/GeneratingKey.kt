@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,12 +58,12 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(centerText = "Keygen", navController = navController)
+        TopBar(centerText = stringResource(R.string.generating_key_title), navController = navController)
         Spacer(modifier = Modifier.weight(1f))
         when (viewModel.currentState.value) {
             KeygenState.CreatingInstance -> {
                 KeygenIndicator(
-                    statusText = "PREPARING VAULT",
+                    statusText = stringResource(R.string.generating_key_preparing_vault),
                     progress = 0.25F,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -70,7 +71,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
 
             KeygenState.KeygenECDSA -> {
                 KeygenIndicator(
-                    statusText = "GENERATING ECDSA KEY",
+                    statusText = stringResource(R.string.generating_key_screen_generating_ecdsa_key),
                     progress = 0.5F,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -78,7 +79,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
 
             KeygenState.KeygenEdDSA -> {
                 KeygenIndicator(
-                    statusText = "GENERATING EdDSA KEY",
+                    statusText = stringResource(R.string.generating_key_screen_generating_eddsa_key),
                     progress = 0.7F,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -86,7 +87,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
 
             KeygenState.ReshareECDSA -> {
                 KeygenIndicator(
-                    statusText = "RESHARING ECDSA Key",
+                    statusText = stringResource(R.string.generating_key_screen_resharing_ecdsa_key),
                     progress = 0.5F,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -94,7 +95,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
 
             KeygenState.ReshareEdDSA -> {
                 KeygenIndicator(
-                    statusText = "RESHARING EdDSA Key",
+                    statusText = stringResource(R.string.generating_key_screen_resharing_eddsa_key),
                     progress = 0.75F,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -109,7 +110,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 }
                 // TODO: play an animation
                 KeygenIndicator(
-                    statusText = "SUCCESS",
+                    statusText = stringResource(R.string.generating_key_screen_success),
                     progress = 1.0F,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -121,7 +122,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                     viewModel.stopService(context)
                 }
                 Text(
-                    text = "Keygen Failed",
+                    text = stringResource(R.string.generating_key_screen_keygen_failed),
                     color = textColor,
                     style = Theme.menlo.headlineSmall
                 )
@@ -142,7 +143,7 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-            text = "Keep devices on the same WiFi Network with vultisig open.",
+            text = stringResource(R.string.generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
             color = textColor,
             style = Theme.menlo.headlineSmall.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp

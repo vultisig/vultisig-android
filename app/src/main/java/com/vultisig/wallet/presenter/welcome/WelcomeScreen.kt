@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -118,7 +119,7 @@ fun WelcomeScreen(
                 .weight(0.3f)
         )
         MultiColorButton(
-            text = "Next",
+            text = stringResource(R.string.welcome_screen_next),
             textColor = MaterialTheme.appColor.oxfordBlue800,
             minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
@@ -136,7 +137,7 @@ fun WelcomeScreen(
         )
         if (pagerState.currentPage < 2) {
             MultiColorButton(
-                text = "Skip",
+                text = stringResource(R.string.welcome_screen_skip),
                 backgroundColor = MaterialTheme.appColor.oxfordBlue800,
                 textColor = MaterialTheme.appColor.turquoise800,
                 iconColor = MaterialTheme.appColor.oxfordBlue800,

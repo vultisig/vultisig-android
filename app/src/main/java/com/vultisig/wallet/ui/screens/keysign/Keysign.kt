@@ -67,11 +67,14 @@ internal fun KeysignScreen(
     val textColor = Theme.colors.neutral0
 
     val text = when (state) {
-        KeysignState.CreatingInstance -> "Preparing vault..."
-        KeysignState.KeysignECDSA -> "Signing with ECDSA..."
-        KeysignState.KeysignEdDSA -> "Signing with EdDSA..."
-        KeysignState.KeysignFinished -> "Keysign Finished!"
-        KeysignState.ERROR -> "Error! Please try again. $errorMessage"
+        KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
+        KeysignState.KeysignECDSA -> stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
+        KeysignState.KeysignEdDSA -> stringResource(id = R.string.vault_detail_screen_eddsa)
+        KeysignState.KeysignFinished -> stringResource(id = R.string.keysign_screen_keysign_finished)
+        KeysignState.ERROR -> stringResource(
+            id = R.string.keysign_screen_error_please_try_again,
+            errorMessage
+        )
     }
 
     Column(
@@ -98,19 +101,19 @@ internal fun KeysignScreen(
 
             UiSpacer(weight = 1f)
 
-            Icon(
-                painter = painterResource(id = R.drawable.wifi),
-                contentDescription = null,
-                tint = Theme.colors.turquoise600Main
-            )
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-            Text(
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-                text = "Keep devices on the same WiFi Network with vultisig open.",
-                color = textColor,
-                style = Theme.menlo.body1,
-                textAlign = TextAlign.Center,
-            )
+        Icon(
+            painter = painterResource(id = R.drawable.wifi),
+            contentDescription = null,
+            tint = Theme.colors.turquoise600Main
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+        Text(
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
+            text = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
+            color = textColor,
+            style = Theme.menlo.body1,
+            textAlign = TextAlign.Center,
+        )
 
             UiSpacer(size = 80.dp)
         }
