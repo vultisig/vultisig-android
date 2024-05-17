@@ -100,10 +100,14 @@ internal fun JoinKeysignView(
             }
 
             Keysign -> {
-                viewModel.keysignViewModel.startKeysign2()
+                val keysignViewModel = viewModel.keysignViewModel
+                keysignViewModel.startKeysign2()
                 KeysignScreen(
-                    state = viewModel.keysignViewModel.currentState.collectAsState().value,
-                    errorMessage = viewModel.keysignViewModel.errorMessage.value,
+                    state = keysignViewModel.currentState.collectAsState().value,
+                    errorMessage = keysignViewModel.errorMessage.value,
+                    txHash = keysignViewModel.txHash.collectAsState().value,
+                    transactionLink = keysignViewModel.txLink.collectAsState().value,
+                    onComplete = navController::popBackStack,
                 )
             }
 
