@@ -39,6 +39,7 @@ data class KeysignPayload(
     val memo: String? = null,
     val swapPayload: THORChainSwapPayload? = null,
     val approvePayload: ERC20ApprovePayload? = null,
+    @SerializedName("vaultPubKeyECDSA")
     val vaultPublicKeyECDSA: String,
 ) : Parcelable {
     fun getKeysignMessages(vault: Vault): List<String> {

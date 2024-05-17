@@ -1,6 +1,7 @@
 package com.vultisig.wallet.models
 
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.R
 import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
@@ -11,6 +12,7 @@ data class Coin(
     val ticker: String,
     val logo: String,
     val address: String,
+    @SerializedName("decimals")
     val decimal: Int,
     val hexPublicKey: String,
     val priceProviderID: String,
