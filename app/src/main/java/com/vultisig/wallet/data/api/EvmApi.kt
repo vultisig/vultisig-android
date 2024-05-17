@@ -236,14 +236,17 @@ internal class EvmApiImp(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_sendRawTransaction",
-            params = listOf(signedTransaction),
+            params = listOf("0x"+signedTransaction),
             id = 1,
         )
+        Timber.d("send transaction: $signedTransaction")
         val response = httpClient.post(getRPCEndpoint()) {
             header("Content-Type", "application/json")
             setBody(gson.toJson(payload))
         }
-        val jsonObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
+        val responseBody = response.bodyAsText()
+        Timber.d("broadcast response: $responseBody")
+        val jsonObject = gson.fromJson(responseBody, JsonObject::class.java)
         if (jsonObject.has("error")) {
             val message = jsonObject.getAsJsonObject("error").get("message").asString
             if (message.contains("known") ||

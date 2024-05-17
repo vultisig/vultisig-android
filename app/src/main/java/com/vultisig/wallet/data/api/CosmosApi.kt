@@ -57,8 +57,10 @@ internal class CosmosApiImp @Inject constructor(
         val response = httpClient
             .get("$rpcEndpoint/cosmos/auth/v1beta1/accounts/$address") {
             }
-        val jsonObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-        val valueObject = jsonObject.get("result")?.asJsonObject?.get("value")?.asJsonObject
+        val responseBody = response.bodyAsText()
+        Timber.d("getAccountNumber: $responseBody")
+        val jsonObject = gson.fromJson(responseBody, JsonObject::class.java)
+        val valueObject = jsonObject.get("account").asJsonObject
 
         return valueObject?.let {
             gson.fromJson(valueObject, THORChainAccountValue::class.java)

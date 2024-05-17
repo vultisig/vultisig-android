@@ -1,7 +1,9 @@
 package com.vultisig.wallet.chains
 
+import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toByteString
+import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
@@ -53,11 +55,11 @@ internal class EvmHelper(
             ?: throw Exception("Invalid blockChainSpecific")
 
         signingInput.toBuilder().apply {
-            chainId = coinType.chainId().toByteString()
-            nonce = ethSpecifc.nonce.toString().toByteString()
-            gasLimit = ethSpecifc.gasLimit.toString().toByteString()
-            maxFeePerGas = ethSpecifc.maxFeePerGasWei.toString().toByteString()
-            maxInclusionFeePerGas = ethSpecifc.priorityFeeWei.toString().toByteString()
+            chainId = ByteString.copyFrom(coinType.chainId().toHexByteArray())
+            nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
+            gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
+            maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
+            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
             txMode = Ethereum.TransactionMode.Enveloped
         }
         return signingInput.toByteArray()
@@ -68,16 +70,16 @@ internal class EvmHelper(
             ?: throw Exception("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()
         input.apply {
-            chainId = coinType.chainId().toByteString()
-            nonce = ethSpecifc.nonce.toString().toByteString()
-            gasLimit = ethSpecifc.gasLimit.toString().toByteString()
-            maxFeePerGas = ethSpecifc.maxFeePerGasWei.toString().toByteString()
-            maxInclusionFeePerGas = ethSpecifc.priorityFeeWei.toString().toByteString()
+            chainId = ByteString.copyFrom(coinType.chainId().toHexByteArray())
+            nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
+            gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
+            maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
+            maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
             toAddress = keysignPayload.toAddress
             txMode = Ethereum.TransactionMode.Enveloped
             transaction = Ethereum.Transaction.newBuilder().apply {
                 transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
-                    amount = keysignPayload.toAmount.toString().toByteString()
+                    amount = ByteString.copyFrom(keysignPayload.toAmount.toByteArray())
                     keysignPayload.memo?.let {
                         data = it.toByteString()
                     }
