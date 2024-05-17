@@ -8,6 +8,6 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class QrAddressViewModel @Inject constructor(savedStateHandle: SavedStateHandle) : ViewModel() {
+internal class QrAddressViewModel @Inject constructor(savedStateHandle: SavedStateHandle) : ViewModel() {
     val address = savedStateHandle.get<String>(Destination.QrAddressScreen.ARG_COIN_ADDRESS)
 }
