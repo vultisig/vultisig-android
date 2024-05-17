@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
+import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -78,7 +79,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
         TokenStandard.SOL -> {
             val blockhash = solanaApi.getRecentBlockHash()
-
+            Timber.d("solana blockhash: $blockhash")
             BlockChainSpecific.Solana(
                 recentBlockHash = blockhash,
                 priorityFee = gasFee.value

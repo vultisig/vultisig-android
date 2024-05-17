@@ -55,7 +55,7 @@ internal class SolanaApiImp @Inject constructor(
     override suspend fun getRecentBlockHash(): String {
         val payload = RpcPayload(
             jsonrpc = "2.0",
-            method = "getLatestBlockHash",
+            method = "getLatestBlockhash",
             params = listOf("commitment" to "finalized"),
             id = 1,
         )
