@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.app.activity.MainActivity
+import com.vultisig.wallet.ui.screens.keysign.Keysign
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
