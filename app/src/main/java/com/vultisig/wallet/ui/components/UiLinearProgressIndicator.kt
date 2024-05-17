@@ -1,11 +1,12 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
@@ -27,6 +28,12 @@ internal fun UiLinearProgressIndicator(
         ),
     ),
 ) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 1000),
+        label = "UiLinearProgressIndicator"
+    )
+
     Canvas(
         modifier = modifier
             .height(10.dp)
@@ -42,7 +49,7 @@ internal fun UiLinearProgressIndicator(
         drawRoundRect(
             brush = indicatorBrush,
             size = Size(
-                width * (progress.coerceAtLeast(0.05f)),
+                width * (animatedProgress.coerceAtLeast(0.05f)),
                 height
             ),
             cornerRadius = cornerRadius,

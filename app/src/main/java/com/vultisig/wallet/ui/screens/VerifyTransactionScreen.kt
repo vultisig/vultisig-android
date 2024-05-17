@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.FormCard
@@ -42,37 +41,13 @@ internal fun VerifyTransactionScreen(
     viewModel: VerifyTransactionViewModel = hiltViewModel(),
 ) {
     val state = viewModel.uiState.collectAsState().value
-    VerifyTransactionScreen(
-        navController = navController,
-        state = state,
-        isConsentsEnabled = true,
-        confirmTitle = stringResource(R.string.verify_transaction_sign),
-        onConsentAddress = viewModel::checkConsentAddress,
-        onConsentAmount = viewModel::checkConsentAmount,
-        onConsentDst = viewModel::checkConsentDst,
-        onConfirm = viewModel::joinKeysign,
-        onDismissError = viewModel::dismissError,
-    )
-}
 
-@Composable
-internal fun VerifyTransactionScreen(
-    navController: NavHostController,
-    state: VerifyTransactionUiModel,
-    isConsentsEnabled: Boolean,
-    confirmTitle: String,
-    onConfirm: () -> Unit,
-    onConsentAddress: (Boolean) -> Unit = {},
-    onConsentAmount: (Boolean) -> Unit = {},
-    onConsentDst: (Boolean) -> Unit = {},
-    onDismissError: () -> Unit = {},
-) {
     val errorText = state.errorText
     if (errorText != null) {
         UiAlertDialog(
             title = stringResource(id = R.string.dialog_default_error_title),
             text = errorText.asString(),
-            onDismiss = onDismissError
+            onDismiss = viewModel::dismissError,
         )
     }
 
@@ -80,99 +55,124 @@ internal fun VerifyTransactionScreen(
         title = stringResource(R.string.verify_transaction_screen_title),
         navController = navController,
     ) {
-        Box(
+        VerifyTransactionScreen(
+            state = state,
+            isProgressEnabled = true,
+            isConsentsEnabled = true,
+            confirmTitle = stringResource(R.string.verify_transaction_sign),
+            onConsentAddress = viewModel::checkConsentAddress,
+            onConsentAmount = viewModel::checkConsentAmount,
+            onConsentDst = viewModel::checkConsentDst,
+            onConfirm = viewModel::joinKeysign,
+        )
+    }
+}
+
+@Composable
+internal fun VerifyTransactionScreen(
+    state: VerifyTransactionUiModel,
+    isProgressEnabled: Boolean,
+    isConsentsEnabled: Boolean,
+    confirmTitle: String,
+    onConfirm: () -> Unit,
+    onConsentAddress: (Boolean) -> Unit = {},
+    onConsentAmount: (Boolean) -> Unit = {},
+    onConsentDst: (Boolean) -> Unit = {},
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
-                .fillMaxSize(),
+                .padding(all = 16.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .padding(all = 16.dp)
-                    .verticalScroll(rememberScrollState()),
-            ) {
+            if (isProgressEnabled) {
                 UiLinearProgressIndicator(
                     progress = 0.6f,
                 )
 
                 // size 0 but still adds margin because of verticalArrangement
                 UiSpacer(size = 0.dp)
+            }
 
-                FormCard {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .padding(
-                                horizontal = 16.dp,
-                                vertical = 12.dp
-                            )
-                    ) {
-                        AddressField(
-                            title = stringResource(R.string.verify_transaction_from_title),
-                            address = state.transaction.srcAddress
+            FormCard {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 12.dp
                         )
+                ) {
+                    AddressField(
+                        title = stringResource(R.string.verify_transaction_from_title),
+                        address = state.transaction.srcAddress
+                    )
 
-                        AddressField(
-                            title = stringResource(R.string.verify_transaction_to_title),
-                            address = state.transaction.dstAddress
-                        )
+                    AddressField(
+                        title = stringResource(R.string.verify_transaction_to_title),
+                        address = state.transaction.dstAddress
+                    )
 
-                        OtherField(
-                            title = stringResource(R.string.verify_transaction_amount_title),
-                            value = state.transaction.tokenValue,
-                        )
+                    OtherField(
+                        title = stringResource(R.string.verify_transaction_amount_title),
+                        value = state.transaction.tokenValue,
+                    )
 
-                        OtherField(
-                            title = stringResource(
-                                R.string.verify_transaction_fiat_amount_title,
-                                state.transaction.fiatCurrency
-                            ),
-                            value = state.transaction.fiatValue,
-                        )
+                    OtherField(
+                        title = stringResource(
+                            R.string.verify_transaction_fiat_amount_title,
+                            state.transaction.fiatCurrency
+                        ),
+                        value = state.transaction.fiatValue,
+                    )
 
-                        OtherField(
-                            title = stringResource(R.string.verify_transaction_gas_title),
-                            value = state.transaction.gasValue,
-                            divider = false
-                        )
-                    }
-                }
-
-                if (isConsentsEnabled){
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                    ) {
-                        CheckField(
-                            title = stringResource(R.string.verify_transaction_consent_address),
-                            isChecked = state.consentAddress,
-                            onCheckedChange = onConsentAddress,
-                        )
-
-                        CheckField(
-                            title = stringResource(R.string.verify_transaction_consent_amount),
-                            isChecked = state.consentAmount,
-                            onCheckedChange = onConsentAmount,
-                        )
-
-                        CheckField(
-                            title = stringResource(R.string.verify_transaction_consent_correct_dst),
-                            isChecked = state.consentDst,
-                            onCheckedChange = onConsentDst,
-                        )
-                    }
+                    OtherField(
+                        title = stringResource(R.string.verify_transaction_gas_title),
+                        value = state.transaction.gasValue,
+                        divider = false
+                    )
                 }
             }
 
-            MultiColorButton(
-                text = confirmTitle,
-                textColor = Theme.colors.oxfordBlue800,
-                minHeight = 44.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(all = 16.dp),
-                onClick = onConfirm,
-            )
+            if (isConsentsEnabled) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    CheckField(
+                        title = stringResource(R.string.verify_transaction_consent_address),
+                        isChecked = state.consentAddress,
+                        onCheckedChange = onConsentAddress,
+                    )
+
+                    CheckField(
+                        title = stringResource(R.string.verify_transaction_consent_amount),
+                        isChecked = state.consentAmount,
+                        onCheckedChange = onConsentAmount,
+                    )
+
+                    CheckField(
+                        title = stringResource(R.string.verify_transaction_consent_correct_dst),
+                        isChecked = state.consentDst,
+                        onCheckedChange = onConsentDst,
+                    )
+                }
+            }
         }
+
+        MultiColorButton(
+            text = confirmTitle,
+            textColor = Theme.colors.oxfordBlue800,
+            minHeight = 44.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(all = 16.dp),
+            onClick = onConfirm,
+        )
     }
 }
 
@@ -272,7 +272,6 @@ private fun CheckField(
 @Composable
 private fun VerifyTransactionScreenPreview() {
     VerifyTransactionScreen(
-        navController = rememberNavController(),
         state = VerifyTransactionUiModel(
             transaction = TransactionUiModel(
                 srcAddress = "0x1234567890",
@@ -283,12 +282,12 @@ private fun VerifyTransactionScreenPreview() {
                 gasValue = "1.1",
             )
         ),
+        isProgressEnabled = true,
         isConsentsEnabled = true,
         confirmTitle = stringResource(R.string.verify_transaction_sign),
         onConsentAddress = {},
         onConsentAmount = {},
         onConsentDst = {},
         onConfirm = {},
-        onDismissError = {},
     )
 }

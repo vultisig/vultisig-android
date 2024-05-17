@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.chains.AtomHelper
 import com.vultisig.wallet.chains.ERC20Helper
@@ -31,6 +33,8 @@ import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
@@ -61,21 +65,31 @@ internal class KeysignViewModel(
     private val mayaChainApi: MayaChainApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
-) {
+) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
-    val currentState: MutableState<KeysignState> = mutableStateOf(KeysignState.CreatingInstance)
+    val currentState: MutableStateFlow<KeysignState> = MutableStateFlow(KeysignState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
     private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
     val txHash: MutableState<String> = mutableStateOf("")
 
 
+    @Deprecated("Use startKeysign2 instead")
     suspend fun startKeysign() {
         withContext(Dispatchers.IO) {
             signAndBroadcast()
+        }
+    }
+
+    // TODO rename after removing startKeysign
+    fun startKeysign2() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                signAndBroadcast()
+            }
         }
     }
 

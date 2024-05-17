@@ -33,6 +33,19 @@ internal fun KeysignErrorScreen(
         navController = navController,
         title = stringResource(R.string.keysign)
     ) {
+        KeysignErrorView(
+            navController = navController,
+            errorMessage = errorMessage
+        )
+    }
+}
+
+@Composable
+internal fun KeysignErrorView(
+    navController: NavController,
+    errorMessage: String = "",
+) {
+    Column {
         UiSpacer(weight = 1f)
 
         Column(
@@ -90,5 +103,5 @@ internal fun KeysignErrorScreen(
 @Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable
 private fun PreviewKeysignError() {
-    KeysignErrorScreen(navController = rememberNavController())
+    KeysignErrorView(navController = rememberNavController())
 }
