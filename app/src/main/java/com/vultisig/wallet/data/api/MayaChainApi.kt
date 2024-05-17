@@ -81,7 +81,9 @@ internal class MayaChainApiImp @Inject constructor(
             .get("https://mayanode.mayachain.info/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val jsonObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
+        val responseBody = response.bodyAsText()
+        Timber.d("getAccountNumber: $responseBody")
+        val jsonObject = gson.fromJson(responseBody, JsonObject::class.java)
         val valueObject = jsonObject.get("result")?.asJsonObject?.get("value")?.asJsonObject
 
         return valueObject?.let {

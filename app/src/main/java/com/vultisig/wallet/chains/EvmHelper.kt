@@ -17,6 +17,7 @@ import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
+import java.math.BigInteger
 
 @OptIn(ExperimentalStdlibApi::class)
 internal class EvmHelper(
@@ -70,7 +71,7 @@ internal class EvmHelper(
             ?: throw Exception("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()
         input.apply {
-            chainId = ByteString.copyFrom(coinType.chainId().toHexByteArray())
+            chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
             nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
             gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
             maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
