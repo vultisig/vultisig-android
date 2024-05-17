@@ -106,7 +106,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             }
 
             bitcoin, bitcoinCash, litecoin, dogecoin, dash -> {
-                val balance = blockchairApi.getAddressInfo(coin)?.address?.balance
+                val balance = blockchairApi.getAddressInfo(coin.chain, address)?.address?.balance
                 balance?.toBigInteger() ?: 0.toBigInteger()
             }
 

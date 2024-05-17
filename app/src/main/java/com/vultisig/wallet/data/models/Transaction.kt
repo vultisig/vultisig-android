@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 
 typealias TransactionId = String
@@ -16,4 +17,5 @@ internal data class Transaction(
     val gasFee: TokenValue,
 
     val blockChainSpecific: BlockChainSpecific,
+    val utxos: List<UtxoInfo> = emptyList(),
 )
