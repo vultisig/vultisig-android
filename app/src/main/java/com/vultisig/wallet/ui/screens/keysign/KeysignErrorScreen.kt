@@ -1,13 +1,8 @@
-package com.vultisig.wallet.presenter.keysign
+package com.vultisig.wallet.ui.screens.keysign
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,31 +18,25 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiBarContainer
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 
 @Composable
-fun KeysignErrorScreen(navController: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.colors.oxfordBlue800)
+internal fun KeysignErrorScreen(
+    navController: NavController,
+    errorMessage: String = "",
+) {
+    UiBarContainer(
+        navController = navController,
+        title = stringResource(R.string.keysign)
     ) {
-
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
-
-        TopBar(
-            modifier = Modifier.align(Alignment.TopCenter),
-            centerText = stringResource(R.string.keysign),
-            startIcon = R.drawable.caret_left,
-            navController = navController
-        )
+        UiSpacer(weight = 1f)
 
         Column(
             Modifier
-                .align(Alignment.Center)
                 .padding(
                     start = 81.dp,
                     end = 81.dp,
@@ -61,26 +50,25 @@ fun KeysignErrorScreen(navController: NavController) {
             )
             Text(
                 modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
-                text = stringResource(R.string.signing_error_please_try_again),
-                style = Theme.menlo.titleLarge,
+                text = stringResource(R.string.signing_error_please_try_again_s, errorMessage),
+                style = Theme.menlo.subtitle1,
                 color = Theme.colors.neutral0,
                 textAlign = TextAlign.Center
             )
         }
 
-        Column(
-            Modifier
-                .align(Alignment.BottomCenter)
-        ) {
+        UiSpacer(weight = 1f)
+
+        Column {
             Text(
                 modifier = Modifier
-                    .padding(top = 150.dp)
                     .align(Alignment.CenterHorizontally),
                 text = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
-                style = Theme.menlo.labelMedium,
+                style = Theme.menlo.body1,
                 color = Theme.colors.neutral0,
                 textAlign = TextAlign.Center
             )
+            UiSpacer(size = 8.dp)
 
             MultiColorButton(
                 text = stringResource(R.string.try_again),
@@ -88,15 +76,10 @@ fun KeysignErrorScreen(navController: NavController) {
                 backgroundColor = Theme.colors.turquoise800,
                 textColor = Theme.colors.oxfordBlue800,
                 iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.titleLarge,
+                textStyle = Theme.montserrat.subtitle1,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        top = MaterialTheme.dimens.small3,
-                        start = MaterialTheme.dimens.small2,
-                        end = MaterialTheme.dimens.small2,
-                        bottom = MaterialTheme.dimens.small2
-                    )
+                    .padding(all = 16.dp)
             ) {
                 navController.popBackStack()
             }
@@ -106,6 +89,6 @@ fun KeysignErrorScreen(navController: NavController) {
 
 @Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable
-fun PreviewKeysignError() {
+private fun PreviewKeysignError() {
     KeysignErrorScreen(navController = rememberNavController())
 }
