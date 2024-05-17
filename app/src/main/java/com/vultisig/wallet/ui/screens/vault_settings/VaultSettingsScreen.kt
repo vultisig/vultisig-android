@@ -22,7 +22,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.downloadVault
+import com.vultisig.wallet.common.backupVaultToDownloadsDir
 import com.vultisig.wallet.ui.components.SettingsItem
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Destination
@@ -65,7 +65,7 @@ internal fun VaultSettingsScreen(
 
                 is BackupFile ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val isSuccess = context.downloadVault(event.vaultName, event.backupFileName)
+                        val isSuccess = context.backupVaultToDownloadsDir(event.vaultName, event.backupFileName)
                         if (isSuccess)
                             viewModel.onEvent(SuccessBackup(event.backupFileName))
                         else
