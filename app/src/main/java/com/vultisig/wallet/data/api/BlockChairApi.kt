@@ -19,7 +19,11 @@ import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface BlockChairApi {
-    suspend fun getAddressInfo(coin: Coin): BlockchairInfo?
+    suspend fun getAddressInfo(
+        chain: Chain,
+        address: String,
+    ): BlockchairInfo?
+
     suspend fun getBlockchairStats(chain: Chain): BigInteger
     suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String
 }
@@ -45,19 +49,22 @@ internal class BlockChairApiImp @Inject constructor(
 
     private fun getChainName(coin: Coin): String = getChainName(coin.chain)
 
-    override suspend fun getAddressInfo(coin: Coin): BlockchairInfo? {
+    override suspend fun getAddressInfo(
+        chain: Chain,
+        address: String,
+    ): BlockchairInfo? {
         try {
-            cache.getIfPresent(coin.address)?.let {
+            cache.getIfPresent(address)?.let {
                 return it
             }
             val response =
-                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(coin)}/dashboards/address/${coin.address}") {
+                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}") {
                     header("Content-Type", "application/json")
                 }
             val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-            val data = rootObject.getAsJsonObject("data").getAsJsonObject().get(coin.address)
+            val data = rootObject.getAsJsonObject("data").getAsJsonObject().get(address)
             val blockchairInfo = gson.fromJson(data, BlockchairInfo::class.java)
-            cache.put(coin.address, blockchairInfo)
+            cache.put(address, blockchairInfo)
             return blockchairInfo
         } catch (e: Exception) {
             Timber.e("fail to get address info from blockchair: ${e.message}")

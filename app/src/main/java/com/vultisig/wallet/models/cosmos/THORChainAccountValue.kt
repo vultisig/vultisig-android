@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class THORChainAccountValue(
     val address: String?,
-    @SerializedName("account_number") val accountNumber: String,
+    @SerializedName("account_number") val accountNumber: String?,
     val sequence: String?,
 ) {
 }
