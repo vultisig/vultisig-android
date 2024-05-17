@@ -1,7 +1,8 @@
 package com.vultisig.wallet.chains
 
+import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
-import com.vultisig.wallet.common.toByteString
+import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
@@ -23,18 +24,18 @@ internal class ERC20Helper(
         val ethSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()
-            .setChainId(coinType.chainId().toByteString())
-            .setNonce(ethSpecific.nonce.toString().toByteString())
-            .setGasLimit(ethSpecific.gasLimit.toString().toByteString())
-            .setMaxFeePerGas(ethSpecific.maxFeePerGasWei.toString().toByteString())
-            .setMaxInclusionFeePerGas(ethSpecific.priorityFeeWei.toString().toByteString())
+            .setChainId(ByteString.copyFrom(coinType.chainId().toHexByteArray()))
+            .setNonce(ByteString.copyFrom(ethSpecific.nonce.toByteArray()))
+            .setGasLimit(ByteString.copyFrom(ethSpecific.gasLimit.toByteArray()))
+            .setMaxFeePerGas(ByteString.copyFrom(ethSpecific.maxFeePerGasWei.toByteArray()))
+            .setMaxInclusionFeePerGas(ByteString.copyFrom(ethSpecific.priorityFeeWei.toByteArray()))
             .setToAddress(keysignPayload.coin.contractAddress)
             .setTxMode(Ethereum.TransactionMode.Enveloped)
             .setTransaction(
                 Ethereum.Transaction.newBuilder()
                     .setErc20Transfer(
                         Ethereum.Transaction.ERC20Transfer.newBuilder()
-                            .setAmount(keysignPayload.toAmount.toString().toByteString())
+                            .setAmount(ByteString.copyFrom(keysignPayload.toAmount.toByteArray()))
                             .setTo(keysignPayload.toAddress)
                             .build()
                     )
