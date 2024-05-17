@@ -1,46 +1,42 @@
 package com.vultisig.wallet.presenter.import_file
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.vultisig.wallet.common.fileContent
+import com.vultisig.wallet.common.fileName
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileContentFetched
-import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileNameFetched
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.RemoveSelectedFile
-import com.vultisig.wallet.presenter.import_file.ImportFileUiEvent.CopyFileToAppDir
-import com.vultisig.wallet.presenter.import_file.ImportFileUiEvent.FetchFileName
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
     private val vaultDB: VaultDB,
     private val gson: Gson,
-    private val navigator: Navigator<Destination>
+    private val navigator: Navigator<Destination>,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     val uiModel = MutableStateFlow(ImportFileState())
-    private val _channel = Channel<ImportFileUiEvent>()
-    val channel = _channel.receiveAsFlow()
+
     fun onEvent(event: ImportFileEvent) {
         when (event) {
             is FileSelected -> fetchFileName(event.uri)
-            OnContinueClick -> fetchFileContent()
+            OnContinueClick -> saveFileToAppDir()
             RemoveSelectedFile -> removeSelectedFile()
-            is FileNameFetched -> updateFileName(event.fileName)
-            is FileContentFetched -> insertContentToDb(event.fileContent)
         }
     }
 
@@ -49,19 +45,14 @@ internal class ImportFileViewModel @Inject constructor(
             return
         val fromJson = gson.fromJson(fileContent, Vault::class.java)
         viewModelScope.launch {
-            val saveFile = async(Dispatchers.IO) {
+            withContext(Dispatchers.IO) {
                 vaultDB.upsert(fromJson)
             }
-            saveFile.join()
             navigator.navigate(Destination.Home)
         }
     }
 
-    private fun updateFileName(fileName: String) {
-        uiModel.update {
-            it.copy(fileName = fileName)
-        }
-    }
+
 
     private fun removeSelectedFile() {
         uiModel.update {
@@ -69,11 +60,10 @@ internal class ImportFileViewModel @Inject constructor(
         }
     }
 
-    private fun fetchFileContent() {
+    private fun saveFileToAppDir() {
         val uri = uiModel.value.fileUri ?: return
-        viewModelScope.launch {
-            _channel.send(CopyFileToAppDir(uri))
-        }
+        val fileContent = uri.fileContent(context)
+        insertContentToDb(fileContent)
     }
 
     private fun fetchFileName(uri: Uri?) {
@@ -82,8 +72,9 @@ internal class ImportFileViewModel @Inject constructor(
         }
         if (uri == null)
             return
-        viewModelScope.launch {
-            _channel.send(FetchFileName(uri))
+        val fileName = uri.fileName(context)
+        uiModel.update {
+            it.copy(fileName = fileName)
         }
     }
 }

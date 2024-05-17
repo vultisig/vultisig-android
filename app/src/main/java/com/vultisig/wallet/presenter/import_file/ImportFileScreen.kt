@@ -22,7 +22,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.Center
@@ -35,7 +34,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,18 +42,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.fileName
-import com.vultisig.wallet.common.fileContent
-import com.vultisig.wallet.presenter.import_file.ImportFileEvent.*
-import com.vultisig.wallet.presenter.import_file.ImportFileUiEvent.CopyFileToAppDir
-import com.vultisig.wallet.presenter.import_file.ImportFileUiEvent.FetchFileName
+import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
+import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
+import com.vultisig.wallet.presenter.import_file.ImportFileEvent.RemoveSelectedFile
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 fun ImportFileScreen(navController: NavHostController) {
-    val context = LocalContext.current
+
     val viewmodel = hiltViewModel<ImportFileViewModel>()
     val uiModel by viewmodel.uiModel.collectAsState()
     val appColor = Theme.colors
@@ -66,22 +62,6 @@ fun ImportFileScreen(navController: NavHostController) {
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             viewmodel.onEvent(FileSelected(uri))
         }
-
-    LaunchedEffect(key1 = Unit) {
-        viewmodel.channel.collect { uiEvent ->
-            when (uiEvent) {
-                is CopyFileToAppDir -> {
-                    val fileContent = uiEvent.uri.fileContent(context)
-                    viewmodel.onEvent(FileContentFetched(fileContent))
-                }
-
-                is FetchFileName -> {
-                    val fileName = uiEvent.uri.fileName(context)
-                    viewmodel.onEvent(FileNameFetched(fileName))
-                }
-            }
-        }
-    }
 
 
     Column(
