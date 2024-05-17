@@ -24,13 +24,18 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Immutable
-data class VerifyTransactionUiModel(
+data class TransactionUiModel(
     val srcAddress: String = "",
     val dstAddress: String = "",
     val tokenValue: String = "",
     val fiatValue: String = "",
     val fiatCurrency: String = "",
     val gasValue: String = "",
+)
+
+@Immutable
+data class VerifyTransactionUiModel(
+    val transaction: TransactionUiModel = TransactionUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
     val consentDst: Boolean = false,
@@ -122,15 +127,17 @@ internal class VerifyTransactionViewModel @Inject constructor(
             val fiatValueString = fiatValueToStringMapper.map(transaction.fiatValue)
             val gasFeeString = mapTokenValueToString(gasFee)
 
+            val transactionUiModel = TransactionUiModel(
+                srcAddress = transaction.srcAddress,
+                dstAddress = transaction.dstAddress,
+                tokenValue = tokenValueString,
+                fiatValue = fiatValueString,
+                fiatCurrency = fiatValue.currency,
+                gasValue = gasFeeString,
+            )
+
             uiState.update {
-                it.copy(
-                    srcAddress = transaction.srcAddress,
-                    dstAddress = transaction.dstAddress,
-                    tokenValue = tokenValueString,
-                    fiatValue = fiatValueString,
-                    fiatCurrency = fiatValue.currency,
-                    gasValue = gasFeeString,
-                )
+                it.copy(transaction = transactionUiModel)
             }
         }
     }
