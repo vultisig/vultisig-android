@@ -75,8 +75,7 @@ internal class SolanaApiImp @Inject constructor(
         return rpcResp
             .getAsJsonObject("result")
             .getAsJsonObject("value")
-            .get("blockhash")
-            .toString()
+            .get("blockhash").asString
     }
 
     override suspend fun getHighPriorityFee(account: String): String {

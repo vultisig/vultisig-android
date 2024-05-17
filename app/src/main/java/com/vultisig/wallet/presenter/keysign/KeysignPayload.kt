@@ -1,6 +1,7 @@
 package com.vultisig.wallet.presenter.keysign
 
 import android.os.Parcelable
+import com.google.common.reflect.TypeToken
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -139,8 +140,9 @@ class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
             jsonObject.get("chainSpecific"), BlockChainSpecific::class.java
         )!!
         val coin = context.deserialize<Coin>(jsonObject.get("coin"), Coin::class.java)
+        val utxosType = object : TypeToken<List<UtxoInfo>>() {}.type
         val utxos = context.deserialize<List<UtxoInfo>>(
-            jsonObject.get("utxos"), List::class.java
+            jsonObject.get("utxos"), utxosType
         )
         val memo = jsonObject.get("memo")?.asString
         val swapPayload = context.deserialize<THORChainSwapPayload>(

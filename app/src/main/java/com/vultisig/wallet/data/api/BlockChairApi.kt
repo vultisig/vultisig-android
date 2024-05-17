@@ -10,7 +10,7 @@ import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.put
+import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -61,7 +61,9 @@ internal class BlockChairApiImp @Inject constructor(
                 httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}") {
                     header("Content-Type", "application/json")
                 }
-            val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
+            val responseData = response.bodyAsText()
+            Timber.d("response data: $responseData")
+            val rootObject = gson.fromJson(responseData, JsonObject::class.java)
             val data = rootObject.getAsJsonObject("data").getAsJsonObject().get(address)
             val blockchairInfo = gson.fromJson(data, BlockchairInfo::class.java)
             cache.put(address, blockchairInfo)
@@ -85,10 +87,12 @@ internal class BlockChairApiImp @Inject constructor(
     override suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String {
         val jsonObject = JsonObject()
         jsonObject.addProperty("data", signedTransaction)
+        val bodyContent = gson.toJson(jsonObject)
+        Timber.d("bodyContent:$bodyContent")
         val response =
-            httpClient.put("https://api.vultisig.com/blockchair/${getChainName(coin)}/push/transaction/$signedTransaction") {
+            httpClient.post("https://api.vultisig.com/blockchair/${getChainName(coin)}/push/transaction") {
                 header("Content-Type", "application/json")
-                setBody(gson.toJson(jsonObject))
+                setBody(bodyContent)
             }
         if (response.status != HttpStatusCode.OK) {
             Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")

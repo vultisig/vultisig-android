@@ -96,8 +96,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 utxos = utxos?.utxos?.map {
                     UtxoInfo(
                         hash = it.transactionHash,
-                        amount = it.index.toULong(),
-                        index = it.value.toUInt(),
+                        amount = it.value,
+                        index = it.index.toUInt(),
                     )
                 } ?: emptyList(),
             )
@@ -130,7 +130,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             )
         }
 
-        else -> throw IllegalArgumentException("Unsupported chain $chain")
     }
 
 }
