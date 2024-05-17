@@ -96,7 +96,7 @@ fun QrAddressScreen(navController: NavHostController) {
 
             Text(
                 text = address,
-                style = Theme.menlo.titleMedium,
+                style = Theme.menlo.body1,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 128.dp)
