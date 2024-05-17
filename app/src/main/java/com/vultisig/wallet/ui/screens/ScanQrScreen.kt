@@ -59,9 +59,11 @@ internal fun ScanQrScreen(
         if (barcodes.isNotEmpty() && !isScanned) {
             isScanned = true
             val barcode = barcodes.first()
+            val barcodeValue = barcode.rawValue
+            Timber.d("Successfully scanned barcode: $barcodeValue")
             navController.previousBackStackEntry
                 ?.savedStateHandle
-                ?.set(ARG_QR_CODE, barcode.rawValue)
+                ?.set(ARG_QR_CODE, barcodeValue)
             navController.popBackStack()
         }
     }

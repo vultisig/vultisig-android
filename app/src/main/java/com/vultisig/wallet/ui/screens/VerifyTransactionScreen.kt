@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCheckbox
+import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -44,6 +45,8 @@ internal fun VerifyTransactionScreen(
     VerifyTransactionScreen(
         navController = navController,
         state = state,
+        isConsentsEnabled = true,
+        confirmTitle = stringResource(R.string.verify_transaction_sign),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
@@ -53,14 +56,16 @@ internal fun VerifyTransactionScreen(
 }
 
 @Composable
-private fun VerifyTransactionScreen(
+internal fun VerifyTransactionScreen(
     navController: NavHostController,
     state: VerifyTransactionUiModel,
-    onConsentAddress: (Boolean) -> Unit,
-    onConsentAmount: (Boolean) -> Unit,
-    onConsentDst: (Boolean) -> Unit,
+    isConsentsEnabled: Boolean,
+    confirmTitle: String,
     onConfirm: () -> Unit,
-    onDismissError: () -> Unit,
+    onConsentAddress: (Boolean) -> Unit = {},
+    onConsentAmount: (Boolean) -> Unit = {},
+    onConsentDst: (Boolean) -> Unit = {},
+    onDismissError: () -> Unit = {},
 ) {
     val errorText = state.errorText
     if (errorText != null) {
@@ -103,60 +108,62 @@ private fun VerifyTransactionScreen(
                     ) {
                         AddressField(
                             title = stringResource(R.string.verify_transaction_from_title),
-                            address = state.srcAddress
+                            address = state.transaction.srcAddress
                         )
 
                         AddressField(
                             title = stringResource(R.string.verify_transaction_to_title),
-                            address = state.dstAddress
+                            address = state.transaction.dstAddress
                         )
 
                         OtherField(
                             title = stringResource(R.string.verify_transaction_amount_title),
-                            value = state.tokenValue,
+                            value = state.transaction.tokenValue,
                         )
 
                         OtherField(
                             title = stringResource(
                                 R.string.verify_transaction_fiat_amount_title,
-                                state.fiatCurrency
+                                state.transaction.fiatCurrency
                             ),
-                            value = state.fiatValue,
+                            value = state.transaction.fiatValue,
                         )
 
                         OtherField(
                             title = stringResource(R.string.verify_transaction_gas_title),
-                            value = state.gasValue,
+                            value = state.transaction.gasValue,
                             divider = false
                         )
                     }
                 }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    CheckField(
-                        title = stringResource(R.string.verify_transaction_consent_address),
-                        isChecked = state.consentAddress,
-                        onCheckedChange = onConsentAddress,
-                    )
+                if (isConsentsEnabled){
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        CheckField(
+                            title = stringResource(R.string.verify_transaction_consent_address),
+                            isChecked = state.consentAddress,
+                            onCheckedChange = onConsentAddress,
+                        )
 
-                    CheckField(
-                        title = stringResource(R.string.verify_transaction_consent_amount),
-                        isChecked = state.consentAmount,
-                        onCheckedChange = onConsentAmount,
-                    )
+                        CheckField(
+                            title = stringResource(R.string.verify_transaction_consent_amount),
+                            isChecked = state.consentAmount,
+                            onCheckedChange = onConsentAmount,
+                        )
 
-                    CheckField(
-                        title = stringResource(R.string.verify_transaction_consent_correct_dst),
-                        isChecked = state.consentDst,
-                        onCheckedChange = onConsentDst,
-                    )
+                        CheckField(
+                            title = stringResource(R.string.verify_transaction_consent_correct_dst),
+                            isChecked = state.consentDst,
+                            onCheckedChange = onConsentDst,
+                        )
+                    }
                 }
             }
 
             MultiColorButton(
-                text = stringResource(R.string.verify_transaction_join_keysign),
+                text = confirmTitle,
                 textColor = Theme.colors.oxfordBlue800,
                 minHeight = 44.dp,
                 modifier = Modifier
@@ -267,13 +274,17 @@ private fun VerifyTransactionScreenPreview() {
     VerifyTransactionScreen(
         navController = rememberNavController(),
         state = VerifyTransactionUiModel(
-            srcAddress = "0x1234567890",
-            dstAddress = "0x1234567890",
-            tokenValue = "1.1",
-            fiatValue = "1.1",
-            fiatCurrency = "USD",
-            gasValue = "1.1",
+            transaction = TransactionUiModel(
+                srcAddress = "0x1234567890",
+                dstAddress = "0x1234567890",
+                tokenValue = "1.1",
+                fiatValue = "1.1",
+                fiatCurrency = "USD",
+                gasValue = "1.1",
+            )
         ),
+        isConsentsEnabled = true,
+        confirmTitle = stringResource(R.string.verify_transaction_sign),
         onConsentAddress = {},
         onConsentAmount = {},
         onConsentDst = {},

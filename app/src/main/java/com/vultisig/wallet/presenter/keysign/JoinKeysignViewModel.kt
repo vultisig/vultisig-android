@@ -166,26 +166,28 @@ internal class JoinKeysignViewModel @Inject constructor(
         )
     }
 
-    suspend fun joinKeysign() {
-        withContext(Dispatchers.IO) {
-            try {
-                val serverUrl = URL("${_serverAddress}/$_sessionID")
-                Timber.tag("JoinKeysignViewModel").d("Joining keysign at $serverUrl")
-                val payload = listOf(_localPartyID)
+    fun joinKeysign() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                try {
+                    val serverUrl = URL("${_serverAddress}/$_sessionID")
+                    Timber.tag("JoinKeysignViewModel").d("Joining keysign at $serverUrl")
+                    val payload = listOf(_localPartyID)
 
-                val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true).build()
-                val request = okhttp3.Request.Builder().method(
-                    "POST", gson.toJson(payload).toRequestBody("application/json".toMediaType())
-                ).url(serverUrl).build()
-                client.newCall(request).execute().use {
-                    Timber.tag("JoinKeysignViewModel").d("Join keysign: Response code: %s", it.code)
+                    val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true).build()
+                    val request = okhttp3.Request.Builder().method(
+                        "POST", gson.toJson(payload).toRequestBody("application/json".toMediaType())
+                    ).url(serverUrl).build()
+                    client.newCall(request).execute().use {
+                        Timber.tag("JoinKeysignViewModel").d("Join keysign: Response code: %s", it.code)
+                    }
+                    currentState.value = JoinKeysignState.WaitingForKeysignStart
+                } catch (e: Exception) {
+                    Timber.tag("JoinKeysignViewModel")
+                        .e("Failed to join keysign: %s", e.stackTraceToString())
+                    errorMessage.value = "Failed to join keysign"
+                    currentState.value = JoinKeysignState.FailedToStart
                 }
-                currentState.value = JoinKeysignState.WaitingForKeysignStart
-            } catch (e: Exception) {
-                Timber.tag("JoinKeysignViewModel")
-                    .e("Failed to join keysign: %s", e.stackTraceToString())
-                errorMessage.value = "Failed to join keysign"
-                currentState.value = JoinKeysignState.FailedToStart
             }
         }
     }

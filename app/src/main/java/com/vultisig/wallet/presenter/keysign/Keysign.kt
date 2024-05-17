@@ -92,9 +92,6 @@ internal fun Keysign(navController: NavController, viewModel: KeysignViewModel) 
             }
 
             KeysignState.ERROR -> {
-                LaunchedEffect(key1 = Unit) {
-
-                }
                 Text(
                     modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                     text = "Error! Please try again. $viewModel.errorMessage.value",

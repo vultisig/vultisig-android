@@ -80,11 +80,13 @@
     <string name="verify_transaction_amount_title">Amount</string>
     <string name="verify_transaction_fiat_amount_title">Amount in (%s)</string>
     <string name="verify_transaction_gas_title">Gas</string>
-    <string name="verify_transaction_join_keysign">Sign</string>
+    <string name="verify_transaction_join_keysign">Join Keysign</string>
+    <string name="verify_transaction_sign">Sign</string>
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_consent_correct_dst">I’m not sending to a scam or hacker</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_denied">Camera permission denied. Please, enable it in the settings.</string>
     <string name="no_camera_permission">No Camera Permission</string>
+    <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
 </resources>
