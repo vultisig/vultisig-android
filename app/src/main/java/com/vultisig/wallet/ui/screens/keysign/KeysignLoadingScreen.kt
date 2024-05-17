@@ -10,38 +10,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun KeysignLoadingScreen(
-    navController: NavHostController,
     text: String,
+    modifier: Modifier = Modifier,
 ) {
-    UiBarContainer(
-        navController = navController,
-        title = stringResource(id = R.string.keysign),
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = text,
-                color = Theme.colors.neutral0,
-                style = Theme.menlo.subtitle1
-            )
+        Text(
+            text = text,
+            color = Theme.colors.neutral0,
+            style = Theme.menlo.subtitle1
+        )
 
-            UiSpacer(size = 32.dp)
+        UiSpacer(size = 32.dp)
 
-            UiCirclesLoader()
-        }
+        UiCirclesLoader()
     }
 }
 
@@ -49,7 +41,6 @@ internal fun KeysignLoadingScreen(
 @Composable
 private fun KeysingLoadingScreenPreview() {
     KeysignLoadingScreen(
-        navController = rememberNavController(),
         text = stringResource(R.string.join_keysign_discovering_session_id),
     )
 }

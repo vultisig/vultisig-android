@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -18,7 +19,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.KeysignState
@@ -38,16 +38,20 @@ internal fun Keysign(
         // kick it off to generate key
         viewModel.startKeysign()
     }
-    KeysignScreen(
+
+    UiBarContainer(
         navController = navController,
-        state = viewModel.currentState.value,
-        errorMessage = viewModel.errorMessage.value,
-    )
+        title = stringResource(id = R.string.keysign)
+    ) {
+        KeysignScreen(
+            state = viewModel.currentState.collectAsState().value,
+            errorMessage = viewModel.errorMessage.value,
+        )
+    }
 }
 
 @Composable
-private fun KeysignScreen(
-    navController: NavController,
+internal fun KeysignScreen(
     state: KeysignState,
     errorMessage: String,
 ) {
@@ -55,51 +59,46 @@ private fun KeysignScreen(
 
     val textColor = Theme.colors.neutral0
 
-    UiBarContainer(
-        navController = navController,
-        title = stringResource(id = R.string.keysign),
+    val text = when (state) {
+        KeysignState.CreatingInstance -> "Preparing vault..."
+        KeysignState.KeysignECDSA -> "Signing with ECDSA..."
+        KeysignState.KeysignEdDSA -> "Signing with EdDSA..."
+        KeysignState.KeysignFinished -> "Keysign Finished!"
+        KeysignState.ERROR -> "Error! Please try again. $errorMessage"
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val text = when (state) {
-            KeysignState.CreatingInstance -> "Preparing vault..."
-            KeysignState.KeysignECDSA -> "Signing with ECDSA..."
-            KeysignState.KeysignEdDSA -> "Signing with EdDSA..."
-            KeysignState.KeysignFinished -> "Keysign Finished!"
-            KeysignState.ERROR -> "Error! Please try again. $errorMessage"
-        }
+        UiSpacer(weight = 1f)
+        Text(
+            text = text,
+            color = Theme.colors.neutral0,
+            style = Theme.menlo.subtitle1
+        )
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            UiSpacer(weight = 1f)
-            Text(
-                text = text,
-                color = Theme.colors.neutral0,
-                style = Theme.menlo.subtitle1
-            )
+        UiSpacer(size = 32.dp)
 
-            UiSpacer(size = 32.dp)
+        UiCirclesLoader()
 
-            UiCirclesLoader()
+        UiSpacer(weight = 1f)
 
-            UiSpacer(weight = 1f)
+        Icon(
+            painter = painterResource(id = R.drawable.wifi),
+            contentDescription = null,
+            tint = Theme.colors.turquoise600Main
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+        Text(
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
+            text = "Keep devices on the same WiFi Network with vultisig open.",
+            color = textColor,
+            style = Theme.menlo.body1,
+            textAlign = TextAlign.Center,
+        )
 
-            Icon(
-                painter = painterResource(id = R.drawable.wifi),
-                contentDescription = null,
-                tint = Theme.colors.turquoise600Main
-            )
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-            Text(
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-                text = "Keep devices on the same WiFi Network with vultisig open.",
-                color = textColor,
-                style = Theme.menlo.body1,
-                textAlign = TextAlign.Center,
-            )
-
-            UiSpacer(size = 80.dp)
-        }
+        UiSpacer(size = 80.dp)
     }
 }
 
@@ -107,7 +106,6 @@ private fun KeysignScreen(
 @Composable
 private fun KeysignPreview() {
     KeysignScreen(
-        navController = rememberNavController(),
         state = KeysignState.CreatingInstance,
         errorMessage = "Error,"
     )
