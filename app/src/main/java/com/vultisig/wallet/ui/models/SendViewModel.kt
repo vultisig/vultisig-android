@@ -251,6 +251,9 @@ internal class SendViewModel @Inject constructor(
 
                 val srcAddress =  selectedToken.address
 
+                val specific = blockChainSpecificRepository
+                    .getSpecific(chain, srcAddress, selectedToken, gasFee)
+
                 val transaction = Transaction(
                     id = UUID.randomUUID().toString(),
                     vaultId = vaultId,
@@ -268,8 +271,9 @@ internal class SendViewModel @Inject constructor(
                         currency = appCurrency.value.ticker,
                     ),
                     gasFee = gasFee,
-                    blockChainSpecific = blockChainSpecificRepository
-                        .getSpecific(chain, srcAddress, selectedToken, gasFee)
+
+                    blockChainSpecific = specific.blockChainSpecific,
+                    utxos = specific.utxos,
                 )
 
                 Timber.d("Transaction: $transaction")

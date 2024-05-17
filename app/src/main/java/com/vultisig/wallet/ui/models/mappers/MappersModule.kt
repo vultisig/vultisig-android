@@ -40,4 +40,10 @@ internal interface MappersModule {
         impl: FiatValueToValueStringMapperImpl,
     ): FiatValueToValueStringMapper
 
+    @Binds
+    @Singleton
+    fun bindTransactionToUiModelMapper(
+        impl: TransactionToUiModelMapperImpl,
+    ): TransactionToUiModelMapper
+
 }

@@ -39,6 +39,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 swapPayload = null,
                 approvePayload = null,
                 vaultPublicKeyECDSA = pubKeyECDSA,
+                utxos = transaction.utxos,
             )
         }
     }

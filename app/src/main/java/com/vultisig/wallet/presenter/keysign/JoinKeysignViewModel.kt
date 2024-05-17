@@ -17,11 +17,19 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
+import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
@@ -29,6 +37,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,8 +46,10 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
+import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.UUID
 import javax.inject.Inject
 
 enum class JoinKeysignState {
@@ -49,6 +61,12 @@ enum class JoinKeysignState {
 internal class JoinKeysignViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val mapTransactionToUiModel: TransactionToUiModelMapper,
+
+    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
+    private val appCurrencyRepository: AppCurrencyRepository,
+    private val tokenRepository: TokenRepository,
+    private val gasFeeRepository: GasFeeRepository,
 
     private val vaultDB: VaultDB,
     private val gson: Gson,
@@ -98,6 +116,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             solanaApi = solanaApi,
         )
 
+    val transactionUiModel = MutableStateFlow(VerifyTransactionUiModel())
+
     fun setData() {
         vaultDB.select(vaultId)?.let {
             _currentVault = it
@@ -115,39 +135,90 @@ internal class JoinKeysignViewModel @Inject constructor(
     }
 
     fun setScanResult(content: String) {
-        try {
-            val qrCodeContent = DeepLinkHelper(content).getJsonData()
-            qrCodeContent ?: run {
-                throw Exception("Invalid QR code content")
-            }
-            val rawJson = qrCodeContent.decodeBase64Bytes().unzip().toString()
-            Timber.d(
-                "QR code content: %s", rawJson
-            )
-            val payload = gson.fromJson(
-                rawJson,
-                KeysignMesssage::class.java
-            )
-            if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-                errorMessage.value = "Wrong vault"
+        viewModelScope.launch {
+            try {
+                val qrCodeContent = DeepLinkHelper(content).getJsonData()
+                qrCodeContent ?: run {
+                    throw Exception("Invalid QR code content")
+                }
+                val rawJson = qrCodeContent.decodeBase64Bytes().unzip().toString()
+                Timber.d(
+                    "QR code content: %s", rawJson
+                )
+                val payload = gson.fromJson(
+                    rawJson,
+                    KeysignMesssage::class.java
+                )
+                if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
+                    errorMessage.value = "Wrong vault"
+                    currentState.value = JoinKeysignState.Error
+                    return@launch
+                }
+                val ksPayload = payload.payload
+                this@JoinKeysignViewModel._keysignPayload = ksPayload
+                this@JoinKeysignViewModel._sessionID = payload.sessionID
+                this@JoinKeysignViewModel._serviceName = payload.serviceName
+                this@JoinKeysignViewModel._useVultisigRelay = payload.usevultisigRelay
+                this@JoinKeysignViewModel._encryptionKeyHex = payload.encryptionKeyHex
+
+                loadTransaction(ksPayload)
+
+                if (_useVultisigRelay) {
+                    this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY
+                    currentState.value = JoinKeysignState.JoinKeysign
+                } else {
+                    currentState.value = JoinKeysignState.DiscoverService
+                }
+            } catch (e: Exception) {
+                Timber.d(e, "Failed to parse QR code")
+                errorMessage.value = "Invalid QR code content"
                 currentState.value = JoinKeysignState.Error
-                return
             }
-            this._keysignPayload = payload.payload
-            this._sessionID = payload.sessionID
-            this._serviceName = payload.serviceName
-            this._useVultisigRelay = payload.usevultisigRelay
-            this._encryptionKeyHex = payload.encryptionKeyHex
-            if (_useVultisigRelay) {
-                this._serverAddress = Endpoints.VULTISIG_RELAY
-                currentState.value = JoinKeysignState.JoinKeysign
-            } else {
-                currentState.value = JoinKeysignState.DiscoverService
-            }
-        } catch (e: Exception) {
-            errorMessage.value = "Invalid QR code content"
-            currentState.value = JoinKeysignState.Error
         }
+    }
+
+    private suspend fun loadTransaction(payload: KeysignPayload) {
+        val payloadToken = payload.coin
+        val address = payloadToken.address
+        val token = tokenRepository.getToken(payloadToken.id)
+            .first()
+        val chain = token.chain
+        val currency = appCurrencyRepository.currency.first()
+
+        val tokenValue = TokenValue(
+            value = payload.toAmount,
+            unit = token.ticker,
+            decimals = token.decimal,
+        )
+
+        val gasFee = gasFeeRepository.getGasFee(chain, address)
+
+        val transaction = Transaction(
+            id = UUID.randomUUID().toString(),
+
+            vaultId = payload.vaultPublicKeyECDSA,
+            chainId = chain.id,
+            tokenId = token.id,
+            srcAddress = address,
+            dstAddress = payload.toAddress,
+            tokenValue = tokenValue,
+            fiatValue = convertTokenValueToFiat(
+                token,
+                tokenValue,
+                currency,
+            ),
+            gasFee = gasFee,
+
+            // TODO that's mock data
+            blockChainSpecific = BlockChainSpecific.THORChain(
+                BigInteger.ZERO,
+                BigInteger.ZERO
+            ),
+        )
+
+        transactionUiModel.value = VerifyTransactionUiModel(
+            transaction = mapTransactionToUiModel(transaction),
+        )
     }
 
     private fun onServerAddressDiscovered(addr: String) {
