@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -68,7 +70,8 @@ internal fun JoinKeysignView(
     ) { state ->
         when (state) {
             DiscoveryingSessionID,
-            WaitingForKeysignStart -> {
+            WaitingForKeysignStart,
+            -> {
                 val text = when (state) {
                     DiscoveryingSessionID -> stringResource(R.string.join_keysign_discovering_session_id)
                     WaitingForKeysignStart -> stringResource(R.string.joinkeysign_waiting_keysign_start)
@@ -100,8 +103,12 @@ internal fun JoinKeysignView(
             }
 
             Keysign -> {
-                val keysignViewModel = viewModel.keysignViewModel
-                keysignViewModel.startKeysign2()
+                val keysignViewModel = remember { viewModel.keysignViewModel }
+                val hasStartedKeysign = remember { mutableStateOf(false) }
+                if (!hasStartedKeysign.value) {
+                    keysignViewModel.startKeysign()
+                    hasStartedKeysign.value = true
+                }
                 KeysignScreen(
                     state = keysignViewModel.currentState.collectAsState().value,
                     errorMessage = keysignViewModel.errorMessage.value,

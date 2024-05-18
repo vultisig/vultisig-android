@@ -26,7 +26,9 @@ internal class MayaChainHelper(
     private val vaultHexChainCode: String,
 ) {
     private val coinType: CoinType = CoinType.THORCHAIN
-    private val MayaChainGasUnit: Long = 2000000000
+    companion object {
+        const val MayaChainGasUnit: Long = 2000000000
+    }
     fun getCoin(): Coin? {
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,

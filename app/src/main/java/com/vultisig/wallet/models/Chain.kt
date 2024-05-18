@@ -30,12 +30,12 @@ enum class Chain(
 
     // BITCOIN
     bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
-    bitcoinCash("Bitcoin Cash", UTXO, "Sats/vbyte"),
+    bitcoinCash("Bitcoin Cash", UTXO, "BCH/vbyte"),
     litecoin("Litecoin", UTXO, "LTC/vbyte"),
     dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
-    dash("Dash", UTXO, "Sats/vbyte"),
+    dash("Dash", UTXO, "DASH/vbyte"),
 
-    solana("Solana", SOL, "Lamports"),
+    solana("Solana", SOL, "SOL"),
     gaiaChain("Gaia Chain", COSMOS, "uatom"),
     kujira("Kujira", COSMOS, "ukuji");
 

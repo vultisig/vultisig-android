@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -44,10 +45,19 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
 
         else -> when (chain) {
-            Chain.thorChain, Chain.mayaChain -> {
+            Chain.thorChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id).first()
                 TokenValue(
                     value = THORCHainHelper.THORChainGasUnit.toBigInteger(),
+                    unit = chain.feeUnit,
+                    decimals = nativeToken.decimal,
+                )
+            }
+
+            Chain.mayaChain -> {
+                val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                TokenValue(
+                    value = MayaChainHelper.MayaChainGasUnit.toBigInteger(),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

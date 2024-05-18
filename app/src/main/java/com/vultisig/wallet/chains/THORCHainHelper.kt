@@ -27,7 +27,7 @@ class THORCHainHelper(
 ) {
     companion object{
         private val coinType: CoinType = CoinType.THORCHAIN
-        val THORChainGasUnit: Long = 2000000
+        const val THORChainGasUnit: Long = 2000000
     }
 
 
