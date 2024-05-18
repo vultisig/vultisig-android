@@ -89,16 +89,7 @@ internal class KeysignViewModel(
         ""
     )
 
-
-    @Deprecated("Use startKeysign2 instead")
-    suspend fun startKeysign() {
-        withContext(Dispatchers.IO) {
-            signAndBroadcast()
-        }
-    }
-
-    // TODO rename after removing startKeysign
-    fun startKeysign2() {
+    fun startKeysign() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 signAndBroadcast()
@@ -107,6 +98,7 @@ internal class KeysignViewModel(
     }
 
     private suspend fun signAndBroadcast() {
+        Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
         try {
             this.tssInstance = Tss.newService(this.tssMessenger, this.localStateAccessor, false)

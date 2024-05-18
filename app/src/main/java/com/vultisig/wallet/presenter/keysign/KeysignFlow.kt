@@ -40,6 +40,7 @@ fun KeysignFlowView(navController: NavController) {
             LaunchedEffect(key1 = Unit) {
                 viewModel.startKeysign()
             }
+
             Keysign(navController, viewModel.keysignViewModel)
         }
 

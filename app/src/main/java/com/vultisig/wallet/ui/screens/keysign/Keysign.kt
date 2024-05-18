@@ -101,19 +101,19 @@ internal fun KeysignScreen(
 
             UiSpacer(weight = 1f)
 
-        Icon(
-            painter = painterResource(id = R.drawable.wifi),
-            contentDescription = null,
-            tint = Theme.colors.turquoise600Main
-        )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-        Text(
-            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-            text = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
-            color = textColor,
-            style = Theme.menlo.body1,
-            textAlign = TextAlign.Center,
-        )
+            Icon(
+                painter = painterResource(id = R.drawable.wifi),
+                contentDescription = null,
+                tint = Theme.colors.turquoise600Main
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+            Text(
+                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
+                text = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
+                color = textColor,
+                style = Theme.menlo.body1,
+                textAlign = TextAlign.Center,
+            )
 
             UiSpacer(size = 80.dp)
         }

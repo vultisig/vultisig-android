@@ -125,7 +125,7 @@ fun DiscoveryingSessionID(navController: NavHostController) {
             Text(
                 text = stringResource(R.string.join_key_gen_screen_discovering_session_id),
                 color = Theme.colors.neutral0,
-                style = Theme.menlo.bodyMedium
+                style = Theme.menlo.body2
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
@@ -166,7 +166,7 @@ fun DiscoverService(navController: NavHostController) {
             Text(
                 text = stringResource(R.string.join_key_gen_screen_discovering_service),
                 color = Theme.colors.neutral0,
-                style = Theme.menlo.bodyMedium
+                style = Theme.menlo.body2
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
@@ -200,7 +200,7 @@ fun JoiningKeygen(navController: NavHostController) {
             Text(
                 text = stringResource(R.string.join_key_gen_screen_joining_keygen),
                 color = Theme.colors.neutral0,
-                style = Theme.menlo.bodyMedium
+                style = Theme.menlo.body2
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
@@ -234,7 +234,7 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
             Text(
                 text = stringResource(R.string.join_key_gen_screen_waiting_for_keygen_to_start),
                 color = Theme.colors.neutral0,
-                style = Theme.menlo.bodyMedium
+                style = Theme.menlo.body2
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
@@ -268,7 +268,7 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
             Text(
                 text = stringResource(R.string.failed_to_start_error, errorMessage),
                 color = Theme.colors.neutral0,
-                style = Theme.menlo.bodyMedium
+                style = Theme.menlo.body2
             )
         }
     }
