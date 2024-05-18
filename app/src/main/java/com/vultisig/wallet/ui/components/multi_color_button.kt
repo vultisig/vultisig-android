@@ -21,10 +21,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
 fun MultiColorButton(
@@ -48,14 +46,15 @@ fun MultiColorButton(
 ) {
     val emptyClickAction: () -> Unit = {}
     var innerModifier = modifier
+    val appColor = Theme.colors
     if (borderSize != null)
         innerModifier = innerModifier.then(
             Modifier.border(
                 width = borderSize,
                 brush = Brush.horizontalGradient(
                     listOf(
-                        MaterialTheme.appColor.turquoise600Main,
-                        MaterialTheme.appColor.persianBlue600Main
+                        appColor.turquoise600Main,
+                        appColor.persianBlue600Main
                     )
                 ),
                 shape = CircleShape
@@ -68,8 +67,8 @@ fun MultiColorButton(
         modifier = innerModifier
             .clip(shape = RoundedCornerShape(60.dp))
             .background(
-                color = if (disabled == true) MaterialTheme.appColor.neutral600 else backgroundColor
-                    ?: MaterialTheme.appColor.turquoise600Main
+                color = if (disabled == true) appColor.neutral600 else backgroundColor
+                    ?: appColor.turquoise600Main
             )
             .defaultMinSize(
                 minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
@@ -77,25 +76,29 @@ fun MultiColorButton(
             )
             .clickable(onClick = if (disabled == false) onClick else emptyClickAction)
     ) {
-        Icon(
-            painter = painterResource(startIcon ?: R.drawable.check),
-            contentDescription = null,
-            tint = if (disabled == true && trailingIcon == null) MaterialTheme.appColor.neutral600 else if (disabled == true) MaterialTheme.appColor.neutral800 else iconColor
-                ?: MaterialTheme.appColor.turquoise600Main,
-            modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
-        )
+        if (startIcon != null)
+            Icon(
+                painter = painterResource(startIcon),
+                contentDescription = null,
+                tint = if (disabled == true && trailingIcon == null) appColor.neutral600 else if (disabled == true) appColor.neutral800 else iconColor
+                    ?: appColor.turquoise600Main,
+                modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
+            )
+        else UiSpacer(iconSize ?: MaterialTheme.dimens.medium1)
         centerContent?.invoke() ?: Text(
             text = text,
-            color = if (disabled == true) MaterialTheme.appColor.neutral800 else textColor
-                ?: MaterialTheme.appColor.turquoise600Main,
-            style = textStyle ?: MaterialTheme.montserratFamily.titleLarge
+            color = if (disabled == true) appColor.neutral800 else textColor
+                ?: appColor.turquoise600Main,
+            style = textStyle ?: Theme.montserrat.subtitle1
         )
-        Icon(
-            painter = painterResource(trailingIcon ?: R.drawable.check),
-            contentDescription = null,
-            tint = if (disabled == true && trailingIcon == null) MaterialTheme.appColor.neutral600 else if (disabled == true) MaterialTheme.appColor.neutral800 else iconColor
-                ?: MaterialTheme.appColor.turquoise600Main,
-            modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
-        )
+        if (trailingIcon != null)
+            Icon(
+                painter = painterResource(trailingIcon),
+                contentDescription = null,
+                tint = if (disabled == true) appColor.neutral800 else iconColor
+                    ?: appColor.turquoise600Main,
+                modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
+            )
+        else UiSpacer(iconSize ?: MaterialTheme.dimens.medium1)
     }
 }

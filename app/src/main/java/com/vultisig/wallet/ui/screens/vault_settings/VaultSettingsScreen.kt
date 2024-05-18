@@ -12,6 +12,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,12 +30,16 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Backup
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ChangeCheckCaution
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Delete
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.DismissConfirmDeleteScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ErrorDownloadFile
+import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ShowConfirmDeleteScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.SuccessBackup
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFailed
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFile
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupSuccess
+import com.vultisig.wallet.ui.screens.vault_settings.components.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -41,6 +47,7 @@ internal fun VaultSettingsScreen(
     navController: NavController,
 ) {
     val viewModel = hiltViewModel<VaultSettingsViewModel>()
+    val uiModel by viewModel.uiModel.collectAsState()
     val context = LocalContext.current
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -143,12 +150,25 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_delete_subtitle),
                     icon = R.drawable.trash_outline,
                     colorTint = Theme.colors.red,
-                    onClick = {
-                        viewModel.onEvent(Delete)
-                    }
+                    onClick = { viewModel.onEvent(ShowConfirmDeleteScreen) }
                 )
             }
         }
+    }
+
+    if (uiModel.showDeleteConfirmScreen) {
+        ConfirmDeleteScreen(
+            cautions = uiModel.cautionsBeforeDelete,
+            checkedCautionIndexes = uiModel.checkedCautionIndexes,
+            isDeleteButtonActive = uiModel.isDeleteButtonEnabled,
+            onDismissClick = { viewModel.onEvent(DismissConfirmDeleteScreen) },
+            onItemCheckChangeClick = { index, isChecked ->
+                viewModel.onEvent(
+                    ChangeCheckCaution(index, isChecked)
+                )
+            },
+            onConfirmClick = { viewModel.onEvent(Delete) }
+        )
     }
 }
 
