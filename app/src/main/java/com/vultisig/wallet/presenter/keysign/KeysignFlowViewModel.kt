@@ -12,7 +12,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
-import com.vultisig.wallet.common.zipAndBase64Encode
+import com.vultisig.wallet.common.zipZlibAndBase64Encode
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -133,7 +133,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     encryptionKeyHex = _encryptionKeyHex,
                     usevultisigRelay = vultisigRelay.IsRelayEnabled
                 )
-            ).toByteArray().zipAndBase64Encode()
+            ).toByteArray().zipZlibAndBase64Encode()
         if (!vultisigRelay.IsRelayEnabled) {
             startMediatorService(context)
         } else {

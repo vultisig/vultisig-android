@@ -3,8 +3,10 @@ package com.vultisig.wallet.common
 import org.bouncycastle.jcajce.provider.digest.Keccak
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.zip.Deflater
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
+import java.util.zip.Inflater
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -34,4 +36,40 @@ fun ByteArray.unzip(): String {
     }
 
     return baos.toString()
+}
+
+@OptIn(ExperimentalEncodingApi::class)
+fun ByteArray.zipZlibAndBase64Encode(): String {
+    val deflater = Deflater(5, true)
+    deflater.setInput(this)
+
+    val outputStream = ByteArrayOutputStream(this.size)
+    deflater.finish()
+    val buffer = ByteArray(1024)
+    while (!deflater.finished()) {
+        val count = deflater.deflate(buffer) // returns the generated code's length
+        outputStream.write(buffer, 0, count)
+    }
+    outputStream.close()
+    return Base64.encode(outputStream.toByteArray())
+}
+
+fun ByteArray.unzipZlib(): String {
+    val inflater = Inflater(true)
+    val outputStream = ByteArrayOutputStream()
+
+    return outputStream.use {
+        val buffer = ByteArray(1024)
+
+        inflater.setInput(this)
+
+        var count = -1
+        while (count != 0) {
+            count = inflater.inflate(buffer)
+            outputStream.write(buffer, 0, count)
+        }
+
+        inflater.end()
+        outputStream.toString("UTF-8")
+    }
 }

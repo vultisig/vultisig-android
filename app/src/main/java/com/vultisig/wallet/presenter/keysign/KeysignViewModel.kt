@@ -130,7 +130,8 @@ internal class KeysignViewModel(
         try {
             Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()
-
+            this.tssMessenger.setMessageID(msgHash)
+            Timber.d("signMessageWithRetry: msgHash: $msgHash")
             this._messagePuller?.pullMessages(msgHash)
             val keysignReq = tss.KeysignRequest()
             keysignReq.localPartyKey = vault.localPartyID
