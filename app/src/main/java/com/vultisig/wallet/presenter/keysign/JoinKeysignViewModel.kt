@@ -10,7 +10,7 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.common.unzip
+import com.vultisig.wallet.common.unzipZlib
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -144,7 +144,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 qrCodeContent ?: run {
                     throw Exception("Invalid QR code content")
                 }
-                val rawJson = qrCodeContent.decodeBase64Bytes().unzip().toString()
+                val rawJson = qrCodeContent.decodeBase64Bytes().unzipZlib()
                 Timber.d(
                     "QR code content: %s", rawJson
                 )
@@ -253,7 +253,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                         "POST", gson.toJson(payload).toRequestBody("application/json".toMediaType())
                     ).url(serverUrl).build()
                     client.newCall(request).execute().use {
-                        Timber.tag("JoinKeysignViewModel").d("Join keysign: Response code: %s", it.code)
+                        Timber.tag("JoinKeysignViewModel")
+                            .d("Join keysign: Response code: %s", it.code)
                     }
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart

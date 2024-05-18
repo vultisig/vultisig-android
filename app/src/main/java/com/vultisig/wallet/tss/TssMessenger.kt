@@ -1,21 +1,26 @@
 package com.vultisig.wallet.tss
 
-import android.util.Log
 import com.vultisig.wallet.common.Encrypt
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.mediator.Message
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import timber.log.Timber
 
 class TssMessenger(
-    private val serverAddress: String,
+    serverAddress: String,
     private val sessionID: String,
     private val encryptionHex: String,
-    private val messageID: String? = null,
-) : tss.Messenger {
+
+    ) : tss.Messenger {
     private val serverUrl = "$serverAddress/message/$sessionID"
+    private var messageID: String? = null
     private var counter = 1
+    fun setMessageID(messageID: String?) {
+        this.messageID = messageID
+    }
+
     override fun send(from: String, to: String, body: String) {
         val encryptedBody = body.Encrypt(encryptionHex)
         val message = Message(
@@ -29,19 +34,20 @@ class TssMessenger(
                 this.messageID?.let {
                     request.addHeader("message_id", it)
                 }
-                Log.d("TssMessenger", "sending message from: $from to: $to, hash: ${message.hash}")
+
+                Timber.tag("TssMessenger")
+                    .d("sending message from: $from to: $to, hash: ${message.hash}")
                 client.newCall(request.build()).execute().use { response ->
                     if (response.code == 201) {
-                        Log.d("TssMessenger", "send message success")
+                        Timber.tag("TssMessenger").d("send message success")
                         return
                     }
                 }
                 // when it reach to this point , it means the message was sent successfully
                 break
             } catch (e: Exception) {
-                Log.e(
-                    "TssMessenger", "fail to send message: ${e.stackTraceToString()} , attempt: $i"
-                )
+                Timber.tag("TssMessenger")
+                    .e("fail to send message: ${e.stackTraceToString()} , attempt: $i")
 
             }
         }
