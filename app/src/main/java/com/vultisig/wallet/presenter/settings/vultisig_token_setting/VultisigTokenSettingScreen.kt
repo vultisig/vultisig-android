@@ -52,11 +52,13 @@ fun VultisigTokenScreen(navController: NavHostController) {
             UiSpacer(size = 32.dp)
             Image(painter = painterResource(id = R.drawable.vultisig), contentDescription = "logo")
             UiSpacer(size = 32.dp)
-            FeatureItem("Supply: 97,000,000")
-            FeatureItem("Burnt: 3,000,000")
-            FeatureItem("VTX tokens are burnt from fees.",R.drawable.caret_right)
-            FeatureItem("VTX tokens are airdropped to users.",R.drawable.caret_right)
-            FeatureItem("Learn more",R.drawable.share)
+            val supply = "97,000,000"
+            FeatureItem(stringResource(R.string.token_settings_supply, supply))
+            val burnt = "3,000,000"
+            FeatureItem(stringResource(R.string.token_settings_burnt, burnt))
+            FeatureItem(stringResource(R.string.feature_item_vtx_tokens_are_burnt_from_fees),R.drawable.caret_right)
+            FeatureItem(text = stringResource(R.string.feature_item_vtx_tokens_are_airdropped_to_users), icon = R.drawable.caret_right)
+            FeatureItem(text = stringResource(R.string.feature_item_learn_more), icon = R.drawable.share)
         }
 
     }

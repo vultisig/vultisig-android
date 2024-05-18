@@ -51,9 +51,9 @@ fun VaultDetailScreen(navHostController: NavHostController) {
                 .padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            VaultDetailScreenItem("Vault Name", uiModel.name)
-            VaultDetailScreenItem("ECDSA", uiModel.pubKeyECDSA)
-            VaultDetailScreenItem("EDDSA", uiModel.pubKeyEDDSA)
+            VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_vault_name), uiModel.name)
+            VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_ecdsa), uiModel.pubKeyECDSA)
+            VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_eddsa), uiModel.pubKeyEDDSA)
             Text(text = "2 of 2 Vault",
 
                 color = Theme.colors.neutral100,

@@ -4,12 +4,14 @@ import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
@@ -86,7 +88,7 @@ internal fun SetupNavGraph(
 
             JoinKeygenView(
                 navController = navController,
-                vault = Vault("New Vault ${allVaults.size + 1}"),
+                vault = Vault(stringResource(R.string.join_keygen_view_new_vault, allVaults.size + 1)),
                 qrCodeResult = qrCodeResult,
             )
         }
@@ -111,7 +113,7 @@ internal fun SetupNavGraph(
                 var newVaultName = ""
                 var idx = 1
                 while (true) {
-                    newVaultName = "New Vault ${allVaults.size + idx}"
+                    newVaultName = stringResource(R.string.join_keygen_view_new_vault, allVaults.size + idx)
                     if (allVaults.find { it.name == newVaultName } == null) {
                         break
                     }

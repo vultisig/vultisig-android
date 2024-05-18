@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,13 +59,13 @@ fun CreateNewVault(navController: NavHostController) {
                 painter = painterResource(id = R.drawable.vultisig), contentDescription = "vultisig"
             )
             Text(
-                text = "vultisig",
+                text = stringResource(R.string.create_new_vault_screen_vultisig),
                 color = textColor,
                 style = Theme.montserrat.headlineLarge.copy(fontSize = 50.sp)
             )
             Spacer(modifier = Modifier.height(40.dp))
             Text(
-                text = "SECURE CRYPTO VAULT", color = textColor,
+                text = stringResource(R.string.create_new_vault_screen_secure_crypto_vault), color = textColor,
                 style = Theme.montserrat.body3.copy(
                     letterSpacing = 2.sp, fontWeight = FontWeight.Bold
                 ),
@@ -77,7 +78,7 @@ fun CreateNewVault(navController: NavHostController) {
         ) {
 
             MultiColorButton(
-                text = "Create a New Vault",
+                text = stringResource(R.string.create_new_vault_screen_create_a_new_vault),
                 minHeight = MaterialTheme.dimens.minHeightButton,
                 backgroundColor = Theme.colors.turquoise800,
                 textColor = Theme.colors.oxfordBlue800,
@@ -95,7 +96,7 @@ fun CreateNewVault(navController: NavHostController) {
             }
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.extraSmall))
             MultiColorButton(
-                text = "Import an Existing Vault",
+                text = stringResource(R.string.create_new_vault_screen_import_an_existing_vault),
                 backgroundColor = Theme.colors.oxfordBlue800,
                 textColor = Theme.colors.turquoise800,
                 iconColor = Theme.colors.oxfordBlue800,

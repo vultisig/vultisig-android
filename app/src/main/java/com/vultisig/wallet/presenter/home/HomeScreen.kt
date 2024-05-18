@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -56,7 +57,7 @@ internal fun HomeScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Vaults",
+                            text = stringResource(R.string.home_screen_title),
                             style = MaterialTheme.montserratFamily.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = textColor,
@@ -93,7 +94,7 @@ internal fun HomeScreen(
             },
             bottomBar = {
                 MultiColorButton(
-                    text = "+ Add New Vault",
+                    text = stringResource(R.string.home_screen_add_new_vault),
                     minHeight = MaterialTheme.dimens.minHeightButton,
                     backgroundColor = MaterialTheme.appColor.turquoise800,
                     textColor = MaterialTheme.appColor.oxfordBlue800,

@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -112,7 +113,7 @@ fun DiscoveryingSessionID(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -122,7 +123,7 @@ fun DiscoveryingSessionID(navController: NavHostController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Discovering Session ID",
+                text = stringResource(R.string.join_key_gen_screen_discovering_session_id),
                 color = Theme.colors.neutral0,
                 style = Theme.menlo.bodyMedium
             )
@@ -153,7 +154,7 @@ fun DiscoverService(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -163,7 +164,7 @@ fun DiscoverService(navController: NavHostController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Discovering Service",
+                text = stringResource(R.string.join_key_gen_screen_discovering_service),
                 color = Theme.colors.neutral0,
                 style = Theme.menlo.bodyMedium
             )
@@ -187,7 +188,7 @@ fun JoiningKeygen(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -197,7 +198,7 @@ fun JoiningKeygen(navController: NavHostController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Joining Keygen",
+                text = stringResource(R.string.join_key_gen_screen_joining_keygen),
                 color = Theme.colors.neutral0,
                 style = Theme.menlo.bodyMedium
             )
@@ -221,7 +222,7 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -231,7 +232,7 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Waiting for Keygen to start",
+                text = stringResource(R.string.join_key_gen_screen_waiting_for_keygen_to_start),
                 color = Theme.colors.neutral0,
                 style = Theme.menlo.bodyMedium
             )
@@ -255,7 +256,7 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
@@ -265,7 +266,7 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Failed to start,error: $errorMessage",
+                text = stringResource(R.string.failed_to_start_error, errorMessage),
                 color = Theme.colors.neutral0,
                 style = Theme.menlo.bodyMedium
             )

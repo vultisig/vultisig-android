@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -75,20 +76,24 @@ fun KeygenPeerDiscovery(
             )
     ) {
         TopBar(
-            centerText = "Keygen", startIcon = R.drawable.caret_left,
+            centerText = stringResource(R.string.keygen_peer_discovery_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         if (!selectionState.isNullOrEmpty() && selectionState.count() > 1) {
             Text(
-                text = "${Utils.getThreshold(selectionState.count())} of ${selectionState.count()} Vault",
+                text = stringResource(
+                    R.string.keygen_peer_descovery_of_vault,
+                    Utils.getThreshold(selectionState.count()),
+                    selectionState.count()
+                ),
                 color = textColor,
                 style = Theme.montserrat.bodyLarge
             )
         }
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         Text(
-            text = "Pair with other devices:",
+            text = stringResource(R.string.keygen_peer_discovery_pair_with_other_devices),
             color = textColor,
             style = Theme.montserrat.bodyMedium
         )
@@ -127,7 +132,7 @@ fun KeygenPeerDiscovery(
             }
         } else {
             Text(
-                text = "Waiting for other devices to connect...",
+                text = stringResource(R.string.keygen_peer_discovery_waiting_for_other_devices_to_connect),
                 color = textColor,
                 style = Theme.montserrat.bodyMedium
             )
@@ -139,7 +144,7 @@ fun KeygenPeerDiscovery(
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
         Text(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
-            text = "Keep all devices on same WiFi with vultisig App open. (May not work on hotel/airport WiFi)",
+            text = stringResource(R.string.keygen_peer_discovery_desc1),
             color = textColor,
             style = Theme.menlo.headlineSmall.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
@@ -148,7 +153,7 @@ fun KeygenPeerDiscovery(
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         MultiColorButton(
-            text = "Continue",
+            text = stringResource(R.string.keygen_peer_discovery_continue),
             backgroundColor = Theme.colors.turquoise600Main,
             textColor = Theme.colors.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
@@ -183,7 +188,7 @@ fun NetworkPrompts(
                     contentDescription = null
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
-                Text(text = "Wifi")
+                Text(text = stringResource(R.string.network_prompts_wifi))
             }
         })
 
@@ -199,7 +204,7 @@ fun NetworkPrompts(
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
-                    Text(text = "Hotspot")
+                    Text(text = stringResource(R.string.network_prompts_hotspot))
                 }
             })
 
@@ -215,7 +220,7 @@ fun NetworkPrompts(
                         contentDescription = null
                     )
                     Spacer(modifier = Modifier.width(MaterialTheme.dimens.marginSmall))
-                    Text(text = "Cellular")
+                    Text(text = stringResource(R.string.network_prompts_cellular))
                 }
             })
     }

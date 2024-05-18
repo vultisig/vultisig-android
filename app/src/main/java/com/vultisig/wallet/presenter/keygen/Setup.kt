@@ -14,12 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.vultisig.wallet.R
 import com.vultisig.wallet.R.drawable
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
@@ -40,21 +42,23 @@ fun Setup(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = "Setup",
+            centerText = stringResource(R.string.setup_title),
             startIcon = drawable.caret_left,
             endIcon = drawable.question,
             navController = navController
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        val current = 2
+        val total = 3
         Text(
-            text = "2 of 3 Vault",
+            text = stringResource(R.string.setup_device_of_vault, current, total),
             color = textColor,
             style = Theme.montserrat.bodyLarge
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 
         Text(
-            text = "(Any 3 Devices)",
+            text = stringResource(R.string.setup_any_total_devices, total),
             color = textColor,
             style = Theme.montserrat.bodyMedium
         )
@@ -71,17 +75,17 @@ fun Setup(navController: NavHostController) {
 
         Text(
             style = Theme.montserrat.body3,
-            text = "3 Devices to create a vault; ",
+            text = stringResource(R.string.setup_devices_to_create_a_vault, total),
             color = textColor
         )
         Text(
             style = Theme.montserrat.body3,
-            text = "2 devices to sign a transaction.",
+            text = stringResource(R.string.setup_devices_to_sign_a_transaction, current),
             color = textColor
         )
         Text(
             style = Theme.montserrat.body3,
-            text = "Automatically backed-up",
+            text = stringResource(R.string.setup_automatically_backed_up),
             color = textColor
         )
 
@@ -91,7 +95,7 @@ fun Setup(navController: NavHostController) {
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-            text = "Keep devices on the same WiFi Network with vultisig open.",
+            text = stringResource(R.string.setup_keep_devices_on_the_same_wifi_network_with_vultisig_open),
             color = textColor,
             style = Theme.menlo.headlineSmall.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
@@ -99,7 +103,7 @@ fun Setup(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         MultiColorButton(
-            text = "Start",
+            text = stringResource(R.string.setup_start),
             backgroundColor = Theme.colors.turquoise600Main,
             textColor = Theme.colors.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
@@ -116,7 +120,7 @@ fun Setup(navController: NavHostController) {
         }
 
         MultiColorButton(
-            text = "Join",
+            text = stringResource(R.string.setup_join),
             backgroundColor = Theme.colors.oxfordBlue600Main,
             textColor = Theme.colors.turquoise600Main,
             iconColor = Theme.colors.oxfordBlue600Main,
