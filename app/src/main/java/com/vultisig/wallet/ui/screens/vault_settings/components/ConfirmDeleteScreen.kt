@@ -94,7 +94,7 @@ internal fun ConfirmDeleteScreen(
                     UiSpacer(weight = 1f)
 
                     Text(
-                        text = "Delete Vault",
+                        text = stringResource(R.string.confirm_delete_delete_vault),
                         color = textColor,
                         style = Theme.montserrat.heading5,
                     )

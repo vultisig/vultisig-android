@@ -29,13 +29,6 @@ import com.vultisig.wallet.ui.components.SettingsItem
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Backup
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ChangeCheckCaution
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.Delete
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.DismissConfirmDeleteScreen
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ErrorDownloadFile
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.ShowConfirmDeleteScreen
-import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsEvent.SuccessBackup
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFailed
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFile
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupSuccess
@@ -74,9 +67,9 @@ internal fun VaultSettingsScreen(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         val isSuccess = context.backupVaultToDownloadsDir(event.vaultName, event.backupFileName)
                         if (isSuccess)
-                            viewModel.onEvent(SuccessBackup(event.backupFileName))
+                            viewModel.successBackup(event.backupFileName)
                         else
-                            viewModel.onEvent(ErrorDownloadFile)
+                            viewModel.errorBackUp()
                     }
             }
         }
@@ -118,10 +111,8 @@ internal fun VaultSettingsScreen(
                 SettingsItem(
                     title = stringResource(R.string.vault_settings_backup_title),
                     subtitle = stringResource(R.string.vault_settings_backup_subtitle),
-                    icon = R.drawable.download_simple
-                ) {
-                    viewModel.onEvent(Backup)
-                }
+                    icon = R.drawable.download_simple,
+                    onClick = viewModel::backupVault)
 
                 SettingsItem(
                     title = stringResource(R.string.vault_settings_rename_title),
@@ -150,7 +141,7 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_delete_subtitle),
                     icon = R.drawable.trash_outline,
                     colorTint = Theme.colors.red,
-                    onClick = { viewModel.onEvent(ShowConfirmDeleteScreen) }
+                    onClick = viewModel::showConfirmDeleteDialog
                 )
             }
         }
@@ -161,13 +152,9 @@ internal fun VaultSettingsScreen(
             cautions = uiModel.cautionsBeforeDelete,
             checkedCautionIndexes = uiModel.checkedCautionIndexes,
             isDeleteButtonActive = uiModel.isDeleteButtonEnabled,
-            onDismissClick = { viewModel.onEvent(DismissConfirmDeleteScreen) },
-            onItemCheckChangeClick = { index, isChecked ->
-                viewModel.onEvent(
-                    ChangeCheckCaution(index, isChecked)
-                )
-            },
-            onConfirmClick = { viewModel.onEvent(Delete) }
+            onDismissClick = viewModel::dismissConfirmDeleteDialog,
+            onItemCheckChangeClick = viewModel::changeCheckCaution,
+            onConfirmClick = viewModel::delete
         )
     }
 }
