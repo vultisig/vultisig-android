@@ -63,7 +63,7 @@ internal fun VaultDetailScreen(
                 title = {
                     Text(
                         text = state.vaultName,
-                        style = Theme.montserrat.titleLarge,
+                        style = Theme.montserrat.subtitle1,
                         fontWeight = FontWeight.Bold,
                         color = textColor,
                         modifier = Modifier

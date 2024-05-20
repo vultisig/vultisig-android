@@ -1,6 +1,7 @@
 package com.vultisig.wallet.common
 
 import java.security.SecureRandom
+import kotlin.math.ceil
 
 object Utils {
     val deviceName: String
@@ -16,6 +17,6 @@ object Utils {
         }
 
     fun getThreshold(input: Int):Int{
-        return Math.ceil(input * 2.0/ 3.0).toInt()
+        return ceil(input * 2.0/ 3.0).toInt()
     }
 }
