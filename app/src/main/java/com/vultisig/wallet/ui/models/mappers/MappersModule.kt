@@ -12,9 +12,9 @@ internal interface MappersModule {
 
     @Binds
     @Singleton
-    fun bindChainAccountToChainAccountUiModelMapper(
-        impl: ChainAccountToChainAccountUiModelMapperImpl,
-    ): ChainAccountToChainAccountUiModelMapper
+    fun bindAddressToUiModelMapper(
+        impl: AddressToUiModelMapperImpl,
+    ): AddressToUiModelMapper
 
     @Binds
     @Singleton

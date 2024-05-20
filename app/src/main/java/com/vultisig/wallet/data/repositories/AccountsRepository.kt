@@ -1,8 +1,9 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.mappers.ChainAddressValue
-import com.vultisig.wallet.data.mappers.CoinToChainAccountMapper
+import com.vultisig.wallet.data.mappers.ChainAndTokens
+import com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
@@ -13,14 +14,14 @@ import javax.inject.Inject
 
 internal interface AccountsRepository {
 
-    fun loadAccounts(
+    fun loadAddresses(
         vaultId: String,
-    ): Flow<List<Account>>
+    ): Flow<List<Address>>
 
-    fun loadChainAccounts(
+    fun loadAddress(
         vaultId: String,
         chain: Chain,
-    ): Flow<List<Account>>
+    ): Flow<Address>
 
 }
 
@@ -28,77 +29,69 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private val vaultDb: VaultDB,
     private val balanceRepository: BalanceRepository,
     private val tokenPriceRepository: TokenPriceRepository,
-    private val coinToChainAccountMapper: CoinToChainAccountMapper,
+    private val chainAndTokensToAddressMapper: ChainAndTokensToAddressMapper,
 ) : AccountsRepository {
+
     private fun getVault(vaultId: String): Vault = checkNotNull(vaultDb.select(vaultId)) {
         "No vault with id $vaultId"
     }
 
-
-    override fun loadAccounts(vaultId: String): Flow<List<Account>> = flow {
+    override fun loadAddresses(vaultId: String): Flow<List<Address>> = flow {
         val vault = getVault(vaultId)
-        val coins = vault.coins.filter { it.isNativeToken }
+        val vaultCoins = vault.coins
+        val coins = vaultCoins.groupBy { it.chain }
 
-        val accounts = coins.mapTo(mutableListOf()) { coin ->
-            val chain = coin.chain
-            coinToChainAccountMapper.map(
-                ChainAddressValue(coin, chain, coin.address, null)
-            )
+        val addresses = coins.mapTo(mutableListOf()) { (chain, coins) ->
+            chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
         }
 
-        emit(accounts)
+        emit(addresses)
 
-        tokenPriceRepository.refresh(coins.map { it.priceProviderID })
+        tokenPriceRepository.refresh(vaultCoins.map { it.priceProviderID })
 
-        fetchAccountBalance(accounts).collect { (index, account) ->
-            accounts[index] = account
-            emit(accounts)
-        }
-    }
-
-    override fun loadChainAccounts(
-        vaultId: String,
-        chain: Chain,
-    ): Flow<List<Account>> = flow {
-        val vault = getVault(vaultId)
-
-        val coins = vault.coins.filter { it.chain.raw == chain.raw }
-
-        val accounts = coins.mapTo(mutableListOf()) {
-            coinToChainAccountMapper.map(
-                ChainAddressValue(it, chain, it.address, null)
-            )
-        }
-
-        emit(accounts)
-
-        tokenPriceRepository.refresh(coins.map { it.priceProviderID })
-
-        fetchAccountBalance(accounts).collect { (index, account) ->
-            accounts[index] = account
-            emit(accounts)
-        }
-    }
-
-    private suspend fun fetchAccountBalance(
-        accounts: List<Account>,
-    ): Flow<Pair<Int, Account>> = flow {
-        accounts.forEachIndexed { index, account ->
-            val token = account.token
+        addresses.forEachIndexed { index, account ->
             val address = account.address
 
-            val balance = balanceRepository.getTokenBalance(address, token).first()
-
-            emit(
-                index to coinToChainAccountMapper.map(
-                    ChainAddressValue(
-                        token = token,
-                        chain = token.chain,
-                        address = address,
-                        balance = balance,
-                    )
-                )
+            addresses[index] = account.copy(
+                accounts = account.accounts.map {
+                    it.fetchAndUpdateBalance(address)
+                }
             )
+
+            emit(addresses)
         }
     }
+
+    override fun loadAddress(
+        vaultId: String,
+        chain: Chain,
+    ): Flow<Address> = flow {
+        val vault = getVault(vaultId)
+        val coins = vault.coins.filter { it.chain == chain }
+
+        val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+
+        emit(account)
+
+        tokenPriceRepository.refresh(coins.map { it.priceProviderID })
+
+        val address = account.address
+
+        emit(account.copy(
+            accounts = account.accounts.map {
+                it.fetchAndUpdateBalance(address)
+            }
+        ))
+    }
+
+    private suspend fun Account.fetchAndUpdateBalance(address: String): Account {
+        val balance = balanceRepository.getTokenBalance(address, token)
+            .first()
+
+        return copy(
+            tokenValue = balance.tokenValue,
+            fiatValue = balance.fiatValue,
+        )
+    }
+
 }

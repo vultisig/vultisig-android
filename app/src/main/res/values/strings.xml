@@ -180,4 +180,5 @@
     <string name="vault_settings_delete_vault_caution3">I have made a vault backup</string>
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
+    <string name="vault_accounts_account_assets">%1$s assets</string>
 </resources>

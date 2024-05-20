@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,15 +16,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.models.ChainAccountUiModel
+import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ChainAccountItem(
-    account: ChainAccountUiModel,
+    account: AccountUiModel,
     onClick: () -> Unit = {},
 ) {
     Card(
@@ -62,15 +65,41 @@ internal fun ChainAccountItem(
                         color = Theme.colors.neutral100,
                         modifier = Modifier
                             .weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
 
-                    UiSpacer(weight = 1f)
+                    UiSpacer(size = 12.dp)
 
-                    Text(
-                        text = account.nativeTokenAmount ?: "",
-                        style = Theme.menlo.body1,
-                        color = Theme.colors.neutral100,
-                    )
+                    if (account.assetsSize > 1) {
+                        Text(
+                            text = stringResource(
+                                R.string.vault_accounts_account_assets,
+                                account.assetsSize
+                            ),
+                            style = Theme.menlo.body1,
+                            color = Theme.colors.neutral100,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .background(
+                                    color = Theme.colors.oxfordBlue400,
+                                    shape = RoundedCornerShape(20.dp),
+                                )
+                                .padding(
+                                    horizontal = 12.dp,
+                                    vertical = 4.dp,
+                                )
+                        )
+                    } else {
+                        Text(
+                            text = account.nativeTokenAmount ?: "",
+                            style = Theme.menlo.body1,
+                            color = Theme.colors.neutral100,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
 
                     UiSpacer(12.dp)
 
@@ -78,6 +107,8 @@ internal fun ChainAccountItem(
                         text = account.fiatAmount ?: "",
                         style = Theme.montserrat.subtitle1,
                         color = Theme.colors.neutral100,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
 
@@ -87,6 +118,8 @@ internal fun ChainAccountItem(
                     text = account.address,
                     style = Theme.montserrat.body1,
                     color = Theme.colors.turquoise600Main,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -97,12 +130,13 @@ internal fun ChainAccountItem(
 @Composable
 private fun PreviewChainAccountItem() {
     ChainAccountItem(
-        ChainAccountUiModel(
+        AccountUiModel(
             chainName = "Bitcoin",
             logo = R.drawable.bitcoin,
             address = "123abc456bca123abc456bca123abc456bca",
             nativeTokenAmount = "0.01",
             fiatAmount = "1000$",
+            assetsSize = 4,
         )
     )
 }

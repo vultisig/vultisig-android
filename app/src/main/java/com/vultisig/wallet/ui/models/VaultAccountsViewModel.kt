@@ -8,12 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.calculateTotalFiatValue
+import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
-import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.models.mappers.ChainAccountToChainAccountUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -25,32 +24,32 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
-internal data class VaultDetailUiModel(
+internal data class VaultAccountsUiModel(
     val vaultName: String = "",
+    val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
-    val accounts: List<ChainAccountUiModel> = emptyList(),
+    val accounts: List<AccountUiModel> = emptyList(),
 )
 
-internal data class ChainAccountUiModel(
+internal data class AccountUiModel(
     val chainName: String,
     @DrawableRes val logo: Int,
     val address: String,
     val nativeTokenAmount: String?,
     val fiatAmount: String?,
-    val coins: List<Coin> = emptyList(),
+    val assetsSize: Int = 0,
 )
 
 @HiltViewModel
-internal class VaultDetailViewModel @Inject constructor(
+internal class VaultAccountsViewModel @Inject constructor(
     private val vaultDb: VaultDB,
     private val accountsRepository: AccountsRepository,
-    private val chainAccountToUiModelMapper: ChainAccountToChainAccountUiModelMapper,
+    private val addressToUiModelMapper: AddressToUiModelMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
 ) : ViewModel() {
     var vault: Vault? by mutableStateOf(null)
-    var isRefreshing: Boolean by mutableStateOf(false)
 
-    val uiState = MutableStateFlow(VaultDetailUiModel())
+    val uiState = MutableStateFlow(VaultAccountsUiModel())
     var currentVault: MutableState<Vault> = mutableStateOf(Vault("temp"))
     fun loadData(vaultId: String) {
         loadVaultName(vaultId)
@@ -59,10 +58,10 @@ internal class VaultDetailViewModel @Inject constructor(
 
     fun refreshData() {
         viewModelScope.launch {
-            isRefreshing = true
+            uiState.update { it.copy(isRefreshing = true) }
             // TODO: add refresh logic here
             delay(3000)
-            isRefreshing = false
+            uiState.update { it.copy(isRefreshing = false) }
         }
     }
 
@@ -70,27 +69,26 @@ internal class VaultDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val vault = requireNotNull(vaultDb.select(vaultId))
             currentVault.value = vault
-            this@VaultDetailViewModel.vault = vault
+            this@VaultAccountsViewModel.vault = vault
             uiState.update { it.copy(vaultName = vault.name) }
         }
     }
 
     private fun loadAccounts(vaultId: String) {
         viewModelScope.launch {
-            accountsRepository.loadAccounts(vaultId)
+            accountsRepository
+                .loadAddresses(vaultId)
                 .catch {
                     // TODO handle error
                     Timber.e(it)
-                }
-                .collect { accounts ->
-                    val totalFiatValue = accounts.calculateTotalFiatValue()
+                }.collect { accounts ->
+                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
                         ?.let(fiatValueToStringMapper::map)
-                    val accountsUiModel = accounts.map(chainAccountToUiModelMapper::map)
+                    val accountsUiModel = accounts.map(addressToUiModelMapper::map)
 
                     uiState.update {
                         it.copy(
-                            totalFiatValue = totalFiatValue,
-                            accounts = accountsUiModel
+                            totalFiatValue = totalFiatValue, accounts = accountsUiModel
                         )
                     }
                 }

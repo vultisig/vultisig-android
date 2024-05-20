@@ -55,9 +55,9 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultActionButton
-import com.vultisig.wallet.ui.models.ChainCoinUiModel
-import com.vultisig.wallet.ui.models.ChainCoinViewModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -65,7 +65,7 @@ import com.vultisig.wallet.ui.theme.dimens
 @Composable
 internal fun ChainTokensScreen(
     navController: NavHostController,
-    viewModel: ChainCoinViewModel = hiltViewModel<ChainCoinViewModel>(),
+    viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
 
@@ -87,7 +87,7 @@ internal fun ChainTokensScreen(
 @Composable
 private fun ChainTokensScreen(
     navController: NavHostController,
-    uiModel: ChainCoinUiModel,
+    uiModel: ChainTokensUiModel,
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
@@ -433,7 +433,7 @@ private fun CoinItem(
 private fun ChainCoinScreenPreview() {
     ChainTokensScreen(
         navController = rememberNavController(),
-        uiModel = ChainCoinUiModel(
+        uiModel = ChainTokensUiModel(
             chainName = "Ethereum",
             chainAddress = "0x1234567890",
             totalBalance = "0.000000",

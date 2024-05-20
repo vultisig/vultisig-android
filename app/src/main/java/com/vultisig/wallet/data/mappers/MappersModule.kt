@@ -10,8 +10,8 @@ import dagger.hilt.components.SingletonComponent
 internal interface MappersModule {
 
     @Binds
-    fun bindCoinToChainAccountMapper(
-        impl: CoinToChainAccountMapperImpl
-    ): CoinToChainAccountMapper
+    fun bindChainAndTokensToAddressMapper(
+        impl: ChainAndTokensToAddressMapperImpl
+    ): ChainAndTokensToAddressMapper
 
 }

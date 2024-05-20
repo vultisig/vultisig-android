@@ -28,36 +28,81 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.ChainAccountUiModel
-import com.vultisig.wallet.ui.models.VaultDetailViewModel
+import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.VaultAccountsUiModel
+import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun VaultDetailScreen(
+internal fun VaultAccountsScreen(
     vaultId: String,
     navHostController: NavHostController,
-    viewModel: VaultDetailViewModel = hiltViewModel(),
+    viewModel: VaultAccountsViewModel = hiltViewModel(),
 ) {
-    val textColor = MaterialTheme.colorScheme.onBackground
-
     val state = viewModel.uiState.collectAsState().value
 
     LaunchedEffect(key1 = viewModel) {
         viewModel.loadData(vaultId)
     }
-    BoxWithSwipeRefresh(onSwipe = viewModel::refreshData, isRefreshing = viewModel.isRefreshing) {
+
+    VaultAccountsScreen(
+        navHostController = navHostController,
+        state = state,
+        onRefresh = viewModel::refreshData,
+        onOpenVaultSettings = {
+            val vault = viewModel.currentVault.value
+            navHostController.navigate(Destination.VaultSettings(vault.name).route)
+        },
+        onJoinKeysign = {
+            navHostController.navigate(
+                Screen.JoinKeysign.createRoute(vaultId)
+            )
+        },
+        onAccountClick = {
+            val route = Screen.ChainCoin.createRoute(
+                chainRaw = it.chainName,
+                vaultId = viewModel.vault?.name ?: "",
+            )
+            navHostController.navigate(route)
+        },
+        onChooseChains = {
+            navHostController.navigate(
+                Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
+            )
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun VaultAccountsScreen(
+    navHostController: NavHostController,
+    state: VaultAccountsUiModel,
+    onRefresh: () -> Unit,
+    onOpenVaultSettings: () -> Unit,
+    onJoinKeysign: () -> Unit,
+    onAccountClick: (AccountUiModel) -> Unit,
+    onChooseChains: () -> Unit,
+) {
+    val textColor = MaterialTheme.colorScheme.onBackground
+
+    BoxWithSwipeRefresh(
+        onSwipe = onRefresh,
+        isRefreshing = state.isRefreshing
+    ) {
         Scaffold(topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -90,10 +135,7 @@ internal fun VaultDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        val vault = viewModel.currentVault.value
-                        navHostController.navigate(Destination.VaultSettings(vault.name).route)
-                    }) {
+                    IconButton(onClick = onOpenVaultSettings) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_edit_square_24),
                             contentDescription = "search",
@@ -104,11 +146,7 @@ internal fun VaultDetailScreen(
             )
         }, bottomBar = {},
             floatingActionButton = {
-                Button(onClick = {
-                    navHostController.navigate(
-                        Screen.JoinKeysign.createRoute(vaultId)
-                    )
-                }) {
+                Button(onClick = onJoinKeysign) {
                     Image(
                         painter = painterResource(id = R.drawable.camera),
                         contentDescription = "join keysign"
@@ -132,16 +170,13 @@ internal fun VaultDetailScreen(
                         modifier = Modifier.fillParentMaxWidth(),
                     )
                 }
-                items(state.accounts) { account: ChainAccountUiModel ->
+                items(state.accounts) { account: AccountUiModel ->
                     ChainAccountItem(
-                        account = account
-                    ) {
-                        val route = Screen.ChainCoin.createRoute(
-                            chainRaw = account.chainName,
-                            vaultId = viewModel.vault?.name ?: "",
-                        )
-                        navHostController.navigate(route)
-                    }
+                        account = account,
+                        onClick = {
+                            onAccountClick(account)
+                        },
+                    )
                 }
                 item {
                     UiSpacer(
@@ -149,14 +184,44 @@ internal fun VaultDetailScreen(
                     )
                     UiPlusButton(
                         title = stringResource(R.string.vault_choose_chains),
-                        onClick = {
-                            navHostController.navigate(
-                                Screen.VaultDetail.AddChainAccount.createRoute(vaultId)
-                            )
-                        },
+                        onClick = onChooseChains,
                     )
                 }
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun VaultAccountsScreenPreview() {
+    VaultAccountsScreen(
+        navHostController = rememberNavController(),
+        state = VaultAccountsUiModel(
+            vaultName = "Vault Name",
+            totalFiatValue = "$1000",
+            accounts = listOf(
+                AccountUiModel(
+                    chainName = "Ethereum",
+                    logo = R.drawable.ethereum,
+                    address = "0x1234567890",
+                    nativeTokenAmount = "1.0",
+                    fiatAmount = "$1000",
+                    assetsSize = 4,
+                ),
+                AccountUiModel(
+                    chainName = "Bitcoin",
+                    logo = R.drawable.bitcoin,
+                    address = "123456789abcdef",
+                    nativeTokenAmount = "1.0",
+                    fiatAmount = "$1000",
+                ),
+            ),
+        ),
+        onRefresh = {},
+        onOpenVaultSettings = {},
+        onJoinKeysign = {},
+        onAccountClick = {},
+        onChooseChains = {},
+    )
 }
