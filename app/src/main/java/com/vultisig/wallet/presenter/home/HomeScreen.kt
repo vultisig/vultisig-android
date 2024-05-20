@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -20,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,15 +27,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,13 +42,14 @@ internal fun HomeScreen(
     navController: NavHostController,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
-    val vaults = viewModel.vaults.asFlow().collectAsState(initial = emptyList()).value
+    val vaults by viewModel.vaults.collectAsState()
     val textColor = MaterialTheme.colorScheme.onBackground
 
+    val appColor = Theme.colors
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(appColor.oxfordBlue800)
     ) {
         Scaffold(
             topBar = {
@@ -58,7 +57,7 @@ internal fun HomeScreen(
                     title = {
                         Text(
                             text = stringResource(R.string.home_screen_title),
-                            style = MaterialTheme.montserratFamily.titleLarge,
+                            style = Theme.montserrat.subtitle1,
                             fontWeight = FontWeight.Bold,
                             color = textColor,
                             modifier = Modifier
@@ -70,7 +69,7 @@ internal fun HomeScreen(
                         )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.appColor.oxfordBlue800,
+                        containerColor = appColor.oxfordBlue800,
                         titleContentColor = textColor
                     ),
                     navigationIcon = {
@@ -96,10 +95,10 @@ internal fun HomeScreen(
                 MultiColorButton(
                     text = stringResource(R.string.home_screen_add_new_vault),
                     minHeight = MaterialTheme.dimens.minHeightButton,
-                    backgroundColor = MaterialTheme.appColor.turquoise800,
-                    textColor = MaterialTheme.appColor.oxfordBlue800,
-                    iconColor = MaterialTheme.appColor.turquoise800,
-                    textStyle = MaterialTheme.montserratFamily.titleLarge,
+                    backgroundColor = appColor.turquoise800,
+                    textColor = appColor.oxfordBlue800,
+                    iconColor = appColor.turquoise800,
+                    textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
@@ -112,10 +111,12 @@ internal fun HomeScreen(
                 }
             }
         ) {
-            LazyColumn(modifier = Modifier.padding(it)) {
-                items(vaults) { vault ->
-                    VaultCeil(navController, vault = vault)
-                }
+            VerticalReorderList(
+                modifier = Modifier.padding(it),
+                onMove = viewModel::onMove,
+                data = vaults,
+            ) { vault ->
+                VaultCeil(navController, vault = vault)
             }
         }
     }
