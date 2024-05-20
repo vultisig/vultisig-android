@@ -14,6 +14,7 @@ import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.models.isDepositSupported
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_CHAIN_RAW
@@ -50,6 +51,7 @@ internal class ChainTokensViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
 
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
@@ -72,7 +74,9 @@ internal class ChainTokensViewModel @Inject constructor(
                 val tokens = address.accounts.map { account ->
                     ChainTokenUiModel(
                         name = account.token.ticker,
-                        balance = account.tokenValue?.decimal?.toPlainString(),
+                        balance = account.tokenValue
+                            ?.let(mapTokenValueToDecimalUiString)
+                            ?: "",
                         fiatBalance = account.fiatValue
                             ?.let(fiatValueToStringMapper::map),
                         tokenLogo = Coins.getCoinLogo(account.token.logo),

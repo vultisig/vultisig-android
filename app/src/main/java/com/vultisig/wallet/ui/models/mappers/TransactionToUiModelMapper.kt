@@ -9,7 +9,7 @@ internal interface TransactionToUiModelMapper : MapperFunc<Transaction, Transact
 
 internal class TransactionToUiModelMapperImpl @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val mapTokenValueToString: TokenValueToStringMapper,
+    private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
 ) : TransactionToUiModelMapper {
 
     override fun invoke(from: Transaction): TransactionUiModel {
