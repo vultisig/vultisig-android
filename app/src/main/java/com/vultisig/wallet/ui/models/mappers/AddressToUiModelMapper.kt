@@ -12,6 +12,7 @@ internal interface AddressToUiModelMapper :
 
 internal class AddressToUiModelMapperImpl @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
 ) : AddressToUiModelMapper {
 
     override fun map(from: Address) = AccountUiModel(
@@ -19,7 +20,7 @@ internal class AddressToUiModelMapperImpl @Inject constructor(
         logo = from.chain.logo,
         address = from.address,
         nativeTokenAmount = from.accounts.first { it.token.isNativeToken }
-            .tokenValue?.decimal?.toPlainString(),
+            .tokenValue?.let(mapTokenValueToDecimalUiString),
         fiatAmount = from.accounts.calculateAccountsTotalFiatValue()
             ?.let(fiatValueToStringMapper::map),
         assetsSize = from.accounts.size,

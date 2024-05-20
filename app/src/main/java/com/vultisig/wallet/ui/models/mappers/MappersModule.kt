@@ -30,9 +30,15 @@ internal interface MappersModule {
 
     @Binds
     @Singleton
-    fun bindGasFeeToStringMapper(
-        impl: TokenValueToStringMapperImpl,
-    ): TokenValueToStringMapper
+    fun bindTokenValueToStringWithUnitMapper(
+        impl: TokenValueToStringWithUnitMapperImpl,
+    ): TokenValueToStringWithUnitMapper
+
+    @Binds
+    @Singleton
+    fun bindTokenValueToDecimalUiStringMapper(
+        impl: TokenValueToDecimalUiStringMapperImpl,
+    ): TokenValueToDecimalUiStringMapper
 
     @Binds
     @Singleton

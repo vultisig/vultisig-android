@@ -27,7 +27,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -80,7 +80,7 @@ internal class SendViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
-    private val mapGasFeeToString: TokenValueToStringMapper,
+    private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
 
     private val vaultDb: VaultDB,
     private val accountsRepository: AccountsRepository,

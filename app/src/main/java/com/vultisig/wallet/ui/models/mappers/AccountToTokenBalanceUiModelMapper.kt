@@ -8,12 +8,15 @@ import javax.inject.Inject
 
 internal interface AccountToTokenBalanceUiModelMapper : Mapper<Account, TokenBalanceUiModel>
 
-internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor() :
+internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+) :
     AccountToTokenBalanceUiModelMapper {
 
     override fun map(from: Account) = TokenBalanceUiModel(
         title = from.token.ticker,
-        balance = from.tokenValue?.decimal?.toPlainString(),
+        balance = from.tokenValue
+            ?.let(mapTokenValueToDecimalUiString),
         logo = Coins.getCoinLogo(from.token.logo),
         model = from,
     )
