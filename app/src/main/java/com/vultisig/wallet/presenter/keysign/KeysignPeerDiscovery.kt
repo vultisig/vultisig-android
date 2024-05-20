@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.asFlow
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.keygen.NetworkPrompts
@@ -47,6 +48,22 @@ internal fun KeysignPeerDiscovery(
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
     val context = LocalContext.current.applicationContext
+    LaunchedEffect(key1 = viewModel.participants) {
+        viewModel.participants.asFlow().collect{newList->
+            // add all participants to the selection
+            for(participant in newList){
+                viewModel.addParticipant(participant)
+            }
+        }
+    }
+    LaunchedEffect(key1 = viewModel.selection) {
+        viewModel.selection.asFlow().collect{newList->
+            if(newList.size >= Utils.getThreshold(vault.signers.size)){
+                // automatically kickoff keysign
+                viewModel.moveToState(KeysignFlowState.KEYSIGN)
+            }
+        }
+    }
     LaunchedEffect(Unit) {
         // start mediator server
         viewModel.setData(vault, context, keysignPayload)
@@ -72,7 +89,7 @@ internal fun KeysignPeerDiscovery(
                 backgroundColor = Theme.colors.turquoise600Main,
                 textColor = Theme.colors.oxfordBlue600Main,
                 minHeight = MaterialTheme.dimens.minHeightButton,
-                textStyle = Theme.montserrat.titleLarge,
+                textStyle = Theme.montserrat.subtitle1,
                 disabled = selectionState.size < 2,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -97,7 +114,7 @@ internal fun KeysignPeerDiscovery(
             Text(
                 text = stringResource(R.string.keysign_peer_discovery_pair_with_other_devices),
                 color = textColor,
-                style = Theme.montserrat.bodyMedium
+                style = Theme.montserrat.body2
             )
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
             if (viewModel.keysignMessage.value.isNotEmpty()) {
@@ -134,7 +151,7 @@ internal fun KeysignPeerDiscovery(
                 Text(
                     text = stringResource(R.string.keysign_peer_discovery_waiting_for_other_devices_to_connect),
                     color = textColor,
-                    style = Theme.montserrat.bodyMedium
+                    style = Theme.montserrat.body2
                 )
             }
 
@@ -146,7 +163,7 @@ internal fun KeysignPeerDiscovery(
                 modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
                 text = stringResource(R.string.keysign_peer_discovery_desc1),
                 color = textColor,
-                style = Theme.menlo.headlineSmall.copy(
+                style = Theme.menlo.heading5.copy(
                     textAlign = TextAlign.Center, fontSize = 13.sp
                 ),
             )
