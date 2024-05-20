@@ -1,9 +1,12 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,6 +43,7 @@ import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
@@ -171,13 +175,30 @@ private fun VaultAccountsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
-                    Text(
-                        text = state.totalFiatValue ?: "",
-                        style = Theme.menlo.subtitle1,
-                        color = Theme.colors.neutral100,
-                        textAlign = TextAlign.Center,
+                    AnimatedContent(
+                        targetState = state.totalFiatValue,
+                        label = "ChainAccount FiatAmount",
                         modifier = Modifier.fillParentMaxWidth(),
-                    )
+                    ) { totalFiatValue ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillParentMaxWidth()
+                        ) {
+                            if (totalFiatValue != null) {
+                                Text(
+                                    text = totalFiatValue,
+                                    style = Theme.menlo.subtitle1,
+                                    color = Theme.colors.neutral100,
+                                    textAlign = TextAlign.Center,
+                                )
+                            } else {
+                                UiPlaceholderLoader(
+                                    modifier = Modifier
+                                        .width(48.dp),
+                                )
+                            }
+                        }
+                    }
                 }
                 items(state.accounts) { account: AccountUiModel ->
                     ChainAccountItem(

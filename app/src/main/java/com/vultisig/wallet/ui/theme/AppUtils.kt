@@ -8,7 +8,7 @@ import androidx.compose.runtime.remember
 @Composable
 internal fun AppUtils(
     appDimens: Dimens,
-    appColor: ColorsPalette,
+    appColor: Colors,
     menloTypography: VultisigTypography,
     montserratTypography: VultisigTypography,
     content: @Composable () -> Unit,
@@ -39,8 +39,8 @@ internal fun AppUtils(
 val LocalAppDimens = compositionLocalOf {
     CompactDimens
 }
-val LocalAppColors = compositionLocalOf {
-    OnLightCustomColorsPalette
+internal val LocalAppColors = compositionLocalOf {
+    Colors.Default
 }
 internal val LocalMenloFamilyTypography = compositionLocalOf {
     menloTypography

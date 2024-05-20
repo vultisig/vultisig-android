@@ -18,6 +18,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.cache.HttpCache
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -78,6 +79,7 @@ internal interface DataModule {
                     level = LogLevel.ALL
                 }
             }
+            install(HttpCache)
         }
 
         @Provides

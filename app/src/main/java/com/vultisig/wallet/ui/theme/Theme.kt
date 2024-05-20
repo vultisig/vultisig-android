@@ -18,8 +18,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.toColorInt
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.theme.menloTypography
-import com.vultisig.wallet.ui.theme.montserratTypography
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -28,11 +26,7 @@ fun OnBoardingComposeTheme(
     activity: Activity = LocalContext.current as MainActivity,
     content: @Composable () -> Unit,
 ) {
-    val appColors = if (darkTheme) {
-        OnDarkCustomColorsPalette
-    } else {
-        OnLightCustomColorsPalette
-    }
+    val appColors = Colors.Default
     val window = calculateWindowSizeClass(activity = activity)
     val config = LocalConfiguration.current
     var appDimens = CompactDimens
@@ -88,6 +82,7 @@ fun OnBoardingComposeTheme(
 //you have to call MaterialTheme.LocalAppDimens.current.dimens
 //to get dimens
 //instead of that you can use extension method to get data in easy way
+@Deprecated("Just specify the value directly", ReplaceWith("X.dp"))
 val MaterialTheme.dimens
     @Composable
     get() = LocalAppDimens.current
@@ -96,7 +91,7 @@ val MaterialTheme.dimens
     "Use Theme.colors instead of MaterialTheme.appColor",
     ReplaceWith("Theme.colors")
 )
-val MaterialTheme.appColor
+internal val MaterialTheme.appColor
     @Composable
     get() = LocalAppColors.current
 
@@ -117,7 +112,7 @@ internal val MaterialTheme.montserratFamily
     get() = LocalMontserratFamilyTypography.current
 
 internal object Theme {
-    val colors: ColorsPalette
+    val colors: Colors
         @Composable
         get() = LocalAppColors.current
 
