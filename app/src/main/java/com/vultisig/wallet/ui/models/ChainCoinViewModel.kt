@@ -29,6 +29,7 @@ import javax.inject.Inject
 data class ChainCoinUiModel(
     val chainName: String = "",
     val chainAddress: String = "",
+    @DrawableRes val chainLogo: Int? = null,
     val totalBalance: String = "",
     val explorerURL: String = "",
     val tokens: List<ChainTokenUiModel> = emptyList(),
@@ -85,6 +86,7 @@ internal class ChainCoinViewModel @Inject constructor(
                     it.copy(
                         chainName = chainRaw,
                         chainAddress = accounts.firstOrNull()?.address ?: "",
+                        chainLogo = chain.logo,
                         tokens = tokens,
                         explorerURL = accounts.firstOrNull()?.blockExplorerUrl ?: "",
                         totalBalance = totalFiatValue
