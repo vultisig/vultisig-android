@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -92,24 +95,49 @@ internal fun ChainAccountItem(
                                 )
                         )
                     } else {
-                        Text(
-                            text = account.nativeTokenAmount ?: "",
-                            style = Theme.menlo.body1,
-                            color = Theme.colors.neutral100,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        AnimatedContent(
+                            targetState = account.nativeTokenAmount,
+                            label = "ChainAccount NativeTokenAmount"
+                        ) { nativeTokenAmount ->
+                            if (nativeTokenAmount != null) {
+                                Text(
+                                    text = nativeTokenAmount,
+                                    style = Theme.menlo.body1,
+                                    color = Theme.colors.neutral100,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            } else {
+                                UiPlaceholderLoader(
+                                    modifier = Modifier
+                                        .width(48.dp)
+                                )
+                            }
+                        }
                     }
 
                     UiSpacer(12.dp)
 
-                    Text(
-                        text = account.fiatAmount ?: "",
-                        style = Theme.montserrat.subtitle1,
-                        color = Theme.colors.neutral100,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    AnimatedContent(
+                        targetState = account.fiatAmount,
+                        label = "ChainAccount FiatAmount"
+                    ) { fiatAmount ->
+                        if (fiatAmount != null) {
+                            Text(
+                                text = fiatAmount,
+                                style = Theme.montserrat.subtitle1,
+                                color = Theme.colors.neutral100,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        } else {
+                            UiPlaceholderLoader(
+                                modifier = Modifier
+                                    .width(48.dp)
+                            )
+                        }
+                    }
+
                 }
 
                 UiSpacer(14.dp)
