@@ -39,8 +39,8 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TRANSACTION_I
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
-import com.vultisig.wallet.ui.screens.ChainCoinScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
+import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -208,7 +208,7 @@ internal fun SetupNavGraph(
             KeysignFlowView(navController)
         }
         composable(route = Screen.ChainCoin.route) {
-            ChainCoinScreen(navController)
+            ChainTokensScreen(navController)
         }
         composable(
             route = Destination.SelectTokens.staticRoute,
