@@ -1,17 +1,18 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.AccountUiModel
@@ -144,15 +146,22 @@ private fun VaultAccountsScreen(
                     }
                 }
             )
-        }, bottomBar = {},
+        },
+            floatingActionButtonPosition = FabPosition.Center,
             floatingActionButton = {
-                Button(onClick = onJoinKeysign) {
-                    Image(
-                        painter = painterResource(id = R.drawable.camera),
-                        contentDescription = "join keysign"
-                    )
-                }
-
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 40.dp,
+                    contentDescription = "join keysign",
+                    tint = Theme.colors.oxfordBlue600Main,
+                    onClick = onJoinKeysign,
+                    modifier = Modifier
+                        .background(
+                            color = Theme.colors.turquoise600Main,
+                            shape = CircleShape,
+                        )
+                        .padding(all = 10.dp)
+                )
             }) {
             LazyColumn(
                 modifier = Modifier.padding(it),
