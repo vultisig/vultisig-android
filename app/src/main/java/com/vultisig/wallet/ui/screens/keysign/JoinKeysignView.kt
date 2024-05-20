@@ -14,8 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -34,6 +36,7 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignState.JoinKeysign
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Keysign
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.WaitingForKeysignStart
 import com.vultisig.wallet.presenter.keysign.JoinKeysignViewModel
+import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -65,9 +68,12 @@ internal fun JoinKeysignView(
         }
     }
 
+    var keysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
+
     JoinKeysignScreen(
         navController = navController,
         state = viewModel.currentState.value,
+        keysignState = keysignState,
     ) { state ->
         when (state) {
             DiscoveryingSessionID,
@@ -110,8 +116,10 @@ internal fun JoinKeysignView(
                     keysignViewModel.startKeysign()
                     hasStartedKeysign.value = true
                 }
+                val kState = keysignViewModel.currentState.collectAsState().value
+                keysignState = kState
                 KeysignScreen(
-                    state = keysignViewModel.currentState.collectAsState().value,
+                    state = kState,
                     errorMessage = keysignViewModel.errorMessage.value,
                     txHash = keysignViewModel.txHash.collectAsState().value,
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
@@ -135,11 +143,15 @@ internal fun JoinKeysignView(
 private fun JoinKeysignScreen(
     navController: NavHostController,
     state: JoinKeysignState,
+    keysignState: KeysignState,
     content: @Composable BoxScope.(JoinKeysignState) -> Unit = {},
 ) {
     UiBarContainer(
         navController = navController,
-        title = stringResource(id = R.string.keysign)
+        title = stringResource(
+            id = if (keysignState != KeysignState.KeysignFinished) R.string.keysign
+            else R.string.transaction_done_title
+        )
     ) {
         Column(
             modifier = Modifier
@@ -179,5 +191,6 @@ private fun JoinKeysignViewPreview() {
     JoinKeysignScreen(
         navController = rememberNavController(),
         state = Error,
+        keysignState = KeysignState.CreatingInstance,
     )
 }
