@@ -43,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -89,7 +88,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                     title = {
                         Text(
                             text = uiModel.chainName,
-                            style = Theme.montserrat.titleLarge,
+                            style = Theme.montserrat.subtitle1,
                             fontWeight = FontWeight.Bold,
                             color = textColor,
                             modifier = Modifier
@@ -132,7 +131,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                         backgroundColor = appColor.turquoise800,
                         textColor = appColor.oxfordBlue800,
                         iconColor = appColor.turquoise800,
-                        textStyle = Theme.montserrat.titleLarge,
+                        textStyle = Theme.montserrat.subtitle1,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
@@ -154,7 +153,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                                 Text(
                                     text = stringResource(id = R.string.chain_account_buy_vtx),
                                     color = MaterialTheme.colorScheme.onPrimary,
-                                    style = Theme.montserrat.titleLarge
+                                    style = Theme.montserrat.subtitle1
                                 )
                             }
                         }
@@ -210,7 +209,7 @@ fun ChainCoinScreen(navController: NavHostController) {
                             uiModel.chainName,
                             uiModel.totalBalance,
                             uiModel.explorerURL,
-                        ){
+                        ) {
                             navController.navigate(Destination.QrAddressScreen(uiModel.chainAddress).route)
                         }
                     }
@@ -242,9 +241,8 @@ private fun CoinListHeader(
     name: String,
     totalBalance: String,
     explorerURL: String,
-    onQrBtnClick:()->Unit = {}
+    onQrBtnClick: () -> Unit = {},
 ) {
-    val context = LocalContext.current
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
     val uriHandler = LocalUriHandler.current
@@ -256,7 +254,7 @@ private fun CoinListHeader(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = name,
-                style = Theme.montserrat.titleLarge,
+                style = Theme.montserrat.subtitle1,
                 color = appColor.neutral0
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -289,14 +287,14 @@ private fun CoinListHeader(
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = totalBalance,
-                style = Theme.menlo.titleMedium,
+                style = Theme.menlo.subtitle2,
                 color = appColor.neutral0
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = address,
-            style = Theme.montserrat.titleSmall,
+            style = Theme.montserrat.subtitle3,
             color = appColor.turquoise800,
             modifier = Modifier.padding(top = dimens.marginSmall)
         )
@@ -344,20 +342,20 @@ private fun CoinItem(
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = title,
-                style = Theme.montserrat.titleMedium,
+                style = Theme.montserrat.subtitle2,
                 color = appColor.neutral100
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = balance,
-                style = Theme.menlo.titleMedium,
+                style = Theme.menlo.subtitle2,
                 color = appColor.neutral0
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = fiatBalance,
-            style = Theme.menlo.titleMedium,
+            style = Theme.menlo.subtitle2,
             color = appColor.neutral100,
             modifier = Modifier.padding(top = dimens.marginSmall)
         )

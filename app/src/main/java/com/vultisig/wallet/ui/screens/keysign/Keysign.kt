@@ -26,6 +26,7 @@ import com.vultisig.wallet.presenter.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
+import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -33,7 +34,7 @@ import com.vultisig.wallet.ui.theme.dimens
 @Composable
 internal fun Keysign(
     navController: NavController,
-    viewModel: KeysignViewModel
+    viewModel: KeysignViewModel,
 ) {
     LaunchedEffect(key1 = Unit) {
         // kick it off to generate key
@@ -49,7 +50,9 @@ internal fun Keysign(
             errorMessage = viewModel.errorMessage.value,
             txHash = viewModel.txHash.collectAsState().value,
             transactionLink = viewModel.txLink.collectAsState().value,
-            onComplete = navController::popBackStack,
+            onComplete = {
+                navController.navigate(Screen.VaultDetail.createRoute(viewModel.vault.name))
+            },
         )
     }
 }

@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
+import timber.log.Timber
 
 @Composable
 internal fun KeysignPeerDiscovery(
@@ -49,16 +50,20 @@ internal fun KeysignPeerDiscovery(
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
     val context = LocalContext.current.applicationContext
     LaunchedEffect(key1 = viewModel.participants) {
-        viewModel.participants.asFlow().collect{newList->
+        viewModel.participants.asFlow().collect { newList ->
             // add all participants to the selection
-            for(participant in newList){
+            for (participant in newList) {
                 viewModel.addParticipant(participant)
             }
         }
     }
     LaunchedEffect(key1 = viewModel.selection) {
-        viewModel.selection.asFlow().collect{newList->
-            if(newList.size >= Utils.getThreshold(vault.signers.size)){
+        viewModel.selection.asFlow().collect { newList ->
+            if (vault.signers.isEmpty()) {
+                Timber.e("Vault signers size is 0")
+                return@collect
+            }
+            if (newList.size >= Utils.getThreshold(vault.signers.size)) {
                 // automatically kickoff keysign
                 viewModel.moveToState(KeysignFlowState.KEYSIGN)
             }

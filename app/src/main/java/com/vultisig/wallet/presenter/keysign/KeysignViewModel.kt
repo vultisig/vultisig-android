@@ -54,7 +54,7 @@ enum class KeysignState {
 }
 
 internal class KeysignViewModel(
-    private val vault: Vault,
+    val vault: Vault,
     private val keysignCommittee: List<String>,
     private val serverAddress: String,
     private val sessionId: String,

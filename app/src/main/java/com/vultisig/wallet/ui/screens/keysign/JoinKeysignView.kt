@@ -37,6 +37,7 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
 
 @Composable
@@ -114,7 +115,9 @@ internal fun JoinKeysignView(
                     errorMessage = keysignViewModel.errorMessage.value,
                     txHash = keysignViewModel.txHash.collectAsState().value,
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
-                    onComplete = navController::popBackStack,
+                    onComplete = {
+                        navController.navigate(Screen.VaultDetail.createRoute(viewModel.vaultId))
+                    }
                 )
             }
 
