@@ -100,7 +100,7 @@
     <string name="import_file_screen_enter_your_previously_created_vault_share">Enter your previously created vault share</string>
     <string name="import_file_screen_upload_file_text_or_image">Upload file, text or image</string>
     <string name="import_file_screen_continue">Continue</string>
-    <string name="create_new_vault_screen_vultisig">vultisig</string>
+    <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
     <string name="create_new_vault_screen_create_a_new_vault">Create a New Vault</string>
     <string name="create_new_vault_screen_import_an_existing_vault">Import an Existing Vault</string>
