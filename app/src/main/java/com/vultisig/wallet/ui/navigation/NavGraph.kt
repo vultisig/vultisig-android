@@ -44,7 +44,7 @@ import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
-import com.vultisig.wallet.ui.screens.VaultDetailScreen
+import com.vultisig.wallet.ui.screens.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
@@ -138,7 +138,7 @@ internal fun SetupNavGraph(
             route = Screen.VaultDetail.route,
         ) { navBackStackEntry ->
             val vaultId = navBackStackEntry.arguments?.getString("vault_name") ?: ""
-            VaultDetailScreen(
+            VaultAccountsScreen(
                 vaultId = vaultId,
                 navHostController = navController,
             )

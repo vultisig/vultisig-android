@@ -5,14 +5,13 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.calculateTotalFiatValue
-import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.models.IsDepositSupported
 import com.vultisig.wallet.models.IsSwapSupported
+import com.vultisig.wallet.models.isDepositSupported
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -26,7 +25,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Immutable
-data class ChainCoinUiModel(
+data class ChainTokensUiModel(
     val chainName: String = "",
     val chainAddress: String = "",
     @DrawableRes val chainLogo: Int? = null,
@@ -47,31 +46,30 @@ data class ChainTokenUiModel(
 )
 
 @HiltViewModel
-internal class ChainCoinViewModel @Inject constructor(
+internal class ChainTokensViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val vaultDB: VaultDB,
-    private val addressRepository: ChainAccountAddressRepository,
-    private val accountsRepository: AccountsRepository,
-    private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val navigator: Navigator<Destination>,
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
+
+    private val explorerLinkRepository: ExplorerLinkRepository,
+    private val accountsRepository: AccountsRepository,
 ) : ViewModel() {
     private val chainRaw: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_CHAIN_RAW)!!
     private val vaultId: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_VAULT_ID)!!
 
-    val uiState = MutableStateFlow(ChainCoinUiModel())
+    val uiState = MutableStateFlow(ChainTokensUiModel())
 
     fun loadData() {
         viewModelScope.launch {
-            val vault = requireNotNull(vaultDB.select(vaultId))
-
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
-            accountsRepository.loadChainAccounts(
+            accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
-            ).collect { accounts ->
-                val totalFiatValue = accounts.calculateTotalFiatValue()
+            ).collect { address ->
+                val totalFiatValue = address.accounts
+                    .calculateAccountsTotalFiatValue()
 
-                val tokens = accounts.map { account ->
+                val tokens = address.accounts.map { account ->
                     ChainTokenUiModel(
                         name = account.token.ticker,
                         balance = account.tokenValue?.decimal?.toPlainString(),
@@ -82,16 +80,21 @@ internal class ChainCoinViewModel @Inject constructor(
                     )
                 }
 
+                val accountAddress = address.address
+                val explorerUrl = explorerLinkRepository
+                    .getAddressLink(chain, accountAddress)
+                val totalBalance = totalFiatValue
+                    ?.let(fiatValueToStringMapper::map) ?: ""
+
                 uiState.update {
                     it.copy(
                         chainName = chainRaw,
-                        chainAddress = accounts.firstOrNull()?.address ?: "",
+                        chainAddress = accountAddress,
                         chainLogo = chain.logo,
                         tokens = tokens,
-                        explorerURL = accounts.firstOrNull()?.blockExplorerUrl ?: "",
-                        totalBalance = totalFiatValue
-                            ?.let(fiatValueToStringMapper::map) ?: "",
-                        canDeposit = chain.IsDepositSupported,
+                        explorerURL = explorerUrl,
+                        totalBalance = totalBalance,
+                        canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
                     )
                 }

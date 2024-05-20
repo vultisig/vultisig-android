@@ -1,0 +1,28 @@
+package com.vultisig.wallet.ui.models.mappers
+
+import com.vultisig.wallet.data.mappers.Mapper
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
+import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.ui.models.AccountUiModel
+import javax.inject.Inject
+
+internal interface AddressToUiModelMapper :
+    Mapper<Address, AccountUiModel>
+
+internal class AddressToUiModelMapperImpl @Inject constructor(
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
+) : AddressToUiModelMapper {
+
+    override fun map(from: Address) = AccountUiModel(
+        chainName = from.chain.raw,
+        logo = from.chain.logo,
+        address = from.address,
+        nativeTokenAmount = from.accounts.first { it.token.isNativeToken }
+            .tokenValue?.decimal?.toPlainString(),
+        fiatAmount = from.accounts.calculateAccountsTotalFiatValue()
+            ?.let(fiatValueToStringMapper::map),
+        assetsSize = from.accounts.size,
+    )
+
+}

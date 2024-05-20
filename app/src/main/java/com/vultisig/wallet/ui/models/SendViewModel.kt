@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
@@ -103,6 +104,7 @@ internal class SendViewModel @Inject constructor(
         }
     }
 
+    private val selectedAddress = MutableStateFlow<Address?>(null)
     private val selectedAccount = MutableStateFlow<Account?>(null)
     private val appCurrency = appCurrencyRepository
         .currency
@@ -249,7 +251,7 @@ internal class SendViewModel @Inject constructor(
                     UiText.StringResource(R.string.send_error_no_token)
                 )
 
-                val srcAddress =  selectedToken.address
+                val srcAddress = selectedToken.address
 
                 val specific = blockChainSpecificRepository
                     .getSpecific(chain, srcAddress, selectedToken, gasFee)
@@ -297,15 +299,17 @@ internal class SendViewModel @Inject constructor(
 
     private fun loadTokens() {
         viewModelScope.launch {
-
-            accountsRepository.loadChainAccounts(
+            accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
-            ).collect { accounts ->
-                val tokenUiModels = accounts
+            ).collect { account ->
+                selectedAddress.value = account
+
+                val tokenUiModels = account
+                    .accounts
                     .map(accountToTokenBalanceUiModelMapper::map)
 
-                val accountOfNativeToken = accounts.find { it.token.isNativeToken }
+                val accountOfNativeToken = account.accounts.find { it.token.isNativeToken }
                 val selectedAccountValue = selectedAccount.value
                 // so it doesnt reset user selection of token on update
                 if (selectedAccountValue == null ||
@@ -317,7 +321,7 @@ internal class SendViewModel @Inject constructor(
 
                 uiState.update {
                     it.copy(
-                        from = accountOfNativeToken?.address ?: "",
+                        from = account.address,
                         availableTokens = tokenUiModels,
                     )
                 }
@@ -327,11 +331,12 @@ internal class SendViewModel @Inject constructor(
 
     private fun calculateGasFees() {
         viewModelScope.launch {
-            selectedAccount
+            selectedAddress
                 .filterNotNull()
-                .map { account ->
-                    gasFeeRepository.getGasFee(chain, account.address)
-                }.catch {
+                .map {
+                    gasFeeRepository.getGasFee(chain, it.address)
+                }
+                .catch {
                     // TODO handle error when querying gas fee
                     Timber.e(it)
                 }
