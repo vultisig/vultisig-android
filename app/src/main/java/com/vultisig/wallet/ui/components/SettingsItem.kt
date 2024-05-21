@@ -94,6 +94,6 @@ private fun SettingsItemPreview() {
     SettingsItem(
         title = "Title",
         subtitle = "Subtitle",
-        icon = R.drawable.ic_launcher_foreground
+        icon = R.drawable.icon_qr
     )
 }
