@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.data.on_board.db.OrderDB
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.on_board.db.VaultDB.Companion.FILE_POSTFIX
 import com.vultisig.wallet.models.Vault
@@ -27,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal open class VaultSettingsViewModel @Inject constructor(
     private val vaultDB: VaultDB,
+    private val orderDB: OrderDB,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
@@ -107,6 +109,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
     fun delete() {
         viewModelScope.launch {
             vaultDB.delete(vaultId)
+            orderDB.removeOrder(vault?.name?:"")
             navigator.navigate(Destination.Home)
         }
     }
