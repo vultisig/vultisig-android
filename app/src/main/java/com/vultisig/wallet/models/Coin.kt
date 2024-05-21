@@ -168,7 +168,7 @@ object Coins {
             address = "",
             decimal = 6,
             hexPublicKey = "",
-            priceProviderID = "uniswap",
+            priceProviderID = "matic-network",
             contractAddress = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
             isNativeToken = false,
         ),
@@ -430,6 +430,7 @@ object Coins {
             "arbitrum" -> R.drawable.eth_arbitrum
             "kuji" -> R.drawable.kuji
             "atom" -> R.drawable.atom
+            "polygon" -> R.drawable.polygon
             else -> R.drawable.danger
         }
     }
