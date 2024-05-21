@@ -1,7 +1,9 @@
 package com.vultisig.wallet.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
@@ -34,12 +38,33 @@ internal fun VaultListScreen(
 ) {
     val vaults = viewModel.vaults.asFlow().collectAsState(initial = emptyList()).value
 
+    VaultListScreen(
+        navController = navController,
+        vaults = vaults,
+        onSelectVault = onSelectVault,
+    )
+}
+
+@Composable
+private fun VaultListScreen(
+    navController: NavHostController,
+    vaults: List<Vault>,
+    onSelectVault: (vaultId: String) -> Unit = {},
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Theme.colors.oxfordBlue800)
     ) {
-        LazyColumn {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(
+                top = 16.dp,
+                start = 12.dp,
+                end = 12.dp,
+                bottom = 64.dp,
+            )
+        ) {
             items(vaults) { vault ->
                 VaultCeil(
                     vault = vault,
@@ -58,9 +83,8 @@ internal fun VaultListScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.dimens.marginMedium,
-                    end = MaterialTheme.dimens.marginMedium,
-                    bottom = MaterialTheme.dimens.marginMedium,
+                    vertical = 16.dp,
+                    horizontal = 12.dp,
                 )
                 .align(Alignment.BottomCenter)
         ) {
@@ -71,7 +95,20 @@ internal fun VaultListScreen(
 
 @Preview(showBackground = true, name = "VaultListScreen")
 @Composable
-fun VaultListScreenPreview() {
+private fun VaultListScreenPreview() {
     val navController = rememberNavController()
-    VaultListScreen(navController = navController)
+    VaultListScreen(
+        navController = navController,
+        vaults = listOf(
+            Vault(
+                name = "Vault 1",
+            ),
+            Vault(
+                name = "Vault 2",
+            ),
+            Vault(
+                name = "Vault 3",
+            ),
+        ),
+    )
 }
