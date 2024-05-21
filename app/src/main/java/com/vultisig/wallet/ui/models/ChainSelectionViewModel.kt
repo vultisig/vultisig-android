@@ -8,7 +8,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update

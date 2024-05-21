@@ -17,16 +17,11 @@ sealed class Screen(val route: String) {
     }
 
     data object SigningError : Screen(route = "signing_error")
-    data object VaultDetail : Screen(route = "vault_detail/{vault_name}") {
-        fun createRoute(vaultName: String): String {
-            return "vault_detail/$vaultName"
-        }
 
-        data object AddChainAccount : Screen(route = "vault_detail/{vault_id}/add_account") {
-            const val ARG_VAULT_ID = "vault_id"
-            fun createRoute(vaultId: String): String {
-                return "vault_detail/$vaultId/add_account"
-            }
+    data object AddChainAccount : Screen(route = "vault_detail/{vault_id}/add_account") {
+        const val ARG_VAULT_ID = "vault_id"
+        fun createRoute(vaultId: String): String {
+            return "vault_detail/$vaultId/add_account"
         }
     }
 

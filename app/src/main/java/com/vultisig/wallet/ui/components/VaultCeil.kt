@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.home
+package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -18,16 +18,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.dimens
 import com.vultisig.wallet.ui.theme.montserratFamily
 
 @Composable
-fun VaultCeil(navHostController: NavHostController, vault: Vault) {
+fun VaultCeil(
+    vault: Vault,
+    onSelectVault: (vaultId: String) -> Unit,
+) {
     val textColor = MaterialTheme.colorScheme.onBackground
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.appColor.oxfordBlue400),
@@ -38,8 +39,9 @@ fun VaultCeil(navHostController: NavHostController, vault: Vault) {
                 end = MaterialTheme.dimens.marginMedium,
                 top = MaterialTheme.dimens.marginMedium,
             )
-            .height(60.dp), onClick = {
-            navHostController.navigate(Screen.VaultDetail.createRoute(vault.name))
+            .height(60.dp),
+        onClick = {
+            onSelectVault(vault.id)
         }
 
     ) {

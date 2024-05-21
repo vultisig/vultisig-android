@@ -44,7 +44,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
-fun KeygenPeerDiscovery(
+internal fun KeygenPeerDiscovery(
     navController: NavHostController,
     vault: Vault,
     viewModel: KeygenFlowViewModel,

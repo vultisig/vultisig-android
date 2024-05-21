@@ -51,7 +51,7 @@ internal fun Keysign(
             txHash = viewModel.txHash.collectAsState().value,
             transactionLink = viewModel.txLink.collectAsState().value,
             onComplete = {
-                navController.navigate(Screen.VaultDetail.createRoute(viewModel.vault.name))
+                navController.navigate(Screen.Home.route)
             },
         )
     }
