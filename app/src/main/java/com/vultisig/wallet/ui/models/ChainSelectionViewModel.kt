@@ -79,7 +79,9 @@ internal class ChainSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             tokenRepository.nativeTokens
                 .zip(tokenRepository.getEnabledChains(vaultId)) { native, enabledChains ->
-                    native.map { nativeToken ->
+                    native
+                        .sortedWith(compareBy({ it.ticker }, { it.chain.raw }))
+                        .map { nativeToken ->
                         ChainUiModel(
                             isEnabled = nativeToken.chain in enabledChains,
                             coin = nativeToken,
