@@ -26,10 +26,7 @@ internal class HomeViewModel @Inject constructor(
     private var reIndexJob: Job? = null
 
     init {
-        val allVaults = vaultDB.selectAll()
-        vaults.update {
-            allVaults
-        }
+        vaults.value = vaultDB.selectAll()
     }
 
     fun navigateToSettingsScreen(){
