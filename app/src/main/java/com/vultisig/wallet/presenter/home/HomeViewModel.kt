@@ -22,7 +22,7 @@ internal class HomeViewModel @Inject constructor(
     private val navigator: Navigator<Destination>
 ) : ViewModel() {
 
-    var vaults = MutableStateFlow<List<Vault>> (emptyList())
+    val vaults = MutableStateFlow<List<Vault>> (emptyList())
     private var reIndexJob: Job? = null
 
     init {
