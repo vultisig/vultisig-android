@@ -92,6 +92,12 @@ internal interface RepositoriesModule {
         impl: ExplorerLinkRepositoryImpl,
     ): ExplorerLinkRepository
 
+    @Binds
+    @Singleton
+    fun bindLastOpenedVaultRepository(
+        impl: LastOpenedVaultRepositoryImpl,
+    ): LastOpenedVaultRepository
+
     companion object {
 
         @Provides

@@ -26,7 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel) {
+internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel) {
     val textColor = Theme.colors.neutral0
     val items = viewModel.selection.value!!
     Column(

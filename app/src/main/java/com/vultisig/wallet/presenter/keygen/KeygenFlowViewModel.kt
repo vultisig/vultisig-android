@@ -40,7 +40,7 @@ enum class KeygenFlowState {
 }
 
 @HiltViewModel
-class KeygenFlowViewModel @Inject constructor(
+internal class KeygenFlowViewModel @Inject constructor(
     private val vaultDB: VaultDB,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,

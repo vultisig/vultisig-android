@@ -15,7 +15,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.home.HomeScreen
 import com.vultisig.wallet.presenter.import_file.ImportFileScreen
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
@@ -36,15 +35,15 @@ import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TRANSACTION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
-import com.vultisig.wallet.ui.navigation.Screen.VaultDetail.AddChainAccount
+import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
-import com.vultisig.wallet.ui.screens.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
@@ -133,15 +132,6 @@ internal fun SetupNavGraph(
 
         composable(route = Screen.ImportFile.route) {
             ImportFileScreen(navController)
-        }
-        composable(
-            route = Screen.VaultDetail.route,
-        ) { navBackStackEntry ->
-            val vaultId = navBackStackEntry.arguments?.getString("vault_name") ?: ""
-            VaultAccountsScreen(
-                vaultId = vaultId,
-                navHostController = navController,
-            )
         }
         composable(
             route = AddChainAccount.route,
