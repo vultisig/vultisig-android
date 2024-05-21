@@ -30,7 +30,7 @@ data class ChainTokensUiModel(
     val chainName: String = "",
     val chainAddress: String = "",
     @DrawableRes val chainLogo: Int? = null,
-    val totalBalance: String = "",
+    val totalBalance: String? = null,
     val explorerURL: String = "",
     val tokens: List<ChainTokenUiModel> = emptyList(),
     val canDeposit: Boolean = true,
@@ -88,7 +88,7 @@ internal class ChainTokensViewModel @Inject constructor(
                 val explorerUrl = explorerLinkRepository
                     .getAddressLink(chain, accountAddress)
                 val totalBalance = totalFiatValue
-                    ?.let(fiatValueToStringMapper::map) ?: ""
+                    ?.let(fiatValueToStringMapper::map)
 
                 uiState.update {
                     it.copy(
