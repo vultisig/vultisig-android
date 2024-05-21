@@ -55,6 +55,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultActionButton
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
@@ -252,8 +253,8 @@ private fun ChainTokensScreen(
 
                                 CoinItem(
                                     title = token.name,
-                                    balance = token.balance ?: "",
-                                    fiatBalance = token.fiatBalance ?: "",
+                                    balance = token.balance,
+                                    fiatBalance = token.fiatBalance,
                                     tokenLogo = token.tokenLogo,
                                     chainLogo = token.chainLogo,
                                 )
@@ -278,7 +279,7 @@ private fun ChainAccountInfo(
     address: String,
     name: String,
     @DrawableRes chainLogo: Int?,
-    totalBalance: String,
+    totalBalance: String?,
     explorerURL: String,
     onQrBtnClick: () -> Unit = {},
 ) {
@@ -336,13 +337,20 @@ private fun ChainAccountInfo(
             )
         }
 
-        Text(
-            text = totalBalance,
-            style = Theme.menlo.heading5,
-            color = appColor.neutral0,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (totalBalance != null) {
+            Text(
+                text = totalBalance,
+                style = Theme.menlo.heading5,
+                color = appColor.neutral0,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        } else {
+            UiPlaceholderLoader(
+                modifier = Modifier
+                    .width(48.dp)
+            )
+        }
 
         Text(
             text = address,
@@ -357,8 +365,8 @@ private fun ChainAccountInfo(
 @Composable
 private fun CoinItem(
     title: String,
-    balance: String,
-    fiatBalance: String,
+    balance: String?,
+    fiatBalance: String?,
     @DrawableRes tokenLogo: Int,
     @DrawableRes chainLogo: Int,
 ) {
@@ -409,22 +417,36 @@ private fun CoinItem(
 
             UiSpacer(size = 8.dp)
 
-            Text(
-                text = balance,
-                style = Theme.menlo.subtitle1,
-                color = appColor.neutral100,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (balance != null) {
+                Text(
+                    text = balance,
+                    style = Theme.menlo.subtitle1,
+                    color = appColor.neutral100,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            } else {
+                UiPlaceholderLoader(
+                    modifier = Modifier
+                        .width(48.dp)
+                )
+            }
         }
 
         UiSpacer(size = 12.dp)
 
-        Text(
-            text = fiatBalance,
-            style = Theme.menlo.subtitle1,
-            color = appColor.neutral100,
-        )
+        if (fiatBalance != null) {
+            Text(
+                text = fiatBalance,
+                style = Theme.menlo.subtitle1,
+                color = appColor.neutral100,
+            )
+        } else {
+            UiPlaceholderLoader(
+                modifier = Modifier
+                    .width(48.dp)
+            )
+        }
     }
 }
 

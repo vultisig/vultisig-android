@@ -90,12 +90,14 @@ internal class TokenSelectionViewModel @Inject constructor(
                     tokenRepository.getEnabledTokens(vaultId)
                         .map { enabled -> enabled.map { it.id }.toSet() }
                 ) { tokens, enabledTokens ->
-                    tokens.map { token ->
-                        TokenUiModel(
-                            isEnabled = token.id in enabledTokens,
-                            coin = token,
-                        )
-                    }
+                    tokens
+                        .sortedWith(compareBy({ it.ticker }, { it.priceProviderID }))
+                        .map { token ->
+                            TokenUiModel(
+                                isEnabled = token.id in enabledTokens,
+                                coin = token,
+                            )
+                        }
                 }.collect { tokens ->
                     uiState.update { it.copy(tokens = tokens) }
                 }
