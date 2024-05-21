@@ -17,7 +17,6 @@ import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.home.HomeScreen
 import com.vultisig.wallet.presenter.import_file.ImportFileScreen
-import com.vultisig.wallet.presenter.keygen.CreateNewVault
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
 import com.vultisig.wallet.presenter.keygen.Setup
@@ -46,6 +45,7 @@ import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultAccountsScreen
 import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -77,7 +77,7 @@ internal fun SetupNavGraph(
         }
 
         composable(route = Screen.CreateNewVault.route) {
-            CreateNewVault(navController)
+            AddVaultScreen(navController)
         }
         composable(route = Screen.JoinKeygen.route) { entry ->
             val vaultDB = VaultDB(context)

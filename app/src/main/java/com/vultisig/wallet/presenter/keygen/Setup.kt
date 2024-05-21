@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +32,9 @@ import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 fun Setup(navController: NavHostController) {
+    val uriHandler = LocalUriHandler.current
+    val helpLink = stringResource(R.string.link_docs_create_vault)
+
     val textColor = Theme.colors.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -45,7 +49,10 @@ fun Setup(navController: NavHostController) {
             centerText = stringResource(R.string.setup_title),
             startIcon = drawable.caret_left,
             endIcon = drawable.question,
-            navController = navController
+            navController = navController,
+            onEndIconClick = {
+                uriHandler.openUri(helpLink)
+            }
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
         val current = 2
