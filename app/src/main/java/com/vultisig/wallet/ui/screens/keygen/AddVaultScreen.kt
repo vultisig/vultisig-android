@@ -1,4 +1,4 @@
-package com.vultisig.wallet.presenter.keygen
+package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +35,25 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
-fun CreateNewVault(navController: NavHostController) {
+internal fun AddVaultScreen(
+    navController: NavHostController,
+) {
+    val uriHandler = LocalUriHandler.current
+    val link = stringResource(id = R.string.link_docs_create_vault)
+
+    AddVaultScreen(
+        navController = navController,
+        onOpenHelp = {
+            uriHandler.openUri(link)
+        }
+    )
+}
+
+@Composable
+private fun AddVaultScreen(
+    navController: NavHostController,
+    onOpenHelp: () -> Unit,
+) {
     val textColor = MaterialTheme.colorScheme.onBackground
     Box(
         modifier = Modifier
@@ -52,7 +71,8 @@ fun CreateNewVault(navController: NavHostController) {
                 navController = navController,
                 centerText = "",
                 startIcon = R.drawable.caret_left,
-                endIcon = R.drawable.question
+                endIcon = R.drawable.question,
+                onEndIconClick = onOpenHelp,
             )
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
             Image(
@@ -65,7 +85,8 @@ fun CreateNewVault(navController: NavHostController) {
             )
             Spacer(modifier = Modifier.height(40.dp))
             Text(
-                text = stringResource(R.string.create_new_vault_screen_secure_crypto_vault), color = textColor,
+                text = stringResource(R.string.create_new_vault_screen_secure_crypto_vault),
+                color = textColor,
                 style = Theme.montserrat.body3.copy(
                     letterSpacing = 2.sp, fontWeight = FontWeight.Bold
                 ),
@@ -123,5 +144,5 @@ fun CreateNewVault(navController: NavHostController) {
 @Composable
 fun CreateNewVaultPreview() {
     val navController = rememberNavController()
-    CreateNewVault(navController)
+    AddVaultScreen(navController)
 }
