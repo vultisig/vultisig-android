@@ -8,6 +8,8 @@ import com.vultisig.wallet.ui.components.reorderable.utils.ItemPosition
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -21,10 +23,12 @@ internal class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     var vaults = MutableStateFlow<List<Vault>> (emptyList())
+    private var reIndexJob: Job? = null
 
     init {
+        val allVaults = vaultDB.selectAll()
         vaults.update {
-            vaultDB.selectAll()
+            allVaults
         }
     }
 
@@ -35,10 +39,15 @@ internal class HomeViewModel @Inject constructor(
     }
 
     fun onMove(from: ItemPosition, to: ItemPosition) {
-        vaults.update {
-            it.toMutableList().apply {
-                add(to.index, removeAt(from.index))
-            }
+        val updatedPositionsList = vaults.value.toMutableList().apply {
+            add(to.index, removeAt(from.index))
+        }
+        vaults.update { updatedPositionsList }
+        reIndexJob?.cancel()
+        reIndexJob = viewModelScope.launch {
+            delay(500)
+            val indexedVaultList = vaultDB.updateVaultsFileIndex(updatedPositionsList)
+            vaults.update { indexedVaultList }
         }
     }
 
