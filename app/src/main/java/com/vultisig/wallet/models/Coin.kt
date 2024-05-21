@@ -335,7 +335,7 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "ethereum",
             contractAddress = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-            isNativeToken = true,
+            isNativeToken = false,
         ),
         Coin(
             chain = Chain.blast,
@@ -357,7 +357,7 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "ethereum",
             contractAddress = "0x4300000000000000000000000000000000000004",
-            isNativeToken = true,
+            isNativeToken = false,
         ),
         Coin(
             chain = Chain.cronosChain,
