@@ -5,7 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.vultisig.wallet.models.Vault
 
-class VaultDB(private val context: Context) {
+class VaultDB(context: Context) {
 
     private val gson = Gson()
     private val vaultsFolder = context.filesDir.resolve("vaults")
@@ -19,6 +19,7 @@ class VaultDB(private val context: Context) {
         val file = vaultsFolder.resolve("${vault.name}${FILE_POSTFIX}")
         file.writeText(gson.toJson(vault))
     }
+
 
     fun updateVaultName(oldVaultName: String, newVault: Vault) {
         val file = vaultsFolder.resolve("${newVault.name}${FILE_POSTFIX}")

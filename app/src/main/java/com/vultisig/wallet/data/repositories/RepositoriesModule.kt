@@ -98,6 +98,12 @@ internal interface RepositoriesModule {
         impl: LastOpenedVaultRepositoryImpl,
     ): LastOpenedVaultRepository
 
+    @Binds
+    @Singleton
+    fun bindVaultRepository(
+        impl: VaultRepositoryImpl,
+    ): VaultRepository
+
     companion object {
 
         @Provides
