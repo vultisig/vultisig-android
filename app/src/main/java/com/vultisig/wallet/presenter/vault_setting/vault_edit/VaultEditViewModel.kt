@@ -20,6 +20,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+internal data class VaultEditUiModel(
+    val name: String = ""
+)
+
 @HiltViewModel
 internal class VaultEditViewModel @Inject constructor(
     private val vaultDB: VaultDB,

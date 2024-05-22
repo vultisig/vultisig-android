@@ -30,7 +30,7 @@ import com.vultisig.wallet.presenter.settings.settings_main.SettingsScreen
 import com.vultisig.wallet.presenter.settings.vultisig_token_setting.VultisigTokenScreen
 import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
-import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditScreen
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TRANSACTION_ID
@@ -168,7 +168,7 @@ internal fun SetupNavGraph(
                 navArgument(Destination.VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
-            VaultEditScreen(navController)
+            VaultRenameScreen(navController)
         }
 
 
