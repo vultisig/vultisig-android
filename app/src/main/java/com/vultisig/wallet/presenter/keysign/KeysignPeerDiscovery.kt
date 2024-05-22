@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keysign
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,11 +19,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.asFlow
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
@@ -32,6 +28,7 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
+import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.NetworkPrompts
 import com.vultisig.wallet.ui.components.TopBar
@@ -162,16 +159,10 @@ internal fun KeysignPeerDiscovery(
 
             Spacer(modifier = Modifier.weight(1.0f))
 
-            Image(painter = painterResource(id = R.drawable.wifi), contentDescription = null)
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.marginSmall))
-            Text(
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.marginExtraLarge),
-                text = stringResource(R.string.keysign_peer_discovery_desc1),
-                color = textColor,
-                style = Theme.menlo.heading5.copy(
-                    textAlign = TextAlign.Center, fontSize = 13.sp
-                ),
+            DevicesOnSameNetworkHint(
+                title = stringResource(R.string.keysign_peer_discovery_desc1)
             )
+
             Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
         }
     }

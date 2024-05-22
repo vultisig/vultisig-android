@@ -1,21 +1,14 @@
 package com.vultisig.wallet.ui.screens.keysign
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -23,13 +16,13 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.presenter.keysign.KeysignViewModel
+import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun Keysign(
@@ -104,18 +97,8 @@ internal fun KeysignScreen(
 
             UiSpacer(weight = 1f)
 
-            Icon(
-                painter = painterResource(id = R.drawable.wifi),
-                contentDescription = null,
-                tint = Theme.colors.turquoise600Main
-            )
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-            Text(
-                modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
-                text = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
-                color = textColor,
-                style = Theme.menlo.body1,
-                textAlign = TextAlign.Center,
+            DevicesOnSameNetworkHint(
+                title =  stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open)
             )
 
             UiSpacer(size = 80.dp)
