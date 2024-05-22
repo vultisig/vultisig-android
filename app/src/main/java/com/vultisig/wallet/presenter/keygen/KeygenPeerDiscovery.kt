@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +49,9 @@ internal fun KeygenPeerDiscovery(
     vault: Vault,
     viewModel: KeygenFlowViewModel,
 ) {
+    val uriHandler = LocalUriHandler.current
+    val link = stringResource(id = R.string.link_docs_create_vault)
+
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
 
@@ -76,6 +80,9 @@ internal fun KeygenPeerDiscovery(
         participants = participants,
         keygenPayloadState = keygenPayloadState,
         networkPromptOption = networkPromptOption,
+        onOpenHelp = {
+            uriHandler.openUri(link)
+        },
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
@@ -94,6 +101,7 @@ internal fun KeygenPeerDiscoveryScreen(
     participants: List<String>,
     keygenPayloadState: String,
     networkPromptOption: NetworkPromptOption,
+    onOpenHelp: () -> Unit = {},
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
@@ -103,7 +111,9 @@ internal fun KeygenPeerDiscoveryScreen(
 
     UiBarContainer(
         navController = navController,
-        title = stringResource(R.string.keygen_peer_discovery_keygen)
+        title = stringResource(R.string.keygen_peer_discovery_keygen),
+        endIcon = R.drawable.question,
+        onEndIconClick = onOpenHelp,
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
