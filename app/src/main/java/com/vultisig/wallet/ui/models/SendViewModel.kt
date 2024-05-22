@@ -302,7 +302,10 @@ internal class SendViewModel @Inject constructor(
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
-            ).collect { account ->
+            ).catch {
+                // TODO handle error
+                Timber.e(it)
+            }.collect { account ->
                 selectedAddress.value = account
 
                 val tokenUiModels = account
