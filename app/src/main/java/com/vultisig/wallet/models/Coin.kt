@@ -206,6 +206,17 @@ object Coins {
             isNativeToken = false,
         ),
         Coin(
+            chain = Chain.ethereum,
+            ticker = "TGT",
+            logo = "tgt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "thorwallet",
+            contractAddress = "0x108a850856Db3f85d0269a2693D896B394C80325",
+            isNativeToken = false,
+        ),
+        Coin(
             chain = Chain.avalanche,
             ticker = "AVAX",
             logo = "eth",
@@ -291,6 +302,17 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "arbitrum",
             contractAddress = "0x912CE59144191C1204E64559FE8253a0e49E6548",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.arbitrum,
+            ticker = "TGT",
+            logo = "tgt",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "thorwallet",
+            contractAddress = "0x429fEd88f10285E61b12BDF00848315fbDfCC341",
             isNativeToken = false,
         ),
         Coin(
@@ -431,6 +453,7 @@ object Coins {
             "kuji" -> R.drawable.kuji
             "atom" -> R.drawable.atom
             "polygon" -> R.drawable.polygon
+            "tgt" -> R.drawable.tgt
             else -> R.drawable.danger
         }
     }
