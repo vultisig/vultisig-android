@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keygen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +34,7 @@ import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
+import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.NetworkPrompts
 import com.vultisig.wallet.ui.components.UiBarContainer
@@ -204,20 +203,8 @@ internal fun KeygenPeerDiscoveryScreen(
 
                 UiSpacer(size = 24.dp)
 
-                Image(
-                    painter = painterResource(id = R.drawable.wifi),
-                    contentDescription = null
-                )
-
-                UiSpacer(size = 4.dp)
-
-                Text(
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp),
-                    text = stringResource(R.string.keygen_peer_discovery_desc1),
-                    color = textColor,
-                    textAlign = TextAlign.Center,
-                    style = Theme.menlo.body1,
+                DevicesOnSameNetworkHint(
+                    title = stringResource(R.string.keygen_peer_discovery_desc1)
                 )
 
                 UiSpacer(size = 72.dp)
