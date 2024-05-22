@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,6 +57,7 @@ private fun VaultListScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Theme.colors.oxfordBlue800)
+            .clickable(enabled = false, onClick = {})
     ) {
 
         VerticalReorderList(
