@@ -134,8 +134,6 @@ internal fun QrAddressScreen(navController: NavHostController) {
                         modifier = Modifier.clip(MaterialTheme.shapes.medium),
                         painter = rememberQRBitmapPainter(
                             qrCodeContent = address,
-                            imageWidthInDp = imageSizeInDp,
-                            imageHeightInDp = imageSizeInDp
                         ),
                         contentScale = ContentScale.FillBounds,
                         contentDescription = "coin address",

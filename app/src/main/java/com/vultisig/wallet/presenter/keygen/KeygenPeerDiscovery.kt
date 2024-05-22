@@ -22,7 +22,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -101,8 +100,9 @@ internal fun KeygenPeerDiscovery(
         if (viewModel.keygenPayloadState.value.isNotEmpty()) {
             QRCodeKeyGenImage(
                 viewModel.keygenPayloadState.value,
-                (LocalConfiguration.current.screenWidthDp / 2).dp,
-                (LocalConfiguration.current.screenWidthDp / 2).dp
+                modifier = Modifier
+                    .padding(all = 32.dp)
+                    .fillMaxWidth(),
             )
         }
 
