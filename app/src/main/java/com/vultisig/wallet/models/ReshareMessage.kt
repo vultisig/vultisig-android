@@ -8,6 +8,5 @@ data class ReshareMessage(
     val oldParties: List<String>,
     val encryptionKeyHex: String,
     val useVultisigRelay: Boolean,
-) {
-
-}
+    val oldResharePrefix: String,
+)

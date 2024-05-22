@@ -38,6 +38,7 @@ class GeneratingKeyViewModel(
     private val serverAddress: String,
     private val sessionId: String,
     private val encryptionKeyHex: String,
+    private val oldResharePrefix: String,
     private val gson: Gson,
     private val vaultDB: VaultDB,
 ) {
@@ -102,7 +103,8 @@ class GeneratingKeyViewModel(
                     reshareRequest.pubKey = vault.pubKeyECDSA
                     reshareRequest.oldParties = oldCommittee.joinToString(",")
                     reshareRequest.newParties = keygenCommittee.joinToString(",")
-                    reshareRequest.resharePrefix = vault.resharePrefix
+                    reshareRequest.resharePrefix =
+                        vault.resharePrefix.ifEmpty { oldResharePrefix }
                     reshareRequest.chainCodeHex = vault.hexChainCode
                     val ecdsaResp = tssReshare(service, reshareRequest, TssKeyType.ECDSA)
                     vault.pubKeyECDSA = ecdsaResp.pubKey
