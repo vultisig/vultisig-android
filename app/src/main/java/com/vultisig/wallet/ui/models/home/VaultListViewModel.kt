@@ -1,21 +1,41 @@
 package com.vultisig.wallet.ui.models.home
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.vultisig.wallet.data.on_board.db.VaultDB
+import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.ui.components.reorderable.utils.ItemPosition
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 internal class VaultListViewModel @Inject constructor(
-    vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
-    val vaults: MutableLiveData<List<Vault>> = MutableLiveData(listOf())
+    val vaults = MutableStateFlow<List<Vault>>(emptyList())
+    private var reIndexJob: Job? = null
 
     init {
-        vaults.postValue(vaultDB.selectAll())
+        vaults.value = vaultRepository.getVaultsForHomeLocation()
     }
 
+    fun onMove(from: ItemPosition, to: ItemPosition) {
+        val updatedPositionsList = vaults.value.toMutableList().apply {
+            add(to.index, removeAt(from.index))
+        }
+        vaults.value =  updatedPositionsList
+        reIndexJob?.cancel()
+        reIndexJob = viewModelScope.launch {
+            delay(500)
+            val indexedVaultList =
+                vaultRepository.updateVaultOrderInHomeLocation(updatedPositionsList)
+            vaults.value = indexedVaultList
+        }
+    }
 }
