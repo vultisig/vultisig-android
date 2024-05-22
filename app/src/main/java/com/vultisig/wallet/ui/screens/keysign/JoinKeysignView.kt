@@ -124,7 +124,7 @@ internal fun JoinKeysignView(
                     txHash = keysignViewModel.txHash.collectAsState().value,
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
                     onComplete = {
-                        navController.navigate(Screen.VaultDetail.createRoute(viewModel.vaultId))
+                        navController.navigate(Screen.Home.route)
                     }
                 )
             }

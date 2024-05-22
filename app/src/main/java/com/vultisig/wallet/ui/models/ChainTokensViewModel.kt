@@ -21,8 +21,10 @@ import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_CHAIN
 import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -67,7 +69,10 @@ internal class ChainTokensViewModel @Inject constructor(
             accountsRepository.loadAddress(
                 vaultId = vaultId,
                 chain = chain,
-            ).collect { address ->
+            ).catch {
+                // TODO handle error
+                Timber.e(it)
+            }.collect { address ->
                 val totalFiatValue = address.accounts
                     .calculateAccountsTotalFiatValue()
 

@@ -58,7 +58,10 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(centerText = stringResource(R.string.generating_key_title), navController = navController)
+        TopBar(
+            centerText = stringResource(R.string.generating_key_title),
+            navController = navController
+        )
         Spacer(modifier = Modifier.weight(1f))
         when (viewModel.currentState.value) {
             KeygenState.CreatingInstance -> {
@@ -166,6 +169,7 @@ fun PreviewGeneratingKey() {
         serverAddress = "http://127.0.0.1:18080",
         sessionId = "123456",
         encryptionKeyHex = "",
+        oldResharePrefix = "",
         gson = Gson(),
         vaultDB = VaultDB(LocalContext.current)
     )

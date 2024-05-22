@@ -40,7 +40,7 @@ enum class KeygenFlowState {
 }
 
 @HiltViewModel
-class KeygenFlowViewModel @Inject constructor(
+internal class KeygenFlowViewModel @Inject constructor(
     private val vaultDB: VaultDB,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
@@ -53,6 +53,7 @@ class KeygenFlowViewModel @Inject constructor(
     private var vault: Vault = Vault("New Vault")
     private val _keygenPayload: MutableState<String> = mutableStateOf("")
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
+    private var _oldResharePrefix: String = ""
 
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
@@ -76,8 +77,9 @@ class KeygenFlowViewModel @Inject constructor(
             serverAddress,
             sessionID,
             _encryptionKeyHex,
+            _oldResharePrefix,
             gson,
-            vaultDB
+            vaultDB,
         )
 
     suspend fun setData(action: TssAction, vault: Vault, context: Context) {
@@ -97,6 +99,7 @@ class KeygenFlowViewModel @Inject constructor(
             this.vault.localPartyID = Utils.deviceName
         }
         this.selection.value = listOf(this.vault.localPartyID)
+        _oldResharePrefix = this.vault.resharePrefix
         updateKeygenPayload(context)
     }
 
@@ -130,7 +133,8 @@ class KeygenFlowViewModel @Inject constructor(
                             pubKeyECDSA = vault.pubKeyECDSA,
                             oldParties = vault.signers,
                             encryptionKeyHex = this._encryptionKeyHex,
-                            useVultisigRelay = vultisigRelay.IsRelayEnabled
+                            useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                            oldResharePrefix = vault.resharePrefix,
                         )
                     ).toJson(gson)
             }

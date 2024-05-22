@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components.reorderable
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -19,12 +20,14 @@ import com.vultisig.wallet.ui.components.reorderable.utils.reorderable
 internal fun <T : Any> VerticalReorderList(
     modifier: Modifier = Modifier,
     data: List<T>,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     onMove: (from: ItemPosition, to: ItemPosition) -> Unit,
     content: @Composable (item: T) -> Unit
 ) {
     val state = rememberReorderableLazyListState(onMove = onMove)
     LazyColumn(
         state = state.listState,
+        contentPadding = contentPadding,
         modifier = modifier
             .reorderable(state)
             .detectReorderAfterLongPress(state)

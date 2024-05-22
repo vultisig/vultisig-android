@@ -16,5 +16,9 @@ data class Vault(
     var resharePrefix: String = "",
     var keyshares: List<KeyShare> = listOf(),
     val coins: List<Coin> = emptyList(),
-    val fileIndex: Int = 0,
-) : Parcelable
+) : Parcelable {
+
+    val id: String
+        get() = name
+
+}

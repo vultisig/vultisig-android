@@ -54,6 +54,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _nsdManager: NsdManager? = null
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _keygenCommittee: List<String> = emptyList()
+    private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
 
     private var isScanStarted = false
@@ -71,7 +72,8 @@ internal class JoinKeygenViewModel @Inject constructor(
             _sessionID,
             _encryptionKeyHex,
             gson = gson,
-            vaultDB = vaultDB
+            vaultDB = vaultDB,
+            oldResharePrefix = _oldResharePrefix
         )
 
     fun setData(vault: Vault) {
@@ -81,6 +83,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         }
         _localPartyID = _vault.localPartyID
     }
+
     fun startScan() {
         if (isScanStarted) return
         isScanStarted = true
@@ -117,6 +120,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                     this._useVultisigRelay = payload.reshareMessage.useVultisigRelay
                     this._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
                     this._oldCommittee = payload.reshareMessage.oldParties
+                    this._oldResharePrefix = payload.reshareMessage.oldResharePrefix
                     // trying to find out whether the device already have a vault with the same public key
                     // if the device has a vault with the same public key , then automatically switch to it
                     vaultDB.selectAll().forEach() {
@@ -130,7 +134,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         _vault.hexChainCode = payload.reshareMessage.hexChainCode
                     } else {
                         if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
-                            errorMessage.value =  "Wrong vault"
+                            errorMessage.value = "Wrong vault"
                             currentState.value = JoinKeygenState.FailedToStart
                         }
                     }
