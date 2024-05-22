@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -143,10 +144,14 @@ fun SettingsScreen(navController: NavHostController) {
 
             UiSpacer(size = 48.dp)
 
-            Text(text = stringResource(R.string.vultisig_app_version, "1.23")
-                , style = Theme.menlo.titleSmall,
-                color = Theme.colors.turquoise600Main
-                )
+            Text(
+                text = stringResource(
+                    R.string.vultisig_app_version,
+                    "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+                ),
+                style = Theme.menlo.body2,
+                color = Theme.colors.turquoise600Main,
+            )
             UiSpacer(size = 24.dp)
         }
 
