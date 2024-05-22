@@ -37,9 +37,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditEvent.OnNameChange
@@ -49,24 +51,45 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun VaultEditScreen(navHostController: NavHostController) {
-    val viewmodel = hiltViewModel<VaultEditViewModel>()
-    val uiModel by viewmodel.uiModel.collectAsState()
+internal fun VaultRenameScreen(
+    navController: NavHostController,
+    viewModel: VaultEditViewModel = hiltViewModel()
+) {
+    val uiModel by viewModel.uiModel.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
-        viewmodel.loadData()
-        viewmodel.channelFlow.collect { event ->
+        viewModel.loadData()
+        viewModel.channelFlow.collect { event ->
             when (event) {
-                is ShowSnackBar -> snackBarHostState.showSnackbar(event.message.asString(context))
+                is ShowSnackBar ->
+                    snackBarHostState.showSnackbar(event.message.asString(context))
             }
         }
     }
 
+    VaultRenameScreen(
+        navHostController = navController,
+        uiModel = uiModel,
+        snackBarHostState = snackBarHostState,
+        onSave = { viewModel.onEvent(OnSave) },
+        onChangeName = { newName ->
+            viewModel.onEvent(OnNameChange(newName))
+        }
+    )
+}
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@Composable
+private fun VaultRenameScreen(
+    navHostController: NavHostController,
+    uiModel: VaultEditUiModel,
+    snackBarHostState: SnackbarHostState,
+    onSave: () -> Unit = {},
+    onChangeName: (name: String) -> Unit = {},
+) {
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
@@ -90,10 +113,9 @@ fun VaultEditScreen(navHostController: NavHostController) {
                             end = dimens.marginMedium,
                             bottom = dimens.marginMedium,
                         ),
-                    text = stringResource(id = R.string.save)
-                ) {
-                    viewmodel.onEvent(OnSave)
-                }
+                    text = stringResource(id = R.string.save),
+                    onClick = onSave,
+                )
             }
         },
         topBar = {
@@ -129,39 +151,54 @@ fun VaultEditScreen(navHostController: NavHostController) {
             )
         },
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(it)
                 .background(Theme.colors.oxfordBlue800),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(
-                text = stringResource(id = R.string.vault_settings_rename_title),
-                color = Theme.colors.neutral100,
-                style = Theme.montserrat.body2,
-            )
-
-            Card(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Theme.colors.oxfordBlue600Main
-                ),
+                    .fillMaxSize()
+                    .padding(
+                        horizontal = 12.dp,
+                        vertical = 16.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                Text(
+                    text = stringResource(id = R.string.vault_settings_rename_title),
+                    color = Theme.colors.neutral100,
+                    style = Theme.montserrat.body2,
+                )
 
-                BasicTextField2(
-                    value = uiModel.name,
-                    onValueChange = { newName ->
-                        viewmodel.onEvent(OnNameChange(newName))
-                    },
+                Card(
                     modifier = Modifier
-                        .padding(12.dp)
-                        .imePadding(),
-                    textStyle = Theme.montserrat.body2.copy(color = Theme.colors.neutral100),
+                        .fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Theme.colors.oxfordBlue600Main
+                    ),
+                ) {
+                    BasicTextField2(
+                        value = uiModel.name,
+                        onValueChange = onChangeName,
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .imePadding(),
+                        textStyle = Theme.montserrat.body2.copy(color = Theme.colors.neutral100),
                     )
+                }
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun RenameScreenPreview() {
+    VaultRenameScreen(
+        navHostController = rememberNavController(),
+        uiModel = VaultEditUiModel(name = "Vault 1"),
+        snackBarHostState = SnackbarHostState(),
+    )
 }
