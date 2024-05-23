@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.common.encodeToHex
+import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapper
 import com.vultisig.wallet.data.on_board.db.OrderDB
 import com.vultisig.wallet.data.on_board.db.VaultDB.Companion.FILE_POSTFIX
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -29,6 +31,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal open class VaultSettingsViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
+    private val vaultAndroidToIOSMapper: VaultAndroidToIOSMapper,
     private val orderDB: OrderDB,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
@@ -111,7 +114,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
                     vault.pubKeyECDSA.takeLast(4)
                 }-${vault.localPartyID}.dat"
 
-            val vaultJson = gson.toJson(vault)
+            val vaultJson = gson.toJson(vaultAndroidToIOSMapper(vault)).encodeToHex()
             channel.send(BackupFile(vaultJson, fileName))
         }
     }

@@ -11,6 +11,7 @@ data class IOSVaultRoot(
 
 @Parcelize
 data class IOSVault(
+    val id: String?,
     val coins: List<Coin>?,
     val localPartyID: String,
     val pubKeyECDSA: String,
