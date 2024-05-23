@@ -60,6 +60,7 @@ internal fun VaultCeil(
 private fun VaultCeilPreview() {
     VaultCeil(
         vault = Vault(
+            id = "",
             name = "Vault 1",
         ),
         onSelectVault = {}

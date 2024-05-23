@@ -9,7 +9,7 @@ import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
-import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
@@ -30,7 +30,7 @@ enum class KeygenState {
     CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
 }
 
-class GeneratingKeyViewModel(
+internal class GeneratingKeyViewModel(
     private val vault: Vault,
     private val action: TssAction,
     private val keygenCommittee: List<String>,
@@ -40,7 +40,7 @@ class GeneratingKeyViewModel(
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
     private val gson: Gson,
-    private val vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -183,7 +183,7 @@ class GeneratingKeyViewModel(
         }
     }
 
-    fun saveVault() {
+    suspend fun saveVault() {
         // save the vault
         val coins: MutableList<Coin> = mutableListOf()
         defaultChains.forEach { chain ->
@@ -225,7 +225,9 @@ class GeneratingKeyViewModel(
                 }
             }
         }
-        vaultDB.upsert(this.vault.copy(coins = coins))
+
+        vaultRepository.upsert(this@GeneratingKeyViewModel.vault.copy(coins = coins))
+
         Timber.d("saveVault: success,name:${vault.name}")
     }
 

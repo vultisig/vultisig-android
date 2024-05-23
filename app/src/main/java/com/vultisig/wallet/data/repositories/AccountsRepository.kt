@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.mappers.ChainAndTokens
 import com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.flow.Flow
@@ -26,15 +25,16 @@ internal interface AccountsRepository {
 }
 
 internal class AccountsRepositoryImpl @Inject constructor(
-    private val vaultDb: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val balanceRepository: BalanceRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val chainAndTokensToAddressMapper: ChainAndTokensToAddressMapper,
 ) : AccountsRepository {
 
-    private fun getVault(vaultId: String): Vault = checkNotNull(vaultDb.select(vaultId)) {
-        "No vault with id $vaultId"
-    }
+    private suspend fun getVault(vaultId: String): Vault =
+        checkNotNull(vaultRepository.get(vaultId)) {
+            "No vault with id $vaultId"
+        }
 
     override fun loadAddresses(vaultId: String): Flow<List<Address>> = flow {
         val vault = getVault(vaultId)

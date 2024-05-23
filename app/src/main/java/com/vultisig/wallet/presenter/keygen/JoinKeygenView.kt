@@ -26,7 +26,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -34,14 +33,13 @@ import com.vultisig.wallet.ui.theme.dimens
 @Composable
 internal fun JoinKeygenView(
     navController: NavHostController,
-    vault: Vault,
     qrCodeResult: String?,
     viewModel: JoinKeygenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
 
     LaunchedEffect(key1 = viewModel) {
-        viewModel.setData(vault)
+        viewModel.setData()
     }
     LaunchedEffect(qrCodeResult) {
         if (qrCodeResult != null) {

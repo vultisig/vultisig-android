@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -82,7 +81,6 @@ internal class SendViewModel @Inject constructor(
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
 
-    private val vaultDb: VaultDB,
     private val accountsRepository: AccountsRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -246,10 +244,6 @@ internal class SendViewModel @Inject constructor(
                         )
                     }
                 }
-
-                val vault = vaultDb.select(vaultId) ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_token)
-                )
 
                 val srcAddress = selectedToken.address
 

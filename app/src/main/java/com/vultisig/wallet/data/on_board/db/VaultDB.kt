@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.vultisig.wallet.models.Vault
 
+@Deprecated("Use VaultRepository instead")
 class VaultDB(context: Context) {
 
     private val gson = Gson()
@@ -13,38 +14,6 @@ class VaultDB(context: Context) {
     init {
         // Ensure the vaults folder exists
         vaultsFolder.mkdirs()
-    }
-
-    fun upsert(vault: Vault) {
-        val file = vaultsFolder.resolve("${vault.name}${FILE_POSTFIX}")
-        file.writeText(gson.toJson(vault))
-    }
-
-
-    fun updateVaultName(oldVaultName: String, newVault: Vault) {
-        val file = vaultsFolder.resolve("${newVault.name}${FILE_POSTFIX}")
-        file.writeText(gson.toJson(newVault))
-        if (file.exists() && file.length() > 0) {
-            delete(oldVaultName)
-        }
-    }
-
-    // Delete operation
-    fun delete(vaultName: String) {
-        val file = vaultsFolder.resolve("${vaultName}${FILE_POSTFIX}")
-        if (file.exists()) {
-            file.delete()
-        }
-    }
-
-    // Select operation
-    fun select(vaultName: String): Vault? {
-        val file = vaultsFolder.resolve("${vaultName}${FILE_POSTFIX}")
-        return if (file.exists()) {
-            gson.fromJson(file.readText(), Vault::class.java)
-        } else {
-            null
-        }
     }
 
     fun selectAll(): List<Vault> {
@@ -66,7 +35,7 @@ class VaultDB(context: Context) {
         return allVaults
     }
 
-    companion object{
+    companion object {
         const val FILE_POSTFIX = "-vault.dat"
     }
 }

@@ -3,11 +3,12 @@ package com.vultisig.wallet.ui.screens.vault_settings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.on_board.db.OrderDB
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.on_board.db.VaultDB.Companion.FILE_POSTFIX
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -17,7 +18,7 @@ import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.Backup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,13 +28,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal open class VaultSettingsViewModel @Inject constructor(
-    private val vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val orderDB: OrderDB,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val gson: Gson,
 ) : ViewModel() {
 
-    private val _uiModel = MutableStateFlow(
+    private val vault = MutableStateFlow<Vault?>(null)
+
+    val uiModel = MutableStateFlow(
         VaultSettingsState(
             cautionsBeforeDelete = listOf(
                 R.string.vault_settings_delete_vault_caution1,
@@ -42,27 +46,38 @@ internal open class VaultSettingsViewModel @Inject constructor(
             )
         )
     )
-    val uiModel = _uiModel.asStateFlow()
 
     private val vaultId: String =
         savedStateHandle.get<String>(Destination.VaultSettings.ARG_VAULT_ID)!!
-    val vault: Vault? = vaultDB.select(vaultId)
+
+    init {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId)
+                ?: return@launch
+
+            this@VaultSettingsViewModel.vault.value = vault
+
+            uiModel.update {
+                it.copy(id = vault.id)
+            }
+        }
+    }
 
     private val channel = Channel<VaultSettingsUiEvent>()
     val channelFlow = channel.receiveAsFlow()
 
 
     fun dismissConfirmDeleteDialog() {
-        _uiModel.update {
+        uiModel.update {
             it.copy(showDeleteConfirmScreen = false)
         }
     }
 
     fun changeCheckCaution(index: Int, checked: Boolean) {
-        val checkedCautionIndexes = _uiModel.value.checkedCautionIndexes.toMutableList()
+        val checkedCautionIndexes = uiModel.value.checkedCautionIndexes.toMutableList()
         if (checked) checkedCautionIndexes.add(index)
         else checkedCautionIndexes.remove(index)
-        _uiModel.update {
+        uiModel.update {
             it.copy(
                 checkedCautionIndexes = checkedCautionIndexes,
                 isDeleteButtonEnabled = checkedCautionIndexes.size == it.cautionsBeforeDelete.size
@@ -86,30 +101,33 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     fun backupVault() {
         viewModelScope.launch {
-            vault?.let {
-                val thresholds = Utils.getThreshold(it.signers.count())
-                val date = Date()
-                val format = SimpleDateFormat("yyyy-MM")
-                val formattedDate = format.format(date)
-                val fileName =
-                    "vultisig-${it.name}-$formattedDate-${thresholds + 1}of${it.signers.count()}-${
-                        it.pubKeyECDSA.takeLast(4)
-                    }-${it.localPartyID}.dat"
-                channel.send(BackupFile(it.name, fileName))
-            }
+            val vault = vault.firstOrNull() ?: return@launch
+            val thresholds = Utils.getThreshold(vault.signers.count())
+            val date = Date()
+            val format = SimpleDateFormat("yyyy-MM")
+            val formattedDate = format.format(date)
+            val fileName =
+                "vultisig-${vault.name}-$formattedDate-${thresholds + 1}of${vault.signers.count()}-${
+                    vault.pubKeyECDSA.takeLast(4)
+                }-${vault.localPartyID}.dat"
+
+            val vaultJson = gson.toJson(vault)
+            channel.send(BackupFile(vaultJson, fileName))
         }
     }
 
     fun showConfirmDeleteDialog() {
-        _uiModel.update {
+        uiModel.update {
             it.copy(showDeleteConfirmScreen = true, checkedCautionIndexes = emptyList())
         }
     }
 
     fun delete() {
         viewModelScope.launch {
-            vaultDB.delete(vaultId)
-            orderDB.removeOrder(vault?.name?:"")
+            val vault = vault.firstOrNull() ?: return@launch
+
+            vaultRepository.delete(vaultId)
+            orderDB.removeOrder(vault.name)
             navigator.navigate(Destination.Home)
         }
     }

@@ -3,11 +3,10 @@ package com.vultisig.wallet.ui.models
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +27,7 @@ internal data class ChainUiModel(
 @HiltViewModel
 internal class ChainSelectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val vaultDb: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
@@ -42,51 +41,45 @@ internal class ChainSelectionViewModel @Inject constructor(
         loadChains()
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun enableAccount(coin: Coin) {
         viewModelScope.launch {
-            commitVault(checkNotNull(vaultDb.select(vaultId)) {
-                "No vault with $vaultId"
-            }.let { vault ->
-                val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-                    coin,
-                    vault
-                )
-                vault.copy(
-                    coins = vault.coins + coin.copy(
-                        address = address,
-                        hexPublicKey = derivedPublicKey
-                    )
-                )
-            })
+            val vault = vaultRepository.get(vaultId)
+                ?: error("No vault with $vaultId")
+
+            val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+                coin,
+                vault
+            )
+            val updatedCoin = coin.copy(
+                address = address,
+                hexPublicKey = derivedPublicKey
+            )
+
+            vaultRepository.addTokenToVault(vaultId, updatedCoin)
+
+            loadChains()
         }
     }
 
     fun disableAccount(coin: Coin) {
-        commitVault(checkNotNull(vaultDb.select(vaultId)) {
-            "No vault with $vaultId"
-        }.let { vault ->
-            vault.copy(coins = vault.coins.filter { it.chain != coin.chain })
-        })
-    }
-
-    private fun commitVault(vault: Vault) {
-        vaultDb.upsert(vault)
-        loadChains()
+        viewModelScope.launch {
+            vaultRepository.deleteChainFromVault(vaultId, coin.chain)
+            loadChains()
+        }
     }
 
     private fun loadChains() {
         viewModelScope.launch {
             tokenRepository.nativeTokens
-                .zip(tokenRepository.getEnabledChains(vaultId)) { native, enabledChains ->
+                .zip(vaultRepository.getEnabledChains(vaultId)) { native, enabledChains ->
                     native
                         .sortedWith(compareBy({ it.ticker }, { it.chain.raw }))
                         .map { nativeToken ->
-                        ChainUiModel(
-                            isEnabled = nativeToken.chain in enabledChains,
-                            coin = nativeToken,
-                        )
-                    }
+                            ChainUiModel(
+                                isEnabled = nativeToken.chain in enabledChains,
+                                coin = nativeToken,
+                            )
+                        }
                 }.collect { chains ->
                     uiState.update { it.copy(chains = chains) }
                 }

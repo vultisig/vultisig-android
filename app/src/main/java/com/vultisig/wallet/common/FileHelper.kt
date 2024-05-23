@@ -8,14 +8,9 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
 import androidx.annotation.RequiresApi
-import com.vultisig.wallet.data.on_board.db.VaultDB
-import java.net.URL
 
 @RequiresApi(Build.VERSION_CODES.Q)
-fun Context.backupVaultToDownloadsDir(vaultName: String, backupFileName: String): Boolean {
-
-    val targetFile = filesDir.resolve("vaults").resolve(vaultName + VaultDB.FILE_POSTFIX)
-
+fun Context.backupVaultToDownloadsDir(json: String, backupFileName: String): Boolean {
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, backupFileName)
         put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
@@ -27,15 +22,16 @@ fun Context.backupVaultToDownloadsDir(vaultName: String, backupFileName: String)
     val downloadUri: Uri =
         resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
 
-    URL("file://" + targetFile.absolutePath).openStream().use { input ->
-        try {
-            resolver.openOutputStream(downloadUri).use { output ->
-                input.copyTo(output!!, DEFAULT_BUFFER_SIZE)
-                return true
-            }
-        } catch (e: Exception) {
-            return false
+    try {
+        resolver.openOutputStream(downloadUri).use { output ->
+            json.byteInputStream()
+                .use {
+                    it.copyTo(output!!, DEFAULT_BUFFER_SIZE)
+                }
+            return true
         }
+    } catch (e: Exception) {
+        return false
     }
 }
 

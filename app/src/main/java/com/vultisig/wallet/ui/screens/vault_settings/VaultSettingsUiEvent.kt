@@ -5,6 +5,6 @@ sealed class VaultSettingsUiEvent {
         VaultSettingsUiEvent()
 
     data object BackupFailed : VaultSettingsUiEvent()
-    data class BackupFile(val vaultName: String, val backupFileName: String) :
+    data class BackupFile(val json: String, val backupFileName: String) :
         VaultSettingsUiEvent()
 }

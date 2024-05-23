@@ -4,6 +4,7 @@ plugins {
     kotlin("kapt")
     alias(libs.plugins.daggerHiltAndroid)
     id("org.jetbrains.kotlin.plugin.parcelize")
+    alias(libs.plugins.ksp)
 }
 android {
     namespace = "com.vultisig.wallet"
@@ -78,6 +79,11 @@ dependencies {
     implementation(libs.androidx.material3.window)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // camera
     implementation(libs.androidx.camera.camera2)

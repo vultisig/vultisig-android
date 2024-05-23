@@ -65,7 +65,7 @@ internal fun VaultSettingsScreen(
 
                 is BackupFile ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        val isSuccess = context.backupVaultToDownloadsDir(event.vaultName, event.backupFileName)
+                        val isSuccess = context.backupVaultToDownloadsDir(event.json, event.backupFileName)
                         if (isSuccess)
                             viewModel.successBackup(event.backupFileName)
                         else
@@ -103,7 +103,7 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_details_subtitle),
                     icon = android.R.drawable.ic_menu_info_details,
                 ) {
-                    viewModel.vault?.name?.let { vaultName ->
+                    uiModel.id.let { vaultName ->
                         navController.navigate(Destination.Details(vaultName).route)
                     }
                 }
@@ -119,7 +119,7 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_rename_subtitle),
                     icon = R.drawable.pencil
                 ) {
-                    viewModel.vault?.name?.let { vaultName ->
+                    uiModel.id.let { vaultName ->
                         navController.navigate(Destination.Rename(vaultName).route)
                     }
                 }
@@ -131,7 +131,7 @@ internal fun VaultSettingsScreen(
                 ) {
                     navController.navigate(
                         Screen.KeygenFlow.createRoute(
-                            viewModel.vault?.name ?: ""
+                            uiModel.id,
                         )
                     )
                 }

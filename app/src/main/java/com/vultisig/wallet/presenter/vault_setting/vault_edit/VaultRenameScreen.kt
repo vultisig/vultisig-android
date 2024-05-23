@@ -54,7 +54,7 @@ import com.vultisig.wallet.ui.theme.dimens
 @Composable
 internal fun VaultRenameScreen(
     navController: NavHostController,
-    viewModel: VaultEditViewModel = hiltViewModel()
+    viewModel: VaultRenameViewModel = hiltViewModel()
 ) {
     val uiModel by viewModel.uiModel.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }

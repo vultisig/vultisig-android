@@ -100,8 +100,14 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindVaultLocationsRepository(
+        impl: VaultLocationsRepositoryImpl,
+    ): VaultLocationsRepository
+
+    @Binds
+    @Singleton
     fun bindVaultRepository(
-        impl: VaultRepositoryImpl,
+        impl: VaultRepositoryImpl
     ): VaultRepository
 
     companion object {

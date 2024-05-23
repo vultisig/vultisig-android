@@ -12,7 +12,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
@@ -29,6 +29,7 @@ import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.Inet4Address
 import java.net.URL
+import java.util.UUID
 import javax.inject.Inject
 
 enum class JoinKeygenState {
@@ -38,10 +39,10 @@ enum class JoinKeygenState {
 @HiltViewModel
 internal class JoinKeygenViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
-    private val vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val gson: Gson,
 ) : ViewModel() {
-    private var _vault: Vault = Vault("new vault")
+    private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "new vault")
     private var _localPartyID: String = ""
     private var _action: TssAction = TssAction.KEYGEN
     private var _sessionID: String = ""
@@ -72,16 +73,23 @@ internal class JoinKeygenViewModel @Inject constructor(
             _sessionID,
             _encryptionKeyHex,
             gson = gson,
-            vaultDB = vaultDB,
+            vaultRepository = vaultRepository,
             oldResharePrefix = _oldResharePrefix
         )
 
-    fun setData(vault: Vault) {
-        _vault = vault
-        if (_vault.localPartyID.isEmpty()) {
-            _vault.localPartyID = Utils.deviceName
+    fun setData() {
+        viewModelScope.launch {
+            val allSize = vaultRepository.getAll().size
+            _vault = Vault(
+                id = UUID.randomUUID().toString(),
+                "New Vault ${allSize + 1}"
+            )
+
+            if (_vault.localPartyID.isEmpty()) {
+                _vault.localPartyID = Utils.deviceName
+            }
+            _localPartyID = _vault.localPartyID
         }
-        _localPartyID = _vault.localPartyID
     }
 
     fun startScan() {
@@ -94,62 +102,64 @@ internal class JoinKeygenViewModel @Inject constructor(
     }
 
     fun setScanResult(content: String) {
-        try {
-            val qrCodeContent = DeepLinkHelper(content).getJsonData()
-            qrCodeContent ?: run {
-                throw Exception("invalid QR code")
-            }
-            when (val payload = PeerDiscoveryPayload.fromJson(gson, qrCodeContent)) {
-                is PeerDiscoveryPayload.Keygen -> {
-                    this._action = TssAction.KEYGEN
-                    this._sessionID = payload.keygenMessage.sessionID
-                    this._hexChainCode = payload.keygenMessage.hexChainCode
-                    this._vault.hexChainCode = this._hexChainCode
-                    this._serviceName = payload.keygenMessage.serviceName
-                    this._useVultisigRelay = payload.keygenMessage.useVultisigRelay
-                    this._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
-                    _vault.name = payload.keygenMessage.vaultName
+        viewModelScope.launch {
+            try {
+                val qrCodeContent = DeepLinkHelper(content).getJsonData()
+                qrCodeContent ?: run {
+                    throw Exception("invalid QR code")
                 }
+                when (val payload = PeerDiscoveryPayload.fromJson(gson, qrCodeContent)) {
+                    is PeerDiscoveryPayload.Keygen -> {
+                        this@JoinKeygenViewModel._action = TssAction.KEYGEN
+                        this@JoinKeygenViewModel._sessionID = payload.keygenMessage.sessionID
+                        this@JoinKeygenViewModel._hexChainCode = payload.keygenMessage.hexChainCode
+                        this@JoinKeygenViewModel._vault.hexChainCode = this@JoinKeygenViewModel._hexChainCode
+                        this@JoinKeygenViewModel._serviceName = payload.keygenMessage.serviceName
+                        this@JoinKeygenViewModel._useVultisigRelay = payload.keygenMessage.useVultisigRelay
+                        this@JoinKeygenViewModel._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
+                        _vault.name = payload.keygenMessage.vaultName
+                    }
 
-                is PeerDiscoveryPayload.Reshare -> {
-                    this._action = TssAction.ReShare
-                    this._sessionID = payload.reshareMessage.sessionID
-                    this._hexChainCode = payload.reshareMessage.hexChainCode
-                    this._vault.hexChainCode = this._hexChainCode
-                    this._serviceName = payload.reshareMessage.serviceName
-                    this._useVultisigRelay = payload.reshareMessage.useVultisigRelay
-                    this._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
-                    this._oldCommittee = payload.reshareMessage.oldParties
-                    this._oldResharePrefix = payload.reshareMessage.oldResharePrefix
-                    // trying to find out whether the device already have a vault with the same public key
-                    // if the device has a vault with the same public key , then automatically switch to it
-                    vaultDB.selectAll().forEach() {
-                        if (it.pubKeyECDSA == payload.reshareMessage.pubKeyECDSA) {
-                            _vault = it
-                            _localPartyID = it.localPartyID
-                            return@forEach
+                    is PeerDiscoveryPayload.Reshare -> {
+                        this@JoinKeygenViewModel._action = TssAction.ReShare
+                        this@JoinKeygenViewModel._sessionID = payload.reshareMessage.sessionID
+                        this@JoinKeygenViewModel._hexChainCode = payload.reshareMessage.hexChainCode
+                        this@JoinKeygenViewModel._vault.hexChainCode = this@JoinKeygenViewModel._hexChainCode
+                        this@JoinKeygenViewModel._serviceName = payload.reshareMessage.serviceName
+                        this@JoinKeygenViewModel._useVultisigRelay = payload.reshareMessage.useVultisigRelay
+                        this@JoinKeygenViewModel._encryptionKeyHex = payload.reshareMessage.encryptionKeyHex
+                        this@JoinKeygenViewModel._oldCommittee = payload.reshareMessage.oldParties
+                        this@JoinKeygenViewModel._oldResharePrefix = payload.reshareMessage.oldResharePrefix
+                        // trying to find out whether the device already have a vault with the same public key
+                        // if the device has a vault with the same public key , then automatically switch to it
+                        vaultRepository.getAll().forEach {
+                            if (it.pubKeyECDSA == payload.reshareMessage.pubKeyECDSA) {
+                                _vault = it
+                                _localPartyID = it.localPartyID
+                                return@forEach
+                            }
                         }
-                    }
-                    if (_vault.pubKeyECDSA.isEmpty()) {
-                        _vault.hexChainCode = payload.reshareMessage.hexChainCode
-                    } else {
-                        if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
-                            errorMessage.value = "Wrong vault"
-                            currentState.value = JoinKeygenState.FailedToStart
+                        if (_vault.pubKeyECDSA.isEmpty()) {
+                            _vault.hexChainCode = payload.reshareMessage.hexChainCode
+                        } else {
+                            if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
+                                errorMessage.value = "Wrong vault"
+                                currentState.value = JoinKeygenState.FailedToStart
+                            }
                         }
                     }
                 }
+                if (_useVultisigRelay) {
+                    this@JoinKeygenViewModel._serverAddress = Endpoints.VULTISIG_RELAY
+                    currentState.value = JoinKeygenState.JoinKeygen
+                } else {
+                    currentState.value = JoinKeygenState.DiscoverService
+                }
+            } catch (e: Exception) {
+                Timber.d("Failed to parse QR code, error: $e")
+                errorMessage.value = "Failed to parse QR code"
+                currentState.value = JoinKeygenState.FailedToStart
             }
-            if (_useVultisigRelay) {
-                this._serverAddress = Endpoints.VULTISIG_RELAY
-                currentState.value = JoinKeygenState.JoinKeygen
-            } else {
-                currentState.value = JoinKeygenState.DiscoverService
-            }
-        } catch (e: Exception) {
-            Timber.d("Failed to parse QR code, error: $e")
-            errorMessage.value = "Failed to parse QR code"
-            currentState.value = JoinKeygenState.FailedToStart
         }
     }
 

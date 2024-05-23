@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
-import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
@@ -16,16 +16,14 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
-    private val vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val gson: Gson,
     private val navigator: Navigator<Destination>,
     @ApplicationContext private val context: Context
@@ -45,9 +43,7 @@ internal class ImportFileViewModel @Inject constructor(
             return
         val fromJson = gson.fromJson(fileContent, Vault::class.java)
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                vaultDB.upsert(fromJson)
-            }
+            vaultRepository.add(fromJson)
             navigator.navigate(Destination.Home)
         }
     }
