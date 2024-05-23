@@ -92,22 +92,9 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     suspend fun setData(vaultId: String, context: Context) {
         // start mediator server
-        val allVaults = vaultRepository.getAll()
 
-        val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
-            var newVaultName = ""
-            var idx = 1
-            while (true) {
-                newVaultName = "New vault ${allVaults.size + idx}"
-                if (allVaults.find { it.name == newVaultName } == null) {
-                    break
-                }
-                idx++
-            }
-            Vault(id = UUID.randomUUID().toString(), newVaultName)
-        } else {
-            vaultRepository.get(vaultId)
-        }!!
+        val vault =
+            vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
 
         val action = if (vault.pubKeyECDSA.isEmpty())
             TssAction.KEYGEN

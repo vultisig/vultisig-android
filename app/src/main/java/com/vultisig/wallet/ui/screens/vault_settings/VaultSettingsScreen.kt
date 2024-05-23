@@ -130,9 +130,9 @@ internal fun VaultSettingsScreen(
                     icon = R.drawable.share
                 ) {
                     navController.navigate(
-                        Screen.KeygenFlow.createRoute(
+                        Destination.KeygenFlow(
                             uiModel.id,
-                        )
+                        ).route
                     )
                 }
 

@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -89,14 +90,14 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Screen.KeygenFlow.route,
-            arguments = listOf(navArgument(Screen.KeygenFlow.ARG_VAULT_NAME) {
+            route = Destination.KeygenFlow.STATIC_ROUTE,
+            arguments = listOf(navArgument(Destination.KeygenFlow.ARG_VAULT_NAME) {
                 type = NavType.StringType
-                defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
+                defaultValue = Destination.KeygenFlow.DEFAULT_NEW_VAULT
             })
         ) { navBackStackEntry ->
             val vaultId =
-                navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
+                navBackStackEntry.arguments?.getString(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
 
             KeygenFlowView(navController, vaultId)
         }
@@ -255,6 +256,12 @@ internal fun SetupNavGraph(
             route = Destination.QrAddressScreen.STATIC_ROUTE,
         ) {
             QrAddressScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.NamingVault.route,
+        ) {
+            NamingVaultScreen(navController = navController)
         }
     }
 }
