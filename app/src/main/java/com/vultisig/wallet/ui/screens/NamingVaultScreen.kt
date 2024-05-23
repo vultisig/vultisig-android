@@ -21,11 +21,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,13 +51,23 @@ internal fun NamingVaultScreen(
 ) {
     val viewModel = hiltViewModel<NamingVaultViewModel>()
     val uiModel by viewModel.uiModel.collectAsState()
+    val snackBarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(key1 = Unit) {
+        viewModel.snackBarChannel.collect { message ->
+            message?.let {
+                snackBarHostState.showSnackbar(message)
+            }
+        }
+    }
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackBarHostState) },
         bottomBar = {
             MultiColorButton(
+                disabled = uiModel.isContinueDisabled,
                 minHeight = dimens.minHeightButton,
                 backgroundColor = appColor.turquoise800,
                 textColor = appColor.oxfordBlue800,

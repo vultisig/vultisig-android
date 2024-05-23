@@ -21,7 +21,7 @@ import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.ReshareMessage
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -93,22 +93,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     suspend fun setData(vaultId: String, context: Context) {
         // start mediator server
 
-        val allVaults = vaultRepository.getAll()
-
-        val vault = if (vaultId == Destination.KeygenFlow.DEFAULT_NEW_VAULT) {
-            var newVaultName = ""
-            var idx = 1
-            while (true) {
-                newVaultName = "New vault ${allVaults.size + idx}"
-                if (allVaults.find { it.name == newVaultName } == null) {
-                    break
-                }
-                idx++
-            }
-            Vault(id = UUID.randomUUID().toString(), newVaultName)
-        } else {
+        val vault =
             vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
-        }
 
         val action = if (vault.pubKeyECDSA.isEmpty())
             TssAction.KEYGEN
