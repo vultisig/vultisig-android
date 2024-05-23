@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.models.KeyShare
 import com.vultisig.wallet.models.Vault
-import java.util.UUID
+import java.util.Date
 import javax.inject.Inject
 
 interface VaultIOSToAndroidMapper : MapperFunc<IOSVaultRoot, Vault>
@@ -14,10 +14,10 @@ internal class VaultIOSToAndroidMapperImpl @Inject constructor(private val gson:
     override fun invoke(from: IOSVaultRoot): Vault {
         val vault = from.vault
         return Vault(
-            id = vault.id ?: UUID.randomUUID().toString(),
             name = vault.name,
             pubKeyECDSA = vault.pubKeyECDSA,
             pubKeyEDDSA = vault.pubKeyEdDSA,
+            createdAt = Date(),
             hexChainCode = vault.hexChainCode,
             localPartyID = vault.localPartyID,
             signers = vault.signers,

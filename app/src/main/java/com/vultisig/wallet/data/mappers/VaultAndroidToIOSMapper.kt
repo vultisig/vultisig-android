@@ -13,7 +13,6 @@ internal class VaultAndroidToIOSMapperImpl @Inject constructor() : VaultAndroidT
     override fun invoke(from: Vault): IOSVaultRoot = IOSVaultRoot(
         version = "v1",
         vault = IOSVault(
-            id = from.id,
             coins = from.coins,
             localPartyID = from.localPartyID,
             pubKeyECDSA = from.pubKeyECDSA,

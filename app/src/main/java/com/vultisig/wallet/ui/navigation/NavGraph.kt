@@ -4,13 +4,17 @@ import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
+import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.import_file.ImportFileScreen
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
@@ -75,6 +79,7 @@ internal fun SetupNavGraph(
             AddVaultScreen(navController)
         }
         composable(route = Screen.JoinKeygen.route) { entry ->
+
             val savedStateHandle = entry.savedStateHandle
             val qrCodeResult = savedStateHandle.get<String>(ARG_QR_CODE)
 
@@ -94,11 +99,8 @@ internal fun SetupNavGraph(
                 type = NavType.StringType
                 defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
             })
-        ) { navBackStackEntry ->
-            val vaultId =
-                navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
-
-            KeygenFlowView(navController, vaultId)
+        ) {
+            KeygenFlowView(navController)
         }
 
         composable(route = Screen.SigningError.route) {

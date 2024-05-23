@@ -6,11 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.decodeFromHex
-import com.vultisig.wallet.common.decodeFromHex
 import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.models.IOSVaultRoot
@@ -21,14 +18,16 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
-    private val vaultRepository: VaultRepository,
+    private val vaultDB: VaultDB,
     private val vaultIOSToAndroidMapper: VaultIOSToAndroidMapper,
     private val gson: Gson,
     private val navigator: Navigator<Destination>,
@@ -48,11 +47,14 @@ internal class ImportFileViewModel @Inject constructor(
         if (fileContent == null)
             return
         viewModelScope.launch {
-            val fromJson = gson.fromJson(fileContent.decodeFromHex(), IOSVaultRoot::class.java)
-            vaultRepository.add(vaultIOSToAndroidMapper(fromJson))
+            withContext(Dispatchers.IO) {
+                val fromJson = gson.fromJson(fileContent.decodeFromHex(), IOSVaultRoot::class.java)
+                vaultDB.upsert(vaultIOSToAndroidMapper(fromJson))
+            }
             navigator.navigate(Destination.Home)
         }
     }
+
 
 
     private fun removeSelectedFile() {
