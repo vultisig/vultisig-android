@@ -10,12 +10,11 @@ import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
 import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.models.Vault
 
-class VaultDB(
-    context: Context,
-    private val toIOSMapper: VaultAndroidToIOSMapper,
-    private val toAndroidMapper: VaultIOSToAndroidMapper
+@Deprecated("Use VaultRepository instead")
+class VaultDB(context: Context,
+              private val toIOSMapper: VaultAndroidToIOSMapper,
+              private val toAndroidMapper: VaultIOSToAndroidMapper
 ) {
-
 
     private val gson = Gson()
     private val vaultsFolder = context.filesDir.resolve("vaults")
@@ -25,37 +24,11 @@ class VaultDB(
         vaultsFolder.mkdirs()
     }
 
-    fun upsert(vault: Vault) {
-        val file = vaultsFolder.resolve("${vault.name}${FILE_POSTFIX}")
-        val jsonIOSVault = gson.toJson(toIOSMapper(vault))
-        file.writeText(jsonIOSVault.encodeToHex())
-    }
-
-
-    fun updateVaultName(oldVaultName: String, newVault: Vault) {
-        val file = vaultsFolder.resolve("${newVault.name}${FILE_POSTFIX}")
-        file.writeText(gson.toJson(toIOSMapper(newVault)).encodeToHex())
-        if (file.exists() && file.length() > 0) {
-            delete(oldVaultName)
-        }
-    }
-
     // Delete operation
     fun delete(vaultName: String) {
         val file = vaultsFolder.resolve("${vaultName}${FILE_POSTFIX}")
         if (file.exists()) {
             file.delete()
-        }
-    }
-
-    // Select operation
-    fun select(vaultName: String): Vault? {
-        val file = vaultsFolder.resolve("${vaultName}${FILE_POSTFIX}")
-        return if (file.exists()) {
-            val iosVaultRoot = gson.fromJson(file.readText().decodeFromHex(), IOSVaultRoot::class.java)
-            toAndroidMapper(iosVaultRoot)
-        } else {
-            null
         }
     }
 
@@ -78,7 +51,7 @@ class VaultDB(
         return allVaults
     }
 
-    companion object{
+    companion object {
         const val FILE_POSTFIX = "-vault.dat"
     }
 }

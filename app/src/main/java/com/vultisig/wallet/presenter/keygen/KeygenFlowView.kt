@@ -8,11 +8,11 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 
 @Composable
-fun KeygenFlowView(navController: NavHostController) {
+fun KeygenFlowView(navController: NavHostController, vaultId: String) {
     val viewModel: KeygenFlowViewModel = hiltViewModel()
     when (viewModel.currentState.value) {
         KeygenFlowState.PEER_DISCOVERY -> {
-            KeygenPeerDiscovery(navController, viewModel)
+            KeygenPeerDiscovery(navController, vaultId, viewModel)
         }
 
         KeygenFlowState.DEVICE_CONFIRMATION -> {

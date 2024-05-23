@@ -30,8 +30,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.models.TssAction
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
@@ -45,6 +43,7 @@ import com.vultisig.wallet.ui.theme.dimens
 @Composable
 internal fun KeygenPeerDiscovery(
     navController: NavHostController,
+    vaultId: String,
     viewModel: KeygenFlowViewModel,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -59,12 +58,7 @@ internal fun KeygenPeerDiscovery(
 
     val context = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
-        viewModel.initVault()
-        val action = if (viewModel.initVault?.pubKeyECDSA?.isEmpty() == true)
-            TssAction.KEYGEN
-        else
-            TssAction.ReShare
-        viewModel.setData(action)
+        viewModel.setData(vaultId, context)
     }
     DisposableEffect(Unit) {
         onDispose {

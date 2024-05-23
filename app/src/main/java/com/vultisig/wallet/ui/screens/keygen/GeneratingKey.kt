@@ -28,8 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapperImpl
 import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapperImpl
@@ -43,7 +41,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
-fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyViewModel) {
+internal fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyViewModel) {
     KeepScreenOn()
     val context: Context = LocalContext.current.applicationContext
     LaunchedEffect(key1 = Unit) {
@@ -157,25 +155,6 @@ fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyView
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
     }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF121212)
-@Composable
-fun PreviewGeneratingKey() {
-    val navController = rememberNavController()
-    val viewModelForReview = GeneratingKeyViewModel(
-        vault = Vault("new Vault"),
-        action = TssAction.KEYGEN,
-        keygenCommittee = listOf(""),
-        oldCommittee = listOf(""),
-        serverAddress = "http://127.0.0.1:18080",
-        sessionId = "123456",
-        encryptionKeyHex = "",
-        oldResharePrefix = "",
-        gson = Gson(),
-        vaultDB = VaultDB(LocalContext.current,VaultAndroidToIOSMapperImpl(),VaultIOSToAndroidMapperImpl(Gson()))
-    )
-    GeneratingKey(navController, viewModelForReview)
 }
 
 @Composable
