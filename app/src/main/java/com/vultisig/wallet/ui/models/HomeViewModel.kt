@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,14 +24,26 @@ internal data class HomeUiModel(
 internal class HomeViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 
-    private val vaultDb: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
+
+    private val vaultDB: VaultDB,
+
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(HomeUiModel())
 
     init {
         collectLastOpenedVault()
+
+        // TODO MIGRATION FROM JSON, REMOVE AFTER EVERYONE MIGRATES VAULTS
+        viewModelScope.launch {
+            val vaults = vaultDB.selectAll()
+
+            vaults.forEach {
+                vaultRepository.add(it)
+            }
+        }
     }
 
     fun openSettings() {
@@ -65,8 +78,8 @@ internal class HomeViewModel @Inject constructor(
             lastOpenedVaultRepository.lastOpenedVaultId
                 .map { lastOpenedVaultId ->
                     lastOpenedVaultId?.let {
-                        vaultDb.select(lastOpenedVaultId)
-                    } ?: vaultDb.selectAll().firstOrNull()
+                        vaultRepository.get(it)
+                    } ?: vaultRepository.getAll().firstOrNull()
                 }.collect { vault ->
                     if (vault != null) {
                         uiState.update {

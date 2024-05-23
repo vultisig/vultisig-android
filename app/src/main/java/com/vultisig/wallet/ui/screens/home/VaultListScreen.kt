@@ -101,12 +101,15 @@ private fun VaultListScreenPreview() {
         navController = navController,
         vaults = listOf(
             Vault(
+                id = "",
                 name = "Vault 1",
             ),
             Vault(
+                id = "",
                 name = "Vault 2",
             ),
             Vault(
+                id = "",
                 name = "Vault 3",
             ),
         ),

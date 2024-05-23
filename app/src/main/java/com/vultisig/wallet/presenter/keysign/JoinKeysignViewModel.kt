@@ -19,11 +19,11 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
@@ -69,7 +69,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val gasFeeRepository: GasFeeRepository,
 
-    private val vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
@@ -80,7 +80,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
-    private var _currentVault: Vault = Vault("temp vault")
+    private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveryingSessionID)
     var errorMessage: MutableState<String> = mutableStateOf("")
@@ -122,9 +122,11 @@ internal class JoinKeysignViewModel @Inject constructor(
     val transactionUiModel = MutableStateFlow(VerifyTransactionUiModel())
 
     fun setData() {
-        vaultDB.select(vaultId)?.let {
-            _currentVault = it
-            _localPartyID = it.localPartyID
+        viewModelScope.launch {
+            vaultRepository.get(vaultId)?.let {
+                _currentVault = it
+                _localPartyID = it.localPartyID
+            }
         }
     }
 

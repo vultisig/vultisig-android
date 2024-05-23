@@ -44,7 +44,7 @@ internal fun VaultAccountsScreen(
 ) {
     val state = viewModel.uiState.collectAsState().value
 
-    LaunchedEffect(key1 = viewModel) {
+    LaunchedEffect(vaultId) {
         viewModel.loadData(vaultId)
     }
 
@@ -59,7 +59,7 @@ internal fun VaultAccountsScreen(
         onAccountClick = {
             val route = Screen.ChainCoin.createRoute(
                 chainRaw = it.chainName,
-                vaultId = viewModel.vault?.name ?: "",
+                vaultId = viewModel.vault?.id ?: "",
             )
             navHostController.navigate(route)
         },

@@ -12,13 +12,14 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
-import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.KeygenMessage
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.ReshareMessage
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +42,7 @@ enum class KeygenFlowState {
 
 @HiltViewModel
 internal class KeygenFlowViewModel @Inject constructor(
-    private val vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
 ) : ViewModel() {
@@ -50,7 +51,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private var serverAddress: String = "http://127.0.0.1:18080" // local mediator server
     private var participantDiscovery: ParticipantDiscovery? = null
     private var action: TssAction = TssAction.KEYGEN
-    private var vault: Vault = Vault("New Vault")
+    private var vault: Vault = Vault(id = UUID.randomUUID().toString(),"New Vault")
     private val _keygenPayload: MutableState<String> = mutableStateOf("")
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _oldResharePrefix: String = ""
@@ -79,10 +80,33 @@ internal class KeygenFlowViewModel @Inject constructor(
             _encryptionKeyHex,
             _oldResharePrefix,
             gson,
-            vaultDB,
+            vaultRepository = vaultRepository,
         )
 
-    suspend fun setData(action: TssAction, vault: Vault, context: Context) {
+    suspend fun setData(vaultId: String, context: Context) {
+        // start mediator server
+        val allVaults = vaultRepository.getAll()
+
+        val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
+            var newVaultName = ""
+            var idx = 1
+            while (true) {
+                newVaultName = "New vault ${allVaults.size + idx}"
+                if (allVaults.find { it.name == newVaultName } == null) {
+                    break
+                }
+                idx++
+            }
+            Vault(id = UUID.randomUUID().toString(), newVaultName)
+        } else {
+            vaultRepository.get(vaultId)
+        }!!
+
+        val action = if (vault.pubKeyECDSA.isEmpty())
+            TssAction.KEYGEN
+        else
+            TssAction.ReShare
+
         if (vultisigRelay.IsRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY
             networkOption.value = NetworkPromptOption.CELLULAR

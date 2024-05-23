@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,13 +15,13 @@ internal interface LastOpenedVaultRepository {
 }
 
 internal class LastOpenedVaultRepositoryImpl @Inject constructor(
-    private val vaultDb: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val dataStore: AppDataStore,
 ) : LastOpenedVaultRepository {
 
     override val lastOpenedVaultId: Flow<String?> = dataStore
         .readData(LastOpenedVaultId)
-        .map { it ?: vaultDb.selectAll().firstOrNull()?.id }
+        .map { it ?: vaultRepository.getAll().firstOrNull()?.id }
 
     override suspend fun setLastOpenedVaultId(vaultId: String) {
         dataStore.set(LastOpenedVaultId, vaultId)

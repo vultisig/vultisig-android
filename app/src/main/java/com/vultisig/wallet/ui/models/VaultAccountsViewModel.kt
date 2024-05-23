@@ -8,8 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -41,10 +41,11 @@ internal data class AccountUiModel(
 
 @HiltViewModel
 internal class VaultAccountsViewModel @Inject constructor(
-    private val vaultDb: VaultDB,
-    private val accountsRepository: AccountsRepository,
     private val addressToUiModelMapper: AddressToUiModelMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+
+    private val vaultRepository: VaultRepository,
+    private val accountsRepository: AccountsRepository,
 ) : ViewModel() {
     var vault: Vault? by mutableStateOf(null)
 
@@ -66,7 +67,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private fun loadVaultName(vaultId: String) {
         viewModelScope.launch {
-            val vault = requireNotNull(vaultDb.select(vaultId))
+            val vault = requireNotNull(vaultRepository.get(vaultId))
             this@VaultAccountsViewModel.vault = vault
             uiState.update { it.copy(vaultName = vault.name) }
         }

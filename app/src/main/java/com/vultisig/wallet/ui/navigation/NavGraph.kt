@@ -4,17 +4,13 @@ import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.data.on_board.db.VaultDB
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.import_file.ImportFileScreen
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
@@ -79,15 +75,11 @@ internal fun SetupNavGraph(
             AddVaultScreen(navController)
         }
         composable(route = Screen.JoinKeygen.route) { entry ->
-            val vaultDB = VaultDB(context)
-            val allVaults = vaultDB.selectAll()
-
             val savedStateHandle = entry.savedStateHandle
             val qrCodeResult = savedStateHandle.get<String>(ARG_QR_CODE)
 
             JoinKeygenView(
                 navController = navController,
-                vault = Vault(stringResource(R.string.join_keygen_view_new_vault, allVaults.size + 1)),
                 qrCodeResult = qrCodeResult,
             )
         }
@@ -103,27 +95,10 @@ internal fun SetupNavGraph(
                 defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
             })
         ) { navBackStackEntry ->
-            val vaultDB = VaultDB(context)
-            val allVaults = vaultDB.selectAll()
             val vaultId =
                 navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
 
-            val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
-                var newVaultName = ""
-                var idx = 1
-                while (true) {
-                    newVaultName = stringResource(R.string.join_keygen_view_new_vault, allVaults.size + idx)
-                    if (allVaults.find { it.name == newVaultName } == null) {
-                        break
-                    }
-                    idx++
-                }
-                Vault(newVaultName)
-            } else {
-                vaultDB.select(vaultId)
-            }
-
-            KeygenFlowView(navController, vault!!)
+            KeygenFlowView(navController, vaultId)
         }
 
         composable(route = Screen.SigningError.route) {

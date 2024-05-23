@@ -20,7 +20,7 @@ data class Coin(
     val isNativeToken: Boolean,
 ) : Parcelable {
     val id: String
-        get() = ticker
+        get() = "${ticker}-${chain.id}"
 
     val coinType: CoinType
         get() = chain.coinType

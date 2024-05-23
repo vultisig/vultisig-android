@@ -22,13 +22,13 @@ class MainActivity : ComponentActivity() {
     val context: Context = this
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        installSplashScreen().setKeepOnScreenCondition {
-            !mainViewModel.isLoading.value
-        }
+        installSplashScreen()
+            .setKeepOnScreenCondition {
+                mainViewModel.isLoading.value
+            }
 
         setContent {
             OnBoardingComposeTheme {
-                mainViewModel.setData(context)
                 val screen by mainViewModel.startDestination
 
                 val navController = rememberNavController()

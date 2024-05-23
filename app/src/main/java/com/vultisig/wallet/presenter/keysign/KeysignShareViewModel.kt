@@ -2,8 +2,8 @@ package com.vultisig.wallet.presenter.keysign
 
 import androidx.lifecycle.ViewModel
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class KeysignShareViewModel @Inject constructor(
-    private val vaultDB: VaultDB,
+    private val vaultRepository: VaultRepository,
     private val transactionRepository: TransactionRepository,
 ) : ViewModel() {
     var vault: Vault? = null
@@ -23,7 +23,7 @@ internal class KeysignShareViewModel @Inject constructor(
             val transaction = transactionRepository.getTransaction(transactionId)
                 .first()
 
-            val vault = vaultDB.select(transaction.vaultId)!!
+            val vault = vaultRepository.get(transaction.vaultId)!!
 
             val pubKeyECDSA = vault.pubKeyECDSA
             val coin =

@@ -6,14 +6,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.models.Vault
 
 @Composable
-fun KeygenFlowView(navController: NavHostController, vault: Vault) {
+fun KeygenFlowView(navController: NavHostController, vaultId: String) {
     val viewModel: KeygenFlowViewModel = hiltViewModel()
     when (viewModel.currentState.value) {
         KeygenFlowState.PEER_DISCOVERY -> {
-            KeygenPeerDiscovery(navController, vault, viewModel)
+            KeygenPeerDiscovery(navController, vaultId, viewModel)
         }
 
         KeygenFlowState.DEVICE_CONFIRMATION -> {
