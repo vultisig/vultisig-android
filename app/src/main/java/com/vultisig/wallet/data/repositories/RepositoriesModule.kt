@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
 import android.content.Context
+import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapper
+import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
 import com.vultisig.wallet.data.on_board.db.VaultDB
 import dagger.Binds
 import dagger.Module
@@ -116,7 +118,9 @@ internal interface RepositoriesModule {
         @Singleton
         fun provideVaultDb(
             @ApplicationContext context: Context,
-        ) = VaultDB(context)
+            vaultAndroidToIOSMapper: VaultAndroidToIOSMapper,
+            vaultIOSToAndroidMapper: VaultIOSToAndroidMapper
+        ) = VaultDB(context,vaultAndroidToIOSMapper,vaultIOSToAndroidMapper)
 
     }
 

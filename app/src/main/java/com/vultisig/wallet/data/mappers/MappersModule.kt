@@ -14,4 +14,14 @@ internal interface MappersModule {
         impl: ChainAndTokensToAddressMapperImpl
     ): ChainAndTokensToAddressMapper
 
+    @Binds
+    fun bindVaultIOSToAndroidMapper(
+        impl: VaultIOSToAndroidMapperImpl
+    ): VaultIOSToAndroidMapper
+
+    @Binds
+    fun bindVaultAndroidToIOSMapper(
+        impl: VaultAndroidToIOSMapperImpl
+    ): VaultAndroidToIOSMapper
+
 }
