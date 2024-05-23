@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +34,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
@@ -46,116 +45,153 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.RemoveSelectedFile
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiBarContainer
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
-fun ImportFileScreen(navController: NavHostController) {
-
-    val viewmodel = hiltViewModel<ImportFileViewModel>()
-    val uiModel by viewmodel.uiModel.collectAsState()
-    val appColor = Theme.colors
-    val menloFamily = Theme.menlo
-    val montserratFamily = Theme.montserrat
+internal fun ImportFileScreen(
+    navController: NavHostController,
+    viewModel: ImportFileViewModel = hiltViewModel(),
+) {
+    val uiModel by viewModel.uiModel.collectAsState()
 
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            viewmodel.onEvent(FileSelected(uri))
+            viewModel.onEvent(FileSelected(uri))
         }
 
+    ImportFileScreen(
+        navController = navController,
+        uiModel = uiModel,
+        onImportFile = {
+            launcher.launch("*/*")
+        },
+        onRemoveSelectedFile = {
+            viewModel.onEvent(RemoveSelectedFile)
+        },
+        onContinue = {
+            viewModel.onEvent(OnContinueClick)
+        }
+    )
+}
 
-    Column(
-        horizontalAlignment = CenterHorizontally,
-        modifier = Modifier
-            .background(appColor.oxfordBlue800)
-            .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginExtraLarge
-            )
+@Composable
+private fun ImportFileScreen(
+    navController: NavHostController,
+    uiModel: ImportFileState,
+    onImportFile: () -> Unit = {},
+    onRemoveSelectedFile: () -> Unit = {},
+    onContinue: () -> Unit = {},
+) {
+    val appColor = Theme.colors
+    val menloFamily = Theme.menlo
+
+    UiBarContainer(
+        navController = navController,
+        title = stringResource(R.string.import_file_screen_title),
     ) {
-        TopBar(centerText = stringResource(R.string.import_file_screen_title), navController = navController)
-        Spacer(modifier = Modifier.height(48.dp))
-        Text(
-            text = stringResource(R.string.import_file_screen_enter_your_previously_created_vault_share),
-            color = appColor.neutral0,
-            style = menloFamily.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp)
-            .clip(RoundedCornerShape(MaterialTheme.dimens.small2))
-            .background(
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-            )
-            .clickable {
-                launcher.launch("application/octet-stream")
-            }
-            .drawBehind {
-                drawRoundRect(
-                    color = Color("#33e6bf".toColorInt()), style = Stroke(
-                        width = 8f,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(40f, 20f), 0f)
-                    ), cornerRadius = CornerRadius(16.dp.toPx())
-                )
-            }
-
+        Column(
+            horizontalAlignment = CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 12.dp,
+                ),
         ) {
-            Column(Modifier.align(Center), horizontalAlignment = CenterHorizontally) {
-                Image(
-                    painterResource(id = R.drawable.file), contentDescription = "file"
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
-                Text(
-                    text = stringResource(R.string.import_file_screen_upload_file_text_or_image),
-                    color = appColor.neutral0,
-                    style = menloFamily.body3
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
-        if (uiModel.fileName != null)
-            Row(verticalAlignment = CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.file),
-                    contentDescription = "file icon",
-                    modifier = Modifier.width(MaterialTheme.dimens.medium1)
-                )
-                Spacer(modifier = Modifier.width(MaterialTheme.dimens.small1))
-                Text(
-                    text = uiModel.fileName!!,
-                    color = appColor.neutral0,
-                    style = menloFamily.bodyMedium,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp)
-                )
-                IconButton(onClick = {
-                    viewmodel.onEvent(RemoveSelectedFile)
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.x),
-                        contentDescription = "X",
-                        tint = appColor.neutral0
+            UiSpacer(size = 48.dp)
+
+            Text(
+                text = stringResource(R.string.import_file_screen_enter_your_previously_created_vault_share),
+                textAlign = TextAlign.Center,
+                color = appColor.neutral0,
+                style = menloFamily.body2
+            )
+
+            UiSpacer(size = 16.dp)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Theme.colors.turquoise600Main.copy(alpha = 0.2f)
+                    )
+                    .clickable(onClick = onImportFile)
+                    .drawBehind {
+                        drawRoundRect(
+                            color = Color("#33e6bf".toColorInt()), style = Stroke(
+                                width = 8f,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(40f, 20f), 0f)
+                            ), cornerRadius = CornerRadius(16.dp.toPx())
+                        )
+                    }
+            ) {
+                Column(
+                    horizontalAlignment = CenterHorizontally,
+                    modifier = Modifier.align(Center),
+                ) {
+                    Image(
+                        painterResource(id = R.drawable.file),
+                        contentDescription = "file"
+                    )
+
+                    UiSpacer(size = 24.dp)
+
+                    Text(
+                        text = stringResource(R.string.import_file_screen_upload_file_text_or_image),
+                        color = appColor.neutral0,
+                        style = menloFamily.body3,
+                        textAlign = TextAlign.Center,
                     )
                 }
 
             }
-        Spacer(modifier = Modifier.weight(1.0F))
-        Button(
-            onClick = {
-                viewmodel.onEvent(OnContinueClick)
-            },
-            enabled = uiModel.fileName != null,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors()
-                .copy(disabledContainerColor = MaterialTheme.colorScheme.surfaceDim),
-        ) {
-            Text(
-                text = stringResource(R.string.import_file_screen_continue),
-                color = MaterialTheme.colorScheme.onPrimary,
-                style = montserratFamily.titleMedium,
+            UiSpacer(size = 16.dp)
+
+            if (uiModel.fileName != null) {
+                Row(verticalAlignment = CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.file),
+                        contentDescription = "file icon",
+                        modifier = Modifier.width(MaterialTheme.dimens.medium1)
+                    )
+                    Spacer(modifier = Modifier.width(MaterialTheme.dimens.small1))
+                    Text(
+                        text = uiModel.fileName,
+                        color = appColor.neutral0,
+                        style = menloFamily.body2,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp)
+                    )
+                    IconButton(onClick = onRemoveSelectedFile) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.x),
+                            contentDescription = "X",
+                            tint = appColor.neutral0
+                        )
+                    }
+
+                }
+            }
+
+            UiSpacer(weight = 1f)
+
+            MultiColorButton(
+                text = stringResource(R.string.send_continue_button),
+                textColor = Theme.colors.oxfordBlue800,
+                disabled = uiModel.fileName == null,
+                minHeight = 44.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = 16.dp,
+                    ),
+                onClick = onContinue,
             )
         }
     }
@@ -163,8 +199,10 @@ fun ImportFileScreen(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun ImportFilePreview() {
+private fun ImportFilePreview() {
     val navController = rememberNavController()
-    ImportFileScreen(navController)
-
+    ImportFileScreen(
+        navController = navController,
+        uiModel = ImportFileState(),
+    )
 }
