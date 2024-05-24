@@ -182,4 +182,5 @@
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>
     <string name="s_of_s_vault">%s of %s vault</string>
+    <string name="scan_qr_screen_return_vault">Return Vault</string>
 </resources>
