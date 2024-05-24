@@ -14,6 +14,7 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -51,6 +52,9 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     val uiState = MutableStateFlow(VaultAccountsUiModel())
 
+    private var loadVaultNameJob: Job? = null
+    private var loadAccountsJob: Job? = null
+
     fun loadData(vaultId: String) {
         loadVaultName(vaultId)
         loadAccounts(vaultId)
@@ -66,7 +70,8 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     private fun loadVaultName(vaultId: String) {
-        viewModelScope.launch {
+        loadVaultNameJob?.cancel()
+        loadVaultNameJob = viewModelScope.launch {
             val vault = requireNotNull(vaultRepository.get(vaultId))
             this@VaultAccountsViewModel.vault = vault
             uiState.update { it.copy(vaultName = vault.name) }
@@ -74,7 +79,8 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     private fun loadAccounts(vaultId: String) {
-        viewModelScope.launch {
+        loadAccountsJob?.cancel()
+        loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId)
                 .catch {
