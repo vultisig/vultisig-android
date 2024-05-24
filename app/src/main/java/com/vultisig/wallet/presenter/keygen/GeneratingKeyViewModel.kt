@@ -9,6 +9,7 @@ import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
+import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
@@ -20,6 +21,7 @@ import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
@@ -41,6 +43,7 @@ internal class GeneratingKeyViewModel(
     private val oldResharePrefix: String,
     private val gson: Gson,
     private val vaultRepository: VaultRepository,
+    private val defaultChainsRepository: DefaultChainsRepository,
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -49,9 +52,6 @@ internal class GeneratingKeyViewModel(
     val currentState: MutableState<KeygenState> = mutableStateOf(KeygenState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
-
-    private val defaultChains =
-        listOf(Chain.thorChain, Chain.bitcoin, Chain.bscChain, Chain.ethereum, Chain.solana)
 
     suspend fun generateKey() {
         currentState.value = KeygenState.CreatingInstance
@@ -186,7 +186,7 @@ internal class GeneratingKeyViewModel(
     suspend fun saveVault() {
         // save the vault
         val coins: MutableList<Coin> = mutableListOf()
-        defaultChains.forEach { chain ->
+        defaultChainsRepository.selectedDefaultChains.first().forEach { chain ->
             when (chain) {
                 Chain.thorChain -> {
                     THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()?.let { coin ->
