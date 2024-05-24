@@ -12,6 +12,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.KeygenMessage
@@ -43,6 +44,7 @@ enum class KeygenFlowState {
 @HiltViewModel
 internal class KeygenFlowViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
+    private val defaultChainsRepository: DefaultChainsRepository,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
 ) : ViewModel() {
@@ -81,6 +83,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             _oldResharePrefix,
             gson,
             vaultRepository = vaultRepository,
+            defaultChainsRepository = defaultChainsRepository,
         )
 
     suspend fun setData(vaultId: String, context: Context) {
