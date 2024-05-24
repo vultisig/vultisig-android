@@ -326,6 +326,7 @@ object Coins {
             contractAddress = "0x429fEd88f10285E61b12BDF00848315fbDfCC341",
             isNativeToken = false,
         ),
+        Coin(
             chain = Chain.arbitrum,
             ticker = "FOX",
             logo = "fox",
