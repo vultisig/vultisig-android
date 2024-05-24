@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,7 +62,6 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 import timber.log.Timber
 
 internal const val ARG_QR_CODE = "qr_code"
@@ -98,23 +98,22 @@ internal fun ScanQrScreen(
     }
     val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
-    val dimens = MaterialTheme.dimens
 
     Scaffold(
         bottomBar = {
             if (cameraPermissionState.status.isGranted.not())
                 MultiColorButton(
-                    minHeight = dimens.minHeightButton,
+                    minHeight = 44.dp,
                     backgroundColor = appColor.turquoise800,
                     textColor = appColor.oxfordBlue800,
                     iconColor = appColor.turquoise800,
-                    textStyle = Theme.montserrat.titleLarge,
+                    textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            start = dimens.marginMedium,
-                            end = dimens.marginMedium,
-                            bottom = dimens.marginMedium,
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp,
                         ),
                     text = stringResource(id = R.string.scan_qr_screen_return_vault),
                     onClick = { navController.popBackStack(Screen.Setup.route,false) },
@@ -131,8 +130,8 @@ internal fun ScanQrScreen(
                         color = textColor,
                         modifier = Modifier
                             .padding(
-                                start = dimens.marginMedium,
-                                end = dimens.marginMedium,
+                                start = 16.dp,
+                                end = 16.dp,
                             )
                             .wrapContentHeight(align = Alignment.CenterVertically)
                     )
@@ -165,7 +164,12 @@ internal fun ScanQrScreen(
                 QrCameraScreen(
                     onSuccess = onSuccess,
                 )
-            } else if (cameraPermissionState.status.shouldShowRationale) {
+            } else if (cameraPermissionState.status.shouldShowRationale ||
+                cameraPermissionState.status.isGranted.not()
+            ) {
+                SideEffect {
+                    cameraPermissionState.launchPermissionRequest()
+                }
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -174,7 +178,8 @@ internal fun ScanQrScreen(
 
                         Image(
                             painter = painterResource(id = R.drawable.danger),
-                            contentDescription = null
+                            contentDescription = null,
+                            Modifier.width(65.dp)
                         )
 
                         UiSpacer(size = 16.dp)
@@ -182,24 +187,10 @@ internal fun ScanQrScreen(
                             text = stringResource(R.string.camera_permission_denied),
                             textAlign = TextAlign.Center,
                             color = Theme.colors.neutral100,
-                            style = Theme.montserrat.titleMedium,
+                            style = Theme.montserrat.subtitle1,
+                            modifier = Modifier.fillMaxWidth(0.5f)
                         )
                     }
-                }
-            } else {
-                SideEffect {
-                    cameraPermissionState.launchPermissionRequest()
-                }
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Text(
-                        text = stringResource(R.string.no_camera_permission),
-                        textAlign = TextAlign.Center,
-                        color = Theme.colors.neutral100,
-                        style = Theme.montserrat.titleMedium,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
                 }
             }
         }
