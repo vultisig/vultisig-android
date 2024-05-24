@@ -65,7 +65,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     var errorMessage: MutableState<String> = mutableStateOf("")
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
-            this@JoinKeygenViewModel._vault,
+            _vault,
             _action,
             _keygenCommittee,
             _oldCommittee.filter { _keygenCommittee.contains(it) },
