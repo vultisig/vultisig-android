@@ -1,13 +1,14 @@
-package com.vultisig.wallet.presenter.keygen
+package com.vultisig.wallet.ui.screens.keygen
 
 import android.content.Context
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,9 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,21 +31,63 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
+import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
+import com.vultisig.wallet.presenter.keygen.KeygenState
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
-internal fun GeneratingKey(navController: NavHostController, viewModel: GeneratingKeyViewModel) {
+internal fun GeneratingKey(
+    navController: NavHostController,
+    viewModel: GeneratingKeyViewModel,
+) {
     KeepScreenOn()
     val context: Context = LocalContext.current.applicationContext
     LaunchedEffect(key1 = Unit) {
         // kick it off to generate key
         viewModel.generateKey()
     }
+
+    val state = viewModel.currentState.value
+
+    when (state) {
+        KeygenState.ERROR -> {
+            LaunchedEffect(key1 = viewModel) {
+                // stop the service , restart it when user need it
+                viewModel.stopService(context)
+            }
+        }
+
+        KeygenState.Success -> {
+            LaunchedEffect(Unit) {
+                viewModel.saveVault()
+                Thread.sleep(2000) // wait for 2 seconds
+                viewModel.stopService(context)
+                navController.navigate(Screen.Home.route)
+            }
+        }
+
+        else -> Unit
+    }
+
+    GeneratingKey(
+        navController = navController,
+        keygenState = viewModel.currentState.value,
+        errorMessage = viewModel.errorMessage.value,
+    )
+}
+
+@Composable
+internal fun GeneratingKey(
+    navController: NavHostController,
+    keygenState: KeygenState,
+    errorMessage: String,
+) {
     val textColor = Theme.colors.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -58,77 +103,51 @@ internal fun GeneratingKey(navController: NavHostController, viewModel: Generati
             navController = navController
         )
         Spacer(modifier = Modifier.weight(1f))
-        when (viewModel.currentState.value) {
-            KeygenState.CreatingInstance -> {
-                KeygenIndicator(
-                    statusText = stringResource(R.string.generating_key_preparing_vault),
-                    progress = 0.25F,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            KeygenState.KeygenECDSA -> {
-                KeygenIndicator(
-                    statusText = stringResource(R.string.generating_key_screen_generating_ecdsa_key),
-                    progress = 0.5F,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            KeygenState.KeygenEdDSA -> {
-                KeygenIndicator(
-                    statusText = stringResource(R.string.generating_key_screen_generating_eddsa_key),
-                    progress = 0.7F,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            KeygenState.ReshareECDSA -> {
-                KeygenIndicator(
-                    statusText = stringResource(R.string.generating_key_screen_resharing_ecdsa_key),
-                    progress = 0.5F,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            KeygenState.ReshareEdDSA -> {
-                KeygenIndicator(
-                    statusText = stringResource(R.string.generating_key_screen_resharing_eddsa_key),
-                    progress = 0.75F,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
+        when (keygenState) {
+            KeygenState.CreatingInstance,
+            KeygenState.KeygenECDSA,
+            KeygenState.KeygenEdDSA,
+            KeygenState.ReshareECDSA,
+            KeygenState.ReshareEdDSA,
             KeygenState.Success -> {
-                LaunchedEffect(key1 = viewModel) {
-                    viewModel.saveVault()
-                    Thread.sleep(2000) // wait for 2 seconds
-                    viewModel.stopService(context)
-                    navController.navigate(Screen.Home.route)
+                val title = when (keygenState) {
+                    KeygenState.CreatingInstance -> stringResource(R.string.generating_key_preparing_vault)
+                    KeygenState.KeygenECDSA -> stringResource(R.string.generating_key_screen_generating_ecdsa_key)
+                    KeygenState.KeygenEdDSA -> stringResource(R.string.generating_key_screen_generating_eddsa_key)
+                    KeygenState.ReshareECDSA -> stringResource(R.string.generating_key_screen_resharing_ecdsa_key)
+                    KeygenState.ReshareEdDSA -> stringResource(R.string.generating_key_screen_resharing_eddsa_key)
+                    KeygenState.Success -> stringResource(R.string.generating_key_screen_success)
+                    else -> ""
                 }
-                // TODO: play an animation
+
+                val progress = when (keygenState) {
+                    KeygenState.CreatingInstance -> 0.25f
+                    KeygenState.KeygenECDSA -> 0.5f
+                    KeygenState.KeygenEdDSA -> 0.7f
+                    KeygenState.ReshareECDSA -> 0.5f
+                    KeygenState.ReshareEdDSA -> 0.75f
+                    KeygenState.Success -> 1.0f
+                    else -> 0F
+                }
+
                 KeygenIndicator(
-                    statusText = stringResource(R.string.generating_key_screen_success),
-                    progress = 1.0F,
+                    statusText = title,
+                    progress = progress,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
             KeygenState.ERROR -> {
-                LaunchedEffect(key1 = viewModel) {
-                    // stop the service , restart it when user need it
-                    viewModel.stopService(context)
-                }
                 Text(
                     text = stringResource(R.string.generating_key_screen_keygen_failed),
                     color = textColor,
-                    style = Theme.menlo.headlineSmall
+                    style = Theme.menlo.heading5
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
                 Text(
-                    text = viewModel.errorMessage.value,
+                    text = errorMessage,
                     color = textColor,
-                    style = Theme.menlo.bodyMedium
+                    style = Theme.menlo.body2
                 )
             }
         }
@@ -143,7 +162,7 @@ internal fun GeneratingKey(navController: NavHostController, viewModel: Generati
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
             text = stringResource(R.string.generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
             color = textColor,
-            style = Theme.menlo.headlineSmall.copy(
+            style = Theme.menlo.heading5.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
             ),
         )
@@ -153,7 +172,17 @@ internal fun GeneratingKey(navController: NavHostController, viewModel: Generati
 }
 
 @Composable
-fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
+private fun KeygenIndicator(
+    statusText: String,
+    progress: Float,
+    modifier: Modifier
+) {
+    val progressAnimated by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 1000),
+        label = "KeygenIndicatorProgress"
+    )
+
     Box(
         contentAlignment = Alignment.Center,
     ) {
@@ -168,10 +197,11 @@ fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
         ) {
 
             CircularProgressIndicator(
-                progress = { progress },
+                progress = { progressAnimated },
                 strokeWidth = 16.dp,
                 color = Theme.colors.turquoise600Main,
                 trackColor = Theme.colors.oxfordBlue600Main,
+                strokeCap = StrokeCap.Round,
                 modifier = modifier
                     .padding(MaterialTheme.dimens.marginMedium)
                     .fillMaxWidth()
@@ -183,6 +213,10 @@ fun KeygenIndicator(statusText: String, progress: Float, modifier: Modifier) {
 
 @Preview
 @Composable
-fun KeygenIndicatorPreview() {
-    KeygenIndicator("Generating ECDSA Key", 0.5f, Modifier.fillMaxSize())
+private fun GeneratingKeyPreview() {
+    GeneratingKey(
+        navController = rememberNavController(),
+        keygenState = KeygenState.CreatingInstance,
+        errorMessage = ""
+    )
 }
