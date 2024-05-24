@@ -24,14 +24,6 @@ class VaultDB(context: Context,
         vaultsFolder.mkdirs()
     }
 
-    // Delete operation
-    fun delete(vaultName: String) {
-        val file = vaultsFolder.resolve("${vaultName}${FILE_POSTFIX}")
-        if (file.exists()) {
-            file.delete()
-        }
-    }
-
     fun selectAll(): List<Vault> {
         val allVaults = mutableListOf<Vault>()
         val vaultFiles = vaultsFolder.listFiles()
