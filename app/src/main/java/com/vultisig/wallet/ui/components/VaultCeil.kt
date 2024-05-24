@@ -39,7 +39,7 @@ internal fun VaultCeil(
             )
             Text(
                 text = vault.name,
-                style = Theme.menlo.body3,
+                style = Theme.menlo.body1,
                 color = Theme.colors.neutral0,
                 fontSize = 16.sp,
                 modifier = Modifier
