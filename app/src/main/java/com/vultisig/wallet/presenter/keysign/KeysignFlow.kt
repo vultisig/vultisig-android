@@ -10,6 +10,7 @@ import androidx.navigation.NavController
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.ui.screens.keysign.Keysign
 import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
+import com.vultisig.wallet.ui.screens.keysign.KeysignPeerDiscovery
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
