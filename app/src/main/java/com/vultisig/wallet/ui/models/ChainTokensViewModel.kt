@@ -17,8 +17,9 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_CHAIN_RAW
+import com.vultisig.wallet.ui.navigation.Screen.ChainCoin.CHAIN_COIN_PARAM_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
@@ -57,52 +58,13 @@ internal class ChainTokensViewModel @Inject constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
 ) : ViewModel() {
-    private val chainRaw: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
-    private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
+    private val chainRaw: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_CHAIN_RAW)!!
+    private val vaultId: String = savedStateHandle.get<String>(CHAIN_COIN_PARAM_VAULT_ID)!!
 
     val uiState = MutableStateFlow(ChainTokensUiModel())
 
-    private var loadDataJob: Job? = null
-
-    init {
-        loadData()
-    }
-
-    fun refresh() {
-        loadData()
-    }
-
-    fun send() {
+    fun loadData() {
         viewModelScope.launch {
-            navigator.navigate(Destination.Send(vaultId, chainRaw))
-        }
-    }
-
-    fun swap() {
-        // TODO navigate to swap screen
-    }
-
-
-    fun deposit() {
-
-    }
-
-    fun selectTokens() {
-        viewModelScope.launch {
-            navigator.navigate(
-                Destination.SelectTokens(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                )
-            )
-        }
-    }
-
-    private fun loadData() {
-        loadDataJob?.cancel()
-        loadDataJob = viewModelScope.launch {
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
             accountsRepository.loadAddress(
                 vaultId = vaultId,
@@ -149,4 +111,29 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
+    fun send() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Send(vaultId, chainRaw))
+        }
+    }
+
+    fun swap() {
+        // TODO navigate to swap screen
+    }
+
+
+    fun deposit() {
+
+    }
+
+    fun selectTokens() {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.SelectTokens(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                )
+            )
+        }
+    }
 }

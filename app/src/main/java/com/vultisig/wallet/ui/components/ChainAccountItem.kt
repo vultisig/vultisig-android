@@ -23,8 +23,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -167,11 +165,6 @@ private fun PreviewChainAccountItem() {
             nativeTokenAmount = "0.01",
             fiatAmount = "1000$",
             assetsSize = 4,
-            model = Address(
-                chain = Chain.bitcoin,
-                address = "123abc456bca123abc456bca123abc456bca",
-                accounts = emptyList()
-            )
         )
     )
 }
