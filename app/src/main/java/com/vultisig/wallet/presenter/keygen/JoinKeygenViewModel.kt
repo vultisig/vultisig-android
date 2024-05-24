@@ -79,7 +79,6 @@ internal class JoinKeygenViewModel @Inject constructor(
 
     fun setData() {
         viewModelScope.launch {
-            Timber.d("set data ......")
             if (_vault.localPartyID.isEmpty()) {
                 _vault.localPartyID = Utils.deviceName
             }
@@ -105,7 +104,6 @@ internal class JoinKeygenViewModel @Inject constructor(
                 }
                 when (val payload = PeerDiscoveryPayload.fromJson(gson, qrCodeContent)) {
                     is PeerDiscoveryPayload.Keygen -> {
-                        Timber.d("scan set data......")
                         this@JoinKeygenViewModel._action = TssAction.KEYGEN
                         this@JoinKeygenViewModel._sessionID = payload.keygenMessage.sessionID
                         this@JoinKeygenViewModel._hexChainCode = payload.keygenMessage.hexChainCode
