@@ -46,7 +46,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val gson: Gson,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
-    private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "new vault")
+    private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
     private var _action: TssAction = TssAction.KEYGEN
     private var _sessionID: String = ""
@@ -83,11 +83,10 @@ internal class JoinKeygenViewModel @Inject constructor(
 
     fun setData() {
         viewModelScope.launch {
-            val allSize = vaultRepository.getAll().size
-            _vault = Vault(
-                id = UUID.randomUUID().toString(),
-                "New Vault ${allSize + 1}"
-            )
+            if (_vault.name.isEmpty()) {
+                val allSize = vaultRepository.getAll().size
+                _vault.name = "New Vault ${allSize + 1}"
+            }
 
             if (_vault.localPartyID.isEmpty()) {
                 _vault.localPartyID = Utils.deviceName

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.home
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -71,6 +73,12 @@ private fun HomeScreen(
         label = "HomeScreen caretRotation",
     )
 
+    val screenTitle = if (state.showVaultList) {
+        stringResource(id = R.string.home_screen_title)
+    } else {
+        state.vaultName
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -81,12 +89,18 @@ private fun HomeScreen(
                         modifier = Modifier
                             .clickable(onClick = onToggleVaults),
                     ) {
-                        Text(
-                            text = state.vaultName,
-                            style = Theme.montserrat.subtitle1,
-                            fontWeight = FontWeight.Bold,
-                            color = Theme.colors.neutral0,
-                        )
+                        AnimatedContent(
+                            targetState = screenTitle,
+                            label = "HomeScreen title",
+                        ) { screenTitle ->
+                            Text(
+                                text = screenTitle,
+                                style = Theme.montserrat.subtitle1,
+                                fontWeight = FontWeight.Bold,
+                                color = Theme.colors.neutral0,
+                            )
+                        }
+
 
                         UiIcon(
                             drawableResId = R.drawable.caret_right,

@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
 
 @Composable
 fun KeygenFlowView(navController: NavHostController, vaultId: String) {

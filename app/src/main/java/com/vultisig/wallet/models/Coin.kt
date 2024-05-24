@@ -210,10 +210,21 @@ object Coins {
             ticker = "TGT",
             logo = "tgt",
             address = "",
-            decimal = 6,
+            decimal = 18,
             hexPublicKey = "",
             priceProviderID = "thorwallet",
             contractAddress = "0x108a850856Db3f85d0269a2693D896B394C80325",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.ethereum,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0xc770eefad204b5180df6a14ee197d99d808ee52d",
             isNativeToken = false,
         ),
         Coin(
@@ -316,6 +327,17 @@ object Coins {
             isNativeToken = false,
         ),
         Coin(
+            chain = Chain.arbitrum,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0xf929de51D91C77E42f5090069E0AD7A09e513c73",
+            isNativeToken = false,
+        ),
+        Coin(
             chain = Chain.optimism,
             ticker = "ETH",
             logo = "eth_optimism",
@@ -338,6 +360,17 @@ object Coins {
             isNativeToken = false,
         ),
         Coin(
+            chain = Chain.optimism,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0xf1a0da3367bc7aa04f8d94ba57b862ff37ced174",
+            isNativeToken = false,
+        ),
+        Coin(
             chain = Chain.polygon,
             ticker = "ETH",
             logo = "polygon",
@@ -357,6 +390,17 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "ethereum",
             contractAddress = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.polygon,
+            ticker = "FOX",
+            logo = "fox",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "shapeshift-fox-token",
+            contractAddress = "0x65a05db8322701724c197af82c9cae41195b0aa8",
             isNativeToken = false,
         ),
         Coin(
@@ -454,6 +498,7 @@ object Coins {
             "atom" -> R.drawable.atom
             "polygon" -> R.drawable.polygon
             "tgt" -> R.drawable.tgt
+            "fox" -> R.drawable.fox
             else -> R.drawable.danger
         }
     }
