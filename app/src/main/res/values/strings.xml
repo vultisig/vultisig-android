@@ -87,7 +87,7 @@
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_consent_correct_dst">I’m not sending to a scam or hacker</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
-    <string name="camera_permission_denied">Camera permission denied. Please, enable it in the settings.</string>
+    <string name="camera_permission_denied">Camera permission not granted. Please, enable it in the settings.</string>
     <string name="no_camera_permission">No Camera Permission</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="qr_address_screen_title">Address</string>
@@ -182,4 +182,5 @@
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>
     <string name="s_of_s_vault">%s of %s vault</string>
+    <string name="scan_qr_screen_return_vault">Return Vault</string>
 </resources>

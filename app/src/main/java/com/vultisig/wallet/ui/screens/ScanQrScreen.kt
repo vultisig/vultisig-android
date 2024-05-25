@@ -15,9 +15,22 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -28,8 +41,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
@@ -42,13 +58,15 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiBarContainer
+import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 
 internal const val ARG_QR_CODE = "qr_code"
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun ScanQrScreen(
     navController: NavHostController,
@@ -78,45 +96,102 @@ internal fun ScanQrScreen(
                 .addOnSuccessListener(onSuccess)
         }
     }
+    val textColor = MaterialTheme.colorScheme.onBackground
+    val appColor = Theme.colors
 
-    UiBarContainer(
-        navController = navController,
-        title = stringResource(R.string.scan_qr_default_title),
-        endIcon = R.drawable.ic_gallery,
-        onEndIconClick = {
-            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-        }
-    ) {
-        if (cameraPermissionState.status.isGranted) {
-            QrCameraScreen(
-                onSuccess = onSuccess,
+    Scaffold(
+        bottomBar = {
+            if (cameraPermissionState.status.isGranted.not())
+                MultiColorButton(
+                    minHeight = 44.dp,
+                    backgroundColor = appColor.turquoise800,
+                    textColor = appColor.oxfordBlue800,
+                    iconColor = appColor.turquoise800,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp,
+                        ),
+                    text = stringResource(id = R.string.scan_qr_screen_return_vault),
+                    onClick = { navController.popBackStack(Screen.Setup.route,false) },
+                )
+
+        },
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.scan_qr_default_title),
+                        style = Theme.montserrat.subtitle1,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor,
+                        modifier = Modifier
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                            )
+                            .wrapContentHeight(align = Alignment.CenterVertically)
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = appColor.oxfordBlue800,
+                    titleContentColor = textColor
+                ),
+                actions = {
+                    IconButton(onClick = {
+                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_gallery),
+                            contentDescription = null,
+                            tint = appColor.neutral0
+                        )
+                    }
+                },
             )
-        } else if (cameraPermissionState.status.shouldShowRationale) {
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Text(
-                    text = stringResource(R.string.camera_permission_denied),
-                    textAlign = TextAlign.Center,
-                    color = Theme.colors.neutral100,
-                    style = Theme.montserrat.titleMedium,
-                    modifier = Modifier.align(Alignment.Center),
+
+        },
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(it)
+        ) {
+
+            if (cameraPermissionState.status.isGranted) {
+                QrCameraScreen(
+                    onSuccess = onSuccess,
                 )
-            }
-        } else {
-            SideEffect {
-                cameraPermissionState.launchPermissionRequest()
-            }
-            Box(
-                modifier = Modifier.fillMaxSize()
+            } else if (cameraPermissionState.status.shouldShowRationale ||
+                cameraPermissionState.status.isGranted.not()
             ) {
-                Text(
-                    text = stringResource(R.string.no_camera_permission),
-                    textAlign = TextAlign.Center,
-                    color = Theme.colors.neutral100,
-                    style = Theme.montserrat.titleMedium,
-                    modifier = Modifier.align(Alignment.Center),
-                )
+                SideEffect {
+                    cameraPermissionState.launchPermissionRequest()
+                }
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                        Image(
+                            painter = painterResource(id = R.drawable.danger),
+                            contentDescription = null,
+                            Modifier.width(65.dp)
+                        )
+
+                        UiSpacer(size = 16.dp)
+                        Text(
+                            text = stringResource(R.string.camera_permission_denied),
+                            textAlign = TextAlign.Center,
+                            color = Theme.colors.neutral100,
+                            style = Theme.montserrat.subtitle1,
+                            modifier = Modifier.fillMaxWidth(0.5f)
+                        )
+                    }
+                }
             }
         }
     }
