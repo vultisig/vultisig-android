@@ -33,6 +33,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapperImpl
+import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapperImpl
+import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.models.TssAction
+import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
 import com.vultisig.wallet.presenter.keygen.KeygenState

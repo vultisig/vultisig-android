@@ -1,6 +1,7 @@
 package com.vultisig.wallet.presenter.keygen
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import androidx.compose.runtime.MutableState
@@ -9,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
+import com.vultisig.wallet.R
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
@@ -20,6 +22,7 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -43,6 +46,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
     private val gson: Gson,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
