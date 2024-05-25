@@ -28,7 +28,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -69,14 +68,11 @@ internal fun ChainTokensScreen(
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
-
-    LaunchedEffect(key1 = Unit) {
-        viewModel.loadData()
-    }
-
+    
     ChainTokensScreen(
         navController = navController,
         uiModel = uiModel,
+        onRefresh = viewModel::refresh,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
@@ -89,6 +85,7 @@ internal fun ChainTokensScreen(
 private fun ChainTokensScreen(
     navController: NavHostController,
     uiModel: ChainTokensUiModel,
+    onRefresh: () -> Unit = {},
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
@@ -136,9 +133,7 @@ private fun ChainTokensScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = {
-                            // TODO what to do here?
-                        }) {
+                        IconButton(onClick = onRefresh) {
                             Icon(
                                 painter = painterResource(id = R.drawable.clockwise),
                                 contentDescription = "refresh",

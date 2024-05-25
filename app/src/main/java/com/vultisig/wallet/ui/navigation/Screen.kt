@@ -25,13 +25,4 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object ChainCoin : Screen(route = "chainCoin/{chain_raw}/{vault_id}") {
-        const val CHAIN_COIN_PARAM_CHAIN_RAW = "chain_raw"
-        const val CHAIN_COIN_PARAM_VAULT_ID = "vault_id"
-        fun createRoute(chainRaw: String, vaultId: String): String {
-            return "chainCoin/$chainRaw/$vaultId"
-        }
-    }
-
-
 }
