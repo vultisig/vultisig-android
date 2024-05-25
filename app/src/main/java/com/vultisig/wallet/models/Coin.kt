@@ -502,7 +502,7 @@ object Coins {
             else -> R.drawable.danger
         }
     }
-    fun getChainString( input: String): String {
+    fun capitalizeTokenSubtitle(input: String): String {
         var output=input.split("-").joinToString(" ") {
             it.capitalize()
         }
