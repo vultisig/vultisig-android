@@ -10,7 +10,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
-import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
@@ -24,7 +23,6 @@ import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -50,8 +48,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val defaultChainsRepository: DefaultChainsRepository,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
-    private val navBackStackEntry: SavedStateHandle,
-    @ApplicationContext private val context: Context
+    navBackStackEntry: SavedStateHandle
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -66,8 +63,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
 
-    var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME)?:""
-    var initVault : Vault? = null
+    var vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME)?:""
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: MutableState<String>
         get() = _keygenPayload
