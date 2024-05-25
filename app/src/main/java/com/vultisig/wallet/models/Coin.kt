@@ -506,7 +506,7 @@ object Coins {
         var output=input.split("-").joinToString(" ") {
             it.capitalize()
         }
-        output=output.replace(Regex("(?i)usd(?:c|t)?")){matchResult->
+        return output.replace(Regex("(?i)usd(?:c|t)?")){matchResult->
             when(matchResult.value.toLowerCase()){
                 "usd" -> "USD"
                 "usdt" ->"USDT"
@@ -514,6 +514,5 @@ object Coins {
                 else ->matchResult.value
             }
         }
-        return output
     }
 }
