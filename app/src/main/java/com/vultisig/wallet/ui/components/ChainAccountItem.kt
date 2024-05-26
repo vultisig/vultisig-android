@@ -24,12 +24,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.ItemAccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ChainAccountItem(
-    account: AccountUiModel,
+    account: ItemAccountUiModel,
     onClick: () -> Unit = {},
 ) {
     Card(
@@ -158,13 +158,14 @@ internal fun ChainAccountItem(
 @Composable
 private fun PreviewChainAccountItem() {
     ChainAccountItem(
-        AccountUiModel(
+        ItemAccountUiModel(
             chainName = "Bitcoin",
             logo = R.drawable.bitcoin,
             address = "123abc456bca123abc456bca123abc456bca",
             nativeTokenAmount = "0.01",
             fiatAmount = "1000$",
             assetsSize = 4,
+            addressId = "123abc456bca123abc456bca123abc456bca"
         )
     )
 }

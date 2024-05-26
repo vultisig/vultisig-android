@@ -111,6 +111,11 @@ internal interface RepositoriesModule {
     fun bindVaultRepository(
         impl: VaultRepositoryImpl
     ): VaultRepository
+    @Binds
+    @Singleton
+    fun bindChainsOrderRepository(
+        impl: ChainsOrderRepositoryImpl
+    ): ChainsOrderRepository
 
     companion object {
 
