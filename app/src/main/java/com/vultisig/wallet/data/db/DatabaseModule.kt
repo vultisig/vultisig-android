@@ -23,6 +23,12 @@ internal interface DatabaseModule {
 
         @Provides
         @Singleton
+        fun provideOrderDao(
+            appDatabase: AppDatabase,
+        ): ChainOrderDao = appDatabase.chainOrderDao()
+
+        @Provides
+        @Singleton
         fun provideAppDatabase(
             @ApplicationContext appContext: Context,
         ): AppDatabase =

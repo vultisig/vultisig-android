@@ -51,7 +51,7 @@ private fun VaultListScreen(
     navController: NavHostController,
     vaults: List<Vault>,
     onSelectVault: (vaultId: String) -> Unit = {},
-    onMove: (from: ItemPosition, to: ItemPosition) -> Unit = { _, _ -> },
+    onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
     Box(
         modifier = Modifier

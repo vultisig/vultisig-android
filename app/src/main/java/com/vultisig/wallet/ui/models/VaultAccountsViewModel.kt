@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import android.os.Parcelable
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
@@ -7,17 +8,22 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.ChainsOrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
+import kotlinx.parcelize.Parcelize
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -26,7 +32,7 @@ internal data class VaultAccountsUiModel(
     val vaultName: String = "",
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
-    val accounts: List<AccountUiModel> = emptyList(),
+    val accounts: List<ItemAccountUiModel> = emptyList(),
 )
 
 internal data class AccountUiModel(
@@ -39,6 +45,17 @@ internal data class AccountUiModel(
     val assetsSize: Int = 0,
 )
 
+@Parcelize /*draggable list requires parcelable data*/
+internal data class ItemAccountUiModel(
+    val addressId: String,
+    val chainName: String,
+    @DrawableRes val logo: Int,
+    val address: String,
+    val nativeTokenAmount: String?,
+    val fiatAmount: String?,
+    val assetsSize: Int = 0,
+) : Parcelable
+
 @HiltViewModel
 internal class VaultAccountsViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
@@ -48,6 +65,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private val vaultRepository: VaultRepository,
     private val accountsRepository: AccountsRepository,
+    private val chainsOrderRepository: ChainsOrderRepository,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -55,7 +73,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
-
+    private var reIndexJob: Job? = null
     fun loadData(vaultId: String) {
         this.vaultId = vaultId
         loadVaultName(vaultId)
@@ -72,9 +90,9 @@ internal class VaultAccountsViewModel @Inject constructor(
         )
     }
 
-    fun openAccount(account: AccountUiModel) {
+    fun openAccount(account: ItemAccountUiModel) {
         val vaultId = vaultId ?: return
-        val chainId = account.model.chain.id
+        val chainId = account.addressId
 
         viewModelScope.launch {
             navigator.navigate(
@@ -105,6 +123,9 @@ internal class VaultAccountsViewModel @Inject constructor(
             }
             accountsRepository
                 .loadAddresses(vaultId)
+                .zip(chainsOrderRepository.loadByOrders()) { addresses, chainOrder ->
+                    chainOrder.map { addresses.find { address -> address.chain.raw == it.value }!! }
+                }
                 .catch {
                     // TODO handle error
                     Timber.e(it)
@@ -117,12 +138,40 @@ internal class VaultAccountsViewModel @Inject constructor(
                         ?.let(fiatValueToStringMapper::map)
                     val accountsUiModel = accounts.map(addressToUiModelMapper::map)
 
-                    uiState.update {
-                        it.copy(
-                            totalFiatValue = totalFiatValue, accounts = accountsUiModel
+                    uiState.update { vaultAccountsUiModel ->
+                        vaultAccountsUiModel.copy(
+                            totalFiatValue = totalFiatValue, accounts = accountsUiModel.map {
+                                ItemAccountUiModel(
+                                    addressId = it.model.chain.id,
+                                    chainName = it.chainName,
+                                    logo = it.logo,
+                                    address = it.address,
+                                    nativeTokenAmount = it.nativeTokenAmount,
+                                    fiatAmount = it.fiatAmount,
+                                )
+                            }
                         )
                     }
                 }
+        }
+    }
+
+    fun onMove(oldOrder: Int, newOrder: Int) {
+        val updatedPositionsList = uiState.value.accounts.toMutableList().apply {
+            add(newOrder, removeAt(oldOrder))
+        }
+        uiState.update {
+            it.copy(
+                accounts = updatedPositionsList
+            )
+        }
+        reIndexJob?.cancel()
+        reIndexJob = viewModelScope.launch(IO) {
+            delay(500)
+            val midOrder = updatedPositionsList[newOrder].chainName
+            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.chainName
+            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.chainName
+            chainsOrderRepository.updateItemOrder(upperOrder, midOrder, lowerOrder)
         }
     }
 

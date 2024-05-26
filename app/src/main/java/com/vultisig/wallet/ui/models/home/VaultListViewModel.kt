@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.VaultLocationsRepository
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.components.reorderable.utils.ItemPosition
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,9 +25,9 @@ internal class VaultListViewModel @Inject constructor(
         }
     }
 
-    fun onMove(from: ItemPosition, to: ItemPosition) {
+    fun onMove(from: Int, to: Int) {
         val updatedPositionsList = vaults.value.toMutableList().apply {
-            add(to.index, removeAt(from.index))
+            add(to, removeAt(from))
         }
         vaults.value =  updatedPositionsList
         reIndexJob?.cancel()
