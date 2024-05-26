@@ -291,7 +291,7 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "ethereum",
             contractAddress = "",
-            isNativeToken = true,
+            isNativeToken = false,
         ),
         Coin(
             chain = Chain.arbitrum,
@@ -302,7 +302,7 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "ethereum",
             contractAddress = "",
-            isNativeToken = true,
+            isNativeToken = false,
         ),
         Coin(
             chain = Chain.arbitrum,
@@ -346,7 +346,7 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "ethereum",
             contractAddress = "",
-            isNativeToken = true,
+            isNativeToken = false,
         ),
         Coin(
             chain = Chain.optimism,
@@ -379,7 +379,7 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "matic-network",
             contractAddress = "",
-            isNativeToken = true,
+            isNativeToken = false,
         ),
         Coin(
             chain = Chain.polygon,
@@ -412,7 +412,7 @@ object Coins {
             hexPublicKey = "",
             priceProviderID = "ethereum",
             contractAddress = "",
-            isNativeToken = true,
+            isNativeToken = false,
         ),
         Coin(
             chain = Chain.blast,
