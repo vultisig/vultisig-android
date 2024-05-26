@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a report to help us improve Vultisig
 title: 'BUG:'
 labels: bug
 assignees: ''
@@ -25,7 +25,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
  - OS: android
- - Browser [chrome, safari]
+ - Browser [e.g. chrome, safari]
  - Version [e.g. 22]
 
 **Smartphone (please complete the following information):**
