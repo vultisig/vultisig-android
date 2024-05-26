@@ -14,6 +14,7 @@ internal interface ChainsOrderRepository {
     suspend fun delete(name: String)
     suspend fun find(name: String): ChainOrderEntity
     suspend fun insert(name: String)
+    suspend fun findMaxOrder(): ChainOrderEntity?
 }
 
 
@@ -73,7 +74,7 @@ internal class ChainsOrderRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun findMaxOrder(): ChainOrderEntity? =
+    override suspend fun findMaxOrder(): ChainOrderEntity? =
         withContext(IO) { chainOrderDao.getMaxChainOrder() }
 
     override suspend fun insert(name: String) {

@@ -105,5 +105,5 @@ internal interface RepositoriesModule {
     fun bindVaultRepository(
         impl: VaultRepositoryImpl
     ): VaultRepository
-    
+
 }
