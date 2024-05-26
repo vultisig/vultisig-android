@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 
 @Entity(
-    tableName = "itemOrder"
+    tableName = "chain_order"
 )
 data class ChainOrderEntity(
     @PrimaryKey

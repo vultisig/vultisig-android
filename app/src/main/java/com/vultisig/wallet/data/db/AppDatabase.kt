@@ -16,7 +16,7 @@ import com.vultisig.wallet.data.db.models.VaultEntity
         CoinEntity::class,
         ChainOrderEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 internal abstract class AppDatabase : RoomDatabase() {
