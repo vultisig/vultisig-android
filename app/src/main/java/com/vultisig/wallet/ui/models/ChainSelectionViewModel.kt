@@ -32,7 +32,6 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val chainsOrderRepository: ChainsOrderRepository,
-) : ViewModel() {
     ) : ViewModel() {
 
     private val vaultId: String =
