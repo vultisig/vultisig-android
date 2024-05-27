@@ -31,6 +31,7 @@ walletCore = "4.0.40"
 zxingAndroidEmbedded = "4.2.0"
 timber = "5.0.1"
 ksp = "1.9.23-1.0.20"
+appcompat = "1.6.1"
 
 [libraries]
 accompanist-permissions = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -78,6 +79,7 @@ timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 
 [plugins]
