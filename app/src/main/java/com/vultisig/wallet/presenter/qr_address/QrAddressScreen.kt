@@ -1,14 +1,12 @@
 package com.vultisig.wallet.presenter.qr_address
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -22,22 +20,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.rememberQRBitmapPainter
+import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -93,10 +86,6 @@ internal fun QrAddressScreen(navController: NavHostController) {
             val screenWidth = LocalConfiguration.current.screenWidthDp
             val address = viewmodel.address!!
             val qrBoxSize = ((screenWidth * .8).coerceAtMost(300.0)).dp
-            val borderColor = Theme.colors.turquoise600Main
-            val imageAndBorderSpace = 30.dp
-            val imageSizeInDp = qrBoxSize - 2 * imageAndBorderSpace
-            val whiteSpace = 10.dp
 
             Text(
                 text = address,
@@ -106,40 +95,16 @@ internal fun QrAddressScreen(navController: NavHostController) {
                     .padding(top = 128.dp)
             )
 
-            Box(
-                Modifier
-                    .clip(shape = RoundedCornerShape(16.dp))
-                    .size(qrBoxSize)
-                    .background(Theme.colors.oxfordBlue600Main)
-                    .drawBehind {
-                        val segment =  qrBoxSize.div(5).toPx()
-                        drawRoundRect(
-                            color = borderColor, style = Stroke(
-                                width = 8f,
-                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(segment, segment))
-                            ),
-                            cornerRadius = CornerRadius(16.dp.toPx())
-                        )
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(imageSizeInDp + whiteSpace)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Theme.colors.neutral0),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        modifier = Modifier.clip(MaterialTheme.shapes.medium),
-                        painter = rememberQRBitmapPainter(
-                            qrCodeContent = address,
-                        ),
-                        contentScale = ContentScale.FillBounds,
-                        contentDescription = "coin address",
-                    )
-                }
+                qrBoxSize.div(5).toPx()
             }
+
+            QRCodeKeyGenImage(
+                address,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(segment, segment)),
+                modifier = Modifier
+                    .padding(all = 32.dp)
+                    .fillMaxWidth(),
+            )
         }
     }
 }

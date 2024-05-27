@@ -106,8 +106,8 @@ internal class KeygenFlowViewModel @Inject constructor(
             }
             Vault(id = UUID.randomUUID().toString(), newVaultName)
         } else {
-            vaultRepository.get(vaultId)
-        }!!
+            vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
+        }
 
         val action = if (vault.pubKeyECDSA.isEmpty())
             TssAction.KEYGEN

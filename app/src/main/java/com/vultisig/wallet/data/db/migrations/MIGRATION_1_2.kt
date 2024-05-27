@@ -7,7 +7,7 @@ internal val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
-            CREATE TABLE IF NOT EXISTS `chain_order` (
+            CREATE TABLE IF NOT EXISTS `chainOrder` (
             `value` TEXT PRIMARY KEY NOT NULL,
             `fractionInFloat` REAL NOT NULL,
             `trueFraction` TEXT NOT NULL)

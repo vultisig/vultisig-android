@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,8 +48,10 @@ internal fun TokenSelectionItem(
         )
     ) {
         Row(
-            modifier = Modifier.padding(all = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(all = 12.dp)
+                .clickable { onCheckedChange?.invoke(!isChecked) },
         ) {
             Image(
                 modifier = Modifier
@@ -88,9 +91,7 @@ internal fun TokenSelectionItem(
                     uncheckedTrackColor = MaterialTheme.appColor.oxfordBlue400
                 ),
                 checked = isChecked,
-                onCheckedChange = { isChecked ->
-                    onCheckedChange?.invoke(isChecked)
-                },
+                onCheckedChange = null,
             )
         }
     }
