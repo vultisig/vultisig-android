@@ -38,13 +38,14 @@ import kotlinx.coroutines.launch
 internal fun QRCodeKeyGenImage(
     qrCodeContent: String,
     modifier: Modifier = Modifier,
+    pathEffect: PathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 50f), 0.0f),
 ) {
     Box(
         modifier = modifier.drawBehind {
             drawRoundRect(
                 color = Color("#33e6bf".toColorInt()), style = Stroke(
                     width = 8f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 50f), 0.0f)
+                    pathEffect = pathEffect,
                 ), cornerRadius = CornerRadius(16.dp.toPx())
             )
         }
