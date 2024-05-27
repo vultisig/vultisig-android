@@ -263,5 +263,11 @@ internal fun SetupNavGraph(
         ) {
             QrAddressScreen(navController = navController)
         }
+
+        composable(
+            route = Destination.NamingVault.route,
+        ) {
+            NamingVaultScreen(navController = navController)
+        }
     }
 }

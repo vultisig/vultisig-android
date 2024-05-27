@@ -39,8 +39,7 @@ internal interface DatabaseModule {
                 klass = AppDatabase::class.java,
                 name = DB_NAME,
             ).
-            addMigrations(MIGRATION_1_2).
-            build()
+            ).addMigrations(MIGRATION_1_2).build()
 
         private const val DB_NAME = "vultisig_db"
 
