@@ -521,19 +521,21 @@ object Coins {
             "polygon" -> R.drawable.polygon
             "tgt" -> R.drawable.tgt
             "fox" -> R.drawable.fox
+            "dot" -> R.drawable.dot
             else -> R.drawable.danger
         }
     }
+
     fun capitalizeTokenSubtitle(input: String): String {
-        var output=input.split("-").joinToString(" ") {
+        var output = input.split("-").joinToString(" ") {
             it.capitalize()
         }
-        return output.replace(Regex("(?i)usd(?:c|t)?")){matchResult->
-            when(matchResult.value.toLowerCase()){
+        return output.replace(Regex("(?i)usd(?:c|t)?")) { matchResult ->
+            when (matchResult.value.toLowerCase()) {
                 "usd" -> "USD"
-                "usdt" ->"USDT"
-                "usdc" ->"USDC"
-                else ->matchResult.value
+                "usdt" -> "USDT"
+                "usdc" -> "USDC"
+                else -> matchResult.value
             }
         }
     }

@@ -50,7 +50,7 @@ internal fun TokenSelectionScreen(
                 val coin = token.coin
                 TokenSelectionItem(
                     title = coin.ticker,
-                    subtitle = Coins.capitalizeTokenSubtitle(coin.priceProviderID),
+                    subtitle = coin.chain.raw,
                     logo = Coins.getCoinLogo(logoName = coin.logo),
                     isChecked = token.isEnabled,
                     onCheckedChange = { checked ->
