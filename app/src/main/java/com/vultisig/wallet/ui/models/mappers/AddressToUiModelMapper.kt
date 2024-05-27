@@ -16,6 +16,7 @@ internal class AddressToUiModelMapperImpl @Inject constructor(
 ) : AddressToUiModelMapper {
 
     override fun map(from: Address) = AccountUiModel(
+        model = from,
         chainName = from.chain.raw,
         logo = from.chain.logo,
         address = from.address,
