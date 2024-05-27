@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -26,24 +25,12 @@ internal class HomeViewModel @Inject constructor(
 
     private val vaultRepository: VaultRepository,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
-
-    private val vaultDB: VaultDB,
-
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(HomeUiModel())
 
     init {
         collectLastOpenedVault()
-
-        // TODO MIGRATION FROM JSON, REMOVE AFTER EVERYONE MIGRATES VAULTS
-        viewModelScope.launch {
-            val vaults = vaultDB.selectAll()
-
-            vaults.forEach {
-                vaultRepository.add(it)
-            }
-        }
     }
 
     fun openSettings() {

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.models.Chain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 
 internal interface DefaultChainsRepository {
@@ -21,17 +22,22 @@ internal class DefaultChainsRepositoryImpl @Inject constructor(
 ) : DefaultChainsRepository {
 
     override val selectedDefaultChains: Flow<List<Chain>>
-        get() =
-            dataStore.readData(stringPreferencesKey(SELECTED_DEFAULT_CHAINS_KEY), "").map {
-                if (it.isEmpty()) emptyList() else
-                    gson.fromJson(it, object : TypeToken<List<Chain>>() {}.type)
+        get() = dataStore.readData(stringPreferencesKey(SELECTED_DEFAULT_CHAINS_KEY), "")
+            .map {
+                try {
+                    gson.fromJson<List<String>>(it, object : TypeToken<List<String>>() {}.type)
+                        .map { Chain.fromRaw(it) }
+                } catch (e: Throwable) {
+                    Timber.e(e)
+                    DEFAULT_CHAINS_LIST
+                }
             }
 
     override suspend fun setSelectedDefaultChains(chains: List<Chain>) {
         dataStore.editData { preferences ->
             preferences.set(
                 key = stringPreferencesKey(SELECTED_DEFAULT_CHAINS_KEY),
-                value = gson.toJson(chains)
+                value = gson.toJson(chains.map { it.id })
             )
         }
     }
@@ -41,7 +47,17 @@ internal class DefaultChainsRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        const val SELECTED_DEFAULT_CHAINS_KEY = "selected_default_chains_key"
+        private const val SELECTED_DEFAULT_CHAINS_KEY = "selected_default_chains_key"
+
+        private val DEFAULT_CHAINS_LIST: List<Chain>
+            get() = listOf(
+                Chain.thorChain,
+                Chain.bitcoin,
+                Chain.bscChain,
+                Chain.ethereum,
+                Chain.solana
+            )
+
     }
 
 }

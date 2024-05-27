@@ -53,7 +53,7 @@ internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowV
                 items.count()
             ),
             color = textColor,
-            style = Theme.montserrat.bodyLarge
+            style = Theme.montserrat.body1
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
 

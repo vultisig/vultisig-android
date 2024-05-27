@@ -129,11 +129,11 @@ val Chain.logo: Int
         Chain.solana -> R.drawable.solana
         Chain.ethereum -> R.drawable.ethereum
         Chain.avalanche -> R.drawable.avax
-        Chain.base -> R.drawable.eth_base
-        Chain.blast -> R.drawable.eth_blast
-        Chain.arbitrum -> R.drawable.eth_arbitrum
-        Chain.polygon -> R.drawable.eth_polygon
-        Chain.optimism -> R.drawable.eth_optimism
+        Chain.base -> R.drawable.base
+        Chain.blast -> R.drawable.blast
+        Chain.arbitrum -> R.drawable.arbitrum
+        Chain.polygon -> R.drawable.polygon
+        Chain.optimism -> R.drawable.optimism
         Chain.bscChain -> R.drawable.bsc
         Chain.bitcoin -> R.drawable.bitcoin
         Chain.bitcoinCash -> R.drawable.bitcoincash
@@ -143,7 +143,7 @@ val Chain.logo: Int
         Chain.gaiaChain -> R.drawable.atom
         Chain.kujira -> R.drawable.kuji
         Chain.mayaChain -> R.drawable.cacao
-        Chain.cronosChain -> R.drawable.eth_cro
+        Chain.cronosChain -> R.drawable.cro
         Chain.polkadot -> R.drawable.dot
     }
 val Chain.IsSwapSupported: Boolean

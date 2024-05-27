@@ -6,14 +6,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,9 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.asFlow
 import androidx.navigation.NavController
@@ -36,6 +29,7 @@ import com.vultisig.wallet.presenter.keysign.KeysignFlowState
 import com.vultisig.wallet.presenter.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -109,30 +103,10 @@ internal fun KeysignPeerDiscovery(
     onStopParticipantDiscovery: () -> Unit = {},
 ) {
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(
-            title = {
-                Text(
-                    text = stringResource(id = R.string.keysign),
-                    style = Theme.montserrat.subtitle1,
-                    fontWeight = FontWeight.Bold,
-                    color = Theme.colors.neutral0,
-                )
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Theme.colors.oxfordBlue800,
-                titleContentColor = Theme.colors.neutral0,
-            ),
-            navigationIcon = {
-                IconButton(onClick = {
-                    navController.popBackStack()
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.caret_left),
-                        contentDescription = "back",
-                        tint = Theme.colors.neutral0
-                    )
-                }
-            },
+        TopBar(
+            navController = navController,
+            centerText = stringResource(id = R.string.keysign),
+            startIcon = R.drawable.caret_left
         )
     }, bottomBar = {
         MultiColorButton(

@@ -1,14 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
-import android.content.Context
-import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapper
-import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
-import com.vultisig.wallet.data.on_board.db.VaultDB
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -111,17 +105,5 @@ internal interface RepositoriesModule {
     fun bindVaultRepository(
         impl: VaultRepositoryImpl
     ): VaultRepository
-
-    companion object {
-
-        @Provides
-        @Singleton
-        fun provideVaultDb(
-            @ApplicationContext context: Context,
-            vaultAndroidToIOSMapper: VaultAndroidToIOSMapper,
-            vaultIOSToAndroidMapper: VaultIOSToAndroidMapper
-        ) = VaultDB(context,vaultAndroidToIOSMapper,vaultIOSToAndroidMapper)
-
-    }
-
+    
 }

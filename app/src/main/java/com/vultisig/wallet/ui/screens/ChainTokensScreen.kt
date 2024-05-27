@@ -13,34 +13,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.FormCard
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
@@ -69,14 +61,11 @@ internal fun ChainTokensScreen(
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
-
-    LaunchedEffect(key1 = Unit) {
-        viewModel.loadData()
-    }
-
+    
     ChainTokensScreen(
         navController = navController,
         uiModel = uiModel,
+        onRefresh = viewModel::refresh,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
@@ -89,12 +78,12 @@ internal fun ChainTokensScreen(
 private fun ChainTokensScreen(
     navController: NavHostController,
     uiModel: ChainTokensUiModel,
+    onRefresh: () -> Unit = {},
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
 ) {
-    val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
     val dimens = MaterialTheme.dimens
     val buyVltiButtonVisible = false
@@ -106,46 +95,12 @@ private fun ChainTokensScreen(
     ) {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = uiModel.chainName,
-                            style = Theme.montserrat.subtitle1,
-                            fontWeight = FontWeight.Bold,
-                            color = textColor,
-                            modifier = Modifier
-                                .padding(
-                                    start = dimens.marginMedium,
-                                    end = dimens.marginMedium,
-                                )
-                                .wrapContentHeight(align = Alignment.CenterVertically)
-                        )
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = appColor.oxfordBlue800,
-                        titleContentColor = textColor
-                    ),
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            navController.popBackStack()
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                contentDescription = "back", tint = Color.White
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            // TODO what to do here?
-                        }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.clockwise),
-                                contentDescription = "refresh",
-                                tint = Color.White
-                            )
-                        }
-                    }
+                TopBar(
+                    navController = navController,
+                    centerText = uiModel.chainName,
+                    startIcon = R.drawable.caret_left,
+                    endIcon = R.drawable.clockwise,
+                    onEndIconClick = onRefresh
                 )
             },
             bottomBar = {
