@@ -22,15 +22,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -43,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -59,6 +52,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
@@ -96,7 +90,6 @@ internal fun ScanQrScreen(
                 .addOnSuccessListener(onSuccess)
         }
     }
-    val textColor = MaterialTheme.colorScheme.onBackground
     val appColor = Theme.colors
 
     Scaffold(
@@ -121,38 +114,15 @@ internal fun ScanQrScreen(
 
         },
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.scan_qr_default_title),
-                        style = Theme.montserrat.subtitle1,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor,
-                        modifier = Modifier
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                            )
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = appColor.oxfordBlue800,
-                    titleContentColor = textColor
-                ),
-                actions = {
-                    IconButton(onClick = {
-                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_gallery),
-                            contentDescription = null,
-                            tint = appColor.neutral0
-                        )
-                    }
+            TopBar(
+                navController = navController,
+                centerText = stringResource(id = R.string.scan_qr_default_title),
+                endIcon = R.drawable.ic_gallery,
+                startIcon = R.drawable.caret_left,
+                onEndIconClick = {
+                    pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                 },
             )
-
         },
     ) {
         Box(
