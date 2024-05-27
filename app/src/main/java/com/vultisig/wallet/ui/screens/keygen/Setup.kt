@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.keygen.KeygenSetupViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -126,7 +127,7 @@ internal fun Setup(
                         bottom = MaterialTheme.dimens.marginMedium,
                     )
             ) {
-                navController.navigate(Screen.KeygenFlow.createRoute(Screen.KeygenFlow.DEFAULT_NEW_VAULT))
+                navController.navigate(Destination.NamingVault.route)
             }
 
             MultiColorButton(

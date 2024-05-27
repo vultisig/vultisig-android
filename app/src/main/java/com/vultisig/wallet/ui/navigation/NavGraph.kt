@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
@@ -255,6 +256,12 @@ internal fun SetupNavGraph(
             route = Destination.QrAddressScreen.STATIC_ROUTE,
         ) {
             QrAddressScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.NamingVault.route,
+        ) {
+            NamingVaultScreen(navController = navController)
         }
     }
 }
