@@ -256,14 +256,5 @@ internal fun SetupNavGraph(
         ) {
             QrAddressScreen(navController = navController)
         }
-        composable(
-            route = Destination.ChainTokens.staticRoute,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) { type = NavType.StringType }
-            )
-        ) {
-            ChainTokensScreen(navController)
-        }
     }
 }

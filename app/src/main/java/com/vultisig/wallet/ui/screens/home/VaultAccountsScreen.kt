@@ -2,9 +2,7 @@ package com.vultisig.wallet.ui.screens.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,8 +29,7 @@ import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
-import com.vultisig.wallet.ui.components.reorderable.utils.ItemPosition
-import com.vultisig.wallet.ui.models.ItemAccountUiModel
+import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.navigation.Screen
@@ -58,7 +55,13 @@ internal fun VaultAccountsScreen(
                 Screen.JoinKeysign.createRoute(vaultId)
             )
         },
-        onAccountClick = viewModel::openAccount,
+        onAccountClick = {
+            val route = Screen.ChainCoin.createRoute(
+                chainRaw = it.chainName,
+                vaultId = viewModel.vault?.id ?: "",
+            )
+            navHostController.navigate(route)
+        },
         onChooseChains = {
             navHostController.navigate(
                 Screen.AddChainAccount.createRoute(vaultId)
@@ -73,21 +76,20 @@ private fun VaultAccountsScreen(
     state: VaultAccountsUiModel,
     onRefresh: () -> Unit,
     onJoinKeysign: () -> Unit,
-    onMove: (Int, Int) -> Unit,
-    onAccountClick: (ItemAccountUiModel) -> Unit,
+    onAccountClick: (AccountUiModel) -> Unit,
     onChooseChains: () -> Unit,
     modifier: Modifier = Modifier,
+    onMove: (Int, Int) -> Unit,
 ) {
     BoxWithSwipeRefresh(
         onSwipe = onRefresh,
         isRefreshing = state.isRefreshing,
         modifier = Modifier.fillMaxSize()
     ) {
-        Column(
-            modifier = modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
 
+        Box(
+            modifier = modifier.fillMaxSize(),
+        ) {
             VerticalReorderList(
                 data = state.accounts,
                 onMove = onMove,
@@ -139,26 +141,25 @@ private fun VaultAccountsScreen(
                 )
             }
 
-        }
-
-        Box(
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.BottomCenter)
-        ) {
-            UiIcon(
-                drawableResId = R.drawable.camera,
-                size = 40.dp,
-                contentDescription = "join keysign",
-                tint = Theme.colors.oxfordBlue600Main,
-                onClick = onJoinKeysign,
+            Box(
                 modifier = Modifier
-                    .background(
-                        color = Theme.colors.turquoise600Main,
-                        shape = CircleShape,
-                    )
-                    .padding(all = 10.dp)
-            )
+                    .padding(16.dp)
+                    .align(Alignment.BottomCenter)
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 40.dp,
+                    contentDescription = "join keysign",
+                    tint = Theme.colors.oxfordBlue600Main,
+                    onClick = onJoinKeysign,
+                    modifier = Modifier
+                        .background(
+                            color = Theme.colors.turquoise600Main,
+                            shape = CircleShape,
+                        )
+                        .padding(all = 10.dp)
+                )
+            }
         }
     }
 }
@@ -171,22 +172,20 @@ private fun VaultAccountsScreenPreview() {
             vaultName = "Vault Name",
             totalFiatValue = "$1000",
             accounts = listOf(
-                ItemAccountUiModel(
+                AccountUiModel(
                     chainName = "Ethereum",
                     logo = R.drawable.ethereum,
                     address = "0x1234567890",
                     nativeTokenAmount = "1.0",
                     fiatAmount = "$1000",
                     assetsSize = 4,
-                    addressId = "0x123456"
                 ),
-                ItemAccountUiModel(
+                AccountUiModel(
                     chainName = "Bitcoin",
                     logo = R.drawable.bitcoin,
                     address = "123456789abcdef",
                     nativeTokenAmount = "1.0",
                     fiatAmount = "$1000",
-                    addressId = "0x123456"
                 ),
             ),
         ),

@@ -121,16 +121,5 @@ internal sealed class Destination(
             const val STATIC_ROUTE = "vault_details/qr_address_screen/{$ARG_COIN_ADDRESS}"
         }
     }
-    data class ChainTokens(
-        val vaultId: String,
-        val chainId: String,
-    ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}"
-    ) {
-        companion object {
-            const val staticRoute =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
-        }
-    }
 
 }
