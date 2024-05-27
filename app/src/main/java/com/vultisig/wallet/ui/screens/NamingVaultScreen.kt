@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.NamingComponent
 import com.vultisig.wallet.ui.models.NamingVaultViewModel
+import com.vultisig.wallet.ui.navigation.Screen
 
 @Composable
 internal fun NamingVaultScreen(
@@ -20,7 +21,11 @@ internal fun NamingVaultScreen(
 
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_name_your_vault),
-        onSave = viewModel::onContinueClick,
+        onSave = {
+                 navController.navigate(Screen.KeygenFlow.createRoute(
+                     uiModel.name.takeIf { it.isNotEmpty() }
+                         ?: Screen.KeygenFlow.DEFAULT_NEW_VAULT))
+        },
         name = uiModel.name,
         navHostController = navController,
         onChangeName = viewModel::onNameChanged,

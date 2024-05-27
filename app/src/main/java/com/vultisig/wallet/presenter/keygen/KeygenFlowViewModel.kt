@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
+import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
@@ -20,8 +21,9 @@ import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.ReshareMessage
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -46,7 +48,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
-    navBackStackEntry: SavedStateHandle
+    private val navBackStackEntry: SavedStateHandle,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -61,7 +64,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
 
-    var vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME)?:""
+    var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME)?:""
+    var initVault : Vault? = null
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: MutableState<String>
         get() = _keygenPayload
@@ -88,10 +92,9 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     suspend fun setData(vaultId: String, context: Context) {
         // start mediator server
-
         val allVaults = vaultRepository.getAll()
 
-        val vault = if (vaultId == Destination.KeygenFlow.DEFAULT_NEW_VAULT) {
+        val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
             var newVaultName = ""
             var idx = 1
             while (true) {

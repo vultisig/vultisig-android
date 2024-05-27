@@ -90,14 +90,14 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.KeygenFlow.STATIC_ROUTE,
-            arguments = listOf(navArgument(Destination.KeygenFlow.ARG_VAULT_NAME) {
+            route = Screen.KeygenFlow.route,
+            arguments = listOf(navArgument(Screen.KeygenFlow.ARG_VAULT_NAME) {
                 type = NavType.StringType
-                defaultValue = Destination.KeygenFlow.DEFAULT_NEW_VAULT
+                defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
             })
         ) { navBackStackEntry ->
             val vaultId =
-                navBackStackEntry.arguments?.getString(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
+                navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
 
             KeygenFlowView(navController, vaultId)
         }
