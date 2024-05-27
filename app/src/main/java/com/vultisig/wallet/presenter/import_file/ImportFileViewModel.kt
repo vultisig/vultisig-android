@@ -6,13 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.decodeFromHex
-import com.vultisig.wallet.common.decodeFromHex
 import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
-import com.vultisig.wallet.data.on_board.db.VaultDB
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
