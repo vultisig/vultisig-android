@@ -6,73 +6,33 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
+import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun QrAddressScreen(navController: NavHostController) {
-    val textColor = MaterialTheme.colorScheme.onBackground
-    val appColor = Theme.colors
-    val dimens = MaterialTheme.dimens
     val viewmodel = hiltViewModel<QrAddressViewModel>()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.qr_address_screen_title),
-                        style = Theme.montserrat.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor,
-                        modifier = Modifier
-                            .padding(
-                                start = dimens.marginMedium,
-                                end = dimens.marginMedium,
-                            )
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = appColor.oxfordBlue800,
-                    titleContentColor = textColor
-                ),
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                            contentDescription = "back", tint = Color.White
-                        )
-                    }
-                },
+            TopBar(
+                navController = navController,
+                centerText = stringResource(id = R.string.qr_address_screen_title),
+                startIcon = R.drawable.caret_left
             )
         },
     ) {
