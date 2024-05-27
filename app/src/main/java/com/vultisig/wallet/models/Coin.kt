@@ -489,11 +489,14 @@ object Coins {
             "eth_optimism" -> R.drawable.eth_optimism
             "optimism" -> R.drawable.optimism
             "eth_arbitrum" -> R.drawable.eth_arbitrum
+            "eth_polygon" -> R.drawable.polygon
             "eth_base" -> R.drawable.eth_base
             "bsc" -> R.drawable.bsc
-            "blast" -> R.drawable.eth_blast
-            "cro" -> R.drawable.eth_cro
-            "arbitrum" -> R.drawable.eth_arbitrum
+            "eth_blast" -> R.drawable.eth_blast
+            "blast" -> R.drawable.blast
+            "eth_cro" -> R.drawable.eth_cro
+            "cro" -> R.drawable.cro
+            "arbitrum" -> R.drawable.arbitrum
             "kuji" -> R.drawable.kuji
             "atom" -> R.drawable.atom
             "polygon" -> R.drawable.polygon
