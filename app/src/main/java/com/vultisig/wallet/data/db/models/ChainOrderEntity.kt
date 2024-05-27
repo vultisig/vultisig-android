@@ -6,9 +6,9 @@ import androidx.room.PrimaryKey
 
 
 @Entity(
-    tableName = "chain_order"
+    tableName = "chainOrder"
 )
-data class ChainOrderEntity(
+internal data class ChainOrderEntity(
     @PrimaryKey
     @ColumnInfo(name = "value")
     val value: String = "",

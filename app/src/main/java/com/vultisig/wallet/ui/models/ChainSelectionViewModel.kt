@@ -33,6 +33,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val chainsOrderRepository: ChainsOrderRepository,
 ) : ViewModel() {
+    ) : ViewModel() {
 
     private val vaultId: String =
         requireNotNull(savedStateHandle[AddChainAccount.ARG_VAULT_ID])

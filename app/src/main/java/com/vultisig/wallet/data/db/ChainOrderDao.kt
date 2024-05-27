@@ -9,13 +9,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 internal interface ChainOrderDao {
-    @Query("SELECT * FROM chain_order order by fractionInFloat desc")
+    @Query("SELECT * FROM chainOrder ORDER BY fractionInFloat DESC")
     fun loadByOrders(): Flow<List<ChainOrderEntity>>
 
-    @Query("SELECT * FROM chain_order where value = :value")
+    @Query("SELECT * FROM chainOrder WHERE value = :value")
     suspend fun find(value: String): ChainOrderEntity
 
-    @Query("SELECT * FROM chain_order where fractionInFloat = (select max(fractionInFloat) from chain_order)")
+    @Query("SELECT * FROM chainOrder WHERE fractionInFloat = (SELECT max(fractionInFloat) FROM chainOrder)")
     suspend fun getMaxChainOrder(): ChainOrderEntity?
 
     @Insert
@@ -24,6 +24,6 @@ internal interface ChainOrderDao {
     @Update
     suspend fun updateItemOrder(order: ChainOrderEntity)
 
-    @Query("delete from chain_order where value = :value")
+    @Query("DELETE FROM chainOrder WHERE value = :value")
     suspend fun delete(value: String)
 }
