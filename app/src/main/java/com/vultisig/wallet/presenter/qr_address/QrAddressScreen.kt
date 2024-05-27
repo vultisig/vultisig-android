@@ -95,6 +95,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
                     .padding(top = 128.dp)
             )
 
+            val segment = with(LocalDensity.current) {
                 qrBoxSize.div(5).toPx()
             }
 
