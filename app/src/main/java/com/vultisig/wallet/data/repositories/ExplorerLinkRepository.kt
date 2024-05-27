@@ -7,7 +7,7 @@ internal interface ExplorerLinkRepository {
 
     fun getTransactionLink(
         chain: Chain,
-        transactionHash: String
+        transactionHash: String,
     ): String
 
     fun getAddressLink(
@@ -35,7 +35,8 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         get() = when (this) {
             Chain.avalanche, Chain.arbitrum, Chain.base, Chain.blast, Chain.bscChain,
             Chain.cronosChain, Chain.dogecoin, Chain.ethereum, Chain.gaiaChain, Chain.mayaChain,
-            Chain.optimism, Chain.polygon, Chain.solana, Chain.thorChain ->
+            Chain.optimism, Chain.polygon, Chain.solana, Chain.thorChain,
+            ->
                 "${explorerUrl}tx/"
 
             Chain.bitcoin, Chain.bitcoinCash, Chain.dash, Chain.litecoin ->
@@ -46,7 +47,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
             // TODO: Add support for these later
             // Chain.sui -> "https://suiscan.xyz/mainnet/tx/"
-            // Chain.dot -> "https://polkadot.subscan.io/extrinsic/"
+            Chain.polkadot -> "https://polkadot.subscan.io/extrinsic/"
         }
 
     private val Chain.blockExplorerUrl: String
@@ -73,6 +74,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.polygon -> "https://polygonscan.com/"
             Chain.solana -> "https://explorer.solana.com/"
             Chain.thorChain -> "https://runescan.io/"
+            Chain.polkadot-> "https://polkadot.subscan.io/account/"
         }
 
 }

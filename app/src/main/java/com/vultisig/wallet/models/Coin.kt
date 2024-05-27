@@ -458,6 +458,28 @@ object Coins {
             contractAddress = "",
             isNativeToken = true,
         ),
+        Coin(
+            chain = Chain.polkadot,
+            ticker = "DOT",
+            logo = "dot",
+            address = "",
+            decimal = 10,
+            hexPublicKey = "",
+            priceProviderID = "polkadot",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.polkadot,
+            ticker = "SUI",
+            logo = "sui",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "sui",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {

@@ -51,4 +51,10 @@ internal interface ApiModule {
     fun bindSolanaApi(
         impl: SolanaApiImp,
     ): SolanaApi
+
+    @Binds
+    @Singleton
+    fun bindPolkadotApi(
+        impl: PolkadotApiImp
+    ): PolkadotApi
 }

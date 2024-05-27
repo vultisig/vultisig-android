@@ -12,6 +12,7 @@ import com.vultisig.wallet.chains.ERC20Helper
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.KujiraHelper
 import com.vultisig.wallet.chains.MayaChainHelper
+import com.vultisig.wallet.chains.PolkadotHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.THORChainSwaps
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -69,6 +71,7 @@ internal class KeysignViewModel(
     private val mayaChainApi: MayaChainApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
+    private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
@@ -225,6 +228,9 @@ internal class KeysignViewModel(
                             Timber.d("transaction hash:$it")
                         }
                 }
+                Chain.polkadot->{
+
+                }
             }
         } catch (e: Exception) {
             Timber.e(e)
@@ -295,6 +301,10 @@ internal class KeysignViewModel(
             Chain.mayaChain -> {
                 val mayaHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return mayaHelper.getSignedTransaction(keysignPayload, signatures)
+            }
+            Chain.polkadot->{
+                val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
+                return dotHelper.getSignedTransaction(keysignPayload, signatures)
             }
         }
     }

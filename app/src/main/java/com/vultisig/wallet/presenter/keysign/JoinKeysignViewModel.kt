@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.TokenValue
@@ -77,6 +78,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
+    private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
@@ -116,6 +118,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             mayaChainApi = mayaChainApi,
             cosmosApiFactory = cosmosApiFactory,
             solanaApi = solanaApi,
+            polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
         )
 

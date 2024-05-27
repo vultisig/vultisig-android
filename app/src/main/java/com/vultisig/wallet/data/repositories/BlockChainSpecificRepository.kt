@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.TokenStandard
@@ -39,6 +40,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val solanaApi: SolanaApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
+    private val polkadotApi: PolkadotApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -128,6 +130,24 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     gas = gasFee.value,
                 )
             )
+        }
+
+        TokenStandard.SUBSTRATE -> {
+            if (chain == Chain.polkadot) {
+                val version: Pair<BigInteger, BigInteger> = polkadotApi.getRuntimeVersion()
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Polkadot(
+                        recentBlockHash = polkadotApi.getBlockHash(),
+                        nonce = polkadotApi.getNonce(address),
+                        currentBlockNumber = polkadotApi.getBlockHeader(),
+                        specVersion = version.first.toLong().toUInt(),
+                        transactionVersion = version.second.toLong().toUInt(),
+                        genesisHash = polkadotApi.getGenesisBlockHash()
+                    )
+                )
+            } else {
+                error("Unsupported chain: $chain")
+            }
         }
 
     }
