@@ -21,8 +21,7 @@ internal interface DatabaseModule {
         fun provideVaultDao(
             appDatabase: AppDatabase,
         ): VaultDao = appDatabase.vaultDao()
-
-
+        
         @Provides
         @Singleton
         fun provideOrderDao(
@@ -39,7 +38,8 @@ internal interface DatabaseModule {
                 context = appContext,
                 klass = AppDatabase::class.java,
                 name = DB_NAME,
-            ).addMigrations(MIGRATION_1_2).build()
+            ).addMigrations(MIGRATION_1_2)
+                .build()
 
         private const val DB_NAME = "vultisig_db"
 
