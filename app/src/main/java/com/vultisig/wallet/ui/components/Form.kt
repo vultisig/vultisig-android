@@ -180,9 +180,11 @@ internal fun FormEntry(
 
 @Composable
 internal fun FormCard(
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
     Card(
+        modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = Theme.colors.oxfordBlue600Main,
         ),

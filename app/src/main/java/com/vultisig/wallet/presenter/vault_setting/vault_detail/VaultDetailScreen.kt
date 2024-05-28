@@ -58,7 +58,7 @@ fun VaultDetailScreen(navHostController: NavHostController) {
 
                 color = Theme.colors.neutral100,
                 modifier = Modifier.fillMaxWidth(),
-                style = Theme.montserrat.titleMedium.copy(textAlign = TextAlign.Center),)
+                style = Theme.montserrat.subtitle2.copy(textAlign = TextAlign.Center),)
 
             uiModel.deviceList.map {
                 VaultDetailScreenItem(it)
@@ -87,7 +87,7 @@ private fun VaultDetailScreenItem(propName: String, propValue: String? = null) {
             Text(
                 text = propName,
                 color = Theme.colors.neutral100,
-                style = Theme.montserrat.titleMedium,
+                style = Theme.montserrat.subtitle2,
             )
             propValue?.let {
                 Text(

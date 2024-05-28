@@ -30,6 +30,7 @@ data class TransactionUiModel(
     val fiatValue: String = "",
     val fiatCurrency: String = "",
     val gasValue: String = "",
+    val showGasField: Boolean = true,
 )
 
 @Immutable
