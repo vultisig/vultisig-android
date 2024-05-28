@@ -60,7 +60,7 @@ class OrderDB @Inject constructor(@ApplicationContext context: Context, private 
 
     fun removeOrder(key: String) {
         ordersFolder.listFiles()?.forEach { fileLocation ->
-            val order = gson.fromJson(fileLocation.readText(), Order::class.java)
+            val order = gson.fromJson(fileLocation.readText(), Order::class.java) ?: return
             val updatedPositions =
                 order.positions.toMutableList().apply { removeIf { it.key == key } }
             fileLocation.writeText(gson.toJson(order.copy(positions = updatedPositions.toList())))

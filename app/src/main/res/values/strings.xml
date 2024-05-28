@@ -176,7 +176,7 @@
     <string name="this_device">(This Device)</string>
     <string name="device_list_of_vault">%1$s of %2$s Vault</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanetly</string>
-    <string name="vault_settings_delete_vault_caution2">I am aware that I can loose funds</string>
+    <string name="vault_settings_delete_vault_caution2">I am aware that I can lost funds</string>
     <string name="vault_settings_delete_vault_caution3">I have made a vault backup</string>
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
