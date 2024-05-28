@@ -289,7 +289,7 @@ object Coins {
         Coin(
             chain = Chain.base,
             ticker = "ETH",
-            logo = "eth_base",
+            logo = "eth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -300,7 +300,7 @@ object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "ETH",
-            logo = "eth_arbitrum",
+            logo = "eth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -344,7 +344,7 @@ object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "ETH",
-            logo = "eth_optimism",
+            logo = "eth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -410,7 +410,7 @@ object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "ETH",
-            logo = "eth_blast",
+            logo = "eth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
