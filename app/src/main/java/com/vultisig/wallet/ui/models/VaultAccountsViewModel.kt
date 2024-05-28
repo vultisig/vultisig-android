@@ -59,17 +59,12 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun loadData(vaultId: String) {
         this.vaultId = vaultId
         loadVaultName(vaultId)
-        loadAccounts(
-            vaultId = vaultId,
-            showRefreshing = false,
-        )
+        loadAccounts(vaultId)
     }
 
     fun refreshData() {
-        loadAccounts(
-            vaultId = requireNotNull(vaultId),
-            showRefreshing = true,
-        )
+        updateRefreshing(true)
+        loadAccounts(requireNotNull(vaultId))
     }
 
     fun openAccount(account: AccountUiModel) {
@@ -94,24 +89,18 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    private fun loadAccounts(
-        vaultId: String,
-        showRefreshing: Boolean,
-    ) {
+    private fun loadAccounts(vaultId: String) {
         loadAccountsJob?.cancel()
         loadAccountsJob = viewModelScope.launch {
-            if (showRefreshing) {
-                uiState.update { it.copy(isRefreshing = true) }
-            }
             accountsRepository
                 .loadAddresses(vaultId)
                 .catch {
+                    updateRefreshing(false)
+
                     // TODO handle error
                     Timber.e(it)
                 }.collect { accounts ->
-                    if (showRefreshing) {
-                        uiState.update { it.copy(isRefreshing = false) }
-                    }
+                    updateRefreshing(false)
 
                     val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
                         ?.let(fiatValueToStringMapper::map)
@@ -124,6 +113,10 @@ internal class VaultAccountsViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private fun updateRefreshing(isRefreshing: Boolean) {
+        uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
 }
