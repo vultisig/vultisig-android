@@ -89,6 +89,7 @@ private fun VaultAccountsScreen(
             VerticalReorderList(
                 data = state.accounts,
                 onMove = onMove,
+                key = { it.chainName },
                 contentPadding = PaddingValues(all = 16.dp),
                 beforeContents = listOf {
                     AnimatedContent(

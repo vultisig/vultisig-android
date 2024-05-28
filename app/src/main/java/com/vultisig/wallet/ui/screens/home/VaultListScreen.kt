@@ -62,6 +62,7 @@ private fun VaultListScreen(
         VerticalReorderList(
             onMove = onMove,
             data = vaults,
+            key = { it.id },
             contentPadding = PaddingValues(
                 top = 16.dp,
                 start = 12.dp,

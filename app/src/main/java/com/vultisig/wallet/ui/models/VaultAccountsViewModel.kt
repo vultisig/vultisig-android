@@ -36,16 +36,15 @@ internal data class VaultAccountsUiModel(
     val accounts: List<AccountUiModel> = emptyList(),
 )
 
-@Parcelize // Draggable list required Parcelable data
 internal data class AccountUiModel(
-    val model: @RawValue Address,
+    val model: Address,
     val chainName: String,
     @DrawableRes val logo: Int,
     val address: String,
     val nativeTokenAmount: String?,
     val fiatAmount: String?,
     val assetsSize: Int = 0,
-):Parcelable
+)
 
 @HiltViewModel
 internal class VaultAccountsViewModel @Inject constructor(

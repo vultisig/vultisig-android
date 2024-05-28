@@ -26,13 +26,14 @@ internal fun <T : Any> VerticalReorderList(
     onMove: (from: Int, to: Int) -> Unit,
     beforeContents: List<@Composable LazyItemScope.() -> Unit>? = null,
     afterContents: List<@Composable LazyItemScope.() -> Unit>? = null,
+    key: ((item: T) -> Any),
     content: @Composable (item: T) -> Unit,
 ) {
     val dataSize by rememberUpdatedState(newValue = data.size)
     val state = rememberReorderableLazyListState(onMove = { from, to ->
         val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
         val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-        val boundaries = listOf(-1,dataSize + (beforeContents?.lastIndex ?: 0))
+        val boundaries = listOf(-1, dataSize + (beforeContents?.lastIndex ?: 0))
         if (boundaries.any { it == i || it == j })
             return@rememberReorderableLazyListState
         onMove(i, j)
@@ -47,8 +48,8 @@ internal fun <T : Any> VerticalReorderList(
         beforeContents?.forEach { content ->
             item(content = content)
         }
-        items(data, { it }) { item ->
-            ReorderableItem(state, key = item) { isDragging ->
+        items(data, key) { item ->
+            ReorderableItem(state, key = key(item)) { isDragging ->
                 val elevation =
                     animateDpAsState(if (isDragging) 16.dp else 0.dp, label = "elevation")
                 Column(
