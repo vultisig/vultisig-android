@@ -8,6 +8,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
+import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
 
@@ -34,11 +35,15 @@ internal interface VaultDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertKeyshares(keyshares: List<KeyShareEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertSigners(signers: List<SignerEntity>)
+
     @Transaction
     suspend fun insert(vault: VaultWithKeySharesAndTokens) {
         insertVault(vault.vault)
         insertCoins(vault.coins)
         insertKeyshares(vault.keyShares)
+        insertSigners(vault.signers)
     }
 
     @Upsert
@@ -50,11 +55,15 @@ internal interface VaultDao {
     @Upsert
     suspend fun upsertKeyshares(keyshares: List<KeyShareEntity>)
 
+    @Upsert
+    suspend fun upsertSigners(signers: List<SignerEntity>)
+
     @Transaction
     suspend fun upsert(vault: VaultWithKeySharesAndTokens) {
         upsertVault(vault.vault)
         upsertCoins(vault.coins)
         upsertKeyshares(vault.keyShares)
+        upsertSigners(vault.signers)
     }
 
     @Query("DELETE FROM coin WHERE vaultId = :vaultId AND id = :tokenId")
