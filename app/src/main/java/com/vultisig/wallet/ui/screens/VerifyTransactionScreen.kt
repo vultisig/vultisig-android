@@ -129,12 +129,13 @@ internal fun VerifyTransactionScreen(
                         ),
                         value = state.transaction.fiatValue,
                     )
-
-                    OtherField(
-                        title = stringResource(R.string.verify_transaction_gas_title),
-                        value = state.transaction.gasValue,
-                        divider = false
-                    )
+                    if (state.transaction.showGasField) {
+                        OtherField(
+                            title = stringResource(R.string.verify_transaction_gas_title),
+                            value = state.transaction.gasValue,
+                            divider = false
+                        )
+                    }
                 }
             }
 

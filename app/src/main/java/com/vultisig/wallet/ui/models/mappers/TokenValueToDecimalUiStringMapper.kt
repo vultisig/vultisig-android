@@ -19,7 +19,7 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
     }
 
     companion object {
-        private const val MAX_UI_TOKEN_VALUE_DECIMALS = 6
+        private const val MAX_UI_TOKEN_VALUE_DECIMALS = 8
     }
 
 }
