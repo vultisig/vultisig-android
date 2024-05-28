@@ -11,6 +11,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -37,14 +38,16 @@ internal class MainViewModel @Inject constructor(
                 _startDestination.value = Screen.Home.route
                 _isLoading.value = false
             } else {
-                repository.readOnBoardingState().collect { completed ->
-                    if (completed) {
-                        _startDestination.value = Screen.CreateNewVault.route
-                    } else {
-                        _startDestination.value = Screen.Welcome.route
-                    }
-                    _isLoading.value = false
+                val isUserPassedOnboarding = repository.readOnBoardingState()
+                    .first()
+
+                if (isUserPassedOnboarding) {
+                    _startDestination.value = Screen.CreateNewVault.route
+                } else {
+                    _startDestination.value = Screen.Welcome.route
                 }
+
+                _isLoading.value = false
             }
         }
     }

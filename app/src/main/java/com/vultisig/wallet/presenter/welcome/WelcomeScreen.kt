@@ -33,7 +33,6 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.presenter.common.UiEvent.NavigateTo
-import com.vultisig.wallet.presenter.common.UiEvent.PopBackStack
 import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.theme.appColor
@@ -44,7 +43,7 @@ import com.vultisig.wallet.ui.theme.montserratFamily
 @OptIn(ExperimentalFoundationApi::class)
 @ExperimentalAnimationApi
 @Composable
-fun WelcomeScreen(
+internal fun WelcomeScreen(
     navController: NavHostController,
     viewModel: WelcomeViewModel = hiltViewModel(),
 ) {
@@ -55,7 +54,9 @@ fun WelcomeScreen(
         viewModel.channel.collect { uiEvent ->
             when (uiEvent) {
                 is NavigateTo -> {
-                    navController.navigate(uiEvent.screen.route)
+                    navController.navigate(uiEvent.screen.route) {
+                        popUpTo(navController.graph.id)
+                    }
                 }
 
                 is ScrollToNextPage -> {
@@ -66,10 +67,6 @@ fun WelcomeScreen(
                         navController.navigate(uiEvent.screen.route)
                     }
 
-                }
-
-                PopBackStack -> {
-                    navController.popBackStack()
                 }
             }
         }
@@ -129,7 +126,7 @@ fun WelcomeScreen(
                     end = MaterialTheme.dimens.buttonMargin
                 )
         ) {
-            viewModel.onEvent(WelcomeEvent.NextPages)
+            viewModel.scrollToNextPage()
         }
         Spacer(
             modifier = Modifier
@@ -145,7 +142,7 @@ fun WelcomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                viewModel.onEvent(WelcomeEvent.BoardCompleted)
+                viewModel.skip()
             }
         }
     }
