@@ -9,7 +9,6 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.encodeToHex
 import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapper
 import com.vultisig.wallet.data.on_board.db.OrderDB
-import com.vultisig.wallet.data.on_board.db.VaultDB.Companion.FILE_POSTFIX
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
@@ -135,5 +134,8 @@ internal open class VaultSettingsViewModel @Inject constructor(
         }
     }
 
+    companion object {
+        private const val FILE_POSTFIX = "-vault.dat"
+    }
 
 }

@@ -178,22 +178,23 @@ internal fun SendScreen(
                     keyboardType = KeyboardType.Number,
                     textFieldState = viewModel.fiatAmountFieldState,
                 )
-
-                Row {
-                    Text(
-                        text = stringResource(R.string.send_gas_title),
-                        color = Theme.colors.neutral100,
-                        style = Theme.montserrat.body1,
-                    )
-                    UiSpacer(weight = 1f)
-                    Text(
-                        text = state.fee ?: "",
-                        color = Theme.colors.neutral100,
-                        style = Theme.menlo.body1
-                    )
+                if (state.showGasFee) {
+                    Row {
+                        Text(
+                            text = stringResource(R.string.send_gas_title),
+                            color = Theme.colors.neutral100,
+                            style = Theme.montserrat.body1,
+                        )
+                        UiSpacer(weight = 1f)
+                        Text(
+                            text = state.fee ?: "",
+                            color = Theme.colors.neutral100,
+                            style = Theme.menlo.body1
+                        )
+                    }
                 }
-
                 UiSpacer(size = 80.dp)
+
             }
 
             MultiColorButton(

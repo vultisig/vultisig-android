@@ -177,10 +177,17 @@ class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
                 )
             }
 
-            jsonObject.has("Polkadot") -> context.deserialize<BlockChainSpecific.Polkadot>(
-                jsonObject.get("Polkadot"), BlockChainSpecific.Polkadot::class.java
-            )
-
+            jsonObject.has("Polkadot") -> {
+                val obj = jsonObject.get("Polkadot").asJsonObject
+                return BlockChainSpecific.Polkadot(
+                    recentBlockHash = obj.get("recentBlockHash").asString,
+                    nonce = obj.get("nonce").asBigInteger,
+                    currentBlockNumber = obj.get("currentBlockNumber").asJsonArray[1].asBigInteger,
+                    specVersion = obj.get("specVersion").asLong.toUInt(),
+                    transactionVersion = obj.get("transactionVersion").asLong.toUInt(),
+                    genesisHash = obj.get("genesisHash").asString
+                )
+            }
             else -> throw JsonParseException("Not a valid BlockChainSpecific type")
         }
     }

@@ -46,7 +46,7 @@
     <string name="chain_account_view_send">SEND</string>
     <string name="chain_account_view_swap">SWAP</string>
     <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_buy_vtx">BUG $VTX</string>
+    <string name="chain_account_buy_vtx">BUY $VULT</string>
     <string name="save">Save</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
@@ -63,7 +63,7 @@
     <string name="settings_screen_currency">Currency</string>
     <string name="settings_screen_default_chains">Default Chains</string>
     <string name="settings_screen_faq">FAQ</string>
-    <string name="settings_screen_vtx_token">The $VTX Token</string>
+    <string name="settings_screen_vtx_token">The $VULT Token</string>
     <string name="settings_screen_share_the_app">Share The App</string>
     <string name="vultisig_app_version">VULTISIG APP V%1$s</string>
     <string name="settings_screen_title">Settings</string>
@@ -139,8 +139,8 @@
     <string name="keysign_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
     <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect...</string>
     <string name="keysign_peer_discovery_desc1">Keep all devices on same network with Vultisig App open. (May not work on hotel/airport WiFi)</string>
-    <string name="feature_item_vtx_tokens_are_burnt_from_fees">VTX tokens are burnt from fees.</string>
-    <string name="feature_item_vtx_tokens_are_airdropped_to_users">VTX tokens are airdropped to users.</string>
+    <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT tokens are burnt from fees.</string>
+    <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokens are airdropped to users.</string>
     <string name="feature_item_learn_more">Learn more</string>
     <string name="signing_error_keygen">Keygen</string>
     <string name="signing_error_signing_error_please_try_again">Signing Error. Please try again.</string>
@@ -183,4 +183,7 @@
     <string name="vault_accounts_account_assets">%1$s assets</string>
     <string name="s_of_s_vault">%s of %s vault</string>
     <string name="scan_qr_screen_return_vault">Return Vault</string>
+    <string name="naming_vault_screen_continue">Continue</string>
+    <string name="naming_vault_screen_name_your_vault">Name your Vault</string>
+    <string name="naming_vault_screen_vault_name">Vault Name</string>
 </resources>

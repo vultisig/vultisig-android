@@ -27,6 +27,10 @@ data class Coin(
 
 }
 
+fun Coin.AllowZeroGas(): Boolean {
+    return this.chain == Chain.polkadot
+}
+
 object Coins {
     val SupportedCoins = listOf(
         Coin(
@@ -458,6 +462,17 @@ object Coins {
             contractAddress = "",
             isNativeToken = true,
         ),
+        Coin(
+            chain = Chain.polkadot,
+            ticker = "DOT",
+            logo = "dot",
+            address = "",
+            decimal = 10,
+            hexPublicKey = "",
+            priceProviderID = "polkadot",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
@@ -489,30 +504,21 @@ object Coins {
             "eth_optimism" -> R.drawable.eth_optimism
             "optimism" -> R.drawable.optimism
             "eth_arbitrum" -> R.drawable.eth_arbitrum
+            "eth_polygon" -> R.drawable.polygon
             "eth_base" -> R.drawable.eth_base
             "bsc" -> R.drawable.bsc
-            "blast" -> R.drawable.eth_blast
-            "cro" -> R.drawable.eth_cro
-            "arbitrum" -> R.drawable.eth_arbitrum
+            "eth_blast" -> R.drawable.eth_blast
+            "blast" -> R.drawable.blast
+            "eth_cro" -> R.drawable.eth_cro
+            "cro" -> R.drawable.cro
+            "arbitrum" -> R.drawable.arbitrum
             "kuji" -> R.drawable.kuji
             "atom" -> R.drawable.atom
             "polygon" -> R.drawable.polygon
             "tgt" -> R.drawable.tgt
             "fox" -> R.drawable.fox
+            "dot" -> R.drawable.dot
             else -> R.drawable.danger
-        }
-    }
-    fun capitalizeTokenSubtitle(input: String): String {
-        var output=input.split("-").joinToString(" ") {
-            it.capitalize()
-        }
-        return output.replace(Regex("(?i)usd(?:c|t)?")){matchResult->
-            when(matchResult.value.toLowerCase()){
-                "usd" -> "USD"
-                "usdt" ->"USDT"
-                "usdc" ->"USDC"
-                else ->matchResult.value
-            }
         }
     }
 }
