@@ -1,5 +1,5 @@
 package com.vultisig.wallet.presenter.settings.faq_setting
 
-data class FAQSettingUiModel (val questions: List<Question>)
+data class FAQSettingUiModel (val questions: List<Faq>)
 
-data class Question(val text: String)
+data class Faq(val question: String,val answer:String)
