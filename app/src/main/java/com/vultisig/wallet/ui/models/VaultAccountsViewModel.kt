@@ -36,7 +36,7 @@ internal data class VaultAccountsUiModel(
     val accounts: List<AccountUiModel> = emptyList(),
 )
 
-@Parcelize
+@Parcelize // Draggable list required Parcelable data
 internal data class AccountUiModel(
     val model: @RawValue Address,
     val chainName: String,
