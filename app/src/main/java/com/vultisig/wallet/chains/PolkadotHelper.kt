@@ -17,16 +17,11 @@ import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
-import java.math.BigInteger
 
 internal class PolkadotHelper(
     private val vaultHexPublicKey: String,
 ) {
     private val coinType = CoinType.POLKADOT
-
-    companion object {
-        internal val DefaultFeeInPlancks: BigInteger = 10_000_000_000.toBigInteger()
-    }
 
     fun getCoin(): Coin? {
         val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
@@ -99,7 +94,7 @@ internal class PolkadotHelper(
             rawTransaction = Numeric.toHexStringNoPrefix(
                 output.encoded.toByteArray()
             ),
-            transactionHash = Numeric.toHexStringNoPrefix(
+            transactionHash = Numeric.toHexString(
                 Utils.blake2bHash(
                     output.encoded.toByteArray().take(32).toByteArray()
                 )

@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.models.AllowZeroGas
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -67,6 +68,7 @@ internal data class SendUiModel(
     val fiatCurrency: String = "",
     val fee: String? = null,
     val errorText: UiText? = null,
+    val showGasFee: Boolean = true,
 )
 
 private data class InvalidTransactionDataException(
@@ -142,6 +144,11 @@ internal class SendViewModel @Inject constructor(
         uiState.update {
             it.copy(isTokensExpanded = !it.isTokensExpanded)
         }
+        if (selectedAccount.value?.token?.AllowZeroGas() == true) {
+            uiState.update {
+                it.copy(showGasFee = false)
+            }
+        }
     }
 
     fun setOutputAddress(address: String) {
@@ -185,13 +192,15 @@ internal class SendViewModel @Inject constructor(
                     )
 
                 val gasFee = gasFee.value
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_gas_fee)
+                    )
 
-                if (gasFee == null || gasFee.value <= BigInteger.ZERO) {
+                if (!selectedAccount.token.AllowZeroGas() && gasFee.value <= BigInteger.ZERO) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-
                 val dstAddress = addressFieldState.text.toString()
 
                 if (dstAddress.isBlank() ||
@@ -320,6 +329,7 @@ internal class SendViewModel @Inject constructor(
                     it.copy(
                         from = account.address,
                         availableTokens = tokenUiModels,
+                        showGasFee = (selectedAccount.value?.token?.AllowZeroGas() == false)
                     )
                 }
             }

@@ -27,6 +27,10 @@ data class Coin(
 
 }
 
+fun Coin.AllowZeroGas(): Boolean {
+    return this.chain == Chain.polkadot
+}
+
 object Coins {
     val SupportedCoins = listOf(
         Coin(

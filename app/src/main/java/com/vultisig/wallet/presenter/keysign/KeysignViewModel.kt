@@ -229,7 +229,14 @@ internal class KeysignViewModel(
                         }
                 }
                 Chain.polkadot->{
-
+                    polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
+                        ?.let {
+                            txHash.value = it
+                            Timber.d("transaction hash:$it")
+                        }
+                        ?: run {
+                            txHash.value = signedTransaction.transactionHash
+                        }
                 }
             }
         } catch (e: Exception) {

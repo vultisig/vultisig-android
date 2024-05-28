@@ -139,7 +139,10 @@ internal class PolkadotApiImp @Inject constructor(
         val responseContent = response.bodyAsText()
         val rpcResp = gson.fromJson(responseContent, RpcResponse::class.java)
         if (rpcResp.error != null) {
-            return null
+            if (rpcResp.error.code == 1012) {
+                return null
+            }
+            throw Exception("Error broadcasting transaction: $responseContent")
         }
         return rpcResp.result
     }
