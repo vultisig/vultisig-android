@@ -21,9 +21,10 @@ import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.ReshareMessage
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -50,7 +51,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
     private val navBackStackEntry: SavedStateHandle,
-    @ApplicationContext private val context: Context
+    private val navigator: Navigator<Destination>
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -90,6 +91,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             gson,
             vaultRepository = vaultRepository,
             defaultChainsRepository = defaultChainsRepository,
+            navigator = navigator,
         )
 
     suspend fun setData(vaultId: String, context: Context) {

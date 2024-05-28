@@ -68,7 +68,15 @@ internal fun SetupNavGraph(
         composable(route = Screen.Welcome.route) {
             WelcomeScreen(navController = navController)
         }
-        composable(route = Destination.Home.route) {
+        composable(
+            route = Destination.Home.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
             HomeScreen(navController)
         }
 

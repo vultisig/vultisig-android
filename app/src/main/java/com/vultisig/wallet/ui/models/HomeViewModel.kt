@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -21,11 +22,15 @@ internal data class HomeUiModel(
 
 @HiltViewModel
 internal class HomeViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+
     private val navigator: Navigator<Destination>,
 
     private val vaultRepository: VaultRepository,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
 ) : ViewModel() {
+
+    private var requestedVaultId: String? = savedStateHandle.remove(Destination.ARG_VAULT_ID)
 
     val uiState = MutableStateFlow(HomeUiModel())
 
@@ -62,6 +67,12 @@ internal class HomeViewModel @Inject constructor(
 
     private fun collectLastOpenedVault() {
         viewModelScope.launch {
+            val requestedVaultId = requestedVaultId
+            if (requestedVaultId != null) {
+                lastOpenedVaultRepository.setLastOpenedVaultId(requestedVaultId)
+                this@HomeViewModel.requestedVaultId = null
+            }
+
             lastOpenedVaultRepository.lastOpenedVaultId
                 .map { lastOpenedVaultId ->
                     lastOpenedVaultId?.let {

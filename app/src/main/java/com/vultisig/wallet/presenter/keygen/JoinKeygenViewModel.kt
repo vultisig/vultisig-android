@@ -81,6 +81,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             vaultRepository = vaultRepository,
             oldResharePrefix = _oldResharePrefix,
             defaultChainsRepository = defaultChainsRepository,
+            navigator = navigator,
         )
 
     fun setData() {

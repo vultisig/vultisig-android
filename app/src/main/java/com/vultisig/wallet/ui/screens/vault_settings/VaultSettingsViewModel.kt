@@ -130,7 +130,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
             vaultRepository.delete(vaultId)
             orderDB.removeOrder(vault.name)
-            navigator.navigate(Destination.Home)
+            navigator.navigate(Destination.Home())
         }
     }
 

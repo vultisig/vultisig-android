@@ -37,7 +37,6 @@ import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
 import com.vultisig.wallet.presenter.keygen.KeygenState
 import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -65,10 +64,7 @@ internal fun GeneratingKey(
 
         KeygenState.Success -> {
             LaunchedEffect(Unit) {
-                viewModel.saveVault()
-                Thread.sleep(2000) // wait for 2 seconds
-                viewModel.stopService(context)
-                navController.navigate(Screen.Home.route)
+                viewModel.saveVault(context)
             }
         }
 
