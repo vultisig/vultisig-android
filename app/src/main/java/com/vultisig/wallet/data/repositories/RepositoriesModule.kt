@@ -106,4 +106,9 @@ internal interface RepositoriesModule {
         impl: VaultRepositoryImpl
     ): VaultRepository
 
+    @Binds
+    @Singleton
+    fun bindChainsOrderRepository(
+        impl: ChainsOrderRepositoryImpl
+    ): ChainsOrderRepository
 }
