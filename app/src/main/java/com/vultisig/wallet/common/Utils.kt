@@ -1,5 +1,6 @@
 package com.vultisig.wallet.common
 
+import org.bouncycastle.crypto.digests.Blake2bDigest
 import java.security.SecureRandom
 import kotlin.math.ceil
 
@@ -16,7 +17,15 @@ object Utils {
             return keyBytes.joinToString("") { "%02x".format(it) }
         }
 
-    fun getThreshold(input: Int):Int{
-        return ceil(input * 2.0/ 3.0).toInt()
+    fun getThreshold(input: Int): Int {
+        return ceil(input * 2.0 / 3.0).toInt()
+    }
+
+    fun blake2bHash(input: ByteArray): ByteArray {
+        val digest = Blake2bDigest(256)
+        digest.update(input, 0, input.size)
+        val output = ByteArray(digest.digestSize)
+        digest.doFinal(output, 0)
+        return output
     }
 }

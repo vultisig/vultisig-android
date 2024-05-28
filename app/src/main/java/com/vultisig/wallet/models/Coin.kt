@@ -27,6 +27,10 @@ data class Coin(
 
 }
 
+fun Coin.AllowZeroGas(): Boolean {
+    return this.chain == Chain.polkadot
+}
+
 object Coins {
     val SupportedCoins = listOf(
         Coin(
@@ -458,6 +462,17 @@ object Coins {
             contractAddress = "",
             isNativeToken = true,
         ),
+        Coin(
+            chain = Chain.polkadot,
+            ticker = "DOT",
+            logo = "dot",
+            address = "",
+            decimal = 10,
+            hexPublicKey = "",
+            priceProviderID = "polkadot",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
@@ -502,6 +517,7 @@ object Coins {
             "polygon" -> R.drawable.polygon
             "tgt" -> R.drawable.tgt
             "fox" -> R.drawable.fox
+            "dot" -> R.drawable.dot
             else -> R.drawable.danger
         }
     }

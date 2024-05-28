@@ -6,4 +6,5 @@ enum class TokenStandard {
     THORCHAIN,
     COSMOS,
     SOL,
+    SUBSTRATE,
 }
