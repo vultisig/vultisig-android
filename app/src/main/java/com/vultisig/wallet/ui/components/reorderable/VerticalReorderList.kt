@@ -32,7 +32,8 @@ internal fun <T : Any> VerticalReorderList(
     val state = rememberReorderableLazyListState(onMove = { from, to ->
         val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
         val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-        if (j <= -1 || j >= dataSize + (beforeContents?.lastIndex ?: 0))
+        val boundaries = listOf(-1,dataSize + (beforeContents?.lastIndex ?: 0))
+        if (boundaries.any { it == i || it == j })
             return@rememberReorderableLazyListState
         onMove(i, j)
     })

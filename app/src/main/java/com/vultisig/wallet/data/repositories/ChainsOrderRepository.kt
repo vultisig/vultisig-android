@@ -26,36 +26,19 @@ internal class ChainsOrderRepositoryImpl @Inject constructor(
 
     override suspend fun updateItemOrder(lowerVal: String?, middleVal: String, upperVal: String?) {
         withContext(IO) {
+            val middleChainEntity = chainOrderDao.find(middleVal)
             val lowerChainEntity = if (lowerVal != null)
                 chainOrderDao.find(lowerVal)
-            else ChainOrderEntity(trueFraction = "0/1", fractionInFloat = 0f)
-            val middleChainEntity = chainOrderDao.find(middleVal)
-            val upperChainEntity = if (upperVal != null) chainOrderDao.find(upperVal)
+            else ChainOrderEntity(order = 0f)
+            val upperChainEntity = if (upperVal != null)
+                chainOrderDao.find(upperVal)
             else {
-                val maxOrder = findMaxOrder() ?: ChainOrderEntity(
-                    "", "0/1", 0f
-                )
-                val maxOrderFraction = maxOrder.trueFraction.extractFraction()
-                ChainOrderEntity(
-                    trueFraction = (
-                            maxOrderFraction.first + maxOrderFraction.second
-                                    to maxOrderFraction.second)
-                        .toFractionString(),
-                    fractionInFloat = maxOrder.fractionInFloat + 1
-                )
+                val maxOrderEntity = findMaxOrder()
+                ChainOrderEntity(order = maxOrderEntity.order + ORDER_STEP)
             }
-            val (lowerNumerator, lowerDenominator) =
-                lowerChainEntity.trueFraction.extractFraction()
-            val (upperNumerator, upperDenominator) =
-                upperChainEntity.trueFraction.extractFraction()
-            val newMiddleTrueFractionPair =
-                (lowerNumerator + upperNumerator) to (lowerDenominator + upperDenominator)
-            val newMiddleFloatFraction: Float = newMiddleTrueFractionPair.first.toFloat()
-                .div(newMiddleTrueFractionPair.second.toFloat())
             chainOrderDao.updateItemOrder(
                 middleChainEntity.copy(
-                    trueFraction = newMiddleTrueFractionPair.toFractionString(),
-                    fractionInFloat = newMiddleFloatFraction
+                    order = (lowerChainEntity.order + upperChainEntity.order) / 2
                 )
             )
         }
@@ -73,34 +56,20 @@ internal class ChainsOrderRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun findMaxOrder(): ChainOrderEntity? =
-        withContext(IO) { chainOrderDao.getMaxChainOrder() }
+    private suspend fun findMaxOrder(): ChainOrderEntity =
+        withContext(IO) { chainOrderDao.getMaxChainOrder() ?: ChainOrderEntity(order = 0f) }
+
 
     override suspend fun insert(name: String) {
         withContext(IO) {
-            val firstChainOrder = ChainOrderEntity(
-                value = "",
-                trueFraction = "0/1",
-                fractionInFloat = 0f
-            )
-            val maxOrder = findMaxOrder() ?: firstChainOrder
-            val (numerator, denominator) = maxOrder.trueFraction.extractFraction()
-            val newFloatFraction = maxOrder.fractionInFloat + 1
-            val newTrueFraction = numerator + denominator to denominator
-            val order = ChainOrderEntity(
-                name,
-                fractionInFloat = newFloatFraction,
-                trueFraction = newTrueFraction.toFractionString()
-            )
+            val maxOrder = findMaxOrder()
+            val newOrder = maxOrder.order + ORDER_STEP
+            val order = ChainOrderEntity(name, order = newOrder)
             chainOrderDao.insert(order)
         }
     }
 
-
-    private fun String.extractFraction(): Pair<Int, Int> {
-        val parts = this.split("/").map { it.toInt() }
-        return Pair(parts[0], parts[1])
+    companion object {
+        private const val ORDER_STEP = 100_000_000
     }
-
-    private fun Pair<Int, Int>.toFractionString(): String = "$first/$second"
 }

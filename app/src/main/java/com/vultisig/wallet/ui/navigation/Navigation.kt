@@ -38,6 +38,18 @@ internal sealed class Destination(
         }
     }
 
+    data class ChainTokens(
+        val vaultId: String,
+        val chainId: String,
+    ) : Destination(
+        route = "vault_detail/${vaultId}/account/${chainId}"
+    ) {
+        companion object {
+            const val staticRoute =
+                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
+        }
+    }
+
     data class Send(
         val vaultId: String,
         val chainId: String,

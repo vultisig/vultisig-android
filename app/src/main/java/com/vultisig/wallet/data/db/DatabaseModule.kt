@@ -22,6 +22,7 @@ internal interface DatabaseModule {
             appDatabase: AppDatabase,
         ): VaultDao = appDatabase.vaultDao()
 
+
         @Provides
         @Singleton
         fun provideOrderDao(

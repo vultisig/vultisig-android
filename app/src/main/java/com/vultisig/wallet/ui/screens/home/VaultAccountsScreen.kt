@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiIcon
@@ -55,13 +57,7 @@ internal fun VaultAccountsScreen(
                 Screen.JoinKeysign.createRoute(vaultId)
             )
         },
-        onAccountClick = {
-            val route = Screen.ChainCoin.createRoute(
-                chainRaw = it.chainName,
-                vaultId = viewModel.vault?.id ?: "",
-            )
-            navHostController.navigate(route)
-        },
+        onAccountClick = viewModel::openAccount,
         onChooseChains = {
             navHostController.navigate(
                 Screen.AddChainAccount.createRoute(vaultId)
@@ -179,6 +175,11 @@ private fun VaultAccountsScreenPreview() {
                     nativeTokenAmount = "1.0",
                     fiatAmount = "$1000",
                     assetsSize = 4,
+                    model = Address(
+                        chain = Chain.ethereum,
+                        address = "0x123456",
+                        accounts = emptyList()
+                    )
                 ),
                 AccountUiModel(
                     chainName = "Bitcoin",
@@ -186,6 +187,11 @@ private fun VaultAccountsScreenPreview() {
                     address = "123456789abcdef",
                     nativeTokenAmount = "1.0",
                     fiatAmount = "$1000",
+                    model = Address(
+                        chain = Chain.bitcoin,
+                        address = "0x123456",
+                        accounts = emptyList()
+                    )
                 ),
             ),
         ),

@@ -13,9 +13,6 @@ internal data class ChainOrderEntity(
     @ColumnInfo(name = "value")
     val value: String = "",
 
-    @ColumnInfo(name = "trueFraction")
-    val trueFraction: String,
-
-    @ColumnInfo(name = "fractionInFloat")
-    val fractionInFloat: Float
+    @ColumnInfo(name = "order")
+    val order: Float
 )

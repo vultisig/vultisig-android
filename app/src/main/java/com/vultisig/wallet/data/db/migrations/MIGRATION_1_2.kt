@@ -9,8 +9,7 @@ internal val MIGRATION_1_2 = object : Migration(1, 2) {
             """
             CREATE TABLE IF NOT EXISTS `chainOrder` (
             `value` TEXT PRIMARY KEY NOT NULL,
-            `fractionInFloat` REAL NOT NULL,
-            `trueFraction` TEXT NOT NULL)
+            `order` REAL NOT NULL
             """.trimMargin()
         )
     }
