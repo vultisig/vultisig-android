@@ -1,26 +1,24 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.vultisig.wallet.ui.theme.montserratFamily
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.theme.Theme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun TopBar(
     navController: NavController,
@@ -30,41 +28,48 @@ internal fun TopBar(
     @DrawableRes endIcon: Int? = null,
     onEndIconClick: () -> Unit = {},
 ) {
-    val textColor = MaterialTheme.colorScheme.onBackground
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = CenterVertically
-    ) {
-        val iconModifier = Modifier
-            .size(24.dp)
-
-        startIcon?.let { id ->
-            Image(
-                painter = painterResource(id = id),
-                contentDescription = null,
-                modifier = iconModifier
-                    .clickable { navController.popBackStack() },
+    CenterAlignedTopAppBar(
+        title = {
+            Text(
+                text = centerText,
+                style = Theme.montserrat.heading5,
+                fontWeight = FontWeight.Bold,
+                color = Theme.colors.neutral0,
+                textAlign = TextAlign.Center,
             )
-        } ?: Spacer(modifier = iconModifier)
-
-        Text(
-            text = centerText,
-            color = textColor,
-            style = MaterialTheme.montserratFamily.heading5,
-        )
-
-        endIcon?.let { id ->
-            Image(
-                painter = painterResource(id = id),
-                contentDescription = null,
-                modifier = iconModifier
-                    .clickable(onClick = onEndIconClick),
-            )
-        } ?: Spacer(modifier = iconModifier)
-    }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Theme.colors.oxfordBlue800,
+            titleContentColor = Theme.colors.neutral0
+        ),
+        navigationIcon = {
+            startIcon?.let {
+                IconButton(
+                    onClick = { navController.popBackStack() }
+                ) {
+                    Icon(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        tint = Theme.colors.neutral0,
+                    )
+                }
+            }
+        },
+        actions = {
+            endIcon?.let {
+                IconButton(
+                    onClick = onEndIconClick
+                ) {
+                    Icon(
+                        painter = painterResource(id = endIcon),
+                        contentDescription = null,
+                        tint = Theme.colors.neutral0,
+                    )
+                }
+            }
+        },
+        modifier = modifier,
+    )
 }
 
 @Preview
@@ -72,6 +77,7 @@ internal fun TopBar(
 private fun TopBarPreview() {
     TopBar(
         navController = rememberNavController(),
-        centerText = "Title"
+        centerText = "Title",
+        startIcon = R.drawable.caret_left,
     )
 }

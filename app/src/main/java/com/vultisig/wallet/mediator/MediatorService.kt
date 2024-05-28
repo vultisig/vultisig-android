@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.nsd.NsdManager
 import android.os.IBinder
-import android.util.Log
+import timber.log.Timber
 
 class MediatorService() : Service() {
     private lateinit var nsdManager: NsdManager
@@ -13,14 +13,15 @@ class MediatorService() : Service() {
     private var isRunning: Boolean = false
     private var serverName: String = ""
 
-    companion object{
+    companion object {
         const val SERVICE_ACTION = "com.vultisig.wallet.mediator.MediatorService.STARTED"
     }
+
     override fun onCreate() {
         super.onCreate()
         nsdManager = getSystemService(Context.NSD_SERVICE) as NsdManager
         server = Server(nsdManager)
-        Log.d("MediatorService", "onCreate")
+        Timber.d("onCreate")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -40,7 +41,7 @@ class MediatorService() : Service() {
                 isRunning = true
             }
         }
-        Log.d("MediatorService", "onStartCommand")
+        Timber.d("onStartCommand")
         broadcastServiceStarted()
         return START_NOT_STICKY
     }
@@ -49,11 +50,11 @@ class MediatorService() : Service() {
         val intent = Intent()
         intent.setAction(SERVICE_ACTION)
         sendBroadcast(intent)
-        Log.d("MediatorService", "broadcast service started")
+        Timber.d("broadcast service started")
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        Log.d("MediatorService", "onBind")
+        Timber.d("onBind")
         return null
     }
 
