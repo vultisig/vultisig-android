@@ -20,8 +20,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
@@ -117,19 +115,14 @@ internal class VaultAccountsViewModel @Inject constructor(
             }
             accountsRepository
                 .loadAddresses(vaultId)
-                .onEach { addresses->
-                    addresses.forEach{
-                        val addressOrder = chainsOrderRepository.find(it.chain.raw)
-                        if (addressOrder == null)
-                            chainsOrderRepository.insert(it.chain.raw)
-                    }
-                }
                 .zip(chainsOrderRepository.loadByOrders()) { addresses, chainOrders ->
-                    chainOrders.map {orderEntity->
-                         addresses.find { address -> address.chain.raw == orderEntity.value }!!
+                    val addressAndOrderMap = mutableMapOf<Address, Float>()
+                    addresses.forEach { eachAddress ->
+                        addressAndOrderMap[eachAddress] = chainOrders.find { it.value == eachAddress.chain.raw }?.order
+                            ?: chainsOrderRepository.insert(eachAddress.chain.raw)
                     }
+                    addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
                 }
-                .flowOn(IO)
                 .catch {
                     // TODO handle error
                     Timber.e(it)

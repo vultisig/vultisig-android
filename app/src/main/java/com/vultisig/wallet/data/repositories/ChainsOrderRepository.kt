@@ -13,7 +13,7 @@ internal interface ChainsOrderRepository {
     suspend fun updateItemOrder(lowerVal: String?, middleVal: String, upperVal: String?)
     suspend fun delete(name: String)
     suspend fun find(name: String): ChainOrderEntity?
-    suspend fun insert(name: String)
+    suspend fun insert(name: String): Float
 }
 
 
@@ -60,13 +60,12 @@ internal class ChainsOrderRepositoryImpl @Inject constructor(
         withContext(IO) { chainOrderDao.getMaxChainOrder() ?: ChainOrderEntity(order = 0f) }
 
 
-    override suspend fun insert(name: String) {
-        withContext(IO) {
-            val maxOrder = findMaxOrder()
-            val newOrder = maxOrder.order + ORDER_STEP
-            val order = ChainOrderEntity(name, order = newOrder)
-            chainOrderDao.insert(order)
-        }
+    override suspend fun insert(name: String) = withContext(IO) {
+        val maxOrder = findMaxOrder()
+        val newOrder = maxOrder.order + ORDER_STEP
+        val order = ChainOrderEntity(name, order = newOrder)
+        chainOrderDao.insert(order)
+        newOrder
     }
 
     companion object {
