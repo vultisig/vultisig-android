@@ -1,7 +1,7 @@
 package com.vultisig.wallet.presenter.settings.faq_setting
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +15,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,10 +73,9 @@ private fun FAQSettingItem(faq: Faq) {
     var isExpanded by remember {
         mutableStateOf(false)
     }
-    val rotation = remember { Animatable(0f) }
-    LaunchedEffect(key1 = isExpanded) {
-        rotation.animateTo(if (isExpanded) 90f else 0f)
-    }
+    val rotation = animateFloatAsState(
+        targetValue = if (isExpanded) 90f else 0f, label = "arrow angle"
+    )
     FormCard(modifier = Modifier.animateContentSize()) {
         Row(
             modifier = Modifier
