@@ -14,6 +14,7 @@ import com.vultisig.wallet.chains.ERC20Helper
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.KujiraHelper
 import com.vultisig.wallet.chains.MayaChainHelper
+import com.vultisig.wallet.chains.PolkadotHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.THORChainSwaps
@@ -101,6 +102,10 @@ data class KeysignPayload(
             Chain.mayaChain -> {
                 val mayachainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return mayachainHelper.getPreSignedImageHash(this)
+            }
+            Chain.polkadot->{
+                val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
+                return dotHelper.getPreSignedImageHash(this)
             }
         }
     }

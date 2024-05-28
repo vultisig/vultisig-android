@@ -82,6 +82,15 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 )
             }
 
+            Chain.polkadot -> {
+                val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                TokenValue(
+                    value = 0.toBigInteger(),
+                    unit = chain.feeUnit,
+                    decimals = nativeToken.decimal,
+                )
+            }
+
             else -> throw IllegalArgumentException("Can't estimate gas fee. Chain $chain is unsupported")
         }
     }

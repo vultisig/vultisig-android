@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.FiatValue
@@ -24,6 +25,7 @@ import com.vultisig.wallet.models.Chain.kujira
 import com.vultisig.wallet.models.Chain.litecoin
 import com.vultisig.wallet.models.Chain.mayaChain
 import com.vultisig.wallet.models.Chain.optimism
+import com.vultisig.wallet.models.Chain.polkadot
 import com.vultisig.wallet.models.Chain.polygon
 import com.vultisig.wallet.models.Chain.solana
 import com.vultisig.wallet.models.Chain.thorChain
@@ -60,6 +62,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val solanaApi: SolanaApi,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val polkadotApi: PolkadotApi,
 ) : BalanceRepository {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -128,6 +131,8 @@ internal class BalanceRepositoryImpl @Inject constructor(
             }
 
             solana -> solanaApi.getBalance(address).toBigInteger()
+            polkadot -> polkadotApi.getBalanace(address)
+
         }, coin.ticker, coin.decimal))
     }
 
