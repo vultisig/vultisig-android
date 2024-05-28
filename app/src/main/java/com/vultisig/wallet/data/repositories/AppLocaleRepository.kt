@@ -20,11 +20,11 @@ internal class AppLocaleRepositoryImpl @Inject constructor(private val dataStore
     private val defaultLocal = LOCALE_LIST[0]
     override val local: Flow<AppLanguage>
         get() =
-            dataStore.readData(stringPreferencesKey(LOCAL_KEY), defaultLocal.mainName).map { it.fromName() }
+            dataStore.readData(stringPreferencesKey(LOCALE_KEY), defaultLocal.mainName).map { it.fromName() }
 
     override suspend fun setLocale(lang: Language) {
         dataStore.editData { preferences ->
-            preferences.set(key = stringPreferencesKey(LOCAL_KEY), value = lang.mainName)
+            preferences.set(key = stringPreferencesKey(LOCALE_KEY), value = lang.mainName)
         }
     }
 
@@ -34,7 +34,7 @@ internal class AppLocaleRepositoryImpl @Inject constructor(private val dataStore
     }
 
     companion object {
-        const val LOCAL_KEY = "local_key"
+        const val LOCALE_KEY = "local_key"
     }
 
 }
