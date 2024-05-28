@@ -9,6 +9,7 @@ import com.vultisig.wallet.common.decodeFromHex
 import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
 import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
+import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
@@ -26,6 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
+    private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultIOSToAndroidMapper: VaultIOSToAndroidMapper,
     private val gson: Gson,
     private val navigator: Navigator<Destination>,
@@ -46,7 +48,10 @@ internal class ImportFileViewModel @Inject constructor(
             return
         viewModelScope.launch {
             val fromJson = gson.fromJson(fileContent.decodeFromHex(), IOSVaultRoot::class.java)
-            vaultRepository.add(vaultIOSToAndroidMapper(fromJson))
+            val vault = vaultIOSToAndroidMapper(fromJson)
+            vaultRepository.add(vault)
+            val vaultId = vaultRepository.getIdByName(vault.name)
+            lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
             navigator.navigate(Destination.Home)
         }
     }

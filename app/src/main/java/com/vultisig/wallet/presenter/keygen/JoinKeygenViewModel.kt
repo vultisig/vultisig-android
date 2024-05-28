@@ -14,6 +14,7 @@ import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
+import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
@@ -44,6 +45,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
+    private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val gson: Gson,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -81,6 +83,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             vaultRepository = vaultRepository,
             oldResharePrefix = _oldResharePrefix,
             defaultChainsRepository = defaultChainsRepository,
+            lastOpenedVaultRepository =lastOpenedVaultRepository
         )
 
     fun setData() {

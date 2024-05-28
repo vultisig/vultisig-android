@@ -44,6 +44,8 @@ internal interface VaultRepository {
 
     suspend fun addTokenToVault(vaultId: String, token: Coin)
 
+    suspend fun getIdByName(name: String): String
+
 }
 
 internal class VaultRepositoryImpl @Inject constructor(
@@ -115,6 +117,7 @@ internal class VaultRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun getIdByName(name: String): String = vaultDao.getIdByName(name)
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
         val vault = this
         return Vault(

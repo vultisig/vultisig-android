@@ -17,6 +17,9 @@ internal interface VaultDao {
     @Transaction
     @Query("SELECT * FROM vault WHERE id = :vaultId")
     suspend fun loadById(vaultId: String): VaultWithKeySharesAndTokens?
+    
+    @Query("SELECT id FROM vault WHERE name = :name")
+    suspend fun getIdByName(name: String): String
 
     @Transaction
     @Query("SELECT * FROM vault")

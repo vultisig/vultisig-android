@@ -10,6 +10,7 @@ import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
+import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
@@ -44,6 +45,7 @@ internal class GeneratingKeyViewModel(
     private val gson: Gson,
     private val vaultRepository: VaultRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
+    private val lastOpenedVaultRepository: LastOpenedVaultRepository
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -226,8 +228,10 @@ internal class GeneratingKeyViewModel(
             }
         }
 
-        vaultRepository.upsert(this@GeneratingKeyViewModel.vault.copy(coins = coins))
-
+        val generatedVault = this@GeneratingKeyViewModel.vault.copy(coins = coins)
+        vaultRepository.upsert(generatedVault)
+        val generatedVaultId = vaultRepository.getIdByName(generatedVault.name)
+        lastOpenedVaultRepository.setLastOpenedVaultId(generatedVaultId)
         Timber.d("saveVault: success,name:${vault.name}")
     }
 
