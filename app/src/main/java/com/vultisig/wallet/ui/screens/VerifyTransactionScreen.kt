@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -193,7 +194,7 @@ private fun AddressField(
 
         Text(
             text = address,
-            style = Theme.montserrat.titleSmall,
+            style = Theme.montserrat.subtitle3,
             color = Theme.colors.turquoise800,
         )
 
@@ -252,7 +253,12 @@ private fun CheckField(
             .padding(
                 horizontal = 4.dp,
                 vertical = 8.dp,
-            ),
+            )
+            .toggleable(
+                value = isChecked, onValueChange = { checked ->
+                    onCheckedChange(checked)
+                }
+            )
     ) {
         UiCheckbox(
             checked = isChecked,
