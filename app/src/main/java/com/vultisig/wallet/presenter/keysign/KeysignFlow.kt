@@ -30,7 +30,6 @@ fun KeysignFlowView(navController: NavController) {
     when (viewModel.currentState.value) {
         KeysignFlowState.PEER_DISCOVERY -> {
             KeysignPeerDiscovery(
-                navController,
                 sharedViewModel.vault!!,
                 sharedViewModel.keysignPayload!!,
                 viewModel

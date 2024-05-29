@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -19,8 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.asFlow
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.Vault
@@ -29,7 +26,6 @@ import com.vultisig.wallet.presenter.keysign.KeysignFlowState
 import com.vultisig.wallet.presenter.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -37,7 +33,6 @@ import timber.log.Timber
 
 @Composable
 internal fun KeysignPeerDiscovery(
-    navController: NavController,
     vault: Vault,
     keysignPayload: KeysignPayload,
     viewModel: KeysignFlowViewModel,
@@ -75,7 +70,7 @@ internal fun KeysignPeerDiscovery(
         }
     }
 
-    KeysignPeerDiscovery(navController = navController,
+    KeysignPeerDiscovery(
         selectionState = selectionState,
         participants = participants,
         keysignMessage = viewModel.keysignMessage.value,
@@ -86,13 +81,12 @@ internal fun KeysignPeerDiscovery(
         onStopParticipantDiscovery = {
             viewModel.stopParticipantDiscovery()
             viewModel.moveToState(KeysignFlowState.KEYSIGN)
-        })
+        }
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun KeysignPeerDiscovery(
-    navController: NavController,
     selectionState: List<String>,
     participants: List<String>,
     keysignMessage: String,
@@ -102,13 +96,7 @@ internal fun KeysignPeerDiscovery(
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
 ) {
-    Scaffold(topBar = {
-        TopBar(
-            navController = navController,
-            centerText = stringResource(id = R.string.keysign),
-            startIcon = R.drawable.caret_left
-        )
-    }, bottomBar = {
+    Scaffold(bottomBar = {
         MultiColorButton(
             text = stringResource(R.string.keysign_peer_discovery_start),
             backgroundColor = Theme.colors.turquoise600Main,
@@ -149,13 +137,10 @@ internal fun KeysignPeerDiscovery(
 @Preview
 @Composable
 private fun KeysignPeerDiscoveryPreview() {
-    KeysignPeerDiscovery(navController = rememberNavController(),
+    KeysignPeerDiscovery(
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keysignMessage = "keysignMessage",
         networkPromptOption = NetworkPromptOption.WIFI,
-        onChangeNetwork = {},
-        onAddParticipant = {},
-        onRemoveParticipant = {},
-        onStopParticipantDiscovery = {})
+    )
 }

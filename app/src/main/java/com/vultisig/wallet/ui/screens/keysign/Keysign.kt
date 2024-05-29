@@ -17,7 +17,6 @@ import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.presenter.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
-import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.navigation.Screen
@@ -34,20 +33,15 @@ internal fun Keysign(
         viewModel.startKeysign()
     }
 
-    UiBarContainer(
-        navController = navController,
-        title = stringResource(id = R.string.keysign)
-    ) {
-        KeysignScreen(
-            state = viewModel.currentState.collectAsState().value,
-            errorMessage = viewModel.errorMessage.value,
-            txHash = viewModel.txHash.collectAsState().value,
-            transactionLink = viewModel.txLink.collectAsState().value,
-            onComplete = {
-                navController.navigate(Screen.Home.route)
-            },
-        )
-    }
+    KeysignScreen(
+        state = viewModel.currentState.collectAsState().value,
+        errorMessage = viewModel.errorMessage.value,
+        txHash = viewModel.txHash.collectAsState().value,
+        transactionLink = viewModel.txLink.collectAsState().value,
+        onComplete = {
+            navController.navigate(Screen.Home.route)
+        },
+    )
 }
 
 @Composable
@@ -98,7 +92,7 @@ internal fun KeysignScreen(
             UiSpacer(weight = 1f)
 
             DevicesOnSameNetworkHint(
-                title =  stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open)
+                title = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open)
             )
 
             UiSpacer(size = 80.dp)

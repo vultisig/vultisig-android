@@ -1,46 +1,21 @@
 package com.vultisig.wallet.ui.navigation
 
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
-import com.vultisig.wallet.data.models.TransactionId
+internal open class Dst(
+    val route: String,
+)
 
 internal sealed class Destination(
-    val route: String,
-) {
+    route: String,
+) : Dst(route) {
 
     companion object {
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
-        const val ARG_TOKEN_ID = "token_id"
-        const val ARG_DST_ADDRESS = "dst_address"
-        const val ARG_AMOUNT = "amount"
-        const val ARG_TRANSACTION_ID = "transaction_id"
-
-        val transactionArgs = listOf(
-            navArgument(ARG_TRANSACTION_ID) { type = NavType.StringType }
-        )
-
     }
 
     data object AddVault : Destination(
         route = "vault/new"
     )
-
-    data class Keysign(
-        val transactionId: TransactionId,
-    ) : Destination(
-        route = buildRoute(transactionId)
-    ) {
-        companion object {
-            val staticRoute = buildRoute(
-                "{$ARG_TRANSACTION_ID}",
-            )
-
-            private fun buildRoute(
-                transactionId: TransactionId,
-            ) = "send/${transactionId}/sign"
-        }
-    }
 
     data class ChainTokens(
         val vaultId: String,
@@ -63,23 +38,6 @@ internal sealed class Destination(
         companion object {
             const val staticRoute =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send"
-        }
-    }
-
-    data class VerifyTransaction(
-        val transactionId: TransactionId,
-    ) : Destination(
-        route = buildRoute(transactionId)
-    ) {
-        companion object {
-
-            val staticRoute = buildRoute(
-                "{$ARG_TRANSACTION_ID}",
-            )
-
-            private fun buildRoute(
-                transactionId: TransactionId,
-            ) = "transaction/${transactionId}/verify"
         }
     }
 

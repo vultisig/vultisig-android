@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models.mappers
 import com.vultisig.wallet.data.mappers.Mapper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.ui.models.TokenBalanceUiModel
+import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import javax.inject.Inject
 
 internal interface AccountToTokenBalanceUiModelMapper : Mapper<Account, TokenBalanceUiModel>

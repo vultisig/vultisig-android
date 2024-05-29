@@ -9,9 +9,9 @@ import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
-import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TRANSACTION_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.SendDst.Companion.ARG_TRANSACTION_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -45,7 +45,7 @@ data class VerifyTransactionUiModel(
 @HiltViewModel
 internal class VerifyTransactionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val navigator: Navigator<Destination>,
+    private val navigator: Navigator<SendDst>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     private val transactionRepository: TransactionRepository,
@@ -94,7 +94,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
                 val transaction = transaction.filterNotNull().first()
 
                 navigator.navigate(
-                    Destination.Keysign(
+                    SendDst.Keysign(
                         transactionId = transaction.id,
                     )
                 )
