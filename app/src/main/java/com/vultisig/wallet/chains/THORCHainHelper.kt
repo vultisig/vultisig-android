@@ -21,7 +21,7 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
 
 @OptIn(ExperimentalStdlibApi::class)
-class THORCHainHelper(
+internal class THORCHainHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {
@@ -59,14 +59,14 @@ class THORCHainHelper(
                 this.gas = 200000
                 this.amountsList.add(Cosmos.Amount.newBuilder().apply {
                     this.denom = "rune"
-                    this.amount = "2000000"
+                    this.amount = thorchainData.fee.toString()
                 }.build())
             }.build()
         }.build()
         return inputData.toByteArray()
     }
 
-    fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         if (keysignPayload.coin.ticker != "RUNE") {
             throw Exception("Coin is not RUNE")
         }
@@ -90,7 +90,7 @@ class THORCHainHelper(
 
         val feeAmount = Cosmos.Amount.newBuilder().apply {
             this.denom = "rune"
-            this.amount = THORChainGasUnit.toString()
+            this.amount = thorchainData.fee.toString()
         }.build()
         val input = Cosmos.SigningInput.newBuilder().apply {
             this.publicKey = ByteString.copyFrom(publicKey.data())
