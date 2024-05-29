@@ -8,9 +8,11 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,7 +32,7 @@ internal class MainViewModel @Inject constructor(
     private val _startDestination: MutableState<String> = mutableStateOf(Screen.Home.route)
     val startDestination: State<String> = _startDestination
 
-    val destination = navigator.destination
+    val destination: Flow<NavigateAction<Destination>> = navigator.destination
 
     init {
         viewModelScope.launch {

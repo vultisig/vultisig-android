@@ -23,7 +23,11 @@ sealed class BlockChainSpecific : Parcelable {
         val gasLimit: BigInteger,
     ) : BlockChainSpecific()
 
-    data class THORChain(val accountNumber: BigInteger, val sequence: BigInteger) :
+    data class THORChain(
+        val accountNumber: BigInteger,
+        val sequence: BigInteger,
+        val fee: BigInteger,
+    ) :
         BlockChainSpecific()
 
     data class Cosmos(
@@ -76,6 +80,7 @@ class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific> {
                 val thorChainJSON = JsonObject()
                 thorChainJSON.addProperty("accountNumber", src.accountNumber)
                 thorChainJSON.addProperty("sequence", src.sequence)
+                thorChainJSON.addProperty("fee", src.fee)
                 jsonObject.add("THORChain", thorChainJSON)
             }
 
@@ -125,7 +130,7 @@ class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
     ): BlockChainSpecific {
         val jsonObject = json.asJsonObject
 
-        return when {
+        when {
             jsonObject.has("UTXO") -> {
                 val obj = jsonObject.get("UTXO").asJsonObject
                 return BlockChainSpecific.UTXO(
@@ -148,7 +153,8 @@ class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
                 val obj = jsonObject.get("THORChain").asJsonObject
                 return BlockChainSpecific.THORChain(
                     accountNumber = obj.get("accountNumber").asBigInteger,
-                    sequence = obj.get("sequence").asBigInteger
+                    sequence = obj.get("sequence").asBigInteger,
+                    fee = obj.get("fee").asBigInteger
                 )
             }
 
@@ -188,6 +194,7 @@ class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
                     genesisHash = obj.get("genesisHash").asString
                 )
             }
+
             else -> throw JsonParseException("Not a valid BlockChainSpecific type")
         }
     }

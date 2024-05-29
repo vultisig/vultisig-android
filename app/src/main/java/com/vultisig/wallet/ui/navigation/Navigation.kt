@@ -22,6 +22,10 @@ internal sealed class Destination(
 
     }
 
+    data object AddVault : Destination(
+        route = "vault/new"
+    )
+
     data class Keysign(
         val transactionId: TransactionId,
     ) : Destination(
@@ -97,7 +101,22 @@ internal sealed class Destination(
         route = ""
     )
 
-    data object Home : Destination(route = "home_screen")
+    data class Home(
+        val openVaultId: String? = null,
+    ) : Destination(
+        route = buildRoute(openVaultId)
+    ) {
+        companion object {
+            val staticRoute = buildRoute(
+                "{$ARG_VAULT_ID}",
+            )
+
+            private fun buildRoute(
+                vaultId: String?,
+            ) = "home?vault_id=$vaultId"
+        }
+    }
+
     data class VaultSettings(val vaultId: String) :
         Destination(route = "vault_detail/$vaultId/settings") {
 
@@ -128,7 +147,8 @@ internal sealed class Destination(
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
     data object NamingVault : Destination(route = "naming_vault")
-    data class QrAddressScreen(val address:String) : Destination(route = "vault_details/qr_address_screen/$address"){
+    data class QrAddressScreen(val address: String) :
+        Destination(route = "vault_details/qr_address_screen/$address") {
         companion object {
             const val ARG_COIN_ADDRESS = "coin_address"
             const val STATIC_ROUTE = "vault_details/qr_address_screen/{$ARG_COIN_ADDRESS}"

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.os.Parcelable
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
@@ -8,23 +7,17 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
-import com.vultisig.wallet.data.repositories.ChainsOrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.RawValue
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -55,30 +48,24 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private val vaultRepository: VaultRepository,
     private val accountsRepository: AccountsRepository,
-    private val chainsOrderRepository: ChainsOrderRepository,
-    ) : ViewModel() {
+) : ViewModel() {
     private var vaultId: String? = null
 
     val uiState = MutableStateFlow(VaultAccountsUiModel())
 
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
-    private var reIndexJob: Job? = null
 
     fun loadData(vaultId: String) {
         this.vaultId = vaultId
         loadVaultName(vaultId)
-        loadAccounts(
-            vaultId = vaultId,
-            showRefreshing = false,
-        )
+        loadAccounts(vaultId)
     }
 
     fun refreshData() {
-        loadAccounts(
-            vaultId = requireNotNull(vaultId),
-            showRefreshing = true,
-        )
+        val vaultId = vaultId ?: return
+        updateRefreshing(true)
+        loadAccounts(vaultId)
     }
 
     fun openAccount(account: AccountUiModel) {
@@ -98,37 +85,24 @@ internal class VaultAccountsViewModel @Inject constructor(
     private fun loadVaultName(vaultId: String) {
         loadVaultNameJob?.cancel()
         loadVaultNameJob = viewModelScope.launch {
-            val vault = requireNotNull(vaultRepository.get(vaultId))
+            val vault = vaultRepository.get(vaultId)
+                ?: return@launch
             uiState.update { it.copy(vaultName = vault.name) }
         }
     }
 
-    private fun loadAccounts(
-        vaultId: String,
-        showRefreshing: Boolean,
-    ) {
+    private fun loadAccounts(vaultId: String) {
         loadAccountsJob?.cancel()
         loadAccountsJob = viewModelScope.launch {
-            if (showRefreshing) {
-                uiState.update { it.copy(isRefreshing = true) }
-            }
             accountsRepository
                 .loadAddresses(vaultId)
-                .zip(chainsOrderRepository.loadByOrders()) { addresses, chainOrders ->
-                    val addressAndOrderMap = mutableMapOf<Address, Float>()
-                    addresses.forEach { eachAddress ->
-                        addressAndOrderMap[eachAddress] = chainOrders.find { it.value == eachAddress.chain.raw }?.order
-                            ?: chainsOrderRepository.insert(eachAddress.chain.raw)
-                    }
-                    addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
-                }
                 .catch {
+                    updateRefreshing(false)
+
                     // TODO handle error
                     Timber.e(it)
                 }.collect { accounts ->
-                    if (showRefreshing) {
-                        uiState.update { it.copy(isRefreshing = false) }
-                    }
+                    updateRefreshing(false)
 
                     val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
                         ?.let(fiatValueToStringMapper::map)
@@ -143,24 +117,8 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-
-    fun onMove(oldOrder: Int, newOrder: Int) {
-        val updatedPositionsList = uiState.value.accounts.toMutableList().apply {
-            add(newOrder, removeAt(oldOrder))
-        }
-        uiState.update {
-            it.copy(
-                accounts = updatedPositionsList
-            )
-        }
-        reIndexJob?.cancel()
-        reIndexJob = viewModelScope.launch(IO) {
-            delay(500)
-            val midOrder = updatedPositionsList[newOrder].chainName
-            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.chainName
-            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.chainName
-            chainsOrderRepository.updateItemOrder(upperOrder, midOrder, lowerOrder)
-        }
+    private fun updateRefreshing(isRefreshing: Boolean) {
+        uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
 }

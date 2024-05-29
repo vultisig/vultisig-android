@@ -23,7 +23,8 @@ class KeysignMesssageTest {
                 toAmount = BigInteger("10000000"), // 0.1 RUNE
                 blockChainSpecific = BlockChainSpecific.THORChain(
                     accountNumber = BigInteger("1024"),
-                    sequence = BigInteger("0")
+                    sequence = BigInteger("0"),
+                    fee = BigInteger("2000000")
                 ),
                 vaultPublicKeyECDSA = "asdfasdf",
             ), encryptionKeyHex = Utils.encryptionKeyHex,
@@ -31,7 +32,8 @@ class KeysignMesssageTest {
         )
         val t = BlockChainSpecific.THORChain(
             accountNumber = BigInteger("1024"),
-            sequence = BigInteger("0")
+            sequence = BigInteger("0"),
+            fee = BigInteger("2000000")
         )
         val gson = DataModule.provideGson()
         val json = gson.toJson(keysignMesssage)
@@ -44,7 +46,7 @@ class KeysignMesssageTest {
             (result.payload.blockChainSpecific as? BlockChainSpecific.THORChain) != null
         )
         val input = """
-            {"toAddress":"thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2","utxos":[],"toAmount":["+",10000000],"vaultPubKeyECDSA":"asdfasdf","chainSpecific":{"THORChain":{"sequence":0,"accountNumber":1024}},"coin":{"isNativeToken":true,"priceRate":0,"feeUnit":"Rune","chainType":{"THORChain":{}},"ticker":"RUNE","decimals":"8","logo":"rune","address":"","hexPublicKey":"","rawBalance":"0","feeDefault":"0.02","priceProviderId":"thorchain","contractAddress":"","chain":"thorChain"}}"""
+            {"toAddress":"thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2","utxos":[],"toAmount":["+",10000000],"vaultPubKeyECDSA":"asdfasdf","chainSpecific":{"THORChain":{"sequence":0,"accountNumber":1024,"fee":"2000000"}},"coin":{"isNativeToken":true,"priceRate":0,"feeUnit":"Rune","chainType":{"THORChain":{}},"ticker":"RUNE","decimals":"8","logo":"rune","address":"","hexPublicKey":"","rawBalance":"0","feeDefault":"0.02","priceProviderId":"thorchain","contractAddress":"","chain":"thorChain"}}"""
         val result1 = gson.fromJson(input, KeysignPayload::class.java)
         Assert.assertEquals(result1.toAddress, "thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2")
         Assert.assertEquals(result1.toAmount, BigInteger("10000000"))

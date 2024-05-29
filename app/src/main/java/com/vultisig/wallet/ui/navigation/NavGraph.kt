@@ -68,12 +68,16 @@ internal fun SetupNavGraph(
         composable(route = Screen.Welcome.route) {
             WelcomeScreen(navController = navController)
         }
-        composable(route = Destination.Home.route) {
+        composable(
+            route = Destination.Home.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
             HomeScreen(navController)
-        }
-
-        composable(route = Screen.CreateNewVault.route) {
-            AddVaultScreen(navController)
         }
         composable(route = Screen.JoinKeygen.route) { entry ->
             val savedStateHandle = entry.savedStateHandle
@@ -161,6 +165,18 @@ internal fun SetupNavGraph(
                 qrCodeResult = qrCodeResult,
             )
         }
+
+        composable(
+            route = Screen.CreateNewVault.route
+        ) {
+            AddVaultScreen(navController)
+        }
+        composable(
+            route = Destination.AddVault.route,
+        ) {
+            AddVaultScreen(navController)
+        }
+
         composable(
             route = Destination.Keysign.staticRoute,
             arguments = Destination.transactionArgs,

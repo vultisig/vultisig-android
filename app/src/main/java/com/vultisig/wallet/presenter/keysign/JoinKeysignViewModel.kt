@@ -220,6 +220,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             // TODO that's mock data
             blockChainSpecific = BlockChainSpecific.THORChain(
                 BigInteger.ZERO,
+                BigInteger.ZERO,
                 BigInteger.ZERO
             ),
         )

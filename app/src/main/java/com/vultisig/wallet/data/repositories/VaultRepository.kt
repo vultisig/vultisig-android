@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import java.util.UUID
 import javax.inject.Inject
 
 internal interface VaultRepository {
@@ -155,7 +154,7 @@ internal class VaultRepositoryImpl @Inject constructor(
 
     private fun Vault.toVaultDb(): VaultWithKeySharesAndTokens {
         val vault = this
-        val vaultId = UUID.randomUUID().toString()
+        val vaultId = vault.id
         return VaultWithKeySharesAndTokens(
             vault = VaultEntity(
                 id = vaultId,

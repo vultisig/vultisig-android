@@ -46,8 +46,13 @@ internal class ImportFileViewModel @Inject constructor(
             return
         viewModelScope.launch {
             val fromJson = gson.fromJson(fileContent.decodeFromHex(), IOSVaultRoot::class.java)
-            vaultRepository.add(vaultIOSToAndroidMapper(fromJson))
-            navigator.navigate(Destination.Home)
+            val vault = vaultIOSToAndroidMapper(fromJson)
+            vaultRepository.add(vault)
+            navigator.navigate(
+                Destination.Home(
+                    openVaultId = vault.id,
+                )
+            )
         }
     }
 

@@ -18,6 +18,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import timber.log.Timber
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface ThorChainApi {
@@ -39,6 +40,7 @@ internal interface ThorChainApi {
     ): THORChainSwapQuote
 
     suspend fun broadcastTransaction(tx: String): String?
+    suspend fun getTHORChainNativeTransactionFee(): BigInteger
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -88,6 +90,21 @@ internal class ThorChainApiImpl @Inject constructor(
         return valueObject?.let {
             gson.fromJson(valueObject, THORChainAccountValue::class.java)
         } ?: error("Field value is not found in the response")
+    }
+
+    override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
+        try {
+            val response = httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
+                header(xClientID, xClientIDValue)
+            }
+            val content = response.bodyAsText()
+            val jsonObject = gson.fromJson(content, JsonObject::class.java)
+            return jsonObject.get("native_tx_fee_rune")?.asBigInteger ?: 0.toBigInteger()
+        } catch (e: Exception) {
+            Timber.tag("THORChainService")
+                .e("Error getting THORChain native transaction fee: ${e.message}")
+            throw e
+        }
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {

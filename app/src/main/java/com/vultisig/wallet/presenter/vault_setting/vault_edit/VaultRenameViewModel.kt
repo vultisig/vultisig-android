@@ -69,7 +69,7 @@ internal class VaultRenameViewModel @Inject constructor(
                 }
                 vaultRepository.setVaultName(vault.id, newName)
                 orderDB.updateItemKey(vault.name, newName)
-                navigator.navigate(Destination.Home)
+                navigator.navigate(Destination.Home())
             }
         }
     }

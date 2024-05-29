@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.on_board.db.OrderDB
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFailed
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFile
@@ -130,7 +131,16 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
             vaultRepository.delete(vaultId)
             orderDB.removeOrder(vault.name)
-            navigator.navigate(Destination.Home)
+
+            if (vaultRepository.hasVaults()) {
+                navigator.navigate(Destination.Home())
+            } else {
+                navigator.navigate(
+                    Destination.AddVault, NavigationOptions(
+                        clearBackStack = true
+                    )
+                )
+            }
         }
     }
 
