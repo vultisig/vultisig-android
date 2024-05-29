@@ -23,7 +23,8 @@ class KeysignMesssageTest {
                 toAmount = BigInteger("10000000"), // 0.1 RUNE
                 blockChainSpecific = BlockChainSpecific.THORChain(
                     accountNumber = BigInteger("1024"),
-                    sequence = BigInteger("0")
+                    sequence = BigInteger("0"),
+                    fee = BigInteger("2000000")
                 ),
                 vaultPublicKeyECDSA = "asdfasdf",
             ), encryptionKeyHex = Utils.encryptionKeyHex,
@@ -31,7 +32,8 @@ class KeysignMesssageTest {
         )
         val t = BlockChainSpecific.THORChain(
             accountNumber = BigInteger("1024"),
-            sequence = BigInteger("0")
+            sequence = BigInteger("0"),
+            fee = BigInteger("2000000")
         )
         val gson = DataModule.provideGson()
         val json = gson.toJson(keysignMesssage)
