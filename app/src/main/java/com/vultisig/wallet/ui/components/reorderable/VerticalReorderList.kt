@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components.reorderable
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +24,7 @@ internal fun <T : Any> VerticalReorderList(
     modifier: Modifier = Modifier,
     data: List<T>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     onMove: (from: Int, to: Int) -> Unit,
     beforeContents: List<@Composable LazyItemScope.() -> Unit>? = null,
     afterContents: List<@Composable LazyItemScope.() -> Unit>? = null,
@@ -39,6 +41,7 @@ internal fun <T : Any> VerticalReorderList(
         onMove(i, j)
     })
     LazyColumn(
+        verticalArrangement = verticalArrangement,
         state = state.listState,
         contentPadding = contentPadding,
         modifier = modifier

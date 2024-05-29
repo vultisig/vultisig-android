@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -91,6 +92,7 @@ private fun VaultAccountsScreen(
                 onMove = onMove,
                 key = { it.chainName },
                 contentPadding = PaddingValues(all = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 beforeContents = listOf {
                     AnimatedContent(
                         targetState = state.totalFiatValue,
