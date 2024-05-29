@@ -23,12 +23,14 @@ import com.vultisig.wallet.tss.TssMessenger
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
 import wallet.core.jni.CoinType
+import kotlin.time.Duration.Companion.seconds
 
 enum class KeygenState {
     CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
@@ -233,6 +235,8 @@ internal class GeneratingKeyViewModel(
         vaultRepository.upsert(this@GeneratingKeyViewModel.vault.copy(coins = coins))
 
         Timber.d("saveVault: success,name:${vault.name}")
+
+        delay(2.seconds)
 
         stopService(context)
 
