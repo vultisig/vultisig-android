@@ -2,14 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import android.content.Context
 import android.net.nsd.NsdManager
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -18,11 +11,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -37,11 +28,9 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Keysign
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.WaitingForKeysignStart
 import com.vultisig.wallet.presenter.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.presenter.keysign.KeysignState
-import com.vultisig.wallet.ui.components.UiBarContainer
-import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
 
 @Composable
 internal fun JoinKeysignView(
@@ -102,7 +91,6 @@ internal fun JoinKeysignView(
 
                 VerifyTransactionScreen(
                     state = transactionUiModel,
-                    isProgressEnabled = false,
                     isConsentsEnabled = false,
                     confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
                     onConfirm = viewModel::joinKeysign,
@@ -146,43 +134,22 @@ private fun JoinKeysignScreen(
     keysignState: KeysignState,
     content: @Composable BoxScope.(JoinKeysignState) -> Unit = {},
 ) {
-    UiBarContainer(
+    ProgressScreen(
         navController = navController,
         title = stringResource(
             id = if (keysignState != KeysignState.KeysignFinished) R.string.keysign
             else R.string.transaction_done_title
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        ) {
-            UiSpacer(size = 16.dp)
-
-            UiLinearProgressIndicator(
-                progress = when (state) {
-                    DiscoveryingSessionID -> 0.1f
-                    DiscoverService -> 0.25f
-                    JoinKeysign -> 0.5f
-                    WaitingForKeysignStart -> 0.625f
-                    Keysign -> 0.75f
-                    FailedToStart, Error -> 0.0f
-                },
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            UiSpacer(size = 32.dp)
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                content(state)
-            }
-        }
-    }
+        ),
+        progress = when (state) {
+            DiscoveryingSessionID -> 0.1f
+            DiscoverService -> 0.25f
+            JoinKeysign -> 0.5f
+            WaitingForKeysignStart -> 0.625f
+            Keysign -> 0.75f
+            FailedToStart, Error -> 0.0f
+        },
+        content = { content(state) }
+    )
 }
 
 @Preview

@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
+import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
@@ -35,22 +36,7 @@ class MainActivity : AppCompatActivity() {
 
                 LaunchedEffect(Unit) {
                     mainViewModel.destination.collect {
-                        val dst = it.dst
-                        val opts = it.opts
-                        navController.navigate(dst.route) {
-                            if (opts != null) {
-                                if (opts.popUpTo != null) {
-                                    popUpTo(opts.popUpTo) {
-                                        inclusive = opts.inclusive
-                                    }
-                                }
-                                if (opts.clearBackStack) {
-                                    popUpTo(navController.graph.id) {
-                                        inclusive = true
-                                    }
-                                }
-                            }
-                        }
+                        navController.route(it.dst.route, it.opts)
                     }
                 }
 

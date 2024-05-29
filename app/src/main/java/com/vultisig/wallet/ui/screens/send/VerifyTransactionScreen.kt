@@ -1,5 +1,6 @@
-package com.vultisig.wallet.ui.screens
+package com.vultisig.wallet.ui.screens.send
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,15 +21,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.FormCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
-import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
-import com.vultisig.wallet.ui.components.UiLinearProgressIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCheckbox
 import com.vultisig.wallet.ui.models.TransactionUiModel
@@ -38,7 +36,6 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VerifyTransactionScreen(
-    navController: NavHostController,
     viewModel: VerifyTransactionViewModel = hiltViewModel(),
 ) {
     val state = viewModel.uiState.collectAsState().value
@@ -52,27 +49,20 @@ internal fun VerifyTransactionScreen(
         )
     }
 
-    UiBarContainer(
-        title = stringResource(R.string.verify_transaction_screen_title),
-        navController = navController,
-    ) {
-        VerifyTransactionScreen(
-            state = state,
-            isProgressEnabled = true,
-            isConsentsEnabled = true,
-            confirmTitle = stringResource(R.string.verify_transaction_sign),
-            onConsentAddress = viewModel::checkConsentAddress,
-            onConsentAmount = viewModel::checkConsentAmount,
-            onConsentDst = viewModel::checkConsentDst,
-            onConfirm = viewModel::joinKeysign,
-        )
-    }
+    VerifyTransactionScreen(
+        state = state,
+        isConsentsEnabled = true,
+        confirmTitle = stringResource(R.string.verify_transaction_sign),
+        onConsentAddress = viewModel::checkConsentAddress,
+        onConsentAmount = viewModel::checkConsentAmount,
+        onConsentDst = viewModel::checkConsentDst,
+        onConfirm = viewModel::joinKeysign,
+    )
 }
 
 @Composable
 internal fun VerifyTransactionScreen(
     state: VerifyTransactionUiModel,
-    isProgressEnabled: Boolean,
     isConsentsEnabled: Boolean,
     confirmTitle: String,
     onConfirm: () -> Unit,
@@ -82,6 +72,7 @@ internal fun VerifyTransactionScreen(
 ) {
     Box(
         modifier = Modifier
+            .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
     ) {
         Column(
@@ -90,15 +81,6 @@ internal fun VerifyTransactionScreen(
                 .padding(all = 16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            if (isProgressEnabled) {
-                UiLinearProgressIndicator(
-                    progress = 0.6f,
-                )
-
-                // size 0 but still adds margin because of verticalArrangement
-                UiSpacer(size = 0.dp)
-            }
-
             FormCard {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -289,7 +271,6 @@ private fun VerifyTransactionScreenPreview() {
                 gasValue = "1.1",
             )
         ),
-        isProgressEnabled = true,
         isConsentsEnabled = true,
         confirmTitle = stringResource(R.string.verify_transaction_sign),
         onConsentAddress = {},

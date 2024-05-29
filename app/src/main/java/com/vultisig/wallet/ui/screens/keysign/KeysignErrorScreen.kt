@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -29,15 +28,10 @@ internal fun KeysignErrorScreen(
     navController: NavController,
     errorMessage: String = "",
 ) {
-    UiBarContainer(
+    KeysignErrorView(
         navController = navController,
-        title = stringResource(R.string.keysign)
-    ) {
-        KeysignErrorView(
-            navController = navController,
-            errorMessage = errorMessage
-        )
-    }
+        errorMessage = errorMessage
+    )
 }
 
 @Composable

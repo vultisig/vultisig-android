@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.models
+package com.vultisig.wallet.ui.models.send
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -6,7 +6,6 @@ import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -29,9 +28,8 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -60,7 +58,7 @@ internal data class TokenBalanceUiModel(
 )
 
 @Immutable
-internal data class SendUiModel(
+internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val availableTokens: List<TokenBalanceUiModel> = emptyList(),
     val isTokensExpanded: Boolean = false,
@@ -77,9 +75,9 @@ private data class InvalidTransactionDataException(
 
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
-internal class SendViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+internal class SendFormViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
+    private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
 
@@ -92,11 +90,8 @@ internal class SendViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) : ViewModel() {
 
-    private val vaultId: String =
-        requireNotNull(savedStateHandle[ARG_VAULT_ID])
-
-    private val chain: Chain = requireNotNull(savedStateHandle.get<String>(ARG_CHAIN_ID))
-        .let(Chain::fromRaw)
+    private lateinit var vaultId: String
+    private lateinit var chain: Chain
 
     fun setAddressFromQrCode(qrCode: String?) {
         if (qrCode != null) {
@@ -125,9 +120,11 @@ internal class SendViewModel @Inject constructor(
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
 
-    val uiState = MutableStateFlow(SendUiModel())
+    val uiState = MutableStateFlow(SendFormUiModel())
 
-    init {
+    fun loadData(vaultId: String, chainId: String) {
+        this.vaultId = vaultId
+        this.chain = Chain.fromRaw(chainId)
         loadTokens()
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -285,8 +282,8 @@ internal class SendViewModel @Inject constructor(
 
                 transactionRepository.addTransaction(transaction)
 
-                navigator.navigate(
-                    Destination.VerifyTransaction(
+                sendNavigator.navigate(
+                    SendDst.VerifyTransaction(
                         transactionId = transaction.id,
                     )
                 )
@@ -348,7 +345,7 @@ internal class SendViewModel @Inject constructor(
                     Timber.e(it)
                 }
                 .collect { gasFee ->
-                    this@SendViewModel.gasFee.value = gasFee
+                    this@SendFormViewModel.gasFee.value = gasFee
 
                     uiState.update {
                         it.copy(fee = mapGasFeeToString(gasFee))

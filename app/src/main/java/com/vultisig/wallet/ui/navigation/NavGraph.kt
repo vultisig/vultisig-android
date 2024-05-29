@@ -1,21 +1,15 @@
 package com.vultisig.wallet.ui.navigation
 
-import android.content.Context
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.presenter.import_file.ImportFileScreen
 import com.vultisig.wallet.presenter.keygen.JoinKeygenView
 import com.vultisig.wallet.presenter.keygen.KeygenFlowView
-import com.vultisig.wallet.presenter.keysign.KeysignFlowView
-import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.presenter.qr_address.QrAddressScreen
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
@@ -28,7 +22,6 @@ import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScree
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TRANSACTION_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
@@ -36,13 +29,12 @@ import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.ScanQrScreen
-import com.vultisig.wallet.ui.screens.SendScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
-import com.vultisig.wallet.ui.screens.VerifyTransactionScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
@@ -55,8 +47,6 @@ internal fun SetupNavGraph(
     navController: NavHostController,
     startDestination: String,
 ) {
-    val context: Context = LocalContext.current
-
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -176,19 +166,6 @@ internal fun SetupNavGraph(
         ) {
             AddVaultScreen(navController)
         }
-
-        composable(
-            route = Destination.Keysign.staticRoute,
-            arguments = Destination.transactionArgs,
-        ) { entry ->
-            val transactionId = entry.arguments?.getString(ARG_TRANSACTION_ID)!!
-
-            val keysignShareViewModel: KeysignShareViewModel =
-                hiltViewModel(context as MainActivity)
-            keysignShareViewModel.loadTransaction(transactionId)
-
-            KeysignFlowView(navController)
-        }
         composable(
             route = Destination.ChainTokens.staticRoute,
             arguments = listOf(
@@ -215,27 +192,21 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
             )
-        ) {
-            val savedStateHandle = navController.currentBackStackEntry
-                ?.savedStateHandle
-            val qrCodeResult = savedStateHandle?.get<String>(ARG_QR_CODE)
-            savedStateHandle?.remove<String>(ARG_QR_CODE)
+        ) { entry ->
+            val savedStateHandle = entry.savedStateHandle
+            val args = requireNotNull(entry.arguments)
 
             SendScreen(
                 navController = navController,
-                qrCodeResult = qrCodeResult
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE),
+                vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
+                chainId = requireNotNull(args.getString(ARG_CHAIN_ID))
             )
         }
         composable(
             route = Destination.ScanQr.route,
         ) {
             ScanQrScreen(navController = navController)
-        }
-        composable(
-            route = Destination.VerifyTransaction.staticRoute,
-            arguments = Destination.transactionArgs,
-        ) {
-            VerifyTransactionScreen(navController = navController)
         }
 
         composable(
