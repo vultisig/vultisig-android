@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.db
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.vultisig.wallet.data.db.models.ChainOrderEntity
@@ -18,7 +19,7 @@ internal interface ChainOrderDao {
     @Query("SELECT * FROM chainOrder WHERE `order` = (SELECT max(`order`) FROM chainOrder)")
     suspend fun getMaxChainOrder(): ChainOrderEntity?
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(order: ChainOrderEntity)
 
     @Update
