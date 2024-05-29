@@ -6,7 +6,12 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -36,7 +41,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             "No vault with id $vaultId"
         }
 
-    override fun loadAddresses(vaultId: String): Flow<List<Address>> = flow {
+    override fun loadAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
         val vault = getVault(vaultId)
         val vaultCoins = vault.coins
         val coins = vaultCoins.groupBy { it.chain }
@@ -45,21 +50,28 @@ internal class AccountsRepositoryImpl @Inject constructor(
             chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
         }
 
-        emit(addresses)
+        send(addresses)
 
         tokenPriceRepository.refresh(vaultCoins.map { it.priceProviderID })
 
-        addresses.forEachIndexed { index, account ->
-            val address = account.address
+        coroutineScope {
+            addresses.mapIndexed { index, account ->
+                async {
+                    val address = account.address
 
-            addresses[index] = account.copy(
-                accounts = account.accounts.map {
-                    it.fetchAndUpdateBalance(address)
+                    val newAccounts = coroutineScope {
+                        account.accounts.map {
+                            async { it.fetchAndUpdateBalance(address) }
+                        }.awaitAll()
+                    }
+
+                    addresses[index] = account.copy(accounts = newAccounts)
+
+                    send(addresses)
                 }
-            )
-
-            emit(addresses)
+            }.awaitAll()
         }
+        awaitClose()
     }
 
     override fun loadAddress(
