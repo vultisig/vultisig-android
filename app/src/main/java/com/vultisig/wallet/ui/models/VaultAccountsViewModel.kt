@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.os.Parcelable
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
@@ -20,11 +19,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.RawValue
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -56,7 +53,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val accountsRepository: AccountsRepository,
     private val chainsOrderRepository: ChainsOrderRepository,
-    ) : ViewModel() {
+) : ViewModel() {
     private var vaultId: String? = null
 
     val uiState = MutableStateFlow(VaultAccountsUiModel())
@@ -105,11 +102,12 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId)
-                .zip(chainsOrderRepository.loadByOrders()) { addresses, chainOrders ->
+                .combine(chainsOrderRepository.loadByOrders()) { addresses, chainOrders ->
                     val addressAndOrderMap = mutableMapOf<Address, Float>()
                     addresses.forEach { eachAddress ->
-                        addressAndOrderMap[eachAddress] = chainOrders.find { it.value == eachAddress.chain.raw }?.order
-                            ?: chainsOrderRepository.insert(eachAddress.chain.raw)
+                        addressAndOrderMap[eachAddress] =
+                            chainOrders.find { it.value == eachAddress.chain.raw }?.order
+                                ?: chainsOrderRepository.insert(eachAddress.chain.raw)
                     }
                     addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
                 }
