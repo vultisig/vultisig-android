@@ -63,6 +63,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                             ?: error("Account number is null. Does the address exist?")
                     ),
                     sequence = BigInteger(account.sequence ?: "0"),
+                    fee = thorChainApi.getTHORChainNativeTransactionFee(),
                 )
             )
         }
