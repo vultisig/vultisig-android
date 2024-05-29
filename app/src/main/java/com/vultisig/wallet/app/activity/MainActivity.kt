@@ -35,7 +35,22 @@ class MainActivity : AppCompatActivity() {
 
                 LaunchedEffect(Unit) {
                     mainViewModel.destination.collect {
-                        navController.navigate(it.route)
+                        val dst = it.dst
+                        val opts = it.opts
+                        navController.navigate(dst.route) {
+                            if (opts != null) {
+                                if (opts.popUpTo != null) {
+                                    popUpTo(opts.popUpTo) {
+                                        inclusive = opts.inclusive
+                                    }
+                                }
+                                if (opts.clearBackStack) {
+                                    popUpTo(navController.graph.id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 

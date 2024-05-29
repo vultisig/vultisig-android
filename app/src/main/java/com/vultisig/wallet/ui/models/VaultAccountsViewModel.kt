@@ -63,8 +63,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun refreshData() {
+        val vaultId = vaultId ?: return
         updateRefreshing(true)
-        loadAccounts(requireNotNull(vaultId))
+        loadAccounts(vaultId)
     }
 
     fun openAccount(account: AccountUiModel) {
@@ -84,7 +85,8 @@ internal class VaultAccountsViewModel @Inject constructor(
     private fun loadVaultName(vaultId: String) {
         loadVaultNameJob?.cancel()
         loadVaultNameJob = viewModelScope.launch {
-            val vault = requireNotNull(vaultRepository.get(vaultId))
+            val vault = vaultRepository.get(vaultId)
+                ?: return@launch
             uiState.update { it.copy(vaultName = vault.name) }
         }
     }
