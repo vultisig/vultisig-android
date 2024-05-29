@@ -26,9 +26,9 @@ internal class VaultListViewModel @Inject constructor(
         }
     }
 
-    fun onMove(from: ItemPosition, to: ItemPosition) {
+    fun onMove(from: Int, to: Int) {
         val updatedPositionsList = vaults.value.toMutableList().apply {
-            add(to.index, removeAt(from.index))
+            add(to, removeAt(from))
         }
         vaults.value =  updatedPositionsList
         reIndexJob?.cancel()

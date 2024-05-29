@@ -24,7 +24,6 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
-import com.vultisig.wallet.ui.components.reorderable.utils.ItemPosition
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
@@ -51,7 +50,7 @@ private fun VaultListScreen(
     navController: NavHostController,
     vaults: List<Vault>,
     onSelectVault: (vaultId: String) -> Unit = {},
-    onMove: (from: ItemPosition, to: ItemPosition) -> Unit = { _, _ -> },
+    onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
     Box(
         modifier = Modifier
@@ -63,6 +62,7 @@ private fun VaultListScreen(
         VerticalReorderList(
             onMove = onMove,
             data = vaults,
+            key = { it.id },
             contentPadding = PaddingValues(
                 top = 16.dp,
                 start = 12.dp,

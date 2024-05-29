@@ -2,14 +2,12 @@ package com.vultisig.wallet.ui.screens.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +30,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
+import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
@@ -63,7 +62,8 @@ internal fun VaultAccountsScreen(
             navHostController.navigate(
                 Screen.AddChainAccount.createRoute(vaultId)
             )
-        }
+        },
+        onMove = viewModel::onMove,
     )
 }
 
@@ -75,46 +75,61 @@ private fun VaultAccountsScreen(
     onAccountClick: (AccountUiModel) -> Unit,
     onChooseChains: () -> Unit,
     modifier: Modifier = Modifier,
+    onMove: (Int, Int) -> Unit,
 ) {
     BoxWithSwipeRefresh(
         onSwipe = onRefresh,
         isRefreshing = state.isRefreshing,
         modifier = Modifier.fillMaxSize()
     ) {
-        LazyColumn(
-            modifier = modifier,
-            contentPadding = PaddingValues(
-                all = 16.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+
+        Box(
+            modifier = modifier.fillMaxSize(),
         ) {
-            item {
-                AnimatedContent(
-                    targetState = state.totalFiatValue,
-                    label = "ChainAccount FiatAmount",
-                    modifier = Modifier.fillParentMaxWidth(),
-                ) { totalFiatValue ->
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillParentMaxWidth()
-                    ) {
-                        if (totalFiatValue != null) {
-                            Text(
-                                text = totalFiatValue,
-                                style = Theme.menlo.subtitle1,
-                                color = Theme.colors.neutral100,
-                                textAlign = TextAlign.Center,
-                            )
-                        } else {
-                            UiPlaceholderLoader(
-                                modifier = Modifier
-                                    .width(48.dp),
-                            )
+            VerticalReorderList(
+                data = state.accounts,
+                onMove = onMove,
+                key = { it.chainName },
+                contentPadding = PaddingValues(all = 16.dp),
+                beforeContents = listOf {
+                    AnimatedContent(
+                        targetState = state.totalFiatValue,
+                        label = "ChainAccount FiatAmount",
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { totalFiatValue ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (totalFiatValue != null) {
+                                Text(
+                                    text = totalFiatValue,
+                                    style = Theme.menlo.subtitle1,
+                                    color = Theme.colors.neutral100,
+                                    textAlign = TextAlign.Center,
+                                )
+                            } else {
+                                UiPlaceholderLoader(
+                                    modifier = Modifier
+                                        .width(48.dp),
+                                )
+                            }
                         }
                     }
+                },
+                afterContents = listOf {
+                    UiSpacer(
+                        size = 16.dp,
+                    )
+                    UiPlusButton(
+                        title = stringResource(R.string.vault_choose_chains),
+                        onClick = onChooseChains,
+                    )
+                    UiSpacer(
+                        size = 64.dp,
+                    )
                 }
-            }
-            items(state.accounts) { account: AccountUiModel ->
+            ) { account ->
                 ChainAccountItem(
                     account = account,
                     onClick = {
@@ -122,38 +137,26 @@ private fun VaultAccountsScreen(
                     },
                 )
             }
-            item {
-                UiSpacer(
-                    size = 16.dp,
-                )
-                UiPlusButton(
-                    title = stringResource(R.string.vault_choose_chains),
-                    onClick = onChooseChains,
-                )
-                UiSpacer(
-                    size = 64.dp,
+
+            Box(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.BottomCenter)
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.camera,
+                    size = 40.dp,
+                    contentDescription = "join keysign",
+                    tint = Theme.colors.oxfordBlue600Main,
+                    onClick = onJoinKeysign,
+                    modifier = Modifier
+                        .background(
+                            color = Theme.colors.turquoise600Main,
+                            shape = CircleShape,
+                        )
+                        .padding(all = 10.dp)
                 )
             }
-        }
-
-        Box(
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.BottomCenter)
-        ) {
-            UiIcon(
-                drawableResId = R.drawable.camera,
-                size = 40.dp,
-                contentDescription = "join keysign",
-                tint = Theme.colors.oxfordBlue600Main,
-                onClick = onJoinKeysign,
-                modifier = Modifier
-                    .background(
-                        color = Theme.colors.turquoise600Main,
-                        shape = CircleShape,
-                    )
-                    .padding(all = 10.dp)
-            )
         }
     }
 }
@@ -197,5 +200,6 @@ private fun VaultAccountsScreenPreview() {
         onJoinKeysign = {},
         onAccountClick = {},
         onChooseChains = {},
+        onMove = { _, _ -> }
     )
 }
