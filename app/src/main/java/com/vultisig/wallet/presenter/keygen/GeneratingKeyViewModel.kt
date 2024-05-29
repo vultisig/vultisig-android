@@ -20,13 +20,17 @@ import com.vultisig.wallet.tss.LocalStateAccessor
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
 import wallet.core.jni.CoinType
+import kotlin.time.Duration.Companion.seconds
 
 enum class KeygenState {
     CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
@@ -42,6 +46,8 @@ internal class GeneratingKeyViewModel(
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
     private val gson: Gson,
+
+    private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
 ) {
@@ -183,7 +189,7 @@ internal class GeneratingKeyViewModel(
         }
     }
 
-    suspend fun saveVault() {
+    suspend fun saveVault(context: Context) {
         // save the vault
         val coins: MutableList<Coin> = mutableListOf()
         defaultChainsRepository.selectedDefaultChains.first().forEach { chain ->
@@ -229,6 +235,16 @@ internal class GeneratingKeyViewModel(
         vaultRepository.upsert(this@GeneratingKeyViewModel.vault.copy(coins = coins))
 
         Timber.d("saveVault: success,name:${vault.name}")
+
+        delay(2.seconds)
+
+        stopService(context)
+
+        navigator.navigate(
+            Destination.Home(
+                openVaultId = vault.id
+            )
+        )
     }
 
     fun stopService(context: Context) {

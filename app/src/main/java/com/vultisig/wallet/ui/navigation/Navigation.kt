@@ -97,7 +97,22 @@ internal sealed class Destination(
         route = ""
     )
 
-    data object Home : Destination(route = "home_screen")
+    data class Home(
+        val openVaultId: String? = null,
+    ) : Destination(
+        route = buildRoute(openVaultId)
+    ) {
+        companion object {
+            val staticRoute = buildRoute(
+                "{$ARG_VAULT_ID}",
+            )
+
+            private fun buildRoute(
+                vaultId: String?,
+            ) = "home?vault_id=$vaultId"
+        }
+    }
+
     data class VaultSettings(val vaultId: String) :
         Destination(route = "vault_detail/$vaultId/settings") {
 
