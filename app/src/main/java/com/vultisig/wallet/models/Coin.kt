@@ -377,7 +377,7 @@ object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "ETH",
-            logo = "polygon",
+            logo = "eth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -518,6 +518,7 @@ object Coins {
             "tgt" -> R.drawable.tgt
             "fox" -> R.drawable.fox
             "dot" -> R.drawable.dot
+            "wETH"->R.drawable.weth
             else -> R.drawable.danger
         }
     }
