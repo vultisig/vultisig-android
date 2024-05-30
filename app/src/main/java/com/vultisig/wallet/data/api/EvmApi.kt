@@ -244,7 +244,7 @@ internal class EvmApiImp(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_sendRawTransaction",
-            params = listOf("0x" + signedTransaction),
+            params = listOf("0x$signedTransaction"),
             id = 1,
         )
         Timber.d("send transaction: $signedTransaction")
