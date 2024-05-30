@@ -23,8 +23,10 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -35,6 +37,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -45,6 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.RemoveSelectedFile
@@ -60,6 +64,16 @@ internal fun ImportFileScreen(
     viewModel: ImportFileViewModel = hiltViewModel(),
 ) {
     val uiModel by viewModel.uiModel.collectAsState()
+    val snackBarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.snackBarChannelFlow.collect { snackBarMessage ->
+                snackBarMessage?.let {
+                    snackBarHostState.showSnackbar(it.asString(context))
+                }
+        }
+    }
 
     val launcher =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -77,7 +91,8 @@ internal fun ImportFileScreen(
         },
         onContinue = {
             viewModel.onEvent(OnContinueClick)
-        }
+        },
+        snackBarHostState=snackBarHostState
     )
 }
 
@@ -88,12 +103,27 @@ private fun ImportFileScreen(
     onImportFile: () -> Unit = {},
     onRemoveSelectedFile: () -> Unit = {},
     onContinue: () -> Unit = {},
-    snackBarSatate : SnackbarHostState
+    snackBarHostState : SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val appColor = Theme.colors
     val menloFamily = Theme.menlo
 
-    Scaffold(snackbarHost = SnackbarHost{snackBarSatate}) {
+    Scaffold(snackbarHost = {
+        SnackbarHost(snackBarHostState)
+    }, bottomBar = {
+        MultiColorButton(
+            text = stringResource(R.string.send_continue_button),
+            textColor = Theme.colors.oxfordBlue800,
+            disabled = uiModel.fileName == null,
+            minHeight = 44.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    vertical = 16.dp,
+                ),
+            onClick = onContinue,
+        )
+    }) {
 Box(Modifier.padding(it)) {
 
     UiBarContainer(
@@ -188,18 +218,6 @@ Box(Modifier.padding(it)) {
 
             UiSpacer(weight = 1f)
 
-            MultiColorButton(
-                text = stringResource(R.string.send_continue_button),
-                textColor = Theme.colors.oxfordBlue800,
-                disabled = uiModel.fileName == null,
-                minHeight = 44.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        vertical = 16.dp,
-                    ),
-                onClick = onContinue,
-            )
         }/*re*/
     }
 }
@@ -214,5 +232,6 @@ private fun ImportFilePreview() {
     ImportFileScreen(
         navController = navController,
         uiModel = ImportFileState(),
+        snackBarHostState = SnackbarHostState()
     )
 }
