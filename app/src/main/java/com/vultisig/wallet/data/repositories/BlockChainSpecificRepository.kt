@@ -17,7 +17,7 @@ import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
-data class BlockChainSpecificAndUtxo(
+internal data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
 )

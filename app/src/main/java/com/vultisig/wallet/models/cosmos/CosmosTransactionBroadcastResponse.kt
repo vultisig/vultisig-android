@@ -2,11 +2,13 @@ package com.vultisig.wallet.models.cosmos
 
 import com.google.gson.annotations.SerializedName
 
-data class CosmosTransactionBroadcastResponse(
+internal data class CosmosTransactionBroadcastResponse(
     @SerializedName("tx_response") val txResponse: CosmosTransactionBroadcastTx?,
 )
 
-data class CosmosTransactionBroadcastTx(
+internal data class CosmosTransactionBroadcastTx(
+    @SerializedName("txhash")
     val txhash: String?,
+    @SerializedName("code")
     val code: Int?,
 )

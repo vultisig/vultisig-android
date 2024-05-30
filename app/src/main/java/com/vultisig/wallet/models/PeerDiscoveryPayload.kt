@@ -3,10 +3,17 @@ package com.vultisig.wallet.models
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
+import com.google.gson.annotations.SerializedName
 
-data class KeygenWrapper(val _0: KeygenMessage)
-data class ReshareWrapper(val _0: ReshareMessage)
-sealed class PeerDiscoveryPayload {
+internal data class KeygenWrapper(
+    @SerializedName("_0")
+    val _0: KeygenMessage
+)
+internal data class ReshareWrapper(
+    @SerializedName("_0")
+    val _0: ReshareMessage
+)
+internal sealed class PeerDiscoveryPayload {
     data class Keygen(val keygenMessage: KeygenMessage) : PeerDiscoveryPayload()
     data class Reshare(val reshareMessage: ReshareMessage) : PeerDiscoveryPayload()
 

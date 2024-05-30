@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.Chain
@@ -16,21 +17,31 @@ import java.math.BigInteger
 import javax.inject.Inject
 
 data class RpcPayload(
+    @SerializedName("jsonrpc")
     val jsonrpc: String,
+    @SerializedName("method")
     val method: String,
+    @SerializedName("params")
     val params: List<Any>,
+    @SerializedName("id")
     val id: Int,
 )
 
 data class RpcResponse(
+    @SerializedName("jsonrpc")
     val jsonrpc: String,
+    @SerializedName("id")
     val id: Int,
+    @SerializedName("result")
     val result: String?,
+    @SerializedName("error")
     val error: RpcError?,
 )
 
 data class RpcError(
+    @SerializedName("code")
     val code: Int,
+    @SerializedName("message")
     val message: String,
 )
 

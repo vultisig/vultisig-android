@@ -6,7 +6,7 @@ import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.models.Vault
 import javax.inject.Inject
 
-interface VaultAndroidToIOSMapper : MapperFunc<Vault, IOSVaultRoot>
+internal interface VaultAndroidToIOSMapper : MapperFunc<Vault, IOSVaultRoot>
 
 internal class VaultAndroidToIOSMapperImpl @Inject constructor() : VaultAndroidToIOSMapper {
 

@@ -19,7 +19,7 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin
 
-class utxoHelper(
+internal class utxoHelper(
     val coinType: CoinType,
     val vaultHexPublicKey: String,
     val vaultHexChainCode: String,

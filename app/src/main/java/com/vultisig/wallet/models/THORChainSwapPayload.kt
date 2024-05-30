@@ -1,32 +1,41 @@
 package com.vultisig.wallet.models
 
-import android.os.Parcelable
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.common.toJson
-import kotlinx.parcelize.Parcelize
 import wallet.core.jni.proto.THORChainSwap.Asset
 import java.lang.reflect.Type
 import java.math.BigInteger
 
-@Parcelize
-data class THORChainSwapPayload(
+internal data class THORChainSwapPayload(
+    @SerializedName("fromAddress")
     val fromAddress: String,
+    @SerializedName("fromCoin")
     val fromCoin: Coin,
+    @SerializedName("toCoin")
     val toCoin: Coin,
+    @SerializedName("vaultAddress")
     val vaultAddress: String,
+    @SerializedName("routerAddress")
     val routerAddress: String,
+    @SerializedName("fromAmount")
     val fromAmount: BigInteger,
+    @SerializedName("toAmount")
     val toAmount: BigInteger,
+    @SerializedName("toAmountLimit")
     val toAmountLimit: String,
+    @SerializedName("steamingInterval")
     val steamingInterval: String,
+    @SerializedName("streamingQuantity")
     val streamingQuantity: String,
+    @SerializedName("expirationTime")
     val expirationTime: ULong,
-) : Parcelable {
+) {
     val toAddress: String
         get() = toCoin.address
 
@@ -58,7 +67,7 @@ data class THORChainSwapPayload(
     }
 }
 
-class THORChainSwapPayloadSerializer : JsonSerializer<THORChainSwapPayload> {
+internal class THORChainSwapPayloadSerializer : JsonSerializer<THORChainSwapPayload> {
     override fun serialize(
         src: THORChainSwapPayload?,
         typeOfSrc: Type?,
@@ -83,7 +92,7 @@ class THORChainSwapPayloadSerializer : JsonSerializer<THORChainSwapPayload> {
     }
 }
 
-class THORChainSwapPayloadDeserializer : JsonDeserializer<THORChainSwapPayload> {
+internal class THORChainSwapPayloadDeserializer : JsonDeserializer<THORChainSwapPayload> {
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type,

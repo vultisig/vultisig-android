@@ -1,12 +1,11 @@
 package com.vultisig.wallet.models
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import com.google.gson.annotations.SerializedName
 import java.math.BigInteger
 
-@Parcelize
-data class ERC20ApprovePayload(
+internal data class ERC20ApprovePayload(
+    @SerializedName("amount")
     val amount: BigInteger,
+    @SerializedName("spender")
     val spender: String,
-) : Parcelable {
-}
+)

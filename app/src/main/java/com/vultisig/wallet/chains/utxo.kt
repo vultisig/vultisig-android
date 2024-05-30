@@ -1,13 +1,12 @@
 package com.vultisig.wallet.chains
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import com.google.gson.annotations.SerializedName
 
-@Parcelize
-data class UtxoInfo(
+internal data class UtxoInfo(
+    @SerializedName("hash")
     val hash: String,
+    @SerializedName("amount")
     val amount: ULong,
+    @SerializedName("index")
     val index: UInt,
-) : Parcelable {
-
-}
+)

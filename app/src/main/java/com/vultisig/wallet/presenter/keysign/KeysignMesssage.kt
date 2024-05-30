@@ -1,13 +1,17 @@
 package com.vultisig.wallet.presenter.keysign
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import com.google.gson.annotations.SerializedName
 
-@Parcelize
-data class KeysignMesssage(
+
+internal data class KeysignMesssage(
+    @SerializedName("sessionID")
     val sessionID: String,
+    @SerializedName("serviceName")
     val serviceName: String,
+    @SerializedName("payload")
     val payload: KeysignPayload,
+    @SerializedName("encryptionKeyHex")
     val encryptionKeyHex: String,
+    @SerializedName("useVultisigRelay")
     val useVultisigRelay: Boolean,
-) : Parcelable
+)

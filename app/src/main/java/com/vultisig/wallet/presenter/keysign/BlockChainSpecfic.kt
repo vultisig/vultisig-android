@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keysign
 
-import android.os.Parcelable
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -8,51 +7,79 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.common.toJson
-import kotlinx.parcelize.Parcelize
 import java.lang.reflect.Type
 import java.math.BigInteger
 
-@Parcelize
-sealed class BlockChainSpecific : Parcelable {
-    data class UTXO(val byteFee: BigInteger, val sendMaxAmount: Boolean) : BlockChainSpecific()
+internal sealed class BlockChainSpecific {
+    data class UTXO(
+        @SerializedName("byteFee")
+        val byteFee: BigInteger,
+        @SerializedName("sendMaxAmount")
+        val sendMaxAmount: Boolean
+    ) : BlockChainSpecific()
+
     data class Ethereum(
+        @SerializedName("maxFeePerGasWei")
         val maxFeePerGasWei: BigInteger,
+        @SerializedName("priorityFeeWei")
         val priorityFeeWei: BigInteger,
+        @SerializedName("nonce")
         val nonce: BigInteger,
+        @SerializedName("gasLimit")
         val gasLimit: BigInteger,
     ) : BlockChainSpecific()
 
     data class THORChain(
+        @SerializedName("accountNumber")
         val accountNumber: BigInteger,
+        @SerializedName("sequence")
         val sequence: BigInteger,
+        @SerializedName("fee")
         val fee: BigInteger,
-    ) :
-        BlockChainSpecific()
+    ) : BlockChainSpecific()
 
     data class Cosmos(
+        @SerializedName("accountNumber")
         val accountNumber: BigInteger,
+        @SerializedName("sequence")
         val sequence: BigInteger,
+        @SerializedName("gas")
         val gas: BigInteger,
     ) : BlockChainSpecific()
 
-    data class Solana(val recentBlockHash: String, val priorityFee: BigInteger) :
-        BlockChainSpecific()
+    data class Solana(
+        @SerializedName("recentBlockHash")
+        val recentBlockHash: String,
+        @SerializedName("priorityFee")
+        val priorityFee: BigInteger
+    ) : BlockChainSpecific()
 
-    data class Sui(val referenceGasPrice: BigInteger, val coins: List<Map<String, String>>) :
-        BlockChainSpecific()
+    data class Sui(
+        @SerializedName("referenceGasPrice")
+        val referenceGasPrice: BigInteger,
+        @SerializedName("coins")
+        val coins: List<Map<String, String>>
+    ) : BlockChainSpecific()
 
     data class Polkadot(
+        @SerializedName("recentBlockHash")
         val recentBlockHash: String,
+        @SerializedName("nonce")
         val nonce: BigInteger,
+        @SerializedName("currentBlockNumber")
         val currentBlockNumber: BigInteger,
+        @SerializedName("specVersion")
         val specVersion: UInt,
+        @SerializedName("transactionVersion")
         val transactionVersion: UInt,
+        @SerializedName("genesisHash")
         val genesisHash: String,
     ) : BlockChainSpecific()
 }
 
-class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific> {
+internal class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific> {
     override fun serialize(
         src: BlockChainSpecific,
         typeOfSrc: Type?,
@@ -122,7 +149,7 @@ class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific> {
 
 }
 
-class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
+internal class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpecific> {
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type,

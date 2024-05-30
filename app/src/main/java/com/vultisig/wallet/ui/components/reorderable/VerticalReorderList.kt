@@ -23,12 +23,12 @@ import com.vultisig.wallet.ui.components.reorderable.utils.reorderable
 internal fun <T : Any> VerticalReorderList(
     modifier: Modifier = Modifier,
     data: List<T>,
+    key: (item: T) -> Any = { it },
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     onMove: (from: Int, to: Int) -> Unit,
     beforeContents: List<@Composable LazyItemScope.() -> Unit>? = null,
     afterContents: List<@Composable LazyItemScope.() -> Unit>? = null,
-    key: ((item: T) -> Any),
     content: @Composable (item: T) -> Unit,
 ) {
     val dataSize by rememberUpdatedState(newValue = data.size)

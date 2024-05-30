@@ -1,7 +1,5 @@
 package com.vultisig.wallet.presenter.keysign
 
-import android.os.Parcelable
-import com.google.common.reflect.TypeToken
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -9,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.chains.AtomHelper
 import com.vultisig.wallet.chains.ERC20Helper
 import com.vultisig.wallet.chains.EvmHelper
@@ -26,25 +25,29 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.models.Vault
-import kotlinx.parcelize.Parcelize
 import java.lang.reflect.Type
 import java.math.BigInteger
 
 
-@Parcelize
-data class KeysignPayload(
+internal data class KeysignPayload(
+    @SerializedName("coin")
     val coin: Coin,
+    @SerializedName("toAddress")
     val toAddress: String,
+    @SerializedName("toAmount")
     val toAmount: BigInteger,
     @SerializedName("chainSpecific") val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
+    @SerializedName("memo")
     val memo: String? = null,
+    @SerializedName("swapPayload")
     val swapPayload: THORChainSwapPayload? = null,
+    @SerializedName("approvePayload")
     val approvePayload: ERC20ApprovePayload? = null,
     @SerializedName("vaultPubKeyECDSA")
     val vaultPublicKeyECDSA: String,
     val vaultLocalPartyID: String,
-) : Parcelable {
+)  {
     fun getKeysignMessages(vault: Vault): List<String> {
         if (swapPayload != null) {
             return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode).getPreSignedImageHash(
@@ -113,7 +116,7 @@ data class KeysignPayload(
     }
 }
 
-class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
+internal class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
     override fun serialize(
         src: KeysignPayload,
         typeOfSrc: Type?,
@@ -134,7 +137,7 @@ class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
     }
 }
 
-class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
+internal class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
     override fun deserialize(
         json: JsonElement,
         typeOfT: Type?,
