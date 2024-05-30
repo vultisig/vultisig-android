@@ -234,7 +234,7 @@ object Coins {
         Coin(
             chain = Chain.avalanche,
             ticker = "AVAX",
-            logo = "eth",
+            logo = "avax",
             address = "",
             decimal = 18,
             hexPublicKey = "",
