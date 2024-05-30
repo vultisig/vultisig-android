@@ -175,7 +175,9 @@ internal class EvmApiImp(
             Timber.d("get gas price error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
-        return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
+        // 1.5x the base fee
+        return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16).multiply(BigInteger("3"))
+            .divide(BigInteger("2"))
     }
 
     override suspend fun getMaxPriorityFeePerGas(): BigInteger {
@@ -195,7 +197,13 @@ internal class EvmApiImp(
             Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
-        return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
+        // Let's make sure we pay at least 1GWei as priority fee
+        val oneGwei = 1000000000.toBigInteger()
+        val priorityFee = BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
+        if (priorityFee > oneGwei) {
+            return priorityFee
+        }
+        return oneGwei
     }
 
     override suspend fun getAllowance(
@@ -236,7 +244,7 @@ internal class EvmApiImp(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_sendRawTransaction",
-            params = listOf("0x"+signedTransaction),
+            params = listOf("0x" + signedTransaction),
             id = 1,
         )
         Timber.d("send transaction: $signedTransaction")
@@ -252,7 +260,8 @@ internal class EvmApiImp(
             if (message.contains("known") ||
                 message.contains("already known") ||
                 message.contains("Transaction is temporarily banned") ||
-                message.contains("nonce too low: next nonce")
+                message.contains("nonce too low: next nonce") ||
+                message.contains("transaction already exists")
             ) {
                 return "Transaction already broadcast"
             }
