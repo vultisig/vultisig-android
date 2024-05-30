@@ -16,7 +16,7 @@ internal data class KeygenSetupUiModel(
         KeygenSetupTabUiModel(
             title = R.string.s_of_s_vault.asUiText("2", "2"),
             content = R.string.setup_device_of_vault.asUiText("2"),
-            drawableResId = R.drawable.devices_two_two,
+            drawableResId = R.drawable.devices_2_2,
         ),
         KeygenSetupTabUiModel(
             title = R.string.s_of_s_vault.asUiText("2", "3"),
