@@ -1,10 +1,14 @@
 package com.vultisig.wallet.presenter.import_file
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.decodeFromHex
 import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
@@ -14,14 +18,18 @@ import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.RemoveSelectedFile
+import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
@@ -33,6 +41,8 @@ internal class ImportFileViewModel @Inject constructor(
 ) : ViewModel() {
     val uiModel = MutableStateFlow(ImportFileState())
 
+    private val channel = Channel<VaultEditUiEvent>()
+    val channelFlow = channel.receiveAsFlow()
     fun onEvent(event: ImportFileEvent) {
         when (event) {
             is FileSelected -> fetchFileName(event.uri)
@@ -45,14 +55,19 @@ internal class ImportFileViewModel @Inject constructor(
         if (fileContent == null)
             return
         viewModelScope.launch {
-            val fromJson = gson.fromJson(fileContent.decodeFromHex(), IOSVaultRoot::class.java)
-            val vault = vaultIOSToAndroidMapper(fromJson)
-            vaultRepository.add(vault)
-            navigator.navigate(
-                Destination.Home(
-                    openVaultId = vault.id,
+            try {
+                val fromJson = gson.fromJson(fileContent.decodeFromHex(), IOSVaultRoot::class.java)
+                val vault = vaultIOSToAndroidMapper(fromJson)
+                vaultRepository.add(vault)
+                navigator.navigate(
+                    Destination.Home(
+                        openVaultId = vault.id,
+                    )
                 )
-            )
+                } catch (e: SQLiteConstraintException) {
+                    channel.send(VaultEditUiEvent.ShowSnackBar(UiText.StringResource(R.string.import_file_screen_duplicate_vault)))
+            }
+
         }
     }
 
