@@ -218,7 +218,7 @@ Box(Modifier.padding(it)) {
 
             UiSpacer(weight = 1f)
 
-        }/*re*/
+        }
     }
 }
 
