@@ -40,6 +40,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 approvePayload = null,
                 vaultPublicKeyECDSA = pubKeyECDSA,
                 utxos = transaction.utxos,
+                vaultLocalPartyID = vault.localPartyID,
             )
         }
     }

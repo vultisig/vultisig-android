@@ -151,7 +151,6 @@ internal fun GeneratingKey(
         Icon(
             painter = painterResource(id = R.drawable.wifi),
             contentDescription = null,
-            tint = Theme.colors.neutral0
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         Text(

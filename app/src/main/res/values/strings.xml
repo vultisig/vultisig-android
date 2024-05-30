@@ -115,7 +115,7 @@
     <string name="generating_key_screen_resharing_eddsa_key">RESHARING EdDSA Key</string>
     <string name="generating_key_screen_success">SUCCESS</string>
     <string name="generating_key_screen_keygen_failed">Keygen Failed</string>
-    <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Keep devices on the same WiFi Network with Vultisig open.</string>
+    <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Keep devices on the same network with Vultisig open.</string>
     <string name="join_key_gen_screen_keygen">Keygen</string>
     <string name="join_key_gen_screen_discovering_service">Discovering Service</string>
     <string name="join_key_gen_screen_discovering_session_id">Discovering Session ID</string>
@@ -124,7 +124,7 @@
     <string name="keygen_flow_views_success">Success</string>
     <string name="keygen_peer_discovery_keygen">Keygen</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
-    <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect...</string>
+    <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect…</string>
     <string name="keygen_peer_discovery_desc1">Keep all devices on same WiFi with Vultisig App open. (May not work on hotel/airport WiFi)</string>
     <string name="keygen_peer_discovery_continue">Continue</string>
     <string name="network_prompts_wifi">Wifi</string>
@@ -150,9 +150,9 @@
     <string name="vault_detail_screen_eddsa">EDDSA</string>
     <string name="welcome_screen_next">Next</string>
     <string name="welcome_screen_skip">Skip</string>
-    <string name="keysign_screen_preparing_vault">Preparing vault...</string>
-    <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA...</string>
-    <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA...</string>
+    <string name="keysign_screen_preparing_vault">Preparing vault…</string>
+    <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
+    <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
     <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Keep devices on the same WiFi Network with Vultisig open.</string>

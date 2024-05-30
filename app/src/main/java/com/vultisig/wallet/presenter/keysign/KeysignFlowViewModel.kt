@@ -134,7 +134,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     serviceName = _serviceName,
                     payload = _keysignPayload!!,
                     encryptionKeyHex = _encryptionKeyHex,
-                    usevultisigRelay = vultisigRelay.IsRelayEnabled
+                    useVultisigRelay = vultisigRelay.IsRelayEnabled
                 )
             ).toByteArray().zipZlibAndBase64Encode()
         if (!vultisigRelay.IsRelayEnabled) {

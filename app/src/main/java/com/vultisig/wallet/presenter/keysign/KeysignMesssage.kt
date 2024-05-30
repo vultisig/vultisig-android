@@ -9,5 +9,5 @@ data class KeysignMesssage(
     val serviceName: String,
     val payload: KeysignPayload,
     val encryptionKeyHex: String,
-    val usevultisigRelay: Boolean,
+    val useVultisigRelay: Boolean,
 ) : Parcelable
