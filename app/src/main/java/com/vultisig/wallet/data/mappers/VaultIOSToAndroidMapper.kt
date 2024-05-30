@@ -7,7 +7,7 @@ import com.vultisig.wallet.models.Vault
 import java.util.UUID
 import javax.inject.Inject
 
-interface VaultIOSToAndroidMapper : MapperFunc<IOSVaultRoot, Vault>
+internal interface VaultIOSToAndroidMapper : MapperFunc<IOSVaultRoot, Vault>
 
 internal class VaultIOSToAndroidMapperImpl @Inject constructor(private val gson: Gson) :
     VaultIOSToAndroidMapper {

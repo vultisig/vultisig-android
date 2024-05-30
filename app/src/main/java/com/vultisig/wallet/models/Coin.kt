@@ -1,24 +1,29 @@
 package com.vultisig.wallet.models
 
-import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.R
-import kotlinx.parcelize.Parcelize
 import wallet.core.jni.CoinType
 
-@Parcelize
-data class Coin(
+internal data class Coin(
+    @SerializedName("chain")
     val chain: Chain,
+    @SerializedName("ticker")
     val ticker: String,
+    @SerializedName("logo")
     val logo: String,
+    @SerializedName("address")
     val address: String,
     @SerializedName("decimals")
     val decimal: Int,
+    @SerializedName("hexPublicKey")
     val hexPublicKey: String,
-    @SerializedName("priceProviderId") val priceProviderID: String,
+    @SerializedName("priceProviderId", alternate = ["priceProviderID"])
+    val priceProviderID: String,
+    @SerializedName("contractAddress")
     val contractAddress: String,
+    @SerializedName("isNativeToken")
     val isNativeToken: Boolean,
-) : Parcelable {
+) {
     val id: String
         get() = "${ticker}-${chain.id}"
 
@@ -27,11 +32,11 @@ data class Coin(
 
 }
 
-fun Coin.AllowZeroGas(): Boolean {
+internal fun Coin.AllowZeroGas(): Boolean {
     return this.chain == Chain.polkadot
 }
 
-object Coins {
+internal object Coins {
     val SupportedCoins = listOf(
         Coin(
             chain = Chain.bitcoin,

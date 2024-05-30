@@ -1,10 +1,10 @@
 package com.vultisig.wallet.models
 
-import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
+import com.google.gson.annotations.SerializedName
 
-@Parcelize
-data class KeyShare(
+internal data class KeyShare(
+    @SerializedName("pubKey")
     val pubKey: String,
+    @SerializedName("keyshare")
     val keyshare: String,
-):Parcelable
+)
