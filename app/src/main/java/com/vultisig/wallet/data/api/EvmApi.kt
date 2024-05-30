@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
@@ -175,9 +177,7 @@ internal class EvmApiImp(
             Timber.d("get gas price error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
-        // 1.5x the base fee
-        return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16).multiply(BigInteger("3"))
-            .divide(BigInteger("2"))
+        return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
     }
 
     override suspend fun getMaxPriorityFeePerGas(): BigInteger {
@@ -197,13 +197,8 @@ internal class EvmApiImp(
             Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
-        // Let's make sure we pay at least 1GWei as priority fee
-        val oneGwei = 1000000000.toBigInteger()
-        val priorityFee = BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
-        if (priorityFee > oneGwei) {
-            return priorityFee
-        }
-        return oneGwei
+
+        return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
     }
 
     override suspend fun getAllowance(
@@ -263,7 +258,10 @@ internal class EvmApiImp(
                 message.contains("nonce too low: next nonce") ||
                 message.contains("transaction already exists")
             ) {
-                return "Transaction already broadcast"
+                // even the server returns an error , but this still consider as success
+                return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
+            } else {
+                throw Exception(responseBody)
             }
         }
         return jsonObject.get("result").asString

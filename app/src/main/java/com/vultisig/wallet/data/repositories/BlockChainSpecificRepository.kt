@@ -70,14 +70,16 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
         TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
-
             val gasLimit = BigInteger(
                 if (token.isNativeToken) "23000"
                 else "120000"
             )
-            val maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
-            val nonce = evmApi.getNonce(address)
 
+            var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
+            if (chain in listOf(Chain.ethereum, Chain.avalanche)) {
+                maxPriorityFee = ensureOneGweiPriorityFee(maxPriorityFee)
+            }
+            val nonce = evmApi.getNonce(address)
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Ethereum(
                     maxFeePerGasWei = gasFee.value,
@@ -151,6 +153,15 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             }
         }
 
+    }
+
+    fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {
+        // Let's make sure we pay at least 1GWei as priority fee
+        val oneGwei = 1000000000.toBigInteger()
+        if (priorityFee > oneGwei) {
+            return priorityFee
+        }
+        return oneGwei
     }
 
 }
