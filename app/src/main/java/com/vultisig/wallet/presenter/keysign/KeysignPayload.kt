@@ -43,6 +43,7 @@ data class KeysignPayload(
     val approvePayload: ERC20ApprovePayload? = null,
     @SerializedName("vaultPubKeyECDSA")
     val vaultPublicKeyECDSA: String,
+    val vaultLocalPartyID: String,
 ) : Parcelable {
     fun getKeysignMessages(vault: Vault): List<String> {
         if (swapPayload != null) {
@@ -103,7 +104,8 @@ data class KeysignPayload(
                 val mayachainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return mayachainHelper.getPreSignedImageHash(this)
             }
-            Chain.polkadot->{
+
+            Chain.polkadot -> {
                 val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
                 return dotHelper.getPreSignedImageHash(this)
             }
@@ -124,7 +126,8 @@ class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
         jsonObject.add("chainSpecific", context?.serialize(src.blockChainSpecific))
         jsonObject.add("coin", context?.serialize(src.coin))
         jsonObject.add("utxos", context?.serialize(src.utxos))
-        jsonObject.addProperty("memo", src.memo)
+        jsonObject.addProperty("memo", src.memo ?: "")
+        jsonObject.addProperty("vaultLocalPartyID", src.vaultLocalPartyID)
         jsonObject.add("swapPayload", context?.serialize(src.swapPayload))
         jsonObject.add("approvePayload", context?.serialize(src.approvePayload))
         return jsonObject
@@ -141,6 +144,7 @@ class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
         val toAddress = jsonObject.get("toAddress").asString
         val toAmount = jsonObject.get("toAmount").asJsonArray[1].asBigInteger
         val vaultPubKeyECDSA = jsonObject.get("vaultPubKeyECDSA").asString
+        val vaultLocalPartyID = jsonObject.get("vaultLocalPartyID").asString
         val chainSpecific = context?.deserialize<BlockChainSpecific>(
             jsonObject.get("chainSpecific"), BlockChainSpecific::class.java
         )!!
@@ -165,7 +169,8 @@ class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
             memo = memo,
             swapPayload = swapPayload,
             approvePayload = approvePayload,
-            vaultPublicKeyECDSA = vaultPubKeyECDSA
+            vaultPublicKeyECDSA = vaultPubKeyECDSA,
+            vaultLocalPartyID = vaultLocalPartyID
         )
     }
 }

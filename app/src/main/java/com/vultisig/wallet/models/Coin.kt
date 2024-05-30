@@ -15,7 +15,7 @@ data class Coin(
     @SerializedName("decimals")
     val decimal: Int,
     val hexPublicKey: String,
-    val priceProviderID: String,
+    @SerializedName("priceProviderId") val priceProviderID: String,
     val contractAddress: String,
     val isNativeToken: Boolean,
 ) : Parcelable {

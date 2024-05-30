@@ -166,7 +166,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 this@JoinKeysignViewModel._keysignPayload = ksPayload
                 this@JoinKeysignViewModel._sessionID = payload.sessionID
                 this@JoinKeysignViewModel._serviceName = payload.serviceName
-                this@JoinKeysignViewModel._useVultisigRelay = payload.usevultisigRelay
+                this@JoinKeysignViewModel._useVultisigRelay = payload.useVultisigRelay
                 this@JoinKeysignViewModel._encryptionKeyHex = payload.encryptionKeyHex
 
                 loadTransaction(ksPayload)
