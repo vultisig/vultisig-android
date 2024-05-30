@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.IsSwapSupported
@@ -21,6 +22,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -36,6 +38,7 @@ data class ChainTokensUiModel(
     val tokens: List<ChainTokenUiModel> = emptyList(),
     val canDeposit: Boolean = true,
     val canSwap: Boolean = true,
+    val canSelectTokens: Boolean = false,
 )
 
 @Immutable
@@ -56,6 +59,7 @@ internal class ChainTokensViewModel @Inject constructor(
 
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
+    private val tokensRepository: TokenRepository,
 ) : ViewModel() {
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
@@ -65,10 +69,6 @@ internal class ChainTokensViewModel @Inject constructor(
     val uiState = MutableStateFlow(ChainTokensUiModel())
 
     private var loadDataJob: Job? = null
-
-    init {
-        loadData()
-    }
 
     fun refresh() {
         loadData()
@@ -133,6 +133,12 @@ internal class ChainTokensViewModel @Inject constructor(
                 val totalBalance = totalFiatValue
                     ?.let(fiatValueToStringMapper::map)
 
+
+                val canSelectTokens = tokensRepository
+                    .getChainTokens(address.chain.id)
+                    .first()
+                    .any { !it.isNativeToken }
+
                 uiState.update {
                     it.copy(
                         chainName = chainRaw,
@@ -143,6 +149,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
+                        canSelectTokens = canSelectTokens,
                     )
                 }
             }

@@ -78,7 +78,8 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
-            tokenRepository.getChainTokens(vaultId, chainId)
+            tokenRepository.getChainTokens(chainId)
+                .map { tokens -> tokens.filter { !it.isNativeToken } }
                 .zip(
                     vaultRepository.getEnabledTokens(vaultId)
                         .map { enabled -> enabled.map { it.id }.toSet() }

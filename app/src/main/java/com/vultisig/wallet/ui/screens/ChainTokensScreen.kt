@@ -16,12 +16,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -61,7 +61,11 @@ internal fun ChainTokensScreen(
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
-    
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
+
     ChainTokensScreen(
         navController = navController,
         uiModel = uiModel,
@@ -73,7 +77,6 @@ internal fun ChainTokensScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChainTokensScreen(
     navController: NavHostController,
@@ -217,12 +220,14 @@ private fun ChainTokensScreen(
                         }
                     }
 
-                    UiPlusButton(
-                        title = stringResource(R.string.choose_tokens),
-                        onClick = onSelectTokens,
-                        modifier = Modifier
-                            .padding(vertical = 16.dp),
-                    )
+                    if (uiModel.canSelectTokens) {
+                        UiPlusButton(
+                            title = stringResource(R.string.choose_tokens),
+                            onClick = onSelectTokens,
+                            modifier = Modifier
+                                .padding(vertical = 16.dp),
+                        )
+                    }
                 }
             }
         }

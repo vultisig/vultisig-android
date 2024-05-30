@@ -11,7 +11,7 @@ internal interface TokenRepository {
 
     fun getToken(tokenId: String): Flow<Coin>
 
-    fun getChainTokens(vaultId: String, chainId: String): Flow<List<Coin>>
+    fun getChainTokens(chainId: String): Flow<List<Coin>>
 
     fun getNativeToken(chainId: String): Flow<Coin>
 
@@ -26,7 +26,7 @@ internal class TokenRepositoryImpl @Inject constructor() : TokenRepository {
     override fun getToken(tokenId: String): Flow<Coin> =
         allTokens.map { allTokens -> allTokens.first { it.id == tokenId } }
 
-    override fun getChainTokens(vaultId: String, chainId: String): Flow<List<Coin>> = allTokens
+    override fun getChainTokens(chainId: String): Flow<List<Coin>> = allTokens
         .map { allTokens ->
             allTokens.filter { it.chain.id == chainId }
         }
