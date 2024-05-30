@@ -11,6 +11,7 @@ import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.util.fastFirstOrNull
+import kotlinx.coroutines.delay
 
 
 internal fun Modifier.reorderable(
@@ -22,6 +23,7 @@ internal fun Modifier.reorderable(
             val down = awaitPointerEventScope {
                 currentEvent.changes.fastFirstOrNull { it.id == dragStart.id }
             }
+            delay(300)
             if (down != null && state.onDragStart(
                     down.position.x.toInt(),
                     down.position.y.toInt()
