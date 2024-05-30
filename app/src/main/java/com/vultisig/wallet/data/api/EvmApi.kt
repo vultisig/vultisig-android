@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
@@ -195,6 +197,7 @@ internal class EvmApiImp(
             Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
+
         return BigInteger(rpcResp.result?.removePrefix("0x") ?: "0", 16)
     }
 
@@ -236,7 +239,7 @@ internal class EvmApiImp(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_sendRawTransaction",
-            params = listOf("0x"+signedTransaction),
+            params = listOf("0x$signedTransaction"),
             id = 1,
         )
         Timber.d("send transaction: $signedTransaction")
@@ -252,9 +255,13 @@ internal class EvmApiImp(
             if (message.contains("known") ||
                 message.contains("already known") ||
                 message.contains("Transaction is temporarily banned") ||
-                message.contains("nonce too low: next nonce")
+                message.contains("nonce too low: next nonce") ||
+                message.contains("transaction already exists")
             ) {
-                return "Transaction already broadcast"
+                // even the server returns an error , but this still consider as success
+                return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
+            } else {
+                throw Exception(responseBody)
             }
         }
         return jsonObject.get("result").asString
