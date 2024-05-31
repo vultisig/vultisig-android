@@ -46,7 +46,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun SendFormScreen(
     vaultId: String,
-    chainId: String,
+    chainId: String?,
     qrCodeResult: String?,
     viewModel: SendFormViewModel = hiltViewModel(),
 ) {

@@ -31,7 +31,7 @@ import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 internal fun SendScreen(
     navController: NavController,
     vaultId: String,
-    chainId: String,
+    chainId: String?,
     qrCodeResult: String?,
     viewModel: SendViewModel = hiltViewModel(),
 ) {

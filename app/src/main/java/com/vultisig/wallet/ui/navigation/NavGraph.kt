@@ -190,7 +190,12 @@ internal fun SetupNavGraph(
             route = Destination.Send.staticRoute,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) {
+                    type = NavType.StringType
+                    // if chainId = null show all tokens
+                    // else only tokens from chain
+                    nullable = true
+                },
             )
         ) { entry ->
             val savedStateHandle = entry.savedStateHandle
@@ -200,7 +205,7 @@ internal fun SetupNavGraph(
                 navController = navController,
                 qrCodeResult = savedStateHandle.remove(ARG_QR_CODE),
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
-                chainId = requireNotNull(args.getString(ARG_CHAIN_ID))
+                chainId = args.getString(ARG_CHAIN_ID),
             )
         }
         composable(

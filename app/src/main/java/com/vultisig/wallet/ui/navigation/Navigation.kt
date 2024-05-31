@@ -31,7 +31,7 @@ internal sealed class Destination(
 
     data class Send(
         val vaultId: String,
-        val chainId: String,
+        val chainId: String? = null,
     ) : Destination(
         route = "vault_detail/${vaultId}/account/${chainId}/send"
     ) {
