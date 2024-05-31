@@ -4,9 +4,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -17,9 +20,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
@@ -30,6 +35,7 @@ import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VaultActionButton
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.AccountUiModel
@@ -53,6 +59,8 @@ internal fun VaultAccountsScreen(
     VaultAccountsScreen(
         state = state,
         onRefresh = viewModel::refreshData,
+        onSend = viewModel::send,
+        onSwap = viewModel::swap,
         onJoinKeysign = {
             navHostController.navigate(
                 Screen.JoinKeysign.createRoute(vaultId)
@@ -71,12 +79,14 @@ internal fun VaultAccountsScreen(
 @Composable
 private fun VaultAccountsScreen(
     state: VaultAccountsUiModel,
-    onRefresh: () -> Unit,
-    onJoinKeysign: () -> Unit,
-    onAccountClick: (AccountUiModel) -> Unit,
-    onChooseChains: () -> Unit,
     modifier: Modifier = Modifier,
-    onMove: (Int, Int) -> Unit,
+    onSend: () -> Unit = {},
+    onSwap: () -> Unit = {},
+    onRefresh: () -> Unit = {},
+    onJoinKeysign: () -> Unit = {},
+    onAccountClick: (AccountUiModel) -> Unit = {},
+    onChooseChains: () -> Unit = {},
+    onMove: (Int, Int) -> Unit = { _, _ -> },
 ) {
     BoxWithSwipeRefresh(
         onSwipe = onRefresh,
@@ -94,28 +104,59 @@ private fun VaultAccountsScreen(
                 contentPadding = PaddingValues(all = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 beforeContents = listOf {
-                    AnimatedContent(
-                        targetState = state.totalFiatValue,
-                        label = "ChainAccount FiatAmount",
-                        modifier = Modifier.fillMaxWidth(),
-                    ) { totalFiatValue ->
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                start = 22.dp,
+                                end = 22.dp,
+                                top = 0.dp,
+                                bottom = 16.dp
+                            )
+                    ) {
+                        AnimatedContent(
+                            targetState = state.totalFiatValue,
+                            label = "ChainAccount FiatAmount",
+                        ) { totalFiatValue ->
                             if (totalFiatValue != null) {
                                 Text(
                                     text = totalFiatValue,
-                                    style = Theme.menlo.subtitle1,
+                                    style = Theme.menlo.heading4
+                                        .copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 32.sp,
+                                        ),
                                     color = Theme.colors.neutral100,
                                     textAlign = TextAlign.Center,
                                 )
                             } else {
                                 UiPlaceholderLoader(
                                     modifier = Modifier
-                                        .width(48.dp),
+                                        .width(48.dp)
+                                        .height(32.dp),
                                 )
                             }
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            VaultActionButton(
+                                text = stringResource(R.string.chain_account_view_send),
+                                color = Theme.colors.turquoise600Main,
+                                modifier = Modifier.weight(1f),
+                                onClick = onSend,
+                            )
+
+                            VaultActionButton(
+                                text = stringResource(R.string.chain_account_view_swap),
+                                color = Theme.colors.persianBlue200,
+                                modifier = Modifier.weight(1f),
+                                onClick = onSwap,
+                            )
                         }
                     }
                 },
@@ -198,10 +239,5 @@ private fun VaultAccountsScreenPreview() {
                 ),
             ),
         ),
-        onRefresh = {},
-        onJoinKeysign = {},
-        onAccountClick = {},
-        onChooseChains = {},
-        onMove = { _, _ -> }
     )
 }
