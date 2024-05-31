@@ -51,7 +51,7 @@ import javax.inject.Inject
 
 @Immutable
 internal data class TokenBalanceUiModel(
-    val model: Account,
+    val model: SendSrc,
     val title: String,
     val balance: String?,
     @DrawableRes val logo: Int,
@@ -67,6 +67,11 @@ internal data class SendFormUiModel(
     val fee: String? = null,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
+)
+
+internal data class SendSrc(
+    val address: Address,
+    val account: Account,
 )
 
 private data class InvalidTransactionDataException(
@@ -91,7 +96,7 @@ internal class SendFormViewModel @Inject constructor(
 ) : ViewModel() {
 
     private lateinit var vaultId: String
-    private lateinit var chain: Chain
+    private var chain: Chain? = null
 
     fun setAddressFromQrCode(qrCode: String?) {
         if (qrCode != null) {
@@ -99,8 +104,11 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private val selectedAddress = MutableStateFlow<Address?>(null)
-    private val selectedAccount = MutableStateFlow<Account?>(null)
+    private val selectedSrc = MutableStateFlow<SendSrc?>(null)
+
+    private val selectedAccount: Account?
+        get() = selectedSrc.value?.account
+
     private val appCurrency = appCurrencyRepository
         .currency
         .stateIn(
@@ -111,8 +119,6 @@ internal class SendFormViewModel @Inject constructor(
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
-    private var nativeTokenAccount: Account? = null
-
     private var lastToken = ""
     private var lastFiat = ""
 
@@ -122,9 +128,9 @@ internal class SendFormViewModel @Inject constructor(
 
     val uiState = MutableStateFlow(SendFormUiModel())
 
-    fun loadData(vaultId: String, chainId: String) {
+    fun loadData(vaultId: String, chainId: String?) {
         this.vaultId = vaultId
-        this.chain = Chain.fromRaw(chainId)
+        this.chain = chainId?.let(Chain::fromRaw)
         loadTokens()
         loadSelectedCurrency()
         collectSelectedAccount()
@@ -133,7 +139,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun selectToken(token: TokenBalanceUiModel) {
-        selectedAccount.value = token.model
+        selectedSrc.value = token.model
         toggleTokens()
     }
 
@@ -141,7 +147,7 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update {
             it.copy(isTokensExpanded = !it.isTokensExpanded)
         }
-        if (selectedAccount.value?.token?.AllowZeroGas() == true) {
+        if (selectedSrc.value?.account?.token?.AllowZeroGas() == true) {
             uiState.update {
                 it.copy(showGasFee = false)
             }
@@ -159,7 +165,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun chooseMaxTokenAmount() {
-        val selectedAccount = selectedAccount.value ?: return
+        val selectedAccount = selectedAccount ?: return
         val selectedTokenValue = selectedAccount.tokenValue ?: return
         val gasFee = gasFee.value ?: return
 
@@ -183,10 +189,12 @@ internal class SendFormViewModel @Inject constructor(
     fun send() {
         viewModelScope.launch {
             try {
-                val selectedAccount = selectedAccount.value
+                val selectedAccount = selectedAccount
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_token)
                     )
+
+                val chain = selectedAccount.token.chain
 
                 val gasFee = gasFee.value
                     ?: throw InvalidTransactionDataException(
@@ -237,6 +245,8 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     }
                 } else {
+                    val nativeTokenAccount = selectedSrc.value?.address?.accounts
+                        ?.find { it.token.isNativeToken }
                     val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
                         ?: throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_no_token)
@@ -298,47 +308,90 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun loadTokens() {
+        val chain = chain
         viewModelScope.launch {
-            accountsRepository.loadAddress(
-                vaultId = vaultId,
-                chain = chain,
-            ).catch {
-                // TODO handle error
-                Timber.e(it)
-            }.collect { account ->
-                selectedAddress.value = account
+            if (chain == null) {
+                accountsRepository.loadAddresses(vaultId)
+                    .catch {
+                        // TODO handle error
+                        Timber.e(it)
+                    }.collect { addresses ->
+                        val selectedSrcValue = selectedSrc.value
+                        if (selectedSrcValue == null) {
+                            val address = addresses.first()
+                            selectedSrc.value = SendSrc(
+                                address,
+                                address.accounts.first(),
+                            )
+                        } else {
+                            val selectedAddress = selectedSrcValue.address
+                            val selectedAccount = selectedSrcValue.account
+                            val address = addresses.first {
+                                it.chain == selectedAddress.chain &&
+                                        it.address == selectedAddress.address
+                            }
+                            selectedSrc.value = SendSrc(
+                                address,
+                                address.accounts.first {
+                                    it.token.ticker == selectedAccount.token.ticker
+                                },
+                            )
+                        }
 
-                val tokenUiModels = account
-                    .accounts
-                    .map(accountToTokenBalanceUiModelMapper::map)
+                        updateUiTokens(
+                            addresses
+                                .asSequence()
+                                .map { address ->
+                                    address.accounts.map {
+                                        accountToTokenBalanceUiModelMapper.map(SendSrc(address, it))
+                                    }
+                                }
+                                .flatten()
+                                .toList()
+                        )
+                    }
+            } else {
+                accountsRepository.loadAddress(
+                    vaultId = vaultId,
+                    chain = chain,
+                ).catch {
+                    // TODO handle error
+                    Timber.e(it)
+                }.collect { account ->
+                    val accountOfNativeToken = account.accounts.find { it.token.isNativeToken }
+                    val selectedAccountValue = selectedAccount
+                    // so it doesnt reset user selection of token on update
+                    if (accountOfNativeToken != null && (selectedAccountValue == null ||
+                                selectedAccountValue.token.ticker == accountOfNativeToken.token.ticker)
+                    ) {
+                        selectedSrc.value = SendSrc(account, accountOfNativeToken)
+                    }
 
-                val accountOfNativeToken = account.accounts.find { it.token.isNativeToken }
-                val selectedAccountValue = selectedAccount.value
-                // so it doesnt reset user selection of token on update
-                if (selectedAccountValue == null ||
-                    selectedAccountValue.token.ticker == accountOfNativeToken?.token?.ticker
-                ) {
-                    selectedAccount.value = accountOfNativeToken
-                }
-                nativeTokenAccount = accountOfNativeToken
+                    val tokenUiModels = account.accounts
+                        .map { accountToTokenBalanceUiModelMapper.map(SendSrc(account, it)) }
+                        .toList()
 
-                uiState.update {
-                    it.copy(
-                        from = account.address,
-                        availableTokens = tokenUiModels,
-                        showGasFee = (selectedAccount.value?.token?.AllowZeroGas() == false)
-                    )
+                    updateUiTokens(tokenUiModels)
                 }
             }
         }
     }
 
+    private fun updateUiTokens(tokenUiModels: List<TokenBalanceUiModel>) {
+        uiState.update {
+            it.copy(
+                availableTokens = tokenUiModels,
+            )
+        }
+    }
+
     private fun calculateGasFees() {
         viewModelScope.launch {
-            selectedAddress
+            selectedSrc
+                .map { it?.address }
                 .filterNotNull()
                 .map {
-                    gasFeeRepository.getGasFee(chain, it.address)
+                    gasFeeRepository.getGasFee(it.chain, it.address)
                 }
                 .catch {
                     // TODO handle error when querying gas fee
@@ -366,13 +419,20 @@ internal class SendFormViewModel @Inject constructor(
 
     private fun collectSelectedAccount() {
         viewModelScope.launch {
-            selectedAccount.collect { selectedAccount ->
-                val uiModel = selectedAccount
-                    ?.let(accountToTokenBalanceUiModelMapper::map)
-                uiState.update {
-                    it.copy(selectedCoin = uiModel)
-                }
-            }
+            selectedSrc
+                .filterNotNull()
+                .map { src ->
+                    val address = src.address.address
+                    val uiModel = accountToTokenBalanceUiModelMapper.map(src)
+                    val showGasFee = (selectedAccount?.token?.AllowZeroGas() == false)
+                    uiState.update {
+                        it.copy(
+                            from = address,
+                            selectedCoin = uiModel,
+                            showGasFee = showGasFee
+                        )
+                    }
+                }.collect()
         }
     }
 
@@ -419,7 +479,7 @@ internal class SendFormViewModel @Inject constructor(
         val decimalValue = value.toBigDecimalOrNull()
 
         return if (decimalValue != null) {
-            val selectedToken = selectedAccount.value?.token
+            val selectedToken = selectedAccount?.token
                 ?: return null
 
             val price = try {
