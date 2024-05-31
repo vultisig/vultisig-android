@@ -96,7 +96,7 @@ internal class GeneratingKeyViewModel(
                     keygenRequest.chainCodeHex = vault.hexChainCode
                     val ecdsaResp = tssKeygen(service, keygenRequest, TssKeyType.ECDSA)
                     vault.pubKeyECDSA = ecdsaResp.pubKey
-                    Thread.sleep(1000) // backoff for 1 second
+                    delay(1.seconds) // backoff for 1 second
                     currentState.value = KeygenState.KeygenEdDSA
                     val eddsaResp = tssKeygen(service, keygenRequest, TssKeyType.EDDSA)
                     vault.pubKeyEDDSA = eddsaResp.pubKey
@@ -116,7 +116,7 @@ internal class GeneratingKeyViewModel(
                     vault.pubKeyECDSA = ecdsaResp.pubKey
                     vault.resharePrefix = ecdsaResp.resharePrefix
                     currentState.value = KeygenState.ReshareEdDSA
-                    Thread.sleep(1000) // backoff for 1 second
+                    delay(1.seconds) // backoff for 1 second
                     reshareRequest.pubKey = vault.pubKeyEDDSA
                     reshareRequest.newResharePrefix = vault.resharePrefix
                     val eddsaResp = tssReshare(service, reshareRequest, TssKeyType.EDDSA)
