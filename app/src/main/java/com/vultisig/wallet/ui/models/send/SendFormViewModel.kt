@@ -310,70 +310,48 @@ internal class SendFormViewModel @Inject constructor(
     private fun loadTokens() {
         val chain = chain
         viewModelScope.launch {
-            if (chain == null) {
-                accountsRepository.loadAddresses(vaultId)
-                    .catch {
-                        // TODO handle error
-                        Timber.e(it)
-                    }.collect { addresses ->
-                        val selectedSrcValue = selectedSrc.value
-                        if (selectedSrcValue == null) {
-                            val address = addresses.first()
-                            selectedSrc.value = SendSrc(
-                                address,
-                                address.accounts.first(),
-                            )
-                        } else {
-                            val selectedAddress = selectedSrcValue.address
-                            val selectedAccount = selectedSrcValue.account
-                            val address = addresses.first {
-                                it.chain == selectedAddress.chain &&
-                                        it.address == selectedAddress.address
-                            }
-                            selectedSrc.value = SendSrc(
-                                address,
-                                address.accounts.first {
-                                    it.token.ticker == selectedAccount.token.ticker
-                                },
-                            )
-                        }
-
-                        updateUiTokens(
-                            addresses
-                                .asSequence()
-                                .map { address ->
-                                    address.accounts.map {
-                                        accountToTokenBalanceUiModelMapper.map(SendSrc(address, it))
-                                    }
-                                }
-                                .flatten()
-                                .toList()
-                        )
-                    }
-            } else {
-                accountsRepository.loadAddress(
-                    vaultId = vaultId,
-                    chain = chain,
-                ).catch {
+            accountsRepository.loadAddresses(vaultId)
+                .catch {
                     // TODO handle error
                     Timber.e(it)
-                }.collect { account ->
-                    val accountOfNativeToken = account.accounts.find { it.token.isNativeToken }
-                    val selectedAccountValue = selectedAccount
-                    // so it doesnt reset user selection of token on update
-                    if (accountOfNativeToken != null && (selectedAccountValue == null ||
-                                selectedAccountValue.token.ticker == accountOfNativeToken.token.ticker)
-                    ) {
-                        selectedSrc.value = SendSrc(account, accountOfNativeToken)
+                }.collect { addresses ->
+                    val selectedSrcValue = selectedSrc.value
+                    if (selectedSrcValue == null) {
+                        val address = if (chain == null) addresses.first()
+                        else addresses.first { it.chain.id == chain.id }
+
+                        val account = if (chain == null)
+                            address.accounts.first()
+                        else address.accounts.first { it.token.isNativeToken }
+
+                        selectedSrc.value = SendSrc(address, account)
+                    } else {
+                        val selectedAddress = selectedSrcValue.address
+                        val selectedAccount = selectedSrcValue.account
+                        val address = addresses.first {
+                            it.chain == selectedAddress.chain &&
+                                    it.address == selectedAddress.address
+                        }
+                        selectedSrc.value = SendSrc(
+                            address,
+                            address.accounts.first {
+                                it.token.ticker == selectedAccount.token.ticker
+                            },
+                        )
                     }
 
-                    val tokenUiModels = account.accounts
-                        .map { accountToTokenBalanceUiModelMapper.map(SendSrc(account, it)) }
-                        .toList()
-
-                    updateUiTokens(tokenUiModels)
+                    updateUiTokens(
+                        addresses
+                            .asSequence()
+                            .map { address ->
+                                address.accounts.map {
+                                    accountToTokenBalanceUiModelMapper.map(SendSrc(address, it))
+                                }
+                            }
+                            .flatten()
+                            .toList()
+                    )
                 }
-            }
         }
     }
 

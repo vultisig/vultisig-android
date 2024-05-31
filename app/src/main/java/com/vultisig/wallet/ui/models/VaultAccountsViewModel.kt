@@ -74,6 +74,17 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccounts(vaultId)
     }
 
+    fun send() {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            navigator.navigate(Destination.Send(vaultId = vaultId))
+        }
+    }
+
+    fun swap() {
+        // todo navigate to swap
+    }
+
     fun openAccount(account: AccountUiModel) {
         val vaultId = vaultId ?: return
         val chainId = account.model.chain.id
