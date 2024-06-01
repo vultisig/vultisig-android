@@ -4,8 +4,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "chainOrder")
-internal data class ChainOrderEntity(
+@Entity(tableName = "vaultOrder")
+internal data class VaultOrderEntity(
     @PrimaryKey
     @ColumnInfo(name = "value")
     override val value: String = "",

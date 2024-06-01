@@ -2,41 +2,55 @@ package com.vultisig.wallet.ui.models.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.repositories.VaultLocationsRepository
+import com.vultisig.wallet.data.repositories.VaultOrderRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.ui.components.reorderable.utils.ItemPosition
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
 @HiltViewModel
 internal class VaultListViewModel @Inject constructor(
-    private val vaultLocationsRepository: VaultLocationsRepository,
+    private val vaultRepository: VaultRepository,
+    private val vaultOrderRepository: VaultOrderRepository
 ) : ViewModel() {
     val vaults = MutableStateFlow<List<Vault>>(emptyList())
     private var reIndexJob: Job? = null
 
     init {
         viewModelScope.launch {
-            vaults.value = vaultLocationsRepository.getVaultsForHomeLocation()
+            vaultOrderRepository.loadOrders().map { orders ->
+                val vaults = vaultRepository.getAll()
+                val addressAndOrderMap = mutableMapOf<Vault, Float>()
+                vaults.forEach { eachVault ->
+                    addressAndOrderMap[eachVault] =
+                        orders.find { it.value == eachVault.name }?.order
+                            ?: vaultOrderRepository.insert(eachVault.name)
+                }
+                addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
+            }.collect { orderedVaults ->
+                vaults.value = orderedVaults
+            }
         }
     }
 
-    fun onMove(from: Int, to: Int) {
+    fun onMove(oldOrder: Int, newOrder: Int) {
         val updatedPositionsList = vaults.value.toMutableList().apply {
-            add(to, removeAt(from))
+            add(newOrder, removeAt(oldOrder))
         }
         vaults.value =  updatedPositionsList
         reIndexJob?.cancel()
         reIndexJob = viewModelScope.launch {
             delay(500)
-            val indexedVaultList =
-                vaultLocationsRepository.updateVaultOrderInHomeLocation(updatedPositionsList)
-            vaults.value = indexedVaultList
+            val midOrder = updatedPositionsList[newOrder].name
+            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.name
+            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.name
+            vaultOrderRepository.updateItemOrder(upperOrder, midOrder, lowerOrder)
         }
     }
 }
