@@ -101,7 +101,6 @@ private fun VaultAccountsScreen(
         onSwipe = onRefresh,
         isRefreshing = state.isRefreshing,
         modifier = Modifier.fillMaxSize()
-            .clickOnce { Modifier.clickOnce {  } }
     ) {
 
         Box(
