@@ -10,9 +10,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.composed
 import kotlinx.coroutines.delay
+import  androidx.compose.ui.Modifier
 
 
-fun androidx.compose.ui.Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) =
+fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) =
     this.composed {
         var enableAgain by remember { mutableStateOf(true) }
         LaunchedEffect(enableAgain, block = {
