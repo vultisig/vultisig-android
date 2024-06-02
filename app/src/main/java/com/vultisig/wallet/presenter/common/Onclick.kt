@@ -36,11 +36,9 @@ fun ClickOnce(
     var lastClickTime by remember { mutableLongStateOf(0L) }
 
     return {
-        println("Before click: lastClickTime = $lastClickTime")
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastClickTime >= 500L) {
             lastClickTime = currentTime
-            println("After click: lastClickTime = $lastClickTime")
             onClick()
         }
     }
