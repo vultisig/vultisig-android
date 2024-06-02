@@ -8,9 +8,9 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import kotlinx.coroutines.delay
-import  androidx.compose.ui.Modifier
 
 
 fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) =
@@ -18,7 +18,7 @@ fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) =
         var enableAgain by remember { mutableStateOf(true) }
         LaunchedEffect(enableAgain, block = {
             if (enableAgain) return@LaunchedEffect
-            /**/  delay(timeMillis = 500L)
+            delay(timeMillis = 500L)
             enableAgain = true
         })
         Modifier.clickable(enabled = enabled) {
