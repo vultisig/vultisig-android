@@ -17,6 +17,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -89,7 +94,7 @@ private fun VaultAccountsScreen(
     onMove: (Int, Int) -> Unit = { _, _ -> },
 ) {
     BoxWithSwipeRefresh(
-        onSwipe = onRefresh,
+        onSwipe = DebouncedClickable {onRefresh },
         isRefreshing = state.isRefreshing,
         modifier = Modifier.fillMaxSize()
     ) {
@@ -148,14 +153,14 @@ private fun VaultAccountsScreen(
                                 text = stringResource(R.string.chain_account_view_send),
                                 color = Theme.colors.turquoise600Main,
                                 modifier = Modifier.weight(1f),
-                                onClick = onSend,
+                                onClick = DebouncedClickable {onSend },
                             )
 
                             VaultActionButton(
                                 text = stringResource(R.string.chain_account_view_swap),
                                 color = Theme.colors.persianBlue200,
                                 modifier = Modifier.weight(1f),
-                                onClick = onSwap,
+                                onClick = DebouncedClickable {onSwap },
                             )
                         }
                     }
@@ -166,7 +171,7 @@ private fun VaultAccountsScreen(
                     )
                     UiPlusButton(
                         title = stringResource(R.string.vault_choose_chains),
-                        onClick = onChooseChains,
+                        onClick = DebouncedClickable {onChooseChains },
                     )
                     UiSpacer(
                         size = 64.dp,
@@ -191,7 +196,7 @@ private fun VaultAccountsScreen(
                     size = 40.dp,
                     contentDescription = "join keysign",
                     tint = Theme.colors.oxfordBlue600Main,
-                    onClick = onJoinKeysign,
+                    onClick = DebouncedClickable {onJoinKeysign },
                     modifier = Modifier
                         .background(
                             color = Theme.colors.turquoise600Main,
@@ -240,4 +245,19 @@ private fun VaultAccountsScreenPreview() {
             ),
         ),
     )
+}
+
+@Composable
+fun DebouncedClickable(
+    debounceTime: Long = 300L, // Set debounce time to 300 milliseconds
+    onClick: () -> Unit
+): () -> Unit {
+    var lastClickTime by remember { mutableLongStateOf(0L) }
+    return {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime >= debounceTime) {
+            lastClickTime = currentTime
+            onClick()
+        }
+    }
 }
