@@ -85,7 +85,7 @@ private fun CurrencyUnitSettingItem(
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .fillMaxWidth()
             .clickOnce(enabled = true, onClick = onClick),
-    shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
             containerColor = colors.oxfordBlue600Main
         )

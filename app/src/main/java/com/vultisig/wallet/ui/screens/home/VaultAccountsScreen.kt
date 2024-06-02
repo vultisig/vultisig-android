@@ -98,7 +98,7 @@ private fun VaultAccountsScreen(
     onMove: (Int, Int) -> Unit = { _, _ -> },
 ) {
     BoxWithSwipeRefresh(
-        onSwipe =onRefresh,
+        onSwipe = onRefresh,
         isRefreshing = state.isRefreshing,
         modifier = Modifier.fillMaxSize()
             .clickOnce { Modifier.clickOnce {  } }
@@ -152,7 +152,7 @@ private fun VaultAccountsScreen(
 
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             VaultActionButton(
                                 text = stringResource(R.string.chain_account_view_send),
@@ -176,7 +176,7 @@ private fun VaultAccountsScreen(
                     )
                     UiPlusButton(
                         title = stringResource(R.string.vault_choose_chains),
-                        onClick = onChooseChains
+                        onClick = onChooseChains,
                     )
                     UiSpacer(
                         size = 64.dp,
@@ -195,14 +195,13 @@ private fun VaultAccountsScreen(
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.BottomCenter)
-                    .clickOnce { Modifier.clickOnce {  } },
             ) {
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 40.dp,
                     contentDescription = "join keysign",
                     tint = Theme.colors.oxfordBlue600Main,
-                    onClick =onJoinKeysign ,
+                    onClick = onJoinKeysign,
                     modifier = Modifier
                         .background(
                             color = Theme.colors.turquoise600Main,
@@ -252,4 +251,3 @@ private fun VaultAccountsScreenPreview() {
         ),
     )
 }
-
