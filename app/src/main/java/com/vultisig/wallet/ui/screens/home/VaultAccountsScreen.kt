@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.home
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +37,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.UiIcon
@@ -48,6 +51,7 @@ import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.delay
 
 @Composable
 internal fun VaultAccountsScreen(
@@ -94,9 +98,10 @@ private fun VaultAccountsScreen(
     onMove: (Int, Int) -> Unit = { _, _ -> },
 ) {
     BoxWithSwipeRefresh(
-        onSwipe = DebouncedClickable {onRefresh },
+        onSwipe =onRefresh,
         isRefreshing = state.isRefreshing,
         modifier = Modifier.fillMaxSize()
+            .clickOnce { Modifier.clickOnce {  } }
     ) {
 
         Box(
@@ -147,20 +152,20 @@ private fun VaultAccountsScreen(
 
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             VaultActionButton(
                                 text = stringResource(R.string.chain_account_view_send),
                                 color = Theme.colors.turquoise600Main,
                                 modifier = Modifier.weight(1f),
-                                onClick = DebouncedClickable {onSend },
+                                onClick = onSend,
                             )
 
                             VaultActionButton(
                                 text = stringResource(R.string.chain_account_view_swap),
                                 color = Theme.colors.persianBlue200,
                                 modifier = Modifier.weight(1f),
-                                onClick = DebouncedClickable {onSwap },
+                                onClick = onSwap,
                             )
                         }
                     }
@@ -171,7 +176,7 @@ private fun VaultAccountsScreen(
                     )
                     UiPlusButton(
                         title = stringResource(R.string.vault_choose_chains),
-                        onClick = DebouncedClickable {onChooseChains },
+                        onClick = onChooseChains
                     )
                     UiSpacer(
                         size = 64.dp,
@@ -190,13 +195,14 @@ private fun VaultAccountsScreen(
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.BottomCenter)
+                    .clickOnce { Modifier.clickOnce {  } },
             ) {
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 40.dp,
                     contentDescription = "join keysign",
                     tint = Theme.colors.oxfordBlue600Main,
-                    onClick = DebouncedClickable {onJoinKeysign },
+                    onClick =onJoinKeysign ,
                     modifier = Modifier
                         .background(
                             color = Theme.colors.turquoise600Main,
@@ -247,17 +253,3 @@ private fun VaultAccountsScreenPreview() {
     )
 }
 
-@Composable
-fun DebouncedClickable(
-    debounceTime: Long = 300L, // Set debounce time to 300 milliseconds
-    onClick: () -> Unit
-): () -> Unit {
-    var lastClickTime by remember { mutableLongStateOf(0L) }
-    return {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClickTime >= debounceTime) {
-            lastClickTime = currentTime
-            onClick()
-        }
-    }
-}
