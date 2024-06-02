@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.models.HomeUiModel
 import com.vultisig.wallet.ui.models.HomeViewModel
@@ -114,7 +115,7 @@ private fun HomeScreen(
                     titleContentColor = Theme.colors.neutral0,
                 ),
                 navigationIcon = {
-                    IconButton(onClick = onOpenSettings) {
+                    IconButton(onClick = ClickOnce(onOpenSettings)) {
                         Icon(
                             imageVector = Icons.Outlined.Menu,
                             contentDescription = "settings",
@@ -123,7 +124,7 @@ private fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onEdit) {
+                    IconButton(onClick = ClickOnce(onEdit)) {
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_edit_square_24),
                             contentDescription = "edit",
