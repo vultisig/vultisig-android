@@ -20,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -30,8 +29,9 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun NamingComponent(
+internal fun NamingComponent(
     title: String = "",
+    saveButtonText:String = "",
     onSave: () -> Unit = {},
     name: String = "",
     navHostController: NavHostController = rememberNavController(),
@@ -59,7 +59,7 @@ fun NamingComponent(
                             end = 16.dp,
                             bottom = 16.dp,
                         ),
-                    text = stringResource(id = R.string.save),
+                    text = saveButtonText,
                     onClick = onSave,
                 )
             }
@@ -67,7 +67,7 @@ fun NamingComponent(
         topBar = {
             TopBar(
                 navController = navHostController,
-                centerText = stringResource(id = R.string.vault_settings_rename_title),
+                centerText = title,
                 startIcon = R.drawable.caret_left,
             )
         },

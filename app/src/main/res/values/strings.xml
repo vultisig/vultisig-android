@@ -185,7 +185,10 @@
     <string name="s_of_s_vault">%s of %s vault</string>
     <string name="scan_qr_screen_return_vault">Return Vault</string>
     <string name="naming_vault_screen_continue">Continue</string>
-    <string name="naming_vault_screen_name_your_vault">Name your Vault</string>
+    <string name="naming_vault_screen_setup">Setup</string>
+    <string name="rename_vault_screen_edit_your_vault_name">Edit your vault name</string>
+    <string name="rename_vault_screen_vault_name">Vault name</string>
+    <string name="rename_vault_screen_continue">Continue</string>
     <string name="naming_vault_screen_vault_name">Vault Name</string>
     <string name="faq_settings_q1">Do I need register</string>
     <string name="faq_settings_q2">Can I recover my assets if I lose a device?</string>
