@@ -18,7 +18,7 @@ fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) =
         var enableAgain by remember { mutableStateOf(true) }
         LaunchedEffect(enableAgain, block = {
             if (enableAgain) return@LaunchedEffect
-            /**/  delay(timeMillis = 900L)
+            /**/  delay(timeMillis = 500L)
             enableAgain = true
         })
         Modifier.clickable(enabled = enabled) {
