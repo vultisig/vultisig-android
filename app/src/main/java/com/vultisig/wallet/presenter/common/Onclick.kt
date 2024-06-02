@@ -21,7 +21,7 @@ fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) =
             /**/  delay(timeMillis = 900L)
             enableAgain = true
         })
-        androidx.compose.ui.Modifier.clickable(enabled = enabled) {
+        Modifier.clickable(enabled = enabled) {
             if (enableAgain) {
                 enableAgain = false
                 onClick()
