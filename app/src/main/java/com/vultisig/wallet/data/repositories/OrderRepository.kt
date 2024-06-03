@@ -8,64 +8,80 @@ import kotlinx.coroutines.withContext
 
 
 internal interface OrderRepository<T : BaseOrderEntity> {
-    fun loadOrders(): Flow<List<T>>
-    suspend fun updateItemOrder(lowerVal: String?, middleVal: String, upperVal: String?)
-    suspend fun delete(name: String)
-    suspend fun find(name: String): T?
-    suspend fun insert(name: String): Float
+    fun loadOrders(parentId: String?): Flow<List<T>>
+    suspend fun updateItemOrder(
+        parentId: String?,
+        lowerVal: String?,
+        middleVal: String,
+        upperVal: String?
+    )
+
+    suspend fun delete(parentId: String?, name: String)
+    suspend fun deleteAll(parentId: String?)
+    suspend fun find(parentId: String?, name: String): T?
+    suspend fun insert(parentId: String?, name: String): Float
 }
 
 
 internal abstract class OrderRepositoryImpl<T : BaseOrderEntity>(
     private val baseOrderDao: BaseOrderDao<T>
 ) : OrderRepository<T> {
-    override fun loadOrders(): Flow<List<T>> = baseOrderDao.loadOrders()
+    override fun loadOrders(parentId: String?): Flow<List<T>> = baseOrderDao.loadOrders(parentId)
 
-    override suspend fun updateItemOrder(lowerVal: String?, middleVal: String, upperVal: String?) {
+    override suspend fun updateItemOrder(
+        parentId: String?, lowerVal: String?,
+        middleVal: String, upperVal: String?
+    ) {
         withContext(IO) {
-            val middleChainEntity = baseOrderDao.find(middleVal)
+            val middleEntity = baseOrderDao.find(middleVal, parentId)
 
-            val lowerChainEntity =
-                lowerVal?.let { baseOrderDao.find(it) } ?: generateNewOrder(order = 0f)
+            val lowerEntity =
+                lowerVal?.let { baseOrderDao.find(it, parentId) } ?: generateNewOrder(
+                    order = 0f,
+                    parentId = parentId
+                )
 
-            val upperChainEntity =
-                upperVal?.let { baseOrderDao.find(it) } ?: run {
-                    val maxOrderEntity = findMaxOrder()
-                    generateNewOrder(order = maxOrderEntity.order + ORDER_STEP)
+            val upperEntity =
+                upperVal?.let { baseOrderDao.find(it, parentId) } ?: run {
+                    val maxOrderEntity = findMaxOrder(parentId)
+                    generateNewOrder(order = maxOrderEntity.order + ORDER_STEP, parentId = parentId)
                 }
 
-            baseOrderDao.update(
-                middleChainEntity.generateUpdatedOrder(
-                    (lowerChainEntity.order + upperChainEntity.order) / 2
-                )
+            val updatedOrderEntity = middleEntity.generateUpdatedOrder(
+                (lowerEntity.order + upperEntity.order) / 2
             )
+            baseOrderDao.update(updatedOrderEntity)
         }
     }
 
-    override suspend fun delete(name: String) = withContext(IO) {
-        baseOrderDao.delete(name)
+    override suspend fun delete(parentId: String?, name: String) = withContext(IO) {
+        baseOrderDao.delete(name, parentId)
     }
 
-    override suspend fun find(name: String): T = withContext(IO) {
-        baseOrderDao.find(name)
+    override suspend fun find(parentId: String?, name: String): T = withContext(IO) {
+        baseOrderDao.find(name, parentId)
     }
 
-    private suspend fun findMaxOrder(): T = withContext(IO) {
-        baseOrderDao.getMaxOrder() ?: defaultOrder
+    private suspend fun findMaxOrder(parentId: String?): T = withContext(IO) {
+        baseOrderDao.getMaxOrder(parentId) ?: defaultOrder(parentId)
     }
 
 
-    override suspend fun insert(name: String) = withContext(IO) {
-        val maxOrder = findMaxOrder()
+    override suspend fun insert(parentId: String?, name: String) = withContext(IO) {
+        val maxOrder = findMaxOrder(parentId)
         val newOrder = maxOrder.order + ORDER_STEP
-        val order = generateNewOrder(value = name, order = newOrder)
+        val order = generateNewOrder(value = name, order = newOrder, parentId)
         baseOrderDao.insert(order)
         newOrder
     }
 
-    protected abstract val defaultOrder: T
+    override suspend fun deleteAll(parentId: String?)  = withContext(IO){
+        baseOrderDao.deleteAll(parentId)
+    }
 
-    protected abstract fun generateNewOrder(value: String = "", order: Float): T
+    protected abstract fun defaultOrder(parentId: String?): T
+
+    protected abstract fun generateNewOrder(value: String = "", order: Float, parentId: String?): T
 
     protected abstract fun T.generateUpdatedOrder(order: Float): T
 

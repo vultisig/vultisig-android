@@ -84,6 +84,14 @@ internal sealed class Destination(
         }
     }
 
+    data class ConfirmDelete(val vaultId: String) :
+        Destination(route = "vault_detail/confirm_delete/$vaultId") {
+            companion object{
+                const val ARG_VAULT_ID = "vault_id"
+                const val STATIC_ROUTE = "vault_detail/confirm_delete/{vault_id}"
+            }
+    }
+
     data class Details(val vaultId: String) :
         Destination(route = "vault_detail/$vaultId/settings/details") {
         companion object {

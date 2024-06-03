@@ -7,6 +7,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 internal abstract class ChainOrderDao : BaseOrderDao<ChainOrderEntity>("chainOrder") {
-    @Query("SELECT * FROM chainOrder ORDER BY `order` DESC")
-    abstract override fun loadOrders(): Flow<List<ChainOrderEntity>>
+    @Query("SELECT * FROM chainOrder WHERE `parentId` = :parentId ORDER BY `order` DESC")
+    abstract override fun loadOrders(parentId: String?): Flow<List<ChainOrderEntity>>
 }

@@ -24,13 +24,13 @@ internal class VaultListViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            vaultOrderRepository.loadOrders().map { orders ->
+            vaultOrderRepository.loadOrders(null).map { orders ->
                 val vaults = vaultRepository.getAll()
                 val addressAndOrderMap = mutableMapOf<Vault, Float>()
                 vaults.forEach { eachVault ->
                     addressAndOrderMap[eachVault] =
-                        orders.find { it.value == eachVault.name }?.order
-                            ?: vaultOrderRepository.insert(eachVault.name)
+                        orders.find { it.value == eachVault.id }?.order
+                            ?: vaultOrderRepository.insert(null,eachVault.id)
                 }
                 addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
             }.collect { orderedVaults ->
@@ -47,10 +47,10 @@ internal class VaultListViewModel @Inject constructor(
         reIndexJob?.cancel()
         reIndexJob = viewModelScope.launch {
             delay(500)
-            val midOrder = updatedPositionsList[newOrder].name
-            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.name
-            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.name
-            vaultOrderRepository.updateItemOrder(upperOrder, midOrder, lowerOrder)
+            val midOrder = updatedPositionsList[newOrder].id
+            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.id
+            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id
+            vaultOrderRepository.updateItemOrder(null,upperOrder, midOrder, lowerOrder)
         }
     }
 }

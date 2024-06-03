@@ -7,10 +7,10 @@ import javax.inject.Inject
 internal class VaultOrderRepository @Inject constructor(vaultOrderDao: VaultOrderDao) :
     OrderRepositoryImpl<VaultOrderEntity>(vaultOrderDao) {
 
-    override val defaultOrder: VaultOrderEntity
-        get() = VaultOrderEntity(order = 0f)
+    override fun defaultOrder(parentId: String?): VaultOrderEntity
+        = VaultOrderEntity(order = 0f)
 
-    override fun generateNewOrder(value: String, order: Float): VaultOrderEntity =
+    override fun generateNewOrder(value: String, order: Float, parentId:String?): VaultOrderEntity =
         VaultOrderEntity(value, order)
 
     override fun VaultOrderEntity.generateUpdatedOrder(order: Float): VaultOrderEntity =

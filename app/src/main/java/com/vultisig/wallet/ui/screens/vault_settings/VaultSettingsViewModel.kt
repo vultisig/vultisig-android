@@ -4,15 +4,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.encodeToHex
 import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapper
-import com.vultisig.wallet.data.on_board.db.OrderDB
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFailed
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFile
@@ -32,7 +29,6 @@ import javax.inject.Inject
 internal open class VaultSettingsViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val vaultAndroidToIOSMapper: VaultAndroidToIOSMapper,
-    private val orderDB: OrderDB,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val gson: Gson,
@@ -40,15 +36,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     private val vault = MutableStateFlow<Vault?>(null)
 
-    val uiModel = MutableStateFlow(
-        VaultSettingsState(
-            cautionsBeforeDelete = listOf(
-                R.string.vault_settings_delete_vault_caution1,
-                R.string.vault_settings_delete_vault_caution2,
-                R.string.vault_settings_delete_vault_caution3,
-            )
-        )
-    )
+    val uiModel = MutableStateFlow(VaultSettingsState())
 
     private val vaultId: String =
         savedStateHandle.get<String>(Destination.VaultSettings.ARG_VAULT_ID)!!
@@ -69,24 +57,6 @@ internal open class VaultSettingsViewModel @Inject constructor(
     private val channel = Channel<VaultSettingsUiEvent>()
     val channelFlow = channel.receiveAsFlow()
 
-
-    fun dismissConfirmDeleteDialog() {
-        uiModel.update {
-            it.copy(showDeleteConfirmScreen = false)
-        }
-    }
-
-    fun changeCheckCaution(index: Int, checked: Boolean) {
-        val checkedCautionIndexes = uiModel.value.checkedCautionIndexes.toMutableList()
-        if (checked) checkedCautionIndexes.add(index)
-        else checkedCautionIndexes.remove(index)
-        uiModel.update {
-            it.copy(
-                checkedCautionIndexes = checkedCautionIndexes,
-                isDeleteButtonEnabled = checkedCautionIndexes.size == it.cautionsBeforeDelete.size
-            )
-        }
-    }
 
     fun successBackup(fileName: String) {
         viewModelScope.launch {
@@ -119,28 +89,9 @@ internal open class VaultSettingsViewModel @Inject constructor(
         }
     }
 
-    fun showConfirmDeleteDialog() {
-        uiModel.update {
-            it.copy(showDeleteConfirmScreen = true, checkedCautionIndexes = emptyList())
-        }
-    }
-
-    fun delete() {
+    fun navigateToConfirmDeleteScreen() {
         viewModelScope.launch {
-            val vault = vault.firstOrNull() ?: return@launch
-
-            vaultRepository.delete(vaultId)
-            orderDB.removeOrder(vault.name)
-
-            if (vaultRepository.hasVaults()) {
-                navigator.navigate(Destination.Home())
-            } else {
-                navigator.navigate(
-                    Destination.AddVault, NavigationOptions(
-                        clearBackStack = true
-                    )
-                )
-            }
+            navigator.navigate(Destination.ConfirmDelete(vaultId))
         }
     }
 

@@ -32,7 +32,6 @@ import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFailed
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupFile
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsUiEvent.BackupSuccess
-import com.vultisig.wallet.ui.screens.vault_settings.components.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -141,22 +140,12 @@ internal fun VaultSettingsScreen(
                     subtitle = stringResource(R.string.vault_settings_delete_subtitle),
                     icon = R.drawable.trash_outline,
                     colorTint = Theme.colors.red,
-                    onClick = viewModel::showConfirmDeleteDialog
+                    onClick = viewModel::navigateToConfirmDeleteScreen
                 )
             }
         }
     }
 
-    if (uiModel.showDeleteConfirmScreen) {
-        ConfirmDeleteScreen(
-            cautions = uiModel.cautionsBeforeDelete,
-            checkedCautionIndexes = uiModel.checkedCautionIndexes,
-            isDeleteButtonActive = uiModel.isDeleteButtonEnabled,
-            onDismissClick = viewModel::dismissConfirmDeleteDialog,
-            onItemCheckChangeClick = viewModel::changeCheckCaution,
-            onConfirmClick = viewModel::delete
-        )
-    }
 }
 
 @Preview

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -54,6 +55,12 @@ internal fun VaultAccountsScreen(
 
     LaunchedEffect(vaultId) {
         viewModel.loadData(vaultId)
+    }
+
+    DisposableEffect(key1 = vaultId) {
+        onDispose {
+            viewModel.closeLoadAccountJob()
+        }
     }
 
     VaultAccountsScreen(

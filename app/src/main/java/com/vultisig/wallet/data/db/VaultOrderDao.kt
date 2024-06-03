@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 internal abstract class VaultOrderDao : BaseOrderDao<VaultOrderEntity>("vaultOrder") {
+    override fun loadOrders(parentId: String?): Flow<List<VaultOrderEntity>> = loadOrders()
+
     @Query("SELECT * FROM vaultOrder ORDER BY `order` DESC")
-    abstract override fun loadOrders(): Flow<List<VaultOrderEntity>>
+    abstract fun loadOrders(): Flow<List<VaultOrderEntity>>
 }

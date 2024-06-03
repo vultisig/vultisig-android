@@ -7,11 +7,11 @@ import javax.inject.Inject
 internal class ChainOrderRepository @Inject constructor(
     chainOrderDao: ChainOrderDao
 ) : OrderRepositoryImpl<ChainOrderEntity>(chainOrderDao) {
-    override val defaultOrder: ChainOrderEntity
-        get() = ChainOrderEntity(order = 0f)
+    override fun defaultOrder(parentId: String?): ChainOrderEntity =
+        ChainOrderEntity(parentId = parentId!!,order = 0f)
 
-    override fun generateNewOrder(value: String, order: Float): ChainOrderEntity =
-        ChainOrderEntity(value, order)
+    override fun generateNewOrder(value: String, order: Float,parentId:String?): ChainOrderEntity =
+        ChainOrderEntity(value, order,parentId!!)
 
     override fun ChainOrderEntity.generateUpdatedOrder(order: Float): ChainOrderEntity =
         copy(order = order)

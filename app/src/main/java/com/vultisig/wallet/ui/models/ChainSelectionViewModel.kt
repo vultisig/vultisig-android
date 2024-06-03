@@ -59,7 +59,7 @@ internal class ChainSelectionViewModel @Inject constructor(
             )
 
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
-            orderRepository.insert(updatedCoin.chain.raw)
+            orderRepository.insert(vaultId,updatedCoin.chain.raw)
             loadChains()
         }
     }
@@ -67,7 +67,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     fun disableAccount(coin: Coin) {
         viewModelScope.launch {
             vaultRepository.deleteChainFromVault(vaultId, coin.chain)
-            orderRepository.delete(coin.chain.raw)
+            orderRepository.delete(vaultId,coin.chain.raw)
             loadChains()
         }
     }
