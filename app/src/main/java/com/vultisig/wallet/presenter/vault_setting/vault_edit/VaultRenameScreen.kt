@@ -37,8 +37,9 @@ internal fun VaultRenameScreen(
     }
 
     NamingComponent(
-        title = stringResource(id = R.string.vault_settings_rename_title),
-        inputTitle = stringResource(id = R.string.vault_settings_rename_subtitle),
+        title = stringResource(id = R.string.rename_vault_screen_edit_your_vault_name),
+        inputTitle = stringResource(id = R.string.rename_vault_screen_vault_name),
+        saveButtonText = stringResource(id = R.string.rename_vault_screen_continue),
         onSave = { viewModel.onEvent(OnSave) },
         onChangeName = { newName ->
             viewModel.onEvent(OnNameChange(newName))

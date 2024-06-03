@@ -20,7 +20,7 @@ internal fun NamingVaultScreen(
 
 
     NamingComponent(
-        title = stringResource(id = R.string.naming_vault_screen_name_your_vault),
+        title = stringResource(id = R.string.naming_vault_screen_setup),
         onSave = {
                  navController.navigate(Screen.KeygenFlow.createRoute(
                      uiModel.name.takeIf { it.isNotEmpty() }
@@ -29,6 +29,7 @@ internal fun NamingVaultScreen(
         name = uiModel.name,
         navHostController = navController,
         onChangeName = viewModel::onNameChanged,
-        inputTitle = stringResource(id = R.string.naming_vault_screen_vault_name)
+        inputTitle = stringResource(id = R.string.naming_vault_screen_vault_name),
+        saveButtonText = stringResource(id = R.string.naming_vault_screen_continue)
     )
 }

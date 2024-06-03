@@ -55,10 +55,6 @@ internal class MayaChainHelper(
             this.mode = Cosmos.BroadcastMode.SYNC
             this.fee = Cosmos.Fee.newBuilder().apply {
                 this.gas = MayaChainGasUnit
-                this.amountsList.add(Cosmos.Amount.newBuilder().apply {
-                    this.denom = "cacao"
-                    this.amount = MayaChainGasUnit.toString()
-                }.build())
             }.build()
         }.build()
         return inputData.toByteArray()
@@ -83,10 +79,6 @@ internal class MayaChainHelper(
             this.addAllAmounts(listOf(sendAmount))
         }.build()
 
-        val feeAmount = Cosmos.Amount.newBuilder().apply {
-            this.denom = "cacao"
-            this.amount = MayaChainGasUnit.toString()
-        }.build()
         val input = Cosmos.SigningInput.newBuilder().apply {
             this.publicKey = ByteString.copyFrom(publicKey.data())
             this.signingMode = Cosmos.SigningMode.Protobuf
@@ -104,7 +96,6 @@ internal class MayaChainHelper(
 
             this.fee = Cosmos.Fee.newBuilder().apply {
                 this.gas = MayaChainGasUnit
-                this.addAllAmounts(listOf(feeAmount))
             }.build()
         }.build()
         return input.toByteArray()

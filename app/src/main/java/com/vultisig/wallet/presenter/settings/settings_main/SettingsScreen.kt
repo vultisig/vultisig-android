@@ -38,6 +38,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -163,7 +164,7 @@ private fun AppSettingItem(@DrawableRes logo: Int, title: String, currentValue: 
     val colors = Theme.colors
     Card(
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickOnce(enabled = true, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
