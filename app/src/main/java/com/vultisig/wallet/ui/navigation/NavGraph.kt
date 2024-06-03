@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
+import com.vultisig.wallet.ui.screens.vault_settings.components.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -260,6 +261,12 @@ internal fun SetupNavGraph(
             route = Destination.NamingVault.route,
         ) {
             NamingVaultScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.ConfirmDelete.STATIC_ROUTE,
+        ) {
+            ConfirmDeleteScreen(navController)
         }
     }
 }

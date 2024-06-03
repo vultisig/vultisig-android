@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.db.models.ChainOrderEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
+import com.vultisig.wallet.data.db.models.VaultOrderEntity
 
 @Database(
     entities = [
@@ -15,13 +16,15 @@ import com.vultisig.wallet.data.db.models.VaultEntity
         SignerEntity::class,
         CoinEntity::class,
         ChainOrderEntity::class,
+        VaultOrderEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 internal abstract class AppDatabase : RoomDatabase() {
 
     abstract fun vaultDao(): VaultDao
     abstract fun chainOrderDao(): ChainOrderDao
+    abstract fun vaultOrderDao(): VaultOrderDao
 
 }

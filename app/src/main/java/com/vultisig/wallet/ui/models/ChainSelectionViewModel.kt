@@ -3,8 +3,9 @@ package com.vultisig.wallet.ui.models
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.db.models.ChainOrderEntity
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.ChainsOrderRepository
+import com.vultisig.wallet.data.repositories.OrderRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Coin
@@ -31,7 +32,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val chainsOrderRepository: ChainsOrderRepository,
+    private val orderRepository: OrderRepository<ChainOrderEntity>,
     ) : ViewModel() {
 
     private val vaultId: String =
@@ -58,7 +59,7 @@ internal class ChainSelectionViewModel @Inject constructor(
             )
 
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
-            chainsOrderRepository.insert(updatedCoin.chain.raw)
+            orderRepository.insert(vaultId,updatedCoin.chain.raw)
             loadChains()
         }
     }
@@ -66,7 +67,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     fun disableAccount(coin: Coin) {
         viewModelScope.launch {
             vaultRepository.deleteChainFromVault(vaultId, coin.chain)
-            chainsOrderRepository.delete(coin.chain.raw)
+            orderRepository.delete(vaultId,coin.chain.raw)
             loadChains()
         }
     }

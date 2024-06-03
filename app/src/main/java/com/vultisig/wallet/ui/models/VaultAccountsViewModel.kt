@@ -4,10 +4,11 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.db.models.ChainOrderEntity
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
-import com.vultisig.wallet.data.repositories.ChainsOrderRepository
+import com.vultisig.wallet.data.repositories.OrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -52,7 +53,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private val vaultRepository: VaultRepository,
     private val accountsRepository: AccountsRepository,
-    private val chainsOrderRepository: ChainsOrderRepository,
+    private val chainsOrderRepository: OrderRepository<ChainOrderEntity>,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -108,17 +109,21 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    fun closeLoadAccountJob() {
+        loadAccountsJob?.cancel()
+    }
+
     private fun loadAccounts(vaultId: String) {
         loadAccountsJob?.cancel()
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId)
-                .combine(chainsOrderRepository.loadByOrders()) { addresses, chainOrders ->
+                .combine(chainsOrderRepository.loadOrders(vaultId)) { addresses, chainOrders ->
                     val addressAndOrderMap = mutableMapOf<Address, Float>()
                     addresses.forEach { eachAddress ->
                         addressAndOrderMap[eachAddress] =
                             chainOrders.find { it.value == eachAddress.chain.raw }?.order
-                                ?: chainsOrderRepository.insert(eachAddress.chain.raw)
+                                ?: chainsOrderRepository.insert(vaultId, eachAddress.chain.raw)
                     }
                     addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
                 }
@@ -163,7 +168,7 @@ internal class VaultAccountsViewModel @Inject constructor(
             val midOrder = updatedPositionsList[newOrder].chainName
             val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.chainName
             val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.chainName
-            chainsOrderRepository.updateItemOrder(upperOrder, midOrder, lowerOrder)
+            chainsOrderRepository.updateItemOrder(vaultId, upperOrder, midOrder, lowerOrder)
         }
     }
 
