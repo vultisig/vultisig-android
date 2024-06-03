@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -30,7 +31,7 @@ internal fun VaultCeil(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = { onSelectVault(vault.id) })
+                .clickOnce(onClick = { onSelectVault(vault.id) })
                 .padding(all = 14.dp)
         ) {
             Icon(

@@ -26,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.appColor
 import com.vultisig.wallet.ui.theme.menloFamily
 import com.vultisig.wallet.ui.theme.montserratFamily
@@ -40,7 +41,7 @@ internal fun SettingsItem(
 ) {
     Card(
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickOnce(enabled = true,onClick = onClick  )
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(

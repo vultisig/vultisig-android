@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -27,7 +28,7 @@ internal fun UiIcon(
         .size(size)
         .then(
             if (onClick != null)
-                Modifier.clickable(onClick = onClick)
+                Modifier.clickOnce(enabled = true, onClick = onClick)
             else Modifier
         ),
 )

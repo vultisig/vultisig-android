@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -40,7 +41,7 @@ internal fun ChainAccountItem(
             containerColor = Theme.colors.oxfordBlue600Main,
         ),
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickOnce(enabled=true ,onClick = onClick)
             .fillMaxWidth(),
     ) {
         Row(

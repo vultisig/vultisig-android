@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -74,7 +75,7 @@ fun MultiColorButton(
                 minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
                 minHeight = minHeight ?: MaterialTheme.dimens.medium2
             )
-            .clickable(onClick = if (disabled == false) onClick else emptyClickAction)
+            .clickOnce(enabled = true,onClick = if (disabled == false) onClick else emptyClickAction)
     ) {
         if (startIcon != null)
             Icon(
