@@ -57,10 +57,6 @@ internal class THORCHainHelper(
             this.mode = Cosmos.BroadcastMode.SYNC
             this.fee = Cosmos.Fee.newBuilder().apply {
                 this.gas = 200000
-                this.amountsList.add(Cosmos.Amount.newBuilder().apply {
-                    this.denom = "rune"
-                    this.amount = thorchainData.fee.toString()
-                }.build())
             }.build()
         }.build()
         return inputData.toByteArray()
@@ -88,10 +84,6 @@ internal class THORCHainHelper(
             this.addAllAmounts(listOf(sendAmount))
         }.build()
 
-        val feeAmount = Cosmos.Amount.newBuilder().apply {
-            this.denom = "rune"
-            this.amount = thorchainData.fee.toString()
-        }.build()
         val input = Cosmos.SigningInput.newBuilder().apply {
             this.publicKey = ByteString.copyFrom(publicKey.data())
             this.signingMode = Cosmos.SigningMode.Protobuf
@@ -109,7 +101,6 @@ internal class THORCHainHelper(
 
             this.fee = Cosmos.Fee.newBuilder().apply {
                 this.gas = THORChainGasUnit
-                this.addAllAmounts(listOf(feeAmount))
             }.build()
         }.build()
         return input.toByteArray()
@@ -125,7 +116,7 @@ internal class THORCHainHelper(
 
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
-        signatures: Map<String, tss.KeysignResponse>,
+        signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val inputData = getPreSignInputData(keysignPayload)
         return getSignedTransaction(inputData, signatures)
