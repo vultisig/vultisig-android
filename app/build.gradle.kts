@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.biometric)
 
     // compose
     implementation(platform(libs.androidx.compose.bom))
