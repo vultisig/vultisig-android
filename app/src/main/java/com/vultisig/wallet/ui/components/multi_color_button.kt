@@ -72,7 +72,7 @@ fun MultiColorButton(
             )
             .defaultMinSize(
                 minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
-                minHeight = minHeight ?: MaterialTheme.dimens.medium2
+                minHeight = minHeight ?: 44.dp
             )
             .clickOnce(
                 enabled = true,
@@ -91,7 +91,7 @@ fun MultiColorButton(
         centerContent?.invoke() ?: Text(
             text = text,
             color = if (disabled == true) appColor.neutral800 else textColor
-                ?: appColor.turquoise600Main,
+                ?: appColor.oxfordBlue800,
             style = textStyle ?: Theme.montserrat.subtitle1
         )
         if (trailingIcon != null)

@@ -30,8 +30,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.FormCard
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

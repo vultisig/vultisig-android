@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.send.SendScreen
+import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -221,6 +222,27 @@ internal fun SetupNavGraph(
             route = Destination.ScanQr.route,
         ) {
             ScanQrScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.Swap.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) {
+                    type = NavType.StringType
+                    // if chainId = null show all tokens
+                    // else only tokens from chain
+                    nullable = true
+                },
+            )
+        ) { entry ->
+            val args = requireNotNull(entry.arguments)
+
+            SwapScreen(
+                navController = navController,
+                vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
+                chainId = args.getString(ARG_CHAIN_ID),
+            )
         }
 
         composable(

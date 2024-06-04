@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalAnimationApi::class)
+
 package com.vultisig.wallet.app.activity
 
 import android.os.Bundle
@@ -15,7 +17,6 @@ import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
 
-@ExperimentalAnimationApi
 @AndroidEntryPoint
 internal class MainActivity : AppCompatActivity() {
 

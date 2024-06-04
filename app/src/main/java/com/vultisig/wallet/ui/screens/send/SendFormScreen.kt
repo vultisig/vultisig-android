@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,15 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.ui.components.FormEntry
-import com.vultisig.wallet.ui.components.FormTextFieldCard
-import com.vultisig.wallet.ui.components.FormTokenCard
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.TokenCard
 import com.vultisig.wallet.ui.components.UiAlertDialog
-import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.form.FormDetails
+import com.vultisig.wallet.ui.components.library.form.FormEntry
+import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
+import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
@@ -66,7 +64,6 @@ internal fun SendFormScreen(
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
         fiatAmountFieldState = viewModel.fiatAmountFieldState,
         onDismissError = viewModel::dismissError,
-        onToggleTokens = viewModel::toggleTokens,
         onSelectToken = viewModel::selectToken,
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
@@ -83,7 +80,6 @@ internal fun SendFormScreen(
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
     onDismissError: () -> Unit = {},
-    onToggleTokens: () -> Unit = {},
     onSelectToken: (TokenBalanceUiModel) -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
@@ -111,32 +107,11 @@ internal fun SendFormScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
 
-            val selectedToken = state.selectedCoin
-
-            FormTokenCard(
-                selectedTitle = selectedToken?.title ?: "",
-                availableToken = selectedToken?.balance ?: "",
-                selectedIcon = selectedToken?.logo
-                    ?: R.drawable.ethereum,
-                isExpanded = state.isTokensExpanded,
-                onClick = onToggleTokens,
-            ) {
-                state.availableTokens.forEach { token ->
-                    UiHorizontalDivider(
-                        modifier = Modifier
-                            .padding(horizontal = 12.dp)
-                    )
-
-                    TokenCard(
-                        title = token.title,
-                        icon = token.logo,
-                        actionIcon = if (token == selectedToken)
-                            R.drawable.check
-                        else null,
-                        onClick = { onSelectToken(token) }
-                    )
-                }
-            }
+            FormTokenSelection(
+                selectedToken = state.selectedCoin,
+                availableTokens = state.availableTokens,
+                onSelectToken = onSelectToken
+            )
 
             FormEntry(
                 title = stringResource(R.string.send_from_address),
@@ -203,19 +178,10 @@ internal fun SendFormScreen(
                 textFieldState = fiatAmountFieldState,
             )
             if (state.showGasFee) {
-                Row {
-                    Text(
-                        text = stringResource(R.string.send_gas_title),
-                        color = Theme.colors.neutral100,
-                        style = Theme.montserrat.body1,
-                    )
-                    UiSpacer(weight = 1f)
-                    Text(
-                        text = state.fee ?: "",
-                        color = Theme.colors.neutral100,
-                        style = Theme.menlo.body1
-                    )
-                }
+                FormDetails(
+                    title = stringResource(R.string.send_gas_title),
+                    value = state.fee ?: "",
+                )
             }
             UiSpacer(size = 80.dp)
 
@@ -240,30 +206,10 @@ internal fun SendFormScreen(
 @Preview
 @Composable
 private fun SendFormScreenPreview() {
-    Column(
-        modifier = Modifier.verticalScroll(rememberScrollState())
-    ) {
-        SendFormScreen(
-            state = SendFormUiModel(),
-            addressFieldState = TextFieldState(),
-            tokenAmountFieldState = TextFieldState(),
-            fiatAmountFieldState = TextFieldState(),
-        )
-
-        SendFormScreen(
-            state = SendFormUiModel(),
-            addressFieldState = TextFieldState(),
-            tokenAmountFieldState = TextFieldState(),
-            fiatAmountFieldState = TextFieldState(),
-        )
-
-        SendFormScreen(
-            state = SendFormUiModel(),
-            addressFieldState = TextFieldState(),
-            tokenAmountFieldState = TextFieldState(),
-            fiatAmountFieldState = TextFieldState(),
-        )
-    }
-
-
+    SendFormScreen(
+        state = SendFormUiModel(),
+        addressFieldState = TextFieldState(),
+        tokenAmountFieldState = TextFieldState(),
+        fiatAmountFieldState = TextFieldState(),
+    )
 }

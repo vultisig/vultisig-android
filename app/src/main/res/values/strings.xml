@@ -203,4 +203,10 @@
     <string name="faq_settings_a5">All assets supported by Trust Wallet Core are supported in Vultisig.</string>
     <string name="faq_settings_a6">Get 2 or more of your devices together and connected to your local WiFi, Hotspot or internet. Then simply pair them via QR code and create a new vault. You can then send funds in.</string>
     <string name="biometry_auth_login_button">Login with biometry</string>
+    <string name="swap_form_from_title">From</string>
+    <string name="swap_form_src_amount_hint">Enter Amount</string>
+    <string name="swap_form_estimated_fees_title">Estimated Fees</string>
+    <string name="swap_form_estimated_time_title">Estimated Time</string>
+    <string name="swap_form_dst_token_title">To</string>
+    <string name="swap_screen_title">Swap</string>
 </resources>

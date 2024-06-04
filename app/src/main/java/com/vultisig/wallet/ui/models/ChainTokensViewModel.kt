@@ -86,7 +86,14 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     fun swap() {
-        // TODO navigate to swap screen
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.Swap(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                )
+            )
+        }
     }
 
 

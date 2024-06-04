@@ -83,7 +83,10 @@ internal class VaultAccountsViewModel @Inject constructor(
     }
 
     fun swap() {
-        // todo navigate to swap
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            navigator.navigate(Destination.Swap(vaultId = vaultId))
+        }
     }
 
     fun openAccount(account: AccountUiModel) {
