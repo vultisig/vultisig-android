@@ -53,9 +53,6 @@ internal fun KeysignScreen(
     onComplete: () -> Unit,
 ) {
     KeepScreenOn()
-
-    val textColor = Theme.colors.neutral0
-
     val text = when (state) {
         KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
         KeysignState.KeysignECDSA -> stringResource(id = R.string.keysign_screen_signing_with_ecdsa)

@@ -29,15 +29,15 @@ fun OnBoardingComposeTheme(
     val appColors = Colors.Default
     val window = calculateWindowSizeClass(activity = activity)
     val config = LocalConfiguration.current
-    var appDimens = CompactDimens
+    val appDimens: Dimens
     when (window.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
-            if (config.screenWidthDp <= 360) {
-                appDimens = CompactSmallDimens
+            appDimens = if (config.screenWidthDp <= 360) {
+                CompactSmallDimens
             } else if (config.screenWidthDp <= 599) {
-                appDimens = CompactMediumDimens
+                CompactMediumDimens
             } else {
-                appDimens = CompactDimens
+                CompactDimens
             }
         }
 
@@ -66,12 +66,11 @@ fun OnBoardingComposeTheme(
         )
     }
     if (Build.VERSION.SDK_INT >= 21) {
-        val window = (LocalContext.current as Activity).window
+        val localWindow = (LocalContext.current as Activity).window
         if (darkTheme) {
-            window.statusBarColor = appColors.oxfordBlue800.toArgb()
+            localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
         } else {
-//            window.statusBarColor = appColors.neutral0.toArgb()
-            window.statusBarColor = appColors.oxfordBlue800.toArgb()
+            localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
         }
     }
 
@@ -86,30 +85,6 @@ fun OnBoardingComposeTheme(
 val MaterialTheme.dimens
     @Composable
     get() = LocalAppDimens.current
-
-@Deprecated(
-    "Use Theme.colors instead of MaterialTheme.appColor",
-    ReplaceWith("Theme.colors")
-)
-internal val MaterialTheme.appColor
-    @Composable
-    get() = LocalAppColors.current
-
-@Deprecated(
-    "Use Theme.menlo instead of MaterialTheme.menloFamily",
-    ReplaceWith("Theme.menlo")
-)
-internal val MaterialTheme.menloFamily
-    @Composable
-    get() = LocalMenloFamilyTypography.current
-
-@Deprecated(
-    "Use Theme.montserrat instead of MaterialTheme.montserratFamily",
-    ReplaceWith("Theme.montserrat")
-)
-internal val MaterialTheme.montserratFamily
-    @Composable
-    get() = LocalMontserratFamilyTypography.current
 
 internal object Theme {
     val colors: Colors

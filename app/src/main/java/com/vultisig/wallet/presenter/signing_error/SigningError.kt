@@ -22,23 +22,25 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.menloFamily
 
 @Composable
 fun SigningError(navController: NavHostController) {
-    val textColor = MaterialTheme.appColor.neutral0
+    val textColor = Theme.colors.neutral0
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,
                 horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
-        TopBar(centerText = stringResource(R.string.signing_error_keygen), navController = navController)
+        TopBar(
+            centerText = stringResource(R.string.signing_error_keygen),
+            navController = navController
+        )
 
         Spacer(modifier = Modifier.weight(1.0f))
         Image(
@@ -47,8 +49,9 @@ fun SigningError(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
         Text(
-            text = stringResource(R.string.signing_error_signing_error_please_try_again), color = textColor,
-            style = MaterialTheme.menloFamily.bodyMedium.copy(
+            text = stringResource(R.string.signing_error_signing_error_please_try_again),
+            color = textColor,
+            style = Theme.menlo.body2.copy(
                 textAlign = TextAlign.Center, lineHeight = 25.sp
             ),
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
@@ -61,15 +64,15 @@ fun SigningError(navController: NavHostController) {
             modifier = Modifier.padding(horizontal = MaterialTheme.dimens.small1),
             text = stringResource(R.string.keep_devices_on_the_same_wifi_network),
             color = textColor,
-            style = MaterialTheme.menloFamily.headlineSmall.copy(
+            style = Theme.menlo.heading5.copy(
                 textAlign = TextAlign.Center, fontSize = 13.sp
             ),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         MultiColorButton(
             text = stringResource(R.string.signing_error_try_again),
-            backgroundColor = MaterialTheme.appColor.turquoise600Main,
-            textColor = MaterialTheme.appColor.oxfordBlue600Main,
+            backgroundColor = Theme.colors.turquoise600Main,
+            textColor = Theme.colors.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
                 .fillMaxWidth()

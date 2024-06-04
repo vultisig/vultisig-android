@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -28,8 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.theme.appColor
-import com.vultisig.wallet.ui.theme.montserratFamily
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun TokenSelectionItem(
@@ -44,7 +42,7 @@ internal fun TokenSelectionItem(
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.appColor.oxfordBlue600Main
+            containerColor = Theme.colors.oxfordBlue600Main
         )
     ) {
         Row(
@@ -69,13 +67,13 @@ internal fun TokenSelectionItem(
             ) {
                 Text(
                     text = title,
-                    color = MaterialTheme.appColor.neutral100,
-                    style = MaterialTheme.montserratFamily.subtitle1,
+                    color = Theme.colors.neutral100,
+                    style = Theme.montserrat.subtitle1,
                 )
                 Text(
                     text = subtitle,
-                    color = MaterialTheme.appColor.neutral100,
-                    style = MaterialTheme.montserratFamily.body3,
+                    color = Theme.colors.neutral100,
+                    style = Theme.montserrat.body3,
                 )
             }
 
@@ -83,12 +81,12 @@ internal fun TokenSelectionItem(
 
             Switch(
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.appColor.neutral0,
-                    checkedBorderColor = MaterialTheme.appColor.turquoise800,
-                    checkedTrackColor = MaterialTheme.appColor.turquoise800,
-                    uncheckedThumbColor = MaterialTheme.appColor.neutral0,
-                    uncheckedBorderColor = MaterialTheme.appColor.oxfordBlue400,
-                    uncheckedTrackColor = MaterialTheme.appColor.oxfordBlue400
+                    checkedThumbColor = Theme.colors.neutral0,
+                    checkedBorderColor = Theme.colors.turquoise800,
+                    checkedTrackColor = Theme.colors.turquoise800,
+                    uncheckedThumbColor = Theme.colors.neutral0,
+                    uncheckedBorderColor = Theme.colors.oxfordBlue400,
+                    uncheckedTrackColor = Theme.colors.oxfordBlue400
                 ),
                 checked = isChecked,
                 onCheckedChange = null,

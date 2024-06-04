@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -22,7 +21,7 @@ import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun ChainSelectionScreen(
@@ -33,7 +32,7 @@ internal fun ChainSelectionScreen(
 
     Column(
         modifier = Modifier
-            .background(MaterialTheme.appColor.oxfordBlue800)
+            .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
     ) {
         TopBar(

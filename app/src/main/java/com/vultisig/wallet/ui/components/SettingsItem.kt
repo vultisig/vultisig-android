@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,9 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.clickOnce
-import com.vultisig.wallet.ui.theme.appColor
-import com.vultisig.wallet.ui.theme.menloFamily
-import com.vultisig.wallet.ui.theme.montserratFamily
+import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun SettingsItem(
@@ -37,15 +33,15 @@ internal fun SettingsItem(
     subtitle: String,
     @DrawableRes icon: Int,
     colorTint: Color? = null,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     Card(
         modifier = Modifier
-            .clickOnce(enabled = true,onClick = onClick  )
+            .clickOnce(enabled = true, onClick = onClick)
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.appColor.oxfordBlue600Main
+            containerColor = Theme.colors.oxfordBlue600Main
         )
     ) {
         Row(
@@ -61,20 +57,20 @@ internal fun SettingsItem(
                     .clip(CircleShape),
                 painter = painterResource(id = icon),
                 contentDescription = stringResource(R.string.token_logo),
-                tint = colorTint ?: MaterialTheme.appColor.neutral100,
+                tint = colorTint ?: Theme.colors.neutral100,
             )
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = title,
-                    color = colorTint ?: MaterialTheme.appColor.neutral100,
-                    style = MaterialTheme.montserratFamily.body2,
+                    color = colorTint ?: Theme.colors.neutral100,
+                    style = Theme.montserrat.body2,
                 )
                 Text(
                     text = subtitle,
-                    color = colorTint ?: MaterialTheme.appColor.neutral300,
-                    style = MaterialTheme.menloFamily.overline2,
+                    color = colorTint ?: Theme.colors.neutral300,
+                    style = Theme.menlo.overline2,
                 )
             }
 
@@ -83,7 +79,7 @@ internal fun SettingsItem(
             Icon(
                 painter = painterResource(id = R.drawable.caret_right),
                 contentDescription = null,
-                tint = colorTint ?: MaterialTheme.appColor.neutral100,
+                tint = colorTint ?: Theme.colors.neutral100,
             )
         }
     }

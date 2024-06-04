@@ -1,5 +1,7 @@
 package com.vultisig.wallet.presenter.settings.settings_main
 
+import android.content.Context
+import android.content.Intent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -35,10 +38,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -47,6 +50,7 @@ fun SettingsScreen(navController: NavHostController) {
     val viewModel = hiltViewModel<SettingsViewModel>()
     val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
+    val context: Context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadSettings()
@@ -64,13 +68,14 @@ fun SettingsScreen(navController: NavHostController) {
             )
         }
     ) {
-        Column(modifier = Modifier.padding(it),
+        Column(
+            modifier = Modifier.padding(it),
             horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        ) {
             AppSettingItem(
                 R.drawable.settings_globe,
                 stringResource(R.string.settings_screen_language), state.selectedLocal.mainName
-            ){
+            ) {
                 viewModel.navigateTo(Destination.LanguageSetting)
             }
 
@@ -78,21 +83,21 @@ fun SettingsScreen(navController: NavHostController) {
             AppSettingItem(
                 R.drawable.settings_dollar,
                 stringResource(R.string.settings_screen_currency), state.selectedCurrency.name
-            ){
+            ) {
                 viewModel.navigateTo(Destination.CurrencyUnitSetting)
             }
 
             AppSettingItem(
                 R.drawable.settings_coin,
                 stringResource(R.string.settings_screen_default_chains)
-            ){
+            ) {
                 viewModel.navigateTo(Destination.DefaultChainSetting)
             }
 
             AppSettingItem(
                 R.drawable.settings_question,
                 stringResource(R.string.settings_screen_faq)
-            ){
+            ) {
                 viewModel.navigateTo(Destination.FAQSetting)
             }
 
@@ -108,14 +113,25 @@ fun SettingsScreen(navController: NavHostController) {
             AppSettingItem(
                 R.drawable.settings_logo,
                 stringResource(R.string.settings_screen_vtx_token)
-            ){
+            ) {
                 viewModel.navigateTo(Destination.VultisigToken)
             }
 
             AppSettingItem(
                 R.drawable.share,
                 stringResource(R.string.settings_screen_share_the_app)
-            )
+            ) {
+                val sendIntent: Intent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "https://play.google.com/store/apps/details?id=com.vultisig.wallet"
+                    )
+                    type = "text/plain"
+                }
+                val shareIntent = Intent.createChooser(sendIntent, null)
+                context.startActivity(shareIntent)
+            }
 
             UiSpacer(weight = 1f)
 
@@ -160,7 +176,12 @@ fun SettingsScreen(navController: NavHostController) {
 }
 
 @Composable
-private fun AppSettingItem(@DrawableRes logo: Int, title: String, currentValue: String? = null, onClick: ()->Unit = {}) {
+private fun AppSettingItem(
+    @DrawableRes logo: Int,
+    title: String,
+    currentValue: String? = null,
+    onClick: () -> Unit = {},
+) {
     val colors = Theme.colors
     Card(
         modifier = Modifier
