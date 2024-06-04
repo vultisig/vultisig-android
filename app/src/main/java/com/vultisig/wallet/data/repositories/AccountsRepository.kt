@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.mappers.ChainAndTokens
 import com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.async
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.supervisorScope
+import timber.log.Timber
 import javax.inject.Inject
 
 internal interface AccountsRepository {
@@ -52,22 +55,53 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         send(addresses)
 
-        tokenPriceRepository.refresh(vaultCoins.map { it.priceProviderID })
+        val loadPrices = supervisorScope {
+            async { tokenPriceRepository.refresh(vaultCoins.map { it.priceProviderID }) }
+        }
 
         coroutineScope {
             addresses.mapIndexed { index, account ->
                 async {
                     val address = account.address
 
-                    val newAccounts = coroutineScope {
-                        account.accounts.map {
-                            async { it.fetchAndUpdateBalance(address) }
+                    val cachedAccounts = coroutineScope {
+                        account.accounts.map { acc ->
+                            async {
+                                val balance = balanceRepository.getCachedTokenBalance(
+                                    address,
+                                    acc.token,
+                                )
+
+                                acc.applyBalance(balance)
+                            }
                         }.awaitAll()
                     }
 
-                    addresses[index] = account.copy(accounts = newAccounts)
+                    addresses[index] = account.copy(accounts = cachedAccounts)
 
                     send(addresses)
+
+                    try {
+                        loadPrices.await()
+
+                        val newAccounts = supervisorScope {
+                            account.accounts.map {
+                                async {
+                                    val balance = balanceRepository.getTokenBalance(address, it.token)
+                                        .first()
+
+                                    it.applyBalance(balance)
+                                }
+                            }.awaitAll()
+                        }
+
+                        addresses[index] = account.copy(accounts = newAccounts)
+
+                        send(addresses)
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        // ignore
+                    }
                 }
             }.awaitAll()
         }
@@ -85,25 +119,40 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         emit(account)
 
-        tokenPriceRepository.refresh(coins.map { it.priceProviderID })
+        val loadPrices = supervisorScope {
+            async { tokenPriceRepository.refresh(coins.map { it.priceProviderID }) }
+        }
 
         val address = account.address
 
+        emit(
+            account.copy(
+                accounts = account.accounts.map {
+                    val balance = balanceRepository.getCachedTokenBalance(
+                        address,
+                        it.token,
+                    )
+
+                    it.applyBalance(balance)
+                }
+            )
+        )
+
+        loadPrices.await()
+
         emit(account.copy(
             accounts = account.accounts.map {
-                it.fetchAndUpdateBalance(address)
+                val balance = balanceRepository.getTokenBalance(address, it.token)
+                    .first()
+
+                it.applyBalance(balance)
             }
         ))
     }
 
-    private suspend fun Account.fetchAndUpdateBalance(address: String): Account {
-        val balance = balanceRepository.getTokenBalance(address, token)
-            .first()
-
-        return copy(
-            tokenValue = balance.tokenValue,
-            fiatValue = balance.fiatValue,
-        )
-    }
+    private fun Account.applyBalance(balance: TokenBalance): Account = copy(
+        tokenValue = balance.tokenValue,
+        fiatValue = balance.fiatValue,
+    )
 
 }
