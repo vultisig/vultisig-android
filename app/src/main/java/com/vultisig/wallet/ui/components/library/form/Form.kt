@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.components
+package com.vultisig.wallet.ui.components.library.form
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
@@ -28,6 +28,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
 
@@ -121,43 +123,59 @@ internal fun FormTextFieldCard(
     FormEntry(
         title = title,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        FormTextField(
+            hint = hint,
+            keyboardType = keyboardType,
+            textFieldState = textFieldState,
+            actions = actions,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun FormTextField(
+    hint: String,
+    keyboardType: KeyboardType,
+    textFieldState: TextFieldState,
+    actions: (@Composable RowScope.() -> Unit)? = null,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .padding(
+                horizontal = 12.dp,
+                vertical = 14.dp
+            ),
+    ) {
+        BasicTextField2(
+            state = textFieldState,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            textStyle = Theme.menlo.body1
+                .copy(color = Theme.colors.neutral100),
+            cursorBrush = Theme.cursorBrush,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = keyboardType,
+            ),
             modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 48.dp)
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 14.dp
-                ),
-        ) {
-            BasicTextField2(
-                state = textFieldState,
-                lineLimits = TextFieldLineLimits.SingleLine,
-                textStyle = Theme.menlo.body1
-                    .copy(color = Theme.colors.neutral100),
-                cursorBrush = Theme.cursorBrush,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = keyboardType,
-                ),
-                modifier = Modifier
-                    .weight(1f),
-                decorator = { textField ->
-                    if (textFieldState.text.isEmpty()) {
-                        Text(
-                            text = hint,
-                            color = Theme.colors.neutral100,
-                            style = Theme.menlo.body1,
-                        )
-                    }
-                    textField()
+                .weight(1f),
+            decorator = { textField ->
+                if (textFieldState.text.isEmpty()) {
+                    Text(
+                        text = hint,
+                        color = Theme.colors.neutral100,
+                        style = Theme.menlo.body1,
+                    )
                 }
-            )
+                textField()
+            }
+        )
 
-            UiSpacer(size = 8.dp)
+        UiSpacer(size = 8.dp)
 
-            actions?.invoke(this)
-        }
+        actions?.invoke(this)
     }
 }
 
@@ -167,14 +185,30 @@ internal fun FormEntry(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    Column(modifier = modifier) {
+    FormTitleContainer(
+        title = title,
+        modifier = modifier,
+    ) {
+        FormCard(content = content)
+    }
+}
+
+@Composable
+internal fun FormTitleContainer(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit = {},
+) {
+    Column(
+        modifier = modifier
+    ) {
         Text(
             text = title,
             color = Theme.colors.neutral100,
             style = Theme.montserrat.body1,
         )
         UiSpacer(size = 10.dp)
-        FormCard(content = content)
+        content()
     }
 }
 
@@ -191,4 +225,24 @@ internal fun FormCard(
         shape = RoundedCornerShape(10.dp),
         content = content,
     )
+}
+
+@Composable
+internal fun FormDetails(
+    title: String,
+    value: String,
+) {
+    Row {
+        Text(
+            text = title,
+            color = Theme.colors.neutral100,
+            style = Theme.montserrat.body1,
+        )
+        UiSpacer(weight = 1f)
+        Text(
+            text = value,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body1
+        )
+    }
 }

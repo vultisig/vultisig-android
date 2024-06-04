@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.common.clickOnce
+import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

@@ -27,6 +27,7 @@ import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.ui.models.swap.updateSrc
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -61,7 +62,6 @@ internal data class TokenBalanceUiModel(
 internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val availableTokens: List<TokenBalanceUiModel> = emptyList(),
-    val isTokensExpanded: Boolean = false,
     val from: String = "",
     val fiatCurrency: String = "",
     val fee: String? = null,
@@ -140,18 +140,6 @@ internal class SendFormViewModel @Inject constructor(
 
     fun selectToken(token: TokenBalanceUiModel) {
         selectedSrc.value = token.model
-        toggleTokens()
-    }
-
-    fun toggleTokens() {
-        uiState.update {
-            it.copy(isTokensExpanded = !it.isTokensExpanded)
-        }
-        if (selectedSrc.value?.account?.token?.AllowZeroGas() == true) {
-            uiState.update {
-                it.copy(showGasFee = false)
-            }
-        }
     }
 
     fun setOutputAddress(address: String) {
@@ -315,30 +303,7 @@ internal class SendFormViewModel @Inject constructor(
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
-                    val selectedSrcValue = selectedSrc.value
-                    if (selectedSrcValue == null) {
-                        val address = if (chain == null) addresses.first()
-                        else addresses.first { it.chain.id == chain.id }
-
-                        val account = if (chain == null)
-                            address.accounts.first()
-                        else address.accounts.first { it.token.isNativeToken }
-
-                        selectedSrc.value = SendSrc(address, account)
-                    } else {
-                        val selectedAddress = selectedSrcValue.address
-                        val selectedAccount = selectedSrcValue.account
-                        val address = addresses.first {
-                            it.chain == selectedAddress.chain &&
-                                    it.address == selectedAddress.address
-                        }
-                        selectedSrc.value = SendSrc(
-                            address,
-                            address.accounts.first {
-                                it.token.ticker == selectedAccount.token.ticker
-                            },
-                        )
-                    }
+                    selectedSrc.updateSrc(addresses, chain)
 
                     updateUiTokens(
                         addresses
