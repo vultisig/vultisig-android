@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText.StringResource
-import com.vultisig.wallet.data.on_board.db.OrderDB
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.ShowSnackBar
@@ -27,7 +26,6 @@ internal data class VaultEditUiModel(
 @HiltViewModel
 internal class VaultRenameViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
-    private val orderDB: OrderDB,
     private val navigator: Navigator<Destination>,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -68,7 +66,6 @@ internal class VaultRenameViewModel @Inject constructor(
                     return@launch
                 }
                 vaultRepository.setVaultName(vault.id, newName)
-                orderDB.updateItemKey(vault.name, newName)
                 navigator.navigate(Destination.Home())
             }
         }
