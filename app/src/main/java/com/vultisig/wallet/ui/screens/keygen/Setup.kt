@@ -4,7 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -37,11 +36,11 @@ import com.vultisig.wallet.ui.models.keygen.KeygenSetupViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun Setup(
     navController: NavHostController,
+    vaultId: String,
     viewModel: KeygenSetupViewModel = hiltViewModel(),
 ) {
     val uriHandler = LocalUriHandler.current
@@ -117,33 +116,37 @@ internal fun Setup(
                 text = stringResource(R.string.setup_start),
                 backgroundColor = Theme.colors.turquoise600Main,
                 textColor = Theme.colors.oxfordBlue600Main,
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 44.dp,
                 textStyle = Theme.montserrat.subtitle1,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = MaterialTheme.dimens.marginMedium,
-                        end = MaterialTheme.dimens.marginMedium,
-                        bottom = MaterialTheme.dimens.marginMedium,
+                        start = 12.dp,
+                        end = 12.dp,
+                        bottom = 12.dp,
                     )
             ) {
-                navController.navigate(Destination.NamingVault.route)
+                if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty()) {
+                    navController.navigate(Destination.NamingVault.route)
+                } else {
+                    navController.navigate(Screen.KeygenFlow.createRoute(vaultId))
+                }
             }
 
             MultiColorButton(
-                text = stringResource(R.string.setup_join),
+                text = stringResource(R.string.setup_pair),
                 backgroundColor = Theme.colors.oxfordBlue600Main,
                 textColor = Theme.colors.turquoise600Main,
                 iconColor = Theme.colors.oxfordBlue600Main,
                 borderSize = 1.dp,
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 44.dp,
                 textStyle = Theme.montserrat.subtitle1,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = MaterialTheme.dimens.marginMedium,
-                        end = MaterialTheme.dimens.marginMedium,
-                        bottom = MaterialTheme.dimens.buttonMargin,
+                        start = 12.dp,
+                        end = 12.dp,
+                        bottom = 12.dp,
                     )
             ) {
                 navController.navigate(Screen.JoinKeygen.route)
@@ -156,5 +159,5 @@ internal fun Setup(
 @Composable
 private fun SetupPreview() {
     val navController = rememberNavController()
-    Setup(navController)
+    Setup(navController, "vaultId")
 }
