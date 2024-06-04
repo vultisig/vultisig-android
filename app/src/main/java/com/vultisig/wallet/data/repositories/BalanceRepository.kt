@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.db.dao.TokenValueDao
+import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenValue
@@ -32,14 +34,21 @@ import com.vultisig.wallet.models.Chain.thorChain
 import com.vultisig.wallet.models.Coin
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import java.math.RoundingMode
 import javax.inject.Inject
 
 
 internal interface BalanceRepository {
+
+    suspend fun getCachedTokenBalance(
+        address: String,
+        coin: Coin,
+    ): TokenBalance
 
     fun getTokenBalance(
         address: String,
@@ -63,7 +72,36 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val polkadotApi: PolkadotApi,
+
+    private val tokenValueDao: TokenValueDao,
 ) : BalanceRepository {
+
+    override suspend fun getCachedTokenBalance(
+        address: String,
+        coin: Coin,
+    ): TokenBalance {
+        val currency = appCurrencyRepository.currency.first()
+
+        val tokenValue = getCachedTokenValue(address, coin)
+
+        val price = tokenPriceRepository.getCachedPrice(coin.priceProviderID, currency)
+
+        val fiatValue = if (tokenValue != null && price != null) {
+            FiatValue(
+                tokenValue.decimal
+                    .multiply(price)
+                    .setScale(2, RoundingMode.HALF_UP),
+                currency.ticker
+            )
+        } else {
+            null
+        }
+
+        return TokenBalance(
+            tokenValue = tokenValue,
+            fiatValue = fiatValue,
+        )
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getTokenBalance(
@@ -88,6 +126,20 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     }
             }
 
+    private suspend fun getCachedTokenValue(
+        address: String,
+        coin: Coin,
+    ): TokenValue? = tokenValueDao.getTokenValue(
+        chainId = coin.chain.id,
+        address = address,
+        ticker = coin.ticker,
+    )?.let {
+        TokenValue(
+            value = it.toBigInteger(),
+            unit = coin.ticker,
+            decimals = coin.decimal,
+        )
+    }
 
     override fun getTokenValue(
         address: String,
@@ -134,6 +186,15 @@ internal class BalanceRepositoryImpl @Inject constructor(
             polkadot -> polkadotApi.getBalanace(address)
 
         }, coin.ticker, coin.decimal))
+    }.onEach { tokenValue ->
+        tokenValueDao.insertTokenValue(
+            TokenValueEntity(
+                chain = coin.chain.id,
+                address = address,
+                ticker = coin.ticker,
+                tokenValue = tokenValue.value.toString(),
+            )
+        )
     }
 
 }

@@ -39,3 +39,31 @@ internal val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("ALTER TABLE `chainOrderCopy` RENAME TO `chainOrder`".trimMargin())
     }
 }
+
+
+internal val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `tokenValue` (
+                `chain` TEXT NOT NULL,
+                `address` TEXT NOT NULL,
+                `ticker` TEXT NOT NULL,
+                `tokenValue` TEXT NOT NULL,
+                PRIMARY KEY(`chain`, `address`, `ticker`)
+            )
+            """.trimMargin()
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `tokenPrice` (
+                `priceProviderId` TEXT NOT NULL,
+                `currency` TEXT NOT NULL,
+                `price` TEXT NOT NULL,
+                PRIMARY KEY(`priceProviderId`, `currency`)
+            )
+            """.trimMargin()
+        )
+    }
+}
