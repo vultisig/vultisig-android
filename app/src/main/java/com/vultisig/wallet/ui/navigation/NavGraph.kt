@@ -80,8 +80,16 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable(route = Screen.Setup.route) {
-            Setup(navController)
+        composable(route = Screen.Setup.route,
+            arguments = listOf(
+                navArgument(Screen.Setup.ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
+                }
+            )) { navBackStackEntry ->
+            val vaultId =
+                navBackStackEntry.arguments?.getString(Screen.Setup.ARG_VAULT_ID) ?: ""
+            Setup(navController, vaultId)
         }
 
         composable(

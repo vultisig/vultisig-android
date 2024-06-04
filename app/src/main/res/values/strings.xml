@@ -135,7 +135,7 @@
     <string name="setup_automatically_backed_up">Automatically backed-up</string>
     <string name="setup_keep_devices_on_the_same_wifi_network_with_vultisig_open">Keep devices on the same WiFi Network with Vultisig open.</string>
     <string name="setup_start">Start</string>
-    <string name="setup_join">Join</string>
+    <string name="setup_pair">Pair</string>
     <string name="keysign_peer_discovery_start">Start</string>
     <string name="keysign_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
     <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect...</string>
