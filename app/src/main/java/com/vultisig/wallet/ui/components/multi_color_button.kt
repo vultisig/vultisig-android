@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -75,7 +74,10 @@ fun MultiColorButton(
                 minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
                 minHeight = minHeight ?: MaterialTheme.dimens.medium2
             )
-            .clickOnce(enabled = true,onClick = if (disabled == false) onClick else emptyClickAction)
+            .clickOnce(
+                enabled = true,
+                onClick = if (disabled == false) onClick else emptyClickAction
+            )
     ) {
         if (startIcon != null)
             Icon(
@@ -83,7 +85,7 @@ fun MultiColorButton(
                 contentDescription = null,
                 tint = if (disabled == true && trailingIcon == null) appColor.neutral600 else if (disabled == true) appColor.neutral800 else iconColor
                     ?: appColor.turquoise600Main,
-                modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
+                modifier = Modifier.size(iconSize ?: 15.dp)
             )
         else UiSpacer(iconSize ?: MaterialTheme.dimens.medium1)
         centerContent?.invoke() ?: Text(

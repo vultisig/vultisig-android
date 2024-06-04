@@ -1,10 +1,10 @@
 package com.vultisig.wallet.ui.screens.keysign
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,7 +20,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 
 @Composable
@@ -39,7 +38,7 @@ internal fun KeysignErrorView(
     navController: NavController,
     errorMessage: String = "",
 ) {
-    Column {
+    Column(Modifier.background(Theme.colors.oxfordBlue800)) {
         UiSpacer(weight = 1f)
 
         Column(
@@ -56,7 +55,7 @@ internal fun KeysignErrorView(
                 alignment = Alignment.Center
             )
             Text(
-                modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
+                modifier = Modifier.padding(top = 9.dp),
                 text = stringResource(R.string.signing_error_please_try_again_s, errorMessage),
                 style = Theme.menlo.subtitle1,
                 color = Theme.colors.neutral0,
@@ -79,7 +78,7 @@ internal fun KeysignErrorView(
 
             MultiColorButton(
                 text = stringResource(R.string.try_again),
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 44.dp,
                 backgroundColor = Theme.colors.turquoise800,
                 textColor = Theme.colors.oxfordBlue800,
                 iconColor = Theme.colors.turquoise800,
@@ -98,4 +97,5 @@ internal fun KeysignErrorView(
 @Composable
 private fun PreviewKeysignError() {
     KeysignErrorView(navController = rememberNavController())
+
 }

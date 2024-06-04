@@ -35,9 +35,8 @@ import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.presenter.common.UiEvent.NavigateTo
 import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.theme.appColor
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
-import com.vultisig.wallet.ui.theme.montserratFamily
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -75,7 +74,7 @@ internal fun WelcomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.appColor.oxfordBlue800),
+            .background(Theme.colors.oxfordBlue800),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -98,9 +97,9 @@ internal fun WelcomeScreen(
         ) {
             repeat(pagerState.pageCount) { iteration ->
                 val color = if (pagerState.currentPage == iteration)
-                    MaterialTheme.appColor.turquoise800
+                    Theme.colors.turquoise800
                 else
-                    MaterialTheme.appColor.oxfordBlue200
+                    Theme.colors.oxfordBlue200
 
                 Box(
                     modifier = Modifier
@@ -117,7 +116,7 @@ internal fun WelcomeScreen(
         )
         MultiColorButton(
             text = stringResource(R.string.welcome_screen_next),
-            textColor = MaterialTheme.appColor.oxfordBlue800,
+            textColor = Theme.colors.oxfordBlue800,
             minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
                 .fillMaxWidth()
@@ -135,9 +134,9 @@ internal fun WelcomeScreen(
         if (pagerState.currentPage < 2) {
             MultiColorButton(
                 text = stringResource(R.string.welcome_screen_skip),
-                backgroundColor = MaterialTheme.appColor.oxfordBlue800,
-                textColor = MaterialTheme.appColor.turquoise800,
-                iconColor = MaterialTheme.appColor.oxfordBlue800,
+                backgroundColor = Theme.colors.oxfordBlue800,
+                textColor = Theme.colors.turquoise800,
+                iconColor = Theme.colors.oxfordBlue800,
                 minHeight = MaterialTheme.dimens.minHeightButton,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,40 +166,10 @@ fun PagerScreen(onBoardingPage: OnBoardPage) {
                 .padding(horizontal = 40.dp)
                 .padding(top = 20.dp),
             text = onBoardingPage.description,
-            style = MaterialTheme.montserratFamily.bodyLarge,
-            color = MaterialTheme.appColor.neutral0,
+            style = Theme.montserrat.body1,
+            color = Theme.colors.neutral0,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.weight(1.0f))
     }
 }
-
-//@OptIn(ExperimentalFoundationApi::class)
-//@ExperimentalAnimationApi
-//@Composable
-//fun FinishButton(
-//    modifier: Modifier,
-//    pagerState: PagerState,
-//    onClick: () -> Unit
-//) {
-//    Row(
-//        modifier = modifier
-//            .padding(horizontal = 40.dp),
-//        verticalAlignment = Alignment.Top,
-//        horizontalArrangement = Arrangement.Center
-//    ) {
-//        AnimatedVisibility(
-//            modifier = Modifier.fillMaxWidth(),
-//            visible = pagerState.currentPage == 2
-//        ) {
-//            Button(
-//                onClick = onClick,
-//                colors = ButtonDefaults.buttonColors(
-//                    contentColor = Color.White
-//                )
-//            ) {
-//                Text(text = "Finish")
-//            }
-//        }
-//    }
-//}
