@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -32,10 +31,8 @@ import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun KeygenPeerDiscovery(
@@ -56,36 +53,6 @@ internal fun KeygenPeerDiscovery(
     val context = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
         viewModel.setData(vaultId, context)
-    }
-    LaunchedEffect(key1 = viewModel.participants) {
-        viewModel.participants.asFlow().collect { newList ->
-            // add all participants to the selection
-            for (participant in newList) {
-                viewModel.addParticipant(participant)
-            }
-        }
-    }
-    LaunchedEffect(key1 = viewModel.selection) {
-        viewModel.selection.asFlow().collect { newList ->
-            when (viewModel.vaultSetupType) {
-                VaultSetupType.TWO_OF_TWO -> {
-                    if (newList.size == 2) {
-                        viewModel.moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
-                    }
-                }
-
-                VaultSetupType.TWO_OF_THREE -> {
-                    if (newList.size == 3) {
-                        viewModel.moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
-                    }
-                }
-
-                VaultSetupType.M_OF_N -> {
-                    // let user to decide
-                }
-            }
-        }
-
     }
     DisposableEffect(Unit) {
         onDispose {
@@ -171,7 +138,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 text = stringResource(R.string.keygen_peer_discovery_continue),
                 backgroundColor = Theme.colors.turquoise600Main,
                 textColor = Theme.colors.oxfordBlue600Main,
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 44.dp,
                 textStyle = Theme.montserrat.subtitle1,
                 disabled = selectionState.size < 2,
                 modifier = Modifier
