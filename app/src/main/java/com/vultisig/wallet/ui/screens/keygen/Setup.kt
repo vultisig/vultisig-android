@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.keygen.KeygenSetupViewModel
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
@@ -127,9 +128,15 @@ internal fun Setup(
                     )
             ) {
                 if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty()) {
-                    navController.navigate(Destination.NamingVault.route)
+                    navController.navigate(Destination.NamingVault(VaultSetupType.fromInt(state.tabIndex)).route)
                 } else {
-                    navController.navigate(Screen.KeygenFlow.createRoute(vaultId))
+                    // when reshare , we need to set to M_OF_N
+                    navController.navigate(
+                        Screen.KeygenFlow.createRoute(
+                            vaultId,
+                            VaultSetupType.M_OF_N
+                        )
+                    )
                 }
             }
 

@@ -10,7 +10,10 @@ import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
 import com.vultisig.wallet.ui.screens.keygen.KeygenPeerDiscovery
 
 @Composable
-fun KeygenFlowView(navController: NavHostController, vaultId: String) {
+fun KeygenFlowView(
+    navController: NavHostController,
+    vaultId: String,
+) {
     val viewModel: KeygenFlowViewModel = hiltViewModel()
     when (viewModel.currentState.value) {
         KeygenFlowState.PEER_DISCOVERY -> {

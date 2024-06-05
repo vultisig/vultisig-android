@@ -81,7 +81,7 @@ private fun AddVaultScreen(
             Text(
                 text = stringResource(R.string.create_new_vault_screen_vultisig),
                 color = textColor,
-                style = Theme.montserrat.headlineLarge.copy(fontSize = 50.sp)
+                style = Theme.montserrat.heading3.copy(fontSize = 50.sp)
             )
             Spacer(modifier = Modifier.height(40.dp))
             Text(
@@ -100,11 +100,11 @@ private fun AddVaultScreen(
 
             MultiColorButton(
                 text = stringResource(R.string.create_new_vault_screen_create_a_new_vault),
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 44.dp,
                 backgroundColor = Theme.colors.turquoise800,
                 textColor = Theme.colors.oxfordBlue800,
                 iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.titleLarge,
+                textStyle = Theme.montserrat.subtitle1,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -113,7 +113,7 @@ private fun AddVaultScreen(
                         bottom = MaterialTheme.dimens.marginMedium,
                     )
             ) {
-                navController.navigate(route = Screen.Setup.route)
+                navController.navigate(route = Screen.Setup.createRoute(Screen.KeygenFlow.DEFAULT_NEW_VAULT))
             }
             Spacer(modifier = Modifier.size(MaterialTheme.dimens.extraSmall))
             MultiColorButton(
@@ -122,8 +122,8 @@ private fun AddVaultScreen(
                 textColor = Theme.colors.turquoise800,
                 iconColor = Theme.colors.oxfordBlue800,
                 borderSize = 1.dp,
-                textStyle = Theme.montserrat.titleLarge,
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                textStyle = Theme.montserrat.subtitle1,
+                minHeight = 44.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(

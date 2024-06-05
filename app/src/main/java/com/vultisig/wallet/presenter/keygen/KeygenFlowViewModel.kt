@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
@@ -21,6 +23,7 @@ import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.ReshareMessage
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
@@ -50,15 +53,15 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val defaultChainsRepository: DefaultChainsRepository,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
-    private val navBackStackEntry: SavedStateHandle,
-    private val navigator: Navigator<Destination>
+    navBackStackEntry: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
     private var serverAddress: String = "http://127.0.0.1:18080" // local mediator server
     private var participantDiscovery: ParticipantDiscovery? = null
     private var action: TssAction = TssAction.KEYGEN
-    private var vault: Vault = Vault(id = UUID.randomUUID().toString(),"New Vault")
+    private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "New Vault")
     private val _keygenPayload: MutableState<String> = mutableStateOf("")
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _oldResharePrefix: String = ""
@@ -66,8 +69,11 @@ internal class KeygenFlowViewModel @Inject constructor(
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
 
-    var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME)?:""
-    var initVault : Vault? = null
+    var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
+    private val vaultSetupType =
+        VaultSetupType.fromInt(
+            navBackStackEntry.get<Int>(Screen.KeygenFlow.ARG_VAULT_TYPE) ?: 0
+        )
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: MutableState<String>
         get() = _keygenPayload
@@ -99,7 +105,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         val allVaults = vaultRepository.getAll()
 
         val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
-            var newVaultName = ""
+            var newVaultName: String
             var idx = 1
             while (true) {
                 newVaultName = "New vault ${allVaults.size + idx}"
@@ -134,6 +140,27 @@ internal class KeygenFlowViewModel @Inject constructor(
             this.vault.localPartyID = Utils.deviceName
         }
         this.selection.value = listOf(this.vault.localPartyID)
+        viewModelScope.launch {
+            selection.asFlow().collect() { newList ->
+                when (vaultSetupType) {
+                    VaultSetupType.TWO_OF_TWO -> {
+                        if (newList.size == 2) {
+                            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
+                        }
+                    }
+
+                    VaultSetupType.TWO_OF_THREE -> {
+                        if (newList.size == 3) {
+                            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
+                        }
+                    }
+
+                    VaultSetupType.M_OF_N -> {
+                        // let user to decide
+                    }
+                }
+            }
+        }
         _oldResharePrefix = this.vault.resharePrefix
         updateKeygenPayload(context)
     }
@@ -143,6 +170,14 @@ internal class KeygenFlowViewModel @Inject constructor(
         stopParticipantDiscovery()
         this.participantDiscovery =
             ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, gson)
+        viewModelScope.launch {
+            participantDiscovery?.participants?.asFlow()?.collect { newList ->
+                // add all participants to the selection
+                for (participant in newList) {
+                    addParticipant(participant)
+                }
+            }
+        }
         when (action) {
             TssAction.KEYGEN -> {
                 _keygenPayload.value =

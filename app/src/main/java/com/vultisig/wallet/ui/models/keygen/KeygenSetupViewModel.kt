@@ -28,7 +28,7 @@ internal data class KeygenSetupUiModel(
             content = R.string.setup_device_of_vault.asUiText("N"),
             drawableResId = R.drawable.devices_m_n,
         ),
-    )
+    ),
 )
 
 internal data class KeygenSetupTabUiModel(
@@ -36,6 +36,16 @@ internal data class KeygenSetupTabUiModel(
     val content: UiText,
     @DrawableRes val drawableResId: Int,
 )
+
+enum class VaultSetupType(val raw: Int) {
+    TWO_OF_TWO(0),
+    TWO_OF_THREE(1),
+    M_OF_N(2);
+
+    companion object {
+        fun fromInt(value: Int) = entries.first { it.raw == value }
+    }
+}
 
 @HiltViewModel
 internal class KeygenSetupViewModel @Inject constructor() : ViewModel() {

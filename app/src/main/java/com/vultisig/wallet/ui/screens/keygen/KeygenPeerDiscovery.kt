@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -34,7 +33,6 @@ import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun KeygenPeerDiscovery(
@@ -140,7 +138,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 text = stringResource(R.string.keygen_peer_discovery_continue),
                 backgroundColor = Theme.colors.turquoise600Main,
                 textColor = Theme.colors.oxfordBlue600Main,
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 44.dp,
                 textStyle = Theme.montserrat.subtitle1,
                 disabled = selectionState.size < 2,
                 modifier = Modifier
