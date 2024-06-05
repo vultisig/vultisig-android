@@ -126,7 +126,7 @@ internal fun Setup(
                         bottom = 12.dp,
                     )
             ) {
-                if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty() || vaultId=="{vault_id}") {
+                if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty()) {
                     navController.navigate(Destination.NamingVault.route)
                 } else {
                     navController.navigate(Screen.KeygenFlow.createRoute(vaultId))
