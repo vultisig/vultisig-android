@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.keygen.KeygenSetupViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.navigation.Screen.Setup.ARG_VAULT_ID
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -126,7 +127,7 @@ internal fun Setup(
                         bottom = 12.dp,
                     )
             ) {
-                if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty()) {
+                if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty() || vaultId=="{vault_id}") {
                     navController.navigate(Destination.NamingVault.route)
                 } else {
                     navController.navigate(Screen.KeygenFlow.createRoute(vaultId))
