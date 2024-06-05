@@ -21,7 +21,6 @@ import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
-import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
@@ -106,10 +105,7 @@ internal fun SetupNavGraph(
             )) { navBackStackEntry ->
             val vaultId =
                 navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
-            val vaultSetupType = VaultSetupType.fromInt(
-                navBackStackEntry.arguments?.getInt(Screen.KeygenFlow.ARG_VAULT_TYPE) ?: 0
-            )
-            KeygenFlowView(navController, vaultId, vaultSetupType)
+            KeygenFlowView(navController, vaultId)
         }
 
         composable(route = Screen.SigningError.route) {

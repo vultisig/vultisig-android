@@ -6,7 +6,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
 import com.vultisig.wallet.ui.screens.keygen.KeygenPeerDiscovery
 
@@ -14,7 +13,6 @@ import com.vultisig.wallet.ui.screens.keygen.KeygenPeerDiscovery
 fun KeygenFlowView(
     navController: NavHostController,
     vaultId: String,
-    vaultSetupType: VaultSetupType,
 ) {
     val viewModel: KeygenFlowViewModel = hiltViewModel()
     when (viewModel.currentState.value) {
