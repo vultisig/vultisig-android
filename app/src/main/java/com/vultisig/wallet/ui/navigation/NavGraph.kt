@@ -99,8 +99,8 @@ internal fun SetupNavGraph(
                 type = NavType.StringType
                 defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
             }, navArgument(Screen.KeygenFlow.ARG_VAULT_TYPE) {
-                type = NavType.StringType
-                defaultValue = "0"
+                type = NavType.IntType
+                defaultValue = 0
             }
             )) { navBackStackEntry ->
             val vaultId =

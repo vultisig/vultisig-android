@@ -51,7 +51,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val defaultChainsRepository: DefaultChainsRepository,
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
-    private val navBackStackEntry: SavedStateHandle,
+    navBackStackEntry: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
@@ -70,7 +70,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
     val vaultSetupType =
         VaultSetupType.fromInt(
-            (navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_TYPE) ?: "0").toInt()
+            navBackStackEntry.get<Int>(Screen.KeygenFlow.ARG_VAULT_TYPE) ?: 0
         )
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: MutableState<String>
