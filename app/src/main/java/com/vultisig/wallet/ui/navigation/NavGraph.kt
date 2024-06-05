@@ -21,6 +21,7 @@ import com.vultisig.wallet.presenter.signing_error.SigningError
 import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
@@ -98,12 +99,17 @@ internal fun SetupNavGraph(
             arguments = listOf(navArgument(Screen.KeygenFlow.ARG_VAULT_NAME) {
                 type = NavType.StringType
                 defaultValue = Screen.KeygenFlow.DEFAULT_NEW_VAULT
-            })
-        ) { navBackStackEntry ->
+            }, navArgument(Screen.KeygenFlow.ARG_VAULT_TYPE) {
+                type = NavType.StringType
+                defaultValue = "0"
+            }
+            )) { navBackStackEntry ->
             val vaultId =
                 navBackStackEntry.arguments?.getString(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
-
-            KeygenFlowView(navController, vaultId)
+            val vaultSetupType = VaultSetupType.fromInt(
+                navBackStackEntry.arguments?.getInt(Screen.KeygenFlow.ARG_VAULT_TYPE) ?: 0
+            )
+            KeygenFlowView(navController, vaultId, vaultSetupType)
         }
 
         composable(route = Screen.SigningError.route) {
@@ -288,7 +294,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.NamingVault.route,
+            route = Destination.NamingVault.STATIC_ROUTE,
         ) {
             NamingVaultScreen(navController = navController)
         }

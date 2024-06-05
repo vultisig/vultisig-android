@@ -32,6 +32,7 @@ import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
@@ -55,6 +56,36 @@ internal fun KeygenPeerDiscovery(
     val context = LocalContext.current.applicationContext
     LaunchedEffect(Unit) {
         viewModel.setData(vaultId, context)
+    }
+    LaunchedEffect(key1 = viewModel.participants) {
+        viewModel.participants.asFlow().collect { newList ->
+            // add all participants to the selection
+            for (participant in newList) {
+                viewModel.addParticipant(participant)
+            }
+        }
+    }
+    LaunchedEffect(key1 = viewModel.selection) {
+        viewModel.selection.asFlow().collect { newList ->
+            when (viewModel.vaultSetupType) {
+                VaultSetupType.TWO_OF_TWO -> {
+                    if (newList.size == 2) {
+                        viewModel.moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
+                    }
+                }
+
+                VaultSetupType.TWO_OF_THREE -> {
+                    if (newList.size == 3) {
+                        viewModel.moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
+                    }
+                }
+
+                VaultSetupType.M_OF_N -> {
+                    // let user to decide
+                }
+            }
+        }
+
     }
     DisposableEffect(Unit) {
         onDispose {

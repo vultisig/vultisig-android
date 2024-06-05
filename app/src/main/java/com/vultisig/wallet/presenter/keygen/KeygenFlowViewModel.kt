@@ -21,6 +21,7 @@ import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.ReshareMessage
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
@@ -51,14 +52,14 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
     private val navBackStackEntry: SavedStateHandle,
-    private val navigator: Navigator<Destination>
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
     private var serverAddress: String = "http://127.0.0.1:18080" // local mediator server
     private var participantDiscovery: ParticipantDiscovery? = null
     private var action: TssAction = TssAction.KEYGEN
-    private var vault: Vault = Vault(id = UUID.randomUUID().toString(),"New Vault")
+    private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "New Vault")
     private val _keygenPayload: MutableState<String> = mutableStateOf("")
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _oldResharePrefix: String = ""
@@ -66,8 +67,11 @@ internal class KeygenFlowViewModel @Inject constructor(
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
 
-    var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME)?:""
-    var initVault : Vault? = null
+    var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
+    val vaultSetupType =
+        VaultSetupType.fromInt(
+            (navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_TYPE) ?: "0").toInt()
+        )
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: MutableState<String>
         get() = _keygenPayload

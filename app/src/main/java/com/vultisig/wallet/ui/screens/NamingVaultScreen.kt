@@ -18,13 +18,13 @@ internal fun NamingVaultScreen(
     val viewModel = hiltViewModel<NamingVaultViewModel>()
     val uiModel by viewModel.uiModel.collectAsState()
 
-
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_setup),
         onSave = {
-                 navController.navigate(Screen.KeygenFlow.createRoute(
-                     uiModel.name.takeIf { it.isNotEmpty() }
-                         ?: Screen.KeygenFlow.DEFAULT_NEW_VAULT))
+            navController.navigate(Screen.KeygenFlow.createRoute(
+                uiModel.name.takeIf { it.isNotEmpty() }
+                    ?: Screen.KeygenFlow.DEFAULT_NEW_VAULT,
+                viewModel.vaultSetupType))
         },
         name = uiModel.name,
         navHostController = navController,

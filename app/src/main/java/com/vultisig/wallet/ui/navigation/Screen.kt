@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.navigation
 
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
+
 sealed class Screen(val route: String) {
     data object Welcome : Screen(route = "welcome_screen")
     data object Home : Screen(route = "home")
@@ -14,11 +16,12 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object KeygenFlow : Screen(route = "keygen_flow/{vault_name}") {
+    data object KeygenFlow : Screen(route = "keygen_flow/{vault_name}/{vault_type}") {
         const val ARG_VAULT_NAME = "vault_name"
+        const val ARG_VAULT_TYPE = "vault_type"
         const val DEFAULT_NEW_VAULT = "*vultisig_new_vault*"
-        fun createRoute(vaultName: String): String {
-            return "keygen_flow/$vaultName"
+        fun createRoute(vaultName: String, vaultSetupType: VaultSetupType): String {
+            return "keygen_flow/$vaultName/${vaultSetupType.raw}"
         }
     }
 

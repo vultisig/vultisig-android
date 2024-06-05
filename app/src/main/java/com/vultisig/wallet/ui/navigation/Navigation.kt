@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.navigation
 
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
+
 internal open class Dst(
     val route: String,
 )
@@ -100,10 +102,10 @@ internal sealed class Destination(
 
     data class ConfirmDelete(val vaultId: String) :
         Destination(route = "vault_detail/confirm_delete/$vaultId") {
-            companion object{
-                const val ARG_VAULT_ID = "vault_id"
-                const val STATIC_ROUTE = "vault_detail/confirm_delete/{vault_id}"
-            }
+        companion object {
+            const val ARG_VAULT_ID = "vault_id"
+            const val STATIC_ROUTE = "vault_detail/confirm_delete/{vault_id}"
+        }
     }
 
     data class Details(val vaultId: String) :
@@ -126,7 +128,15 @@ internal sealed class Destination(
     data object VultisigToken : Destination(route = "settings/vultisig_token")
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
-    data object NamingVault : Destination(route = "naming_vault")
+    data class NamingVault(val vaultSetupType: VaultSetupType) :
+        Destination(route = "naming_vault/${vaultSetupType.raw}") {
+        companion object {
+            const val ARG_VAULT_SETUP_TYPE = "vault_setup_type"
+            const val STATIC_ROUTE = "naming_vault/{$ARG_VAULT_SETUP_TYPE}"
+        }
+    }
+
+
     data class QrAddressScreen(val address: String) :
         Destination(route = "vault_details/qr_address_screen/$address") {
         companion object {
