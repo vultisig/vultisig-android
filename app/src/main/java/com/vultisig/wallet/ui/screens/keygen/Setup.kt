@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -104,7 +106,7 @@ internal fun Setup(
                 painter = painterResource(id = state.tabs[state.tabIndex].drawableResId),
                 contentDescription = "devices",
                 contentScale = ContentScale.FillWidth,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).width(state.tabs[state.tabIndex].imageWidth)
             )
 
             DevicesOnSameNetworkHint(
