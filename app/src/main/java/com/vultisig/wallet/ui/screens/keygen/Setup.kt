@@ -35,7 +35,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.keygen.KeygenSetupViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
-import com.vultisig.wallet.ui.navigation.Screen.Setup.ARG_VAULT_ID
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable

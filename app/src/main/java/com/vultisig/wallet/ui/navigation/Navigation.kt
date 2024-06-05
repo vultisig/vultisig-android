@@ -55,6 +55,14 @@ internal sealed class Destination(
         }
     }
 
+    data class Setup(val vaultId: String? = null) :
+        Destination(route = "setup?${vaultId?.let { "vault_id=$it" }?:""}") {
+        companion object {
+            const val STATIC_ROUTE = "setup?vault_id={vault_id}"
+            const val ARG_VAULT_ID = "vault_id"
+        }
+    }
+
     data class SelectTokens(
         val vaultId: String,
         val chainId: String,

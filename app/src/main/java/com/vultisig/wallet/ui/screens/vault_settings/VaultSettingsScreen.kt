@@ -129,9 +129,9 @@ internal fun VaultSettingsScreen(
                     icon = R.drawable.share
                 ) {
                     navController.navigate(
-                        Screen.Setup.createRoute(
+                        Destination.Setup(
                             uiModel.id,
-                        )
+                        ).route
                     )
                 }
 
