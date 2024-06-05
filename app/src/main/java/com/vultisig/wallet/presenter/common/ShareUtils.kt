@@ -15,10 +15,10 @@ fun Context.share(bitmap: Bitmap) {
     try {
         val cachePath = File(cacheDir, "images")
         cachePath.mkdirs()
-        val stream = FileOutputStream("$cachePath/image.png")
-        val resizedBitmap = bitmap.getResizedBitmap(500f, 500f)
-        resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        stream.close()
+        FileOutputStream("$cachePath/image.png").use { stream ->
+            val resizedBitmap = bitmap.getResizedBitmap(500f, 500f)
+            resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        }
         val imagePath = File(cacheDir, "images")
         val newFile = File(imagePath, "image.png")
         val contentUri = FileProvider.getUriForFile(
