@@ -70,12 +70,12 @@ internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowV
             items.forEachIndexed() { index, item ->
                 item {
                     if (item == viewModel.localPartyID) {
-                        DeviceInfoItem("$index. $item ${stringResource(R.string.this_device)}")
+                        DeviceInfoItem("${index+1}. $item ${stringResource(R.string.this_device)}")
                     } else {
                         if (index < thresholds)
-                            DeviceInfoItem("$index. $item ${stringResource(R.string.pair_device)}")
+                            DeviceInfoItem("${index+1}. $item ${stringResource(R.string.pair_device)}")
                         else
-                            DeviceInfoItem("$index. $item ${stringResource(R.string.backup_device)}")
+                            DeviceInfoItem("${index+1}. $item ${stringResource(R.string.backup_device)}")
                     }
                 }
             }
