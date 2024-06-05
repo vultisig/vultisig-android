@@ -24,6 +24,7 @@ fun KeysignFlowView(navController: NavController) {
     }
     DisposableEffect(key1 = Unit) {
         onDispose {
+            viewModel.resetQrAddress()
             viewModel.stopService(context)
         }
     }
