@@ -106,7 +106,8 @@ internal fun Setup(
                 painter = painterResource(id = state.tabs[state.tabIndex].drawableResId),
                 contentDescription = "devices",
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.weight(1f).padding(16.dp)
+                modifier = Modifier.weight(1f).
+                fillMaxWidth()
             )
 
             DevicesOnSameNetworkHint(
