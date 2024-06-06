@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,8 +29,6 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
-import io.ktor.http.ContentType
-import kotlin.math.max
 
 @Composable
 internal fun ChainAccountItem(
@@ -150,6 +147,7 @@ internal fun ChainAccountItem(
 
                 Text(
                     text =  MiddleEllipsisText(account.address),
+                    text = MiddleEllipsisText(account.address),
                     style = Theme.montserrat.body1,
                     color = Theme.colors.turquoise600Main,
                     maxLines = 1,
