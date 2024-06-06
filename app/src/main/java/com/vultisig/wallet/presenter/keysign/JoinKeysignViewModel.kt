@@ -188,8 +188,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val payloadToken = payload.coin
         val address = payloadToken.address
-        val token = tokenRepository.getToken(payloadToken.id)
-            .first()
+        val token = tokenRepository.getToken(payloadToken.id)!!
         val chain = token.chain
         val currency = appCurrencyRepository.currency.first()
 

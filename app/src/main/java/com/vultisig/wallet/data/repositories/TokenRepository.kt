@@ -3,17 +3,19 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 internal interface TokenRepository {
 
-    fun getToken(tokenId: String): Flow<Coin>
+    suspend fun getToken(tokenId: String): Coin?
 
     fun getChainTokens(chainId: String): Flow<List<Coin>>
 
-    fun getNativeToken(chainId: String): Flow<Coin>
+    suspend fun getNativeToken(chainId: String): Coin
 
     val allTokens: Flow<List<Coin>>
 
@@ -23,16 +25,16 @@ internal interface TokenRepository {
 
 internal class TokenRepositoryImpl @Inject constructor() : TokenRepository {
 
-    override fun getToken(tokenId: String): Flow<Coin> =
-        allTokens.map { allTokens -> allTokens.first { it.id == tokenId } }
+    override suspend fun getToken(tokenId: String): Coin? =
+        allTokens.map { allTokens -> allTokens.first { it.id == tokenId } }.firstOrNull()
 
     override fun getChainTokens(chainId: String): Flow<List<Coin>> = allTokens
         .map { allTokens ->
             allTokens.filter { it.chain.id == chainId }
         }
 
-    override fun getNativeToken(chainId: String): Flow<Coin> =
-        nativeTokens.map { it.first { it.chain.id == chainId } }
+    override suspend fun getNativeToken(chainId: String): Coin =
+        nativeTokens.map { it.first { it.chain.id == chainId } }.first()
 
     override val allTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
 

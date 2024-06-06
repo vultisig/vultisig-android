@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiIcon
@@ -154,13 +155,18 @@ internal fun SwapFormScreen(
             }
 
             FormDetails(
+                title = stringResource(R.string.swap_form_gas_title),
+                value = state.gas,
+            )
+
+            FormDetails(
                 title = stringResource(R.string.swap_form_estimated_fees_title),
                 value = state.fee
             )
 
             FormDetails(
                 title = stringResource(R.string.swap_form_estimated_time_title),
-                value = state.estimatedTime
+                value = state.estimatedTime.asString()
             )
         }
 
