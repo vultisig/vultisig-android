@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -20,19 +21,28 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
+import com.vultisig.wallet.presenter.common.generateQrBitmap
+import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun QrAddressScreen(navController: NavHostController) {
     val viewmodel = hiltViewModel<QrAddressViewModel>()
+    val address = viewmodel.address!!
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
             TopBar(
                 navController = navController,
                 centerText = stringResource(id = R.string.qr_address_screen_title),
-                startIcon = R.drawable.caret_left
+                startIcon = R.drawable.caret_left,
+                endIcon = R.drawable.qr_share,
+                onEndIconClick = {
+                    val qrBitmap = generateQrBitmap(address)
+                    context.share(qrBitmap)
+                }
             )
         },
     ) {
@@ -44,7 +54,6 @@ internal fun QrAddressScreen(navController: NavHostController) {
             Alignment.Center
         ) {
             val screenWidth = LocalConfiguration.current.screenWidthDp
-            val address = viewmodel.address!!
             val qrBoxSize = ((screenWidth * .8).coerceAtMost(300.0)).dp
 
             Text(

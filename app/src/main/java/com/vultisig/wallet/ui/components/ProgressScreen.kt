@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -19,11 +20,15 @@ import androidx.navigation.compose.rememberNavController
 internal fun ProgressScreen(
     navController: NavController,
     title: String,
+    @DrawableRes endIcon: Int? = null,
+    onEndIconClick: () -> Unit = {},
     progress: Float,
     content: @Composable BoxScope.() -> Unit
 ) {
     UiBarContainer(
         navController = navController,
+        endIcon = endIcon,
+        onEndIconClick = onEndIconClick,
         title = title
     ) {
         Column(

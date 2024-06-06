@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +24,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.presenter.common.generateQrBitmap
+import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.presenter.keygen.KeygenFlowState
 import com.vultisig.wallet.presenter.keygen.KeygenFlowViewModel
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
@@ -40,8 +41,6 @@ internal fun KeygenPeerDiscovery(
     vaultId: String,
     viewModel: KeygenFlowViewModel,
 ) {
-    val uriHandler = LocalUriHandler.current
-    val link = stringResource(id = R.string.link_docs_create_vault)
 
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
@@ -50,9 +49,11 @@ internal fun KeygenPeerDiscovery(
 
     val networkPromptOption = viewModel.networkOption.value
 
-    val context = LocalContext.current.applicationContext
+    val context = LocalContext.current
+    val applicationContext = context.applicationContext
+
     LaunchedEffect(Unit) {
-        viewModel.setData(vaultId, context)
+        viewModel.setData(vaultId, applicationContext)
     }
     DisposableEffect(Unit) {
         onDispose {
@@ -66,10 +67,11 @@ internal fun KeygenPeerDiscovery(
         participants = participants,
         keygenPayloadState = keygenPayloadState,
         networkPromptOption = networkPromptOption,
-        onOpenHelp = {
-            uriHandler.openUri(link)
+        onQrAddressClick = {
+            val qrBitmap = generateQrBitmap(keygenPayloadState)
+            context.share(qrBitmap)
         },
-        onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
+        onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
         onStopParticipantDiscovery = {
@@ -86,7 +88,7 @@ internal fun KeygenPeerDiscoveryScreen(
     participants: List<String>,
     keygenPayloadState: String,
     networkPromptOption: NetworkPromptOption,
-    onOpenHelp: () -> Unit = {},
+    onQrAddressClick: () -> Unit = {},
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
@@ -97,8 +99,8 @@ internal fun KeygenPeerDiscoveryScreen(
     UiBarContainer(
         navController = navController,
         title = stringResource(R.string.keygen_peer_discovery_keygen),
-        endIcon = R.drawable.question,
-        onEndIconClick = onOpenHelp,
+        endIcon = R.drawable.qr_share,
+        onEndIconClick = onQrAddressClick
     ) {
         Box(
             modifier = Modifier.fillMaxSize()

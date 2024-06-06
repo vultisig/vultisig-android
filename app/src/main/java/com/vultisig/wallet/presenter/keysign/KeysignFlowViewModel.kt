@@ -27,6 +27,7 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
 import com.vultisig.wallet.tss.TssKeyType
+import com.vultisig.wallet.ui.models.AddressProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -58,6 +59,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
+    private val addressProvider: AddressProvider
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -137,6 +139,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     useVultisigRelay = vultisigRelay.IsRelayEnabled
                 )
             ).toByteArray().zipZlibAndBase64Encode()
+        addressProvider.update(_keysignMessage.value)
         if (!vultisigRelay.IsRelayEnabled) {
             startMediatorService(context)
         } else {
@@ -233,6 +236,10 @@ internal class KeysignFlowViewModel @Inject constructor(
 
     fun stopParticipantDiscovery() {
         _participantDiscovery?.stop()
+    }
+
+    fun resetQrAddress(){
+        addressProvider.clean()
     }
 
     @OptIn(DelicateCoroutinesApi::class)

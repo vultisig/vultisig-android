@@ -82,37 +82,8 @@ internal fun rememberQRBitmapPainter(
         if (bitmap != null) return@LaunchedEffect
 
         launch(Dispatchers.IO) {
-            val qrCodeWriter = QRCodeWriter()
-            val hintMap = mapOf(EncodeHintType.MARGIN to 0)
             bitmap = try {
-                val bitmapMatrix = qrCodeWriter.encode(
-                    qrCodeContent,
-                    BarcodeFormat.QR_CODE,
-                    0,
-                    0,
-                    hintMap
-                )
-
-                val matrixWidth = bitmapMatrix.width
-                val matrixHeight = bitmapMatrix.height
-
-                val newBitmap = Bitmap.createBitmap(
-                    matrixWidth,
-                    matrixHeight,
-                    Bitmap.Config.ARGB_8888,
-                )
-
-                for (x in 0 until matrixWidth) {
-                    for (y in 0 until matrixHeight) {
-                        val shouldColorPixel = bitmapMatrix?.get(x, y) ?: false
-                        val pixelColor =
-                            if (shouldColorPixel) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
-
-                        newBitmap.setPixel(x, y, pixelColor)
-                    }
-                }
-
-                newBitmap
+                generateQrBitmap(qrCodeContent)
             } catch (ex: WriterException) {
                 null
             }
@@ -133,6 +104,40 @@ internal fun rememberQRBitmapPainter(
             filterQuality = FilterQuality.None
         )
     }
+}
+ internal fun generateQrBitmap(
+    qrCodeContent: String,
+): Bitmap {
+    val hintMap = mapOf(EncodeHintType.MARGIN to 0)
+
+    val qrCodeWriter = QRCodeWriter()
+    val bitmapMatrix = qrCodeWriter.encode(
+        qrCodeContent,
+        BarcodeFormat.QR_CODE,
+        0,
+        0,
+        hintMap
+    )
+
+    val matrixWidth = bitmapMatrix.width
+    val matrixHeight = bitmapMatrix.height
+
+    val bitmap = Bitmap.createBitmap(
+        matrixWidth,
+        matrixHeight,
+        Bitmap.Config.ARGB_8888,
+    )
+
+    for (x in 0 until matrixWidth) {
+        for (y in 0 until matrixHeight) {
+            val shouldColorPixel = bitmapMatrix?.get(x, y) ?: false
+            val pixelColor =
+                if (shouldColorPixel) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+
+            bitmap.setPixel(x, y, pixelColor)
+        }
+    }
+    return bitmap
 }
 
 @Preview
