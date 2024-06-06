@@ -161,7 +161,7 @@ internal fun VerifyTransactionScreen(
 }
 
 @Composable
-private fun AddressField(
+internal fun AddressField(
     title: String,
     address: String,
 ) {
@@ -187,7 +187,7 @@ private fun AddressField(
 }
 
 @Composable
-private fun OtherField(
+internal fun OtherField(
     title: String,
     value: String,
     divider: Boolean = true,
@@ -223,7 +223,7 @@ private fun OtherField(
 }
 
 @Composable
-private fun CheckField(
+internal fun CheckField(
     title: String,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,

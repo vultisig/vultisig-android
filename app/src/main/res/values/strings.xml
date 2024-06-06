@@ -212,4 +212,8 @@
     <string name="swap_form_gas_title">Gas (auto)</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="swap_screen_estimated_time_instant">Instant</string>
+    <string name="verify_swap_screen_estimated_fees">Estimated Fees</string>
+    <string name="verify_swap_screen_estimated_time">Estimated Time</string>
+    <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
+    <string name="verify_swap_consent_amount">The swap amount is correct</string>
 </resources>
