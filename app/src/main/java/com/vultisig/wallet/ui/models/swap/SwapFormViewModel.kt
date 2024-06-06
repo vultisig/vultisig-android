@@ -22,6 +22,8 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -49,6 +51,7 @@ internal data class SwapFormUiModel(
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class SwapFormViewModel @Inject constructor(
+    private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
@@ -78,7 +81,15 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     fun swap() {
+        // TODO verify swap info
 
+        viewModelScope.launch {
+            sendNavigator.navigate(
+                SendDst.VerifyTransaction(
+                    transactionId = "transactionId",
+                )
+            )
+        }
     }
 
     fun selectSrcToken(model: TokenBalanceUiModel) {
