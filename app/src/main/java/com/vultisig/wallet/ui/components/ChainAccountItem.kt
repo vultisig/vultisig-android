@@ -66,7 +66,7 @@ internal fun ChainAccountItem(
                         .fillMaxWidth(),
                 ) {
                     Text(
-                        text =account.chainName,
+                        text = account.chainName,
                         style = Theme.montserrat.subtitle1,
                         color = Theme.colors.neutral100,
                         modifier = Modifier
@@ -146,7 +146,6 @@ internal fun ChainAccountItem(
                 UiSpacer(14.dp)
 
                 Text(
-                    text =  MiddleEllipsisText(account.address),
                     text = MiddleEllipsisText(account.address),
                     style = Theme.montserrat.body1,
                     color = Theme.colors.turquoise600Main,
