@@ -105,7 +105,7 @@ internal fun Setup(
             Image(
                 painter = painterResource(id = state.tabs[state.tabIndex].drawableResId),
                 contentDescription = "devices",
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
                 modifier = Modifier.weight(1f).padding(16.dp)
             )
 
