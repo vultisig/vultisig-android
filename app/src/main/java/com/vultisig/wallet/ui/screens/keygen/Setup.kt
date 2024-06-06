@@ -105,8 +105,8 @@ internal fun Setup(
             Image(
                 painter = painterResource(id = state.tabs[state.tabIndex].drawableResId),
                 contentDescription = "devices",
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier.weight(1f).width(state.tabs[state.tabIndex].imageWidth)
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.weight(1f).padding(16.dp)
             )
 
             DevicesOnSameNetworkHint(

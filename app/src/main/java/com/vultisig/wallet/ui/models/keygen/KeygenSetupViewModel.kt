@@ -19,20 +19,16 @@ internal data class KeygenSetupUiModel(
             title = R.string.s_of_s_vault.asUiText("2", "2"),
             content = R.string.setup_device_of_vault.asUiText("2"),
             drawableResId = R.drawable.devices_2_2,
-            imageWidth = 152.dp
-
         ),
         KeygenSetupTabUiModel(
             title = R.string.s_of_s_vault.asUiText("2", "3"),
             content = R.string.setup_device_of_vault.asUiText("3"),
             drawableResId = R.drawable.devices_2_3,
-            imageWidth = 218.dp
         ),
         KeygenSetupTabUiModel(
             title = R.string.s_of_s_vault.asUiText("M", "N"),
             content = R.string.setup_device_of_vault.asUiText("N"),
             drawableResId = R.drawable.devices_m_n,
-            imageWidth = 275.dp
         ),
     ),
 )
@@ -40,7 +36,6 @@ internal data class KeygenSetupUiModel(
 internal data class KeygenSetupTabUiModel(
     val title: UiText,
     val content: UiText,
-    val imageWidth: Dp,
     @DrawableRes val drawableResId: Int,
 )
 
