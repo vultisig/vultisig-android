@@ -162,13 +162,13 @@ private fun PreviewChainAccountItem() {
         AccountUiModel(
             chainName = "Bitcoin",
             logo = R.drawable.bitcoin,
-            address = "123abc456bca123abc456bca123abc456bca123abc456bca123abc456bca123abc456bca",
+            address = "123abc456bca123abc456bca123abc456bca",
             nativeTokenAmount = "0.01",
             fiatAmount = "1000$",
             assetsSize = 4,
             model = Address(
                 chain = Chain.bitcoin,
-                address = "123abc456bca123abc456bca123abc456bca123abc456bca123abc456bca123abc456bca",
+                address = "123abc456bca123abc456bca123abc456bca",
                 accounts = emptyList()
             )
         )
