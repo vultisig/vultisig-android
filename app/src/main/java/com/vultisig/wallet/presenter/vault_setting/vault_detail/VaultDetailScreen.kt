@@ -54,7 +54,7 @@ fun VaultDetailScreen(navHostController: NavHostController) {
             VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_vault_name), uiModel.name)
             VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_ecdsa), uiModel.pubKeyECDSA)
             VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_eddsa), uiModel.pubKeyEDDSA)
-            Text(text = "2 of 2 Vault",
+            Text(text = "2 of ${uiModel.deviceList.count()} Vault",
 
                 color = Theme.colors.neutral100,
                 modifier = Modifier.fillMaxWidth(),
