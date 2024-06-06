@@ -212,4 +212,7 @@
     <string name="swap_form_gas_title">Gas (auto)</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="swap_screen_estimated_time_instant">Instant</string>
+    <string name="settings_screen_vault_settings">Vault Settings</string>
+    <string name="home_scree_done">done</string>
+    <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
 </resources>

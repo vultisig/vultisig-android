@@ -13,11 +13,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -44,12 +48,14 @@ import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun VaultAccountsScreen(
     vaultId: String,
     navHostController: NavHostController,
     viewModel: VaultAccountsViewModel = hiltViewModel(),
+    isRearrangeMode: Boolean,
 ) {
     val state = viewModel.uiState.collectAsState().value
 
@@ -65,6 +71,7 @@ internal fun VaultAccountsScreen(
 
     VaultAccountsScreen(
         state = state,
+        isRearrangeMode = isRearrangeMode,
         onRefresh = viewModel::refreshData,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
@@ -83,10 +90,12 @@ internal fun VaultAccountsScreen(
     )
 }
 
+
 @Composable
 private fun VaultAccountsScreen(
     state: VaultAccountsUiModel,
     modifier: Modifier = Modifier,
+    isRearrangeMode: Boolean,
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onRefresh: () -> Unit = {},
@@ -95,6 +104,11 @@ private fun VaultAccountsScreen(
     onChooseChains: () -> Unit = {},
     onMove: (Int, Int) -> Unit = { _, _ -> },
 ) {
+    val snackBarHostState = remember {
+        SnackbarHostState()
+    }
+    val coroutineScope = rememberCoroutineScope()
+
     BoxWithSwipeRefresh(
         onSwipe = onRefresh,
         isRefreshing = state.isRefreshing,
@@ -107,6 +121,7 @@ private fun VaultAccountsScreen(
             VerticalReorderList(
                 data = state.accounts,
                 onMove = onMove,
+                isReorderEnabled = isRearrangeMode,
                 key = { it.chainName },
                 contentPadding = PaddingValues(all = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -185,6 +200,12 @@ private fun VaultAccountsScreen(
                     onClick = {
                         onAccountClick(account)
                     },
+                    isRearrangeMode = isRearrangeMode,
+                    onCopy = {
+                        coroutineScope.launch {
+                            snackBarHostState.showSnackbar(it)
+                        }
+                    }
                 )
             }
 
@@ -207,6 +228,8 @@ private fun VaultAccountsScreen(
                         .padding(all = 10.dp)
                 )
             }
+
+            SnackbarHost(snackBarHostState, modifier = Modifier.align(Alignment.BottomCenter))
         }
     }
 }
@@ -215,6 +238,7 @@ private fun VaultAccountsScreen(
 @Composable
 private fun VaultAccountsScreenPreview() {
     VaultAccountsScreen(
+        isRearrangeMode = false,
         state = VaultAccountsUiModel(
             vaultName = "Vault Name",
             totalFiatValue = "$1000",

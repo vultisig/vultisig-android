@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.ClickOnce
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.models.HomeUiModel
 import com.vultisig.wallet.ui.models.HomeViewModel
@@ -55,6 +56,7 @@ internal fun HomeScreen(
         onEdit = viewModel::edit,
         onToggleVaults = viewModel::toggleVaults,
         onSelectVault = viewModel::selectVault,
+        isEditMode = viewModel.isEditMode
     )
 }
 
@@ -65,6 +67,7 @@ private fun HomeScreen(
     state: HomeUiModel,
     onOpenSettings: () -> Unit = {},
     onEdit: () -> Unit = {},
+    isEditMode:Boolean,
     onToggleVaults: () -> Unit = {},
     onSelectVault: (vaultId: String) -> Unit = {}
 ) {
@@ -124,13 +127,22 @@ private fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = ClickOnce(onEdit)) {
+                    if (isEditMode)
+                        Text(
+                            text = stringResource(id = R.string.home_scree_done),
+                            style = Theme.menlo.subtitle1,
+                            fontWeight = FontWeight.Bold,
+                            color = Theme.colors.neutral0,
+                            modifier = Modifier.clickOnce(onClick = onEdit)
+                        )
+                    else
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_edit_square_24),
                             contentDescription = "edit",
                             tint = Theme.colors.neutral0,
+                            modifier = Modifier.clickOnce(onClick = onEdit)
                         )
-                    }
+
                 }
             )
         },
@@ -142,6 +154,7 @@ private fun HomeScreen(
                 VaultAccountsScreen(
                     navHostController = navController,
                     vaultId = state.selectedVaultId,
+                    isRearrangeMode = state.isChainRearrangeMode
                 )
             }
 
@@ -164,6 +177,7 @@ private fun HomeScreen(
 private fun HomeScreenPreview() {
     HomeScreen(
         navController = rememberNavController(),
+        isEditMode = false,
         state = HomeUiModel(
             showVaultList = false,
             vaultName = "Vault Name",

@@ -122,7 +122,12 @@ internal sealed class Destination(
         }
     }
 
-    data object Settings : Destination(route = "settings")
+    data class Settings(val vaultId: String) : Destination(route = "settings/$vaultId"){
+        companion object {
+            const val ARG_VAULT_ID = "vault_id"
+            const val STATIC_ROUTE = "settings/{$ARG_VAULT_ID}"
+        }
+    }
     data object DefaultChainSetting : Destination(route = "settings/default_chains")
     data object FAQSetting : Destination(route = "settings/faq")
     data object VultisigToken : Destination(route = "settings/vultisig_token")
