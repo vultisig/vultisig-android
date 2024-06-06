@@ -19,7 +19,7 @@ internal data class KeygenSetupUiModel(
             title = R.string.s_of_s_vault.asUiText("2", "2"),
             content = R.string.setup_device_of_vault.asUiText("2"),
             drawableResId = R.drawable.devices_2_2,
-            imageWidth = 306.dp
+            imageWidth = 152.dp
 
         ),
         KeygenSetupTabUiModel(
