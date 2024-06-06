@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -54,7 +55,7 @@ fun VaultDetailScreen(navHostController: NavHostController) {
             VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_vault_name), uiModel.name)
             VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_ecdsa), uiModel.pubKeyECDSA)
             VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_eddsa), uiModel.pubKeyEDDSA)
-            Text(text = "2 of ${uiModel.deviceList.count()} Vault",
+            Text(text = "${Utils.getThreshold(uiModel.deviceList.size)} of ${uiModel.deviceList.count()} Vault",
 
                 color = Theme.colors.neutral100,
                 modifier = Modifier.fillMaxWidth(),
