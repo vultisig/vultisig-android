@@ -141,7 +141,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
         this.selection.value = listOf(this.vault.localPartyID)
         viewModelScope.launch {
-            selection.asFlow().collect() { newList ->
+            selection.asFlow().collect { newList ->
                 when (vaultSetupType) {
                     VaultSetupType.TWO_OF_TWO -> {
                         if (newList.size == 2) {

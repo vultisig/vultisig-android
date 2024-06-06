@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -51,14 +52,28 @@ fun VaultDetailScreen(navHostController: NavHostController) {
                 .padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_vault_name), uiModel.name)
-            VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_ecdsa), uiModel.pubKeyECDSA)
-            VaultDetailScreenItem(stringResource(R.string.vault_detail_screen_eddsa), uiModel.pubKeyEDDSA)
-            Text(text = "2 of 2 Vault",
-
+            VaultDetailScreenItem(
+                stringResource(R.string.vault_detail_screen_vault_name),
+                uiModel.name
+            )
+            VaultDetailScreenItem(
+                stringResource(R.string.vault_detail_screen_ecdsa),
+                uiModel.pubKeyECDSA
+            )
+            VaultDetailScreenItem(
+                stringResource(R.string.vault_detail_screen_eddsa),
+                uiModel.pubKeyEDDSA
+            )
+            Text(
+                text = String.format(
+                    stringResource(id = R.string.s_of_s_vault),
+                    Utils.getThreshold(uiModel.deviceList.size),
+                    uiModel.deviceList.size.toString()
+                ),
                 color = Theme.colors.neutral100,
                 modifier = Modifier.fillMaxWidth(),
-                style = Theme.montserrat.subtitle2.copy(textAlign = TextAlign.Center),)
+                style = Theme.montserrat.subtitle2.copy(textAlign = TextAlign.Center),
+            )
 
             uiModel.deviceList.map {
                 VaultDetailScreenItem(it)
