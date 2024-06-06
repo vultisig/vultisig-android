@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
-import kotlinx.coroutines.flow.first
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -44,7 +43,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
         TokenStandard.UTXO -> {
             val gas = blockChairApi.getBlockchairStats(chain)
-            val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+            val nativeToken = tokenRepository.getNativeToken(chain.id)
             TokenValue(
                 gas.multiply(BigInteger("3")).divide(BigInteger("2")),
                 chain.feeUnit,
@@ -54,7 +53,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
         else -> when (chain) {
             Chain.thorChain -> {
-                val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = thorChainApi.getTHORChainNativeTransactionFee(),
                     unit = chain.feeUnit,
@@ -63,7 +62,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
 
             Chain.mayaChain -> {
-                val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = MayaChainHelper.MayaChainGasUnit.toBigInteger(),
                     unit = chain.feeUnit,
@@ -72,7 +71,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
 
             Chain.gaiaChain, Chain.kujira -> {
-                val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = 7500.toBigInteger(),
                     unit = chain.feeUnit,
@@ -81,7 +80,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
 
             Chain.solana -> {
-                val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
                 val fee = BigInteger(solanaApi.getHighPriorityFee(address))
                 TokenValue(
                     value = fee,
@@ -91,7 +90,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             }
 
             Chain.polkadot -> {
-                val nativeToken = tokenRepository.getNativeToken(chain.id).first()
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = 0.toBigInteger(),
                     unit = chain.feeUnit,

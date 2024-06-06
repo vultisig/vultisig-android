@@ -11,7 +11,6 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.KeyShare
 import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -134,7 +133,6 @@ internal class VaultRepositoryImpl @Inject constructor(
             coins = vault.coins.map {
                 val supportedCoin = tokenRepository
                     .getToken(it.id)
-                    .firstOrNull()
                     ?: throw IllegalStateException("Unsupported coin ${it.id}")
 
                 Coin(

@@ -63,7 +63,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                             ?: error("Account number is null. Does the address exist?")
                     ),
                     sequence = BigInteger(account.sequence ?: "0"),
-                    fee = thorChainApi.getTHORChainNativeTransactionFee(),
+                    fee = gasFee.value,
                 )
             )
         }
@@ -155,13 +155,10 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
     }
 
-    fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {
+    private fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {
         // Let's make sure we pay at least 1GWei as priority fee
         val oneGwei = 1000000000.toBigInteger()
-        if (priorityFee > oneGwei) {
-            return priorityFee
-        }
-        return oneGwei
+        return priorityFee.coerceAtLeast(oneGwei)
     }
 
 }

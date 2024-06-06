@@ -113,4 +113,11 @@ internal interface RepositoriesModule {
     fun bindVaultOrderRepository(
         impl: VaultOrderRepository
     ): OrderRepository<VaultOrderEntity>
+
+    @Binds
+    @Singleton
+    fun bindSwapQuoteRepository(
+        impl: SwapQuoteRepositoryImpl
+    ): SwapQuoteRepository
+
 }

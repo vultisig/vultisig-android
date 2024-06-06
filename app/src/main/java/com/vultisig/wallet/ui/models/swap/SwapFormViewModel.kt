@@ -2,12 +2,24 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +27,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -25,15 +41,24 @@ internal data class SwapFormUiModel(
     val selectedDstToken: TokenBalanceUiModel? = null,
     val availableTokens: List<TokenBalanceUiModel> = emptyList(),
     val estimatedDstTokenValue: String = "",
+    val gas: String = "",
     val fee: String = "",
-    val estimatedTime: String = "",
+    val estimatedTime: UiText = UiText.DynamicString(""),
 )
 
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class SwapFormViewModel @Inject constructor(
-    private val accountsRepository: AccountsRepository,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
+    private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
+    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+    private val fiatValueToString: FiatValueToStringMapper,
+
+    private val appCurrencyRepository: AppCurrencyRepository,
+    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
+    private val accountsRepository: AccountsRepository,
+    private val gasFeeRepository: GasFeeRepository,
+    private val swapQuoteRepository: SwapQuoteRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
@@ -43,8 +68,13 @@ internal class SwapFormViewModel @Inject constructor(
     private val selectedSrc = MutableStateFlow<SendSrc?>(null)
     private val selectedDst = MutableStateFlow<SendSrc?>(null)
 
+    private val gasFee = MutableStateFlow<TokenValue?>(null)
+
     init {
         collectSelectedAccounts()
+
+        calculateGas()
+        calculateFees()
     }
 
     fun swap() {
@@ -120,6 +150,81 @@ internal class SwapFormViewModel @Inject constructor(
                     )
                 }
             }.collect()
+        }
+    }
+
+    private fun calculateGas() {
+        viewModelScope.launch {
+            selectedSrc
+                .map { it?.address }
+                .filterNotNull()
+                .map {
+                    gasFeeRepository.getGasFee(it.chain, it.address)
+                }
+                .catch {
+                    // TODO handle error when querying gas fee
+                    Timber.e(it)
+                }
+                .collect { gasFee ->
+                    this@SwapFormViewModel.gasFee.value = gasFee
+
+                    uiState.update {
+                        it.copy(gas = mapTokenValueToString(gasFee))
+                    }
+                }
+        }
+    }
+
+    private fun calculateFees() {
+        viewModelScope.launch {
+            combine(
+                selectedSrc.filterNotNull(),
+                selectedDst.filterNotNull(),
+            ) { src, dst -> src to dst }
+                .distinctUntilChanged()
+                .combine(srcAmountState.textAsFlow()) { addrs, amount ->
+                    addrs to amount.toString()
+                }
+                .collect { (addrs, amountText) ->
+                    val (src, dst) = addrs
+
+                    val srcTokenValue = amountText.toBigDecimalOrNull()
+                        ?.movePointRight(src.account.token.decimal)
+                        ?.toBigInteger()
+
+                    try {
+                        val quote = swapQuoteRepository.getSwapQuote(
+                            dstAddress = dst.address.address,
+                            srcToken = src.account.token,
+                            dstToken = dst.account.token,
+                            // todo currently ?: option is to get quotes
+                            //  if user didn't input any value. can we do it better?
+                            tokenValue = srcTokenValue ?: 1_000_000_000.toBigInteger(),
+                        )
+
+                        val currency = appCurrencyRepository.currency.first()
+                        val fiatFees =
+                            convertTokenValueToFiat(dst.account.token, quote.fees, currency)
+
+                        // todo convert seconds to human readable format
+                        val estimatedTime = quote.estimatedTime?.toString()?.let {
+                            UiText.DynamicString(it)
+                        } ?: R.string.swap_screen_estimated_time_instant.asUiText()
+
+                        uiState.update {
+                            it.copy(
+                                estimatedDstTokenValue = mapTokenValueToDecimalUiString(
+                                    quote.expectedDstValue
+                                ),
+                                fee = fiatValueToString.map(fiatFees),
+                                estimatedTime = estimatedTime,
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // TODO handle error
+                        Timber.e(e)
+                    }
+                }
         }
     }
 
