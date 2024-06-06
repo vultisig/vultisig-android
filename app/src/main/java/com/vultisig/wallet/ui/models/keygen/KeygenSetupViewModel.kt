@@ -1,8 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
 import androidx.annotation.DrawableRes
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
