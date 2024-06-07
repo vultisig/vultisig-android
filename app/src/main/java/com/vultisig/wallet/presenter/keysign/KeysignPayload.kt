@@ -48,7 +48,7 @@ internal data class KeysignPayload(
     val vaultPublicKeyECDSA: String,
     @SerializedName("vaultLocalPartyID")
     val vaultLocalPartyID: String,
-)  {
+) {
     fun getKeysignMessages(vault: Vault): List<String> {
         if (swapPayload != null) {
             return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode).getPreSignedImageHash(
@@ -132,14 +132,18 @@ internal class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
         jsonObject.add("utxos", context?.serialize(src.utxos))
         jsonObject.addProperty("memo", src.memo ?: "")
         jsonObject.addProperty("vaultLocalPartyID", src.vaultLocalPartyID)
+        if (src.swapPayload != null) {
+            jsonObject.add("swapPayload", context?.serialize(src.swapPayload))
+            val spObject = JsonObject()
+            val wrapperObject = JsonObject()
+            wrapperObject.add("_0", context?.serialize(src.swapPayload))
+            spObject.add("thorchain", wrapperObject)
 
-        val spObject = JsonObject()
-        val wrapperObject = JsonObject()
-        wrapperObject.add("_0", context?.serialize(src.swapPayload))
-        spObject.add("thorchain", wrapperObject)
-
-        jsonObject.add("swapPayload", spObject)
-        jsonObject.add("approvePayload", context?.serialize(src.approvePayload))
+            jsonObject.add("swapPayload", spObject)
+        }
+        if (src.approvePayload != null) {
+            jsonObject.add("approvePayload", context?.serialize(src.approvePayload))
+        }
         return jsonObject
     }
 }
@@ -164,12 +168,20 @@ internal class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
             jsonObject.get("utxos"), utxosType
         )
         val memo = jsonObject.get("memo")?.asString
-        val swapPayload = context.deserialize<THORChainSwapPayload>(
-            jsonObject.get("swapPayload"), THORChainSwapPayload::class.java
-        )
-        val approvePayload = context.deserialize<ERC20ApprovePayload>(
-            jsonObject.get("approvePayload"), ERC20ApprovePayload::class.java
-        )
+        val swapPayloadJsonObject = jsonObject.get("swapPayload")
+        var swapPayload: THORChainSwapPayload? = null
+        if (swapPayloadJsonObject != null) {
+            swapPayload = context.deserialize<THORChainSwapPayload>(
+                jsonObject.get("swapPayload"), THORChainSwapPayload::class.java
+            )
+        }
+        var approvePayload: ERC20ApprovePayload? = null
+        val approvePayloadJsonObject = jsonObject.get("approvePayload")
+        if (approvePayloadJsonObject != null) {
+            approvePayload = context.deserialize<ERC20ApprovePayload>(
+                jsonObject.get("approvePayload"), ERC20ApprovePayload::class.java
+            )
+        }
         return KeysignPayload(
             coin = coin,
             toAddress = toAddress,
