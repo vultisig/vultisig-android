@@ -19,15 +19,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,7 +58,7 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun ChainTokensScreen(
@@ -88,15 +93,21 @@ private fun ChainTokensScreen(
     onSelectTokens: () -> Unit = {},
 ) {
     val appColor = Theme.colors
-    val dimens = MaterialTheme.dimens
     val buyVltiButtonVisible = false
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember {
+        SnackbarHostState()
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(appColor.oxfordBlue800)
     ) {
-        Scaffold(
+        Scaffold(snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
             topBar = {
                 TopBar(
                     navController = navController,
@@ -109,7 +120,7 @@ private fun ChainTokensScreen(
             bottomBar = {
                 if (buyVltiButtonVisible) {
                     MultiColorButton(
-                        minHeight = dimens.minHeightButton,
+                        minHeight = 44.dp,
                         backgroundColor = appColor.turquoise800,
                         textColor = appColor.oxfordBlue800,
                         iconColor = appColor.turquoise800,
@@ -117,9 +128,9 @@ private fun ChainTokensScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
-                                start = dimens.marginMedium,
-                                end = dimens.marginMedium,
-                                bottom = dimens.marginMedium,
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 16.dp,
                             ),
                         centerContent = {
                             Row(
@@ -129,7 +140,7 @@ private fun ChainTokensScreen(
                                 Icon(
                                     painter = painterResource(id = R.drawable.logo_button),
                                     contentDescription = null,
-                                    modifier = Modifier.width(dimens.medium1),
+                                    modifier = Modifier.width(16.dp),
                                     tint = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
@@ -201,6 +212,15 @@ private fun ChainTokensScreen(
                                 chainLogo = uiModel.chainLogo,
                                 totalBalance = uiModel.totalBalance,
                                 explorerURL = uiModel.explorerURL,
+                                onCopy = { message ->
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            context.getString(
+                                                R.string.chain_token_screen_address_copied, message
+                                            )
+                                        )
+                                    }
+                                },
                                 onQrBtnClick = {
                                     navController.navigate(Destination.QrAddressScreen(uiModel.chainAddress).route)
                                 }
@@ -242,6 +262,7 @@ private fun ChainAccountInfo(
     totalBalance: String?,
     explorerURL: String,
     onQrBtnClick: () -> Unit = {},
+    onCopy: (String) -> Unit
 ) {
     val appColor = Theme.colors
     val uriHandler = LocalUriHandler.current
@@ -279,6 +300,7 @@ private fun ChainAccountInfo(
                 size = 20.dp,
                 onClick = {
                     clipboard.setText(AnnotatedString(address))
+                    onCopy(address)
                 }
             )
 
