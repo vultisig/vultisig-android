@@ -49,14 +49,14 @@ internal class THORCHainHelper(
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.THORChain
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
-            PublicKey(keysignPayload.vaultPublicKeyECDSA.hexToByteArray(), PublicKeyType.SECP256K1)
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val inputData = input.apply {
             this.publicKey = ByteString.copyFrom(publicKey.data())
             this.accountNumber = thorchainData.accountNumber.toLong()
             this.sequence = thorchainData.sequence.toLong()
             this.mode = Cosmos.BroadcastMode.SYNC
             this.fee = Cosmos.Fee.newBuilder().apply {
-                this.gas = 200000
+                this.gas = THORChainGasUnit
             }.build()
         }.build()
         return inputData.toByteArray()
