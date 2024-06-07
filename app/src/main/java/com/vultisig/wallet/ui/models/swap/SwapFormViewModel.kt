@@ -9,11 +9,15 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -36,6 +40,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
+import java.util.UUID
 import javax.inject.Inject
 
 internal data class SwapFormUiModel(
@@ -57,16 +63,24 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
 
+    private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val accountsRepository: AccountsRepository,
     private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
+    private val swapTransactionRepository: SwapTransactionRepository,
+    private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
 
     val srcAmountState = TextFieldState()
+
+    private var vaultId: String? = null
+
+    private val srcAmount: BigDecimal?
+        get() = srcAmountState.text.toString().toBigDecimalOrNull()
 
     private val selectedSrc = MutableStateFlow<SendSrc?>(null)
     private val selectedDst = MutableStateFlow<SendSrc?>(null)
@@ -82,14 +96,75 @@ internal class SwapFormViewModel @Inject constructor(
 
     fun swap() {
         // TODO verify swap info
+        val vaultId = vaultId ?: return
+        val selectedSrc = selectedSrc.value ?: return
+        val selectedDst = selectedDst.value ?: return
+
+        val gasFee = gasFee.value ?: return
+
+        val srcToken = selectedSrc.account.token
+        val dstToken = selectedDst.account.token
+
+        val srcAddress = selectedSrc.address.address
+
+        // TODO reuse this with calculateFees
+        val srcTokenValue = srcAmountState.text.toString()
+            .toBigDecimalOrNull()
+            ?.movePointRight(selectedSrc.account.token.decimal)
+            ?.toBigInteger()
+            ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
+            ?: return
+
 
         viewModelScope.launch {
+            // TODO cache last quote
+            val quote = swapQuoteRepository.getSwapQuote(
+                dstAddress = selectedDst.address.address,
+                srcToken = srcToken,
+                dstToken = dstToken,
+                tokenValue = srcTokenValue,
+            )
+
+            val dstTokenValue = quote.expectedDstValue
+
+            val specificAndUtxo = blockChainSpecificRepository.getSpecific(
+                srcToken.chain,
+                srcAddress,
+                srcToken,
+                gasFee,
+                isSwap = true,
+            )
+
+            val transaction = SwapTransaction(
+                id = UUID.randomUUID().toString(),
+                vaultId = vaultId,
+                srcToken = srcToken,
+                srcTokenValue = srcTokenValue,
+                srcAddress = srcAddress,
+                dstToken = dstToken,
+                dstAddress = quote.routerAddress ?: quote.inboundAddress ?: srcAddress,
+                expectedDstTokenValue = dstTokenValue,
+                blockChainSpecific = specificAndUtxo,
+                vaultAddress = quote.inboundAddress ?: srcAddress,
+                routerAddress = quote.routerAddress,
+            )
+
+            swapTransactionRepository.addTransaction(transaction)
+
             sendNavigator.navigate(
-                SendDst.VerifyTransaction(
-                    transactionId = "transactionId",
+                SendDst.Keysign(
+                    transactionId = transaction.id,
                 )
             )
         }
+
+//        viewModelScope.launch {
+//            sendNavigator.navigate(
+//                SendDst.VerifyTransaction(
+//                    transactionId = "transactionId",
+//                )
+//            )
+//        }
     }
 
     fun selectSrcToken(model: TokenBalanceUiModel) {
@@ -107,6 +182,7 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     fun loadData(vaultId: String, chainId: String?) {
+        this.vaultId = vaultId
         loadTokens(vaultId, chainId)
     }
 
@@ -194,23 +270,33 @@ internal class SwapFormViewModel @Inject constructor(
             ) { src, dst -> src to dst }
                 .distinctUntilChanged()
                 .combine(srcAmountState.textAsFlow()) { addrs, amount ->
-                    addrs to amount.toString()
+                    addrs to srcAmount
                 }
-                .collect { (addrs, amountText) ->
+                .collect { (addrs, amount) ->
                     val (src, dst) = addrs
 
-                    val srcTokenValue = amountText.toBigDecimalOrNull()
+                    val srcToken = src.account.token
+
+                    val srcTokenValue = amount
                         ?.movePointRight(src.account.token.decimal)
                         ?.toBigInteger()
 
                     try {
+                        val tokenValue = srcTokenValue?.let {
+                            convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
+                            // todo currently ?: option is to get quotes
+                            //  if user didn't input any value. can we do it better?
+                        } ?: TokenValue(
+                            1_000_000_000.toBigInteger(),
+                            srcToken.ticker,
+                            srcToken.decimal
+                        )
+
                         val quote = swapQuoteRepository.getSwapQuote(
                             dstAddress = dst.address.address,
                             srcToken = src.account.token,
                             dstToken = dst.account.token,
-                            // todo currently ?: option is to get quotes
-                            //  if user didn't input any value. can we do it better?
-                            tokenValue = srcTokenValue ?: 1_000_000_000.toBigInteger(),
+                            tokenValue = tokenValue,
                         )
 
                         val currency = appCurrencyRepository.currency.first()

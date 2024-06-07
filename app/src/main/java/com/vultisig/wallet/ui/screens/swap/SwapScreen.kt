@@ -122,7 +122,7 @@ internal fun SwapScreen(
 
                 val keysignShareViewModel: KeysignShareViewModel =
                     hiltViewModel(context as MainActivity)
-                keysignShareViewModel.loadTransaction(transactionId)
+                keysignShareViewModel.loadSwapTransaction(transactionId)
 
                 KeysignFlowView(navHostController)
             }

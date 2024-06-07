@@ -29,6 +29,7 @@ internal interface BlockChainSpecificRepository {
         address: String,
         token: Coin,
         gasFee: TokenValue,
+        isSwap: Boolean,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -48,6 +49,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         address: String,
         token: Coin,
         gasFee: TokenValue,
+        isSwap: Boolean,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.mayaChain) {
@@ -71,8 +73,11 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
             val gasLimit = BigInteger(
-                if (token.isNativeToken) "23000"
-                else "120000"
+                when {
+                    isSwap -> "600000"
+                    token.isNativeToken -> "23000"
+                    else -> "120000"
+                }
             )
 
             var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
