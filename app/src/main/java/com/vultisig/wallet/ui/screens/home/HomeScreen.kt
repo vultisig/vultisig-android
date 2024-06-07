@@ -67,7 +67,7 @@ private fun HomeScreen(
     state: HomeUiModel,
     onOpenSettings: () -> Unit = {},
     onEdit: () -> Unit = {},
-    isEditMode:Boolean,
+    isEditMode: Boolean,
     onToggleVaults: () -> Unit = {},
     onSelectVault: (vaultId: String) -> Unit = {}
 ) {

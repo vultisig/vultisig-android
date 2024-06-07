@@ -80,8 +80,8 @@ internal class HomeViewModel @Inject constructor(
     val isEditMode: Boolean
         get() {
             val state = uiState.value
-            return (state.showVaultList.not() and state.isChainRearrangeMode)
-                    || (state.showVaultList and state.isVaultRearrangeMode)
+            return (!state.showVaultList && state.isChainRearrangeMode)
+                    || (state.showVaultList && state.isVaultRearrangeMode)
         }
 
     private fun collectLastOpenedVault() {
