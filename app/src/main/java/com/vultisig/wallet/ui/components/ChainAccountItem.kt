@@ -183,12 +183,10 @@ internal fun ChainAccountItem(
 
                 UiSpacer(14.dp)
 
-                Text(
+                MiddleEllipsisText(
                     text = account.address,
                     style = Theme.montserrat.body1,
                     color = Theme.colors.turquoise600Main,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
