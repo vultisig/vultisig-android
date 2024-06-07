@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.models.THORChainSwapPayload
+import com.vultisig.wallet.models.THORChainSwapPayloadDeserializer
 import com.vultisig.wallet.models.THORChainSwapPayloadSerializer
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecificDeserializer
@@ -72,6 +73,10 @@ internal interface DataModule {
                 .registerTypeAdapter(
                     THORChainSwapPayload::class.java,
                     THORChainSwapPayloadSerializer(),
+                )
+                .registerTypeAdapter(
+                    THORChainSwapPayload::class.java,
+                    THORChainSwapPayloadDeserializer(),
                 )
                 .create()
         }

@@ -10,6 +10,9 @@ internal data class SwapTransaction(
     val srcTokenValue: TokenValue,
     val srcAddress: String,
     val dstToken: Coin,
+    val dstAddress: String,
     val expectedDstTokenValue: TokenValue,
     val blockChainSpecific: BlockChainSpecificAndUtxo,
+    val vaultAddress: String,
+    val routerAddress: String?,
 )

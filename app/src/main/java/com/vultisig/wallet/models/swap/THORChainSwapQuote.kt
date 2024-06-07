@@ -12,7 +12,7 @@ internal data class THORChainSwapQuote(
     val expiry: BigInteger,
     @SerializedName("fees")
     val fees: Fees,
-    @SerializedName("inbound_addresses")
+    @SerializedName("inbound_address")
     val inboundAddress: String?,
     @SerializedName("inbound_confirmation_blocks")
     val inboundConfirmationBlocks: BigInteger?,

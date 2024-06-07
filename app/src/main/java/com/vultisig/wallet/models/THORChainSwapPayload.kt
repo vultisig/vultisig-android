@@ -23,7 +23,7 @@ internal data class THORChainSwapPayload(
     @SerializedName("vaultAddress")
     val vaultAddress: String,
     @SerializedName("routerAddress")
-    val routerAddress: String,
+    val routerAddress: String?,
     @SerializedName("fromAmount")
     val fromAmount: BigInteger,
     @SerializedName("toAmountDecimal")

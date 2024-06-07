@@ -67,15 +67,15 @@ internal class KeysignShareViewModel @Inject constructor(
 
             keysignPayload = KeysignPayload(
                 coin = srcToken,
-                toAddress = transaction.srcAddress,
+                toAddress = transaction.dstAddress,
                 toAmount = transaction.srcTokenValue.value,
                 blockChainSpecific = specific.blockChainSpecific,
                 swapPayload = THORChainSwapPayload(
                     fromAddress = transaction.srcAddress,
                     fromCoin = srcToken,
                     toCoin = dstToken,
-                    vaultAddress = transaction.srcAddress,
-                    routerAddress = "", // TODO router address
+                    vaultAddress = transaction.vaultAddress,
+                    routerAddress = transaction.routerAddress,
                     fromAmount = transaction.srcTokenValue.value,
                     toAmountDecimal = transaction.expectedDstTokenValue.decimal,
                     toAmountLimit = "0",
