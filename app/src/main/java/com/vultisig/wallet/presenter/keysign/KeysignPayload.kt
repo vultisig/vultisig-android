@@ -46,6 +46,7 @@ internal data class KeysignPayload(
     val approvePayload: ERC20ApprovePayload? = null,
     @SerializedName("vaultPubKeyECDSA")
     val vaultPublicKeyECDSA: String,
+    @SerializedName("vaultLocalPartyID")
     val vaultLocalPartyID: String,
 )  {
     fun getKeysignMessages(vault: Vault): List<String> {
@@ -131,7 +132,13 @@ internal class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
         jsonObject.add("utxos", context?.serialize(src.utxos))
         jsonObject.addProperty("memo", src.memo ?: "")
         jsonObject.addProperty("vaultLocalPartyID", src.vaultLocalPartyID)
-        jsonObject.add("swapPayload", context?.serialize(src.swapPayload))
+
+        val spObject = JsonObject()
+        val wrapperObject = JsonObject()
+        wrapperObject.add("_0", context?.serialize(src.swapPayload))
+        spObject.add("thorchain", wrapperObject)
+
+        jsonObject.add("swapPayload", spObject)
         jsonObject.add("approvePayload", context?.serialize(src.approvePayload))
         return jsonObject
     }

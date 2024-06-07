@@ -9,11 +9,15 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -36,6 +40,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.UUID
 import javax.inject.Inject
 
 internal data class SwapFormUiModel(
@@ -57,16 +62,21 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
 
+    private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val accountsRepository: AccountsRepository,
     private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
+    private val swapTransactionRepository: SwapTransactionRepository,
+    private val blockChainSpecificRepository: BlockChainSpecificRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
 
     val srcAmountState = TextFieldState()
+
+    private var vaultId: String? = null
 
     private val selectedSrc = MutableStateFlow<SendSrc?>(null)
     private val selectedDst = MutableStateFlow<SendSrc?>(null)
@@ -82,14 +92,56 @@ internal class SwapFormViewModel @Inject constructor(
 
     fun swap() {
         // TODO verify swap info
+        val vaultId = vaultId ?: return
+        val selectedSrc = selectedSrc.value ?: return
+        val selectedDst = selectedDst.value ?: return
+        val srcTokenValue = srcAmountState.text.toString()
+            .toBigDecimalOrNull()
+            ?.movePointRight(selectedSrc.account.token.decimal)
+            ?.toBigInteger()
+            ?: return
+        val gasFee = gasFee.value ?: return
+
+        val dstTokenValue = 0.toBigInteger()
+
+        val srcToken = selectedSrc.account.token
+        val dstToken = selectedDst.account.token
 
         viewModelScope.launch {
+            val specificAndUtxo = blockChainSpecificRepository.getSpecific(
+                srcToken.chain,
+                selectedSrc.address.address,
+                srcToken,
+                gasFee,
+            )
+
+            val transaction = SwapTransaction(
+                id = UUID.randomUUID().toString(),
+                vaultId = vaultId,
+                srcToken = srcToken,
+                srcTokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue),
+                srcAddress = selectedSrc.address.address,
+                dstToken = dstToken,
+                expectedDstTokenValue = convertTokenAndValueToTokenValue(dstToken, dstTokenValue),
+                blockChainSpecific = specificAndUtxo,
+            )
+
+            swapTransactionRepository.addTransaction(transaction)
+
             sendNavigator.navigate(
-                SendDst.VerifyTransaction(
-                    transactionId = "transactionId",
+                SendDst.Keysign(
+                    transactionId = transaction.id,
                 )
             )
         }
+
+//        viewModelScope.launch {
+//            sendNavigator.navigate(
+//                SendDst.VerifyTransaction(
+//                    transactionId = "transactionId",
+//                )
+//            )
+//        }
     }
 
     fun selectSrcToken(model: TokenBalanceUiModel) {
@@ -107,6 +159,7 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     fun loadData(vaultId: String, chainId: String?) {
+        this.vaultId = vaultId
         loadTokens(vaultId, chainId)
     }
 
