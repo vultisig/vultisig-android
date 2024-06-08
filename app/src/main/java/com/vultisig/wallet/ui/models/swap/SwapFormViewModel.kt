@@ -192,16 +192,17 @@ internal class SwapFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId)
+                .map { addresses ->
+                    addresses.filter { it.chain.IsSwapSupported }
+                }
                 .catch {
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
-                    val canSwapAddresses = addresses.filter { it.chain.IsSwapSupported }
-                    selectedSrc.updateSrc(canSwapAddresses, chain)
-                    selectedDst.updateSrc(canSwapAddresses, chain)
-
+                    selectedSrc.updateSrc(addresses, chain)
+                    selectedDst.updateSrc(addresses, chain)
                     updateUiTokens(
-                        canSwapAddresses
+                        addresses
                             .asSequence()
                             .map { address ->
                                 address.accounts.map {
