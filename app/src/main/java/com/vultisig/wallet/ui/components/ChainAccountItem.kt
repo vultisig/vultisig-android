@@ -1,9 +1,10 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,35 +14,56 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
-import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ChainAccountItem(
     account: AccountUiModel,
+    isRearrangeMode: Boolean,
+    onCopy: (String) -> Unit,
     onClick: () -> Unit = {},
 ) {
+    val clipboard = LocalClipboardManager.current
+    val context = LocalContext.current
+    val longClick = {
+        clipboard.setText(AnnotatedString(account.address))
+        onCopy(
+            context.getString(
+                R.string.chain_account_item_address_copied,
+                account.address
+            )
+        )
+    }
     Card(
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
             containerColor = Theme.colors.oxfordBlue600Main,
         ),
         modifier = Modifier
-            .clickOnce(enabled=true ,onClick = onClick)
+            .combinedClickable(
+                onClick = ClickOnce(onClick),
+                onLongClick = if (isRearrangeMode) null else longClick
+            )
             .fillMaxWidth(),
     ) {
         Row(
@@ -49,6 +71,22 @@ internal fun ChainAccountItem(
             modifier = Modifier
                 .padding(all = 12.dp),
         ) {
+            AnimatedContent(
+                targetState = isRearrangeMode,
+                label = "isRearrangeMode",
+            ) { isRearrangeModeEnabled ->
+                if (isRearrangeModeEnabled)
+                    Icon(
+                        painter = painterResource(id = R.drawable.hamburger_menu),
+                        contentDescription = "rearrange icon",
+                        tint = Theme.colors.neutral0,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(16.dp)
+                    )
+            }
+
+
             Image(
                 painter = painterResource(id = account.logo),
                 contentDescription = null,
@@ -159,7 +197,9 @@ internal fun ChainAccountItem(
 @Composable
 private fun PreviewChainAccountItem() {
     ChainAccountItem(
-        AccountUiModel(
+        isRearrangeMode = true,
+        onCopy = {},
+        account = AccountUiModel(
             chainName = "Bitcoin",
             logo = R.drawable.bitcoin,
             address = "123abc456bca123abc456bca123abc456bca",

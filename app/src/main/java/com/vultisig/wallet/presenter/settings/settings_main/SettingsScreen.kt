@@ -73,6 +73,13 @@ fun SettingsScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AppSettingItem(
+                R.drawable.gear,
+                stringResource(R.string.settings_screen_vault_settings)
+            ) {
+                viewModel.navigateTo(Destination.VaultSettings(viewModel.vaultId))
+            }
+
+            AppSettingItem(
                 R.drawable.settings_globe,
                 stringResource(R.string.settings_screen_language), state.selectedLocal.mainName
             ) {
