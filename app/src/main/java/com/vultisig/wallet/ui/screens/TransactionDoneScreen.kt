@@ -78,7 +78,7 @@ internal fun TransactionDoneView(
                         drawableResId = R.drawable.copy,
                         size = 20.dp,
                         onClick = {
-                            clipboard.setText(AnnotatedString(transactionHash))
+                            clipboard.setText(AnnotatedString(transactionLink))
                         }
                     )
 
