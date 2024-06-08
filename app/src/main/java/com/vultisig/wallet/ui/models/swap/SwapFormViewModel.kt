@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -195,11 +196,12 @@ internal class SwapFormViewModel @Inject constructor(
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
-                    selectedSrc.updateSrc(addresses, chain)
-                    selectedDst.updateSrc(addresses, chain)
+                    val canSwapAddresses = addresses.filter { it.chain.IsSwapSupported }
+                    selectedSrc.updateSrc(canSwapAddresses, chain)
+                    selectedDst.updateSrc(canSwapAddresses, chain)
 
                     updateUiTokens(
-                        addresses
+                        canSwapAddresses
                             .asSequence()
                             .map { address ->
                                 address.accounts.map {
