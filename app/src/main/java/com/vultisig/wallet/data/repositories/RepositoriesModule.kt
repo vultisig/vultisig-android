@@ -120,4 +120,10 @@ internal interface RepositoriesModule {
         impl: SwapQuoteRepositoryImpl
     ): SwapQuoteRepository
 
+    @Binds
+    @Singleton
+    fun bindSwapTransactionRepository(
+        impl: SwapTransactionRepositoryImpl
+    ): SwapTransactionRepository
+
 }

@@ -16,4 +16,10 @@ internal interface UseCasesModule {
         impl: ConvertTokenValueToFiatUseCaseImpl
     ): ConvertTokenValueToFiatUseCase
 
+    @Binds
+    @Singleton
+    fun bindConvertTokenAndValueToTokenValueUseCase(
+        impl: ConvertTokenAndValueToTokenValueUseCaseImpl
+    ): ConvertTokenAndValueToTokenValueUseCase
+
 }

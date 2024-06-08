@@ -1,5 +1,6 @@
 package com.vultisig.wallet.chains
 
+import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toByteString
 import com.vultisig.wallet.models.ERC20ApprovePayload
@@ -16,7 +17,8 @@ internal class THORChainSwaps(
     private val vaultHexChainCode: String,
 ) {
     companion object {
-        val affiliateFeeAddress: String = "vi"
+        private const val AFFILIATE_FEE_ADDRESS = "vi"
+        private const val AFFILIATE_FEE_RATE = "50" // 50 BP
     }
 
     fun getPreSignedInputData(
@@ -29,7 +31,7 @@ internal class THORChainSwaps(
             .setToAsset(swapPayload.toAsset)
             .setToAddress(swapPayload.toAddress)
             .setVaultAddress(swapPayload.vaultAddress)
-            .setRouterAddress(swapPayload.routerAddress)
+            .setRouterAddress(swapPayload.routerAddress ?: "")
             .setFromAmount(swapPayload.fromAmount.toString())
             .setToAmountLimit(swapPayload.toAmountLimit)
             .setExpirationTime(swapPayload.expirationTime.toLong())
@@ -37,9 +39,16 @@ internal class THORChainSwaps(
                 THORChainSwap.StreamParams.newBuilder()
                     .setInterval(swapPayload.steamingInterval)
                     .setQuantity(swapPayload.streamingQuantity)
-            )
-            .setAffiliateFeeAddress(affiliateFeeAddress)
-            .setAffiliateFeeRateBp("70") // 70 BP
+            ).let {
+                if (swapPayload.isAffiliate) {
+                    it.setAffiliateFeeAddress(AFFILIATE_FEE_ADDRESS)
+                        .setAffiliateFeeRateBp(
+                            if (BuildConfig.DEBUG) "0" else AFFILIATE_FEE_RATE
+                        )
+                } else {
+                    it
+                }
+            }
             .build()
         val inputData = input.toByteArray()
         val outputData = wallet.core.jni.THORChainSwap.buildSwap(inputData)

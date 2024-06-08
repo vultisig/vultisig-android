@@ -129,16 +129,21 @@ internal class KeysignFlowViewModel @Inject constructor(
             gson
         )
 
+        val keysignJsonData = gson.toJson(
+            KeysignMesssage(
+                sessionID = _sessionID,
+                serviceName = _serviceName,
+                payload = _keysignPayload!!,
+                encryptionKeyHex = _encryptionKeyHex,
+                useVultisigRelay = vultisigRelay.IsRelayEnabled
+            )
+        )
+
+        Timber.d("keysignJsonData: $keysignJsonData")
+
         _keysignMessage.value =
-            "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" + gson.toJson(
-                KeysignMesssage(
-                    sessionID = _sessionID,
-                    serviceName = _serviceName,
-                    payload = _keysignPayload!!,
-                    encryptionKeyHex = _encryptionKeyHex,
-                    useVultisigRelay = vultisigRelay.IsRelayEnabled
-                )
-            ).toByteArray().zipZlibAndBase64Encode()
+            "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" +
+                    keysignJsonData.toByteArray().zipZlibAndBase64Encode()
         addressProvider.update(_keysignMessage.value)
         if (!vultisigRelay.IsRelayEnabled) {
             startMediatorService(context)

@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
-import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -77,7 +76,7 @@ private fun NetworkChip(
             containerColor = Theme.colors.oxfordBlue400,
             selectedContainerColor = Theme.colors.oxfordBlue200,
         ),
-        onClick = ClickOnce {onClick},
+        onClick = ClickOnce(onClick),
         label = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,

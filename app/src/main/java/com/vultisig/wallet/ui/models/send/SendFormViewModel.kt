@@ -252,7 +252,7 @@ internal class SendFormViewModel @Inject constructor(
                 val srcAddress = selectedToken.address
 
                 val specific = blockChainSpecificRepository
-                    .getSpecific(chain, srcAddress, selectedToken, gasFee)
+                    .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
 
                 val transaction = Transaction(
                     id = UUID.randomUUID().toString(),

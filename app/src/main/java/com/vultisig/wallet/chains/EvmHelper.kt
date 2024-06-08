@@ -3,7 +3,6 @@ package com.vultisig.wallet.chains
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toByteString
-import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
@@ -55,15 +54,14 @@ internal class EvmHelper(
         val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw Exception("Invalid blockChainSpecific")
 
-        signingInput.toBuilder().apply {
-            chainId = ByteString.copyFrom(coinType.chainId().toHexByteArray())
+        return signingInput.toBuilder().apply {
+            chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
             nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
             gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
             maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
             maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
             txMode = Ethereum.TransactionMode.Enveloped
-        }
-        return signingInput.toByteArray()
+        }.build().toByteArray()
     }
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {

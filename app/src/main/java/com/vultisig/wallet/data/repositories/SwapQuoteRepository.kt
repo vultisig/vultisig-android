@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import java.math.BigDecimal
-import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.time.DurationUnit
@@ -18,7 +17,7 @@ internal interface SwapQuoteRepository {
         dstAddress: String,
         srcToken: Coin,
         dstToken: Coin,
-        tokenValue: BigInteger,
+        tokenValue: TokenValue,
     ): SwapQuote
 
 }
@@ -31,13 +30,17 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstAddress: String,
         srcToken: Coin,
         dstToken: Coin,
-        tokenValue: BigInteger,
+        tokenValue: TokenValue,
     ): SwapQuote {
+        val thorTokenValue = tokenValue.decimal
+            .movePointRight(FIXED_THORSWAP_DECIMALS)
+            .toBigInteger()
+
         val thorQuote = thorChainApi.getSwapQuotes(
             address = dstAddress,
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
-            amount = tokenValue.toString(),
+            amount = thorTokenValue.toString(),
             interval = "1"
         )
 
@@ -54,6 +57,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             expectedDstValue = expectedDstTokenValue,
             fees = tokenFees,
             estimatedTime = estimatedTime,
+            inboundAddress = thorQuote.inboundAddress,
+            routerAddress = thorQuote.router,
         )
     }
 
@@ -91,6 +96,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         }
     } else {
         "${chain.swapAssetName()}.${ticker}-${contractAddress}"
+    }
+
+    companion object {
+
+        private const val FIXED_THORSWAP_DECIMALS = 8
     }
 
 }
