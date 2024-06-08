@@ -171,8 +171,13 @@ internal class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
         val swapPayloadJsonObject = jsonObject.get("swapPayload")
         var swapPayload: THORChainSwapPayload? = null
         if (swapPayloadJsonObject != null) {
+            // TODO Here , in future , if we add 1inch swap , then this part need to be changed
             swapPayload = context.deserialize<THORChainSwapPayload>(
-                jsonObject.get("swapPayload"), THORChainSwapPayload::class.java
+                jsonObject.get("swapPayload")
+                    .asJsonObject
+                    .get("thorchain")
+                    .asJsonObject.get("_0"),
+                THORChainSwapPayload::class.java
             )
         }
         var approvePayload: ERC20ApprovePayload? = null
