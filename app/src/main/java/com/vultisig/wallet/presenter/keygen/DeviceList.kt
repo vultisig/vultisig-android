@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfoItem
+import com.vultisig.wallet.ui.components.digitStringToWords
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
@@ -85,7 +86,7 @@ internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowV
 
         Text(
             style = Theme.menlo.bodyMedium,
-            text = stringResource(
+            text = digitStringToWords(
                 R.string.device_list_desc1,
                 Utils.getThreshold(items.count())
             ),
