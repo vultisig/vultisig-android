@@ -18,6 +18,8 @@ internal data class HomeUiModel(
     val showVaultList: Boolean = false,
     val vaultName: String = "",
     val selectedVaultId: String? = null,
+    val isChainRearrangeMode: Boolean = false,
+    val isVaultRearrangeMode: Boolean = false
 )
 
 @HiltViewModel
@@ -39,17 +41,27 @@ internal class HomeViewModel @Inject constructor(
     }
 
     fun openSettings() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.Settings)
+        val selectedVaultId = uiState.value.selectedVaultId
+        selectedVaultId?.let { vaultId ->
+            viewModelScope.launch {
+                navigator.navigate(Destination.Settings(vaultId = vaultId))
+            }
         }
     }
 
     fun edit() {
-        val selectedVaultId = uiState.value.selectedVaultId ?: return
+        if (uiState.value.showVaultList) {
+            toggleVaultRearrangeMode()
+        } else toggleChainRearrangeMode()
+    }
 
-        viewModelScope.launch {
-            navigator.navigate(Destination.VaultSettings(selectedVaultId))
-        }
+
+    private fun toggleChainRearrangeMode() {
+        uiState.update { it.copy(isChainRearrangeMode = !it.isChainRearrangeMode) }
+    }
+
+    private fun toggleVaultRearrangeMode() {
+        uiState.update { it.copy(isVaultRearrangeMode = !it.isVaultRearrangeMode) }
     }
 
     fun toggleVaults() {
@@ -64,6 +76,13 @@ internal class HomeViewModel @Inject constructor(
             lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
         }
     }
+
+    val isEditMode: Boolean
+        get() {
+            val state = uiState.value
+            return (!state.showVaultList && state.isChainRearrangeMode)
+                    || (state.showVaultList && state.isVaultRearrangeMode)
+        }
 
     private fun collectLastOpenedVault() {
         viewModelScope.launch {

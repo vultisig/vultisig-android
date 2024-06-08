@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.components.reorderable.utils.reorderable
 @Composable
 internal fun <T : Any> VerticalReorderList(
     modifier: Modifier = Modifier,
+    isReorderEnabled: Boolean = true,
     data: List<T>,
     key: (item: T) -> Any = { it },
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -32,7 +33,10 @@ internal fun <T : Any> VerticalReorderList(
     content: @Composable (item: T) -> Unit,
 ) {
     val dataSize by rememberUpdatedState(newValue = data.size)
+    val isDraggingEnabled by rememberUpdatedState(newValue = isReorderEnabled)
     val state = rememberReorderableLazyListState(onMove = { from, to ->
+        if (isDraggingEnabled.not())
+            return@rememberReorderableLazyListState
         val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
         val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
         val boundaries = listOf(-1, dataSize + (beforeContents?.lastIndex ?: 0))
@@ -40,13 +44,14 @@ internal fun <T : Any> VerticalReorderList(
             return@rememberReorderableLazyListState
         onMove(i, j)
     })
+    val reorderableModifier = modifier
+        .reorderable(state)
+        .detectReorderAfterLongPress(state)
     LazyColumn(
         verticalArrangement = verticalArrangement,
         state = state.listState,
         contentPadding = contentPadding,
-        modifier = modifier
-            .reorderable(state)
-            .detectReorderAfterLongPress(state)
+        modifier = if (isDraggingEnabled) reorderableModifier else modifier
     ) {
         beforeContents?.forEach { content ->
             item(content = content)

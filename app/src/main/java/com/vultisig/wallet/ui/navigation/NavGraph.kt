@@ -248,7 +248,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.Settings.route,
+            route = Destination.Settings.STATIC_ROUTE,
         ) {
             SettingsScreen(navController = navController)
         }
