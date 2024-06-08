@@ -216,7 +216,7 @@
     <string name="verify_swap_screen_estimated_time">Estimated Time</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
+    <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
-    <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
 </resources>
