@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -191,13 +192,15 @@ internal class SwapFormViewModel @Inject constructor(
 
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId)
+                .map { addresses ->
+                    addresses.filter { it.chain.IsSwapSupported }
+                }
                 .catch {
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
                     selectedSrc.updateSrc(addresses, chain)
                     selectedDst.updateSrc(addresses, chain)
-
                     updateUiTokens(
                         addresses
                             .asSequence()
