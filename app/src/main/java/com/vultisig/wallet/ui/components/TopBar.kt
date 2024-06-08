@@ -26,6 +26,7 @@ internal fun TopBar(
     modifier: Modifier = Modifier,
     @DrawableRes startIcon: Int? = null,
     @DrawableRes endIcon: Int? = null,
+    onStartIconClick: (() -> Unit)? = null,
     onEndIconClick: () -> Unit = {},
 ) {
     CenterAlignedTopAppBar(
@@ -45,7 +46,7 @@ internal fun TopBar(
         navigationIcon = {
             startIcon?.let {
                 IconButton(
-                    onClick = { navController.popBackStack() }
+                    onClick = { onStartIconClick?.invoke() ?: navController.popBackStack() }
                 ) {
                     Icon(
                         painter = painterResource(id = it),
