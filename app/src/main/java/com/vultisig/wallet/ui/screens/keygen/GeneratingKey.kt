@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,6 +51,12 @@ internal fun GeneratingKey(
         viewModel.generateKey()
     }
 
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            viewModel.stopService(context)
+        }
+    }
+
     val state = viewModel.currentState.value
 
     when (state) {
@@ -73,10 +80,6 @@ internal fun GeneratingKey(
         navController = navController,
         keygenState = viewModel.currentState.value,
         errorMessage = viewModel.errorMessage.value,
-        onBackClick = {
-            viewModel.stopService(context)
-            navController.popBackStack()
-        }
     )
 }
 
@@ -84,8 +87,7 @@ internal fun GeneratingKey(
 internal fun GeneratingKey(
     navController: NavHostController,
     keygenState: KeygenState,
-    errorMessage: String,
-    onBackClick: () -> Unit
+    errorMessage: String
 ) {
     val textColor = Theme.colors.neutral0
     Column(
@@ -100,7 +102,6 @@ internal fun GeneratingKey(
         TopBar(
             centerText = stringResource(R.string.generating_key_title),
             startIcon = R.drawable.caret_left,
-            onStartIconClick = onBackClick,
             navController = navController
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -214,5 +215,5 @@ private fun GeneratingKeyPreview() {
         navController = rememberNavController(),
         keygenState = KeygenState.CreatingInstance,
         errorMessage = ""
-    ){}
+    )
 }
