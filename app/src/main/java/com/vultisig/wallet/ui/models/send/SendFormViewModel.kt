@@ -442,5 +442,22 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    fun validateDstAddress(dstAddress: String): UiText? {
+        val selectedAccount = selectedAccount
+            ?: return UiText.StringResource(R.string.send_error_no_token)
+        val chain = selectedAccount.token.chain
+        if (dstAddress.isBlank() || !chainAccountAddressRepository.isValid(chain, dstAddress))
+            return UiText.StringResource(R.string.send_error_no_address)
+        return null
+    }
+
+    fun validateTokenAmount(tokenAmount: String): UiText? {
+        val tokenAmountBigDecimal = tokenAmount.toBigDecimalOrNull()
+        if (tokenAmountBigDecimal == null || tokenAmountBigDecimal <= BigDecimal.ZERO) {
+            return UiText.StringResource(R.string.send_error_no_amount)
+        }
+        return null
+    }
+
 }
 

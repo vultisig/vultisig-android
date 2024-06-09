@@ -1,9 +1,13 @@
 package com.vultisig.wallet.presenter.vault_setting.vault_edit
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.UiText.StringResource
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
@@ -15,14 +19,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class VaultEditUiModel(
-    val name: String = ""
-)
 
+@OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class VaultRenameViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
@@ -34,7 +35,7 @@ internal class VaultRenameViewModel @Inject constructor(
 
     private val vault = MutableStateFlow<Vault?>(null)
 
-    val uiModel = MutableStateFlow(VaultEditUiModel())
+    val renameTextFieldState = TextFieldState()
 
     private val channel = Channel<VaultEditUiEvent>()
     val channelFlow = channel.receiveAsFlow()
@@ -42,32 +43,38 @@ internal class VaultRenameViewModel @Inject constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId id")
             this@VaultRenameViewModel.vault.value = vault
-            uiModel.update {
-                it.copy(name = vault.name)
-            }
+            renameTextFieldState.setTextAndPlaceCursorAtEnd(vault.name)
         }
     }
 
-    fun onEvent(event: VaultEditEvent) {
-        when (event) {
-            is VaultEditEvent.OnNameChange -> uiModel.update { it.copy(name = event.name) }
-            VaultEditEvent.OnSave -> saveName()
-        }
-    }
 
-    private fun saveName() {
+    fun onSaveName() {
         viewModelScope.launch {
             vault.value?.let { vault ->
-                val newName = uiModel.value.name
+                val newName = renameTextFieldState.text.toString()
+                if (newName.isEmpty() || newName.length > 50) {
+                    channel.send(ShowSnackBar(StringResource(R.string.rename_vault_invalid_name)))
+                    return@launch
+                }
                 val isNameAlreadyExist =
                     vaultRepository.getAll().any { it.name == newName }
                 if (isNameAlreadyExist) {
-                    channel.send(ShowSnackBar(StringResource(R.string.vault_edit_this_name_already_exist)))
+                    channel.send(ShowSnackBar(StringResource(R.string.vault_edit_enter_a_new_name)))
                     return@launch
                 }
                 vaultRepository.setVaultName(vault.id, newName)
                 navigator.navigate(Destination.Home())
             }
         }
+    }
+
+    suspend fun validateName(newName: String): UiText? {
+        if (newName.isEmpty() || newName.length > 50)
+            return StringResource(R.string.rename_vault_invalid_name)
+        val isNameAlreadyExist = vaultRepository.getAll().any { it.name == newName }
+        if (isNameAlreadyExist) {
+            return StringResource(R.string.vault_edit_enter_a_new_name)
+        }
+        return null
     }
 }

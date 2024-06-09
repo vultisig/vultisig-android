@@ -50,7 +50,7 @@
     <string name="save">Save</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
-    <string name="vault_edit_this_name_already_exist">this name already exist</string>
+    <string name="vault_edit_enter_a_new_name">enter a new name</string>
     <string name="send_screen_max">MAX</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Error</string>
@@ -220,4 +220,7 @@
     <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
+    <string name="swap_error_no_amount">Amount must be a positive number</string>
+    <string name="naming_vault_screen_invalid_name">invalid name</string>
+    <string name="rename_vault_invalid_name">invalid name</string>
 </resources>

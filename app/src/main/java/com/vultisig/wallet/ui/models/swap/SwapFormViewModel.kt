@@ -328,6 +328,14 @@ internal class SwapFormViewModel @Inject constructor(
         }
     }
 
+    fun srcAmountValidator(srcAmount: String): UiText? {
+        val srcAmountAmountBigDecimal = srcAmount.toBigDecimalOrNull()
+        if (srcAmountAmountBigDecimal == null || srcAmountAmountBigDecimal <= BigDecimal.ZERO) {
+            return UiText.StringResource(R.string.swap_error_no_amount)
+        }
+        return null
+    }
+
 }
 
 

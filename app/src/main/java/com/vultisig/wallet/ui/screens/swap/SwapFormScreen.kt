@@ -18,8 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +40,8 @@ import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.library.form.FormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTitleContainer
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
+import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
+import com.vultisig.wallet.ui.components.library.form.UiTextFieldValidator
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
@@ -62,6 +68,7 @@ internal fun SwapFormScreen(
         onSelectSrcToken = viewModel::selectSrcToken,
         onSelectDstToken = viewModel::selectDstToken,
         onFlipSelectedTokens = viewModel::flipSelectedTokens,
+        srcAmountValidator = viewModel::srcAmountValidator
     )
 }
 
@@ -70,11 +77,15 @@ internal fun SwapFormScreen(
 internal fun SwapFormScreen(
     state: SwapFormUiModel,
     srcAmountTextFieldState: TextFieldState,
+    srcAmountValidator: UiTextFieldValidator,
     onSelectSrcToken: (TokenBalanceUiModel) -> Unit = {},
     onSelectDstToken: (TokenBalanceUiModel) -> Unit = {},
     onFlipSelectedTokens: () -> Unit = {},
     onSwap: () -> Unit = {},
 ) {
+    var focusState by remember {
+        mutableStateOf<FocusState?>(null)
+    }
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -100,12 +111,22 @@ internal fun SwapFormScreen(
                         onSelectToken = onSelectSrcToken,
                     )
 
-                    FormCard {
-                        FormTextField(
-                            hint = stringResource(R.string.swap_form_src_amount_hint),
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = srcAmountTextFieldState,
-                        )
+                    TextFieldValidator(
+                        state = srcAmountTextFieldState,
+                        validator = srcAmountValidator,
+                        focusState = focusState
+                    )
+                    {
+                        FormCard {
+                            FormTextField(
+                                hint = stringResource(R.string.swap_form_src_amount_hint),
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = srcAmountTextFieldState,
+                                onFocusStateChanged = {
+                                    focusState = it
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -194,6 +215,7 @@ internal fun SwapFormScreenPreview() {
     ) {
         SwapFormScreen(
             state = SwapFormUiModel(),
+            srcAmountValidator = { null },
             srcAmountTextFieldState = TextFieldState(),
         )
     }
