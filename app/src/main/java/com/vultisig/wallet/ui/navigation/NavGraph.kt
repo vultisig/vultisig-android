@@ -239,9 +239,11 @@ internal fun SetupNavGraph(
             )
         ) { entry ->
             val args = requireNotNull(entry.arguments)
+            val savedStateHandle = entry.savedStateHandle
 
             SwapScreen(
                 navController = navController,
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE),
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
             )
