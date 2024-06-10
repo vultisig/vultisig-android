@@ -14,6 +14,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import timber.log.Timber
 import java.math.BigInteger
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 data class RpcPayload(
@@ -95,10 +96,15 @@ internal class EvmApiImp(
 ) : EvmApi {
     private fun getRPCEndpoint(): String = rpcEndpoint
     override suspend fun getBalance(coin: Coin): BigInteger {
-        if (coin.isNativeToken) {
-            return getETHBalance(coin.address)
+        return try {
+            if (coin.isNativeToken)
+                getETHBalance(coin.address)
+            else
+                getERC20Balance(coin.address, coin.contractAddress)
+        } catch (e: SocketTimeoutException) {
+            Timber.d("request time out, message: ${e.message}")
+            BigInteger.ZERO
         }
-        return getERC20Balance(coin.address, coin.contractAddress)
     }
 
     private suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger {
