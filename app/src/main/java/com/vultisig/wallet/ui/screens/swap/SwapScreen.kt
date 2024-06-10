@@ -124,7 +124,7 @@ internal fun SwapScreen(
                     hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadSwapTransaction(transactionId)
 
-                KeysignFlowView(navHostController)
+                KeysignFlowView(topBarNavController)
             }
         }
     }
