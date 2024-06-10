@@ -32,8 +32,6 @@ fun MultiColorButton(
     iconColor: Color? = null,
     backgroundColor: Color? = null,
     disabled: Boolean? = false,
-    foregroundColor: Color? = null,
-    borderColor: Color? = null,
     iconSize: Dp? = null,
     borderSize: Dp? = null,
     minWidth: Dp? = null,

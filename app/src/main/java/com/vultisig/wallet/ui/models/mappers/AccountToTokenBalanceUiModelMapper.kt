@@ -13,14 +13,14 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
 ) :
     AccountToTokenBalanceUiModelMapper {
 
-    override fun map(src: SendSrc): TokenBalanceUiModel {
-        val (_, from) = src
+    override fun map(from: SendSrc): TokenBalanceUiModel {
+        val (_, fromAccount) = from
         return TokenBalanceUiModel(
-            title = from.token.ticker,
-            balance = from.tokenValue
+            title = fromAccount.token.ticker,
+            balance = fromAccount.tokenValue
                 ?.let(mapTokenValueToDecimalUiString),
-            logo = Coins.getCoinLogo(from.token.logo),
-            model = src,
+            logo = Coins.getCoinLogo(fromAccount.token.logo),
+            model = from,
         )
     }
 

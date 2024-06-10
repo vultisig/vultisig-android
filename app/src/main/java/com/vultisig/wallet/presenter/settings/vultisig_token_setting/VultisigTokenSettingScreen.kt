@@ -48,7 +48,7 @@ fun VultisigTokenScreen(navController: NavHostController) {
             modifier = Modifier.padding(it),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "\$1.01",style = Theme.montserrat.headlineSmall, color = colors.neutral0)
+            Text(text = "\$1.01", style = Theme.montserrat.heading5, color = colors.neutral0)
             UiSpacer(size = 32.dp)
             Image(painter = painterResource(id = R.drawable.vultisig), contentDescription = "logo")
             UiSpacer(size = 32.dp)

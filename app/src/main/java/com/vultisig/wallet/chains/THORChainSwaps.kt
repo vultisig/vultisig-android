@@ -82,11 +82,6 @@ internal class THORChainSwaps(
                 )
             }
 
-            THORChainSwap.Chain.BNB -> {
-                throw Exception("Unsupported chain")
-            }
-
-
             THORChainSwap.Chain.ATOM -> {
                 val helper = AtomHelper(vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSwapPreSignedInputData(
@@ -96,7 +91,7 @@ internal class THORChainSwaps(
             }
 
 
-            THORChainSwap.Chain.UNRECOGNIZED -> {
+            THORChainSwap.Chain.BNB, THORChainSwap.Chain.UNRECOGNIZED, null -> {
                 throw Exception("Unsupported chain")
             }
         }
@@ -114,7 +109,7 @@ internal class THORChainSwaps(
                     TransactionCompiler.preImageHashes(keysignPayload.coin.coinType, inputData)
                 val preSigningOutput =
                     Bitcoin.PreSigningOutput.parseFrom(hashes)
-                return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.toByteArray()) }
+                return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             }
 
             THORChainSwap.Chain.THOR, THORChainSwap.Chain.ATOM, THORChainSwap.Chain.ETH, THORChainSwap.Chain.BSC, THORChainSwap.Chain.AVAX -> {
@@ -125,12 +120,7 @@ internal class THORChainSwaps(
                 return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
             }
 
-            THORChainSwap.Chain.BNB -> {
-                throw Exception("Unsupported chain")
-            }
-
-
-            THORChainSwap.Chain.UNRECOGNIZED -> {
+            THORChainSwap.Chain.BNB, THORChainSwap.Chain.UNRECOGNIZED, null -> {
                 throw Exception("Unsupported chain")
             }
         }
@@ -206,10 +196,6 @@ internal class THORChainSwaps(
                 return helper.getSignedTransaction(inputData, signatures)
             }
 
-            THORChainSwap.Chain.BNB -> {
-                throw Exception("Unsupported chain")
-            }
-
             THORChainSwap.Chain.ATOM -> {
                 val helper = AtomHelper(vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSignedTransaction(
@@ -219,7 +205,10 @@ internal class THORChainSwaps(
                 )
             }
 
-            THORChainSwap.Chain.UNRECOGNIZED -> TODO()
+            THORChainSwap.Chain.UNRECOGNIZED, THORChainSwap.Chain.BNB, null -> {
+                throw Exception("Unsupported chain")
+            }
+
         }
     }
 }
