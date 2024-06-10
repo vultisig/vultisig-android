@@ -59,7 +59,7 @@ internal class VaultRenameViewModel @Inject constructor(
                 val isNameAlreadyExist =
                     vaultRepository.getAll().any { it.name == newName }
                 if (isNameAlreadyExist) {
-                    channel.send(ShowSnackBar(StringResource(R.string.vault_edit_enter_a_new_name)))
+                    channel.send(ShowSnackBar(StringResource(R.string.vault_edit_this_name_already_exist)))
                     return@launch
                 }
                 vaultRepository.setVaultName(vault.id, newName)
@@ -73,7 +73,7 @@ internal class VaultRenameViewModel @Inject constructor(
             return StringResource(R.string.rename_vault_invalid_name)
         val isNameAlreadyExist = vaultRepository.getAll().any { it.name == newName }
         if (isNameAlreadyExist) {
-            return StringResource(R.string.vault_edit_enter_a_new_name)
+            return StringResource(R.string.vault_edit_this_name_already_exist)
         }
         return null
     }
