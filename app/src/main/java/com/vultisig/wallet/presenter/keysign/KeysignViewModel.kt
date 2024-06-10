@@ -116,6 +116,7 @@ internal class KeysignViewModel(
                 sessionID = sessionId
             )
             this.messagesToSign.forEach() { message ->
+                Timber.d("signing message: $message")
                 signMessageWithRetry(this.tssInstance!!, message, 1)
             }
             broadcastTransaction()

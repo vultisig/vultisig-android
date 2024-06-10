@@ -17,9 +17,9 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfoItem
-import com.vultisig.wallet.ui.components.digitStringToWords
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.digitStringToWords
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 import kotlinx.coroutines.CoroutineScope
@@ -61,7 +61,7 @@ internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowV
         Text(
             text = stringResource(R.string.device_list_screen_with_these_devices),
             color = textColor,
-            style = Theme.montserrat.bodyMedium
+            style = Theme.montserrat.body2
         )
 
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
@@ -85,7 +85,7 @@ internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowV
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
 
         Text(
-            style = Theme.menlo.bodyMedium,
+            style = Theme.menlo.body2,
             text = digitStringToWords(
                 R.string.device_list_desc1,
                 Utils.getThreshold(items.count())
@@ -95,7 +95,7 @@ internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowV
         Spacer(modifier = Modifier.height(MaterialTheme.dimens.small3))
 
         Text(
-            style = Theme.menlo.bodyMedium,
+            style = Theme.menlo.body2,
             text = if (items.count() < 3) stringResource(R.string.device_list_desc2) else stringResource(
                 R.string.device_list_desc3
             ),
@@ -110,7 +110,7 @@ internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowV
             backgroundColor = Theme.colors.turquoise600Main,
             textColor = Theme.colors.oxfordBlue600Main,
             minHeight = MaterialTheme.dimens.minHeightButton,
-            textStyle = Theme.montserrat.titleLarge,
+            textStyle = Theme.montserrat.subtitle1,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(

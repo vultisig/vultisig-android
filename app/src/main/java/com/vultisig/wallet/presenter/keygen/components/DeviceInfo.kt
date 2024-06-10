@@ -97,7 +97,7 @@ fun DeviceInfo(
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
             color = Theme.colors.neutral0,
-            style = Theme.montserrat.titleMedium,
+            style = Theme.montserrat.subtitle2,
             textAlign = TextAlign.Center
         )
     }

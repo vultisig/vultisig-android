@@ -25,7 +25,7 @@ fun DeviceInfoItem(info: String) {
             )
     ) {
         Text(
-            text = info, color = textColor, style = Theme.menlo.bodyMedium
+            text = info, color = textColor, style = Theme.menlo.body2
         )
     }
 }
