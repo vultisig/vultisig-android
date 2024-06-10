@@ -34,17 +34,8 @@ internal fun SwapScreen(
     navController: NavController,
     vaultId: String,
     chainId: String?,
-    qrCodeResult: String?,
-    viewModel: SwapViewModel = hiltViewModel(),
 ) {
     val swapNavHostController = rememberNavController()
-
-    LaunchedEffect(Unit) {
-        viewModel.dst.collect {
-            swapNavHostController.route(it.dst.route, it.opts)
-        }
-    }
-
     val navBackStackEntry by swapNavHostController.currentBackStackEntryAsState()
 
     val route = navBackStackEntry?.destination?.route
