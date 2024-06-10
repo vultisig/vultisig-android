@@ -43,6 +43,7 @@ internal fun SwapScreen(
             swapNavHostController.route(it.dst.route, it.opts)
         }
     }
+
     val navBackStackEntry by swapNavHostController.currentBackStackEntryAsState()
 
     val route = navBackStackEntry?.destination?.route
@@ -90,20 +91,19 @@ internal fun SwapScreen(
 ) {
     val context = LocalContext.current
 
-
     val qr = qrCodeResult.takeIf { !it.isNullOrBlank() }
 
     ProgressScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
-        endIcon =qr?.let { R.drawable.qr_share },
+        endIcon = qr?.let { R.drawable.qr_share },
         onEndIconClick = qr?.let {
             {
                 val qrBitmap = generateQrBitmap(it)
                 context.share(qrBitmap)
             }
-        }?:{}
+        } ?: {}
     ) {
         NavHost(
             navController = navHostController,
