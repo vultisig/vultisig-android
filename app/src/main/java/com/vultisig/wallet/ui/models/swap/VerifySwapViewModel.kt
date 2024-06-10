@@ -9,6 +9,7 @@ import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -38,6 +39,7 @@ internal class VerifySwapViewModel @Inject constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val mapDurationToUiString: DurationToUiStringMapper,
 
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val swapTransactionRepository: SwapTransactionRepository,
@@ -58,9 +60,8 @@ internal class VerifySwapViewModel @Inject constructor(
                 transaction.estimatedFees, currency
             )
 
-            // todo convert seconds to human readable format
-            val estimatedTime = transaction.estimatedTime?.toString()?.let {
-                UiText.DynamicString(it)
+            val estimatedTime = transaction.estimatedTime?.let {
+                UiText.DynamicString(mapDurationToUiString(it))
             } ?: R.string.swap_screen_estimated_time_instant.asUiText()
 
             state.update {
