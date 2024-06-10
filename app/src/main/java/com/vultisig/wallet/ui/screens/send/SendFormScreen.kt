@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -91,6 +92,7 @@ internal fun SendFormScreen(
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
 ) {
+    val focusManager = LocalFocusManager.current
     val errorText = state.errorText
     if (errorText != null) {
         UiAlertDialog(
@@ -202,7 +204,9 @@ internal fun SendFormScreen(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .padding(all = 16.dp),
-            onClick = onSend,
+            onClick = {
+                focusManager.clearFocus()
+                onSend() },
         )
     }
 

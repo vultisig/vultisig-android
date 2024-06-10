@@ -26,7 +26,6 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -69,10 +68,10 @@ internal class KeygenFlowViewModel @Inject constructor(
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
 
-    var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
+    var vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
     private val vaultSetupType =
         VaultSetupType.fromInt(
-            navBackStackEntry.get<Int>(Screen.KeygenFlow.ARG_VAULT_TYPE) ?: 0
+            navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
         )
     val selection = MutableLiveData<List<String>>()
     val keygenPayloadState: MutableState<String>
@@ -104,7 +103,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         // start mediator server
         val allVaults = vaultRepository.getAll()
 
-        val vault = if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT) {
+        val vault = if (vaultId == Destination.KeygenFlow.DEFAULT_NEW_VAULT) {
             var newVaultName: String
             var idx = 1
             while (true) {

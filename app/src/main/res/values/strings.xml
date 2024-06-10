@@ -50,7 +50,7 @@
     <string name="save">Save</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
-    <string name="vault_edit_this_name_already_exist">this name already exist</string>
+    <string name="vault_edit_enter_a_new_name">enter a new name</string>
     <string name="send_screen_max">MAX</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Error</string>
@@ -232,4 +232,9 @@
         <item>eight</item>
         <item>nine</item>
     </string-array>
+    <string name="swap_error_no_amount">Amount must be a positive number</string>
+    <string name="naming_vault_screen_invalid_name">Invalid name</string>
+    <string name="rename_vault_invalid_name">Invalid name</string>
+    <string name="swap_form_invalid_amount">Invalid amount</string>
+    <string name="send_from_invalid_amount">Invalid amount</string>
 </resources>

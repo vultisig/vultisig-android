@@ -4,8 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -130,15 +128,15 @@ internal fun Setup(
                         bottom = 12.dp,
                     )
             ) {
-                if (vaultId == Screen.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty()) {
+                if (vaultId == Destination.KeygenFlow.DEFAULT_NEW_VAULT || vaultId.isEmpty()) {
                     navController.navigate(Destination.NamingVault(VaultSetupType.fromInt(state.tabIndex)).route)
                 } else {
                     // when reshare , we need to set to M_OF_N
                     navController.navigate(
-                        Screen.KeygenFlow.createRoute(
+                        Destination.KeygenFlow(
                             vaultId,
                             VaultSetupType.M_OF_N
-                        )
+                        ).route
                     )
                 }
             }

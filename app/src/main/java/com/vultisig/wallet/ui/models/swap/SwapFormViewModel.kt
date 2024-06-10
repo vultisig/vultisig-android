@@ -109,8 +109,8 @@ internal class SwapFormViewModel @Inject constructor(
         val srcAddress = selectedSrc.address.address
 
         // TODO reuse this with calculateFees
-        val srcTokenValue = srcAmountState.text.toString()
-            .toBigDecimalOrNull()
+        val srcTokenValue = srcAmountState.text.toString().takeIf { it.length<50 }
+            ?.toBigDecimalOrNull()
             ?.movePointRight(selectedSrc.account.token.decimal)
             ?.toBigInteger()
             ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
@@ -329,6 +329,9 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     fun srcAmountValidator(srcAmount: String): UiText? {
+        if(srcAmount.isEmpty() || srcAmount.length>50){
+            return UiText.StringResource(R.string.swap_form_invalid_amount)
+        }
         val srcAmountAmountBigDecimal = srcAmount.toBigDecimalOrNull()
         if (srcAmountAmountBigDecimal == null || srcAmountAmountBigDecimal <= BigDecimal.ZERO) {
             return UiText.StringResource(R.string.swap_error_no_amount)

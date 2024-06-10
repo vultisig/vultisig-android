@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -52,7 +53,7 @@ internal fun NamingComponent(
     var focusState by remember {
         mutableStateOf<FocusState?>(null)
     }
-
+    val focusManager = LocalFocusManager.current
     Scaffold(
         snackbarHost = {
             SnackbarHost(snackBarHostState)
@@ -73,7 +74,10 @@ internal fun NamingComponent(
                             bottom = 16.dp,
                         ),
                     text = saveButtonText,
-                    onClick = onSave,
+                    onClick = {
+                        focusManager.clearFocus()
+                        onSave()
+                    },
                 )
             }
         },
