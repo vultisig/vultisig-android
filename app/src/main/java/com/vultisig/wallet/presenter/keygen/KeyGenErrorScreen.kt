@@ -64,7 +64,7 @@ fun KeyGenErrorScreen(
             Text(
                 modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
                 text = stringResource(R.string.signing_error_please_try_again),
-                style = Theme.menlo.titleLarge,
+                style = Theme.menlo.subtitle1,
                 color = Theme.colors.neutral0,
                 textAlign = TextAlign.Center
             )
@@ -79,7 +79,7 @@ fun KeyGenErrorScreen(
                     .padding(top = 150.dp)
                     .align(Alignment.CenterHorizontally),
                 text = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
-                style = Theme.menlo.labelMedium,
+                style = Theme.menlo.overline,
                 color = Theme.colors.neutral0,
                 textAlign = TextAlign.Center
             )
@@ -90,7 +90,7 @@ fun KeyGenErrorScreen(
                 backgroundColor = Theme.colors.turquoise800,
                 textColor = Theme.colors.oxfordBlue800,
                 iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.titleLarge,
+                textStyle = Theme.montserrat.subtitle1,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
