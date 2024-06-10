@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
 
@@ -82,6 +84,8 @@ internal class SwapFormViewModel @Inject constructor(
 
     private var vaultId: String? = null
 
+    private var quote: SwapQuote? = null
+
     private val srcAmount: BigDecimal?
         get() = srcAmountState.text.toString().toBigDecimalOrNull()
 
@@ -110,24 +114,15 @@ internal class SwapFormViewModel @Inject constructor(
 
         val srcAddress = selectedSrc.address.address
 
-        // TODO reuse this with calculateFees
-        val srcTokenValue = srcAmountState.text.toString()
-            .toBigDecimalOrNull()
+        val srcTokenValue = srcAmount
             ?.movePointRight(selectedSrc.account.token.decimal)
             ?.toBigInteger()
             ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
             ?: return
 
+        val quote = quote ?: return
 
         viewModelScope.launch {
-            // TODO cache last quote
-            val quote = swapQuoteRepository.getSwapQuote(
-                dstAddress = selectedDst.address.address,
-                srcToken = srcToken,
-                dstToken = dstToken,
-                tokenValue = srcTokenValue,
-            )
-
             val dstTokenValue = quote.expectedDstValue
 
             val specificAndUtxo = blockChainSpecificRepository.getSpecific(
@@ -281,12 +276,13 @@ internal class SwapFormViewModel @Inject constructor(
                         ?.toBigInteger()
 
                     try {
+                        val hasUserSetTokenValue = srcTokenValue != null
+
                         val tokenValue = srcTokenValue?.let {
                             convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
-                            // todo currently ?: option is to get quotes
-                            //  if user didn't input any value. can we do it better?
                         } ?: TokenValue(
-                            1_000_000_000.toBigInteger(),
+                            1.toBigInteger()
+                                .multiply(BigInteger.TEN.pow(srcToken.decimal)),
                             srcToken.ticker,
                             srcToken.decimal
                         )
@@ -297,6 +293,7 @@ internal class SwapFormViewModel @Inject constructor(
                             dstToken = dst.account.token,
                             tokenValue = tokenValue,
                         )
+                        this@SwapFormViewModel.quote = quote
 
                         val currency = appCurrencyRepository.currency.first()
                         val fiatFees =
@@ -306,11 +303,15 @@ internal class SwapFormViewModel @Inject constructor(
                             UiText.DynamicString(mapDurationToUiString(it))
                         } ?: R.string.swap_screen_estimated_time_instant.asUiText()
 
+                        val estimatedDstTokenValue = if (hasUserSetTokenValue) {
+                            mapTokenValueToDecimalUiString(
+                                quote.expectedDstValue
+                            )
+                        } else ""
+
                         uiState.update {
                             it.copy(
-                                estimatedDstTokenValue = mapTokenValueToDecimalUiString(
-                                    quote.expectedDstValue
-                                ),
+                                estimatedDstTokenValue = estimatedDstTokenValue,
                                 fee = fiatValueToString.map(fiatFees),
                                 estimatedTime = estimatedTime,
                             )
