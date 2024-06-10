@@ -15,6 +15,11 @@ sealed class UiText {
         val resId: Int,
         val formatArgs: List<Any>
     ) : UiText()
+
+    companion object {
+        val Empty = DynamicString("")
+    }
+
 }
 
 internal fun Int.asUiText(vararg args: Any): UiText =
