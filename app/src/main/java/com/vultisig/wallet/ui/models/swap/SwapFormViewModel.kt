@@ -148,24 +148,18 @@ internal class SwapFormViewModel @Inject constructor(
                 blockChainSpecific = specificAndUtxo,
                 vaultAddress = quote.inboundAddress ?: srcAddress,
                 routerAddress = quote.routerAddress,
+                estimatedFees = quote.fees,
+                estimatedTime = quote.estimatedTime,
             )
 
             swapTransactionRepository.addTransaction(transaction)
 
             sendNavigator.navigate(
-                SendDst.Keysign(
+                SendDst.VerifyTransaction(
                     transactionId = transaction.id,
                 )
             )
         }
-
-//        viewModelScope.launch {
-//            sendNavigator.navigate(
-//                SendDst.VerifyTransaction(
-//                    transactionId = "transactionId",
-//                )
-//            )
-//        }
     }
 
     fun selectSrcToken(model: TokenBalanceUiModel) {

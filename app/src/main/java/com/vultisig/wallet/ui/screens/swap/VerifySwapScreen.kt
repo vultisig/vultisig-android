@@ -19,7 +19,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.AddressField
@@ -33,14 +35,23 @@ internal fun VerifySwapScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    val errorText = state.errorText
+    if (errorText != null) {
+        UiAlertDialog(
+            title = stringResource(id = R.string.dialog_default_error_title),
+            text = errorText.asString(),
+            onDismiss = viewModel::dismissError,
+        )
+    }
+
     VerifySwapScreen(
         srcTokenValue = state.srcTokenValue,
         dstTokenValue = state.dstTokenValue,
         estimatedFees = state.estimatedFees,
-        estimatedTime = state.estimatedTime,
+        estimatedTime = state.estimatedTime.asString(),
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
-        confirmTitle = "Sign",
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
         onConfirm = viewModel::confirm,

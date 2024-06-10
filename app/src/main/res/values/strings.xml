@@ -220,6 +220,7 @@
     <string name="chain_account_item_address_copied">%1$s copied to clipboard</string>
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
+    <string name="verify_swap_sign_button">Sign</string>
     <string-array name="digit_words">
         <item>zero</item>
         <item>one</item>
