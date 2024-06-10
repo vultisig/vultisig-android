@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -63,6 +64,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
+    private val mapDurationToUiString: DurationToUiStringMapper,
 
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -300,9 +302,8 @@ internal class SwapFormViewModel @Inject constructor(
                         val fiatFees =
                             convertTokenValueToFiat(dst.account.token, quote.fees, currency)
 
-                        // todo convert seconds to human readable format
-                        val estimatedTime = quote.estimatedTime?.toString()?.let {
-                            UiText.DynamicString(it)
+                        val estimatedTime = quote.estimatedTime?.let {
+                            UiText.DynamicString(mapDurationToUiString(it))
                         } ?: R.string.swap_screen_estimated_time_instant.asUiText()
 
                         uiState.update {
