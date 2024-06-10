@@ -34,8 +34,15 @@ internal fun SwapScreen(
     navController: NavController,
     vaultId: String,
     chainId: String?,
+    viewModel: SwapViewModel = hiltViewModel(),
 ) {
     val swapNavHostController = rememberNavController()
+
+    LaunchedEffect(Unit) {
+        viewModel.dst.collect {
+            swapNavHostController.route(it.dst.route, it.opts)
+        }
+    }
     val navBackStackEntry by swapNavHostController.currentBackStackEntryAsState()
 
     val route = navBackStackEntry?.destination?.route
@@ -67,6 +74,7 @@ internal fun SwapScreen(
         chainId = chainId,
         title = title,
         progress = progress,
+        qrCodeResult = viewModel.addressProvider.address.collectAsState().value
     )
 }
 
@@ -78,13 +86,12 @@ internal fun SwapScreen(
     progress: Float,
     vaultId: String,
     chainId: String?,
-    viewModel: SwapViewModel = hiltViewModel(),
+    qrCodeResult: String?,
 ) {
     val context = LocalContext.current
 
 
-    val qrAddress by viewModel.addressProvider.address.collectAsState()
-    val qr = qrAddress.takeIf { it.isNotEmpty() }
+    val qr = qrCodeResult.takeIf { !it.isNullOrBlank() }
 
     ProgressScreen(
         navController = topBarNavController,
@@ -147,5 +154,6 @@ internal fun SwapScreenPreview() {
         chainId = null,
         title = stringResource(id = R.string.swap_screen_title),
         progress = 0.35f,
+        qrCodeResult = "0x1234567890"
     )
 }
