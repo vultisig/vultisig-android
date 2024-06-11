@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.models.AllowZeroGas
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc
@@ -67,6 +68,8 @@ internal data class SendFormUiModel(
     val fee: String? = null,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
+    val dstAddressError: UiText? = null,
+    val tokenAmountError: UiText? = null,
 )
 
 internal data class SendSrc(
@@ -134,8 +137,20 @@ internal class SendFormViewModel @Inject constructor(
         loadTokens()
         loadSelectedCurrency()
         collectSelectedAccount()
+        collectAddressChanges()
         collectAmountChanges()
         calculateGasFees()
+    }
+
+    private fun collectAddressChanges() {
+        viewModelScope.launch {
+            addressFieldState.textAsFlow().collect { address ->
+                val errorText = validateDstAddress(address.toString())
+                uiState.update {
+                    it.copy(dstAddressError = errorText)
+                }
+            }
+        }
     }
 
     fun selectToken(token: TokenBalanceUiModel) {
@@ -205,7 +220,7 @@ internal class SendFormViewModel @Inject constructor(
                 }
 
                 val tokenAmount = tokenAmountFieldState.text
-                    .toString().takeIf { it.length<50 }
+                    .toString().takeIf { it.length < TextFieldUtils.AMOUNT_MAX_LENGTH }
                     ?.toBigDecimalOrNull()
 
                 if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
@@ -387,7 +402,8 @@ internal class SendFormViewModel @Inject constructor(
             ) { tokenFieldValue, fiatFieldValue ->
                 val tokenString = tokenFieldValue.toString()
                 val fiatString = fiatFieldValue.toString()
-
+                val errorText = validateTokenAmount(tokenString)
+                uiState.update { it.copy(tokenAmountError = errorText) }
                 if (lastToken != tokenString) {
                     val fiatValue = convertValue(tokenString) { value, price, token ->
                         value.multiply(price)
@@ -442,7 +458,7 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun validateDstAddress(dstAddress: String): UiText? {
+    private fun validateDstAddress(dstAddress: String): UiText? {
         val selectedAccount = selectedAccount
             ?: return UiText.StringResource(R.string.send_error_no_token)
         val chain = selectedAccount.token.chain
@@ -451,7 +467,7 @@ internal class SendFormViewModel @Inject constructor(
         return null
     }
 
-    fun validateTokenAmount(tokenAmount: String): UiText? {
+    private fun validateTokenAmount(tokenAmount: String): UiText? {
         if(tokenAmount.length>50)
             return UiText.StringResource(R.string.send_from_invalid_amount)
         val tokenAmountBigDecimal = tokenAmount.toBigDecimalOrNull()

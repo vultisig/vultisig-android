@@ -36,7 +36,6 @@ import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
-import com.vultisig.wallet.ui.components.library.form.UiTextFieldValidator
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
@@ -70,8 +69,6 @@ internal fun SendFormScreen(
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onScan = viewModel::scanAddress,
-        dstAddressValidator = viewModel::validateDstAddress,
-        tokenAmountValidator = viewModel::validateTokenAmount,
         onSend = viewModel::send,
     )
 }
@@ -83,8 +80,6 @@ internal fun SendFormScreen(
     addressFieldState: TextFieldState,
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
-    dstAddressValidator: UiTextFieldValidator,
-    tokenAmountValidator: UiTextFieldValidator,
     onDismissError: () -> Unit = {},
     onSelectToken: (TokenBalanceUiModel) -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
@@ -142,7 +137,7 @@ internal fun SendFormScreen(
                 hint = stringResource(R.string.send_to_address_hint),
                 keyboardType = KeyboardType.Text,
                 textFieldState = addressFieldState,
-                validator = dstAddressValidator
+                error = state.dstAddressError
             ) {
                 val clipboard = LocalClipboardManager.current
 
@@ -169,7 +164,7 @@ internal fun SendFormScreen(
                 hint = stringResource(R.string.send_amount_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = tokenAmountFieldState,
-                validator = tokenAmountValidator
+                error = state.tokenAmountError
             ) {
                 Text(
                     text = stringResource(R.string.send_screen_max),
@@ -185,6 +180,7 @@ internal fun SendFormScreen(
                 hint = stringResource(R.string.send_amount_currency_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = fiatAmountFieldState,
+                error = null
             )
             if (state.showGasFee) {
                 FormDetails(
@@ -206,7 +202,8 @@ internal fun SendFormScreen(
                 .padding(all = 16.dp),
             onClick = {
                 focusManager.clearFocus()
-                onSend() },
+                onSend()
+            },
         )
     }
 
@@ -221,8 +218,6 @@ private fun SendFormScreenPreview() {
         state = SendFormUiModel(),
         addressFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
-        fiatAmountFieldState = TextFieldState(),
-        dstAddressValidator = { null },
-        tokenAmountValidator = { null },
+        fiatAmountFieldState = TextFieldState()
     )
 }

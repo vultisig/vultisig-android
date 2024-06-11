@@ -52,4 +52,10 @@ internal interface MappersModule {
         impl: TransactionToUiModelMapperImpl,
     ): TransactionToUiModelMapper
 
+    @Binds
+    @Singleton
+    fun bindDurationToUiStringMapper(
+        impl: DurationToUiStringMapperImpl
+    ): DurationToUiStringMapper
+
 }

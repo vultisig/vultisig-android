@@ -2,8 +2,6 @@ package com.vultisig.wallet.ui.screens.swap
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,7 +42,6 @@ import com.vultisig.wallet.ui.components.library.form.FormTextField
 import com.vultisig.wallet.ui.components.library.form.FormTitleContainer
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
-import com.vultisig.wallet.ui.components.library.form.UiTextFieldValidator
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
@@ -71,7 +68,6 @@ internal fun SwapFormScreen(
         onSelectSrcToken = viewModel::selectSrcToken,
         onSelectDstToken = viewModel::selectDstToken,
         onFlipSelectedTokens = viewModel::flipSelectedTokens,
-        srcAmountValidator = viewModel::srcAmountValidator
     )
 }
 
@@ -80,7 +76,6 @@ internal fun SwapFormScreen(
 internal fun SwapFormScreen(
     state: SwapFormUiModel,
     srcAmountTextFieldState: TextFieldState,
-    srcAmountValidator: UiTextFieldValidator,
     onSelectSrcToken: (TokenBalanceUiModel) -> Unit = {},
     onSelectDstToken: (TokenBalanceUiModel) -> Unit = {},
     onFlipSelectedTokens: () -> Unit = {},
@@ -116,9 +111,8 @@ internal fun SwapFormScreen(
                     )
 
                     TextFieldValidator(
-                        state = srcAmountTextFieldState,
-                        validator = srcAmountValidator,
-                        focusState = focusState
+                        focusState = focusState,
+                        errorText = state.amountError
                     )
                     {
                         FormCard {
@@ -222,7 +216,6 @@ internal fun SwapFormScreenPreview() {
     ) {
         SwapFormScreen(
             state = SwapFormUiModel(),
-            srcAmountValidator = { null },
             srcAmountTextFieldState = TextFieldState(),
         )
     }

@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -16,16 +18,17 @@ internal fun NamingVaultScreen(
 ) {
     val viewModel = hiltViewModel<NamingVaultViewModel>()
 
+    LaunchedEffect(Unit) {
+        viewModel.collectNamingFieldStateChanges()
+    }
+
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_setup),
         textFieldState = viewModel.namingTextFiledState,
         navHostController = navController,
         inputTitle = stringResource(id = R.string.naming_vault_screen_vault_name),
         saveButtonText = stringResource(id = R.string.naming_vault_screen_continue),
-        validator = viewModel::validateVaultName,
-        onSave = viewModel::navigateToKeygen
+        onSave = viewModel::navigateToKeygen,
+        errorText = viewModel.errorMessageState.collectAsState().value
     )
-
-
-
 }

@@ -33,8 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
-import com.vultisig.wallet.ui.components.library.form.UiTextFieldValidator
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -45,7 +45,7 @@ internal fun NamingComponent(
     textFieldState: TextFieldState = rememberTextFieldState(),
     navHostController: NavHostController = rememberNavController(),
     inputTitle: String = "",
-    validator: UiTextFieldValidator = { null },
+    errorText: UiText? = null,
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onSave: () -> Unit = {}
 ) {
@@ -110,8 +110,7 @@ internal fun NamingComponent(
                 )
 
                 TextFieldValidator(
-                    state = textFieldState,
-                    validator = validator,
+                    errorText = errorText,
                     focusState = focusState
                 ) {
                     Card(

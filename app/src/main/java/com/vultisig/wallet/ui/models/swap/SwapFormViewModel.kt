@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -21,7 +22,9 @@ import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.IsSwapSupported
+import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -42,6 +45,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
 
@@ -53,6 +57,7 @@ internal data class SwapFormUiModel(
     val gas: String = "",
     val fee: String = "",
     val estimatedTime: UiText = UiText.DynamicString(""),
+    val amountError: UiText? = null
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -63,6 +68,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
+    private val mapDurationToUiString: DurationToUiStringMapper,
 
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -79,6 +85,8 @@ internal class SwapFormViewModel @Inject constructor(
     val srcAmountState = TextFieldState()
 
     private var vaultId: String? = null
+
+    private var quote: SwapQuote? = null
 
     private val srcAmount: BigDecimal?
         get() = srcAmountState.text.toString().toBigDecimalOrNull()
@@ -108,24 +116,15 @@ internal class SwapFormViewModel @Inject constructor(
 
         val srcAddress = selectedSrc.address.address
 
-        // TODO reuse this with calculateFees
-        val srcTokenValue = srcAmountState.text.toString().takeIf { it.length<50 }
-            ?.toBigDecimalOrNull()
+        val srcTokenValue = srcAmount
             ?.movePointRight(selectedSrc.account.token.decimal)
             ?.toBigInteger()
             ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
             ?: return
 
+        val quote = quote ?: return
 
         viewModelScope.launch {
-            // TODO cache last quote
-            val quote = swapQuoteRepository.getSwapQuote(
-                dstAddress = selectedDst.address.address,
-                srcToken = srcToken,
-                dstToken = dstToken,
-                tokenValue = srcTokenValue,
-            )
-
             val dstTokenValue = quote.expectedDstValue
 
             val specificAndUtxo = blockChainSpecificRepository.getSpecific(
@@ -148,24 +147,18 @@ internal class SwapFormViewModel @Inject constructor(
                 blockChainSpecific = specificAndUtxo,
                 vaultAddress = quote.inboundAddress ?: srcAddress,
                 routerAddress = quote.routerAddress,
+                estimatedFees = quote.fees,
+                estimatedTime = quote.estimatedTime,
             )
 
             swapTransactionRepository.addTransaction(transaction)
 
             sendNavigator.navigate(
-                SendDst.Keysign(
+                SendDst.VerifyTransaction(
                     transactionId = transaction.id,
                 )
             )
         }
-
-//        viewModelScope.launch {
-//            sendNavigator.navigate(
-//                SendDst.VerifyTransaction(
-//                    transactionId = "transactionId",
-//                )
-//            )
-//        }
     }
 
     fun selectSrcToken(model: TokenBalanceUiModel) {
@@ -276,6 +269,9 @@ internal class SwapFormViewModel @Inject constructor(
                     addrs to srcAmount
                 }
                 .collect { (addrs, amount) ->
+                    val errorMessage = srcAmountValidator(amount.toString())
+                    uiState.update { it.copy(amountError = errorMessage) }
+
                     val (src, dst) = addrs
 
                     val srcToken = src.account.token
@@ -285,12 +281,13 @@ internal class SwapFormViewModel @Inject constructor(
                         ?.toBigInteger()
 
                     try {
+                        val hasUserSetTokenValue = srcTokenValue != null
+
                         val tokenValue = srcTokenValue?.let {
                             convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
-                            // todo currently ?: option is to get quotes
-                            //  if user didn't input any value. can we do it better?
                         } ?: TokenValue(
-                            1_000_000_000.toBigInteger(),
+                            1.toBigInteger()
+                                .multiply(BigInteger.TEN.pow(srcToken.decimal)),
                             srcToken.ticker,
                             srcToken.decimal
                         )
@@ -301,21 +298,25 @@ internal class SwapFormViewModel @Inject constructor(
                             dstToken = dst.account.token,
                             tokenValue = tokenValue,
                         )
+                        this@SwapFormViewModel.quote = quote
 
                         val currency = appCurrencyRepository.currency.first()
                         val fiatFees =
                             convertTokenValueToFiat(dst.account.token, quote.fees, currency)
 
-                        // todo convert seconds to human readable format
-                        val estimatedTime = quote.estimatedTime?.toString()?.let {
-                            UiText.DynamicString(it)
+                        val estimatedTime = quote.estimatedTime?.let {
+                            UiText.DynamicString(mapDurationToUiString(it))
                         } ?: R.string.swap_screen_estimated_time_instant.asUiText()
+
+                        val estimatedDstTokenValue = if (hasUserSetTokenValue) {
+                            mapTokenValueToDecimalUiString(
+                                quote.expectedDstValue
+                            )
+                        } else ""
 
                         uiState.update {
                             it.copy(
-                                estimatedDstTokenValue = mapTokenValueToDecimalUiString(
-                                    quote.expectedDstValue
-                                ),
+                                estimatedDstTokenValue = estimatedDstTokenValue,
                                 fee = fiatValueToString.map(fiatFees),
                                 estimatedTime = estimatedTime,
                             )
@@ -328,8 +329,8 @@ internal class SwapFormViewModel @Inject constructor(
         }
     }
 
-    fun srcAmountValidator(srcAmount: String): UiText? {
-        if(srcAmount.isEmpty() || srcAmount.length>50){
+    private fun srcAmountValidator(srcAmount: String): UiText? {
+        if (srcAmount.isEmpty() || srcAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH) {
             return UiText.StringResource(R.string.swap_form_invalid_amount)
         }
         val srcAmountAmountBigDecimal = srcAmount.toBigDecimalOrNull()

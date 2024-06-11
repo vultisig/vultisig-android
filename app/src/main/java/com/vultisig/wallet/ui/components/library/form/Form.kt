@@ -126,7 +126,7 @@ internal fun TokenCard(
 internal fun FormTextFieldCard(
     title: String,
     hint: String,
-    validator: UiTextFieldValidator = { null },
+    error: UiText?,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     actions: (@Composable RowScope.() -> Unit)? = null,
@@ -134,7 +134,7 @@ internal fun FormTextFieldCard(
     var focusState by remember {
         mutableStateOf<FocusState?>(null)
     }
-    TextFieldValidator(state = textFieldState, validator = validator,focusState = focusState) {
+    TextFieldValidator(errorText = error, focusState = focusState) {
         FormEntry(
             title = title,
         ) {
@@ -268,13 +268,10 @@ internal fun FormDetails(
     }
 }
 
-typealias UiTextFieldValidator = suspend (String) -> UiText?
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TextFieldValidator(
-    state: TextFieldState,
-    validator: UiTextFieldValidator,
+internal fun TextFieldValidator(
+    errorText: UiText?,
     focusState: FocusState?,
     content: @Composable () -> Unit,
 ) {
@@ -289,7 +286,7 @@ fun TextFieldValidator(
             isFocused = true
         } else {
             if (isFocused) {
-                errorMessage = validator(state.text.toString())
+                errorMessage = errorText
             }
             isFocused = false
         }
