@@ -8,8 +8,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vultisig.wallet.R
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.common.unzipZlib
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -23,15 +26,21 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
@@ -58,6 +67,17 @@ enum class JoinKeysignState {
     DiscoveryingSessionID, DiscoverService, JoinKeysign, WaitingForKeysignStart, Keysign, FailedToStart, Error
 }
 
+sealed class VerifyUiModel {
+
+    data class Send(
+        val model: VerifyTransactionUiModel,
+    ) : VerifyUiModel()
+
+    data class Swap(
+        val model: VerifySwapUiModel,
+    ) : VerifyUiModel()
+
+}
 
 @HiltViewModel
 internal class JoinKeysignViewModel @Inject constructor(
@@ -66,9 +86,14 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
+    private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
+    private val durationToUiStringMapper: DurationToUiStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
     private val gasFeeRepository: GasFeeRepository,
+    private val swapQuoteRepository: SwapQuoteRepository,
 
     private val vaultRepository: VaultRepository,
     private val gson: Gson,
@@ -122,7 +147,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
         )
 
-    val transactionUiModel = MutableStateFlow(VerifyTransactionUiModel())
+    val verifyUiModel =
+        MutableStateFlow<VerifyUiModel>(VerifyUiModel.Send(VerifyTransactionUiModel()))
 
     fun setData() {
         viewModelScope.launch {
@@ -186,47 +212,84 @@ internal class JoinKeysignViewModel @Inject constructor(
     }
 
     private suspend fun loadTransaction(payload: KeysignPayload) {
-        val payloadToken = payload.coin
-        val address = payloadToken.address
-        val token = tokenRepository.getToken(payloadToken.id)!!
-        val chain = token.chain
+        val swapPayload = payload.swapPayload
         val currency = appCurrencyRepository.currency.first()
 
-        val tokenValue = TokenValue(
-            value = payload.toAmount,
-            unit = token.ticker,
-            decimals = token.decimal,
-        )
+        if (swapPayload == null) {
+            val payloadToken = payload.coin
+            val address = payloadToken.address
+            val token = tokenRepository.getToken(payloadToken.id)!!
+            val chain = token.chain
 
-        val gasFee = gasFeeRepository.getGasFee(chain, address)
+            val tokenValue = TokenValue(
+                value = payload.toAmount,
+                unit = token.ticker,
+                decimals = token.decimal,
+            )
 
-        val transaction = Transaction(
-            id = UUID.randomUUID().toString(),
+            val gasFee = gasFeeRepository.getGasFee(chain, address)
 
-            vaultId = payload.vaultPublicKeyECDSA,
-            chainId = chain.id,
-            tokenId = token.id,
-            srcAddress = address,
-            dstAddress = payload.toAddress,
-            tokenValue = tokenValue,
-            fiatValue = convertTokenValueToFiat(
-                token,
-                tokenValue,
-                currency,
-            ),
-            gasFee = gasFee,
+            val transaction = Transaction(
+                id = UUID.randomUUID().toString(),
 
-            // TODO that's mock data
-            blockChainSpecific = BlockChainSpecific.THORChain(
-                BigInteger.ZERO,
-                BigInteger.ZERO,
-                BigInteger.ZERO
-            ),
-        )
+                vaultId = payload.vaultPublicKeyECDSA,
+                chainId = chain.id,
+                tokenId = token.id,
+                srcAddress = address,
+                dstAddress = payload.toAddress,
+                tokenValue = tokenValue,
+                fiatValue = convertTokenValueToFiat(
+                    token,
+                    tokenValue,
+                    currency,
+                ),
+                gasFee = gasFee,
 
-        transactionUiModel.value = VerifyTransactionUiModel(
-            transaction = mapTransactionToUiModel(transaction),
-        )
+                // TODO that's mock data
+                blockChainSpecific = BlockChainSpecific.THORChain(
+                    BigInteger.ZERO,
+                    BigInteger.ZERO,
+                    BigInteger.ZERO
+                ),
+            )
+
+            verifyUiModel.value = VerifyUiModel.Send(
+                VerifyTransactionUiModel(
+                    transaction = mapTransactionToUiModel(transaction),
+                )
+            )
+        } else {
+            val srcToken = swapPayload.fromCoin
+            val dstToken = swapPayload.toCoin
+
+            val srcTokenValue = convertTokenAndValueToTokenValue(srcToken, swapPayload.fromAmount)
+
+            val dstTokenValue = convertTokenAndValueToTokenValue(
+                dstToken, swapPayload.toAmountDecimal
+                    .movePointRight(dstToken.decimal)
+                    .toBigInteger()
+            )
+
+            val quote = swapQuoteRepository.getSwapQuote(
+                srcToken = srcToken,
+                dstToken = dstToken,
+                dstAddress = swapPayload.toAddress,
+                tokenValue = srcTokenValue,
+            )
+
+            verifyUiModel.value = VerifyUiModel.Swap(
+                VerifySwapUiModel(
+                    srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                    dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                    estimatedFees = fiatValueToStringMapper.map(
+                        convertTokenValueToFiat(dstToken, quote.fees, currency)
+                    ),
+                    estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
+                        ?.let { UiText.DynamicString(it) }
+                        ?: R.string.swap_screen_estimated_time_instant.asUiText(),
+                )
+            )
+        }
     }
 
     private fun onServerAddressDiscovered(addr: String) {
