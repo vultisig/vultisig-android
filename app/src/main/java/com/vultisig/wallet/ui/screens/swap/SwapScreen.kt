@@ -90,15 +90,13 @@ internal fun SwapScreen(
     qrCodeResult: String?,
 ) {
     val context = LocalContext.current
-
-    val qr = qrCodeResult.takeIf { !it.isNullOrBlank() }
-
+    
     ProgressScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
-        endIcon = qr?.let { R.drawable.qr_share },
-        onEndIconClick = qr?.let {
+        endIcon = qrCodeResult?.let { R.drawable.qr_share },
+        onEndIconClick = qrCodeResult?.let {
             {
                 val qrBitmap = generateQrBitmap(it)
                 context.share(qrBitmap)
