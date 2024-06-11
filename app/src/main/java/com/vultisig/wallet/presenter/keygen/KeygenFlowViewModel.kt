@@ -14,7 +14,6 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.vultisigRelay
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.mediator.MediatorService
@@ -51,7 +50,6 @@ enum class KeygenFlowState {
 internal class KeygenFlowViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
-    private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
     navBackStackEntry: SavedStateHandle,
     private val navigator: Navigator<Destination>,
@@ -68,6 +66,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
+    private var isRelayEnabled = true
 
     var vaultId = navBackStackEntry.get<String>(Screen.KeygenFlow.ARG_VAULT_NAME) ?: ""
     private val vaultSetupType =
@@ -83,7 +82,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     val participants: MutableLiveData<List<String>>
         get() = participantDiscovery?.participants ?: MutableLiveData(listOf())
 
-    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.WIFI)
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
             vault,
@@ -124,10 +122,6 @@ internal class KeygenFlowViewModel @Inject constructor(
         else
             TssAction.ReShare
 
-        if (vultisigRelay.IsRelayEnabled) {
-            serverAddress = Endpoints.VULTISIG_RELAY
-            networkOption.value = NetworkPromptOption.CELLULAR
-        }
         this.action = action
         this.vault = vault
         if (this.vault.hexChainCode.isEmpty()) {
@@ -168,6 +162,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private suspend fun updateKeygenPayload(context: Context) {
         // stop participant discovery
         stopParticipantDiscovery()
+        startDiscovery(context)
         this.participantDiscovery =
             ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, gson)
         viewModelScope.launch {
@@ -187,7 +182,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                             hexChainCode = vault.hexChainCode,
                             serviceName = serviceName,
                             encryptionKeyHex = this._encryptionKeyHex,
-                            useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                            useVultisigRelay = isRelayEnabled,
                             vaultName = this.vault.name,
                         )
                     ).toJson(gson)
@@ -203,24 +198,29 @@ internal class KeygenFlowViewModel @Inject constructor(
                             pubKeyECDSA = vault.pubKeyECDSA,
                             oldParties = vault.signers,
                             encryptionKeyHex = this._encryptionKeyHex,
-                            useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                            useVultisigRelay = isRelayEnabled,
                             oldResharePrefix = vault.resharePrefix,
                         )
                     ).toJson(gson)
             }
         }
 
-        if (!vultisigRelay.IsRelayEnabled)
-        // when relay is disabled, start the mediator service
-            startMediatorService(context)
-        else {
-            serverAddress = Endpoints.VULTISIG_RELAY
-            // start the session
-            withContext(Dispatchers.IO) {
-                startSession(serverAddress, sessionID, vault.localPartyID)
-            }
-            // kick off discovery
+    }
+
+    private suspend fun startDiscovery(context: Context) {
+        serverAddress = Endpoints.VULTISIG_RELAY
+        // start the session
+        val isCellularSuccess = withContext(Dispatchers.IO) {
+            startSession(serverAddress, sessionID, vault.localPartyID)
+        }
+        // kick off discovery
+        if (isCellularSuccess) {
             participantDiscovery?.discoveryParticipants()
+            isRelayEnabled = true
+        } else {
+            startMediatorService(context)
+            serverAddress = "http://127.0.0.1:18080"
+            isRelayEnabled = false
         }
     }
 
@@ -260,7 +260,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         serverAddr: String,
         sessionID: String,
         localPartyID: String,
-    ) {
+    ): Boolean {
         // start the session
         try {
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
@@ -272,13 +272,18 @@ internal class KeygenFlowViewModel @Inject constructor(
                 when (response.code) {
                     HttpURLConnection.HTTP_CREATED -> {
                         Timber.d("startSession: Session started")
+                        return true
                     }
 
-                    else -> Timber.d("startSession: Response code: " + response.code)
+                    else -> {
+                        Timber.d("startSession: Response code: " + response.code)
+                        return false
+                    }
                 }
             }
         } catch (e: Exception) {
             Timber.e("startSession: ${e.stackTraceToString()}")
+            return false
         }
     }
 
@@ -316,25 +321,4 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
-        if (networkOption.value == option) return
-        when (option) {
-            NetworkPromptOption.WIFI, NetworkPromptOption.HOTSPOT -> {
-                vultisigRelay.IsRelayEnabled = false
-                serverAddress = "http://127.0.0.1:18080"
-                networkOption.value = option
-            }
-
-            NetworkPromptOption.CELLULAR -> {
-                vultisigRelay.IsRelayEnabled = true
-                serverAddress = Endpoints.VULTISIG_RELAY
-                networkOption.value = option
-            }
-        }
-
-        GlobalScope.launch(Dispatchers.IO) {
-            updateKeygenPayload(context)
-        }
-    }
 }

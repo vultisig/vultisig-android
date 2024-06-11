@@ -221,6 +221,7 @@
     <string name="settings_screen_vault_settings">Vault Settings</string>
     <string name="home_scree_done">done</string>
     <string name="verify_swap_sign_button">Sign</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Looking for devices…</string>
     <string-array name="digit_words">
         <item>zero</item>
         <item>one</item>

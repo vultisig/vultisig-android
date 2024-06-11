@@ -28,7 +28,6 @@ import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.presenter.keygen.KeygenFlowState
 import com.vultisig.wallet.presenter.keygen.KeygenFlowViewModel
-import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -47,7 +46,6 @@ internal fun KeygenPeerDiscovery(
 
     val keygenPayloadState = viewModel.keygenPayloadState.value
 
-    val networkPromptOption = viewModel.networkOption.value
 
     val context = LocalContext.current
     val applicationContext = context.applicationContext
@@ -66,12 +64,10 @@ internal fun KeygenPeerDiscovery(
         selectionState = selectionState,
         participants = participants,
         keygenPayloadState = keygenPayloadState,
-        networkPromptOption = networkPromptOption,
         onQrAddressClick = {
             val qrBitmap = generateQrBitmap(keygenPayloadState)
             context.share(qrBitmap)
         },
-        onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
         onStopParticipantDiscovery = {
@@ -87,9 +83,7 @@ internal fun KeygenPeerDiscoveryScreen(
     selectionState: List<String>,
     participants: List<String>,
     keygenPayloadState: String,
-    networkPromptOption: NetworkPromptOption,
     onQrAddressClick: () -> Unit = {},
-    onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
@@ -129,8 +123,6 @@ internal fun KeygenPeerDiscoveryScreen(
                     selectionState = selectionState,
                     participants = participants,
                     keygenPayloadState = keygenPayloadState,
-                    networkPromptOption = networkPromptOption,
-                    onChangeNetwork = onChangeNetwork,
                     onAddParticipant = onAddParticipant,
                     onRemoveParticipant = onRemoveParticipant,
                 )
@@ -164,6 +156,5 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
-        networkPromptOption = NetworkPromptOption.WIFI,
     )
 }

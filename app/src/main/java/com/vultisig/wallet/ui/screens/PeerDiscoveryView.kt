@@ -15,10 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
-import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
-import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
-import com.vultisig.wallet.ui.components.NetworkPrompts
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -28,8 +25,6 @@ internal fun PeerDiscoveryView(
     selectionState: List<String>,
     participants: List<String>,
     keygenPayloadState: String,
-    networkPromptOption: NetworkPromptOption,
-    onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
 ) {
@@ -40,7 +35,7 @@ internal fun PeerDiscoveryView(
     Text(
         text = stringResource(R.string.keygen_peer_discovery_pair_with_other_devices),
         color = textColor,
-        style = Theme.montserrat.body3
+        style = Theme.montserrat.subtitle1
     )
 
     if (keygenPayloadState.isNotEmpty()) {
@@ -51,12 +46,6 @@ internal fun PeerDiscoveryView(
                 .fillMaxWidth(),
         )
     }
-
-    NetworkPrompts(
-        networkPromptOption = networkPromptOption,
-        onChange = onChangeNetwork,
-        modifier = Modifier.padding(horizontal = 12.dp),
-    )
 
     UiSpacer(size = 24.dp)
 
@@ -87,9 +76,9 @@ internal fun PeerDiscoveryView(
         }
     } else {
         Text(
-            text = stringResource(R.string.keygen_peer_discovery_waiting_for_other_devices_to_connect),
+            text = stringResource(R.string.keygen_peer_discovery_looking_for_devices),
             color = textColor,
-            style = Theme.montserrat.body2,
+            style = Theme.montserrat.subtitle3,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(
@@ -98,14 +87,6 @@ internal fun PeerDiscoveryView(
                 )
         )
     }
-
-    UiSpacer(size = 24.dp)
-
-    DevicesOnSameNetworkHint(
-        title = stringResource(R.string.keygen_peer_discovery_desc1)
-    )
-
-    UiSpacer(size = 72.dp)
 }
 
 @Preview
@@ -115,6 +96,5 @@ private fun PeerDiscoveryPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "",
-        networkPromptOption = NetworkPromptOption.WIFI,
     )
 }

@@ -11,7 +11,6 @@ import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.vultisigRelay
 import com.vultisig.wallet.common.zipZlibAndBase64Encode
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -24,7 +23,6 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.AddressProvider
@@ -49,7 +47,6 @@ enum class KeysignFlowState {
 
 @HiltViewModel
 internal class KeysignFlowViewModel @Inject constructor(
-    private val vultisigRelay: vultisigRelay,
     private val gson: Gson,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
@@ -73,14 +70,13 @@ internal class KeysignFlowViewModel @Inject constructor(
         mutableStateOf(KeysignFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
     val selection = MutableLiveData<List<String>>()
+    private var isRelayEnabled: Boolean = true
     val localPartyID: String?
         get() = _currentVault?.localPartyID
     val keysignMessage: MutableState<String>
         get() = _keysignMessage
     val participants: MutableLiveData<List<String>>
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
-
-    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.WIFI)
 
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -107,10 +103,6 @@ internal class KeysignFlowViewModel @Inject constructor(
         _currentVault = vault
         _keysignPayload = keysignPayload
         this.selection.value = listOf(vault.localPartyID)
-        if (vultisigRelay.IsRelayEnabled) {
-            _serverAddress = Endpoints.VULTISIG_RELAY
-            networkOption.value = NetworkPromptOption.CELLULAR
-        }
         updateKeysignPayload(context)
     }
 
@@ -129,13 +121,15 @@ internal class KeysignFlowViewModel @Inject constructor(
             gson
         )
 
+        startDiscovery(context)
+
         val keysignJsonData = gson.toJson(
             KeysignMesssage(
                 sessionID = _sessionID,
                 serviceName = _serviceName,
                 payload = _keysignPayload!!,
                 encryptionKeyHex = _encryptionKeyHex,
-                useVultisigRelay = vultisigRelay.IsRelayEnabled
+                useVultisigRelay = isRelayEnabled
             )
         )
 
@@ -145,16 +139,26 @@ internal class KeysignFlowViewModel @Inject constructor(
             "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" +
                     keysignJsonData.toByteArray().zipZlibAndBase64Encode()
         addressProvider.update(_keysignMessage.value)
-        if (!vultisigRelay.IsRelayEnabled) {
-            startMediatorService(context)
-        } else {
-            _serverAddress = Endpoints.VULTISIG_RELAY
-            withContext(Dispatchers.IO) {
-                startSession(_serverAddress, _sessionID, vault.localPartyID)
-            }
+    }
+
+
+    private suspend fun startDiscovery(context: Context) {
+        _serverAddress = Endpoints.VULTISIG_RELAY
+        // start the session
+        val isCellularSuccess = withContext(Dispatchers.IO) {
+            startSession(_serverAddress, _sessionID, _currentVault!!.localPartyID)
+        }
+        // kick off discovery
+        if (isCellularSuccess) {
             _participantDiscovery?.discoveryParticipants()
+            isRelayEnabled = true
+        } else {
+            startMediatorService(context)
+            _serverAddress = "http://127.0.0.1:18080"
+            isRelayEnabled = false
         }
     }
+
 
     @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -201,7 +205,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         serverAddr: String,
         sessionID: String,
         localPartyID: String,
-    ) {
+    ): Boolean {
         // start the session
         try {
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
@@ -213,15 +217,20 @@ internal class KeysignFlowViewModel @Inject constructor(
                 when (response.code) {
                     HttpURLConnection.HTTP_CREATED -> {
                         Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
+                        return true
                     }
 
-                    else -> Timber.tag("KeysignFlowViewModel").d(
-                        "startSession: Response code: ${response.code}"
-                    )
+                    else -> {
+                        Timber.tag("KeysignFlowViewModel").d(
+                            "startSession: Response code: ${response.code}"
+                        )
+                        return false
+                    }
                 }
             }
         } catch (e: Exception) {
             Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
+            return false
         }
     }
 
@@ -247,27 +256,6 @@ internal class KeysignFlowViewModel @Inject constructor(
         addressProvider.clean()
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
-        if (networkOption.value == option) return
-        when (option) {
-            NetworkPromptOption.WIFI, NetworkPromptOption.HOTSPOT -> {
-                vultisigRelay.IsRelayEnabled = false
-                _serverAddress = "http://127.0.0.1:18080"
-                networkOption.value = option
-            }
-
-            NetworkPromptOption.CELLULAR -> {
-                vultisigRelay.IsRelayEnabled = true
-                _serverAddress = Endpoints.VULTISIG_RELAY
-                networkOption.value = option
-            }
-        }
-
-        GlobalScope.launch(Dispatchers.IO) {
-            updateKeysignPayload(context)
-        }
-    }
 
     suspend fun startKeysign() {
         withContext(Dispatchers.IO) {

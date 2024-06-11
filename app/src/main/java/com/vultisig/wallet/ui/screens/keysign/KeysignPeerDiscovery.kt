@@ -21,7 +21,6 @@ import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keysign.KeysignFlowState
 import com.vultisig.wallet.presenter.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
@@ -74,8 +73,6 @@ internal fun KeysignPeerDiscovery(
         selectionState = selectionState,
         participants = participants,
         keysignMessage = viewModel.keysignMessage.value,
-        networkPromptOption = viewModel.networkOption.value,
-        onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
         onStopParticipantDiscovery = {
@@ -90,8 +87,6 @@ internal fun KeysignPeerDiscovery(
     selectionState: List<String>,
     participants: List<String>,
     keysignMessage: String,
-    networkPromptOption: NetworkPromptOption,
-    onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
@@ -125,8 +120,6 @@ internal fun KeysignPeerDiscovery(
                 selectionState = selectionState,
                 participants = participants,
                 keygenPayloadState = keysignMessage,
-                networkPromptOption = networkPromptOption,
-                onChangeNetwork = onChangeNetwork,
                 onAddParticipant = onAddParticipant,
                 onRemoveParticipant = onRemoveParticipant,
             )
@@ -141,6 +134,5 @@ private fun KeysignPeerDiscoveryPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keysignMessage = "keysignMessage",
-        networkPromptOption = NetworkPromptOption.WIFI,
     )
 }
