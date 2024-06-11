@@ -23,6 +23,7 @@ import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.library.form.FormCard
+import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.CheckField
@@ -45,12 +46,7 @@ internal fun VerifySwapScreen(
     }
 
     VerifySwapScreen(
-        srcTokenValue = state.srcTokenValue,
-        dstTokenValue = state.dstTokenValue,
-        estimatedFees = state.estimatedFees,
-        estimatedTime = state.estimatedTime.asString(),
-        consentAmount = state.consentAmount,
-        consentReceiveAmount = state.consentReceiveAmount,
+        state = state,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
@@ -58,6 +54,29 @@ internal fun VerifySwapScreen(
     )
 }
 
+@Composable
+internal fun VerifySwapScreen(
+    state: VerifySwapUiModel,
+    confirmTitle: String,
+    isConsentsEnabled: Boolean = true,
+    onConsentReceiveAmount: (Boolean) -> Unit = {},
+    onConsentAmount: (Boolean) -> Unit = {},
+    onConfirm: () -> Unit,
+) {
+    VerifySwapScreen(
+        srcTokenValue = state.srcTokenValue,
+        dstTokenValue = state.dstTokenValue,
+        estimatedFees = state.estimatedFees,
+        estimatedTime = state.estimatedTime.asString(),
+        consentAmount = state.consentAmount,
+        consentReceiveAmount = state.consentReceiveAmount,
+        confirmTitle = confirmTitle,
+        isConsentsEnabled = isConsentsEnabled,
+        onConsentReceiveAmount = onConsentReceiveAmount,
+        onConsentAmount = onConsentAmount,
+        onConfirm = onConfirm,
+    )
+}
 
 @Composable
 private fun VerifySwapScreen(
