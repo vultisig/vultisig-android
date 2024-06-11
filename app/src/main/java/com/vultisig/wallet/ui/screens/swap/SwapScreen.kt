@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.swap
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -15,6 +16,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
+import com.vultisig.wallet.presenter.common.generateQrBitmap
+import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
@@ -72,6 +75,7 @@ internal fun SwapScreen(
         chainId = chainId,
         title = title,
         progress = progress,
+        qrCodeResult = viewModel.addressProvider.address.collectAsState().value
     )
 }
 
@@ -83,6 +87,7 @@ internal fun SwapScreen(
     progress: Float,
     vaultId: String,
     chainId: String?,
+    qrCodeResult: String?,
 ) {
     val context = LocalContext.current
 
@@ -90,6 +95,13 @@ internal fun SwapScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
+        endIcon = qrCodeResult?.let { R.drawable.qr_share },
+        onEndIconClick = qrCodeResult?.let {
+            {
+                val qrBitmap = generateQrBitmap(it)
+                context.share(qrBitmap)
+            }
+        } ?: {}
     ) {
         NavHost(
             navController = navHostController,
@@ -140,5 +152,6 @@ internal fun SwapScreenPreview() {
         chainId = null,
         title = stringResource(id = R.string.swap_screen_title),
         progress = 0.35f,
+        qrCodeResult = "0x1234567890"
     )
 }
