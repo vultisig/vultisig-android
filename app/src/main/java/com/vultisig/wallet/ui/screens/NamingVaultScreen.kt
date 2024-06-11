@@ -24,7 +24,7 @@ internal fun NamingVaultScreen(
 
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_setup),
-        textFieldState = viewModel.namingTextFiledState,
+        textFieldState = viewModel.namingTextFieldState,
         navHostController = navController,
         inputTitle = stringResource(id = R.string.naming_vault_screen_vault_name),
         saveButtonText = stringResource(id = R.string.naming_vault_screen_continue),

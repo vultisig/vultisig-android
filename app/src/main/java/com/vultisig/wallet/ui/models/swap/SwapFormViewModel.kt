@@ -269,7 +269,7 @@ internal class SwapFormViewModel @Inject constructor(
                     addrs to srcAmount
                 }
                 .collect { (addrs, amount) ->
-                    val errorMessage = srcAmountValidator(amount.toString())
+                    val errorMessage = validateSrcAmount(amount.toString())
                     uiState.update { it.copy(amountError = errorMessage) }
 
                     val (src, dst) = addrs
@@ -329,7 +329,7 @@ internal class SwapFormViewModel @Inject constructor(
         }
     }
 
-    private fun srcAmountValidator(srcAmount: String): UiText? {
+    private fun validateSrcAmount(srcAmount: String): UiText? {
         if (srcAmount.isEmpty() || srcAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH) {
             return UiText.StringResource(R.string.swap_form_invalid_amount)
         }

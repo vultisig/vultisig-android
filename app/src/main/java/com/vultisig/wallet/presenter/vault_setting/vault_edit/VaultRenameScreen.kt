@@ -42,6 +42,6 @@ internal fun VaultRenameScreen(
         navHostController = navController,
         snackBarHostState = snackBarHostState,
         errorText = viewModel.errorMessageState.collectAsState().value ,
-        onSave = viewModel::onSaveName
+        onSave = viewModel::saveName
     )
 }

@@ -220,8 +220,8 @@ internal class SendFormViewModel @Inject constructor(
                 }
 
                 val tokenAmount = tokenAmountFieldState.text
-                    .toString().takeIf { it.length < TextFieldUtils.AMOUNT_MAX_LENGTH }
-                    ?.toBigDecimalOrNull()
+                    .toString()
+                    .toBigDecimalOrNull()
 
                 if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                     throw InvalidTransactionDataException(
@@ -468,7 +468,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun validateTokenAmount(tokenAmount: String): UiText? {
-        if(tokenAmount.length>50)
+        if (tokenAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH)
             return UiText.StringResource(R.string.send_from_invalid_amount)
         val tokenAmountBigDecimal = tokenAmount.toBigDecimalOrNull()
         if (tokenAmountBigDecimal == null || tokenAmountBigDecimal <= BigDecimal.ZERO) {

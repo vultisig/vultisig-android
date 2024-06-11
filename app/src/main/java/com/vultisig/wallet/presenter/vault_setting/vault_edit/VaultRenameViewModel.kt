@@ -63,7 +63,7 @@ internal class VaultRenameViewModel @Inject constructor(
     }
 
 
-    fun onSaveName() {
+    fun saveName() {
         viewModelScope.launch {
             vault.value?.let { vault ->
                 val newName = renameTextFieldState.text.toString()

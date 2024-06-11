@@ -134,7 +134,10 @@ internal fun FormTextFieldCard(
     var focusState by remember {
         mutableStateOf<FocusState?>(null)
     }
-    TextFieldValidator(errorText = error, focusState = focusState) {
+    TextFieldValidator(
+        errorText = error,
+        focusState = focusState
+    ) {
         FormEntry(
             title = title,
         ) {
@@ -143,7 +146,7 @@ internal fun FormTextFieldCard(
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
                 actions = actions,
-                onFocusStateChanged = {it: FocusState ->
+                onFocusStateChanged = {
                     focusState = it
                 }
             )
