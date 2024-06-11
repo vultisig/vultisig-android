@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.chains.MayaChainHelper
+import com.vultisig.wallet.chains.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi
@@ -81,7 +82,10 @@ internal class GasFeeRepositoryImpl @Inject constructor(
 
             Chain.solana -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
-                val fee = BigInteger(solanaApi.getHighPriorityFee(address))
+                val fee = maxOf(
+                    BigInteger(solanaApi.getHighPriorityFee(address)),
+                    DefaultFeeInLamports
+                )
                 TokenValue(
                     value = fee,
                     unit = chain.feeUnit,
