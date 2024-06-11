@@ -90,7 +90,7 @@ internal fun SwapScreen(
     qrCodeResult: String?,
 ) {
     val context = LocalContext.current
-    
+
     ProgressScreen(
         navController = topBarNavController,
         title = title,
