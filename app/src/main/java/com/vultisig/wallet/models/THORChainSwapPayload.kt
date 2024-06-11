@@ -110,7 +110,7 @@ internal class THORChainSwapPayloadDeserializer : JsonDeserializer<THORChainSwap
         val routerAddress = jsonObject.get("routerAddress")?.asString ?: ""
         val fromAmount =
             jsonObject.get("fromAmount")?.asJsonArray?.get(1)?.asBigInteger ?: BigInteger.ZERO
-        val toAmountDecimal = jsonObject.get("toAmount")?.asBigDecimal ?: BigDecimal.ZERO
+        val toAmountDecimal = jsonObject.get("toAmountDecimal")?.asBigDecimal ?: BigDecimal.ZERO
         val toAmountLimit = jsonObject.get("toAmountLimit")?.asString ?: ""
         val steamingInterval = jsonObject.get("steamingInterval")?.asString ?: ""
         val streamingQuantity = jsonObject.get("streamingQuantity")?.asString ?: ""

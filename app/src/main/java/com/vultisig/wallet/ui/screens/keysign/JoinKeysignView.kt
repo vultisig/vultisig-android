@@ -28,9 +28,11 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Keysign
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.WaitingForKeysignStart
 import com.vultisig.wallet.presenter.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.presenter.keysign.KeysignState
+import com.vultisig.wallet.presenter.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 
 @Composable
 internal fun JoinKeysignView(
@@ -87,14 +89,27 @@ internal fun JoinKeysignView(
             }
 
             JoinKeysign -> {
-                val transactionUiModel = viewModel.transactionUiModel.collectAsState().value
+                val verifyUiModel by viewModel.verifyUiModel.collectAsState()
 
-                VerifyTransactionScreen(
-                    state = transactionUiModel,
-                    isConsentsEnabled = false,
-                    confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
-                    onConfirm = viewModel::joinKeysign,
-                )
+                when (val model = verifyUiModel) {
+                    is VerifyUiModel.Send -> {
+                        VerifyTransactionScreen(
+                            state = model.model,
+                            isConsentsEnabled = false,
+                            confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
+                            onConfirm = viewModel::joinKeysign,
+                        )
+                    }
+
+                    is VerifyUiModel.Swap -> {
+                        VerifySwapScreen(
+                            state = model.model,
+                            confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                            isConsentsEnabled = false,
+                            onConfirm = viewModel::joinKeysign,
+                        )
+                    }
+                }
             }
 
             Keysign -> {
