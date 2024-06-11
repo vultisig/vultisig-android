@@ -23,11 +23,12 @@ internal class MainActivity : AppCompatActivity() {
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         installSplashScreen()
             .setKeepOnScreenCondition {
                 mainViewModel.isLoading.value
             }
+
+        super.onCreate(savedInstanceState)
 
         setContent {
             OnBoardingComposeTheme {
