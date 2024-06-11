@@ -23,7 +23,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalFoundationApi::class)
 internal class NamingVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val navigator: Navigator<Destination>
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
 
