@@ -285,9 +285,11 @@ internal fun TextFieldValidator(
         mutableStateOf(false)
     }
     LaunchedEffect(focusState) {
+        //check if a text field has been focused
         if (focusState?.isFocused == true) {
             isFocused = true
         } else {
+            //when exiting from focus state, error message shown
             if (isFocused) {
                 errorMessage = errorText
             }

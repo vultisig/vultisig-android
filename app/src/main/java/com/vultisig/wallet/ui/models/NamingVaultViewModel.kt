@@ -30,6 +30,10 @@ internal class NamingVaultViewModel @Inject constructor(
     val namingTextFieldState = TextFieldState()
     val errorMessageState = MutableStateFlow<UiText?>(null)
 
+    init {
+        collectNamingFieldStateChanges()
+    }
+
     fun collectNamingFieldStateChanges() {
         viewModelScope.launch {
             namingTextFieldState.textAsFlow().collect { newName ->

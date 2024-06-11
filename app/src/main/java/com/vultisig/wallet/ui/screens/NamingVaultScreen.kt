@@ -18,10 +18,6 @@ internal fun NamingVaultScreen(
 ) {
     val viewModel = hiltViewModel<NamingVaultViewModel>()
 
-    LaunchedEffect(Unit) {
-        viewModel.collectNamingFieldStateChanges()
-    }
-
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_setup),
         textFieldState = viewModel.namingTextFieldState,
