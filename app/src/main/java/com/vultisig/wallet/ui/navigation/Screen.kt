@@ -16,14 +16,7 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data object KeygenFlow : Screen(route = "keygen_flow/{vault_name}/{vault_type}") {
-        const val ARG_VAULT_NAME = "vault_name"
-        const val ARG_VAULT_TYPE = "vault_type"
-        const val DEFAULT_NEW_VAULT = "*vultisig_new_vault*"
-        fun createRoute(vaultName: String, vaultSetupType: VaultSetupType): String {
-            return "keygen_flow/$vaultName/${vaultSetupType.raw}"
-        }
-    }
+
 
     data object SigningError : Screen(route = "signing_error")
 

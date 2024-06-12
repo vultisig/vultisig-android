@@ -150,4 +150,14 @@ internal sealed class Destination(
         }
     }
 
+    data class KeygenFlow(val vaultName: String, val vaultSetupType: VaultSetupType) :
+        Destination(route = "keygen_flow/$vaultName/${vaultSetupType.raw}") {
+        companion object {
+            const val STATIC_ROUTE = "keygen_flow/{vault_name}/{vault_type}"
+            const val ARG_VAULT_NAME = "vault_name"
+            const val ARG_VAULT_TYPE = "vault_type"
+            const val DEFAULT_NEW_VAULT = "*vultisig_new_vault*"
+        }
+    }
+
 }

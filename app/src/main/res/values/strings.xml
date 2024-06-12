@@ -233,4 +233,9 @@
         <item>eight</item>
         <item>nine</item>
     </string-array>
+    <string name="swap_error_no_amount">Amount must be a positive number</string>
+    <string name="naming_vault_screen_invalid_name">Invalid name</string>
+    <string name="rename_vault_invalid_name">Invalid name</string>
+    <string name="swap_form_invalid_amount">Invalid amount</string>
+    <string name="send_from_invalid_amount">Invalid amount</string>
 </resources>

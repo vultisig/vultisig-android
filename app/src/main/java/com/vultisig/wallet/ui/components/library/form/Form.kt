@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components.library.form
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -22,12 +23,21 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusState
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -116,19 +126,31 @@ internal fun TokenCard(
 internal fun FormTextFieldCard(
     title: String,
     hint: String,
+    error: UiText?,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    FormEntry(
-        title = title,
+    var focusState by remember {
+        mutableStateOf<FocusState?>(null)
+    }
+    TextFieldValidator(
+        errorText = error,
+        focusState = focusState
     ) {
-        FormTextField(
-            hint = hint,
-            keyboardType = keyboardType,
-            textFieldState = textFieldState,
-            actions = actions,
-        )
+        FormEntry(
+            title = title,
+        ) {
+            FormTextField(
+                hint = hint,
+                keyboardType = keyboardType,
+                textFieldState = textFieldState,
+                actions = actions,
+                onFocusStateChanged = {
+                    focusState = it
+                }
+            )
+        }
     }
 }
 
@@ -139,6 +161,7 @@ internal fun FormTextField(
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     actions: (@Composable RowScope.() -> Unit)? = null,
+    onFocusStateChanged: (FocusState) -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -160,7 +183,8 @@ internal fun FormTextField(
                 keyboardType = keyboardType,
             ),
             modifier = Modifier
-                .weight(1f),
+                .weight(1f)
+                .onFocusEvent(onFocusStateChanged),
             decorator = { textField ->
                 if (textFieldState.text.isEmpty()) {
                     Text(
@@ -244,5 +268,48 @@ internal fun FormDetails(
             color = Theme.colors.neutral100,
             style = Theme.menlo.body1
         )
+    }
+}
+
+
+@Composable
+internal fun TextFieldValidator(
+    errorText: UiText?,
+    focusState: FocusState?,
+    content: @Composable () -> Unit,
+) {
+    var errorMessage by remember {
+        mutableStateOf<UiText?>(null)
+    }
+    var isFocused by remember {
+        mutableStateOf(false)
+    }
+    LaunchedEffect(focusState) {
+        //check if a text field has been focused
+        if (focusState?.isFocused == true) {
+            isFocused = true
+        } else {
+            //when exiting from focus state, error message shown
+            if (isFocused) {
+                errorMessage = errorText
+            }
+            isFocused = false
+        }
+    }
+    Column {
+        content()
+        UiSpacer(size = 8.dp)
+        AnimatedContent(
+            targetState = errorMessage,
+            label = "error message"
+        ) { errorMessage ->
+            if (errorMessage != null)
+                Text(
+                    text = errorMessage.asString(),
+                    color = Theme.colors.error,
+                    style = Theme.menlo.body1
+                )
+        }
+
     }
 }

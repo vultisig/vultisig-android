@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.IsSwapSupported
+import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -56,6 +57,7 @@ internal data class SwapFormUiModel(
     val gas: String = "",
     val fee: String = "",
     val estimatedTime: UiText = UiText.DynamicString(""),
+    val amountError: UiText? = null
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -267,6 +269,9 @@ internal class SwapFormViewModel @Inject constructor(
                     addrs to srcAmount
                 }
                 .collect { (addrs, amount) ->
+                    val errorMessage = validateSrcAmount(amount.toString())
+                    uiState.update { it.copy(amountError = errorMessage) }
+
                     val (src, dst) = addrs
 
                     val srcToken = src.account.token
@@ -322,6 +327,17 @@ internal class SwapFormViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private fun validateSrcAmount(srcAmount: String): UiText? {
+        if (srcAmount.isEmpty() || srcAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH) {
+            return UiText.StringResource(R.string.swap_form_invalid_amount)
+        }
+        val srcAmountAmountBigDecimal = srcAmount.toBigDecimalOrNull()
+        if (srcAmountAmountBigDecimal == null || srcAmountAmountBigDecimal <= BigDecimal.ZERO) {
+            return UiText.StringResource(R.string.swap_error_no_amount)
+        }
+        return null
     }
 
 }
