@@ -69,7 +69,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     var errorMessage: MutableState<String> = mutableStateOf("")
 
     var vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
-    private val vaultSetupType =
+    val vaultSetupType =
         VaultSetupType.fromInt(
             navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
         )

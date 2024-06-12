@@ -17,7 +17,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
-import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.NetworkPrompts
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -35,19 +34,22 @@ internal fun PeerDiscoveryView(
 ) {
     val textColor = Theme.colors.neutral0
 
-    UiSpacer(size = 8.dp)
-
     Text(
         text = stringResource(R.string.keygen_peer_discovery_pair_with_other_devices),
         color = textColor,
-        style = Theme.montserrat.body3
+        style = Theme.montserrat.subtitle1
     )
 
     if (keygenPayloadState.isNotEmpty()) {
         QRCodeKeyGenImage(
             keygenPayloadState,
             modifier = Modifier
-                .padding(all = 32.dp)
+                .padding(
+                    top = 32.dp,
+                    start = 32.dp,
+                    end = 32.dp,
+                    bottom = 20.dp
+                )
                 .fillMaxWidth(),
         )
     }
@@ -58,9 +60,15 @@ internal fun PeerDiscoveryView(
         modifier = Modifier.padding(horizontal = 12.dp),
     )
 
-    UiSpacer(size = 24.dp)
 
     if (participants.isNotEmpty()) {
+        Text(
+            text = stringResource(R.string.keygen_peer_discovery_select_the_pairing_devices),
+            color = textColor,
+            style = Theme.montserrat.subtitle3,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(vertical = 12.dp)
+        )
         FlowRow(
             modifier = Modifier
                 .padding(horizontal = 12.dp),
@@ -86,10 +94,11 @@ internal fun PeerDiscoveryView(
             }
         }
     } else {
+        UiSpacer(size = 64.dp)
         Text(
-            text = stringResource(R.string.keygen_peer_discovery_waiting_for_other_devices_to_connect),
+            text = stringResource(id = R.string.keygen_peer_discovery_looking_for_devices),
             color = textColor,
-            style = Theme.montserrat.body2,
+            style = Theme.montserrat.subtitle3,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(
@@ -100,12 +109,6 @@ internal fun PeerDiscoveryView(
     }
 
     UiSpacer(size = 24.dp)
-
-    DevicesOnSameNetworkHint(
-        title = stringResource(R.string.keygen_peer_discovery_desc1)
-    )
-
-    UiSpacer(size = 72.dp)
 }
 
 @Preview

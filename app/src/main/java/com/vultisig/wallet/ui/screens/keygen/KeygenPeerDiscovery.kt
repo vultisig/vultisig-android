@@ -31,7 +31,7 @@ import com.vultisig.wallet.presenter.keygen.KeygenFlowViewModel
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType.Companion.asString
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -66,6 +66,7 @@ internal fun KeygenPeerDiscovery(
         selectionState = selectionState,
         participants = participants,
         keygenPayloadState = keygenPayloadState,
+        vaultSetupType = viewModel.vaultSetupType.asString(),
         networkPromptOption = networkPromptOption,
         onQrAddressClick = {
             val qrBitmap = generateQrBitmap(keygenPayloadState)
@@ -87,6 +88,7 @@ internal fun KeygenPeerDiscoveryScreen(
     selectionState: List<String>,
     participants: List<String>,
     keygenPayloadState: String,
+    vaultSetupType: String,
     networkPromptOption: NetworkPromptOption,
     onQrAddressClick: () -> Unit = {},
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
@@ -98,7 +100,10 @@ internal fun KeygenPeerDiscoveryScreen(
 
     UiBarContainer(
         navController = navController,
-        title = stringResource(R.string.keygen_peer_discovery_keygen),
+        title = stringResource(
+            R.string.keygen_peer_discovery_keygen,
+            vaultSetupType
+        ),
         endIcon = R.drawable.qr_share,
         onEndIconClick = onQrAddressClick
     ) {
@@ -111,8 +116,6 @@ internal fun KeygenPeerDiscoveryScreen(
                     .verticalScroll(rememberScrollState())
                     .fillMaxSize(),
             ) {
-                UiSpacer(size = 8.dp)
-
                 if (selectionState.isNotEmpty() && selectionState.count() > 1) {
                     Text(
                         text = stringResource(
@@ -165,5 +168,6 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
         networkPromptOption = NetworkPromptOption.WIFI,
+        vaultSetupType = "M/N"
     )
 }

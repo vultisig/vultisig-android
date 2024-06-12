@@ -123,7 +123,7 @@
     <string name="join_key_gen_screen_joining_keygen">Joining Keygen</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Waiting for Keygen to start</string>
     <string name="keygen_flow_views_success">Success</string>
-    <string name="keygen_peer_discovery_keygen">Keygen</string>
+    <string name="keygen_peer_discovery_keygen">Keygen for %1$s vault</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect…</string>
     <string name="keygen_peer_discovery_desc1">Keep all devices on same WiFi with Vultisig App open. (May not work on hotel/airport WiFi)</string>
@@ -238,4 +238,6 @@
     <string name="rename_vault_invalid_name">Invalid name</string>
     <string name="swap_form_invalid_amount">Invalid amount</string>
     <string name="send_from_invalid_amount">Invalid amount</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Looking for devices…</string>
+    <string name="keygen_peer_discovery_select_the_pairing_devices">Select the pairing devices</string>
 </resources>

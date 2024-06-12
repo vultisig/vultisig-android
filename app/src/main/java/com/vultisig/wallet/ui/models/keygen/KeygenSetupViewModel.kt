@@ -44,6 +44,12 @@ enum class VaultSetupType(val raw: Int) {
 
     companion object {
         fun fromInt(value: Int) = entries.first { it.raw == value }
+        fun VaultSetupType.asString(): String =
+            when (this) {
+                TWO_OF_TWO -> "2/2"
+                TWO_OF_THREE -> "2/3"
+                M_OF_N -> "M/N"
+            }
     }
 }
 

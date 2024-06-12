@@ -8,7 +8,7 @@ import javax.inject.Inject
 
 internal class vultisigRelay @Inject constructor(private val appDataStore: AppDataStore) {
     var IsRelayEnabled: Boolean
-        get() = runBlocking { appDataStore.readData(relayKey, false).first() }
+        get() = runBlocking { appDataStore.readData(relayKey, true).first() }
         set(value) = runBlocking {
             appDataStore.editData { preferences ->
                 preferences[relayKey] = value
