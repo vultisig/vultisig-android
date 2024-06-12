@@ -34,7 +34,7 @@ internal class NamingVaultViewModel @Inject constructor(
         collectNamingFieldStateChanges()
     }
 
-    fun collectNamingFieldStateChanges() {
+    private fun collectNamingFieldStateChanges() {
         viewModelScope.launch {
             namingTextFieldState.textAsFlow().collect { newName ->
                 val errorMessage = validateVaultName(newName.toString())
