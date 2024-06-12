@@ -71,7 +71,6 @@ private fun AddVaultScreen(
             TopBar(
                 navController = navController,
                 centerText = "",
-                startIcon = R.drawable.caret_left,
                 endIcon = R.drawable.question,
                 onEndIconClick = onOpenHelp,
             )
