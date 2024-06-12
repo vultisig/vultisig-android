@@ -95,7 +95,6 @@ internal fun SwapScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
-        endIcon = qrCodeResult?.let { R.drawable.qr_share },
         endIcon = qrCodeResult?.takeIf { it.isNotEmpty() }?.let { R.drawable.qr_share },
         onEndIconClick = qrCodeResult?.let {
             {
