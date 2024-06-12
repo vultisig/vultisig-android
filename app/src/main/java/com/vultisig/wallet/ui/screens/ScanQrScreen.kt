@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +40,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavHostController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -55,16 +55,44 @@ import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 
 internal const val ARG_QR_CODE = "qr_code"
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+@Composable
+internal fun ScanQrAndJoin(
+    navController: NavController,
+    viewModel: ScanQrViewModel = hiltViewModel(),
+) {
+    ScanQrScreen(
+        navController = navController,
+        onScanSuccess = viewModel::join,
+    )
+}
+
 @Composable
 internal fun ScanQrScreen(
-    navController: NavHostController,
+    navController: NavController,
+) {
+    ScanQrScreen(
+        navController = navController,
+        onScanSuccess = { qr ->
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set(ARG_QR_CODE, qr)
+            navController.popBackStack()
+        }
+    )
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+internal fun ScanQrScreen(
+    navController: NavController,
+    onScanSuccess: (qr: String) -> Unit,
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
     val context = LocalContext.current
@@ -77,10 +105,9 @@ internal fun ScanQrScreen(
             val barcode = barcodes.first()
             val barcodeValue = barcode.rawValue
             Timber.d(context.getString(R.string.successfully_scanned_barcode, barcodeValue))
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set(ARG_QR_CODE, barcodeValue)
-            navController.popBackStack()
+            if (barcodeValue != null) {
+                onScanSuccess(barcodeValue)
+            }
         }
     }
 
@@ -110,7 +137,7 @@ internal fun ScanQrScreen(
                             bottom = 16.dp,
                         ),
                     text = stringResource(id = R.string.scan_qr_screen_return_vault),
-                    onClick = { navController.popBackStack(Screen.Setup.route,false) },
+                    onClick = { navController.popBackStack(Screen.Setup.route, false) },
                 )
 
         },

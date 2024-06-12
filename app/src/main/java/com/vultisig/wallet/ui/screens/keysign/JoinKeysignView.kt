@@ -37,22 +37,15 @@ import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 @Composable
 internal fun JoinKeysignView(
     navController: NavHostController,
-    qrCodeResult: String? = null,
+    qrCodeResult: String,
 ) {
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
 
     LaunchedEffect(qrCodeResult) {
-        if (qrCodeResult != null) {
-            viewModel.setScanResult(qrCodeResult)
-        } else {
-            viewModel.startScan()
-        }
+        viewModel.setScanResult(qrCodeResult)
     }
 
-    LaunchedEffect(key1 = Unit) {
-        viewModel.setData()
-    }
     DisposableEffect(key1 = Unit) {
         onDispose {
             viewModel.cleanUp()

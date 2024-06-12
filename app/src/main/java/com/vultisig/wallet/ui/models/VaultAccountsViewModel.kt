@@ -89,6 +89,13 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    fun joinKeysign() {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            navigator.navigate(Destination.JoinThroughQr(vaultId = vaultId))
+        }
+    }
+
     fun openAccount(account: AccountUiModel) {
         val vaultId = vaultId ?: return
         val chainId = account.model.chain.id

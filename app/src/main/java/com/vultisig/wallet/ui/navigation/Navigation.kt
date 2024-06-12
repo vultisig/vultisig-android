@@ -13,6 +13,7 @@ internal sealed class Destination(
     companion object {
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
+        const val ARG_QR = "qr"
     }
 
     data object AddVault : Destination(
@@ -70,6 +71,15 @@ internal sealed class Destination(
     }
 
     data object ScanQr : Destination(route = "scan_qr")
+
+    data class JoinThroughQr(
+        val vaultId: String,
+    ) : Destination(route = "join/qr?vault_id=$vaultId") {
+        companion object {
+            const val staticRoute = "join/qr?vault_id={$ARG_VAULT_ID}"
+        }
+    }
+
 
     data object Back : Destination(
         route = ""
@@ -157,6 +167,15 @@ internal sealed class Destination(
             const val ARG_VAULT_NAME = "vault_name"
             const val ARG_VAULT_TYPE = "vault_type"
             const val DEFAULT_NEW_VAULT = "*vultisig_new_vault*"
+        }
+    }
+
+    data class JoinKeysign(
+        val vaultId: String,
+        val qr: String,
+    ) : Destination(route = "join_keysign/$vaultId?qr=$qr") {
+        companion object {
+            const val staticRoute = "join_keysign/{$ARG_VAULT_ID}?qr={$ARG_QR}"
         }
     }
 
