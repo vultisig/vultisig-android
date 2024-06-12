@@ -34,6 +34,8 @@ import java.net.Inet4Address
 import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 enum class JoinKeygenState {
     DiscoveryingSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart, ERROR
@@ -63,8 +65,6 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
 
-    private var isScanStarted = false
-
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
     var errorMessage: MutableState<String> = mutableStateOf("")
@@ -84,7 +84,8 @@ internal class JoinKeygenViewModel @Inject constructor(
             navigator = navigator,
         )
 
-    fun setData() {
+    @OptIn(ExperimentalEncodingApi::class)
+    fun setScanResult(qrBase64: String) {
         viewModelScope.launch {
             if (_vault.name.isEmpty()) {
                 val allSize = vaultRepository.getAll().size
@@ -95,21 +96,11 @@ internal class JoinKeygenViewModel @Inject constructor(
                 _vault.localPartyID = Utils.deviceName
             }
             _localPartyID = _vault.localPartyID
-        }
-    }
 
-    fun startScan() {
-        if (isScanStarted) return
-        isScanStarted = true
-
-        viewModelScope.launch {
-            navigator.navigate(Destination.ScanQr)
-        }
-    }
-
-    fun setScanResult(content: String) {
-        viewModelScope.launch {
             try {
+                val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
+                    .decodeToString()
+
                 val qrCodeContent = DeepLinkHelper(content).getJsonData()
                 qrCodeContent ?: run {
                     throw Exception("invalid QR code")
