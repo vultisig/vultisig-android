@@ -75,11 +75,7 @@ internal fun VaultAccountsScreen(
         onRefresh = viewModel::refreshData,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
-        onJoinKeysign = {
-            navHostController.navigate(
-                Screen.JoinKeysign.createRoute(vaultId)
-            )
-        },
+        onJoinKeysign = viewModel::joinKeysign,
         onAccountClick = viewModel::openAccount,
         onChooseChains = {
             navHostController.navigate(

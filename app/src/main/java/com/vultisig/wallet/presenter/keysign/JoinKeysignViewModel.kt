@@ -43,7 +43,6 @@ import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +61,8 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 enum class JoinKeysignState {
     DiscoveryingSessionID, DiscoverService, JoinKeysign, WaitingForKeysignStart, Keysign, FailedToStart, Error
@@ -106,7 +107,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
-    val vaultId: String = requireNotNull(savedStateHandle[Screen.JoinKeysign.ARG_VAULT_ID])
+    val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveryingSessionID)
@@ -122,7 +123,6 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
     private var _jobWaitingForKeysignStart: Job? = null
-    private var isScanStarted = false
 
     val keysignPayload: KeysignPayload?
         get() = _keysignPayload
@@ -150,27 +150,18 @@ internal class JoinKeysignViewModel @Inject constructor(
     val verifyUiModel =
         MutableStateFlow<VerifyUiModel>(VerifyUiModel.Send(VerifyTransactionUiModel()))
 
-    fun setData() {
+    @OptIn(ExperimentalEncodingApi::class)
+    fun setScanResult(qrBase64: String) {
         viewModelScope.launch {
             vaultRepository.get(vaultId)?.let {
                 _currentVault = it
                 _localPartyID = it.localPartyID
             }
-        }
-    }
 
-    fun startScan() {
-        if (isScanStarted) return
-        isScanStarted = true
-
-        viewModelScope.launch {
-            navigator.navigate(Destination.ScanQr)
-        }
-    }
-
-    fun setScanResult(content: String) {
-        viewModelScope.launch {
             try {
+                val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
+                    .decodeToString()
+
                 val qrCodeContent = DeepLinkHelper(content).getJsonData()
                 qrCodeContent ?: run {
                     throw Exception("Invalid QR code content")

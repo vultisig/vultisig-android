@@ -22,12 +22,14 @@ import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScree
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
+import com.vultisig.wallet.ui.screens.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
@@ -154,13 +156,14 @@ internal fun SetupNavGraph(
         }
 
 
-        composable(route = Screen.JoinKeysign.route,
+        composable(
+            route = Destination.JoinKeysign.staticRoute,
             arguments = listOf(
-                navArgument(Screen.JoinKeysign.ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_QR) { type = NavType.StringType }
             )
         ) { entry ->
-            val savedStateHandle = entry.savedStateHandle
-            val qrCodeResult = savedStateHandle.get<String>(ARG_QR_CODE)
+            val qrCodeResult = entry.arguments?.getString(ARG_QR)!!
 
             JoinKeysignView(
                 navController = navController,
@@ -224,6 +227,15 @@ internal fun SetupNavGraph(
             route = Destination.ScanQr.route,
         ) {
             ScanQrScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.JoinThroughQr.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
+            )
+        ) {
+            ScanQrAndJoin(navController = navController)
         }
 
         composable(
