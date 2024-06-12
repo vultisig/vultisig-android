@@ -34,20 +34,13 @@ import com.vultisig.wallet.ui.theme.dimens
 @Composable
 internal fun JoinKeygenView(
     navController: NavHostController,
-    qrCodeResult: String?,
+    qrCodeResult: String,
     viewModel: JoinKeygenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
 
-    LaunchedEffect(key1 = viewModel) {
-        viewModel.setData()
-    }
     LaunchedEffect(qrCodeResult) {
-        if (qrCodeResult != null) {
-            viewModel.setScanResult(qrCodeResult)
-        } else {
-            viewModel.startScan()
-        }
+        viewModel.setScanResult(qrCodeResult)
     }
 
     DisposableEffect(key1 = Unit) {

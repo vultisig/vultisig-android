@@ -73,9 +73,13 @@ internal fun SetupNavGraph(
         ) {
             HomeScreen(navController)
         }
-        composable(route = Screen.JoinKeygen.route) { entry ->
-            val savedStateHandle = entry.savedStateHandle
-            val qrCodeResult = savedStateHandle.get<String>(ARG_QR_CODE)
+        composable(
+            route = Destination.JoinKeygen.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_QR) { type = NavType.StringType }
+            )
+        ) { entry ->
+            val qrCodeResult = entry.arguments?.getString(ARG_QR)!!
 
             JoinKeygenView(
                 navController = navController,
@@ -232,7 +236,10 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.JoinThroughQr.staticRoute,
             arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
             )
         ) {
             ScanQrAndJoin(navController = navController)

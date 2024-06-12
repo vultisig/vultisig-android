@@ -35,7 +35,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.keygen.KeygenSetupViewModel
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -104,8 +103,9 @@ internal fun Setup(
                 painter = painterResource(id = state.tabs[state.tabIndex].drawableResId),
                 contentDescription = "devices",
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.weight(1f).
-                fillMaxWidth()
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
             )
 
             DevicesOnSameNetworkHint(
@@ -157,7 +157,7 @@ internal fun Setup(
                         bottom = 12.dp,
                     )
             ) {
-                navController.navigate(Screen.JoinKeygen.route)
+                navController.navigate(Destination.JoinThroughQr(vaultId = null).route)
             }
         }
     }
