@@ -177,7 +177,7 @@
     <string name="this_device">(This Device)</string>
     <string name="device_list_of_vault">%1$s of %2$s Vault</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
-    <string name="vault_settings_delete_vault_caution2">I am aware that I can lost funds</string>
+    <string name="vault_settings_delete_vault_caution2">I am aware that I can lose funds</string>
     <string name="vault_settings_delete_vault_caution3">I have made a vault backup</string>
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
@@ -190,7 +190,7 @@
     <string name="rename_vault_screen_vault_name">Vault name</string>
     <string name="rename_vault_screen_continue">Continue</string>
     <string name="naming_vault_screen_vault_name">Vault Name</string>
-    <string name="faq_settings_q1">Do I need register</string>
+    <string name="faq_settings_q1">Do I need register?</string>
     <string name="faq_settings_q2">Can I recover my assets if I lose a device?</string>
     <string name="faq_settings_q3">How does Vultisig make money?</string>
     <string name="faq_settings_q4">How does the crypto vault app secure my cryptocurrencies?</string>
@@ -238,4 +238,5 @@
     <string name="rename_vault_invalid_name">Invalid name</string>
     <string name="swap_form_invalid_amount">Invalid amount</string>
     <string name="send_from_invalid_amount">Invalid amount</string>
+    <string name="choose_tokens">Choose Tokens</string>
 </resources>
