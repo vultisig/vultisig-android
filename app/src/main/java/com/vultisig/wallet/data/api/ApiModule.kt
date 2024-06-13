@@ -57,4 +57,11 @@ internal interface ApiModule {
     fun bindPolkadotApi(
         impl: PolkadotApiImp
     ): PolkadotApi
+
+    @Binds
+    @Singleton
+    fun bindOneInchApi(
+        impl: OneInchApiImpl
+    ): OneInchApi
+
 }

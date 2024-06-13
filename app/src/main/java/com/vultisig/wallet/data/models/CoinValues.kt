@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.models.Coin
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -16,6 +17,15 @@ internal data class TokenValue(
     val decimal: BigDecimal
         get() = BigDecimal(value)
             .divide(BigDecimal(10).pow(decimals))
+
+    constructor(
+        value: BigInteger,
+        token: Coin
+    ) : this(
+        value = value,
+        unit = token.ticker,
+        decimals = token.decimal
+    )
 
 }
 

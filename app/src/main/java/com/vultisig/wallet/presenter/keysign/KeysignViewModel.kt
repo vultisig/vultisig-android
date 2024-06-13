@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
@@ -248,10 +249,21 @@ internal class KeysignViewModel(
     }
 
     private fun getSignedTransaction(): SignedTransactionResult {
-        if (keysignPayload.swapPayload != null) {
-            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
-                .getSignedTransaction(keysignPayload.swapPayload, keysignPayload, signatures)
+        val swapPayload = keysignPayload.swapPayload
+        if (swapPayload != null) {
+            return when (swapPayload) {
+                is SwapPayload.ThorChain -> {
+                    return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures)
+                }
+
+                is SwapPayload.OneInch -> {
+                    // TODO support 1inch
+                    TODO("No getSignedTransaction for 1inch yet")
+                }
+            }
         }
+
         if (keysignPayload.approvePayload != null) {
             return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                 .getSignedApproveTransaction(

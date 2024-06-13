@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
+import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.UiText
@@ -21,6 +22,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -68,7 +70,7 @@ enum class JoinKeysignState {
     DiscoveryingSessionID, DiscoverService, JoinKeysign, WaitingForKeysignStart, Keysign, FailedToStart, Error
 }
 
-sealed class VerifyUiModel {
+internal sealed class VerifyUiModel {
 
     data class Send(
         val model: VerifyTransactionUiModel,
@@ -250,36 +252,55 @@ internal class JoinKeysignViewModel @Inject constructor(
                 )
             )
         } else {
-            val srcToken = swapPayload.fromCoin
-            val dstToken = swapPayload.toCoin
+            val srcToken = swapPayload.srcToken
+            val dstToken = swapPayload.dstToken
 
-            val srcTokenValue = convertTokenAndValueToTokenValue(srcToken, swapPayload.fromAmount)
+            val srcTokenValue = swapPayload.srcTokenValue
+            val dstTokenValue = swapPayload.dstTokenValue
 
-            val dstTokenValue = convertTokenAndValueToTokenValue(
-                dstToken, swapPayload.toAmountDecimal
-                    .movePointRight(dstToken.decimal)
-                    .toBigInteger()
-            )
+            when (swapPayload) {
+                is SwapPayload.OneInch -> {
+                    val estimatedTokenFees = TokenValue(
+                        value = swapPayload.data.quote.tx.gasPrice.toBigInteger() *
+                                EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
+                        token = srcToken
+                    )
 
-            val quote = swapQuoteRepository.getSwapQuote(
-                srcToken = srcToken,
-                dstToken = dstToken,
-                dstAddress = swapPayload.toAddress,
-                tokenValue = srcTokenValue,
-            )
+                    verifyUiModel.value = VerifyUiModel.Swap(
+                        VerifySwapUiModel(
+                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            estimatedFees = fiatValueToStringMapper.map(
+                                convertTokenValueToFiat(srcToken, estimatedTokenFees, currency)
+                            ),
+                            estimatedTime = R.string.swap_screen_estimated_time_instant.asUiText(),
+                        )
+                    )
+                }
 
-            verifyUiModel.value = VerifyUiModel.Swap(
-                VerifySwapUiModel(
-                    srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                    dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
-                    estimatedFees = fiatValueToStringMapper.map(
-                        convertTokenValueToFiat(dstToken, quote.fees, currency)
-                    ),
-                    estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
-                        ?.let { UiText.DynamicString(it) }
-                        ?: R.string.swap_screen_estimated_time_instant.asUiText(),
-                )
-            )
+                is SwapPayload.ThorChain -> {
+                    val quote = swapQuoteRepository.getSwapQuote(
+                        srcToken = srcToken,
+                        dstToken = dstToken,
+                        dstAddress = swapPayload.data.toAddress,
+                        tokenValue = srcTokenValue,
+                    )
+
+                    verifyUiModel.value = VerifyUiModel.Swap(
+                        VerifySwapUiModel(
+                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            estimatedFees = fiatValueToStringMapper.map(
+                                convertTokenValueToFiat(dstToken, quote.fees, currency)
+                            ),
+                            estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
+                                ?.let { UiText.DynamicString(it) }
+                                ?: R.string.swap_screen_estimated_time_instant.asUiText(),
+                        )
+                    )
+                }
+            }
+
         }
     }
 

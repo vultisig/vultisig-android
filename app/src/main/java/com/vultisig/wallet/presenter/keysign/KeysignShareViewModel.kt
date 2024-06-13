@@ -1,6 +1,7 @@
 package com.vultisig.wallet.presenter.keysign
 
 import androidx.lifecycle.ViewModel
+import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
@@ -70,20 +71,23 @@ internal class KeysignShareViewModel @Inject constructor(
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.srcTokenValue.value,
                 blockChainSpecific = specific.blockChainSpecific,
-                swapPayload = THORChainSwapPayload(
-                    fromAddress = transaction.srcAddress,
-                    fromCoin = srcToken,
-                    toCoin = dstToken,
-                    vaultAddress = transaction.vaultAddress,
-                    routerAddress = transaction.routerAddress,
-                    fromAmount = transaction.srcTokenValue.value,
-                    toAmountDecimal = transaction.expectedDstTokenValue.decimal,
-                    toAmountLimit = "0",
-                    steamingInterval = "1",
-                    streamingQuantity = "0",
-                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
-                        .inWholeSeconds.toULong(),
-                    isAffiliate = false, // TODO calculate
+                // TODO support 1inch
+                swapPayload = SwapPayload.ThorChain(
+                    THORChainSwapPayload(
+                        fromAddress = transaction.srcAddress,
+                        fromCoin = srcToken,
+                        toCoin = dstToken,
+                        vaultAddress = transaction.vaultAddress,
+                        routerAddress = transaction.routerAddress,
+                        fromAmount = transaction.srcTokenValue.value,
+                        toAmountDecimal = transaction.expectedDstTokenValue.decimal,
+                        toAmountLimit = "0",
+                        steamingInterval = "1",
+                        streamingQuantity = "0",
+                        expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
+                            .inWholeSeconds.toULong(),
+                        isAffiliate = false, // TODO calculate
+                    )
                 ),
                 vaultPublicKeyECDSA = pubKeyECDSA,
                 utxos = specific.utxos,

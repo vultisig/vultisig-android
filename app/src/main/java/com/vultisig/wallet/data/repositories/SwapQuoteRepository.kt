@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
@@ -20,11 +22,33 @@ internal interface SwapQuoteRepository {
         tokenValue: TokenValue,
     ): SwapQuote
 
+    suspend fun getOneInchSwapQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+    ): OneInchSwapQuoteJson
+
 }
 
 internal class SwapQuoteRepositoryImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
+    private val oneInchApi: OneInchApi,
 ) : SwapQuoteRepository {
+
+    override suspend fun getOneInchSwapQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+    ): OneInchSwapQuoteJson {
+        return oneInchApi.getSwapQuote(
+            chain = srcToken.chain.oneInchChainId(),
+            srcTokenContractAddress = srcToken.contractAddress,
+            dstTokenContractAddress = dstToken.contractAddress,
+            srcAddress = srcToken.address,
+            amount = tokenValue.toString(),
+            isAffiliate = false, // TODO calculate
+        )
+    }
 
     override suspend fun getSwapQuote(
         dstAddress: String,
@@ -104,6 +128,23 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
 }
+
+private fun Chain.oneInchChainId(): Int =
+    when (this) {
+        Chain.ethereum -> 1
+        Chain.avalanche -> 43114
+        Chain.base -> 8453
+        Chain.blast -> 238
+        Chain.arbitrum -> 42161
+        Chain.polygon -> 137
+        Chain.optimism -> 10
+        Chain.bscChain -> 56
+        Chain.cronosChain -> 25
+
+        // TODO add later
+        // Chain.zksync -> 324
+        else -> error("Chain $this is not supported by 1inch API")
+    }
 
 private fun Chain.swapAssetName(): String {
     // TODO that seems to differ just for thorChain

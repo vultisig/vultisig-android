@@ -292,6 +292,17 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
+            chain = Chain.bscChain,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+            isNativeToken = false,
+        ),
+        Coin(
             chain = Chain.base,
             ticker = "ETH",
             logo = "eth",
