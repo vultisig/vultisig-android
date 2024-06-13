@@ -16,7 +16,7 @@
     <string name="vault_settings_title">Edit Vault</string>
     <string name="vault_settings_details_title">Details</string>
     <string name="vault_settings_details_subtitle">View your vault details</string>
-    <string name="vault_settings_backup_title">MainActivity</string>
+    <string name="vault_settings_backup_title">Backup</string>
     <string name="vault_settings_backup_subtitle">Backup your vault share</string>
     <string name="vault_settings_rename_title">Rename</string>
     <string name="vault_settings_rename_subtitle">Edit your vault name</string>
