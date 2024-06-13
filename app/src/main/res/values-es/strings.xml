@@ -3,7 +3,7 @@
     <string name="signing_error_please_try_again">Error al Firmar. Por favor intenta de nuevo.</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
     <string name="try_again">Intentar de Nuevo</string>
-    <string name="vault_choose_chains">Elegir Tokens</string>
+    <string name="vault_choose_chains">Elegir Cadenas</string>
     <string name="vault_settings_title">Editar Caja Fuerte</string>
     <string name="vault_settings_details_title">Detalles</string>
     <string name="vault_settings_details_subtitle">Ver los detalles de tu caja fuerte</string>
@@ -13,7 +13,6 @@
     <string name="vault_settings_reshare_title">Recompartir</string>
     <string name="vault_settings_reshare_subtitle">Recompartir caja fuerte con un nuevo comité</string>
     <string name="vault_settings_delete_title">Eliminar</string>
-    <string name="vault_settings_delete_subtitle">Eliminar tu caja fuerte permanentemente</string>
     <string name="joinkeysign_wrongvault">Caja Fuerte o Dispositivo Emparejado Incorrecto.</string>
     <string name="joinkeysign_from">De:</string>
     <string name="joinkeysign_to">A:</string>

@@ -3,7 +3,7 @@
     <string name="signing_error_please_try_again">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut.</string>
     <string name="signing_error_please_try_again_s">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut. %s</string>
     <string name="try_again">Erneut versuchen</string>
-    <string name="vault_choose_chains">Tokens wählen</string>
+    <string name="vault_choose_chains">Ketten wählen</string>
     <string name="vault_settings_title">Tresor bearbeiten</string>
     <string name="vault_settings_details_title">Details</string>
     <string name="vault_settings_details_subtitle">Sehen Sie die Details Ihres Tresors</string>
@@ -13,7 +13,6 @@
     <string name="vault_settings_reshare_title">Erneut teilen</string>
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
     <string name="vault_settings_delete_title">Löschen</string>
-    <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft</string>
     <string name="joinkeysign_wrongvault">Falscher Tresor oder gekoppeltes Gerät.</string>
     <string name="joinkeysign_from">Von:</string>
     <string name="joinkeysign_to">Zu:</string>
