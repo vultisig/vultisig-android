@@ -223,8 +223,8 @@
     <string name="pair_device">(Dispositivo de emparejamiento)</string>
     <string name="device_list_of_vault">%1$s de la bóveda de %2$s</string>
     <string name="vault_accounts_account_assets">%1$s activos</string>
-    <string name="chain_token_screen_address_copied">% 1 $ s copiada al portapapeles</string>
-    <string name="chain_account_item_address_copied">% 1 $ s copiada al portapapeles</string>
+    <string name="chain_token_screen_address_copied">% 1$s copiada al portapapeles</string>
+    <string name="chain_account_item_address_copied">%1$s copiada al portapapeles</string>
     <string name="s_of_s_vault">%1$s de %2$s caja fuerte</string>
 
 
