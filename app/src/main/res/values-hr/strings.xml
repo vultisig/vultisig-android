@@ -225,4 +225,5 @@
     <string name="chain_account_buy_vtx">KUPITE $VULT</string>
     <string name="send_amount_currency">Iznos (u %s)</string>
     <string name="vault_settings_backup_subtitle">Sigurnosno kopirajte svoj udio u trezoru</string>
+    <string name="chains">Lanci</string>
 </resources>
