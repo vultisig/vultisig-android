@@ -61,7 +61,6 @@
     <string name="settings_screen_vtx_token">El token $VAULT</string>
     <string name="settings_screen_share_the_app">Compartir La App</string>
     <string name="vultisig_app_version">APLICACIÓN VULTISIG V%1$s</string>
-    <string name="vultisig_app_version">APLICACIÓN VULTISIG V%1$s</string>
     <string name="settings_screen_title">Configuración</string>
     <string name="settings_screen_others">Otras</string>
     <string name="language_setting_screen_title">Idioma</string>
@@ -143,8 +142,8 @@
     <string name="welcome_screen_next">Siguiente</string>
     <string name="welcome_screen_skip">Saltar</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO CAJA FUERTE..</string>
-    <string name="keysign_screen_signing_with_ecdsa">"FIRMANDO USANDO CLAVE ECDSA... "</string>
-    <string name="keysign_screen_signing_with_eddsa">"FIRMANDO USANDO CLAVE EdDSA... "</string>
+    <string name="keysign_screen_signing_with_ecdsa">"FIRMANDO USANDO CLAVE ECDSA… "</string>
+    <string name="keysign_screen_signing_with_eddsa">"FIRMANDO USANDO CLAVE EdDSA… "</string>
     <string name="keysign_screen_keysign_finished">¡Keysign terminado!</string>
     <string name="keysign_screen_error_please_try_again">Error! Por favor, inténtalo de nuevo. %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenga los dispositivos en la misma red WiFi con Vultisig abierto.</string>
@@ -156,7 +155,6 @@
     <string name="join_keygen_view_new_vault">Nueva CAJA FUERTE %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
     <string name="token_settings_supply">Oferta: %1$s</string>
-    <string name="setup_any_total_devices">Necesita al menos %s dispositivos. 1. INICIAR desde un dispositivo 2. EMPAREJAR desde el segundo/tercero</string>
     <string name="setup_any_total_devices">(Cualquier dispositivo %1$s)</string>
     <string name="this_device">(Este Dispositivo)</string>
     <string name="vault_settings_delete_vault_caution1">Soy consciente de que el almacén será eliminado permanentemente</string>
@@ -198,7 +196,6 @@
     <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad que recibiré después del intercambio.</string>
     <string name="verify_swap_consent_amount">El monto del intercambio es correcto</string>
     <string name="settings_screen_vault_settings">Configuración Cajas Fuertes</string>
-    <string name="settings_screen_vault_settings">Configuración de la bóveda</string>
     <string name="home_scree_done">hecho</string>
     <string name="verify_swap_sign_button">Firmar</string>
     <string name="swap_error_no_amount">La cantidad debe ser un número positivo</string>
@@ -228,7 +225,6 @@
     <string name="vault_accounts_account_assets">%1$s activos</string>
     <string name="chain_token_screen_address_copied">% 1 $ s copiada al portapapeles</string>
     <string name="chain_account_item_address_copied">% 1 $ s copiada al portapapeles</string>
-    <string name="s_of_s_vault">%1$s de la bóveda de %2$s</string>
     <string name="s_of_s_vault">%1$s de la bóveda de %2$s</string>
 
 
