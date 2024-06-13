@@ -1,12 +1,14 @@
 package com.vultisig.wallet.ui.components.reorderable
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -14,11 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.components.reorderable.utils.ReorderableItem
-import com.vultisig.wallet.ui.components.reorderable.utils.detectReorderAfterLongPress
 import com.vultisig.wallet.ui.components.reorderable.utils.rememberReorderableLazyListState
-import com.vultisig.wallet.ui.components.reorderable.utils.reorderable
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun <T : Any> VerticalReorderList(
     modifier: Modifier = Modifier,
@@ -32,26 +33,21 @@ internal fun <T : Any> VerticalReorderList(
     afterContents: List<@Composable LazyItemScope.() -> Unit>? = null,
     content: @Composable (item: T) -> Unit,
 ) {
-    val dataSize by rememberUpdatedState(newValue = data.size)
     val isDraggingEnabled by rememberUpdatedState(newValue = isReorderEnabled)
-    val state = rememberReorderableLazyListState(onMove = { from, to ->
-        if (isDraggingEnabled.not())
-            return@rememberReorderableLazyListState
-        val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-        val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-        val boundaries = listOf(-1, dataSize + (beforeContents?.lastIndex ?: 0))
-        if (boundaries.any { it == i || it == j })
-            return@rememberReorderableLazyListState
-        onMove(i, j)
-    })
-    val reorderableModifier = modifier
-        .reorderable(state)
-        .detectReorderAfterLongPress(state)
+    val lazyListState = rememberLazyListState()
+    val state = rememberReorderableLazyListState(
+        lazyListState = lazyListState,
+        onMove = { from, to ->
+            val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
+            val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
+
+            onMove(i, j)
+        })
     LazyColumn(
         verticalArrangement = verticalArrangement,
-        state = state.listState,
+        state = lazyListState,
         contentPadding = contentPadding,
-        modifier = if (isDraggingEnabled) reorderableModifier else modifier
+        modifier = modifier
     ) {
         beforeContents?.forEach { content ->
             item(content = content)
@@ -62,6 +58,7 @@ internal fun <T : Any> VerticalReorderList(
                     animateDpAsState(if (isDragging) 16.dp else 0.dp, label = "elevation")
                 Column(
                     modifier = Modifier
+                        .longPressDraggableHandle(enabled = isDraggingEnabled)
                         .shadow(elevation.value)
                 ) {
                     content(item)
