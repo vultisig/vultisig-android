@@ -56,6 +56,7 @@ private fun AddVaultScreen(
     onOpenHelp: () -> Unit,
 ) {
     val textColor = MaterialTheme.colorScheme.onBackground
+    val isFirstEntry = navController.previousBackStackEntry == null
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -71,7 +72,7 @@ private fun AddVaultScreen(
             TopBar(
                 navController = navController,
                 centerText = "",
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.caret_left.takeIf { !isFirstEntry },
                 endIcon = R.drawable.question,
                 onEndIconClick = onOpenHelp,
             )

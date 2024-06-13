@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import android.app.Activity
 import androidx.annotation.DrawableRes
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -9,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,6 +31,7 @@ internal fun TopBar(
     onStartIconClick: (() -> Unit)? = null,
     onEndIconClick: () -> Unit = {},
 ) {
+    val activity = LocalContext.current as Activity
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -46,7 +49,12 @@ internal fun TopBar(
         navigationIcon = {
             startIcon?.let {
                 IconButton(
-                    onClick = { onStartIconClick?.invoke() ?: navController.popBackStack() }
+                    onClick = {
+                        onStartIconClick?.invoke() ?: run {
+                            if (!navController.popBackStack())
+                                activity.finish()
+                        }
+                    }
                 ) {
                     Icon(
                         painter = painterResource(id = it),
