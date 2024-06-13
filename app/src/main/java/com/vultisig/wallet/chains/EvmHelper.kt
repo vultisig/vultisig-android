@@ -24,9 +24,12 @@ internal class EvmHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {
-    val DefaultETHTransferGasUnits: ULong =
-        23000UL // Increased to 23000 to support swaps and transfers with memo
-    val DefaultERC20TransferGasUnits: ULong = 120000UL
+    companion object{
+        val DefaultETHTransferGasUnits: ULong =
+            23000UL // Increased to 23000 to support swaps and transfers with memo
+        val DefaultERC20TransferGasUnits: ULong = 120000UL
+        val DefaultEthSwapGasUnit: Long = 600000L
+    }
 
     fun getCoin(): Coin? {
         val ticker = when (coinType) {

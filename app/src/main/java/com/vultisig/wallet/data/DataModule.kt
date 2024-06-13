@@ -4,6 +4,9 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
+import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonDeserializer
+import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonSerializer
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.models.THORChainSwapPayloadDeserializer
@@ -77,6 +80,14 @@ internal interface DataModule {
                 .registerTypeAdapter(
                     THORChainSwapPayload::class.java,
                     THORChainSwapPayloadDeserializer(),
+                )
+                .registerTypeAdapter(
+                    OneInchSwapPayloadJson::class.java,
+                    OneInchSwapPayloadJsonDeserializer(),
+                )
+                .registerTypeAdapter(
+                    OneInchSwapPayloadJson::class.java,
+                    OneInchSwapPayloadJsonSerializer(),
                 )
                 .create()
         }
