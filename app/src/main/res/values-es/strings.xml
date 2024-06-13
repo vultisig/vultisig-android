@@ -114,7 +114,7 @@
     <string name="join_key_gen_screen_discovering_service">Descubriendo el servicio</string>
     <string name="join_key_gen_screen_discovering_session_id">Descubriendo el ID de sesión</string>
     <string name="join_key_gen_screen_joining_keygen">Unirse a Keygen</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Esperando que se inicie Keysign.</string>
+    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Esperando que se inicie Keygen.</string>
     <string name="keygen_flow_views_success">Éxito</string>
     <string name="keygen_peer_discovery_keygen">Generador de claves</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Emparejar con otros dispositivos:</string>

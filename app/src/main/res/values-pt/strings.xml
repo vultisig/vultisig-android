@@ -135,7 +135,7 @@
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Aguardando a conexão de outros dispositivos…</string>
     <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Aguardando a conexão de outros dispositivos…</string>
     <string name="joinkeysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Aguardando o início do Keysign.</string>
+    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Aguardando o início do Keygen.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Os tokens VULT são queimados com taxas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Os tokens VULT são distribuídos aos usuários.</string>
     <string name="vultisig_token_setting_screen_title">TOKEN VULTISIG</string>
