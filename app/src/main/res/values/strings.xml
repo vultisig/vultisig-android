@@ -182,7 +182,7 @@
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>
-    <string name="s_of_s_vault">%s of %s vault</string>
+    <string name="s_of_s_vault">%1$s of %2$s vault</string>
     <string name="scan_qr_screen_return_vault">Return Vault</string>
     <string name="naming_vault_screen_continue">Continue</string>
     <string name="naming_vault_screen_setup">Setup</string>

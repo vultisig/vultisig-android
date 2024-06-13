@@ -213,7 +213,7 @@
     <string name="setup_devices_to_sign_a_transaction">%1$s uređaja za potpisivanje transakcije.</string>
     <string name="keygen_peer_descovery_of_vault">%1$s od %2$s trezora</string>
     <string name="device_list_of_vault">%1$s od %2$s trezora</string>
-    <string name="s_of_s_vault">%s od %s trezora</string>
+    <string name="s_of_s_vault">%1$s od %2$s trezora</string>
     <string name="token_settings_burnt">Spaljeno: %1$s</string>
     <string name="camera_bind_error">Pogreška povezivanja kamere %1$s</string>
     <string name="setup_automatically_backed_up">Automatsko sigurnosno kopiranje</string>
