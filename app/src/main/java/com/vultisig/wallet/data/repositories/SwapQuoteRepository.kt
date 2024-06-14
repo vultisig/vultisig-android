@@ -45,7 +45,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             srcTokenContractAddress = srcToken.contractAddress,
             dstTokenContractAddress = dstToken.contractAddress,
             srcAddress = srcToken.address,
-            amount = tokenValue.toString(),
+            amount = tokenValue.value.toString(),
             isAffiliate = false, // TODO calculate
         )
     }
@@ -77,12 +77,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val expectedDstTokenValue = thorQuote.expectedAmountOut
             .thorTokenValueToTokenValue(dstToken)
 
-        return SwapQuote(
+        return SwapQuote.ThorChain(
             expectedDstValue = expectedDstTokenValue,
             fees = tokenFees,
             estimatedTime = estimatedTime,
-            inboundAddress = thorQuote.inboundAddress,
-            routerAddress = thorQuote.router,
+            data = thorQuote,
         )
     }
 
@@ -98,16 +97,12 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             BigDecimal(0.1)
         }.pow(abs(exponent))
 
-        return this.toBigDecimal()
-            .multiply(multiplier)
-            .toBigInteger()
-            .let {
-                TokenValue(
-                    it,
-                    token.ticker,
-                    token.decimal,
-                )
-            }
+        return TokenValue(
+            value = this.toBigDecimal()
+                .multiply(multiplier)
+                .toBigInteger(),
+            token = token,
+        )
     }
 
     private fun Coin.swapAssetName(): String = if (isNativeToken) {

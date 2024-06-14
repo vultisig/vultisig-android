@@ -7,7 +7,9 @@ import com.vultisig.wallet.common.toHexBytesInByteString
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import tss.KeysignResponse
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Ethereum.SigningInput
@@ -72,6 +74,17 @@ internal class OneInchSwap(
             vaultHexPublicKey,
             vaultHexChainCode,
         ).getPreSignedInputData(gas, gasPrice, input, keysignPayload)
+    }
+
+    fun getSignedTransaction(
+        swapPayload: OneInchSwapPayloadJson,
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>,
+    ): SignedTransactionResult {
+        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload)
+        val helper =
+            EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+        return helper.getSignedTransaction(inputData, signatures)
     }
 
 }
