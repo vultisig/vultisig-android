@@ -38,6 +38,7 @@ internal class OneInchSwapPayloadJsonSerializer : JsonSerializer<OneInchSwapPayl
         jsonObject.add("toCoin", context?.serialize(it.toCoin))
         jsonObject.add("fromAmount", it.fromAmount.toJson())
         jsonObject.addProperty("toAmountDecimal", it.toAmountDecimal)
+        jsonObject.add("quote", context?.serialize(it.quote))
         return jsonObject
     } ?: JsonObject()
 }

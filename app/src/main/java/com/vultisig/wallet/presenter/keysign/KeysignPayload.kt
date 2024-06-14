@@ -142,12 +142,28 @@ internal class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
         jsonObject.add("utxos", context?.serialize(src.utxos))
         jsonObject.addProperty("memo", src.memo ?: "")
         jsonObject.addProperty("vaultLocalPartyID", src.vaultLocalPartyID)
-        if (src.swapPayload != null) {
-            jsonObject.add("swapPayload", context?.serialize(src.swapPayload))
+        val swapPayload = src.swapPayload
+        if (swapPayload != null) {
+            jsonObject.add("swapPayload", context?.serialize(swapPayload))
             val spObject = JsonObject()
             val wrapperObject = JsonObject()
-            wrapperObject.add("_0", context?.serialize(src.swapPayload))
-            spObject.add("thorchain", wrapperObject)
+            when (swapPayload) {
+                is SwapPayload.ThorChain -> {
+                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
+                    spObject.add(
+                        "thorchain",
+                        wrapperObject
+                    )
+                }
+
+                is SwapPayload.OneInch -> {
+                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
+                    spObject.add(
+                        "oneInch",
+                        wrapperObject
+                    )
+                }
+            }
 
             jsonObject.add("swapPayload", spObject)
         }

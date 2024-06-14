@@ -35,8 +35,8 @@ internal class OneInchApiImpl @Inject constructor(
         isAffiliate: Boolean
     ): OneInchSwapQuoteJson {
         val response = httpClient.get("https://api.vultisig.com/1inch/swap/v6.0/$chain/swap") {
-            parameter("src", srcTokenContractAddress)
-            parameter("dst", dstTokenContractAddress)
+            parameter("src", srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
+            parameter("dst", dstTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
             parameter("amount", amount)
             parameter("from", srcAddress)
             parameter("slippage", "0.5")
@@ -54,6 +54,7 @@ internal class OneInchApiImpl @Inject constructor(
     companion object {
         private const val ONEINCH_REFERRER_ADDRESS = "0xa4a4f610e89488eb4ecc6c63069f241a54485269"
         private const val ONEINCH_REFERRER_FEE = 0.5
+        private const val ONEINCH_NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     }
 
 }

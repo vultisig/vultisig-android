@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.SignedTransactionResult
@@ -253,13 +254,13 @@ internal class KeysignViewModel(
         if (swapPayload != null) {
             return when (swapPayload) {
                 is SwapPayload.ThorChain -> {
-                    return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                    THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                         .getSignedTransaction(swapPayload.data, keysignPayload, signatures)
                 }
 
                 is SwapPayload.OneInch -> {
-                    // TODO support 1inch
-                    TODO("No getSignedTransaction for 1inch yet")
+                    OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures)
                 }
             }
         }
