@@ -22,6 +22,7 @@ import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.toJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
+import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
@@ -52,12 +53,16 @@ internal data class KeysignPayload(
 ) {
     fun getKeysignMessages(vault: Vault): List<String> {
         if (swapPayload != null) {
-            return if (swapPayload is SwapPayload.ThorChain) {
-                THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
-                    .getPreSignedImageHash(swapPayload.data, this)
-            } else {
-                // TODO
-                TODO("No getPreSignedImageHash for 1inch yet")
+            return when (swapPayload) {
+                is SwapPayload.ThorChain -> {
+                    THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getPreSignedImageHash(swapPayload.data, this)
+                }
+
+                is SwapPayload.OneInch -> {
+                    OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getPreSignedImageHash(swapPayload.data, this)
+                }
             }
         }
 

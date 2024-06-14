@@ -54,8 +54,7 @@ internal class EvmHelper(
         signingInput: Ethereum.SigningInput,
         keysignPayload: KeysignPayload,
     ): ByteArray {
-        val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
-            ?: throw Exception("Invalid blockChainSpecific")
+        val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
 
         return signingInput.toBuilder().apply {
             chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
@@ -66,6 +65,29 @@ internal class EvmHelper(
             txMode = Ethereum.TransactionMode.Enveloped
         }.build().toByteArray()
     }
+
+    fun getPreSignedInputData(
+        gas: BigInteger,
+        gasPrice: BigInteger,
+        signingInput: Ethereum.SigningInput.Builder,
+        keysignPayload: KeysignPayload,
+    ): ByteArray {
+        val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
+
+        return signingInput.apply {
+            chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
+            nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
+
+            gasLimit = ByteString.copyFrom(gas.toByteArray())
+            setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))
+
+            txMode = Ethereum.TransactionMode.Legacy
+        }.build().toByteArray()
+    }
+
+    private fun requireEthereumSpec(spec: BlockChainSpecific): BlockChainSpecific.Ethereum =
+        spec as? BlockChainSpecific.Ethereum
+            ?: error("BlockChainSpecific is not Ethereum for EVM chain")
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
