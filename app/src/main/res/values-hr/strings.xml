@@ -225,4 +225,8 @@
     <string name="send_amount_currency">Iznos (u %s)</string>
     <string name="vault_settings_backup_subtitle">Sigurnosno kopirajte svoj udio u trezoru</string>
     <string name="chains">Lanci</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Traženje uređaja…</string>
+    <string name="keygen_peer_discovery_select_the_pairing_devices">Odaberite uređaje za uparivanje</string>
+    <string name="peer_discovery_hint_connect_to_internet">Povežite sve uređaje na istu mrežu s otvorenim Vultisig-om</string>
+    <string name="peer_discovery_hint_connect_to_same_wifi">Povežite sve uređaje s internetom s otvorenim Vultisig-om</string>
 </resources>

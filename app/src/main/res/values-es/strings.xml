@@ -225,6 +225,10 @@
     <string name="chain_token_screen_address_copied">%1$s copiada al portapapeles</string>
     <string name="chain_account_item_address_copied">%1$s copiada al portapapeles</string>
     <string name="s_of_s_vault">%1$s de %2$s caja fuerte</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Buscando dispositivos…</string>
+    <string name="keygen_peer_discovery_select_the_pairing_devices">Seleccionar los dispositivos de emparejamiento</string>
+    <string name="peer_discovery_hint_connect_to_internet">Conecte todos los dispositivos a la misma red con Vultisig abierto</string>
+    <string name="peer_discovery_hint_connect_to_same_wifi">Conecte todos los dispositivos a Internet con Vultisig abierto</string>
 
 
 </resources>

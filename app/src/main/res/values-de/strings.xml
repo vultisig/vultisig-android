@@ -225,4 +225,8 @@
     <string name="send_amount_currency">Betrag (in %s)</string>
     <string name="vault_settings_backup_subtitle">Sichern Sie Ihre Tresorfreigabe</string>
     <string name="chains">Ketten</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Suche nach Geräten…</string>
+    <string name="keygen_peer_discovery_select_the_pairing_devices">Wählen Sie die zu koppelnden Geräte aus</string>
+    <string name="peer_discovery_hint_connect_to_internet">Verbinden Sie alle Geräte mit demselben Netzwerk, wobei Vultisig geöffnet sein muss</string>
+    <string name="peer_discovery_hint_connect_to_same_wifi">Verbinden Sie alle Geräte mit dem Internet mit Vultisig Open</string>
 </resources>

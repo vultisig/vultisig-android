@@ -225,4 +225,8 @@
     <string name="send_amount_currency">Quantidade (em %s)</string>
     <string name="vault_settings_backup_subtitle">Faça backup do seu compartilhamento de cofre</string>
     <string name="chains">Correntes</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Procurando por dispositivos…</string>
+    <string name="keygen_peer_discovery_select_the_pairing_devices">Selecione os dispositivos de pareamento</string>
+    <string name="peer_discovery_hint_connect_to_internet">Conecte todos os dispositivos à mesma rede com o Vultisig aberto</string>
+    <string name="peer_discovery_hint_connect_to_same_wifi">Conecte todos os dispositivos à Internet com o Vultisig aberto</string>
 </resources>
