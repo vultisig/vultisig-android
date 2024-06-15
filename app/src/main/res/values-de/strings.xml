@@ -229,4 +229,10 @@
     <string name="keygen_peer_discovery_select_the_pairing_devices">Wählen Sie die zu koppelnden Geräte aus</string>
     <string name="peer_discovery_hint_connect_to_internet">Verbinden Sie alle Geräte mit demselben Netzwerk, wobei Vultisig geöffnet sein muss</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Verbinden Sie alle Geräte mit dem Internet mit Vultisig Open</string>
+    <string name="vault_settings_delete_vault_details">Details</string>
+    <string name="vault_settings_delete_vault_name">Tresorname:</string>
+    <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Schlüssel:</string>
+    <string name="vault_settings_delete_vault_eddsa_key">EdDSA Schlüssel:</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s-von-%2$s Tresor</string>
+    <string name="vault_settings_delete_vault_type">Tresortyp:</string>
 </resources>

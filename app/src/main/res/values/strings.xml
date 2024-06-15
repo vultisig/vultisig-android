@@ -178,6 +178,12 @@
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
     <string name="vault_settings_delete_vault_caution2">I am aware that I can lose funds</string>
     <string name="vault_settings_delete_vault_caution3">I have made a vault backup</string>
+    <string name="vault_settings_delete_vault_details">Details:</string>
+    <string name="vault_settings_delete_vault_name">Vault Name:</string>
+    <string name="vault_settings_delete_vault_type">Vault Type:</string>
+    <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Key:</string>
+    <string name="vault_settings_delete_vault_eddsa_key">EdDSA Key:</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s-of-%2$s Vault</string>
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>

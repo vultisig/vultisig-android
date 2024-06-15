@@ -229,6 +229,12 @@
     <string name="keygen_peer_discovery_select_the_pairing_devices">Seleccionar los dispositivos de emparejamiento</string>
     <string name="peer_discovery_hint_connect_to_internet">Conecte todos los dispositivos a la misma red con Vultisig abierto</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Conecte todos los dispositivos a Internet con Vultisig abierto</string>
+    <string name="vault_settings_delete_vault_details">Detalles</string>
+    <string name="vault_settings_delete_vault_name">Nombre de la Caja Fuerte:</string>
+    <string name="vault_settings_delete_vault_ecdsa_key">Clave ECDSA:</string>
+    <string name="vault_settings_delete_vault_eddsa_key">Clave EdDSA:</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s-de-%2$s Caja Fuerte</string>
+    <string name="vault_settings_delete_vault_type">Tipo De Cajas Fuerte:</string>
 
 
 </resources>
