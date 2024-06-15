@@ -120,7 +120,6 @@ internal fun KeysignPeerDiscovery(
             modifier = Modifier
                 .background(Theme.colors.oxfordBlue800)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(it)
         ) {
             PeerDiscoveryView(

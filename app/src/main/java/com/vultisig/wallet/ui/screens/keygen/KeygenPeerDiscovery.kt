@@ -1,18 +1,14 @@
 package com.vultisig.wallet.ui.screens.keygen
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -107,37 +103,32 @@ internal fun KeygenPeerDiscoveryScreen(
         endIcon = R.drawable.qr_share,
         onEndIconClick = onQrAddressClick
     ) {
-        Box(
+        Column(
+            horizontalAlignment = CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                horizontalAlignment = CenterHorizontally,
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .fillMaxSize(),
-            ) {
-                if (selectionState.isNotEmpty() && selectionState.count() > 1) {
-                    Text(
-                        text = stringResource(
-                            R.string.keygen_peer_descovery_of_vault,
-                            Utils.getThreshold(selectionState.count()),
-                            selectionState.count()
-                        ),
-                        color = textColor,
-                        style = Theme.montserrat.subtitle2
-                    )
-                }
-
-                PeerDiscoveryView(
-                    selectionState = selectionState,
-                    participants = participants,
-                    keygenPayloadState = keygenPayloadState,
-                    networkPromptOption = networkPromptOption,
-                    onChangeNetwork = onChangeNetwork,
-                    onAddParticipant = onAddParticipant,
-                    onRemoveParticipant = onRemoveParticipant,
+            if (selectionState.isNotEmpty() && selectionState.count() > 1) {
+                Text(
+                    text = stringResource(
+                        R.string.keygen_peer_descovery_of_vault,
+                        Utils.getThreshold(selectionState.count()),
+                        selectionState.count()
+                    ),
+                    color = textColor,
+                    style = Theme.montserrat.subtitle2
                 )
             }
+
+            PeerDiscoveryView(
+                modifier = Modifier.weight(1f),
+                selectionState = selectionState,
+                participants = participants,
+                keygenPayloadState = keygenPayloadState,
+                networkPromptOption = networkPromptOption,
+                onChangeNetwork = onChangeNetwork,
+                onAddParticipant = onAddParticipant,
+                onRemoveParticipant = onRemoveParticipant,
+            )
 
             MultiColorButton(
                 text = stringResource(R.string.keygen_peer_discovery_continue),
@@ -147,7 +138,6 @@ internal fun KeygenPeerDiscoveryScreen(
                 textStyle = Theme.montserrat.subtitle1,
                 disabled = selectionState.size < 2,
                 modifier = Modifier
-                    .align(BottomCenter)
                     .fillMaxWidth()
                     .padding(
                         horizontal = 12.dp,
@@ -168,6 +158,6 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
         networkPromptOption = NetworkPromptOption.LOCAL,
-        vaultSetupType = "M/N"
+        vaultSetupType = "M/N",
     )
 }
