@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -22,38 +23,30 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun NetworkPrompts(
     modifier: Modifier = Modifier,
-    networkPromptOption: NetworkPromptOption = NetworkPromptOption.WIFI,
+    networkPromptOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
     onChange: (NetworkPromptOption) -> Unit = {},
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier.fillMaxWidth(),
     ) {
         NetworkChip(
-            title = stringResource(R.string.network_prompts_wifi),
-            drawableResId = R.drawable.wifi,
-            isSelected = networkPromptOption == NetworkPromptOption.WIFI,
-            onClick = {
-                onChange(NetworkPromptOption.WIFI)
-            },
-        )
-
-        NetworkChip(
-            title = stringResource(R.string.network_prompts_hotspot),
-            drawableResId = R.drawable.baseline_wifi_tethering_24,
-            isSelected = networkPromptOption == NetworkPromptOption.HOTSPOT,
-            onClick = {
-                onChange(NetworkPromptOption.HOTSPOT)
-            },
-        )
-
-
-        NetworkChip(
-            title = stringResource(R.string.network_prompts_cellular),
+            modifier = Modifier.weight(1f),
+            title = stringResource(R.string.network_prompts_internet),
             drawableResId = R.drawable.baseline_signal_cellular_alt_24,
-            isSelected = networkPromptOption == NetworkPromptOption.CELLULAR,
+            isSelected = networkPromptOption == NetworkPromptOption.INTERNET,
             onClick = {
-                onChange(NetworkPromptOption.CELLULAR)
+                onChange(NetworkPromptOption.INTERNET)
+            },
+        )
+
+        NetworkChip(
+            modifier = Modifier.weight(1f),
+            title = stringResource(R.string.network_prompts_local),
+            drawableResId = R.drawable.wifi,
+            isSelected = networkPromptOption == NetworkPromptOption.LOCAL,
+            onClick = {
+                onChange(NetworkPromptOption.LOCAL)
             },
         )
     }
@@ -62,6 +55,7 @@ internal fun NetworkPrompts(
 @Composable
 private fun NetworkChip(
     title: String,
+    modifier: Modifier,
     @DrawableRes drawableResId: Int,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -77,16 +71,20 @@ private fun NetworkChip(
             selectedContainerColor = Theme.colors.oxfordBlue200,
         ),
         onClick = ClickOnce(onClick),
+        modifier = modifier,
         label = {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.Center
             ) {
                 UiIcon(
                     drawableResId = drawableResId,
                     size = 20.dp,
                     tint = Theme.colors.turquoise600Main,
                 )
+
+                UiSpacer(size = 8.dp)
 
                 Text(
                     text = title,

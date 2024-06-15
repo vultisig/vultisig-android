@@ -75,8 +75,7 @@
     <string name="generating_key_screen_resharing_eddsa_key">EdDSA-SCHLÜSSEL ERNEUT TEILEN</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Mit anderen Geräten koppeln:</string>
     <string name="keygen_peer_discovery_continue">Fortfahren</string>
-    <string name="network_prompts_wifi">WLAN</string>
-    <string name="network_prompts_hotspot">Hotspot</string>
+    <string name="network_prompts_local">WLAN</string>
     <string name="setup_title">Einrichten</string>
     <string name="setup_start">Starten</string>
     <string name="setup_pair">Koppeln</string>
@@ -217,7 +216,7 @@
     <string name="token_settings_burnt">Verbrannt: %1$s</string>
     <string name="camera_bind_error">Kamerabindungsfehler %1$s</string>
     <string name="setup_automatically_backed_up">Automatisch gesichert</string>
-    <string name="network_prompts_cellular">Mobilfunk</string>
+    <string name="network_prompts_internet">Mobilfunk</string>
     <string name="camera_permission_denied">Kameraberechtigung nicht erteilt. Bitte aktivieren Sie sie in den Einstellungen.</string>
     <string name="verify_transaction_fiat_amount_title">Betrag in (%s)</string>
     <string name="send_error_no_address">Adresse ist ungültig</string>

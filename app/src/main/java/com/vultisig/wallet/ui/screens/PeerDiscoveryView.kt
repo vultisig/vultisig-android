@@ -1,13 +1,17 @@
 package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -18,7 +22,9 @@ import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.components.NetworkPrompts
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -57,7 +63,7 @@ internal fun PeerDiscoveryView(
     NetworkPrompts(
         networkPromptOption = networkPromptOption,
         onChange = onChangeNetwork,
-        modifier = Modifier.padding(horizontal = 12.dp),
+        modifier = Modifier.padding(horizontal = 32.dp),
     )
 
 
@@ -74,7 +80,7 @@ internal fun PeerDiscoveryView(
                 .padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(
                 space = 8.dp,
-                alignment = Alignment.CenterHorizontally
+                alignment = CenterHorizontally
             ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -94,30 +100,58 @@ internal fun PeerDiscoveryView(
             }
         }
     } else {
-        UiSpacer(size = 64.dp)
-        Text(
-            text = stringResource(id = R.string.keygen_peer_discovery_looking_for_devices),
-            color = textColor,
-            style = Theme.montserrat.subtitle3,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(
-                    horizontal = 24.dp,
-                    vertical = 24.dp,
-                )
-        )
+        Column(horizontalAlignment = CenterHorizontally) {
+            UiSpacer(size = 30.dp)
+            Text(
+                text = stringResource(id = R.string.keygen_peer_discovery_looking_for_devices),
+                color = textColor,
+                style = Theme.montserrat.subtitle3,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            UiCirclesLoader()
+            UiSpacer(size = 64.dp)
+            NetworkPromptHint(networkPromptOption)
+        }
     }
 
     UiSpacer(size = 24.dp)
 }
 
+@Composable
+private fun NetworkPromptHint(networkPromptOption: NetworkPromptOption) {
+    UiIcon(
+        drawableResId = when (networkPromptOption) {
+            NetworkPromptOption.LOCAL -> R.drawable.wifi
+            NetworkPromptOption.INTERNET -> R.drawable.baseline_signal_cellular_alt_24
+        },
+        size = 20.dp,
+        tint = Theme.colors.turquoise600Main,
+    )
+    UiSpacer(size = 10.dp)
+    Text(
+        text = when (networkPromptOption) {
+            NetworkPromptOption.LOCAL -> stringResource(R.string.peer_discovery_hint_connect_to_internet)
+            NetworkPromptOption.INTERNET -> stringResource(R.string.peer_discovery_hint_connect_to_same_wifi)
+        },
+        style = Theme.menlo.body1,
+        color = Theme.colors.neutral0,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(0.7f)
+    )
+}
+
 @Preview
 @Composable
 private fun PeerDiscoveryPreview() {
-    PeerDiscoveryView(
-        selectionState = listOf("1", "2"),
-        participants = listOf("1", "2", "3"),
-        keygenPayloadState = "",
-        networkPromptOption = NetworkPromptOption.WIFI,
-    )
+    Column(
+        horizontalAlignment = CenterHorizontally,
+    ) {
+        PeerDiscoveryView(
+            selectionState = listOf("1", "2"),
+            participants = listOf("1", "2", "3"),
+            keygenPayloadState = "keygen payload",
+            networkPromptOption = NetworkPromptOption.LOCAL,
+        )
+    }
 }

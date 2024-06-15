@@ -143,6 +143,6 @@ private fun KeysignPeerDiscoveryPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keysignMessage = "keysignMessage",
-        networkPromptOption = NetworkPromptOption.WIFI,
+        networkPromptOption = NetworkPromptOption.LOCAL,
     )
 }

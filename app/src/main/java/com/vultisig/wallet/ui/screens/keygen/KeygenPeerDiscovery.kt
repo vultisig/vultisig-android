@@ -167,7 +167,7 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
-        networkPromptOption = NetworkPromptOption.WIFI,
+        networkPromptOption = NetworkPromptOption.LOCAL,
         vaultSetupType = "M/N"
     )
 }

@@ -78,8 +78,7 @@
     <string name="generating_key_screen_resharing_eddsa_key">RECOMPARTILHANDO CHAVE EdDSA</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Emparelhar com outros dispositivos:</string>
     <string name="keygen_peer_discovery_continue">Continuar</string>
-    <string name="network_prompts_wifi">Wifi</string>
-    <string name="network_prompts_hotspot">Hotspot</string>
+    <string name="network_prompts_local">Wifi</string>
     <string name="setup_title">Configurar</string>
     <string name="setup_start">Iniciar</string>
     <string name="setup_pair">Emparelhar</string>
@@ -217,7 +216,7 @@
     <string name="token_settings_burnt">Queimado: %1$s</string>
     <string name="camera_bind_error">Erro de vinculação da câmera %1$s</string>
     <string name="setup_automatically_backed_up">Backup automático</string>
-    <string name="network_prompts_cellular">Celular</string>
+    <string name="network_prompts_internet">Celular</string>
     <string name="camera_permission_denied">Permissão de câmera não concedida. Por favor, habilite-a nas configurações.</string>
     <string name="verify_transaction_fiat_amount_title">Quantidade em (%s)</string>
     <string name="send_error_no_address">Endereço inválido</string>
