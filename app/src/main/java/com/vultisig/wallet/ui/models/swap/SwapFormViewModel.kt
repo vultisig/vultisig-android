@@ -6,9 +6,12 @@ import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
@@ -22,6 +25,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.IsSwapSupported
+import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
@@ -48,6 +52,8 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
@@ -135,21 +141,60 @@ internal class SwapFormViewModel @Inject constructor(
                 isSwap = true,
             )
 
-            val transaction = SwapTransaction(
-                id = UUID.randomUUID().toString(),
-                vaultId = vaultId,
-                srcToken = srcToken,
-                srcTokenValue = srcTokenValue,
-                srcAddress = srcAddress,
-                dstToken = dstToken,
-                dstAddress = quote.routerAddress ?: quote.inboundAddress ?: srcAddress,
-                expectedDstTokenValue = dstTokenValue,
-                blockChainSpecific = specificAndUtxo,
-                vaultAddress = quote.inboundAddress ?: srcAddress,
-                routerAddress = quote.routerAddress,
-                estimatedFees = quote.fees,
-                estimatedTime = quote.estimatedTime,
-            )
+            val transaction = when (quote) {
+                is SwapQuote.ThorChain -> SwapTransaction(
+                    id = UUID.randomUUID().toString(),
+                    vaultId = vaultId,
+                    srcToken = srcToken,
+                    srcTokenValue = srcTokenValue,
+                    dstToken = dstToken,
+                    dstAddress = quote.data.router ?: quote.data.inboundAddress ?: srcAddress,
+                    expectedDstTokenValue = dstTokenValue,
+                    blockChainSpecific = specificAndUtxo,
+                    estimatedFees = quote.fees,
+                    estimatedTime = quote.estimatedTime,
+                    payload = SwapPayload.ThorChain(
+                        THORChainSwapPayload(
+                            fromAddress = srcAddress,
+                            fromCoin = srcToken,
+                            toCoin = dstToken,
+                            vaultAddress = quote.data.inboundAddress ?: srcAddress,
+                            routerAddress = quote.data.router,
+                            fromAmount = srcTokenValue.value,
+                            toAmountDecimal = dstTokenValue.decimal,
+                            toAmountLimit = "0",
+                            steamingInterval = "1",
+                            streamingQuantity = "0",
+                            expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
+                                .inWholeSeconds.toULong(),
+                            isAffiliate = false, // TODO calculate
+                        )
+                    )
+                )
+
+                is SwapQuote.OneInch ->
+                    SwapTransaction(
+                        id = UUID.randomUUID().toString(),
+                        vaultId = vaultId,
+                        srcToken = srcToken,
+                        srcTokenValue = srcTokenValue,
+                        dstToken = dstToken,
+                        dstAddress = quote.data.tx.to,
+                        expectedDstTokenValue = dstTokenValue,
+                        blockChainSpecific = specificAndUtxo,
+                        estimatedFees = quote.fees,
+                        estimatedTime = quote.estimatedTime,
+                        payload = SwapPayload.OneInch(
+                            OneInchSwapPayloadJson(
+                                fromCoin = srcToken,
+                                toCoin = dstToken,
+                                fromAmount = srcTokenValue.value,
+                                toAmountDecimal = dstTokenValue.decimal,
+                                quote = quote.data,
+                            )
+                        )
+                    )
+            }
 
             swapTransactionRepository.addTransaction(transaction)
 
@@ -275,6 +320,7 @@ internal class SwapFormViewModel @Inject constructor(
                     val (src, dst) = addrs
 
                     val srcToken = src.account.token
+                    val dstToken = dst.account.token
 
                     val srcTokenValue = amount
                         ?.movePointRight(src.account.token.decimal)
@@ -292,34 +338,79 @@ internal class SwapFormViewModel @Inject constructor(
                             srcToken.decimal
                         )
 
-                        val quote = swapQuoteRepository.getSwapQuote(
-                            dstAddress = dst.address.address,
-                            srcToken = src.account.token,
-                            dstToken = dst.account.token,
-                            tokenValue = tokenValue,
-                        )
-                        this@SwapFormViewModel.quote = quote
-
                         val currency = appCurrencyRepository.currency.first()
-                        val fiatFees =
-                            convertTokenValueToFiat(dst.account.token, quote.fees, currency)
 
-                        val estimatedTime = quote.estimatedTime?.let {
-                            UiText.DynamicString(mapDurationToUiString(it))
-                        } ?: R.string.swap_screen_estimated_time_instant.asUiText()
-
-                        val estimatedDstTokenValue = if (hasUserSetTokenValue) {
-                            mapTokenValueToDecimalUiString(
-                                quote.expectedDstValue
+                        // THORChain for cross-chain swap, 1inch for same-chain swap
+                        if (srcToken.chain != dstToken.chain) {
+                            val quote = swapQuoteRepository.getSwapQuote(
+                                dstAddress = dst.address.address,
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
                             )
-                        } else ""
+                            this@SwapFormViewModel.quote = quote
 
-                        uiState.update {
-                            it.copy(
-                                estimatedDstTokenValue = estimatedDstTokenValue,
-                                fee = fiatValueToString.map(fiatFees),
-                                estimatedTime = estimatedTime,
+                            val fiatFees =
+                                convertTokenValueToFiat(dstToken, quote.fees, currency)
+
+                            val estimatedTime = quote.estimatedTime?.let {
+                                UiText.DynamicString(mapDurationToUiString(it))
+                            } ?: R.string.swap_screen_estimated_time_instant.asUiText()
+
+                            val estimatedDstTokenValue = if (hasUserSetTokenValue) {
+                                mapTokenValueToDecimalUiString(
+                                    quote.expectedDstValue
+                                )
+                            } else ""
+
+                            uiState.update {
+                                it.copy(
+                                    estimatedDstTokenValue = estimatedDstTokenValue,
+                                    fee = fiatValueToString.map(fiatFees),
+                                    estimatedTime = estimatedTime,
+                                )
+                            }
+                        } else {
+                            val quote = swapQuoteRepository.getOneInchSwapQuote(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
                             )
+
+                            val expectedDstValue = TokenValue(
+                                value = quote.dstAmount.toBigInteger(),
+                                token = dstToken,
+                            )
+
+                            val tokenFees = TokenValue(
+                                value = quote.tx.gasPrice.toBigInteger() * EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
+                                token = srcToken
+                            )
+
+                            this@SwapFormViewModel.quote = SwapQuote.OneInch(
+                                expectedDstValue = expectedDstValue,
+                                fees = tokenFees,
+                                estimatedTime = null,
+                                data = quote
+                            )
+
+                            val fiatFees =
+                                convertTokenValueToFiat(dstToken, tokenFees, currency)
+
+                            val estimatedTime =
+                                R.string.swap_screen_estimated_time_instant.asUiText()
+
+                            val estimatedDstTokenValue = if (hasUserSetTokenValue) {
+                                mapTokenValueToDecimalUiString(expectedDstValue)
+                            } else ""
+
+                            uiState.update {
+                                it.copy(
+                                    estimatedDstTokenValue = estimatedDstTokenValue,
+                                    fee = fiatValueToString.map(fiatFees),
+                                    estimatedTime = estimatedTime,
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         // TODO handle error

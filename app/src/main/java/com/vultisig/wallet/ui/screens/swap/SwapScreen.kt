@@ -70,6 +70,7 @@ internal fun SwapScreen(
 
     SwapScreen(
         topBarNavController = topBarNavController,
+        mainNavController = navController,
         navHostController = swapNavHostController,
         vaultId = vaultId,
         chainId = chainId,
@@ -82,6 +83,7 @@ internal fun SwapScreen(
 @Composable
 internal fun SwapScreen(
     topBarNavController: NavController,
+    mainNavController: NavController,
     navHostController: NavHostController,
     title: String,
     progress: Float,
@@ -136,7 +138,7 @@ internal fun SwapScreen(
                     hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadSwapTransaction(transactionId)
 
-                KeysignFlowView(topBarNavController)
+                KeysignFlowView(mainNavController)
             }
         }
     }
@@ -147,6 +149,7 @@ internal fun SwapScreen(
 internal fun SwapScreenPreview() {
     SwapScreen(
         topBarNavController = rememberNavController(),
+        mainNavController = rememberNavController(),
         navHostController = rememberNavController(),
         vaultId = "",
         chainId = null,

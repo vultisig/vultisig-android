@@ -20,6 +20,9 @@ import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.chains.utxoHelper
 import com.vultisig.wallet.common.toJson
+import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapPayload
+import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
@@ -40,8 +43,7 @@ internal data class KeysignPayload(
     val utxos: List<UtxoInfo> = emptyList(),
     @SerializedName("memo")
     val memo: String? = null,
-    @SerializedName("swapPayload")
-    val swapPayload: THORChainSwapPayload? = null,
+    val swapPayload: SwapPayload? = null,
     @SerializedName("approvePayload")
     val approvePayload: ERC20ApprovePayload? = null,
     @SerializedName("vaultPubKeyECDSA")
@@ -51,11 +53,19 @@ internal data class KeysignPayload(
 ) {
     fun getKeysignMessages(vault: Vault): List<String> {
         if (swapPayload != null) {
-            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode).getPreSignedImageHash(
-                swapPayload,
-                this
-            )
+            return when (swapPayload) {
+                is SwapPayload.ThorChain -> {
+                    THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getPreSignedImageHash(swapPayload.data, this)
+                }
+
+                is SwapPayload.OneInch -> {
+                    OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getPreSignedImageHash(swapPayload.data, this)
+                }
+            }
         }
+
         if (approvePayload != null) {
             THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode).getPreSignedApproveImageHash(
                 approvePayload,
@@ -132,12 +142,28 @@ internal class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
         jsonObject.add("utxos", context?.serialize(src.utxos))
         jsonObject.addProperty("memo", src.memo ?: "")
         jsonObject.addProperty("vaultLocalPartyID", src.vaultLocalPartyID)
-        if (src.swapPayload != null) {
-            jsonObject.add("swapPayload", context?.serialize(src.swapPayload))
+        val swapPayload = src.swapPayload
+        if (swapPayload != null) {
+            jsonObject.add("swapPayload", context?.serialize(swapPayload))
             val spObject = JsonObject()
             val wrapperObject = JsonObject()
-            wrapperObject.add("_0", context?.serialize(src.swapPayload))
-            spObject.add("thorchain", wrapperObject)
+            when (swapPayload) {
+                is SwapPayload.ThorChain -> {
+                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
+                    spObject.add(
+                        "thorchain",
+                        wrapperObject
+                    )
+                }
+
+                is SwapPayload.OneInch -> {
+                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
+                    spObject.add(
+                        "oneInch",
+                        wrapperObject
+                    )
+                }
+            }
 
             jsonObject.add("swapPayload", spObject)
         }
@@ -169,17 +195,33 @@ internal class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
         )
         val memo = jsonObject.get("memo")?.asString
         val swapPayloadJsonObject = jsonObject.get("swapPayload")
-        var swapPayload: THORChainSwapPayload? = null
-        if (swapPayloadJsonObject != null) {
-            // TODO Here , in future , if we add 1inch swap , then this part need to be changed
-            swapPayload = context.deserialize<THORChainSwapPayload>(
-                jsonObject.get("swapPayload")
-                    .asJsonObject
-                    .get("thorchain")
-                    .asJsonObject.get("_0"),
-                THORChainSwapPayload::class.java
-            )
-        }
+        val swapPayload: SwapPayload? = if (swapPayloadJsonObject != null) {
+            val spo = swapPayloadJsonObject.asJsonObject
+            when {
+                spo.has("thorchain") -> {
+                    SwapPayload.ThorChain(
+                        context.deserialize(
+                            spo.get("thorchain")
+                                .asJsonObject.get("_0"),
+                            THORChainSwapPayload::class.java
+                        )
+                    )
+                }
+
+                spo.has("oneInch") -> {
+                    SwapPayload.OneInch(
+                        context.deserialize(
+                            spo.get("oneInch")
+                                .asJsonObject.get("_0"),
+                            OneInchSwapPayloadJson::class.java
+                        )
+                    )
+                }
+
+                else -> error("KeysignPayload doesn't have a known swapPayload")
+            }
+        } else null
+
         var approvePayload: ERC20ApprovePayload? = null
         val approvePayloadJsonObject = jsonObject.get("approvePayload")
         if (approvePayloadJsonObject != null) {

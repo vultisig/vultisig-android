@@ -113,8 +113,7 @@ internal fun SwapFormScreen(
                     TextFieldValidator(
                         focusState = focusState,
                         errorText = state.amountError
-                    )
-                    {
+                    ) {
                         FormCard {
                             FormTextField(
                                 hint = stringResource(R.string.swap_form_src_amount_hint),

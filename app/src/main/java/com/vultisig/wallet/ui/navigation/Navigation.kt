@@ -73,7 +73,7 @@ internal sealed class Destination(
     data object ScanQr : Destination(route = "scan_qr")
 
     data class JoinThroughQr(
-        val vaultId: String,
+        val vaultId: String?,
     ) : Destination(route = "join/qr?vault_id=$vaultId") {
         companion object {
             const val staticRoute = "join/qr?vault_id={$ARG_VAULT_ID}"
@@ -174,9 +174,21 @@ internal sealed class Destination(
         val vaultId: String,
         val qr: String,
     ) : Destination(route = "join_keysign/$vaultId?qr=$qr") {
+
         companion object {
             const val staticRoute = "join_keysign/{$ARG_VAULT_ID}?qr={$ARG_QR}"
         }
+
+    }
+
+    data class JoinKeygen(
+        val qr: String,
+    ) : Destination(route = "join_keygen?qr=$qr") {
+
+        companion object {
+            const val staticRoute = "join_keygen?qr={$ARG_QR}"
+        }
+
     }
 
 }

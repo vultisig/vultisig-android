@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-data class VerifySwapUiModel(
+internal data class VerifySwapUiModel(
     val srcTokenValue: String = "",
     val dstTokenValue: String = "",
     val estimatedFees: String = "",
