@@ -45,7 +45,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                 R.string.vault_settings_delete_vault_caution1,
                 R.string.vault_settings_delete_vault_caution2,
                 R.string.vault_settings_delete_vault_caution3,
-            ),
+            )
         )
     )
     fun loadData(){
