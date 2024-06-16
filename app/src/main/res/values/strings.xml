@@ -123,14 +123,13 @@
     <string name="join_key_gen_screen_joining_keygen">Joining Keygen</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Waiting for Keygen to start</string>
     <string name="keygen_flow_views_success">Success</string>
-    <string name="keygen_peer_discovery_keygen">Keygen</string>
+    <string name="keygen_peer_discovery_keygen">Keygen for %1$s vault</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect…</string>
     <string name="keygen_peer_discovery_desc1">Keep all devices on same WiFi with Vultisig App open. (May not work on hotel/airport WiFi)</string>
     <string name="keygen_peer_discovery_continue">Continue</string>
-    <string name="network_prompts_wifi">Wifi</string>
-    <string name="network_prompts_hotspot">Hotspot</string>
-    <string name="network_prompts_cellular">Cellular</string>
+    <string name="network_prompts_local">Local</string>
+    <string name="network_prompts_internet">Internet</string>
     <string name="setup_title">Setup</string>
     <string name="setup_automatically_backed_up">Automatically backed-up</string>
     <string name="setup_keep_devices_on_the_same_wifi_network_with_vultisig_open">Keep devices on the same WiFi Network with Vultisig open.</string>
@@ -238,4 +237,8 @@
     <string name="rename_vault_invalid_name">Invalid name</string>
     <string name="swap_form_invalid_amount">Invalid amount</string>
     <string name="send_from_invalid_amount">Invalid amount</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Looking for devices…</string>
+    <string name="keygen_peer_discovery_select_the_pairing_devices">Select the pairing devices</string>
+    <string name="peer_discovery_hint_connect_to_internet">Connect all devices to the same Network with Vultisig open</string>
+    <string name="peer_discovery_hint_connect_to_same_wifi">Connect all devices to the Internet with Vultisig open</string>
 </resources>

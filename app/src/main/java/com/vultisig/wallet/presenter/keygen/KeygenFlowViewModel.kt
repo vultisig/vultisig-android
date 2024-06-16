@@ -69,7 +69,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     var errorMessage: MutableState<String> = mutableStateOf("")
 
     var vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
-    private val vaultSetupType =
+    val vaultSetupType =
         VaultSetupType.fromInt(
             navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
         )
@@ -82,7 +82,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     val participants: MutableLiveData<List<String>>
         get() = participantDiscovery?.participants ?: MutableLiveData(listOf())
 
-    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.WIFI)
+    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.LOCAL)
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
             vault,
@@ -125,7 +125,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         if (vultisigRelay.IsRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY
-            networkOption.value = NetworkPromptOption.CELLULAR
+            networkOption.value = NetworkPromptOption.INTERNET
         }
         this.action = action
         this.vault = vault
@@ -319,13 +319,13 @@ internal class KeygenFlowViewModel @Inject constructor(
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (networkOption.value == option) return
         when (option) {
-            NetworkPromptOption.WIFI, NetworkPromptOption.HOTSPOT -> {
+            NetworkPromptOption.LOCAL -> {
                 vultisigRelay.IsRelayEnabled = false
                 serverAddress = "http://127.0.0.1:18080"
                 networkOption.value = option
             }
 
-            NetworkPromptOption.CELLULAR -> {
+            NetworkPromptOption.INTERNET -> {
                 vultisigRelay.IsRelayEnabled = true
                 serverAddress = Endpoints.VULTISIG_RELAY
                 networkOption.value = option

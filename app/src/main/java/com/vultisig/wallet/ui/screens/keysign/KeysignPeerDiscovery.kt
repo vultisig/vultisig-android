@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -118,7 +119,7 @@ internal fun KeysignPeerDiscovery(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .background(Theme.colors.oxfordBlue800)
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
                 .padding(it)
         ) {
             PeerDiscoveryView(
@@ -141,6 +142,6 @@ private fun KeysignPeerDiscoveryPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keysignMessage = "keysignMessage",
-        networkPromptOption = NetworkPromptOption.WIFI,
+        networkPromptOption = NetworkPromptOption.LOCAL,
     )
 }

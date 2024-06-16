@@ -80,7 +80,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     val participants: MutableLiveData<List<String>>
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
-    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.WIFI)
+    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.LOCAL)
 
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -109,7 +109,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         this.selection.value = listOf(vault.localPartyID)
         if (vultisigRelay.IsRelayEnabled) {
             _serverAddress = Endpoints.VULTISIG_RELAY
-            networkOption.value = NetworkPromptOption.CELLULAR
+            networkOption.value = NetworkPromptOption.INTERNET
         }
         updateKeysignPayload(context)
     }
@@ -251,13 +251,13 @@ internal class KeysignFlowViewModel @Inject constructor(
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (networkOption.value == option) return
         when (option) {
-            NetworkPromptOption.WIFI, NetworkPromptOption.HOTSPOT -> {
+            NetworkPromptOption.LOCAL -> {
                 vultisigRelay.IsRelayEnabled = false
                 _serverAddress = "http://127.0.0.1:18080"
                 networkOption.value = option
             }
 
-            NetworkPromptOption.CELLULAR -> {
+            NetworkPromptOption.INTERNET -> {
                 vultisigRelay.IsRelayEnabled = true
                 _serverAddress = Endpoints.VULTISIG_RELAY
                 networkOption.value = option

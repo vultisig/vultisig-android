@@ -1,18 +1,14 @@
 package com.vultisig.wallet.ui.screens.keygen
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,7 +27,7 @@ import com.vultisig.wallet.presenter.keygen.KeygenFlowViewModel
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType.Companion.asString
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -66,6 +62,7 @@ internal fun KeygenPeerDiscovery(
         selectionState = selectionState,
         participants = participants,
         keygenPayloadState = keygenPayloadState,
+        vaultSetupType = viewModel.vaultSetupType.asString(),
         networkPromptOption = networkPromptOption,
         onQrAddressClick = {
             val qrBitmap = generateQrBitmap(keygenPayloadState)
@@ -87,6 +84,7 @@ internal fun KeygenPeerDiscoveryScreen(
     selectionState: List<String>,
     participants: List<String>,
     keygenPayloadState: String,
+    vaultSetupType: String,
     networkPromptOption: NetworkPromptOption,
     onQrAddressClick: () -> Unit = {},
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
@@ -98,43 +96,39 @@ internal fun KeygenPeerDiscoveryScreen(
 
     UiBarContainer(
         navController = navController,
-        title = stringResource(R.string.keygen_peer_discovery_keygen),
+        title = stringResource(
+            R.string.keygen_peer_discovery_keygen,
+            vaultSetupType
+        ),
         endIcon = R.drawable.qr_share,
         onEndIconClick = onQrAddressClick
     ) {
-        Box(
+        Column(
+            horizontalAlignment = CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            Column(
-                horizontalAlignment = CenterHorizontally,
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .fillMaxSize(),
-            ) {
-                UiSpacer(size = 8.dp)
-
-                if (selectionState.isNotEmpty() && selectionState.count() > 1) {
-                    Text(
-                        text = stringResource(
-                            R.string.keygen_peer_descovery_of_vault,
-                            Utils.getThreshold(selectionState.count()),
-                            selectionState.count()
-                        ),
-                        color = textColor,
-                        style = Theme.montserrat.subtitle2
-                    )
-                }
-
-                PeerDiscoveryView(
-                    selectionState = selectionState,
-                    participants = participants,
-                    keygenPayloadState = keygenPayloadState,
-                    networkPromptOption = networkPromptOption,
-                    onChangeNetwork = onChangeNetwork,
-                    onAddParticipant = onAddParticipant,
-                    onRemoveParticipant = onRemoveParticipant,
+            if (selectionState.isNotEmpty() && selectionState.count() > 1) {
+                Text(
+                    text = stringResource(
+                        R.string.keygen_peer_descovery_of_vault,
+                        Utils.getThreshold(selectionState.count()),
+                        selectionState.count()
+                    ),
+                    color = textColor,
+                    style = Theme.montserrat.subtitle2
                 )
             }
+
+            PeerDiscoveryView(
+                modifier = Modifier.weight(1f),
+                selectionState = selectionState,
+                participants = participants,
+                keygenPayloadState = keygenPayloadState,
+                networkPromptOption = networkPromptOption,
+                onChangeNetwork = onChangeNetwork,
+                onAddParticipant = onAddParticipant,
+                onRemoveParticipant = onRemoveParticipant,
+            )
 
             MultiColorButton(
                 text = stringResource(R.string.keygen_peer_discovery_continue),
@@ -144,7 +138,6 @@ internal fun KeygenPeerDiscoveryScreen(
                 textStyle = Theme.montserrat.subtitle1,
                 disabled = selectionState.size < 2,
                 modifier = Modifier
-                    .align(BottomCenter)
                     .fillMaxWidth()
                     .padding(
                         horizontal = 12.dp,
@@ -164,6 +157,7 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
-        networkPromptOption = NetworkPromptOption.WIFI,
+        networkPromptOption = NetworkPromptOption.LOCAL,
+        vaultSetupType = "M/N",
     )
 }
