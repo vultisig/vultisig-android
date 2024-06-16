@@ -244,7 +244,8 @@ internal class GeneratingKeyViewModel(
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id
-            ), opts = NavigationOptions(clearBackStack = true)
+            ),
+            opts = NavigationOptions(clearBackStack = true)
         )
     }
 
