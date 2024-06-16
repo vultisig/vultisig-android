@@ -64,7 +64,12 @@ internal class ConfirmDeleteViewModel @Inject constructor(
             vaultOrderRepository.delete(parentId = null, name = vaultId)
             chainOrderRepository.deleteAll(parentId = vaultId)
             if (vaultRepository.hasVaults()) {
-                navigator.navigate(Destination.Home())
+                navigator.navigate(
+                    Destination.Home(),
+                    NavigationOptions(
+                        clearBackStack = true
+                    )
+                )
             } else {
                 navigator.navigate(
                     Destination.AddVault, NavigationOptions(
