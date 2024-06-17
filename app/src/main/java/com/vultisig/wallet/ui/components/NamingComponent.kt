@@ -111,7 +111,6 @@ internal fun NamingComponent(
 
                 TextFieldValidator(
                     errorText = errorText,
-                    focusState = focusState
                 ) {
                     Card(
                         modifier = Modifier

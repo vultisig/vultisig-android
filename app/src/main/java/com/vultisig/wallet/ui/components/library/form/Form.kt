@@ -24,14 +24,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -132,14 +130,11 @@ internal fun FormTextFieldCard(
     error: UiText?,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
+    onLostFocus: () -> Unit = {},
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    var focusState by remember {
-        mutableStateOf<FocusState?>(null)
-    }
     TextFieldValidator(
         errorText = error,
-        focusState = focusState
     ) {
         FormEntry(
             title = title,
@@ -149,9 +144,7 @@ internal fun FormTextFieldCard(
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
                 actions = actions,
-                onFocusStateChanged = {
-                    focusState = it
-                }
+                onLostFocus = onLostFocus
             )
         }
     }
@@ -164,9 +157,10 @@ internal fun FormTextField(
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     actions: (@Composable RowScope.() -> Unit)? = null,
-    onFocusStateChanged: (FocusState) -> Unit
+    onLostFocus: () -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
+    var isFocused by remember { mutableStateOf(false) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -194,7 +188,14 @@ internal fun FormTextField(
             ),
             modifier = Modifier
                 .weight(1f)
-                .onFocusEvent(onFocusStateChanged),
+                .onFocusEvent {
+                    if (isFocused != it.isFocused) {
+                        isFocused = it.isFocused
+                        if (!isFocused) {
+                            onLostFocus()
+                        }
+                    }
+                },
             decorator = { textField ->
                 if (textFieldState.text.isEmpty()) {
                     Text(
@@ -285,32 +286,13 @@ internal fun FormDetails(
 @Composable
 internal fun TextFieldValidator(
     errorText: UiText?,
-    focusState: FocusState?,
     content: @Composable () -> Unit,
 ) {
-    var errorMessage by remember {
-        mutableStateOf<UiText?>(null)
-    }
-    var isFocused by remember {
-        mutableStateOf(false)
-    }
-    LaunchedEffect(focusState) {
-        //check if a text field has been focused
-        if (focusState?.isFocused == true) {
-            isFocused = true
-        } else {
-            //when exiting from focus state, error message shown
-            if (isFocused) {
-                errorMessage = errorText
-            }
-            isFocused = false
-        }
-    }
     Column {
         content()
         UiSpacer(size = 8.dp)
         AnimatedContent(
-            targetState = errorMessage,
+            targetState = errorText,
             label = "error message"
         ) { errorMessage ->
             if (errorMessage != null)

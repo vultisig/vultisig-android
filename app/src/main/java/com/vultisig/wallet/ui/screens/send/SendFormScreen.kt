@@ -64,6 +64,8 @@ internal fun SendFormScreen(
         addressFieldState = viewModel.addressFieldState,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
         fiatAmountFieldState = viewModel.fiatAmountFieldState,
+        onDstAddressLostFocus = viewModel::validateDstAddress,
+        onTokenAmountLostFocus = viewModel::validateTokenAmount,
         onDismissError = viewModel::dismissError,
         onSelectToken = viewModel::selectToken,
         onSetOutputAddress = viewModel::setOutputAddress,
@@ -80,6 +82,8 @@ internal fun SendFormScreen(
     addressFieldState: TextFieldState,
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
+    onDstAddressLostFocus: () -> Unit = {},
+    onTokenAmountLostFocus: () -> Unit = {},
     onDismissError: () -> Unit = {},
     onSelectToken: (TokenBalanceUiModel) -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
@@ -137,6 +141,7 @@ internal fun SendFormScreen(
                 hint = stringResource(R.string.send_to_address_hint),
                 keyboardType = KeyboardType.Text,
                 textFieldState = addressFieldState,
+                onLostFocus = onDstAddressLostFocus,
                 error = state.dstAddressError
             ) {
                 val clipboard = LocalClipboardManager.current
@@ -164,6 +169,7 @@ internal fun SendFormScreen(
                 hint = stringResource(R.string.send_amount_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = tokenAmountFieldState,
+                onLostFocus = onTokenAmountLostFocus,
                 error = state.tokenAmountError
             ) {
                 Text(

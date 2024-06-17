@@ -225,6 +225,11 @@ internal class SwapFormViewModel @Inject constructor(
         loadTokens(vaultId, chainId)
     }
 
+    fun validateAmount() {
+        val errorMessage = validateSrcAmount(srcAmountState.text.toString())
+        uiState.update { it.copy(amountError = errorMessage) }
+    }
+
     private fun loadTokens(vaultId: String, chainId: String?) {
         val chain = chainId?.let(Chain::fromRaw)
 
@@ -314,9 +319,6 @@ internal class SwapFormViewModel @Inject constructor(
                     addrs to srcAmount
                 }
                 .collect { (addrs, amount) ->
-                    val errorMessage = validateSrcAmount(amount.toString())
-                    uiState.update { it.copy(amountError = errorMessage) }
-
                     val (src, dst) = addrs
 
                     val srcToken = src.account.token

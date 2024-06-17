@@ -18,12 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,6 +60,7 @@ internal fun SwapFormScreen(
     SwapFormScreen(
         state = state,
         srcAmountTextFieldState = viewModel.srcAmountState,
+        onAmountLostFocus = viewModel::validateAmount,
         onSwap = viewModel::swap,
         onSelectSrcToken = viewModel::selectSrcToken,
         onSelectDstToken = viewModel::selectDstToken,
@@ -76,14 +73,12 @@ internal fun SwapFormScreen(
 internal fun SwapFormScreen(
     state: SwapFormUiModel,
     srcAmountTextFieldState: TextFieldState,
+    onAmountLostFocus: () -> Unit = {},
     onSelectSrcToken: (TokenBalanceUiModel) -> Unit = {},
     onSelectDstToken: (TokenBalanceUiModel) -> Unit = {},
     onFlipSelectedTokens: () -> Unit = {},
     onSwap: () -> Unit = {},
 ) {
-    var focusState by remember {
-        mutableStateOf<FocusState?>(null)
-    }
     val focusManager = LocalFocusManager.current
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -111,7 +106,6 @@ internal fun SwapFormScreen(
                     )
 
                     TextFieldValidator(
-                        focusState = focusState,
                         errorText = state.amountError
                     ) {
                         FormCard {
@@ -119,9 +113,7 @@ internal fun SwapFormScreen(
                                 hint = stringResource(R.string.swap_form_src_amount_hint),
                                 keyboardType = KeyboardType.Number,
                                 textFieldState = srcAmountTextFieldState,
-                                onFocusStateChanged = {
-                                    focusState = it
-                                }
+                                onLostFocus = onAmountLostFocus,
                             )
                         }
                     }
