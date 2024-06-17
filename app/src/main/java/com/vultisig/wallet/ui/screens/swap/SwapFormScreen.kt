@@ -165,6 +165,11 @@ internal fun SwapFormScreen(
             }
 
             FormDetails(
+                title = stringResource(R.string.swap_screen_provider_title),
+                value = state.provider.asString(),
+            )
+
+            FormDetails(
                 title = stringResource(R.string.swap_form_gas_title),
                 value = state.gas,
             )

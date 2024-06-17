@@ -60,6 +60,7 @@ internal data class SwapFormUiModel(
     val selectedDstToken: TokenBalanceUiModel? = null,
     val availableTokens: List<TokenBalanceUiModel> = emptyList(),
     val estimatedDstTokenValue: String = "",
+    val provider: UiText = UiText.Empty,
     val gas: String = "",
     val fee: String = "",
     val estimatedTime: UiText = UiText.DynamicString(""),
@@ -367,6 +368,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                             uiState.update {
                                 it.copy(
+                                    provider = R.string.swap_form_provider_thorchain.asUiText(),
                                     estimatedDstTokenValue = estimatedDstTokenValue,
                                     fee = fiatValueToString.map(fiatFees),
                                     estimatedTime = estimatedTime,
@@ -408,6 +410,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                             uiState.update {
                                 it.copy(
+                                    provider = R.string.swap_for_provider_1inch.asUiText(),
                                     estimatedDstTokenValue = estimatedDstTokenValue,
                                     fee = fiatValueToString.map(fiatFees),
                                     estimatedTime = estimatedTime,
