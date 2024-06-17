@@ -273,7 +273,8 @@ internal class EvmApiImp(
                 message.contains("already known") ||
                 message.contains("Transaction is temporarily banned") ||
                 message.contains("nonce too low: next nonce") ||
-                message.contains("transaction already exists")
+                message.contains("transaction already exists") ||
+                message.contains("tx already in mempool")
             ) {
                 // even the server returns an error , but this still consider as success
                 return Numeric.hexStringToByteArray(signedTransaction).toKeccak256()
