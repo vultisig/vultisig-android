@@ -229,4 +229,10 @@
     <string name="keygen_peer_discovery_select_the_pairing_devices">Selecione os dispositivos de pareamento</string>
     <string name="peer_discovery_hint_connect_to_internet">Conecte todos os dispositivos à mesma rede com o Vultisig aberto</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Conecte todos os dispositivos à Internet com o Vultisig aberto</string>
+    <string name="vault_settings_delete_vault_details">Detalhes</string>
+    <string name="vault_settings_delete_vault_name">Nome do Cofre:</string>
+    <string name="vault_settings_delete_vault_ecdsa_key">Chave ECDSA:</string>
+    <string name="vault_settings_delete_vault_eddsa_key">Chave EdDSA:</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s do cofre %2$s</string>
+    <string name="vault_settings_delete_vault_type">Tipo de cofre:</string>
 </resources>

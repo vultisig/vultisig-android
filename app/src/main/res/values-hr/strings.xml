@@ -229,4 +229,10 @@
     <string name="keygen_peer_discovery_select_the_pairing_devices">Odaberite uređaje za uparivanje</string>
     <string name="peer_discovery_hint_connect_to_internet">Povežite sve uređaje na istu mrežu s otvorenim Vultisig-om</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Povežite sve uređaje s internetom s otvorenim Vultisig-om</string>
+    <string name="vault_settings_delete_vault_details">Detalji</string>
+    <string name="vault_settings_delete_vault_name">Ime sefa:</string>
+    <string name="vault_settings_delete_vault_ecdsa_key">ECDSA ključ:</string>
+    <string name="vault_settings_delete_vault_eddsa_key">EdDSA ključ:</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s od %2$s trezora</string>
+    <string name="vault_settings_delete_vault_type">Vrsta sefa:</string>
 </resources>
