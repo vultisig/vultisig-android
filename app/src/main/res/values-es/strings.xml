@@ -40,7 +40,7 @@
     <string name="send_amount_hint">Ingresar Cantidad</string>
     <string name="send_amount_currency_hint">Ingresar Cantidad</string>
     <string name="send_gas_title">Gas (auto)</string>
-    <string name="send_continue_button">Continuar</string>
+    <string name="send_continue_button">Nombre de la Caja Fuerte</string>
     <string name="chain_account_view_send">ENVIAR</string>
     <string name="chain_account_view_swap">INTERCAMBIAR</string>
     <string name="chain_account_view_deposit">Depósito</string>
@@ -233,7 +233,7 @@
     <string name="vault_settings_delete_vault_name">Nombre de la Caja Fuerte:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Clave ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Clave EdDSA:</string>
-    <string name="vault_settings_delete_vault_of_vault">%1$s-de-%2$s Caja Fuerte</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s de %2$s caja fuerte</string>
     <string name="vault_settings_delete_vault_type">Tipo De Cajas Fuerte:</string>
 
 

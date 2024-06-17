@@ -21,10 +21,7 @@ internal data class ConfirmDeleteVaultState(
     val checkedCautionIndexes: List<Int> = emptyList(),
     val cautionsBeforeDelete: List<Int> = emptyList(),
     val isDeleteButtonEnabled: Boolean = false,
-    var name:String = "",
-    val pubKeyECDSA:String = "",
-    val pubKeyEDDSA:String = "",
-    val deviceList: List<String> = emptyList()
+    val vaultDeleteUiModel: VaultDeleteUiModel = VaultDeleteUiModel()
 )
 
 @HiltViewModel
@@ -45,18 +42,26 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                 R.string.vault_settings_delete_vault_caution1,
                 R.string.vault_settings_delete_vault_caution2,
                 R.string.vault_settings_delete_vault_caution3,
-            )
+            ),
+            vaultDeleteUiModel = VaultDeleteUiModel()
         )
     )
-    fun loadData(){
+
+    init {
+        loadData()
+    }
+
+    fun loadData() {
         viewModelScope.launch {
-            vaultRepository.get(vaultId)?.let {vault->
+            vaultRepository.get(vaultId)?.let { vault ->
                 uiModel.update {
                     it.copy(
-                            name= vault.name,
-                            pubKeyECDSA= vault.pubKeyECDSA,
+                        vaultDeleteUiModel = VaultDeleteUiModel(
+                            name = vault.name,
+                            pubKeyECDSA = vault.pubKeyECDSA,
                             pubKeyEDDSA = vault.pubKeyEDDSA,
-                            deviceList =  vault.signers
+                            deviceList = vault.signers
+                        )
                     )
                 }
             }

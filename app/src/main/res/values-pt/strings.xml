@@ -233,6 +233,6 @@
     <string name="vault_settings_delete_vault_name">Nome do Cofre:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Chave ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Chave EdDSA:</string>
-    <string name="vault_settings_delete_vault_of_vault">%1$s Do Cofre %2$s</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s do cofre %2$s</string>
     <string name="vault_settings_delete_vault_type">Tipo de cofre:</string>
 </resources>

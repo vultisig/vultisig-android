@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,20 +49,13 @@ internal fun ConfirmDeleteScreen(navHostController: NavHostController) {
         cautions = uiModel.cautionsBeforeDelete,
         checkedCautionIndexes = uiModel.checkedCautionIndexes,
         isDeleteButtonActive = uiModel.isDeleteButtonEnabled,
-        name = uiModel.name,
-        pubKeyECDSA = uiModel.pubKeyECDSA,
-        pubKeyEDDSA = uiModel.pubKeyEDDSA,
-        deviceList = uiModel.deviceList,
-
+        vaultDeleteUiModel = uiModel.vaultDeleteUiModel,
         onDismissClick = {
             navHostController.popBackStack()
         },
         onItemCheckChangeClick = viewModel::changeCheckCaution,
         onConfirmClick = viewModel::delete
     )
-    LaunchedEffect(key1 = Unit) {
-        viewModel.loadData()
-    }
 }
 
 @Composable
@@ -71,10 +63,7 @@ internal fun ConfirmDeleteScreen(
     cautions: List<Int>,
     checkedCautionIndexes: List<Int>,
     isDeleteButtonActive: Boolean,
-    name: String,
-    pubKeyECDSA: String,
-    pubKeyEDDSA: String,
-    deviceList: List<String>,
+    vaultDeleteUiModel: VaultDeleteUiModel,
     onDismissClick: () -> Unit,
     onItemCheckChangeClick: (Int, Boolean) -> Unit,
     onConfirmClick: () -> Unit
@@ -194,7 +183,7 @@ internal fun ConfirmDeleteScreen(
                     )
                     UiSpacer(size = 12.dp)
                     Text(
-                        text = name,
+                        text = vaultDeleteUiModel.name,
                         color = colors.neutral0,
                         style = Theme.menlo.overline2,
                     )
@@ -212,9 +201,9 @@ internal fun ConfirmDeleteScreen(
                     UiSpacer(size = 12.dp)
                     Text(
                         text = String.format(
-                            stringResource(id = R.string.vault_settings_delete_vault_of_vault),
-                            Utils.getThreshold(deviceList.size),
-                            deviceList.size.toString()
+                            stringResource(id = R.string.s_of_s_vault),
+                            Utils.getThreshold(vaultDeleteUiModel.deviceList.size),
+                            vaultDeleteUiModel.deviceList.size.toString()
                         ),
                         color = colors.neutral0,
                         style = Theme.menlo.overline2,
@@ -232,7 +221,7 @@ internal fun ConfirmDeleteScreen(
                     )
                     UiSpacer(size = 12.dp)
                     Text(
-                        text = pubKeyECDSA,
+                        text = vaultDeleteUiModel.pubKeyECDSA,
                         color = colors.neutral0,
                         style = Theme.montserrat.overline,
                     )
@@ -250,7 +239,7 @@ internal fun ConfirmDeleteScreen(
                     )
                     UiSpacer(size = 12.dp)
                     Text(
-                        text = pubKeyEDDSA,
+                        text = vaultDeleteUiModel.pubKeyEDDSA,
                         color = colors.neutral0,
                         style = Theme.montserrat.overline,
                     )

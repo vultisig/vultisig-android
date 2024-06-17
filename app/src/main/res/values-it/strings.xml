@@ -225,14 +225,14 @@
     <string name="send_amount_currency">Importo (in %s)</string>
     <string name="vault_settings_backup_subtitle">Esegui il backup della condivisione del vault</string>
     <string name="chains">Catene</string>
-    <string name="vault_settings_delete_vault_details">Dettagli</string>
-    <string name="vault_settings_delete_vault_name">Nome Cassaforte:</string>
-    <string name="vault_settings_delete_vault_ecdsa_key">Chiave ECDSA:</string>
-    <string name="vault_settings_delete_vault_eddsa_key">Chiave EdDSA:</string>
-    <string name="vault_settings_delete_vault_of_vault">%1$s Del Caveau %2$s</string>
-    <string name="vault_settings_delete_vault_type">Tipo di caveau:</string>
     <string name="keygen_peer_discovery_looking_for_devices">Alla ricerca di dispositivi…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Seleziona i dispositivi da associare</string>
     <string name="peer_discovery_hint_connect_to_internet">Collega tutti i dispositivi alla stessa rete con Vultisig aperto</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Connetti tutti i dispositivi a Internet con Vultisig open</string>
+    <string name="vault_settings_delete_vault_details">Dettagli</string>
+    <string name="vault_settings_delete_vault_name">Nome Cassaforte:</string>
+    <string name="vault_settings_delete_vault_ecdsa_key">Chiave ECDSA:</string>
+    <string name="vault_settings_delete_vault_eddsa_key">Chiave EdDSA:</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s del caveau %2$s</string>
+    <string name="vault_settings_delete_vault_type">Tipo di caveau:</string>
 </resources>

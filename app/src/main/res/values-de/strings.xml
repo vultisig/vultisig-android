@@ -233,6 +233,6 @@
     <string name="vault_settings_delete_vault_name">Tresorname:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Schlüssel:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Schlüssel:</string>
-    <string name="vault_settings_delete_vault_of_vault">%1$s-von-%2$s Tresor</string>
+    <string name="vault_settings_delete_vault_of_vault">%1$s von %2$s Tresor</string>
     <string name="vault_settings_delete_vault_type">Tresortyp:</string>
 </resources>
