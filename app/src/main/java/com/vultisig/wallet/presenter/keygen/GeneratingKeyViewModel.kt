@@ -21,6 +21,7 @@ import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -243,7 +244,8 @@ internal class GeneratingKeyViewModel(
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id
-            )
+            ),
+            opts = NavigationOptions(clearBackStack = true)
         )
     }
 
