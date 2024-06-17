@@ -248,4 +248,10 @@
     <string name="keygen_peer_discovery_select_the_pairing_devices">Select the pairing devices</string>
     <string name="peer_discovery_hint_connect_to_internet">Connect all devices to the same Network with Vultisig open</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Connect all devices to the Internet with Vultisig open</string>
+
+
+    <!-- TODO needs translation-->
+    <string name="swap_screen_provider_title" translatable="false">Provider</string>
+    <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
+    <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
 </resources>

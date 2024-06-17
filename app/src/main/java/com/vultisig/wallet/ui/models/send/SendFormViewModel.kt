@@ -137,20 +137,20 @@ internal class SendFormViewModel @Inject constructor(
         loadTokens()
         loadSelectedCurrency()
         collectSelectedAccount()
-        collectAddressChanges()
         collectAmountChanges()
         calculateGasFees()
     }
 
-    private fun collectAddressChanges() {
-        viewModelScope.launch {
-            addressFieldState.textAsFlow().collect { address ->
-                val errorText = validateDstAddress(address.toString())
-                uiState.update {
-                    it.copy(dstAddressError = errorText)
-                }
-            }
+    fun validateDstAddress() {
+        val errorText = validateDstAddress(addressFieldState.text.toString())
+        uiState.update {
+            it.copy(dstAddressError = errorText)
         }
+    }
+
+    fun validateTokenAmount() {
+        val errorText = validateTokenAmount(tokenAmountFieldState.text.toString())
+        uiState.update { it.copy(tokenAmountError = errorText) }
     }
 
     fun selectToken(token: TokenBalanceUiModel) {
@@ -402,8 +402,6 @@ internal class SendFormViewModel @Inject constructor(
             ) { tokenFieldValue, fiatFieldValue ->
                 val tokenString = tokenFieldValue.toString()
                 val fiatString = fiatFieldValue.toString()
-                val errorText = validateTokenAmount(tokenString)
-                uiState.update { it.copy(tokenAmountError = errorText) }
                 if (lastToken != tokenString) {
                     val fiatValue = convertValue(tokenString) { value, price, token ->
                         value.multiply(price)
