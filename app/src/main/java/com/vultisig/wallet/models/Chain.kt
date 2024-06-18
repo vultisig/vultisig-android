@@ -38,6 +38,7 @@ enum class Chain(
     solana("Solana", SOL, "SOL"),
     gaiaChain("Gaia Chain", COSMOS, "uatom"),
     kujira("Kujira", COSMOS, "ukuji"),
+    dydx("Dydx", COSMOS, "adydx"),
     polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT");
 
     val id: String
@@ -71,10 +72,11 @@ val Chain.coinType: CoinType
         Chain.kujira -> CoinType.KUJIRA
         Chain.cronosChain -> CoinType.CRONOSCHAIN
         Chain.polkadot -> CoinType.POLKADOT
+        Chain.dydx -> CoinType.DYDX
     }
 val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
-        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash, Chain.thorChain, Chain.mayaChain, Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.gaiaChain, Chain.kujira, Chain.cronosChain -> TssKeyType.ECDSA
+        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash, Chain.thorChain, Chain.mayaChain, Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.gaiaChain, Chain.kujira, Chain.cronosChain, Chain.dydx -> TssKeyType.ECDSA
         Chain.solana, Chain.polkadot-> TssKeyType.EDDSA
     }
 val Chain.Ticker: String
@@ -99,6 +101,7 @@ val Chain.Ticker: String
         Chain.mayaChain -> "CACAO"
         Chain.cronosChain -> "CRO"
         Chain.polkadot -> "DOT"
+        Chain.dydx -> "DYDX"
     }
 val Chain.SwapAsset: String
     get() = when (this) {
@@ -122,6 +125,7 @@ val Chain.SwapAsset: String
         Chain.mayaChain -> "cacao"
         Chain.cronosChain -> "cro"
         Chain.polkadot -> "dot"
+        Chain.dydx -> "dydx"
     }
 val Chain.logo: Int
     get() = when (this) {
@@ -145,11 +149,12 @@ val Chain.logo: Int
         Chain.mayaChain -> R.drawable.cacao
         Chain.cronosChain -> R.drawable.cro
         Chain.polkadot -> R.drawable.dot
+        Chain.dydx -> R.drawable.dydx
     }
 val Chain.IsSwapSupported: Boolean
     get() = when (this) {
         Chain.thorChain, Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.bitcoin, Chain.bitcoinCash, Chain.gaiaChain, Chain.litecoin, Chain.dogecoin -> true
-        Chain.solana, Chain.dash, Chain.kujira, Chain.mayaChain, Chain.cronosChain, Chain.base, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.blast, Chain.polkadot -> false
+        Chain.solana, Chain.dash, Chain.kujira, Chain.mayaChain, Chain.cronosChain, Chain.base, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.blast, Chain.polkadot, Chain.dydx -> false
     }
 
 val Chain.isDepositSupported: Boolean

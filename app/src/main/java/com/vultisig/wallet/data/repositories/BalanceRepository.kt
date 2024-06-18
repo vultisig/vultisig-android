@@ -21,6 +21,7 @@ import com.vultisig.wallet.models.Chain.bitcoinCash
 import com.vultisig.wallet.models.Chain.bscChain
 import com.vultisig.wallet.models.Chain.dash
 import com.vultisig.wallet.models.Chain.dogecoin
+import com.vultisig.wallet.models.Chain.dydx
 import com.vultisig.wallet.models.Chain.ethereum
 import com.vultisig.wallet.models.Chain.gaiaChain
 import com.vultisig.wallet.models.Chain.kujira
@@ -169,7 +170,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
-            gaiaChain, kujira -> {
+            gaiaChain, kujira, dydx -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
                 val listCosmosBalance = cosmosApi.getBalance(address)
                 val balance = listCosmosBalance

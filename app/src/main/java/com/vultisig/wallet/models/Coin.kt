@@ -479,6 +479,17 @@ internal object Coins {
             isNativeToken = true,
         ),
         Coin(
+            chain = Chain.kujira,
+            ticker = "KUJI",
+            logo = "kuji",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
+        Coin(
             chain = Chain.polkadot,
             ticker = "DOT",
             logo = "dot",

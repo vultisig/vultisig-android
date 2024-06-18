@@ -35,6 +35,7 @@ internal class CosmosApiFactoryImp @Inject constructor(
         return when (chain) {
             Chain.gaiaChain -> CosmosApiImp(gson, httpClient, "https://cosmos-rest.publicnode.com")
             Chain.kujira -> CosmosApiImp(gson, httpClient, "https://kujira-rest.publicnode.com")
+            Chain.dydx -> CosmosApiImp(gson, httpClient, "https://dydx-rest.publicnode.com")
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
     }

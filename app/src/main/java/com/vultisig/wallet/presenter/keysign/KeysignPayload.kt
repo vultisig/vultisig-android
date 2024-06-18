@@ -9,6 +9,7 @@ import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.chains.AtomHelper
+import com.vultisig.wallet.chains.DydxHelper
 import com.vultisig.wallet.chains.ERC20Helper
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.KujiraHelper
@@ -107,6 +108,11 @@ internal data class KeysignPayload(
             Chain.gaiaChain -> {
                 val atomHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return atomHelper.getPreSignedImageHash(this)
+            }
+
+            Chain.dydx -> {
+                val dydxHelper = DydxHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return dydxHelper.getPreSignedImageHash(this)
             }
 
             Chain.kujira -> {

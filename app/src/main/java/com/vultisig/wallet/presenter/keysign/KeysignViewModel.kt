@@ -215,7 +215,7 @@ internal class KeysignViewModel(
 
                 }
 
-                Chain.gaiaChain, Chain.kujira -> {
+                Chain.gaiaChain, Chain.kujira, Chain.dydx -> {
                     val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
                     cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
                         ?.let {
@@ -231,7 +231,8 @@ internal class KeysignViewModel(
                             Timber.d("transaction hash:$it")
                         }
                 }
-                Chain.polkadot->{
+
+                Chain.polkadot -> {
                     polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
                         ?.let {
                             txHash.value = it
@@ -295,6 +296,11 @@ internal class KeysignViewModel(
                 return kujiraHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
+            Chain.dydx -> {
+                val dydxHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                return dydxHelper.getSignedTransaction(keysignPayload, signatures)
+            }
+
             Chain.solana -> {
                 val solanaHelper = SolanaHelper(vault.pubKeyEDDSA)
                 return solanaHelper.getSignedTransaction(keysignPayload, signatures)
@@ -323,7 +329,8 @@ internal class KeysignViewModel(
                 val mayaHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return mayaHelper.getSignedTransaction(keysignPayload, signatures)
             }
-            Chain.polkadot->{
+
+            Chain.polkadot -> {
                 val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
                 return dotHelper.getSignedTransaction(keysignPayload, signatures)
             }
