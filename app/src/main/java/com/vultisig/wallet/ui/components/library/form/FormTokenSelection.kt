@@ -25,7 +25,7 @@ internal fun FormTokenSelection(
     FormTokenCard(
         selectedTitle = selectedToken?.title ?: "",
         availableToken = selectedToken?.balance ?: "",
-        selectedIcon = selectedToken?.logo
+        selectedIcon = selectedToken?.tokenLogo
             ?: R.drawable.ethereum,
         isExpanded = isTokenListExpanded,
         onClick = { isTokenListExpanded = !isTokenListExpanded },
@@ -38,7 +38,9 @@ internal fun FormTokenSelection(
 
             TokenCard(
                 title = token.title,
-                icon = token.logo,
+                tokenLogo = token.tokenLogo,
+                chainLogo = token.chainLogo.takeIf { !token.isNativeToken },
+                tokenStandard = token.tokenStandard.takeIf { !token.isNativeToken },
                 actionIcon = if (token == selectedToken)
                     R.drawable.check
                 else null,

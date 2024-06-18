@@ -1,16 +1,20 @@
 package com.vultisig.wallet.chains
 
+import com.google.protobuf.ByteString
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.common.Numeric
-import com.vultisig.wallet.common.toByteString
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import tss.KeysignResponse
+import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Ethereum.SigningInput
+import wallet.core.jni.proto.Ethereum.Transaction
 import wallet.core.jni.proto.THORChainSwap
+import wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
 
 internal class THORChainSwaps(
     private val vaultHexPublicKey: String,
@@ -102,22 +106,18 @@ internal class THORChainSwaps(
         keysignPayload: KeysignPayload,
     ): List<String> {
         val inputData = getPreSignedInputData(swapPayload, keysignPayload)
-        when (swapPayload.fromAsset.chain) {
+        return when (swapPayload.fromAsset.chain) {
 
             THORChainSwap.Chain.BTC, THORChainSwap.Chain.LTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH -> {
                 val hashes =
                     TransactionCompiler.preImageHashes(keysignPayload.coin.coinType, inputData)
                 val preSigningOutput =
                     Bitcoin.PreSigningOutput.parseFrom(hashes)
-                return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
+                preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             }
 
             THORChainSwap.Chain.THOR, THORChainSwap.Chain.ATOM, THORChainSwap.Chain.ETH, THORChainSwap.Chain.BSC, THORChainSwap.Chain.AVAX -> {
-                val hashes =
-                    TransactionCompiler.preImageHashes(keysignPayload.coin.coinType, inputData)
-                val preSigningOutput =
-                    wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
+                getPreSigningOutput(keysignPayload.coin.coinType, inputData)
             }
 
             THORChainSwap.Chain.BNB, THORChainSwap.Chain.UNRECOGNIZED, null -> {
@@ -126,36 +126,42 @@ internal class THORChainSwaps(
         }
     }
 
-    fun getPreSignedApproveInputData(
+    private fun getPreSigningOutput(coinType: CoinType, inputData: ByteArray): List<String> {
+        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preSigningOutput = PreSigningOutput.parseFrom(hashes)
+        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
+    }
+
+    private fun getPreSignedApproveInputData(
         approvePayload: ERC20ApprovePayload,
         keysignPayload: KeysignPayload,
     ): ByteArray {
-        val approveInput = wallet.core.jni.proto.Ethereum.SigningInput.newBuilder().setTransaction(
-            wallet.core.jni.proto.Ethereum.Transaction.newBuilder().setErc20Approve(
-                wallet.core.jni.proto.Ethereum.Transaction.ERC20Approve.newBuilder().apply {
-                    this.spender = approvePayload.spender
-                    this.amount = approvePayload.amount.toString(10).toByteString()
-                }.build()
-            ).build()
-        ).build()
-        val result = EvmHelper(
+        val approveInput = SigningInput.newBuilder()
+            .setTransaction(
+                Transaction.newBuilder()
+                    .setErc20Approve(
+                        Transaction.ERC20Approve.newBuilder()
+                            .setSpender(approvePayload.spender)
+                            .setAmount(ByteString.copyFrom(approvePayload.amount.toByteArray()))
+                    )
+            )
+            .setToAddress(keysignPayload.toAddress)
+            .build()
+
+        return EvmHelper(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,
             vaultHexChainCode
         ).getPreSignedInputData(signingInput = approveInput, keysignPayload = keysignPayload)
-        return result
     }
 
     fun getPreSignedApproveImageHash(
         approvePayload: ERC20ApprovePayload,
         keysignPayload: KeysignPayload,
-    ): List<String> {
-        val result = getPreSignedApproveInputData(approvePayload, keysignPayload)
-        val hashes = TransactionCompiler.preImageHashes(keysignPayload.coin.coinType, result)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
-    }
+    ): List<String> = getPreSigningOutput(
+        coinType = keysignPayload.coin.coinType,
+        inputData = getPreSignedApproveInputData(approvePayload, keysignPayload)
+    )
 
     fun getSignedApproveTransaction(
         approvePayload: ERC20ApprovePayload,
