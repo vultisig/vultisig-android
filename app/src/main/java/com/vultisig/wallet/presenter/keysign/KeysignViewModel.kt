@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.chains.AtomHelper
+import com.vultisig.wallet.chains.DydxHelper
 import com.vultisig.wallet.chains.ERC20Helper
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.KujiraHelper
@@ -297,7 +298,7 @@ internal class KeysignViewModel(
             }
 
             Chain.dydx -> {
-                val dydxHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val dydxHelper = DydxHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return dydxHelper.getSignedTransaction(keysignPayload, signatures)
             }
 

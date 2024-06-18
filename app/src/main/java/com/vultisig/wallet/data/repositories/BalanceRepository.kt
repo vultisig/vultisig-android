@@ -178,6 +178,9 @@ internal class BalanceRepositoryImpl @Inject constructor(
                         it.denom.equals(
                             "u${coin.ticker.lowercase()}",
                             ignoreCase = true
+                        ) || it.denom.equals(
+                            "a${coin.ticker.lowercase()}",
+                            ignoreCase = true
                         )
                     }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()

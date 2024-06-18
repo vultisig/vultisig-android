@@ -111,7 +111,7 @@ internal data class KeysignPayload(
 
             Chain.dydx -> {
                 val dydxHelper = DydxHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                return dydxHelper.getPreSignedImageHash(this)
+                dydxHelper.getPreSignedImageHash(this)
             }
 
             Chain.kujira -> {
