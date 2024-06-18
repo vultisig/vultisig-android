@@ -146,6 +146,14 @@ val Chain.logo: Int
         Chain.cronosChain -> R.drawable.cro
         Chain.polkadot -> R.drawable.dot
     }
+
+val Chain.tokenStandard: String?
+    get() = when (this) {
+        Chain.ethereum -> "ERC20"
+        Chain.bscChain -> "BEP20"
+        else -> null
+    }
+
 val Chain.IsSwapSupported: Boolean
     get() = when (this) {
         Chain.thorChain, Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.bitcoin, Chain.bitcoinCash, Chain.gaiaChain, Chain.litecoin, Chain.dogecoin -> true

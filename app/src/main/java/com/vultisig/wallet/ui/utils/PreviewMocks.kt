@@ -43,13 +43,19 @@ internal val tokenBalanceUiModels
         TokenBalanceUiModel(
             title = "Rune",
             balance = "0.123123",
-            logo = R.drawable.rune,
+            tokenLogo = R.drawable.rune,
             model = sendSrc,
+            chainLogo = R.drawable.rune,
+            tokenStandard = null,
+            isNativeToken = true,
         ),
         TokenBalanceUiModel(
             title = "Ethereum",
             balance = "0.123123",
-            logo = R.drawable.ethereum,
+            tokenLogo = R.drawable.ethereum,
             model = sendSrc,
+            chainLogo = R.drawable.ethereum,
+            tokenStandard = null,
+            isNativeToken = false,
         ),
     )

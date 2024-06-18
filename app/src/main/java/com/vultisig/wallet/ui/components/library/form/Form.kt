@@ -5,7 +5,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -29,6 +31,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
@@ -57,7 +60,7 @@ internal fun FormTokenCard(
     FormCard {
         TokenCard(
             title = selectedTitle,
-            icon = selectedIcon,
+            tokenLogo = selectedIcon,
             availableToken = availableToken,
             actionIcon = R.drawable.caret_down,
             onClick = onClick,
@@ -74,7 +77,9 @@ internal fun FormTokenCard(
 @Composable
 internal fun TokenCard(
     title: String,
-    @DrawableRes icon: Int,
+    tokenStandard: String? = null,
+    @DrawableRes tokenLogo: Int,
+    @DrawableRes chainLogo: Int? = null,
     @DrawableRes actionIcon: Int? = null,
     availableToken: String? = null,
     onClick: () -> Unit,
@@ -89,16 +94,35 @@ internal fun TokenCard(
             )
             .clickable(onClick = onClick),
     ) {
-        Image(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            modifier = Modifier.size(32.dp)
-        )
+
+        Box {
+            Image(
+                painter = painterResource(id = tokenLogo),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(4.dp)
+                    .align(Alignment.Center)
+            )
+            if (chainLogo != null)
+                Image(
+                    painter = painterResource(id = chainLogo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(12.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Theme.colors.neutral0,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                        .align(BottomEnd)
+                )
+        }
 
         UiSpacer(size = 8.dp)
 
         Text(
-            text = title,
+            text = tokenStandard?.let { "$title ($it)" } ?: title,
             color = Theme.colors.neutral100,
             style = Theme.menlo.body1,
         )

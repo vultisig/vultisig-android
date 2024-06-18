@@ -56,7 +56,10 @@ internal data class TokenBalanceUiModel(
     val model: SendSrc,
     val title: String,
     val balance: String?,
-    @DrawableRes val logo: Int,
+    val isNativeToken: Boolean,
+    val tokenStandard: String?,
+    @DrawableRes val tokenLogo: Int,
+    @DrawableRes val chainLogo: Int,
 )
 
 @Immutable
