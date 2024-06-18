@@ -71,7 +71,7 @@ internal fun SendFormScreen(
         onSelectToken = viewModel::selectToken,
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
-        onChoosePercentAmount = viewModel::choosePercentAmount,
+        onChoosePercentageAmount = viewModel::choosePercentageAmount,
         onScan = viewModel::scanAddress,
         onSend = viewModel::send,
     )
@@ -90,7 +90,7 @@ internal fun SendFormScreen(
     onSelectToken: (TokenBalanceUiModel) -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
-    onChoosePercentAmount :(Int)->Unit={},
+    onChoosePercentageAmount: (Float) -> Unit = {},
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
 ) {
@@ -174,9 +174,8 @@ internal fun SendFormScreen(
                 textFieldState = tokenAmountFieldState,
                 onLostFocus = onTokenAmountLostFocus,
                 error = state.tokenAmountError,
-                onPercentClick = onChoosePercentAmount
+                onPercentClick = onChoosePercentageAmount
             ) {
-
                 Text(
                     text = stringResource(R.string.send_screen_max),
                     color = Theme.colors.neutral100,
@@ -186,13 +185,13 @@ internal fun SendFormScreen(
                 )
             }
 
-//            FormTextFieldCard(
-//                title = stringResource(R.string.send_amount_currency, state.fiatCurrency),
-//                hint = stringResource(R.string.send_amount_currency_hint),
-//                keyboardType = KeyboardType.Number,
-//                textFieldState = fiatAmountFieldState,
-//                error = null
-//            )
+            FormTextFieldCard(
+                title = stringResource(R.string.send_amount_currency, state.fiatCurrency),
+                hint = stringResource(R.string.send_amount_currency_hint),
+                keyboardType = KeyboardType.Number,
+                textFieldState = fiatAmountFieldState,
+                error = null
+            )
             if (state.showGasFee) {
                 FormDetails(
                     title = stringResource(R.string.send_gas_title),

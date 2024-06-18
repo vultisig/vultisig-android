@@ -1,12 +1,10 @@
 package com.vultisig.wallet.ui.components.library.form
 
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -35,22 +33,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.presenter.common.clickOnce
+import com.vultisig.wallet.ui.components.PercentText
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.Theme.colors
 import com.vultisig.wallet.ui.theme.cursorBrush
 
 
@@ -189,7 +184,7 @@ internal fun FormTextFieldCardWithPercentage(
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     onLostFocus: () -> Unit = {},
-    onPercentClick: (percent: Int) -> Unit = {},
+    onPercentClick: (percent: Float) -> Unit = {},
     actions: (@Composable RowScope.() -> Unit)? = null,
 
     ) {
@@ -293,13 +288,15 @@ internal fun FormEntry(
 internal fun FormEntryWithPercentage(
     title: String,
     modifier: Modifier = Modifier,
-    onPercentClick: (percent: Int) -> Unit,
+    onPercentClick: (percent: Float) -> Unit,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
     FormTitleContainerWithPercentage(
         title = title,
         modifier = modifier,
-        onPercentClick = onPercentClick,
+        onPercentClick = { percent ->
+            onPercentClick(percent / 100f)
+        },
     ) {
         FormCard(content = content)
     }
@@ -345,32 +342,14 @@ internal fun FormTitleContainerWithPercentage(
                 style = Theme.montserrat.body1,
             )
             UiSpacer(weight = 1f)
-            Text(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(colors.oxfordBlue600Main)
-                    .padding(
-                        horizontal = 19.dp,
-                        vertical = 5.dp
-                    )
-                    .clickOnce { onPercentClick(25) },
-                text = "${stringResource(R.string.send_25)}%",
-                color = colors.neutral100,
-                style = Theme.menlo.overline2,
+            PercentText(
+                25,
+                onPercentClick
             )
             UiSpacer(size = 10.dp)
-            Text(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(colors.oxfordBlue600Main)
-                    .padding(
-                        horizontal = 19.dp,
-                        vertical = 5.dp
-                    )
-                    .clickOnce { onPercentClick(50) },
-                text = "${stringResource(R.string.send_50)}%",
-                color = colors.neutral100,
-                style = Theme.menlo.overline2,
+            PercentText(
+                50,
+                onPercentClick
             )
         }
 
@@ -379,6 +358,7 @@ internal fun FormTitleContainerWithPercentage(
         content()
     }
 }
+
 @Composable
 internal fun FormCard(
     modifier: Modifier = Modifier,

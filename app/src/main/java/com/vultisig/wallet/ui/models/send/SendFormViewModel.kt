@@ -187,26 +187,15 @@ internal class SendFormViewModel @Inject constructor(
 
         tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max)
     }
-    fun choosePercentAmount(percent: Int) {
-        val selectedAccount = selectedAccount ?: return
-        val selectedTokenValue = selectedAccount.tokenValue ?: return
-        val gasFee = gasFee.value ?: return
-        val percentValue = if (selectedAccount.token.isNativeToken) {
-            val calculatedValue = maxOf(
-                BigInteger.ZERO,
-                (selectedTokenValue.value * percent.toBigInteger()) / BigInteger.valueOf(100) - gasFee.value
-            )
-            TokenValue(
-                value = calculatedValue,
-                unit = selectedTokenValue.unit,
-                decimals = selectedTokenValue.decimals,
-            )
-        } else {
-            selectedTokenValue
-        }.decimal.toPlainString()
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(percentValue)
-    }
 
+    fun choosePercentageAmount(percentage: Float) {
+        val selectedTokenValue = selectedAccount?.tokenValue ?: return
+
+        var tokenValue = selectedTokenValue.copy(
+            value = (BigDecimal(selectedTokenValue.value) * percentage.toBigDecimal()).toBigInteger(),
+        )
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue.decimal.toPlainString())
+    }
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
