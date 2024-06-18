@@ -479,13 +479,13 @@ internal object Coins {
             isNativeToken = true,
         ),
         Coin(
-            chain = Chain.kujira,
-            ticker = "KUJI",
-            logo = "kuji",
+            chain = Chain.dydx,
+            ticker = "DYDX",
+            logo = "dydx",
             address = "",
-            decimal = 6,
+            decimal = 18,
             hexPublicKey = "",
-            priceProviderID = "kujira",
+            priceProviderID = "dydx-chain",
             contractAddress = "",
             isNativeToken = true,
         ),
@@ -541,6 +541,7 @@ internal object Coins {
             "arbitrum" -> R.drawable.arbitrum
             "kuji" -> R.drawable.kuji
             "atom" -> R.drawable.atom
+            "dydx" -> R.drawable.dydx
             "polygon" -> R.drawable.polygon
             "tgt" -> R.drawable.tgt
             "fox" -> R.drawable.fox

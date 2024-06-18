@@ -24,7 +24,10 @@ internal class DydxHelper(
     private val vaultHexChainCode: String,
 ) {
     val coinType = CoinType.DYDX
-    val DydxGasLimit = 2500000000000000
+
+    companion object {
+        val DydxGasLimit = 2500000000000000
+    }
     fun getCoin(): Coin? {
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,

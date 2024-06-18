@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.chains.DydxHelper
 import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.chains.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.api.BlockChairApi
@@ -79,7 +80,14 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
-
+            Chain.dydx -> {
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
+                TokenValue(
+                    value = DydxHelper.DydxGasLimit.toBigInteger(),
+                    unit = chain.feeUnit,
+                    decimals = nativeToken.decimal,
+                )
+            }
             Chain.solana -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 val fee = maxOf(
