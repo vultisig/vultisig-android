@@ -227,8 +227,7 @@ internal class SwapFormViewModel @Inject constructor(
 
             if (transaction.isApprovalRequired) {
                 sendNavigator.navigate(
-                    // TODO navigate to verify approve
-                    SendDst.KeysignApproval(
+                    SendDst.VerifyApproval(
                         transactionId = transaction.id,
                     )
                 )
