@@ -126,4 +126,10 @@ internal interface RepositoriesModule {
         impl: SwapTransactionRepositoryImpl
     ): SwapTransactionRepository
 
+    @Binds
+    @Singleton
+    fun bindBalanceVisibilityRepository(
+        impl: BalanceVisibilityRepositoryImpl
+    ): BalanceVisibilityRepository
+
 }
