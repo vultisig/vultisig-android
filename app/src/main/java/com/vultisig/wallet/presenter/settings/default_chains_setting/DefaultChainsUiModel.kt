@@ -16,8 +16,8 @@ data class DefaultChain(
     @DrawableRes val logo: Int
 )
 
-fun Chain.toUiModel() = DefaultChain(title = raw, subtitle = Ticker, logo = logo)
+internal fun Chain.toUiModel() = DefaultChain(title = raw, subtitle = Ticker, logo = logo)
 
-fun DefaultChain.toDataModel() = Chain.entries.first { it.raw == title }
+internal fun DefaultChain.toDataModel() = Chain.entries.first { it.raw == title }
 
-fun List<Chain>.toUiModel() = map { it.toUiModel() }
+internal fun List<Chain>.toUiModel() = map { it.toUiModel() }

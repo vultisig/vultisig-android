@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.models
 
-enum class TokenStandard {
+internal enum class TokenStandard {
     EVM,
     UTXO,
     THORCHAIN,

@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
@@ -78,6 +79,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapDurationToUiString: DurationToUiStringMapper,
 
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
+    private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val accountsRepository: AccountsRepository,
@@ -143,48 +145,71 @@ internal class SwapFormViewModel @Inject constructor(
             )
 
             val transaction = when (quote) {
-                is SwapQuote.ThorChain -> SwapTransaction(
-                    id = UUID.randomUUID().toString(),
-                    vaultId = vaultId,
-                    srcToken = srcToken,
-                    srcTokenValue = srcTokenValue,
-                    dstToken = dstToken,
-                    dstAddress = quote.data.router ?: quote.data.inboundAddress ?: srcAddress,
-                    expectedDstTokenValue = dstTokenValue,
-                    blockChainSpecific = specificAndUtxo,
-                    estimatedFees = quote.fees,
-                    estimatedTime = quote.estimatedTime,
-                    payload = SwapPayload.ThorChain(
-                        THORChainSwapPayload(
-                            fromAddress = srcAddress,
-                            fromCoin = srcToken,
-                            toCoin = dstToken,
-                            vaultAddress = quote.data.inboundAddress ?: srcAddress,
-                            routerAddress = quote.data.router,
-                            fromAmount = srcTokenValue.value,
-                            toAmountDecimal = dstTokenValue.decimal,
-                            toAmountLimit = "0",
-                            steamingInterval = "1",
-                            streamingQuantity = "0",
-                            expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
-                                .inWholeSeconds.toULong(),
-                            isAffiliate = false, // TODO calculate
-                        )
+                is SwapQuote.ThorChain -> {
+                    val dstAddress = quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                    val allowance = allowanceRepository.getAllowance(
+                        chain = srcToken.chain,
+                        contractAddress = srcToken.contractAddress,
+                        srcAddress = srcAddress,
+                        dstAddress = dstAddress,
                     )
-                )
+                    val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
-                is SwapQuote.OneInch ->
                     SwapTransaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = vaultId,
                         srcToken = srcToken,
                         srcTokenValue = srcTokenValue,
                         dstToken = dstToken,
-                        dstAddress = quote.data.tx.to,
+                        dstAddress = dstAddress,
                         expectedDstTokenValue = dstTokenValue,
                         blockChainSpecific = specificAndUtxo,
                         estimatedFees = quote.fees,
                         estimatedTime = quote.estimatedTime,
+                        isApprovalRequired = isApprovalRequired,
+                        payload = SwapPayload.ThorChain(
+                            THORChainSwapPayload(
+                                fromAddress = srcAddress,
+                                fromCoin = srcToken,
+                                toCoin = dstToken,
+                                vaultAddress = quote.data.inboundAddress ?: srcAddress,
+                                routerAddress = quote.data.router,
+                                fromAmount = srcTokenValue.value,
+                                toAmountDecimal = dstTokenValue.decimal,
+                                toAmountLimit = "0",
+                                steamingInterval = "1",
+                                streamingQuantity = "0",
+                                expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
+                                    .inWholeSeconds.toULong(),
+                                isAffiliate = false, // TODO calculate
+                            )
+                        )
+                    )
+                }
+
+                is SwapQuote.OneInch -> {
+                    val dstAddress = quote.data.tx.to
+
+                    val allowance = allowanceRepository.getAllowance(
+                        chain = srcToken.chain,
+                        contractAddress = srcToken.contractAddress,
+                        srcAddress = srcAddress,
+                        dstAddress = dstAddress,
+                    )
+                    val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
+
+                    SwapTransaction(
+                        id = UUID.randomUUID().toString(),
+                        vaultId = vaultId,
+                        srcToken = srcToken,
+                        srcTokenValue = srcTokenValue,
+                        dstToken = dstToken,
+                        dstAddress = dstAddress,
+                        expectedDstTokenValue = dstTokenValue,
+                        blockChainSpecific = specificAndUtxo,
+                        estimatedFees = quote.fees,
+                        estimatedTime = quote.estimatedTime,
+                        isApprovalRequired = isApprovalRequired,
                         payload = SwapPayload.OneInch(
                             OneInchSwapPayloadJson(
                                 fromCoin = srcToken,
@@ -195,15 +220,25 @@ internal class SwapFormViewModel @Inject constructor(
                             )
                         )
                     )
+                }
             }
 
             swapTransactionRepository.addTransaction(transaction)
 
-            sendNavigator.navigate(
-                SendDst.VerifyTransaction(
-                    transactionId = transaction.id,
+            if (transaction.isApprovalRequired) {
+                sendNavigator.navigate(
+                    // TODO navigate to verify approve
+                    SendDst.KeysignApproval(
+                        transactionId = transaction.id,
+                    )
                 )
-            )
+            } else {
+                sendNavigator.navigate(
+                    SendDst.VerifyTransaction(
+                        transactionId = transaction.id,
+                    )
+                )
+            }
         }
     }
 

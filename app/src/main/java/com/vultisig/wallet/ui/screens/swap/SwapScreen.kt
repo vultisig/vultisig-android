@@ -122,6 +122,19 @@ internal fun SwapScreen(
                 )
             }
             composable(
+                route = SendDst.KeysignApproval.staticRoute,
+                arguments = SendDst.transactionArgs,
+            ) { entry ->
+                val transactionId = entry.arguments
+                    ?.getString(SendDst.ARG_TRANSACTION_ID)!!
+
+                val keysignShareViewModel: KeysignShareViewModel =
+                    hiltViewModel(context as MainActivity)
+                keysignShareViewModel.loadSwapApprovalTransaction(transactionId)
+
+                KeysignFlowView(mainNavController)
+            }
+            composable(
                 route = SendDst.VerifyTransaction.staticRoute,
                 arguments = SendDst.transactionArgs,
             ) {
