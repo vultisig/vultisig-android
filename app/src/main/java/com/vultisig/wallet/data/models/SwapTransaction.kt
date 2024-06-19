@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.models.Coin
+import java.math.BigInteger
 import kotlin.time.Duration
 
 internal data class SwapTransaction(
@@ -16,4 +17,12 @@ internal data class SwapTransaction(
     val estimatedFees: TokenValue,
     val estimatedTime: Duration?,
     val payload: SwapPayload,
-)
+    val isApprovalRequired: Boolean,
+) {
+
+    companion object {
+        val maxAllowance: BigInteger
+            get() = BigInteger("2".repeat(64), 16)
+    }
+
+}

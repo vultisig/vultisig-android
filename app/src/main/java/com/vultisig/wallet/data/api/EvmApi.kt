@@ -223,17 +223,15 @@ internal class EvmApiImp(
         owner: String,
         spender: String,
     ): BigInteger {
+        val paddedOwner = owner.removePrefix("0x").padStart(64, '0')
+        val paddedSpender = spender.removePrefix("0x").padStart(64, '0')
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_call",
             params = listOf(
                 mapOf(
                     "to" to contractAddress,
-                    "data" to "0xdd62ed3e000000000000000000000000${owner.removePrefix("0x")}000000000000000000000000${
-                        spender.removePrefix(
-                            "0x"
-                        )
-                    }"
+                    "data" to "0xdd62ed3e$paddedOwner$paddedSpender"
                 ),
                 "latest"
             ),

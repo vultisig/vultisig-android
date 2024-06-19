@@ -52,4 +52,21 @@ internal sealed class SendDst(route: String) : Dst(route) {
         }
     }
 
+    data class KeysignApproval(
+        val transactionId: TransactionId,
+    ) : SendDst(
+        route = buildRoute(transactionId)
+    ) {
+        companion object {
+
+            val staticRoute = buildRoute(
+                "{$ARG_TRANSACTION_ID}",
+            )
+
+            private fun buildRoute(
+                transactionId: TransactionId,
+            ) = "send/${transactionId}/sign/approval"
+        }
+    }
+
 }

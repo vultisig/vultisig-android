@@ -14,6 +14,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindAllowanceRepository(
+        impl: AllowanceRepositoryImpl,
+    ): AllowanceRepository
+
+    @Binds
+    @Singleton
     fun bindAppCurrencyRepository(
         impl: AppCurrencyRepositoryImpl,
     ): AppCurrencyRepository

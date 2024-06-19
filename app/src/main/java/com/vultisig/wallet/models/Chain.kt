@@ -9,7 +9,7 @@ import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.tss.TssKeyType
 import wallet.core.jni.CoinType
 
-enum class Chain(
+internal enum class Chain(
     val raw: String,
     val standard: TokenStandard,
     val feeUnit: String,
@@ -50,7 +50,7 @@ enum class Chain(
     }
 }
 
-val Chain.coinType: CoinType
+internal val Chain.coinType: CoinType
     get() = when (this) {
         Chain.bitcoin -> CoinType.BITCOIN
         Chain.bitcoinCash -> CoinType.BITCOINCASH
@@ -74,12 +74,12 @@ val Chain.coinType: CoinType
         Chain.polkadot -> CoinType.POLKADOT
         Chain.dydx -> CoinType.DYDX
     }
-val Chain.TssKeysignType: TssKeyType
+internal val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
         Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash, Chain.thorChain, Chain.mayaChain, Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.gaiaChain, Chain.kujira, Chain.cronosChain, Chain.dydx -> TssKeyType.ECDSA
         Chain.solana, Chain.polkadot-> TssKeyType.EDDSA
     }
-val Chain.Ticker: String
+internal val Chain.Ticker: String
     get() = when (this) {
         Chain.thorChain -> "RUNE"
         Chain.solana -> "SOL"
@@ -103,7 +103,7 @@ val Chain.Ticker: String
         Chain.polkadot -> "DOT"
         Chain.dydx -> "DYDX"
     }
-val Chain.SwapAsset: String
+internal val Chain.SwapAsset: String
     get() = when (this) {
         Chain.thorChain -> "thor"
         Chain.solana -> "sol"
@@ -127,7 +127,7 @@ val Chain.SwapAsset: String
         Chain.polkadot -> "dot"
         Chain.dydx -> "dydx"
     }
-val Chain.logo: Int
+internal val Chain.logo: Int
     get() = when (this) {
         Chain.thorChain -> R.drawable.rune
         Chain.solana -> R.drawable.solana
@@ -152,20 +152,20 @@ val Chain.logo: Int
         Chain.dydx -> R.drawable.dydx
     }
 
-val Chain.tokenStandard: String?
+internal val Chain.tokenStandard: String?
     get() = when (this) {
         Chain.ethereum -> "ERC20"
         Chain.bscChain -> "BEP20"
         else -> null
     }
 
-val Chain.IsSwapSupported: Boolean
+internal val Chain.IsSwapSupported: Boolean
     get() = when (this) {
         Chain.thorChain, Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.bitcoin, Chain.bitcoinCash, Chain.gaiaChain, Chain.litecoin, Chain.dogecoin -> true
         Chain.solana, Chain.dash, Chain.kujira, Chain.mayaChain, Chain.cronosChain, Chain.base, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.blast, Chain.polkadot, Chain.dydx -> false
     }
 
-val Chain.isDepositSupported: Boolean
+internal val Chain.isDepositSupported: Boolean
     get() = when (this) {
         Chain.thorChain, Chain.mayaChain -> true
         else -> false
