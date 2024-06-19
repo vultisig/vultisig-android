@@ -79,30 +79,35 @@ internal class SolanaApiImp @Inject constructor(
     }
 
     override suspend fun getHighPriorityFee(account: String): String {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "getRecentPrioritizationFees",
-            params = listOf(listOf(account)),
-            id = 1,
-        )
-        val response = httpClient.post(rpcEndpoint) {
-            header("Content-Type", "application/json")
-            setBody(gson.toJson(payload))
-        }
-        val responseContent = response.bodyAsText()
-        Timber.d(responseContent)
-        val rpcResp = gson.fromJson(responseContent, JsonObject::class.java)
+        try {
+            val payload = RpcPayload(
+                jsonrpc = "2.0",
+                method = "getRecentPrioritizationFees",
+                params = listOf(listOf(account)),
+                id = 1,
+            )
+            val response = httpClient.post(rpcEndpoint) {
+                header("Content-Type", "application/json")
+                setBody(gson.toJson(payload))
+            }
+            val responseContent = response.bodyAsText()
+            Timber.d(responseContent)
+            val rpcResp = gson.fromJson(responseContent, JsonObject::class.java)
 
-        if (rpcResp.has("error")) {
-            Timber.d("get high priority fee  error: ${rpcResp.get("error")}")
-            return ""
+            if (rpcResp.has("error")) {
+                Timber.d("get high priority fee  error: ${rpcResp.get("error")}")
+                return ""
+            }
+            val listType = object : TypeToken<List<SolanaFeeObject>>() {}.type
+            val fees: List<SolanaFeeObject> = gson.fromJson(
+                rpcResp["result"],
+                listType
+            )
+            return fees.maxOf { it.prioritizationFee }.toString()
+        } catch (e: Exception) {
+            Timber.tag("SolanaApiImp").e("Error getting high priority fee: ${e.message}")
         }
-        val listType = object : TypeToken<List<SolanaFeeObject>>() {}.type
-        val fees: List<SolanaFeeObject> = gson.fromJson(
-            rpcResp["result"],
-            listType
-        )
-        return fees.maxOf { it.prioritizationFee }.toString()
+        return "0"
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
@@ -123,7 +128,7 @@ internal class SolanaApiImp @Inject constructor(
                 Timber.tag("SolanaApiImp").d("Error broadcasting transaction: $responseRawString")
                 return null
             }
-            return result.get("result").toString()
+            return result.get("result").asString
         } catch (e: Exception) {
             Timber.tag("SolanaApiImp").e("Error broadcasting transaction: ${e.message}")
             throw e
