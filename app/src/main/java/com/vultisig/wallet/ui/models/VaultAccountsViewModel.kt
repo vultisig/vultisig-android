@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.db.models.ChainOrderEntity
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.OrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
@@ -31,6 +32,7 @@ internal data class VaultAccountsUiModel(
     val vaultName: String = "",
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
+    val isBalanceValueVisible: Boolean = true,
     val accounts: List<AccountUiModel> = emptyList(),
 )
 
@@ -54,6 +56,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val accountsRepository: AccountsRepository,
     private val chainsOrderRepository: OrderRepository<ChainOrderEntity>,
+    private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -67,6 +70,16 @@ internal class VaultAccountsViewModel @Inject constructor(
         this.vaultId = vaultId
         loadVaultName(vaultId)
         loadAccounts(vaultId)
+        loadBalanceVisibility(vaultId)
+    }
+
+    private fun loadBalanceVisibility(vaultId: String) {
+        viewModelScope.launch {
+            val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
+            uiState.update {
+                it.copy(isBalanceValueVisible = isBalanceVisible)
+            }
+        }
     }
 
     fun refreshData() {
@@ -179,6 +192,17 @@ internal class VaultAccountsViewModel @Inject constructor(
             val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.chainName
             val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.chainName
             chainsOrderRepository.updateItemOrder(vaultId, upperOrder, midOrder, lowerOrder)
+        }
+    }
+
+
+    fun toggleBalanceVisibility() {
+        val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
+        viewModelScope.launch {
+            uiState.update {
+                it.copy(isBalanceValueVisible = isBalanceValueVisible)
+            }
+            balanceVisibilityRepository.setVisibility(vaultId!!, isBalanceValueVisible)
         }
     }
 

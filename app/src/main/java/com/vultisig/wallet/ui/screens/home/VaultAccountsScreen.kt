@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
+import com.vultisig.wallet.ui.components.ToggleVisibilityText
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -83,6 +84,7 @@ internal fun VaultAccountsScreen(
             )
         },
         onMove = viewModel::onMove,
+        onToggleBalanceVisibility = viewModel::toggleBalanceVisibility
     )
 }
 
@@ -99,6 +101,7 @@ private fun VaultAccountsScreen(
     onAccountClick: (AccountUiModel) -> Unit = {},
     onChooseChains: () -> Unit = {},
     onMove: (Int, Int) -> Unit = { _, _ -> },
+    onToggleBalanceVisibility: () -> Unit = {}
 ) {
     val snackBarHostState = remember {
         SnackbarHostState()
@@ -139,8 +142,10 @@ private fun VaultAccountsScreen(
                             label = "ChainAccount FiatAmount",
                         ) { totalFiatValue ->
                             if (totalFiatValue != null) {
-                                Text(
+                                ToggleVisibilityText(
                                     text = totalFiatValue,
+                                    isVisible = state.isBalanceValueVisible,
+                                    onChangeVisibilityButtonClick = onToggleBalanceVisibility,
                                     style = Theme.menlo.heading4
                                         .copy(
                                             fontWeight = FontWeight.Bold,
@@ -193,6 +198,7 @@ private fun VaultAccountsScreen(
             ) { account ->
                 ChainAccountItem(
                     account = account,
+                    isBalanceVisible = state.isBalanceValueVisible,
                     onClick = {
                         onAccountClick(account)
                     },

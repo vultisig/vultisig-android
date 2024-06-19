@@ -40,6 +40,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun ChainAccountItem(
     account: AccountUiModel,
     isRearrangeMode: Boolean,
+    isBalanceVisible: Boolean,
     onCopy: (String) -> Unit,
     onClick: () -> Unit = {},
 ) {
@@ -116,7 +117,8 @@ internal fun ChainAccountItem(
                     UiSpacer(size = 12.dp)
 
                     if (account.assetsSize > 1) {
-                        Text(
+                        ToggleVisibilityText(
+                            isVisible = isBalanceVisible,
                             text = stringResource(
                                 R.string.vault_accounts_account_assets,
                                 account.assetsSize
@@ -141,7 +143,8 @@ internal fun ChainAccountItem(
                             label = "ChainAccount NativeTokenAmount"
                         ) { nativeTokenAmount ->
                             if (nativeTokenAmount != null) {
-                                Text(
+                                ToggleVisibilityText(
+                                    isVisible = isBalanceVisible,
                                     text = nativeTokenAmount,
                                     style = Theme.menlo.body1,
                                     color = Theme.colors.neutral100,
@@ -164,7 +167,8 @@ internal fun ChainAccountItem(
                         label = "ChainAccount FiatAmount"
                     ) { fiatAmount ->
                         if (fiatAmount != null) {
-                            Text(
+                            ToggleVisibilityText(
+                                isVisible = isBalanceVisible,
                                 text = fiatAmount,
                                 style = Theme.montserrat.subtitle1,
                                 color = Theme.colors.neutral100,
@@ -198,6 +202,7 @@ internal fun ChainAccountItem(
 private fun PreviewChainAccountItem() {
     ChainAccountItem(
         isRearrangeMode = true,
+        isBalanceVisible = true,
         onCopy = {},
         account = AccountUiModel(
             chainName = "Bitcoin",
