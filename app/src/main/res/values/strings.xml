@@ -254,4 +254,8 @@
     <string name="swap_screen_provider_title" translatable="false">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
+    <string name="verify_approve_amount_title" translatable="false">Amount to approve</string>
+    <string name="verify_approve_amount_unlimited" translatable="false">UNLIMITED</string>
+    <string name="verify_approve_spender_title" translatable="false">Spender</string>
+    <string name="verify_approve_consent_allowance" translatable="false">I agree to provide unlimited allowance to the given spender address</string>
 </resources>
