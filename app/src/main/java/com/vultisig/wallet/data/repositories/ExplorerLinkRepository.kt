@@ -45,6 +45,9 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.kujira ->
                 "https://finder.kujira.network/kaiyo-1/tx/"
 
+            Chain.dydx ->
+                "https://www.mintscan.io/dydx/tx/"
+
             // TODO: Add support for these later
             // Chain.sui -> "https://suiscan.xyz/mainnet/tx/"
             Chain.polkadot -> "https://polkadot.subscan.io/extrinsic/"
@@ -67,6 +70,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.dogecoin -> "https://blockchair.com/dogecoin/"
             Chain.ethereum -> "https://etherscan.io/"
             Chain.gaiaChain -> "https://www.mintscan.io/cosmos/"
+            Chain.dydx -> "https://www.mintscan.io/dydx/"
             Chain.kujira -> "https://finder.kujira.network/"
             Chain.litecoin -> "https://blockchair.com/litecoin/"
             Chain.mayaChain -> "https://www.mayascan.org/"
@@ -74,7 +78,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.polygon -> "https://polygonscan.com/"
             Chain.solana -> "https://explorer.solana.com/"
             Chain.thorChain -> "https://runescan.io/"
-            Chain.polkadot-> "https://polkadot.subscan.io/account/"
+            Chain.polkadot -> "https://polkadot.subscan.io/account/"
         }
 
 }

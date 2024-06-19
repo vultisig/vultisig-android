@@ -164,7 +164,7 @@ private fun Chain.swapAssetName(): String {
         Chain.blast -> "BLAST"
         Chain.cronosChain -> "CRO"
         Chain.polkadot -> "DOT"
-
+        Chain.dydx -> "DYDX"
 //        Chain.sui -> "SUI"
 //        Chain.zksync -> "ZK"
     }
