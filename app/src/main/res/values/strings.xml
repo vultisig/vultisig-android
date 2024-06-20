@@ -259,4 +259,5 @@
     <string name="verify_approve_amount_unlimited" translatable="false">UNLIMITED</string>
     <string name="verify_approve_spender_title" translatable="false">Spender</string>
     <string name="verify_approve_consent_allowance" translatable="false">I agree to provide unlimited allowance to the given spender address</string>
+    <string name="circular_progress_indicator_done">Done</string>
 </resources>
