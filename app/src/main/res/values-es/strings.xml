@@ -235,6 +235,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">Clave EdDSA:</string>
     <string name="vault_settings_delete_vault_of_vault">%1$s de %2$s caja fuerte</string>
     <string name="vault_settings_delete_vault_type">Tipo De Cajas Fuerte:</string>
+    <string name="circular_progress_indicator_done">Hecho</string>
 
 
 </resources>

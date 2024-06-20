@@ -235,4 +235,5 @@
     <string name="vault_settings_delete_vault_eddsa_key">Chave EdDSA:</string>
     <string name="vault_settings_delete_vault_of_vault">%1$s do cofre %2$s</string>
     <string name="vault_settings_delete_vault_type">Tipo de cofre:</string>
+    <string name="circular_progress_indicator_done">Concluído</string>
 </resources>
