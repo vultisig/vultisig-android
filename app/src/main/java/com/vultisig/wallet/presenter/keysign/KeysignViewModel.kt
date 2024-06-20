@@ -181,68 +181,45 @@ internal class KeysignViewModel(
     private suspend fun broadcastTransaction() {
         try {
             val signedTransaction = getSignedTransaction()
-            when (keysignPayload.coin.chain) {
+            val txHash = when (keysignPayload.coin.chain) {
                 Chain.thorChain -> {
-                    this.thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
-                        ?.let {
-                            txHash.value = it
-                            Timber.d("transaction hash:$it")
-                        }
+                    thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
                 }
 
                 Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> {
-                    this.blockChairApi.broadcastTransaction(
+                    blockChairApi.broadcastTransaction(
                         keysignPayload.coin,
                         signedTransaction.rawTransaction
-                    ).let {
-                        txHash.value = it
-                        Timber.d("transaction hash:$it")
-                    }
+                    )
                 }
 
-                Chain.ethereum, Chain.cronosChain, Chain.blast, Chain.bscChain, Chain.avalanche, Chain.base, Chain.polygon, Chain.optimism, Chain.arbitrum -> {
+                Chain.ethereum, Chain.cronosChain, Chain.blast, Chain.bscChain, Chain.avalanche,
+                Chain.base, Chain.polygon, Chain.optimism, Chain.arbitrum -> {
                     val evmApi = evmApiFactory.createEvmApi(keysignPayload.coin.chain)
-                    val txid = evmApi.sendTransaction(signedTransaction.rawTransaction)
-                    txHash.value = txid
-                    Timber.d("transaction hash:$txHash")
+                    evmApi.sendTransaction(signedTransaction.rawTransaction)
                 }
 
                 Chain.solana -> {
                     solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
-                        ?.let {
-                            txHash.value = it
-                            Timber.d("transaction hash:$it")
-                        }
-
                 }
 
                 Chain.gaiaChain, Chain.kujira, Chain.dydx -> {
                     val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
                     cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
-                        ?.let {
-                            txHash.value = it
-                            Timber.d("transaction hash:$it")
-                        }
                 }
 
                 Chain.mayaChain -> {
                     mayaChainApi.broadcastTransaction(signedTransaction.rawTransaction)
-                        ?.let {
-                            txHash.value = it
-                            Timber.d("transaction hash:$it")
-                        }
                 }
 
                 Chain.polkadot -> {
                     polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
-                        ?.let {
-                            txHash.value = it
-                            Timber.d("transaction hash:$it")
-                        }
-                        ?: run {
-                            txHash.value = signedTransaction.transactionHash
-                        }
+                        ?: signedTransaction.transactionHash
                 }
+            }
+            Timber.d("transaction hash: $txHash")
+            if (txHash != null) {
+                this.txHash.value = txHash
             }
         } catch (e: Exception) {
             Timber.e(e)

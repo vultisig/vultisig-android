@@ -107,15 +107,21 @@ private fun VerifyApproveScreen(
                         address = stringResource(R.string.verify_approve_amount_unlimited),
                     )
 
+                    val hasFees = estimatedFees.isNotBlank()
+
                     AddressField(
                         title = stringResource(R.string.verify_approve_spender_title),
-                        address = spenderAddress
+                        address = spenderAddress,
+                        divider = hasFees,
                     )
 
-                    OtherField(
-                        title = stringResource(R.string.verify_swap_screen_estimated_fees),
-                        value = estimatedFees,
-                    )
+                    if (hasFees) {
+                        OtherField(
+                            title = stringResource(R.string.verify_swap_screen_estimated_fees),
+                            value = estimatedFees,
+                            divider = false,
+                        )
+                    }
                 }
             }
 

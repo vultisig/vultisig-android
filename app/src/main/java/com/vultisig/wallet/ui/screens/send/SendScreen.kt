@@ -22,6 +22,7 @@ import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.send.SendViewModel
+import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -120,7 +121,12 @@ internal fun SendScreen(
                     hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadTransaction(transactionId)
 
-                KeysignFlowView(navController)
+                KeysignFlowView(
+                    navController = navController,
+                    onComplete = {
+                        navController.navigate(Screen.Home.route)
+                    }
+                )
             }
         }
     }
