@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.presenter.common.ClickOnce
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -87,9 +88,9 @@ internal fun ConfirmDeleteScreen(
                     contentDescription = null,
                     modifier = Modifier
                         .size(24.dp)
-                        .clickable(onClick = ClickOnce {
+                        .clickOnce {
                             onDismissClick()
-                        }),
+                        },
                 )
 
                 UiSpacer(weight = 1f)
