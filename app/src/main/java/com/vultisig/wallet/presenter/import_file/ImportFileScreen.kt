@@ -49,6 +49,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
+import com.vultisig.wallet.presenter.common.ClickOnce
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.FileSelected
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.OnContinueClick
 import com.vultisig.wallet.presenter.import_file.ImportFileEvent.RemoveSelectedFile
@@ -121,7 +123,7 @@ private fun ImportFileScreen(
                 .padding(
                     vertical = 16.dp,
                 ),
-            onClick = onContinue,
+            onClick = ClickOnce(onContinue),
         )
     }) {
 Box(Modifier.padding(it)) {
@@ -157,7 +159,7 @@ Box(Modifier.padding(it)) {
                     .background(
                         Theme.colors.turquoise600Main.copy(alpha = 0.2f)
                     )
-                    .clickable(onClick = onImportFile)
+                    .clickOnce(onClick = onImportFile)
                     .drawBehind {
                         drawRoundRect(
                             color = Color("#33e6bf".toColorInt()), style = Stroke(
@@ -205,7 +207,7 @@ Box(Modifier.padding(it)) {
                             .weight(1f)
                             .padding(end = 8.dp)
                     )
-                    IconButton(onClick = onRemoveSelectedFile) {
+                    IconButton(onClick = ClickOnce(onRemoveSelectedFile)) {
                         Icon(
                             painter = painterResource(id = R.drawable.x),
                             contentDescription = "X",

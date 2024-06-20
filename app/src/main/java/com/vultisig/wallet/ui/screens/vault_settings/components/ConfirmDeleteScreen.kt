@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -86,7 +87,7 @@ internal fun ConfirmDeleteScreen(
                     contentDescription = null,
                     modifier = Modifier
                         .size(24.dp)
-                        .clickable(onClick = {
+                        .clickable(onClick = ClickOnce {
                             onDismissClick()
                         }),
                 )
@@ -118,7 +119,7 @@ internal fun ConfirmDeleteScreen(
                         bottom = 16.dp,
                     ),
                 text = stringResource(R.string.confirm_delete_delete_vault),
-                onClick = {
+                onClick = ClickOnce {
                     onConfirmClick()
                 },
                 disabled = isDeleteButtonActive.not()
