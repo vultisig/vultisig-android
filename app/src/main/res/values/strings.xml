@@ -8,7 +8,7 @@
     <string name="keygen">Keygen</string>
     <string name="danger_icon">Danger Icon</string>
     <string name="signing_error_please_try_again">Signing Error. Please try again.</string>
-    <string name="signing_error_please_try_again_s">Done</string>
+    <string name="signing_error_please_try_again_s">Signing Error. Please try again. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network,\n correct vault and pair devices.\n Make sure no other devices are\n running Vultisig.</string>
     <string name="try_again">Try again</string>
     <string name="vault_choose_chains">Choose Chains</string>
