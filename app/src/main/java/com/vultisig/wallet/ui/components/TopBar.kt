@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.components
 
-import android.app.Activity
 import androidx.annotation.DrawableRes
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.closestActivityOrNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +32,7 @@ internal fun TopBar(
     onStartIconClick: (() -> Unit)? = null,
     onEndIconClick: () -> Unit = {},
 ) {
-    val activity = LocalContext.current as Activity
+    val activity = LocalContext.current.closestActivityOrNull
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -53,7 +53,7 @@ internal fun TopBar(
                     onClick = ClickOnce {
                         onStartIconClick?.invoke() ?: run {
                             if (!navController.popBackStack())
-                                activity.finish()
+                                activity?.finish()
                         }
                     }
                 ) {
