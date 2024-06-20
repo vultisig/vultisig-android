@@ -7,8 +7,8 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
-import com.vultisig.wallet.common.toJson
 import com.vultisig.wallet.data.mappers.fromIosBigInt
+import com.vultisig.wallet.data.mappers.toIosBigInt
 import java.lang.reflect.Type
 import java.math.BigInteger
 
@@ -25,7 +25,7 @@ internal class ERC20ApprovePayloadSerializer : JsonSerializer<ERC20ApprovePayloa
         typeOfSrc: Type?,
         context: JsonSerializationContext?,
     ): JsonElement = JsonObject().apply {
-        add("amount", src.amount.toJson())
+        add("amount", src.amount.toIosBigInt())
         addProperty("spender", src.spender)
     }
 }

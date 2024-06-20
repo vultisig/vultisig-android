@@ -49,7 +49,8 @@ internal class VerifyApproveViewModel @Inject constructor(
 
             val fiatFees = convertTokenValueToFiat(
                 transaction.dstToken,
-                transaction.estimatedFees, currency
+                transaction.estimatedFees,
+                currency,
             )
 
             state.update {

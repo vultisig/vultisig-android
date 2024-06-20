@@ -22,6 +22,7 @@ import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.swap.SwapViewModel
+import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -140,20 +141,12 @@ internal fun SwapScreen(
                     hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadSwapApprovalTransaction(transactionId)
 
-                KeysignFlowView(mainNavController)
-            }
-            composable(
-                route = SendDst.KeysignApproval.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) { entry ->
-                val transactionId = entry.arguments
-                    ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-
-                val keysignShareViewModel: KeysignShareViewModel =
-                    hiltViewModel(context as MainActivity)
-                keysignShareViewModel.loadSwapApprovalTransaction(transactionId)
-
-                KeysignFlowView(mainNavController)
+                KeysignFlowView(
+                    navController = mainNavController,
+                    onComplete = {
+                        navHostController.navigate(SendDst.VerifyTransaction(transactionId).route)
+                    }
+                )
             }
             composable(
                 route = SendDst.VerifyTransaction.staticRoute,
@@ -172,7 +165,12 @@ internal fun SwapScreen(
                     hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadSwapTransaction(transactionId)
 
-                KeysignFlowView(mainNavController)
+                KeysignFlowView(
+                    navController = mainNavController,
+                    onComplete = {
+                        mainNavController.navigate(Screen.Home.route)
+                    }
+                )
             }
         }
     }

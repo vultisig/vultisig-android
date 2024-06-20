@@ -164,6 +164,7 @@ internal fun VerifyTransactionScreen(
 internal fun AddressField(
     title: String,
     address: String,
+    divider: Boolean = true,
 ) {
     Column {
         Text(
@@ -180,9 +181,11 @@ internal fun AddressField(
             color = Theme.colors.turquoise800,
         )
 
-        UiSpacer(size = 12.dp)
+        if (divider) {
+            UiSpacer(size = 12.dp)
 
-        UiHorizontalDivider()
+            UiHorizontalDivider()
+        }
     }
 }
 

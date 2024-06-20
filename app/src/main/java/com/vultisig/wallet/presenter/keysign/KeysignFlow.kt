@@ -14,7 +14,10 @@ import com.vultisig.wallet.ui.screens.keysign.KeysignPeerDiscovery
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun KeysignFlowView(navController: NavController) {
+fun KeysignFlowView(
+    navController: NavController,
+    onComplete: () -> Unit,
+) {
     val viewModel: KeysignFlowViewModel = hiltViewModel()
     val context = LocalContext.current.applicationContext
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
@@ -42,7 +45,10 @@ fun KeysignFlowView(navController: NavController) {
                 viewModel.startKeysign()
             }
 
-            Keysign(navController, viewModel.keysignViewModel)
+            Keysign(
+                viewModel = viewModel.keysignViewModel,
+                onComplete = onComplete,
+            )
         }
 
         KeysignFlowState.ERROR -> {

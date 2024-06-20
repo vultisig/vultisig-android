@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.swap.VerifyApproveUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -78,6 +79,10 @@ internal sealed class VerifyUiModel {
 
     data class Swap(
         val model: VerifySwapUiModel,
+    ) : VerifyUiModel()
+
+    data class Approve(
+        val model: VerifyApproveUiModel,
     ) : VerifyUiModel()
 
 }
@@ -206,101 +211,112 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val swapPayload = payload.swapPayload
+        val approvePayload = payload.approvePayload
         val currency = appCurrencyRepository.currency.first()
 
-        if (swapPayload == null) {
-            val payloadToken = payload.coin
-            val address = payloadToken.address
-            val token = tokenRepository.getToken(payloadToken.id)!!
-            val chain = token.chain
-
-            val tokenValue = TokenValue(
-                value = payload.toAmount,
-                unit = token.ticker,
-                decimals = token.decimal,
-            )
-
-            val gasFee = gasFeeRepository.getGasFee(chain, address)
-
-            val transaction = Transaction(
-                id = UUID.randomUUID().toString(),
-
-                vaultId = payload.vaultPublicKeyECDSA,
-                chainId = chain.id,
-                tokenId = token.id,
-                srcAddress = address,
-                dstAddress = payload.toAddress,
-                tokenValue = tokenValue,
-                fiatValue = convertTokenValueToFiat(
-                    token,
-                    tokenValue,
-                    currency,
-                ),
-                gasFee = gasFee,
-
-                // TODO that's mock data
-                blockChainSpecific = BlockChainSpecific.THORChain(
-                    BigInteger.ZERO,
-                    BigInteger.ZERO,
-                    BigInteger.ZERO
-                ),
-            )
-
-            verifyUiModel.value = VerifyUiModel.Send(
-                VerifyTransactionUiModel(
-                    transaction = mapTransactionToUiModel(transaction),
+        when {
+            approvePayload != null -> {
+              verifyUiModel.value = VerifyUiModel.Approve(
+                    VerifyApproveUiModel(
+                        spenderAddress = payload.toAddress,
+                    )
                 )
-            )
-        } else {
-            val srcToken = swapPayload.srcToken
-            val dstToken = swapPayload.dstToken
-
-            val srcTokenValue = swapPayload.srcTokenValue
-            val dstTokenValue = swapPayload.dstTokenValue
-
-            when (swapPayload) {
-                is SwapPayload.OneInch -> {
-                    val estimatedTokenFees = TokenValue(
-                        value = swapPayload.data.quote.tx.gasPrice.toBigInteger() *
-                                EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
-                        token = srcToken
-                    )
-
-                    verifyUiModel.value = VerifyUiModel.Swap(
-                        VerifySwapUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
-                            estimatedFees = fiatValueToStringMapper.map(
-                                convertTokenValueToFiat(srcToken, estimatedTokenFees, currency)
-                            ),
-                            estimatedTime = R.string.swap_screen_estimated_time_instant.asUiText(),
-                        )
-                    )
-                }
-
-                is SwapPayload.ThorChain -> {
-                    val quote = swapQuoteRepository.getSwapQuote(
-                        srcToken = srcToken,
-                        dstToken = dstToken,
-                        dstAddress = swapPayload.data.toAddress,
-                        tokenValue = srcTokenValue,
-                    )
-
-                    verifyUiModel.value = VerifyUiModel.Swap(
-                        VerifySwapUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
-                            estimatedFees = fiatValueToStringMapper.map(
-                                convertTokenValueToFiat(dstToken, quote.fees, currency)
-                            ),
-                            estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
-                                ?.let { UiText.DynamicString(it) }
-                                ?: R.string.swap_screen_estimated_time_instant.asUiText(),
-                        )
-                    )
-                }
             }
+            swapPayload == null -> {
+                val payloadToken = payload.coin
+                val address = payloadToken.address
+                val token = tokenRepository.getToken(payloadToken.id)!!
+                val chain = token.chain
 
+                val tokenValue = TokenValue(
+                    value = payload.toAmount,
+                    unit = token.ticker,
+                    decimals = token.decimal,
+                )
+
+                val gasFee = gasFeeRepository.getGasFee(chain, address)
+
+                val transaction = Transaction(
+                    id = UUID.randomUUID().toString(),
+
+                    vaultId = payload.vaultPublicKeyECDSA,
+                    chainId = chain.id,
+                    tokenId = token.id,
+                    srcAddress = address,
+                    dstAddress = payload.toAddress,
+                    tokenValue = tokenValue,
+                    fiatValue = convertTokenValueToFiat(
+                        token,
+                        tokenValue,
+                        currency,
+                    ),
+                    gasFee = gasFee,
+
+                    // TODO that's mock data
+                    blockChainSpecific = BlockChainSpecific.THORChain(
+                        BigInteger.ZERO,
+                        BigInteger.ZERO,
+                        BigInteger.ZERO
+                    ),
+                )
+
+                verifyUiModel.value = VerifyUiModel.Send(
+                    VerifyTransactionUiModel(
+                        transaction = mapTransactionToUiModel(transaction),
+                    )
+                )
+            }
+            else -> {
+                val srcToken = swapPayload.srcToken
+                val dstToken = swapPayload.dstToken
+
+                val srcTokenValue = swapPayload.srcTokenValue
+                val dstTokenValue = swapPayload.dstTokenValue
+
+                when (swapPayload) {
+                    is SwapPayload.OneInch -> {
+                        val estimatedTokenFees = TokenValue(
+                            value = swapPayload.data.quote.tx.gasPrice.toBigInteger() *
+                                    EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
+                            token = srcToken
+                        )
+
+                        verifyUiModel.value = VerifyUiModel.Swap(
+                            VerifySwapUiModel(
+                                srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                                dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                                estimatedFees = fiatValueToStringMapper.map(
+                                    convertTokenValueToFiat(srcToken, estimatedTokenFees, currency)
+                                ),
+                                estimatedTime = R.string.swap_screen_estimated_time_instant.asUiText(),
+                            )
+                        )
+                    }
+
+                    is SwapPayload.ThorChain -> {
+                        val quote = swapQuoteRepository.getSwapQuote(
+                            srcToken = srcToken,
+                            dstToken = dstToken,
+                            dstAddress = swapPayload.data.toAddress,
+                            tokenValue = srcTokenValue,
+                        )
+
+                        verifyUiModel.value = VerifyUiModel.Swap(
+                            VerifySwapUiModel(
+                                srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                                dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                                estimatedFees = fiatValueToStringMapper.map(
+                                    convertTokenValueToFiat(dstToken, quote.fees, currency)
+                                ),
+                                estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
+                                    ?.let { UiText.DynamicString(it) }
+                                    ?: R.string.swap_screen_estimated_time_instant.asUiText(),
+                            )
+                        )
+                    }
+                }
+
+            }
         }
     }
 
