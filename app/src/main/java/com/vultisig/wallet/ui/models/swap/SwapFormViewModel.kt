@@ -60,7 +60,9 @@ internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
     val selectedDstToken: TokenBalanceUiModel? = null,
     val availableTokens: List<TokenBalanceUiModel> = emptyList(),
-    val estimatedDstTokenValue: String = "",
+    val srcFiatValue: String = "0$",
+    val estimatedDstTokenValue: String = "0",
+    val estimatedDstFiatValue: String = "0$",
     val provider: UiText = UiText.Empty,
     val gas: String = "",
     val fee: String = "",
@@ -377,6 +379,14 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val currency = appCurrencyRepository.currency.first()
 
+                        val srcFiatValue = if (hasUserSetTokenValue) {
+                            convertTokenValueToFiat(srcToken, tokenValue, currency)
+                        } else null
+
+                        val srcFiatValueText = srcFiatValue?.let {
+                            fiatValueToString.map(it)
+                        } ?: "0$"
+
                         // THORChain for cross-chain swap, 1inch for same-chain swap
                         if (srcToken.chain != dstToken.chain) {
                             val quote = swapQuoteRepository.getSwapQuote(
@@ -400,10 +410,20 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
                             } else ""
 
+                            val estimatedDstFiatValue = convertTokenValueToFiat(
+                                dstToken,
+                                quote.expectedDstValue,
+                                currency
+                            )
+
                             uiState.update {
                                 it.copy(
                                     provider = R.string.swap_form_provider_thorchain.asUiText(),
+                                    srcFiatValue = srcFiatValueText,
                                     estimatedDstTokenValue = estimatedDstTokenValue,
+                                    estimatedDstFiatValue = fiatValueToString.map(
+                                        estimatedDstFiatValue
+                                    ),
                                     fee = fiatValueToString.map(fiatFees),
                                     estimatedTime = estimatedTime,
                                 )
@@ -442,10 +462,19 @@ internal class SwapFormViewModel @Inject constructor(
                                 mapTokenValueToDecimalUiString(expectedDstValue)
                             } else ""
 
+                            val estimatedDstFiatValue = convertTokenValueToFiat(
+                                dstToken,
+                                expectedDstValue, currency
+                            )
+
                             uiState.update {
                                 it.copy(
                                     provider = R.string.swap_for_provider_1inch.asUiText(),
+                                    srcFiatValue = srcFiatValueText,
                                     estimatedDstTokenValue = estimatedDstTokenValue,
+                                    estimatedDstFiatValue = fiatValueToString.map(
+                                        estimatedDstFiatValue
+                                    ),
                                     fee = fiatValueToString.map(fiatFees),
                                     estimatedTime = estimatedTime,
                                 )

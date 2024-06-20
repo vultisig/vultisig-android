@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -215,8 +216,6 @@ internal fun FormTextField(
     actions: (@Composable RowScope.() -> Unit)? = null,
     onLostFocus: () -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
-    var isFocused by remember { mutableStateOf(false) }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -227,47 +226,68 @@ internal fun FormTextField(
                 vertical = 14.dp
             ),
     ) {
-        BasicTextField2(
-            state = textFieldState,
-            lineLimits = TextFieldLineLimits.SingleLine,
-            textStyle = Theme.menlo.body1
-                .copy(color = Theme.colors.neutral100),
-            cursorBrush = Theme.cursorBrush,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = keyboardType,
-                imeAction = ImeAction.Done,
-            ),
-            keyboardActions = KeyboardActions(
-                onAny = {
-                    focusManager.clearFocus()
-                }
-            ),
+        BasicFormTextField(
+            hint = hint,
+            keyboardType = keyboardType,
+            textFieldState = textFieldState,
+            onLostFocus = onLostFocus,
             modifier = Modifier
-                .weight(1f)
-                .onFocusEvent {
-                    if (isFocused != it.isFocused) {
-                        isFocused = it.isFocused
-                        if (!isFocused) {
-                            onLostFocus()
-                        }
-                    }
-                },
-            decorator = { textField ->
-                if (textFieldState.text.isEmpty()) {
-                    Text(
-                        text = hint,
-                        color = Theme.colors.neutral100,
-                        style = Theme.menlo.body1,
-                    )
-                }
-                textField()
-            }
+                .weight(1f),
         )
 
         UiSpacer(size = 8.dp)
 
         actions?.invoke(this)
     }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun BasicFormTextField(
+    hint: String,
+    keyboardType: KeyboardType,
+    textFieldState: TextFieldState,
+    onLostFocus: () -> Unit,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = Theme.menlo.body1,
+) {
+    val focusManager = LocalFocusManager.current
+    var isFocused by remember { mutableStateOf(false) }
+
+    BasicTextField2(
+        state = textFieldState,
+        lineLimits = TextFieldLineLimits.SingleLine,
+        textStyle = textStyle.copy(color = Theme.colors.neutral100),
+        cursorBrush = Theme.cursorBrush,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType,
+            imeAction = ImeAction.Done,
+        ),
+        keyboardActions = KeyboardActions(
+            onAny = {
+                focusManager.clearFocus()
+            }
+        ),
+        modifier = modifier
+            .onFocusEvent {
+                if (isFocused != it.isFocused) {
+                    isFocused = it.isFocused
+                    if (!isFocused) {
+                        onLostFocus()
+                    }
+                }
+            },
+        decorator = { textField ->
+            if (textFieldState.text.isEmpty()) {
+                Text(
+                    text = hint,
+                    color = Theme.colors.neutral100,
+                    style = textStyle,
+                )
+            }
+            textField()
+        }
+    )
 }
 
 @Composable

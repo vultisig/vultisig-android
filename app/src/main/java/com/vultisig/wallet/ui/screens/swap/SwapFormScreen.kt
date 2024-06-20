@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,12 +32,11 @@ import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
-import com.vultisig.wallet.ui.components.library.form.FormTextField
-import com.vultisig.wallet.ui.components.library.form.FormTitleContainer
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
-import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
@@ -84,7 +83,7 @@ internal fun SwapFormScreen(
         modifier = Modifier.fillMaxSize(),
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -93,96 +92,82 @@ internal fun SwapFormScreen(
                     vertical = 16.dp
                 ),
         ) {
-            FormTitleContainer(
-                title = stringResource(R.string.swap_form_from_title),
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    FormTokenSelection(
-                        selectedToken = state.selectedSrcToken,
-                        availableTokens = state.availableTokens,
-                        onSelectToken = onSelectSrcToken,
-                    )
-
-                    TextFieldValidator(
-                        errorText = state.amountError
-                    ) {
-                        FormCard {
-                            FormTextField(
-                                hint = stringResource(R.string.swap_form_src_amount_hint),
-                                keyboardType = KeyboardType.Number,
-                                textFieldState = srcAmountTextFieldState,
-                                onLostFocus = onAmountLostFocus,
-                            )
-                        }
-                    }
-                }
-            }
-
-            UiIcon(
-                drawableResId = R.drawable.ic_swap_arrows,
-                size = 24.dp,
-                modifier = Modifier
-                    .padding(all = 8.dp)
-                    .background(
-                        color = Theme.colors.persianBlue400,
-                        shape = CircleShape,
-                    )
-                    .padding(all = 8.dp),
-                onClick = onFlipSelectedTokens,
+            FormTokenSelection(
+                selectedToken = state.selectedSrcToken,
+                availableTokens = state.availableTokens,
+                onSelectToken = onSelectSrcToken,
             )
 
-            FormTitleContainer(
-                title = stringResource(R.string.swap_form_dst_token_title),
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-
-
-                    FormTokenSelection(
-                        selectedToken = state.selectedDstToken,
-                        availableTokens = state.availableTokens,
-                        onSelectToken = onSelectDstToken,
+            Box {
+                Column {
+                    SwapFormTextField(
+                        title = stringResource(id = R.string.swap_form_from_title),
+                        hint = stringResource(id = R.string.swap_form_src_amount_hint),
+                        fiatAmount = state.srcFiatValue,
+                        textFieldState = srcAmountTextFieldState,
+                        onLostFocus = onAmountLostFocus,
                     )
 
-                    FormCard {
+                    UiSpacer(size = 8.dp)
+
+                    SwapFormTextContent(
+                        title = stringResource(id = R.string.swap_form_dst_token_title),
+                        fiatAmount = state.estimatedDstFiatValue,
+                    ) {
                         Text(
                             text = state.estimatedDstTokenValue,
-                            color = Theme.colors.neutral300,
-                            style = Theme.menlo.body1,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 48.dp)
-                                .padding(
-                                    horizontal = 12.dp,
-                                    vertical = 16.dp
-                                ),
+                            color = Theme.colors.neutral500,
+                            style = Theme.menlo.heading5,
+                            modifier = Modifier.padding(top = 8.dp),
                         )
                     }
                 }
+
+                UiIcon(
+                    drawableResId = R.drawable.ic_swap_arrows,
+                    size = 24.dp,
+                    modifier = Modifier
+                        .background(
+                            color = Theme.colors.persianBlue400,
+                            shape = CircleShape,
+                        )
+                        .padding(all = 8.dp)
+                        .align(Alignment.Center),
+                    onClick = onFlipSelectedTokens,
+                )
             }
 
-            FormDetails(
-                title = stringResource(R.string.swap_screen_provider_title),
-                value = state.provider.asString(),
+            FormTokenSelection(
+                selectedToken = state.selectedDstToken,
+                availableTokens = state.availableTokens,
+                onSelectToken = onSelectDstToken,
             )
 
-            FormDetails(
-                title = stringResource(R.string.swap_form_gas_title),
-                value = state.gas,
-            )
+            UiSpacer(size = 0.dp)
 
-            FormDetails(
-                title = stringResource(R.string.swap_form_estimated_fees_title),
-                value = state.fee
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                FormDetails(
+                    title = stringResource(R.string.swap_screen_provider_title),
+                    value = state.provider.asString(),
+                )
 
-            FormDetails(
-                title = stringResource(R.string.swap_form_estimated_time_title),
-                value = state.estimatedTime.asString()
-            )
+                FormDetails(
+                    title = stringResource(R.string.swap_form_gas_title),
+                    value = state.gas,
+                )
+
+                FormDetails(
+                    title = stringResource(R.string.swap_form_estimated_fees_title),
+                    value = state.fee
+                )
+
+                FormDetails(
+                    title = stringResource(R.string.swap_form_estimated_time_title),
+                    value = state.estimatedTime.asString()
+                )
+            }
         }
 
         MultiColorButton(
@@ -203,6 +188,66 @@ internal fun SwapFormScreen(
 }
 
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun SwapFormTextField(
+    title: String,
+    hint: String,
+    fiatAmount: String,
+    textFieldState: TextFieldState,
+    onLostFocus: () -> Unit,
+) {
+    SwapFormTextContent(
+        title = title,
+        fiatAmount = fiatAmount
+    ) {
+        BasicFormTextField(
+            hint = hint,
+            keyboardType = KeyboardType.Number,
+            textFieldState = textFieldState,
+            textStyle = Theme.menlo.heading5,
+            onLostFocus = onLostFocus,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+    }
+}
+
+@Composable
+internal fun SwapFormTextContent(
+    title: String,
+    fiatAmount: String,
+    content: @Composable () -> Unit,
+) {
+    FormCard {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(
+                horizontal = 12.dp,
+                vertical = 16.dp
+            ),
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    color = Theme.colors.neutral200,
+                    style = Theme.menlo.body1,
+                    modifier = Modifier
+                )
+
+                content()
+            }
+
+            Text(
+                text = fiatAmount,
+                color = Theme.colors.neutral500,
+                style = Theme.menlo.body2,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
 @Preview
 @Composable
 internal fun SwapFormScreenPreview() {
@@ -211,7 +256,9 @@ internal fun SwapFormScreenPreview() {
         title = "Swap",
     ) {
         SwapFormScreen(
-            state = SwapFormUiModel(),
+            state = SwapFormUiModel(
+                estimatedDstTokenValue = "0",
+            ),
             srcAmountTextFieldState = TextFieldState(),
         )
     }
