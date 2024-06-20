@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asString
+import com.vultisig.wallet.ui.components.PercentText
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -176,6 +177,37 @@ internal fun FormTextFieldCard(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
+internal fun FormTextFieldCardWithPercentage(
+    title: String,
+    hint: String,
+    error: UiText?,
+    keyboardType: KeyboardType,
+    textFieldState: TextFieldState,
+    onLostFocus: () -> Unit = {},
+    onPercentClick: (percent: Float) -> Unit = {},
+    actions: (@Composable RowScope.() -> Unit)? = null,
+
+    ) {
+    TextFieldValidator(
+        errorText = error,
+    ) {
+        FormEntryWithPercentage(
+            title = title,
+            onPercentClick = onPercentClick
+        ) {
+            FormTextField(
+                hint = hint,
+                keyboardType = keyboardType,
+                textFieldState = textFieldState,
+                actions = actions,
+                onLostFocus = onLostFocus
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
 internal fun FormTextField(
     hint: String,
     keyboardType: KeyboardType,
@@ -253,6 +285,24 @@ internal fun FormEntry(
 }
 
 @Composable
+internal fun FormEntryWithPercentage(
+    title: String,
+    modifier: Modifier = Modifier,
+    onPercentClick: (percent: Float) -> Unit,
+    content: @Composable ColumnScope.() -> Unit = {},
+) {
+    FormTitleContainerWithPercentage(
+        title = title,
+        modifier = modifier,
+        onPercentClick = { percent ->
+            onPercentClick(percent / 100f)
+        },
+    ) {
+        FormCard(content = content)
+    }
+}
+
+@Composable
 internal fun FormTitleContainer(
     title: String,
     modifier: Modifier = Modifier,
@@ -267,6 +317,44 @@ internal fun FormTitleContainer(
             style = Theme.montserrat.body1,
         )
         UiSpacer(size = 10.dp)
+        content()
+    }
+}
+
+@Composable
+internal fun FormTitleContainerWithPercentage(
+    title: String,
+    modifier: Modifier = Modifier,
+    onPercentClick: (percent: Int) -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit = {},
+) {
+    Column(
+        modifier = modifier
+    ) {
+
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                color = Theme.colors.neutral100,
+                style = Theme.montserrat.body1,
+            )
+            UiSpacer(weight = 1f)
+            PercentText(
+                25,
+                onPercentClick
+            )
+            UiSpacer(size = 10.dp)
+            PercentText(
+                50,
+                onPercentClick
+            )
+        }
+
+        UiSpacer(size = 10.dp)
+
         content()
     }
 }

@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
+import com.vultisig.wallet.ui.components.library.form.FormTextFieldCardWithPercentage
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
@@ -70,6 +71,7 @@ internal fun SendFormScreen(
         onSelectToken = viewModel::selectToken,
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
+        onChoosePercentageAmount = viewModel::choosePercentageAmount,
         onScan = viewModel::scanAddress,
         onSend = viewModel::send,
     )
@@ -88,6 +90,7 @@ internal fun SendFormScreen(
     onSelectToken: (TokenBalanceUiModel) -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
+    onChoosePercentageAmount: (Float) -> Unit = {},
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
 ) {
@@ -164,13 +167,14 @@ internal fun SendFormScreen(
                 )
             }
 
-            FormTextFieldCard(
+            FormTextFieldCardWithPercentage(
                 title = stringResource(R.string.send_amount),
                 hint = stringResource(R.string.send_amount_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = tokenAmountFieldState,
                 onLostFocus = onTokenAmountLostFocus,
-                error = state.tokenAmountError
+                error = state.tokenAmountError,
+                onPercentClick = onChoosePercentageAmount
             ) {
                 Text(
                     text = stringResource(R.string.send_screen_max),
