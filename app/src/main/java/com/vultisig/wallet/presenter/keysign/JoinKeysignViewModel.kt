@@ -218,7 +218,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             approvePayload != null -> {
               verifyUiModel.value = VerifyUiModel.Approve(
                     VerifyApproveUiModel(
-                        spenderAddress = payload.toAddress,
+                        spenderAddress = approvePayload.spender,
                     )
                 )
             }
@@ -280,7 +280,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         val estimatedTokenFees = TokenValue(
                             value = swapPayload.data.quote.tx.gasPrice.toBigInteger() *
                                     EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
-                            token = srcToken
+                            token = nativeToken
                         )
 
                         verifyUiModel.value = VerifyUiModel.Swap(
