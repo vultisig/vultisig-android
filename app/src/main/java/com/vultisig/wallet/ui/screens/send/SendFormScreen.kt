@@ -86,7 +86,7 @@ internal fun SendFormScreen(
     addressFieldState: TextFieldState,
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
-    memoFieldState: TextFieldState?,
+    memoFieldState: TextFieldState,
     onDstAddressLostFocus: () -> Unit = {},
     onTokenAmountLostFocus: () -> Unit = {},
     onDismissError: () -> Unit = {},
@@ -170,7 +170,7 @@ internal fun SendFormScreen(
                 )
             }
 
-            if (memoFieldState != null)
+            if (state.hasMemo)
                 FormTitleCollapsibleTextField(
                     title = stringResource(R.string.send_form_screen_memo_optional),
                     hint = "",

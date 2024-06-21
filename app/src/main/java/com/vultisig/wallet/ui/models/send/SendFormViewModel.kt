@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.send
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.clearText
 import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.compose.runtime.Immutable
@@ -73,6 +74,7 @@ internal data class SendFormUiModel(
     val showGasFee: Boolean = true,
     val dstAddressError: UiText? = null,
     val tokenAmountError: UiText? = null,
+    val hasMemo: Boolean = false,
 )
 
 internal data class SendSrc(
@@ -131,7 +133,7 @@ internal class SendFormViewModel @Inject constructor(
     val addressFieldState = TextFieldState()
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
-    var memoFieldState: TextFieldState? = TextFieldState()
+    val memoFieldState: TextFieldState = TextFieldState()
 
     val uiState = MutableStateFlow(SendFormUiModel())
 
@@ -159,8 +161,7 @@ internal class SendFormViewModel @Inject constructor(
 
     fun selectToken(token: TokenBalanceUiModel) {
         selectedSrc.value = token.model
-        val isNative = token.model.account.token.isNativeToken
-        memoFieldState = TextFieldState().takeIf { isNative }
+        memoFieldState.clearText()
     }
 
     fun setOutputAddress(address: String) {
@@ -304,7 +305,7 @@ internal class SendFormViewModel @Inject constructor(
 
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
-                    memo = memoFieldState?.text?.toString(),
+                    memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
                 )
 
                 Timber.d("Transaction: $transaction")
@@ -399,11 +400,13 @@ internal class SendFormViewModel @Inject constructor(
                     val address = src.address.address
                     val uiModel = accountToTokenBalanceUiModelMapper.map(src)
                     val showGasFee = (selectedAccount?.token?.AllowZeroGas() == false)
+                    val hasMemo = src.account.token.isNativeToken
                     uiState.update {
                         it.copy(
                             from = address,
                             selectedCoin = uiModel,
-                            showGasFee = showGasFee
+                            showGasFee = showGasFee,
+                            hasMemo = hasMemo,
                         )
                     }
                 }.collect()
