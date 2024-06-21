@@ -261,4 +261,5 @@
     <string name="verify_approve_consent_allowance" translatable="false">I agree to provide unlimited allowance to the given spender address</string>
     <string name="verify_approve_sign_button" translatable="false">Sign</string>
     <string name="circular_progress_indicator_done">Done</string>
+    <string name="verify_swap_provider_title">Provider</string>
 </resources>

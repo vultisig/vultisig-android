@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
+import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -24,6 +25,7 @@ import javax.inject.Inject
 
 
 internal data class VerifySwapUiModel(
+    val provider: UiText = UiText.Empty,
     val srcTokenValue: String = "",
     val dstTokenValue: String = "",
     val estimatedFees: String = "",
@@ -64,8 +66,14 @@ internal class VerifySwapViewModel @Inject constructor(
                 UiText.DynamicString(mapDurationToUiString(it))
             } ?: R.string.swap_screen_estimated_time_instant.asUiText()
 
+            val providerText = when (transaction.payload) {
+                is SwapPayload.OneInch -> R.string.swap_for_provider_1inch.asUiText()
+                is SwapPayload.ThorChain -> R.string.swap_form_provider_thorchain.asUiText()
+            }
+
             state.update {
                 it.copy(
+                    provider = providerText,
                     srcTokenValue = mapTokenValueToStringWithUnit(transaction.srcTokenValue),
                     dstTokenValue = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue),
                     estimatedFees = fiatValueToStringMapper.map(fiatFees),
