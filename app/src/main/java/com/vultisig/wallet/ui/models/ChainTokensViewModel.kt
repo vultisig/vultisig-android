@@ -126,18 +126,23 @@ internal class ChainTokensViewModel @Inject constructor(
                 val totalFiatValue = address.accounts
                     .calculateAccountsTotalFiatValue()
 
-                val tokens = address.accounts.map { account ->
-                    ChainTokenUiModel(
-                        name = account.token.ticker,
-                        balance = account.tokenValue
-                            ?.let(mapTokenValueToDecimalUiString)
-                            ?: "",
-                        fiatBalance = account.fiatValue
-                            ?.let(fiatValueToStringMapper::map),
-                        tokenLogo = Coins.getCoinLogo(account.token.logo),
-                        chainLogo = chain.logo,
+                val tokens = address.accounts
+                    .sortedWith(
+                        compareBy({ !it.token.isNativeToken },
+                            { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
                     )
-                }
+                    .map { account ->
+                        ChainTokenUiModel(
+                            name = account.token.ticker,
+                            balance = account.tokenValue
+                                ?.let(mapTokenValueToDecimalUiString)
+                                ?: "",
+                            fiatBalance = account.fiatValue
+                                ?.let(fiatValueToStringMapper::map),
+                            tokenLogo = Coins.getCoinLogo(account.token.logo),
+                            chainLogo = chain.logo,
+                        )
+                    }
 
                 val accountAddress = address.address
                 val explorerUrl = explorerLinkRepository
