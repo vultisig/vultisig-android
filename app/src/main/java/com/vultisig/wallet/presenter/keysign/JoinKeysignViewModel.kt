@@ -283,6 +283,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
+                                provider = R.string.swap_for_provider_1inch.asUiText(),
                                 srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
                                 dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
                                 estimatedFees = fiatValueToStringMapper.map(
@@ -303,6 +304,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
+                                provider = R.string.swap_form_provider_thorchain.asUiText(),
                                 srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
                                 dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
                                 estimatedFees = fiatValueToStringMapper.map(

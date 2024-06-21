@@ -64,6 +64,7 @@ internal fun VerifySwapScreen(
     onConfirm: () -> Unit,
 ) {
     VerifySwapScreen(
+        provider = state.provider.asString(),
         srcTokenValue = state.srcTokenValue,
         dstTokenValue = state.dstTokenValue,
         estimatedFees = state.estimatedFees,
@@ -80,6 +81,7 @@ internal fun VerifySwapScreen(
 
 @Composable
 private fun VerifySwapScreen(
+    provider: String,
     srcTokenValue: String,
     dstTokenValue: String,
     estimatedFees: String,
@@ -130,6 +132,11 @@ private fun VerifySwapScreen(
                     OtherField(
                         title = stringResource(R.string.verify_swap_screen_estimated_time),
                         value = estimatedTime,
+                    )
+
+                    OtherField(
+                        title = stringResource(R.string.verify_swap_provider_title),
+                        value = provider,
                         divider = false,
                     )
                 }
@@ -171,6 +178,7 @@ private fun VerifySwapScreen(
 @Composable
 private fun VerifySwapScreenPreview() {
     VerifySwapScreen(
+        provider = "THORChain",
         srcTokenValue = "1 RUNE",
         dstTokenValue = "1 ETH",
         estimatedFees = "1.00$",
