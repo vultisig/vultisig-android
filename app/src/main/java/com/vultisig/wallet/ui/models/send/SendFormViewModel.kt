@@ -131,6 +131,7 @@ internal class SendFormViewModel @Inject constructor(
     val addressFieldState = TextFieldState()
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
+    var memoFieldState: TextFieldState? = TextFieldState()
 
     val uiState = MutableStateFlow(SendFormUiModel())
 
@@ -158,6 +159,8 @@ internal class SendFormViewModel @Inject constructor(
 
     fun selectToken(token: TokenBalanceUiModel) {
         selectedSrc.value = token.model
+        val isNative = token.model.account.token.isNativeToken
+        memoFieldState = TextFieldState().takeIf { isNative }
     }
 
     fun setOutputAddress(address: String) {
@@ -301,6 +304,7 @@ internal class SendFormViewModel @Inject constructor(
 
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
+                    memo = memoFieldState?.text?.toString(),
                 )
 
                 Timber.d("Transaction: $transaction")

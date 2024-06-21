@@ -3,10 +3,12 @@ package com.vultisig.wallet.ui.components.library.form
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,6 +27,7 @@ import androidx.compose.foundation.text2.input.TextFieldLineLimits
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -338,6 +343,63 @@ internal fun FormTitleContainer(
         )
         UiSpacer(size = 10.dp)
         content()
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun FormTitleCollapsibleTextField(
+    title: String,
+    modifier: Modifier = Modifier,
+    isFormVisible: Boolean = false,
+    hint: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    textFieldState: TextFieldState,
+    actions: (@Composable RowScope.() -> Unit)? = null,
+    onLostFocus: () -> Unit,
+) {
+    var isExpanded by remember {
+        mutableStateOf(isFormVisible)
+    }
+    val arrowDegree = animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "rotate arrow"
+    )
+    Column(
+        modifier = modifier
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier
+                .clickable { isExpanded = !isExpanded }
+        ) {
+            Text(
+                text = title,
+                color = Theme.colors.neutral100,
+                style = Theme.montserrat.body1,
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.caret_down),
+                contentDescription = "expand collapse",
+                modifier = Modifier
+                    .width(12.dp)
+                    .rotate(arrowDegree.value),
+                tint = Theme.colors.neutral100
+            )
+        }
+        UiSpacer(size = 10.dp)
+        AnimatedVisibility(visible = isExpanded) {
+            FormCard {
+                FormTextField(
+                    hint,
+                    keyboardType,
+                    textFieldState,
+                    actions,
+                    onLostFocus,
+                )
+            }
+        }
     }
 }
 

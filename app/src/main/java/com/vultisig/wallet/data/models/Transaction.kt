@@ -15,6 +15,7 @@ internal data class Transaction(
     val tokenValue: TokenValue,
     val fiatValue: FiatValue,
     val gasFee: TokenValue,
+    val memo: String?,
 
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
