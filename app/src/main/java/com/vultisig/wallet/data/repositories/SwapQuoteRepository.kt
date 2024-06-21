@@ -26,6 +26,7 @@ internal interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        isAffiliate: Boolean,
     ): OneInchSwapQuoteJson
 
 }
@@ -39,6 +40,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        isAffiliate: Boolean,
     ): OneInchSwapQuoteJson {
         return oneInchApi.getSwapQuote(
             chain = srcToken.chain.oneInchChainId(),
@@ -46,7 +48,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             dstTokenContractAddress = dstToken.contractAddress,
             srcAddress = srcToken.address,
             amount = tokenValue.value.toString(),
-            isAffiliate = false, // TODO calculate
+            isAffiliate = isAffiliate,
         )
     }
 
