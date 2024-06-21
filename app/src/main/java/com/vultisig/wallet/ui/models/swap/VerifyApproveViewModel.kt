@@ -7,6 +7,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -36,6 +37,7 @@ internal class VerifyApproveViewModel @Inject constructor(
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifyApproveUiModel())
@@ -48,7 +50,7 @@ internal class VerifyApproveViewModel @Inject constructor(
             val transaction = swapTransactionRepository.getTransaction(transactionId)
 
             val fiatFees = convertTokenValueToFiat(
-                transaction.dstToken,
+                tokenRepository.getNativeToken(transaction.srcToken.chain.id),
                 transaction.estimatedFees,
                 currency,
             )

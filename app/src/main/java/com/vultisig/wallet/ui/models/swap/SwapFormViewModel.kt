@@ -10,6 +10,7 @@ import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.SwapQuote
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
@@ -89,6 +91,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
@@ -157,6 +160,13 @@ internal class SwapFormViewModel @Inject constructor(
                     )
                     val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
+                    val srcFiatValue = convertTokenValueToFiat(
+                        srcToken, srcTokenValue, AppCurrency.USD,
+                    )
+
+                    val isAffiliate = srcFiatValue.value >=
+                            AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
                     SwapTransaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = vaultId,
@@ -183,7 +193,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 streamingQuantity = "0",
                                 expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
                                     .inWholeSeconds.toULong(),
-                                isAffiliate = false, // TODO calculate
+                                isAffiliate = isAffiliate,
                             )
                         )
                     )
@@ -387,6 +397,8 @@ internal class SwapFormViewModel @Inject constructor(
                             fiatValueToString.map(it)
                         } ?: "0$"
 
+                        val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
+
                         // THORChain for cross-chain swap, 1inch for same-chain swap
                         if (srcToken.chain != dstToken.chain) {
                             val quote = swapQuoteRepository.getSwapQuote(
@@ -398,7 +410,7 @@ internal class SwapFormViewModel @Inject constructor(
                             this@SwapFormViewModel.quote = quote
 
                             val fiatFees =
-                                convertTokenValueToFiat(dstToken, quote.fees, currency)
+                                convertTokenValueToFiat(srcNativeToken, quote.fees, currency)
 
                             val estimatedTime = quote.estimatedTime?.let {
                                 UiText.DynamicString(mapDurationToUiString(it))
@@ -429,10 +441,18 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
                             }
                         } else {
+                            val srcUsdFiatValue = convertTokenValueToFiat(
+                                srcToken, tokenValue, AppCurrency.USD,
+                            )
+
+                            val isAffiliate =
+                                srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
                             val quote = swapQuoteRepository.getOneInchSwapQuote(
                                 srcToken = srcToken,
                                 dstToken = dstToken,
                                 tokenValue = tokenValue,
+                                isAffiliate = isAffiliate,
                             )
 
                             val expectedDstValue = TokenValue(
@@ -441,8 +461,9 @@ internal class SwapFormViewModel @Inject constructor(
                             )
 
                             val tokenFees = TokenValue(
-                                value = quote.tx.gasPrice.toBigInteger() * EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
-                                token = srcToken
+                                value = quote.tx.gasPrice.toBigInteger() *
+                                        EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
+                                token = srcNativeToken
                             )
 
                             this@SwapFormViewModel.quote = SwapQuote.OneInch(
@@ -453,7 +474,7 @@ internal class SwapFormViewModel @Inject constructor(
                             )
 
                             val fiatFees =
-                                convertTokenValueToFiat(dstToken, tokenFees, currency)
+                                convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
 
                             val estimatedTime =
                                 R.string.swap_screen_estimated_time_instant.asUiText()
@@ -497,6 +518,12 @@ internal class SwapFormViewModel @Inject constructor(
             return UiText.StringResource(R.string.swap_error_no_amount)
         }
         return null
+    }
+
+    companion object {
+
+        private const val AFFILIATE_FEE_USD_THRESHOLD = 100
+
     }
 
 }
