@@ -273,6 +273,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val srcTokenValue = swapPayload.srcTokenValue
                 val dstTokenValue = swapPayload.dstTokenValue
 
+                val nativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
+
                 when (swapPayload) {
                     is SwapPayload.OneInch -> {
                         val estimatedTokenFees = TokenValue(
@@ -287,7 +289,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
                                 dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
                                 estimatedFees = fiatValueToStringMapper.map(
-                                    convertTokenValueToFiat(srcToken, estimatedTokenFees, currency)
+                                    convertTokenValueToFiat(nativeToken, estimatedTokenFees, currency)
                                 ),
                                 estimatedTime = R.string.swap_screen_estimated_time_instant.asUiText(),
                             )
@@ -308,7 +310,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
                                 dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
                                 estimatedFees = fiatValueToStringMapper.map(
-                                    convertTokenValueToFiat(dstToken, quote.fees, currency)
+                                    convertTokenValueToFiat(nativeToken, quote.fees, currency)
                                 ),
                                 estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
                                     ?.let { UiText.DynamicString(it) }
