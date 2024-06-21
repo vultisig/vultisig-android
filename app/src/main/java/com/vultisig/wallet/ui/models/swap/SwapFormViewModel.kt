@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.models.Chain
@@ -90,6 +91,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
@@ -395,6 +397,8 @@ internal class SwapFormViewModel @Inject constructor(
                             fiatValueToString.map(it)
                         } ?: "0$"
 
+                        val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
+
                         // THORChain for cross-chain swap, 1inch for same-chain swap
                         if (srcToken.chain != dstToken.chain) {
                             val quote = swapQuoteRepository.getSwapQuote(
@@ -406,7 +410,7 @@ internal class SwapFormViewModel @Inject constructor(
                             this@SwapFormViewModel.quote = quote
 
                             val fiatFees =
-                                convertTokenValueToFiat(dstToken, quote.fees, currency)
+                                convertTokenValueToFiat(srcNativeToken, quote.fees, currency)
 
                             val estimatedTime = quote.estimatedTime?.let {
                                 UiText.DynamicString(mapDurationToUiString(it))
@@ -457,8 +461,9 @@ internal class SwapFormViewModel @Inject constructor(
                             )
 
                             val tokenFees = TokenValue(
-                                value = quote.tx.gasPrice.toBigInteger() * EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
-                                token = srcToken
+                                value = quote.tx.gasPrice.toBigInteger() *
+                                        EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
+                                token = srcNativeToken
                             )
 
                             this@SwapFormViewModel.quote = SwapQuote.OneInch(
@@ -469,7 +474,7 @@ internal class SwapFormViewModel @Inject constructor(
                             )
 
                             val fiatFees =
-                                convertTokenValueToFiat(dstToken, tokenFees, currency)
+                                convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
 
                             val estimatedTime =
                                 R.string.swap_screen_estimated_time_instant.asUiText()
