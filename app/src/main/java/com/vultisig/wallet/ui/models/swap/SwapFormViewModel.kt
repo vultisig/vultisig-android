@@ -10,6 +10,7 @@ import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.SwapQuote
@@ -157,6 +158,12 @@ internal class SwapFormViewModel @Inject constructor(
                     )
                     val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
+                    val srcFiatValue = convertTokenValueToFiat(
+                        srcToken, srcTokenValue, AppCurrency.USD,
+                    )
+
+                    val isAffiliate = srcFiatValue.value > 100.toBigDecimal()
+
                     SwapTransaction(
                         id = UUID.randomUUID().toString(),
                         vaultId = vaultId,
@@ -183,7 +190,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 streamingQuantity = "0",
                                 expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
                                     .inWholeSeconds.toULong(),
-                                isAffiliate = false, // TODO calculate
+                                isAffiliate = isAffiliate,
                             )
                         )
                     )
@@ -429,10 +436,17 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
                             }
                         } else {
+                            val srcUsdFiatValue = convertTokenValueToFiat(
+                                srcToken, tokenValue, AppCurrency.USD,
+                            )
+
+                            val isAffiliate = srcUsdFiatValue.value > 100.toBigDecimal()
+
                             val quote = swapQuoteRepository.getOneInchSwapQuote(
                                 srcToken = srcToken,
                                 dstToken = dstToken,
                                 tokenValue = tokenValue,
+                                isAffiliate = isAffiliate,
                             )
 
                             val expectedDstValue = TokenValue(
