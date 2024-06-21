@@ -162,7 +162,8 @@ internal class SwapFormViewModel @Inject constructor(
                         srcToken, srcTokenValue, AppCurrency.USD,
                     )
 
-                    val isAffiliate = srcFiatValue.value > 100.toBigDecimal()
+                    val isAffiliate = srcFiatValue.value >=
+                            AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
                     SwapTransaction(
                         id = UUID.randomUUID().toString(),
@@ -440,7 +441,8 @@ internal class SwapFormViewModel @Inject constructor(
                                 srcToken, tokenValue, AppCurrency.USD,
                             )
 
-                            val isAffiliate = srcUsdFiatValue.value > 100.toBigDecimal()
+                            val isAffiliate =
+                                srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
                             val quote = swapQuoteRepository.getOneInchSwapQuote(
                                 srcToken = srcToken,
@@ -511,6 +513,12 @@ internal class SwapFormViewModel @Inject constructor(
             return UiText.StringResource(R.string.swap_error_no_amount)
         }
         return null
+    }
+
+    companion object {
+
+        private const val AFFILIATE_FEE_USD_THRESHOLD = 100
+
     }
 
 }
