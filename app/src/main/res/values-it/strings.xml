@@ -236,4 +236,6 @@
     <string name="vault_settings_delete_vault_of_vault">%1$s del caveau %2$s</string>
     <string name="vault_settings_delete_vault_type">Tipo di caveau:</string>
     <string name="circular_progress_indicator_done">Fatto</string>
+    <string name="verify_transaction_memo_title">Promemoria</string>
+    <string name="send_form_screen_memo_optional">PROMEMORIA (facoltativo)</string>
 </resources>

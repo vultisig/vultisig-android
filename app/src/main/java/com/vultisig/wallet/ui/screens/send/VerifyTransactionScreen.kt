@@ -100,6 +100,12 @@ internal fun VerifyTransactionScreen(
                         address = state.transaction.dstAddress
                     )
 
+                    if (!state.transaction.memo.isNullOrEmpty())
+                        OtherField(
+                            title = stringResource(R.string.verify_transaction_memo_title),
+                            value = state.transaction.memo
+                        )
+
                     OtherField(
                         title = stringResource(R.string.verify_transaction_amount_title),
                         value = state.transaction.tokenValue,
@@ -272,6 +278,7 @@ private fun VerifyTransactionScreenPreview() {
                 fiatValue = "1.1",
                 fiatCurrency = "USD",
                 gasValue = "1.1",
+                memo = "some memo",
             )
         ),
         isConsentsEnabled = true,

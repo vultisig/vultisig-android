@@ -251,6 +251,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         currency,
                     ),
                     gasFee = gasFee,
+                    memo = payload.memo,
 
                     // TODO that's mock data
                     blockChainSpecific = BlockChainSpecific.THORChain(

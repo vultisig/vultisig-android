@@ -249,6 +249,8 @@
     <string name="keygen_peer_discovery_select_the_pairing_devices">Select the pairing devices</string>
     <string name="peer_discovery_hint_connect_to_internet">Connect all devices to the same Network with Vultisig open</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Connect all devices to the Internet with Vultisig open</string>
+    <string name="verify_transaction_memo_title">Memo</string>
+    <string name="send_form_screen_memo_optional">MEMO (optional)</string>
     <string name="circular_progress_indicator_done">Done</string>
 
 

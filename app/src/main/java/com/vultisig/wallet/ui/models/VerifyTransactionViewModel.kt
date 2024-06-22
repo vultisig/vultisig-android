@@ -26,6 +26,7 @@ import javax.inject.Inject
 data class TransactionUiModel(
     val srcAddress: String = "",
     val dstAddress: String = "",
+    val memo: String? = null,
     val tokenValue: String = "",
     val fiatValue: String = "",
     val fiatCurrency: String = "",

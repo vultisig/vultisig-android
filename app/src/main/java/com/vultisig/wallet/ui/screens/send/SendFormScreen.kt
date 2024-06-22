@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCardWithPercentage
+import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
@@ -65,6 +66,7 @@ internal fun SendFormScreen(
         addressFieldState = viewModel.addressFieldState,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
         fiatAmountFieldState = viewModel.fiatAmountFieldState,
+        memoFieldState = viewModel.memoFieldState,
         onDstAddressLostFocus = viewModel::validateDstAddress,
         onTokenAmountLostFocus = viewModel::validateTokenAmount,
         onDismissError = viewModel::dismissError,
@@ -84,6 +86,7 @@ internal fun SendFormScreen(
     addressFieldState: TextFieldState,
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
+    memoFieldState: TextFieldState,
     onDstAddressLostFocus: () -> Unit = {},
     onTokenAmountLostFocus: () -> Unit = {},
     onDismissError: () -> Unit = {},
@@ -167,6 +170,14 @@ internal fun SendFormScreen(
                 )
             }
 
+            if (state.hasMemo)
+                FormTitleCollapsibleTextField(
+                    title = stringResource(R.string.send_form_screen_memo_optional),
+                    hint = "",
+                    onLostFocus = {},
+                    textFieldState = memoFieldState
+                )
+
             FormTextFieldCardWithPercentage(
                 title = stringResource(R.string.send_amount),
                 hint = stringResource(R.string.send_amount_hint),
@@ -228,6 +239,7 @@ private fun SendFormScreenPreview() {
         state = SendFormUiModel(),
         addressFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
-        fiatAmountFieldState = TextFieldState()
+        fiatAmountFieldState = TextFieldState(),
+        memoFieldState = TextFieldState(),
     )
 }

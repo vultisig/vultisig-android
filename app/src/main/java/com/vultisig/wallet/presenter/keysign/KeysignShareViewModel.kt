@@ -39,7 +39,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.tokenValue.value,
                 blockChainSpecific = transaction.blockChainSpecific,
-                memo = null,
+                memo = transaction.memo,
                 swapPayload = null,
                 approvePayload = null,
                 vaultPublicKeyECDSA = pubKeyECDSA,
