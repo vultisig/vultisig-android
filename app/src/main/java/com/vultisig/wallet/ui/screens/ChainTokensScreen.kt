@@ -373,18 +373,20 @@ private fun CoinItem(
                         .padding(4.dp)
                         .align(Alignment.Center)
                 )
-                Image(
-                    painter = painterResource(id = chainLogo),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(12.dp)
-                        .border(
-                            width = 1.dp,
-                            color = appColor.neutral0,
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .align(BottomEnd)
-                )
+                (chainLogo.takeIf { it != tokenLogo }?.let { painterResource(id = it) })?.let {
+                    Image(
+                        painter = it,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(12.dp)
+                            .border(
+                                width = 1.dp,
+                                color = appColor.neutral0,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .align(BottomEnd)
+                    )
+                }
             }
 
             UiSpacer(size = 6.dp)

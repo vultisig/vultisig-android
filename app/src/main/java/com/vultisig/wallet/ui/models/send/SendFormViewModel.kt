@@ -59,6 +59,7 @@ internal data class TokenBalanceUiModel(
     val title: String,
     val balance: String?,
     val isNativeToken: Boolean,
+    val isLayer2: Boolean,
     val tokenStandard: String?,
     val tokenLogo: ImageModel,
     @DrawableRes val chainLogo: Int,

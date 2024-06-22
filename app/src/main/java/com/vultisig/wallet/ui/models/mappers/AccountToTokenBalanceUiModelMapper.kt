@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.Mapper
 import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.models.isLayer2
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.models.tokenStandard
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -24,6 +25,7 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
             tokenLogo = Coins.getCoinLogo(fromAccount.token.logo),
             chainLogo = fromAccount.token.chain.logo,
             isNativeToken = fromAccount.token.isNativeToken,
+            isLayer2 = fromAccount.token.isLayer2(),
             tokenStandard = fromAccount.token.chain.tokenStandard,
             model = from,
         )

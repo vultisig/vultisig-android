@@ -48,6 +48,7 @@ internal val tokenBalanceUiModels
             chainLogo = R.drawable.rune,
             tokenStandard = null,
             isNativeToken = true,
+            isLayer2 = false,
         ),
         TokenBalanceUiModel(
             title = "Ethereum",
@@ -57,5 +58,6 @@ internal val tokenBalanceUiModels
             chainLogo = R.drawable.ethereum,
             tokenStandard = null,
             isNativeToken = false,
+            isLayer2 = false,
         ),
     )
