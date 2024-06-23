@@ -22,9 +22,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text2.BasicSecureTextField
 import androidx.compose.foundation.text2.BasicTextField2
 import androidx.compose.foundation.text2.input.TextFieldLineLimits
 import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.TextObfuscationMode
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -294,6 +296,68 @@ internal fun BasicFormTextField(
         }
     )
 }
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun FormBasicSecureTextField(
+    hint: String,
+    isObfuscationMode: Boolean,
+    textFieldState: TextFieldState,
+    error: UiText?,
+    onLostFocus: () -> Unit,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = Theme.menlo.body1,
+    actions: @Composable (RowScope.() -> Unit)?
+) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    TextFieldValidator(
+        errorText = error,
+    ) {
+        FormCard {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 12.dp,
+                        vertical = 6.dp
+                    ),
+            ) {
+                BasicSecureTextField(
+                    state = textFieldState,
+                    textStyle = textStyle.copy(color = Theme.colors.neutral100),
+                    cursorBrush = Theme.cursorBrush,
+                    textObfuscationMode = if (isObfuscationMode)
+                        TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
+                    modifier = modifier
+                        .onFocusEvent {
+                            if (isFocused != it.isFocused) {
+                                isFocused = it.isFocused
+                                if (!isFocused) {
+                                    onLostFocus()
+                                }
+                            }
+                        },
+                    decorator = { textField ->
+                        if (textFieldState.text.isEmpty()) {
+                            Text(
+                                text = hint,
+                                color = Theme.colors.neutral100,
+                                style = textStyle,
+                            )
+                        }
+                        textField()
+                    }
+                )
+
+                actions?.invoke(this)
+            }
+        }
+    }
+}
+
 
 @Composable
 internal fun FormEntry(
