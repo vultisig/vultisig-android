@@ -12,10 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -43,7 +44,6 @@ import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultActionButton
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
@@ -83,7 +83,6 @@ internal fun VaultAccountsScreen(
                 Screen.AddChainAccount.createRoute(vaultId)
             )
         },
-        onMove = viewModel::onMove,
         onToggleBalanceVisibility = viewModel::toggleBalanceVisibility
     )
 }
@@ -100,7 +99,6 @@ private fun VaultAccountsScreen(
     onJoinKeysign: () -> Unit = {},
     onAccountClick: (AccountUiModel) -> Unit = {},
     onChooseChains: () -> Unit = {},
-    onMove: (Int, Int) -> Unit = { _, _ -> },
     onToggleBalanceVisibility: () -> Unit = {}
 ) {
     val snackBarHostState = remember {
@@ -117,14 +115,11 @@ private fun VaultAccountsScreen(
         Box(
             modifier = modifier.fillMaxSize(),
         ) {
-            VerticalReorderList(
-                data = state.accounts,
-                onMove = onMove,
-                isReorderEnabled = isRearrangeMode,
-                key = { it.chainName },
+            LazyColumn(
                 contentPadding = PaddingValues(all = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                beforeContents = listOf {
+            ) {
+                item {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -182,8 +177,29 @@ private fun VaultAccountsScreen(
                             )
                         }
                     }
-                },
-                afterContents = listOf {
+                }
+
+                items(
+                    items = state.accounts,
+                    key = { it.chainName },
+                ) { account ->
+                    ChainAccountItem(
+                        account = account,
+                        isBalanceVisible = state.isBalanceValueVisible,
+                        onClick = {
+                            onAccountClick(account)
+                        },
+                        isRearrangeMode = isRearrangeMode,
+                        onCopy = {
+                            coroutineScope.launch {
+                                snackBarHostState.showSnackbar(it)
+                            }
+                        }
+                    )
+
+                }
+
+                item {
                     UiSpacer(
                         size = 16.dp,
                     )
@@ -195,20 +211,6 @@ private fun VaultAccountsScreen(
                         size = 64.dp,
                     )
                 }
-            ) { account ->
-                ChainAccountItem(
-                    account = account,
-                    isBalanceVisible = state.isBalanceValueVisible,
-                    onClick = {
-                        onAccountClick(account)
-                    },
-                    isRearrangeMode = isRearrangeMode,
-                    onCopy = {
-                        coroutineScope.launch {
-                            snackBarHostState.showSnackbar(it)
-                        }
-                    }
-                )
             }
 
             Box(

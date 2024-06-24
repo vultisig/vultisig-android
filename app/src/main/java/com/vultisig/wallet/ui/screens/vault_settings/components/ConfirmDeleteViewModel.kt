@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.db.models.ChainOrderEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import com.vultisig.wallet.data.repositories.OrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -30,7 +29,6 @@ internal class ConfirmDeleteViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     private val vaultOrderRepository: OrderRepository<VaultOrderEntity>,
-    private val chainOrderRepository: OrderRepository<ChainOrderEntity>,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -85,7 +83,6 @@ internal class ConfirmDeleteViewModel @Inject constructor(
         viewModelScope.launch {
             vaultRepository.delete(vaultId)
             vaultOrderRepository.delete(parentId = null, name = vaultId)
-            chainOrderRepository.deleteAll(parentId = vaultId)
             if (vaultRepository.hasVaults()) {
                 navigator.navigate(
                     Destination.Home(),
