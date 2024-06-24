@@ -127,22 +127,23 @@ private fun HomeScreen(
                     }
                 },
                 actions = {
-                    if (isEditMode)
-                        Text(
-                            text = stringResource(id = R.string.home_scree_done),
-                            style = Theme.menlo.subtitle1,
-                            fontWeight = FontWeight.Bold,
-                            color = Theme.colors.neutral0,
-                            modifier = Modifier.clickOnce(onClick = onEdit)
-                        )
-                    else
-                        Icon(
-                            painter = painterResource(id = R.drawable.baseline_edit_square_24),
-                            contentDescription = "edit",
-                            tint = Theme.colors.neutral0,
-                            modifier = Modifier.clickOnce(onClick = onEdit)
-                        )
-
+                    if (state.showVaultList) {
+                        if (isEditMode)
+                            Text(
+                                text = stringResource(id = R.string.home_scree_done),
+                                style = Theme.menlo.subtitle1,
+                                fontWeight = FontWeight.Bold,
+                                color = Theme.colors.neutral0,
+                                modifier = Modifier.clickOnce(onClick = onEdit)
+                            )
+                        else
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_edit_square_24),
+                                contentDescription = "edit",
+                                tint = Theme.colors.neutral0,
+                                modifier = Modifier.clickOnce(onClick = onEdit)
+                            )
+                    }
                 }
             )
         },

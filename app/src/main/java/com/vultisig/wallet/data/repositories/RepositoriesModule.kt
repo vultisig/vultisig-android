@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.db.models.ChainOrderEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import dagger.Binds
 import dagger.Module
@@ -107,12 +106,6 @@ internal interface RepositoriesModule {
     fun bindVaultRepository(
         impl: VaultRepositoryImpl
     ): VaultRepository
-
-    @Binds
-    @Singleton
-    fun bindChainsOrderRepository(
-        impl: ChainOrderRepository
-    ): OrderRepository<ChainOrderEntity>
 
     @Binds
     @Singleton

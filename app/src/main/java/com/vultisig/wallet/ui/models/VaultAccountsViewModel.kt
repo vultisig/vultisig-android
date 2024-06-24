@@ -4,24 +4,21 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.db.models.ChainOrderEntity
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
-import com.vultisig.wallet.data.repositories.OrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -55,7 +52,6 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private val vaultRepository: VaultRepository,
     private val accountsRepository: AccountsRepository,
-    private val chainsOrderRepository: OrderRepository<ChainOrderEntity>,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
     private var vaultId: String? = null
@@ -64,7 +60,6 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
-    private var reIndexJob: Job? = null
 
     fun loadData(vaultId: String) {
         this.vaultId = vaultId
@@ -141,14 +136,10 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId)
-                .combine(chainsOrderRepository.loadOrders(vaultId)) { addresses, chainOrders ->
-                    val addressAndOrderMap = mutableMapOf<Address, Float>()
-                    addresses.forEach { eachAddress ->
-                        addressAndOrderMap[eachAddress] =
-                            chainOrders.find { it.value == eachAddress.chain.raw }?.order
-                                ?: chainsOrderRepository.insert(vaultId, eachAddress.chain.raw)
+                .map {
+                    it.sortedBy {
+                        it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
                     }
-                    addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
                 }
                 .catch {
                     updateRefreshing(false)
@@ -174,27 +165,6 @@ internal class VaultAccountsViewModel @Inject constructor(
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
-
-
-    fun onMove(oldOrder: Int, newOrder: Int) {
-        val updatedPositionsList = uiState.value.accounts.toMutableList().apply {
-            add(newOrder, removeAt(oldOrder))
-        }
-        uiState.update {
-            it.copy(
-                accounts = updatedPositionsList
-            )
-        }
-        reIndexJob?.cancel()
-        reIndexJob = viewModelScope.launch(IO) {
-            delay(500)
-            val midOrder = updatedPositionsList[newOrder].chainName
-            val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.chainName
-            val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.chainName
-            chainsOrderRepository.updateItemOrder(vaultId, upperOrder, midOrder, lowerOrder)
-        }
-    }
-
 
     fun toggleBalanceVisibility() {
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
