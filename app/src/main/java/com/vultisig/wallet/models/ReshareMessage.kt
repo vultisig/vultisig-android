@@ -19,4 +19,6 @@ internal data class ReshareMessage(
     val useVultisigRelay: Boolean,
     @SerializedName("oldResharePrefix")
     val oldResharePrefix: String,
+    @SerializedName("vaultName")
+    val vaultName: String,
 )

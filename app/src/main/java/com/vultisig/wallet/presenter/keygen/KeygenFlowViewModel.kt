@@ -204,6 +204,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                             encryptionKeyHex = this._encryptionKeyHex,
                             useVultisigRelay = vultisigRelay.IsRelayEnabled,
                             oldResharePrefix = vault.resharePrefix,
+                            vaultName = vault.name
                         )
                     ).toJson(gson)
             }
