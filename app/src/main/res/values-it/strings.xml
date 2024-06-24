@@ -239,4 +239,5 @@
     <string name="verify_transaction_memo_title">Promemoria</string>
     <string name="send_form_screen_memo_optional">PROMEMORIA (facoltativo)</string>
     <string name="vault_already_exist">Il vault con il nome %s esiste già</string>
+    <string name="vault_detail_this_device">%1s (Questo Dispositivo)</string>
 </resources>
