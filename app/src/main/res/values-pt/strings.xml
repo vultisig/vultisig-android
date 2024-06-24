@@ -238,4 +238,5 @@
     <string name="circular_progress_indicator_done">Concluído</string>
     <string name="verify_transaction_memo_title">Memorando</string>
     <string name="send_form_screen_memo_optional">MEMO (opcional)</string>
+    <string name="vault_detail_this_device">%1s (Dispositivo de par)</string>
 </resources>
