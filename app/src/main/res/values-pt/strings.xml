@@ -238,4 +238,5 @@
     <string name="circular_progress_indicator_done">Concluído</string>
     <string name="verify_transaction_memo_title">Memorando</string>
     <string name="send_form_screen_memo_optional">MEMO (opcional)</string>
+    <string name="vault_already_exist">O cofre com o nome %s já existe</string>
 </resources>
