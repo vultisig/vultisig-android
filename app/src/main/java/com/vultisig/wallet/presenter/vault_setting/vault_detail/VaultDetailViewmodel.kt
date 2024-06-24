@@ -1,11 +1,14 @@
 package com.vultisig.wallet.presenter.vault_setting.vault_detail
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination.VaultSettings.Companion.ARG_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -15,6 +18,7 @@ import javax.inject.Inject
 internal class VaultDetailViewmodel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -29,7 +33,16 @@ internal class VaultDetailViewmodel @Inject constructor(
                         name = vault.name,
                         pubKeyECDSA = vault.pubKeyECDSA,
                         pubKeyEDDSA = vault.pubKeyEDDSA,
-                        deviceList = vault.signers
+                        deviceList = vault.signers.map {
+                            if (it == vault.localPartyID) {
+                                context.getString(
+                                    R.string.vault_detail_this_device,
+                                    it
+                                )
+                            } else {
+                                it
+                            }
+                        }
                     )
                 }
             }

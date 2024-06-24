@@ -265,4 +265,5 @@
     <string name="verify_approve_consent_allowance" translatable="false">I agree to provide unlimited allowance to the given spender address</string>
     <string name="verify_approve_sign_button" translatable="false">Sign</string>
     <string name="verify_swap_provider_title" translatable="false">Provider</string>
+    <string name="vault_detail_this_device">%1$s (This Device)</string>
 </resources>

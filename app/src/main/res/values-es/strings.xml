@@ -239,5 +239,7 @@
     <string name="verify_transaction_memo_title">Memorándum</string>
     <string name="send_form_screen_memo_optional">NOTA (opcional)</string>
     <string name="vault_already_exist">La bóveda con nombre %s ya existe</string>
+    <string name="vault_detail_this_device">%1s (Este Dispositivo)</string>
+
 
 </resources>
