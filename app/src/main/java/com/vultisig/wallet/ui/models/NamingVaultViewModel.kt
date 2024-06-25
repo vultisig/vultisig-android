@@ -30,18 +30,6 @@ internal class NamingVaultViewModel @Inject constructor(
     val namingTextFieldState = TextFieldState()
     val errorMessageState = MutableStateFlow<UiText?>(null)
 
-    init {
-        collectNamingFieldStateChanges()
-    }
-
-    private fun collectNamingFieldStateChanges() {
-        viewModelScope.launch {
-            namingTextFieldState.textAsFlow().collect { newName ->
-                val errorMessage = validateVaultName(newName.toString())
-                errorMessageState.update { errorMessage }
-            }
-        }
-    }
 
     private val vaultSetupType =
         VaultSetupType.fromInt(
@@ -57,7 +45,9 @@ internal class NamingVaultViewModel @Inject constructor(
 
     fun navigateToKeygen() {
         val name = namingTextFieldState.text.toString()
-        if (isNameNotValid(name))
+        val errorMessage = validateVaultName(name)
+        errorMessageState.update { errorMessage }
+        if (errorMessage != null)
             return
         viewModelScope.launch {
             navigator.navigate(

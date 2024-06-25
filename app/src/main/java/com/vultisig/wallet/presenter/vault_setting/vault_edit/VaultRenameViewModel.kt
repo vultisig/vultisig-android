@@ -44,17 +44,9 @@ internal class VaultRenameViewModel @Inject constructor(
     private val channel = Channel<VaultEditUiEvent>()
     val channelFlow = channel.receiveAsFlow()
 
-    private fun collectRenameTextFieldChanges() {
-        viewModelScope.launch {
-            renameTextFieldState.textAsFlow().collect {
-                val errorMessage = validateName(it.toString())
-                errorMessageState.update { errorMessage }
-            }
-        }
-    }
+
 
     fun loadData() {
-        collectRenameTextFieldChanges()
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId id")
             this@VaultRenameViewModel.vault.value = vault
@@ -65,6 +57,10 @@ internal class VaultRenameViewModel @Inject constructor(
 
     fun saveName() {
         viewModelScope.launch {
+            val errorMessage = validateName(renameTextFieldState.text.toString())
+            errorMessageState.update { errorMessage }
+            if (errorMessageState.value != null)
+                return@launch
             vault.value?.let { vault ->
                 val newName = renameTextFieldState.text.toString()
                 if (newName.isEmpty() || newName.length > TextFieldUtils.VAULT_NAME_MAX_LENGTH) {
