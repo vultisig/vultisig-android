@@ -146,7 +146,7 @@ private fun ImportFileScreen(
                             FormTextFieldCard(
                                 textFieldState = passwordTextFieldState,
                                 title = "",
-                                hint = "Password",
+                                hint = stringResource(R.string.import_file_screen_hint_password),
                                 error = uiModel.passwordErrorHint,
                                 onLostFocus = onConfirmPasswordClick,
                                 keyboardType = KeyboardType.Password
@@ -154,7 +154,7 @@ private fun ImportFileScreen(
 
                             TextButton(onClick = onConfirmPasswordClick) {
                                 Text(
-                                    text = "Ok",
+                                    text = stringResource(R.string.import_file_screen_ok),
                                     style = Theme.menlo.subtitle1,
                                     color = Theme.colors.neutral0
                                 )
@@ -162,7 +162,7 @@ private fun ImportFileScreen(
                             HorizontalDivider()
                             TextButton(onClick = onHidePasswordPromptDialog) {
                                 Text(
-                                    text = "Cancel",
+                                    text = stringResource(R.string.import_file_screen_cancel),
                                     style = Theme.menlo.subtitle1,
                                     color = Theme.colors.neutral0
                                 )

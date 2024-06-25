@@ -7,8 +7,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
@@ -42,10 +46,17 @@ internal class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                SetupNavGraph(
-                    navController = navController,
-                    startDestination = screen,
-                )
+                Box {
+                    SetupNavGraph(
+                        navController = navController,
+                        startDestination = screen,
+                    )
+
+                    SnackbarHost(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        hostState = mainViewModel.snakeBarHostState
+                    )
+                }
 
                 BiometryAuthScreen()
             }

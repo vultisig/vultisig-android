@@ -3,7 +3,7 @@ package com.vultisig.wallet.presenter.import_file
 import android.net.Uri
 import com.vultisig.wallet.common.UiText
 
-data class ImportFileState(
+internal data class ImportFileState(
     val fileUri: Uri? = null,
     val fileName: String? = null,
     val fileContent: String? = null,

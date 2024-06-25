@@ -11,13 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -37,11 +37,9 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
     val viewModel = hiltViewModel<BackupPasswordViewModel>()
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(viewModel.snackbarHostState)
-        },
         bottomBar = {
             Column(Modifier.imePadding()) {
                 MultiColorButton(
@@ -60,6 +58,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     text = stringResource(R.string.backup_password_screen_save),
                     onClick = {
                         focusManager.clearFocus()
+                        keyboardController?.hide()
                         viewModel.backupVault(true)
                     },
                 )
@@ -79,6 +78,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             bottom = 16.dp,
                         )
                 ) {
+                    keyboardController?.hide()
                     viewModel.backupVault(false)
                 }
             }

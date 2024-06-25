@@ -1,24 +1,12 @@
 package com.vultisig.wallet.common
 
 import android.util.Base64
-import dagger.Binds
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import java.security.MessageDigest
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
-
-
-@Module
-@InstallIn(SingletonComponent::class)
-internal interface CryptoModule {
-    @Binds
-    fun bindCryptoManager(aesCryptoManager: AESCryptoManager): CryptoManager
-}
 
 
 internal interface CryptoManager {
