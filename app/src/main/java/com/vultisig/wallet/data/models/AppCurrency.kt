@@ -6,7 +6,15 @@ internal enum class AppCurrency(
 ) {
     USD(ticker = "USD"),
 
-    AUD(ticker = "AUD");
+    AUD(ticker = "AUD"),
+
+    EUR(ticker = "EUR"),
+
+    RUB(ticker = "RUB"),
+
+    GPB(ticker = "GPB"),
+
+    JPY(ticker = "JPY");
 
     companion object {
 

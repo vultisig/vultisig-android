@@ -62,9 +62,9 @@ internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
     val selectedDstToken: TokenBalanceUiModel? = null,
     val availableTokens: List<TokenBalanceUiModel> = emptyList(),
-    val srcFiatValue: String = "0$",
+    val srcFiatValue: String = "0",
     val estimatedDstTokenValue: String = "0",
-    val estimatedDstFiatValue: String = "0$",
+    val estimatedDstFiatValue: String = "0",
     val provider: UiText = UiText.Empty,
     val gas: String = "",
     val fee: String = "",
@@ -395,7 +395,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val srcFiatValueText = srcFiatValue?.let {
                             fiatValueToString.map(it)
-                        } ?: "0$"
+                        } ?: "0"
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
