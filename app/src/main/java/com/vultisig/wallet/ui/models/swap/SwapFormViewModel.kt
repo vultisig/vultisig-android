@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.ui.models.mappers.ZeroValueCurrencyToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -80,6 +81,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
+    private val zeroValueCurrencyToString: ZeroValueCurrencyToStringMapper,
     private val mapDurationToUiString: DurationToUiStringMapper,
 
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
@@ -395,7 +397,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val srcFiatValueText = srcFiatValue?.let {
                             fiatValueToString.map(it)
-                        } ?: "0"
+                        } ?: zeroValueCurrencyToString.map(currency)
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
