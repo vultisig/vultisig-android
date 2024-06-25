@@ -10,9 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vultisig.wallet.R
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.PeerDiscoveryPayload
@@ -129,7 +131,8 @@ internal class JoinKeygenViewModel @Inject constructor(
                         this@JoinKeygenViewModel._oldResharePrefix = payload.reshareMessage.oldResharePrefix
                         // trying to find out whether the device already have a vault with the same public key
                         // if the device has a vault with the same public key , then automatically switch to it
-                        vaultRepository.getAll().forEach {
+                        val allVaults = vaultRepository.getAll()
+                        allVaults.forEach {
                             if (it.pubKeyECDSA == payload.reshareMessage.pubKeyECDSA) {
                                 _vault = it
                                 _localPartyID = it.localPartyID
@@ -138,6 +141,12 @@ internal class JoinKeygenViewModel @Inject constructor(
                         }
                         if (_vault.pubKeyECDSA.isEmpty()) {
                             _vault.hexChainCode = payload.reshareMessage.hexChainCode
+                            _vault.name = payload.reshareMessage.vaultName
+                            allVaults.find { it.name == _vault.name }?.let {
+                                errorMessage.value =
+                                    R.string.vault_already_exist.asUiText(_vault.name).toString()
+                                currentState.value = JoinKeygenState.FailedToStart
+                            }
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                                 errorMessage.value = "Wrong vault"

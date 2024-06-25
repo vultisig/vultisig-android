@@ -252,6 +252,8 @@
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="send_form_screen_memo_optional">MEMO (optional)</string>
     <string name="circular_progress_indicator_done">Done</string>
+    <string name="vault_already_exist">Vault with name %s already exist</string>
+    <string name="vault_detail_this_device">%1$s (This Device)</string>
 
 
     <!-- TODO needs translation-->
