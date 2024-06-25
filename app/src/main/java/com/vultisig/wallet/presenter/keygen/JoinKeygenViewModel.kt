@@ -66,6 +66,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _keygenCommittee: List<String> = emptyList()
     private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
+    private var _isDiscoveryListenerRegistered = false
 
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
@@ -173,7 +174,12 @@ internal class JoinKeygenViewModel @Inject constructor(
         _serverAddress = addr
         currentState.value = JoinKeygenState.JoinKeygen
         // discovery finished
-        _discoveryListener?.let { _nsdManager?.stopServiceDiscovery(it) }
+        _discoveryListener?.let {
+            if (_isDiscoveryListenerRegistered) {
+                _nsdManager?.stopServiceDiscovery(it)
+                _isDiscoveryListenerRegistered = false
+            }
+        }
     }
 
     fun discoveryMediator(nsdManager: NsdManager) {
@@ -183,6 +189,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         nsdManager.discoverServices(
             "_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener
         )
+        _isDiscoveryListenerRegistered = true
     }
 
     suspend fun joinKeygen() {
