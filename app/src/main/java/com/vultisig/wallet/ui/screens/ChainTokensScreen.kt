@@ -46,6 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -336,12 +337,10 @@ private fun ChainAccountInfo(
             )
         }
 
-        Text(
+        MiddleEllipsisText(
             text = address,
             style = Theme.menlo.body1,
             color = appColor.turquoise600Main,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }
