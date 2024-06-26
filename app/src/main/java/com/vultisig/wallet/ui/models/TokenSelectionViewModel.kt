@@ -14,10 +14,12 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -88,6 +90,10 @@ internal class TokenSelectionViewModel @Inject constructor(
         val chain = Chain.fromRaw(chainId)
         viewModelScope.launch {
             tokenRepository.getChainTokens(chain)
+                .catch { e ->
+                    // todo handle error
+                    Timber.e(e)
+                }
                 .map { tokens -> tokens.filter { !it.isNativeToken } }
                 .zip(
                     vaultRepository.getEnabledTokens(vaultId)
