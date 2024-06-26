@@ -266,4 +266,6 @@
     <string name="verify_approve_consent_allowance" translatable="false">I agree to provide unlimited allowance to the given spender address</string>
     <string name="verify_approve_sign_button" translatable="false">Sign</string>
     <string name="verify_swap_provider_title" translatable="false">Provider</string>
+    <string name="language_setting_dialog_body">Please restart the app to apply the new language settings.</string>
+    <string name="language_setting_dialog_title">Language changed</string>
 </resources>
