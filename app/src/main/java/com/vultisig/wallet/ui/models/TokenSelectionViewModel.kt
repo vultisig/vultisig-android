@@ -4,18 +4,22 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -35,6 +39,7 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val oneInchApi: OneInchApi,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -47,6 +52,11 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     init {
         loadChains()
+
+        viewModelScope.launch {
+            val resp = oneInchApi.getTokens(Chain.ethereum)
+            println(resp)
+        }
     }
 
     fun enableToken(coin: Coin) {
@@ -77,21 +87,33 @@ internal class TokenSelectionViewModel @Inject constructor(
     }
 
     private fun loadChains() {
+        val chain = Chain.fromRaw(chainId)
         viewModelScope.launch {
-            tokenRepository.getChainTokens(chainId)
+            tokenRepository.getChainTokens(chain)
+                .catch { e ->
+                    // todo handle error
+                    Timber.e(e)
+                }
                 .map { tokens -> tokens.filter { !it.isNativeToken } }
                 .zip(
                     vaultRepository.getEnabledTokens(vaultId)
                         .map { enabled -> enabled.map { it.id }.toSet() }
                 ) { tokens, enabledTokens ->
                     tokens
-                        .sortedWith(compareBy({ it.ticker }, { it.priceProviderID }))
+                        .asSequence()
                         .map { token ->
                             TokenUiModel(
                                 isEnabled = token.id in enabledTokens,
                                 coin = token,
                             )
                         }
+                        .sortedWith(
+                            compareBy(
+                                { !it.isEnabled },
+                                { it.coin.ticker },
+                            )
+                        )
+                        .toList()
                 }.collect { tokens ->
                     uiState.update { it.copy(tokens = tokens) }
                 }
