@@ -147,7 +147,7 @@ internal fun ScanQrScreen(
                 centerText = stringResource(id = R.string.scan_qr_default_title),
                 endIcon = R.drawable.ic_gallery,
                 startIcon = R.drawable.caret_left,
-                onEndIconClick = ClickOnce {
+                onEndIconClick = {
                     pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                 },
             )
