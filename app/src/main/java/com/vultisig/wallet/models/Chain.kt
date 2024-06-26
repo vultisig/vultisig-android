@@ -77,7 +77,7 @@ internal val Chain.coinType: CoinType
 internal val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
         Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash, Chain.thorChain, Chain.mayaChain, Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.gaiaChain, Chain.kujira, Chain.cronosChain, Chain.dydx -> TssKeyType.ECDSA
-        Chain.solana, Chain.polkadot-> TssKeyType.EDDSA
+        Chain.solana, Chain.polkadot -> TssKeyType.EDDSA
     }
 internal val Chain.Ticker: String
     get() = when (this) {
@@ -157,6 +157,12 @@ internal val Chain.tokenStandard: String?
         Chain.ethereum -> "ERC20"
         Chain.bscChain -> "BEP20"
         else -> null
+    }
+
+internal val Chain.canSelectTokens: Boolean
+    get() = when {
+        standard == EVM -> true
+        else -> false
     }
 
 internal val Chain.IsSwapSupported: Boolean

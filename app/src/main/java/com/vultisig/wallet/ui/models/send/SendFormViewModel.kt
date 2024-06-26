@@ -14,6 +14,7 @@ import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -59,7 +60,7 @@ internal data class TokenBalanceUiModel(
     val balance: String?,
     val isNativeToken: Boolean,
     val tokenStandard: String?,
-    @DrawableRes val tokenLogo: Int,
+    val tokenLogo: ImageModel,
     @DrawableRes val chainLogo: Int,
 )
 
@@ -460,7 +461,7 @@ internal class SendFormViewModel @Inject constructor(
 
             val price = try {
                 tokenPriceRepository.getPrice(
-                    selectedToken.priceProviderID,
+                    selectedToken,
                     appCurrency.value,
                 ).first()
             } catch (e: Exception) {

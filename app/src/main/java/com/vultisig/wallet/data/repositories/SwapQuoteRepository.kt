@@ -43,7 +43,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         isAffiliate: Boolean,
     ): OneInchSwapQuoteJson {
         return oneInchApi.getSwapQuote(
-            chain = srcToken.chain.oneInchChainId(),
+            chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
             dstTokenContractAddress = dstToken.contractAddress,
             srcAddress = srcToken.address,
@@ -125,23 +125,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
 }
-
-private fun Chain.oneInchChainId(): Int =
-    when (this) {
-        Chain.ethereum -> 1
-        Chain.avalanche -> 43114
-        Chain.base -> 8453
-        Chain.blast -> 238
-        Chain.arbitrum -> 42161
-        Chain.polygon -> 137
-        Chain.optimism -> 10
-        Chain.bscChain -> 56
-        Chain.cronosChain -> 25
-
-        // TODO add later
-        // Chain.zksync -> 324
-        else -> error("Chain $this is not supported by 1inch API")
-    }
 
 private fun Chain.swapAssetName(): String {
     // TODO that seems to differ just for thorChain

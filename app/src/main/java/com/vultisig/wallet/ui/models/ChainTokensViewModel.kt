@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -12,6 +13,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.IsSwapSupported
+import com.vultisig.wallet.models.canSelectTokens
 import com.vultisig.wallet.models.isDepositSupported
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -22,7 +24,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -46,7 +47,7 @@ data class ChainTokenUiModel(
     val name: String,
     val balance: String?,
     val fiatBalance: String?,
-    @DrawableRes val tokenLogo: Int,
+    val tokenLogo: ImageModel,
     @DrawableRes val chainLogo: Int,
 )
 
@@ -151,11 +152,6 @@ internal class ChainTokensViewModel @Inject constructor(
                     ?.let(fiatValueToStringMapper::map)
 
 
-                val canSelectTokens = tokensRepository
-                    .getChainTokens(address.chain.id)
-                    .first()
-                    .any { !it.isNativeToken }
-
                 uiState.update {
                     it.copy(
                         chainName = chainRaw,
@@ -166,7 +162,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
-                        canSelectTokens = canSelectTokens,
+                        canSelectTokens = chain.canSelectTokens,
                     )
                 }
             }
