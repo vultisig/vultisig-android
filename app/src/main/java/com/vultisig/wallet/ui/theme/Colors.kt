@@ -38,6 +38,11 @@ internal data class Colors(
     val turquoise200: Color = Color(0xffA6FBE8),
 
     val red: Color = Color(0xffFF4040),
+
+    val semiTransparentBlack: Color =Color(0x80000000),
+    val semiTransparentBlack2: Color =Color(0xffBEC0C2)
+
+
 ) {
     companion object {
         val Default = Colors()
