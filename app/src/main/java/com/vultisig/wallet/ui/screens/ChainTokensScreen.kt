@@ -43,9 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -351,7 +349,7 @@ private fun CoinItem(
     title: String,
     balance: String?,
     fiatBalance: String?,
-    tokenLogo: ImageModel,
+    @DrawableRes tokenLogo: Int,
     @DrawableRes chainLogo: Int,
 ) {
     val appColor = Theme.colors
@@ -366,8 +364,8 @@ private fun CoinItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box {
-                AsyncImage(
-                    model = tokenLogo,
+                Image(
+                    painter = painterResource(id = tokenLogo),
                     contentDescription = null,
                     modifier = Modifier
                         .size(36.dp)

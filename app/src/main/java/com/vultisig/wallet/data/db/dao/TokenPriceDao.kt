@@ -11,10 +11,10 @@ internal interface TokenPriceDao {
 
     @Query(
         "SELECT price FROM tokenPrice WHERE " +
-                "tokenId = :tokenId AND currency = :currency"
+                "priceProviderId = :priceProviderId AND currency = :currency"
     )
     suspend fun getTokenPrice(
-        tokenId: String,
+        priceProviderId: String,
         currency: String
     ): String?
 

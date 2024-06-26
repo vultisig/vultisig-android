@@ -22,7 +22,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         TokenValueEntity::class,
         TokenPriceEntity::class,
     ],
-    version = 6,
+    version = 5,
     exportSchema = false,
 )
 internal abstract class AppDatabase : RoomDatabase() {

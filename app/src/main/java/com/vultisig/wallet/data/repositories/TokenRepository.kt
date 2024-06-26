@@ -1,14 +1,10 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.api.OneInchApi
-import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -17,7 +13,7 @@ internal interface TokenRepository {
 
     suspend fun getToken(tokenId: String): Coin?
 
-    fun getChainTokens(chain: Chain): Flow<List<Coin>>
+    fun getChainTokens(chainId: String): Flow<List<Coin>>
 
     suspend fun getNativeToken(chainId: String): Coin
 
@@ -27,39 +23,14 @@ internal interface TokenRepository {
 
 }
 
-internal class TokenRepositoryImpl @Inject constructor(
-    private val oneInchApi: OneInchApi,
-) : TokenRepository {
+internal class TokenRepositoryImpl @Inject constructor() : TokenRepository {
 
     override suspend fun getToken(tokenId: String): Coin? =
-        allTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
+        allTokens.map { allTokens -> allTokens.first { it.id == tokenId } }.firstOrNull()
 
-    override fun getChainTokens(chain: Chain): Flow<List<Coin>> =
-        if (chain.standard == TokenStandard.EVM) {
-            flow {
-                val tokens = oneInchApi.getTokens(chain)
-                emit(tokens.tokens.asSequence()
-                    .map { it.value }
-                    .map {
-                        Coin(
-                            contractAddress = it.address,
-                            chain = chain,
-                            ticker = it.symbol,
-                            logo = it.logoURI ?: "",
-                            decimal = it.decimals,
-                            isNativeToken = false,
-                            priceProviderID = "",
-                            address = "",
-                            hexPublicKey = "",
-                        )
-                    }
-                    .toList()
-                )
-            }
-        } else {
-            allTokens.map { allTokens ->
-                allTokens.filter { it.chain.id == chain.id }
-            }
+    override fun getChainTokens(chainId: String): Flow<List<Coin>> = allTokens
+        .map { allTokens ->
+            allTokens.filter { it.chain.id == chainId }
         }
 
     override suspend fun getNativeToken(chainId: String): Coin =

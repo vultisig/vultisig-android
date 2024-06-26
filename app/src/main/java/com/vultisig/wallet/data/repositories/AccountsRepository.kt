@@ -56,7 +56,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         send(addresses)
 
         val loadPrices = supervisorScope {
-            async { tokenPriceRepository.refresh(vaultCoins) }
+            async { tokenPriceRepository.refresh(vaultCoins.map { it.priceProviderID }) }
         }
 
         coroutineScope {
@@ -120,7 +120,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         emit(account)
 
         val loadPrices = supervisorScope {
-            async { tokenPriceRepository.refresh(coins) }
+            async { tokenPriceRepository.refresh(coins.map { it.priceProviderID }) }
         }
 
         val address = account.address

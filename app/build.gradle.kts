@@ -113,7 +113,6 @@ dependencies {
     implementation(libs.core.zxing)
     implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.coil)
 
     // test
     testImplementation(libs.junit)

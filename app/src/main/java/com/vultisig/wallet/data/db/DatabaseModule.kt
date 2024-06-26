@@ -8,7 +8,6 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_1_2
 import com.vultisig.wallet.data.db.migrations.MIGRATION_2_3
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
-import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,10 +32,7 @@ internal interface DatabaseModule {
                 klass = AppDatabase::class.java,
                 name = DB_NAME,
             )
-                .addMigrations(
-                    MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
-                    MIGRATION_5_6
-                )
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
 
         private const val DB_NAME = "vultisig_db"

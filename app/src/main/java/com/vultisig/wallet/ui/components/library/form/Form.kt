@@ -45,11 +45,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.PercentText
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -60,7 +58,7 @@ import com.vultisig.wallet.ui.theme.cursorBrush
 @Composable
 internal fun FormTokenCard(
     selectedTitle: String,
-    selectedIcon: ImageModel,
+    @DrawableRes selectedIcon: Int,
     availableToken: String,
     isExpanded: Boolean,
     onClick: () -> Unit,
@@ -87,7 +85,7 @@ internal fun FormTokenCard(
 internal fun TokenCard(
     title: String,
     tokenStandard: String? = null,
-    tokenLogo: ImageModel,
+    @DrawableRes tokenLogo: Int,
     @DrawableRes chainLogo: Int? = null,
     @DrawableRes actionIcon: Int? = null,
     availableToken: String? = null,
@@ -105,8 +103,8 @@ internal fun TokenCard(
     ) {
 
         Box {
-            AsyncImage(
-                model = tokenLogo,
+            Image(
+                painter = painterResource(id = tokenLogo),
                 contentDescription = null,
                 modifier = Modifier
                     .size(36.dp)
