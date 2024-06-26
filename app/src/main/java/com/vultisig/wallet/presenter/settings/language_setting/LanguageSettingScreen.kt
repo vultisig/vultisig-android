@@ -41,6 +41,7 @@ fun LanguageSettingScreen(navController: NavHostController) {
 
     LaunchedEffect(key1 = Unit) {
         viewModel.onEvent(LanguageSettingEvent.InitSelectedLanguage)
+        navController.popBackStack()
     }
 
 
