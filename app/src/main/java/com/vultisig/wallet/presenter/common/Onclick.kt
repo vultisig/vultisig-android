@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import kotlinx.coroutines.delay
 
-private const val COOL_DOWN_PERIOD = 1700L
+private const val COOL_DOWN_PERIOD = 1400L
 private var lastClickTime = 0L
 
 fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) = this.composed {
