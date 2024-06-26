@@ -32,6 +32,8 @@ internal data class CoinEntity(
 
     @ColumnInfo("decimals")
     val decimals: Int,
+    @ColumnInfo("logo")
+    val logo: String,
 
     @ColumnInfo("priceProviderId")
     val priceProviderID: String,

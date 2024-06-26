@@ -85,7 +85,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
         val tokenValue = getCachedTokenValue(address, coin)
 
-        val price = tokenPriceRepository.getCachedPrice(coin.priceProviderID, currency)
+        val price = tokenPriceRepository.getCachedPrice(coin.id, currency)
 
         val fiatValue = if (tokenValue != null && price != null) {
             FiatValue(
@@ -113,7 +113,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             .currency
             .flatMapConcat { currency ->
                 tokenPriceRepository
-                    .getPrice(coin.priceProviderID, currency)
+                    .getPrice(coin, currency)
                     .zip(getTokenValue(address, coin)) { price, balance ->
                         TokenBalance(
                             tokenValue = balance,

@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.components
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,10 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -32,7 +30,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun TokenSelectionItem(
     title: String,
     subtitle: String,
-    @DrawableRes logo: Int,
+    logo: Any,
     isChecked: Boolean = false,
     onCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
@@ -50,14 +48,14 @@ internal fun TokenSelectionItem(
                 .padding(all = 12.dp)
                 .clickable { onCheckedChange?.invoke(!isChecked) },
         ) {
-            Image(
+            AsyncImage(
+                model = logo,
                 modifier = Modifier
                     .padding(
                         end = 12.dp,
                     )
                     .size(32.dp)
                     .clip(CircleShape),
-                painter = painterResource(id = logo),
                 contentDescription = stringResource(R.string.token_logo),
                 contentScale = ContentScale.Crop
             )

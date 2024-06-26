@@ -2,8 +2,8 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.Mapper
 import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.models.tokenStandard
 import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.models.tokenStandard
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import javax.inject.Inject

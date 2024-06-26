@@ -2,6 +2,7 @@ package com.vultisig.wallet.models
 
 import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.ImageModel
 import wallet.core.jni.CoinType
 
 internal data class Coin(
@@ -508,7 +509,7 @@ internal object Coins {
 
     }
 
-    fun getCoinLogo(logoName: String): Int {
+    fun getCoinLogo(logoName: String): ImageModel {
         return when (logoName) {
             "btc" -> R.drawable.bitcoin
             "bch" -> R.drawable.bitcoincash
@@ -547,7 +548,7 @@ internal object Coins {
             "fox" -> R.drawable.fox
             "dot" -> R.drawable.dot
             "wETH"->R.drawable.weth
-            else -> R.drawable.danger
+            else -> logoName
         }
     }
 }
