@@ -142,7 +142,10 @@ private fun ImportFileScreen(
                 if (uiModel.showPasswordPrompt) {
                     UiCustomContentAlertDialog {
                         Column(horizontalAlignment = CenterHorizontally) {
-                            Text(text = "Enter Password")
+                            Text(
+                                text = stringResource(id = R.string.import_file_screen_enter_password),
+                                style = Theme.menlo.subtitle1
+                            )
                             FormTextFieldCard(
                                 textFieldState = passwordTextFieldState,
                                 title = "",

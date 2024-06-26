@@ -56,7 +56,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     val confirmPasswordTextFieldState = TextFieldState()
 
     private val vaultId: String =
-        savedStateHandle.get<String>(Destination.BackupPassword.ARG_VAULT_ID)!!
+        requireNotNull(savedStateHandle.get<String>(Destination.BackupPassword.ARG_VAULT_ID))
 
     private val vault = MutableStateFlow<Vault?>(null)
 
@@ -73,11 +73,12 @@ internal class BackupPasswordViewModel @Inject constructor(
     private fun backupFile(json: String, backupFileName: String, encryptDataEnabled: Boolean) {
         val dataToBackup: String
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-
-            dataToBackup = if (encryptDataEnabled && passwordIsValid())
-                encryptData(json, passwordTextFieldState.text.toString())
-            else json
-
+            if (encryptDataEnabled && (!validatePassword() || !validateConfirmPassword()))
+                return
+            dataToBackup =
+                if (encryptDataEnabled && validatePassword() && validateConfirmPassword())
+                    encryptData(json, passwordTextFieldState.text.toString())
+                else json
             val isSuccess = context.backupVaultToDownloadsDir(dataToBackup, backupFileName)
             viewModelScope.launch {
                 if (isSuccess) {
@@ -107,14 +108,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         return cryptoManager.encrypt(date, key)
     }
 
-    private fun passwordIsValid(): Boolean =
-        passwordTextFieldState.text.toString().isNotEmpty() &&
-                passwordTextFieldState.text.toString() == confirmPasswordTextFieldState.text.toString()
-
-
     fun backupVault(encryptDataEnabled: Boolean) {
-        if (encryptDataEnabled && (!validatePassword() || !validateConfirmPassword()))
-            return
         viewModelScope.launch {
             val vault = vault.firstOrNull() ?: return@launch
             val thresholds = Utils.getThreshold(vault.signers.count())

@@ -37,7 +37,6 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
     val viewModel = hiltViewModel<BackupPasswordViewModel>()
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     Scaffold(
         bottomBar = {
@@ -58,7 +57,6 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     text = stringResource(R.string.backup_password_screen_save),
                     onClick = {
                         focusManager.clearFocus()
-                        keyboardController?.hide()
                         viewModel.backupVault(true)
                     },
                 )
@@ -78,7 +76,6 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             bottom = 16.dp,
                         )
                 ) {
-                    keyboardController?.hide()
                     viewModel.backupVault(false)
                 }
             }

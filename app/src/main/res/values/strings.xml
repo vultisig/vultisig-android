@@ -273,6 +273,7 @@
     <string name="backup_password_screen_save" translatable="false">Save</string>
     <string name="backup_password_screen_skip" translatable="false">Skip</string>
     <string name="backup_password_screen_enter_password" translatable="false">Enter Password</string>
+    <string name="import_file_screen_enter_password" translatable="false">Enter Password</string>
     <string name="backup_password_screen_verify_password" translatable="false">Verify password</string>
     <string name="backup_password_screen_password_is_empty" translatable="false">Password is empty.</string>
     <string name="import_file_screen_hint_password" translatable="false">Password</string>

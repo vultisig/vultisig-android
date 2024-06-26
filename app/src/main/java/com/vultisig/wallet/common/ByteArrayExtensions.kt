@@ -74,7 +74,7 @@ fun ByteArray.unzipZlib(): String {
     }
 }
 
-fun ByteArray.buildString(): String {
+internal fun ByteArray.buildString(): String {
     val sb = StringBuilder()
     for (char in this) {
         sb.append(char.toInt().toChar())
