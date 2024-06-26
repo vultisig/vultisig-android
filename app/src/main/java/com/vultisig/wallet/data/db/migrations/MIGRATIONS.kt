@@ -73,3 +73,31 @@ internal val MIGRATION_4_5 = object : Migration(4, 5) {
         db.execSQL("DROP TABLE `chainOrder`".trimMargin())
     }
 }
+
+internal val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            ALTER TABLE `coin` ADD COLUMN `logo` TEXT NOT NULL DEFAULT ""
+            """.trimMargin()
+        )
+
+        // just drop and recreate token price, as it is temporary cache
+        db.execSQL(
+            """
+                DROP TABLE IF EXISTS `tokenPrice`
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `tokenPrice` (
+                `tokenId` TEXT NOT NULL,
+                `currency` TEXT NOT NULL,
+                `price` TEXT NOT NULL,
+                PRIMARY KEY(`tokenId`, `currency`)
+            )
+            """.trimMargin()
+        )
+    }
+}

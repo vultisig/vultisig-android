@@ -96,21 +96,7 @@ internal class VaultRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addTokenToVault(vaultId: String, token: Coin) {
-        vaultDao.insertCoins(
-            listOf(
-                CoinEntity(
-                    vaultId = vaultId,
-                    id = "${token.ticker}-${token.chain.id}",
-                    chain = token.chain.raw,
-                    ticker = token.ticker,
-                    address = token.address,
-                    decimals = token.decimal,
-                    hexPublicKey = token.hexPublicKey,
-                    priceProviderID = token.priceProviderID,
-                    contractAddress = token.contractAddress,
-                )
-            )
-        )
+        vaultDao.insertCoins(listOf(token.toCoinEntity(vaultId)))
     }
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
@@ -131,20 +117,17 @@ internal class VaultRepositoryImpl @Inject constructor(
                 )
             },
             coins = vault.coins.map {
-                val supportedCoin = tokenRepository
-                    .getToken(it.id)
-                    ?: throw IllegalStateException("Unsupported coin ${it.id}")
-
                 Coin(
                     chain = Chain.fromRaw(it.chain),
                     ticker = it.ticker,
-                    logo = supportedCoin.logo,
+                    logo = it.logo.takeIf { it.isNotBlank() }
+                        ?: tokenRepository.getToken(it.id)?.logo ?: "",
                     address = it.address,
                     decimal = it.decimals,
                     hexPublicKey = it.hexPublicKey,
                     priceProviderID = it.priceProviderID,
                     contractAddress = it.contractAddress,
-                    isNativeToken = supportedCoin.isNativeToken,
+                    isNativeToken = it.contractAddress.isBlank(),
                 )
             },
         )
@@ -177,19 +160,23 @@ internal class VaultRepositoryImpl @Inject constructor(
                 )
             },
             coins = vault.coins.map {
-                CoinEntity(
-                    vaultId = vaultId,
-                    id = "${it.ticker}-${it.chain.raw}",
-                    chain = it.chain.raw,
-                    ticker = it.ticker,
-                    address = it.address,
-                    decimals = it.decimal,
-                    hexPublicKey = it.hexPublicKey,
-                    priceProviderID = it.priceProviderID,
-                    contractAddress = it.contractAddress,
-                )
+                it.toCoinEntity(vaultId)
             },
         )
     }
+
+    private fun Coin.toCoinEntity(vaultId: String): CoinEntity =
+        CoinEntity(
+            vaultId = vaultId,
+            id = "${this.ticker}-${this.chain.raw}",
+            chain = this.chain.raw,
+            ticker = this.ticker,
+            address = this.address,
+            decimals = this.decimal,
+            hexPublicKey = this.hexPublicKey,
+            priceProviderID = this.priceProviderID,
+            contractAddress = this.contractAddress,
+            logo = this.logo,
+        )
 
 }

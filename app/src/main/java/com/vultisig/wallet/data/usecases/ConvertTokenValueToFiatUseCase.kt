@@ -21,7 +21,7 @@ internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
         appCurrency: AppCurrency,
     ): FiatValue {
         val price = tokenPriceRepository.getPrice(
-            token.priceProviderID,
+            token,
             appCurrency,
         ).first()
 

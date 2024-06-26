@@ -5,11 +5,11 @@ import androidx.room.Entity
 
 @Entity(
     tableName = "tokenPrice",
-    primaryKeys = ["priceProviderId", "currency"],
+    primaryKeys = ["tokenId", "currency"],
 )
 internal data class TokenPriceEntity(
-    @ColumnInfo("priceProviderId")
-    val priceProviderId: String,
+    @ColumnInfo("tokenId")
+    val tokenId: String,
     @ColumnInfo("currency")
     val currency: String,
 
