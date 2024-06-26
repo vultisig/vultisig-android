@@ -412,7 +412,7 @@ internal class SwapFormViewModel @Inject constructor(
                             this@SwapFormViewModel.quote = quote
 
                             val fiatFees =
-                                convertTokenValueToFiat(srcNativeToken, quote.fees, currency)
+                                convertTokenValueToFiat(dstToken, quote.fees, currency)
 
                             val estimatedTime = quote.estimatedTime?.let {
                                 UiText.DynamicString(mapDurationToUiString(it))
