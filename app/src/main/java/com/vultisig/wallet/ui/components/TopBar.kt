@@ -68,7 +68,7 @@ internal fun TopBar(
         actions = {
             endIcon?.let {
                 IconButton(
-                    onClick = ClickOnce { onEndIconClick }
+                    onClick = ClickOnce { onEndIconClick() }
                 ) {
                     Icon(
                         painter = painterResource(id = endIcon),
