@@ -279,4 +279,6 @@
     <string name="import_file_screen_hint_password" translatable="false">Password</string>
     <string name="import_file_screen_ok" translatable="false">OK</string>
     <string name="import_file_screen_cancel" translatable="false">Cancel</string>
+    <string name="token_selection_selected_tokens_title" translatable="false">Selected</string>
+    <string name="token_selection_tokens_title" translatable="false">Tokens</string>
 </resources>
