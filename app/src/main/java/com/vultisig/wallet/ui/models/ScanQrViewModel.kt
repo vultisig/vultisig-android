@@ -18,35 +18,40 @@ internal class ScanQrViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
+    val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
     @OptIn(ExperimentalEncodingApi::class)
-    fun join(qr: String) {
-        val flowType = DeepLinkHelper(qr).getFlowType()
-        val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
+    fun join(qr: String): Boolean {
+        try {
+            val flowType = DeepLinkHelper(qr).getFlowType()
+            val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
 
-        viewModelScope.launch {
-            navigator.navigate(
-                when (flowType) {
-                    JOIN_KEYSIGN_FLOW -> {
-                        Destination.JoinKeysign(
-                            vaultId = requireNotNull(vaultId),
-                            qr = qrBase64,
+            viewModelScope.launch {
+                navigator.navigate(
+                    when (flowType) {
+                        JOIN_KEYSIGN_FLOW -> {
+                            Destination.JoinKeysign(
+                                vaultId = requireNotNull(vaultId),
+                                qr = qrBase64,
+                            )
+                        }
+
+                        JOIN_KEYGEN_FLOW -> {
+                            Destination.JoinKeygen(
+                                qr = qrBase64,
+                            )
+                        }
+
+                        else -> throw IllegalArgumentException(
+                            "Unsupported QR-code flowType: $flowType"
                         )
                     }
-
-                    JOIN_KEYGEN_FLOW -> {
-                        Destination.JoinKeygen(
-                            qr = qrBase64,
-                        )
-                    }
-
-                    else -> throw IllegalArgumentException(
-                        "Unsupported QR-code flowType: $flowType"
-                    )
-                }
-            )
+                )
+            }
+        } catch (e: Exception) {
+            return false
         }
+        return true
     }
 
     companion object {

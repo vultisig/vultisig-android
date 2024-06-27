@@ -56,6 +56,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
@@ -69,7 +70,16 @@ internal fun ScanQrAndJoin(
 ) {
     ScanQrScreen(
         navController = navController,
-        onScanSuccess = viewModel::join,
+        onScanSuccess = { qr ->
+            Timber.d("Scanned QR code: $qr")
+            if (!viewModel.join(qr) && viewModel.vaultId != null) {
+                Timber.e("Failed to join QR code: $qr")
+                navController.navigate(Destination.Send(
+                    vaultId = viewModel.vaultId,
+                    qr = qr,
+                ).route)
+            }
+        },
     )
 }
 
