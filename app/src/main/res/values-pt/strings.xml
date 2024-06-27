@@ -240,4 +240,5 @@
     <string name="send_form_screen_memo_optional">MEMO (opcional)</string>
     <string name="vault_already_exist">O cofre com o nome %s já existe</string>
     <string name="vault_detail_this_device">%1s (Dispositivo de par)</string>
+    <string name="vault_settings_delete_vault_value">Vault Valor:</string>
 </resources>

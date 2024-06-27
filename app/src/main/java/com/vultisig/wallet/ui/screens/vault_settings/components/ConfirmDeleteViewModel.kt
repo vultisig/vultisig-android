@@ -5,15 +5,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
+import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
+import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
+import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.OrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class ConfirmDeleteVaultState(
@@ -29,6 +36,8 @@ internal class ConfirmDeleteViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     private val vaultOrderRepository: OrderRepository<VaultOrderEntity>,
+    private val accountsRepository: AccountsRepository,
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -52,6 +61,11 @@ internal class ConfirmDeleteViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             vaultRepository.get(vaultId)?.let { vault ->
+                var fiatValue = 0.0
+                vault.coins.forEach{ coin ->
+                    println(coin)
+
+                }
                 uiModel.update {
                     it.copy(
                         vaultDeleteUiModel = VaultDeleteUiModel(
@@ -63,6 +77,27 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                     )
                 }
             }
+            accountsRepository
+                .loadAddresses(vaultId)
+                .map {
+                    it.sortedBy {
+                        it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
+                    }
+                }
+                .catch {
+                    Timber.e(it)
+                }.collect { accounts ->
+                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
+                        ?.let(fiatValueToStringMapper::map)
+
+                    uiModel.update {
+                        it.copy(
+                            vaultDeleteUiModel = it.vaultDeleteUiModel.copy(
+                                totalFiatValue = totalFiatValue?: ""
+                            )
+                        )
+                    }
+                }
         }
     }
 

@@ -240,4 +240,6 @@
     <string name="send_form_screen_memo_optional">MEMO (nije obavezno)</string>
     <string name="vault_already_exist">Trezor s imenom %s već postoji</string>
     <string name="vault_detail_this_device">%1s (Ovaj uređaj)</string>
+    <string name="vault_settings_delete_vault_value">Vault Vrijednost:</string>
+
 </resources>
