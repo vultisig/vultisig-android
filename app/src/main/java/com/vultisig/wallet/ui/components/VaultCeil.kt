@@ -32,9 +32,7 @@ internal fun VaultCeil(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickOnce(onClick = ClickOnce {
-                    onSelectVault(vault.id)
-                })
+                .clickOnce(onClick = { onSelectVault(vault.id) })
                 .padding(all = 14.dp)
         ) {
             Icon(
