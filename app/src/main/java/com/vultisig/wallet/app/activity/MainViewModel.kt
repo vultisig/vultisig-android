@@ -1,5 +1,6 @@
 package com.vultisig.wallet.app.activity
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -22,7 +24,7 @@ import javax.inject.Inject
 internal class MainViewModel @Inject constructor(
     private val repository: OnBoardRepository,
     private val navigator: Navigator<Destination>,
-
+    private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
@@ -33,6 +35,8 @@ internal class MainViewModel @Inject constructor(
     val startDestination: State<String> = _startDestination
 
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
+
+    val snakeBarHostState = SnackbarHostState()
 
     init {
         viewModelScope.launch {
@@ -50,6 +54,10 @@ internal class MainViewModel @Inject constructor(
                 }
 
                 _isLoading.value = false
+            }
+
+            snackbarFlow.collectMessage {
+                snakeBarHostState.showSnackbar(it)
             }
         }
     }

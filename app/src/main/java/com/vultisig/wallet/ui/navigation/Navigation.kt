@@ -132,12 +132,13 @@ internal sealed class Destination(
         }
     }
 
-    data class Settings(val vaultId: String) : Destination(route = "settings/$vaultId"){
+    data class Settings(val vaultId: String) : Destination(route = "settings/$vaultId") {
         companion object {
             const val ARG_VAULT_ID = "vault_id"
             const val STATIC_ROUTE = "settings/{$ARG_VAULT_ID}"
         }
     }
+
     data object DefaultChainSetting : Destination(route = "settings/default_chains")
     data object FAQSetting : Destination(route = "settings/faq")
     data object VultisigToken : Destination(route = "settings/vultisig_token")
@@ -189,6 +190,15 @@ internal sealed class Destination(
             const val staticRoute = "join_keygen?qr={$ARG_QR}"
         }
 
+    }
+
+
+    data class BackupPassword(val vaultId: String) :
+        Destination(route = "backup_password/$vaultId") {
+        companion object {
+            const val ARG_VAULT_ID = "vault_id"
+            const val STATIC_ROUTE = "backup_password/{$ARG_VAULT_ID}"
+        }
     }
 
 }

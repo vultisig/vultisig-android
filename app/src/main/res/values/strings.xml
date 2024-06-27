@@ -266,4 +266,18 @@
     <string name="verify_approve_consent_allowance" translatable="false">I agree to provide unlimited allowance to the given spender address</string>
     <string name="verify_approve_sign_button" translatable="false">Sign</string>
     <string name="verify_swap_provider_title" translatable="false">Provider</string>
+    <string name="backup_password_screen_title" translatable="false">Backup</string>
+    <string name="backup_password_screen_confirm_password_error_message" translatable="false">Please make sure your passwords match</string>
+    <string name="import_file_screen_password_error" translatable="false">Password is not correct.</string>
+    <string name="backup_password_optional_password_protection" translatable="false">Optional password protection of your Vault</string>
+    <string name="backup_password_screen_save" translatable="false">Save</string>
+    <string name="backup_password_screen_skip" translatable="false">Skip</string>
+    <string name="backup_password_screen_enter_password" translatable="false">Enter Password</string>
+    <string name="import_file_screen_enter_password" translatable="false">Enter Password</string>
+    <string name="backup_password_screen_verify_password" translatable="false">Verify password</string>
+    <string name="backup_password_screen_password_is_empty" translatable="false">Password is empty.</string>
+    <string name="import_file_screen_hint_password" translatable="false">Password</string>
+    <string name="import_file_screen_ok" translatable="false">OK</string>
+    <string name="import_file_screen_cancel" translatable="false">Cancel</string>
+    <string name="backup_password_screen_permission_required" translatable="false">File permission required for backup operations.</string>
 </resources>
