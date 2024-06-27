@@ -73,3 +73,11 @@ fun ByteArray.unzipZlib(): String {
         outputStream.toString("UTF-8")
     }
 }
+
+internal fun ByteArray.buildString(): String {
+    val sb = StringBuilder()
+    for (char in this) {
+        sb.append(char.toInt().toChar())
+    }
+    return sb.toString()
+}

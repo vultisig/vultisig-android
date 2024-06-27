@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.ARG_QR_CODE
+import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
@@ -318,6 +319,12 @@ internal fun SetupNavGraph(
             route = Destination.ConfirmDelete.STATIC_ROUTE,
         ) {
             ConfirmDeleteScreen(navController)
+        }
+
+        composable(
+            route = Destination.BackupPassword.STATIC_ROUTE,
+        ) {
+            BackupPasswordScreen(navController)
         }
     }
 }
