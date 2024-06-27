@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -14,17 +13,19 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
 internal data class TokenSelectionUiModel(
-    val tokens: List<TokenUiModel> = emptyList(),
+    val selectedTokens: List<TokenUiModel> = emptyList(),
+    val otherTokens: List<TokenUiModel> = emptyList(),
 )
 
 @Immutable
@@ -39,7 +40,6 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val oneInchApi: OneInchApi,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -48,15 +48,16 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val chainId: String =
         requireNotNull(savedStateHandle[ARG_CHAIN_ID])
 
+    private val enabledTokens = MutableStateFlow(emptySet<String>())
+
+    private val selectedTokens = MutableStateFlow(emptyList<Coin>())
+    private val otherTokens = MutableStateFlow(emptyList<Coin>())
+
     val uiState = MutableStateFlow(TokenSelectionUiModel())
 
     init {
-        loadChains()
-
-        viewModelScope.launch {
-            val resp = oneInchApi.getTokens(Chain.ethereum)
-            println(resp)
-        }
+        loadTokens()
+        collectTokens()
     }
 
     fun enableToken(coin: Coin) {
@@ -75,49 +76,67 @@ internal class TokenSelectionViewModel @Inject constructor(
 
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
-            loadChains()
+            enabledTokens.update { it + updatedCoin.id }
         }
     }
 
     fun disableToken(coin: Coin) {
         viewModelScope.launch {
             vaultRepository.deleteTokenFromVault(vaultId, coin.id)
-            loadChains()
+            enabledTokens.update { it - coin.id }
         }
     }
 
-    private fun loadChains() {
+    private fun loadTokens() {
         val chain = Chain.fromRaw(chainId)
+
         viewModelScope.launch {
-            tokenRepository.getChainTokens(chain)
-                .catch { e ->
-                    // todo handle error
-                    Timber.e(e)
-                }
-                .map { tokens -> tokens.filter { !it.isNativeToken } }
-                .zip(
-                    vaultRepository.getEnabledTokens(vaultId)
-                        .map { enabled -> enabled.map { it.id }.toSet() }
-                ) { tokens, enabledTokens ->
-                    tokens
-                        .asSequence()
-                        .map { token ->
-                            TokenUiModel(
-                                isEnabled = token.id in enabledTokens,
-                                coin = token,
-                            )
-                        }
-                        .sortedWith(
-                            compareBy(
-                                { !it.isEnabled },
-                                { it.coin.ticker },
-                            )
-                        )
-                        .toList()
-                }.collect { tokens ->
-                    uiState.update { it.copy(tokens = tokens) }
-                }
+            val enabled = vaultRepository.getEnabledTokens(vaultId)
+                .map { enabled -> enabled.map { it.id }.toSet() }
+                .first()
+
+            enabledTokens.value = enabled
+
+            try {
+                val tokens = tokenRepository.getChainTokens(chain)
+                    .map { tokens -> tokens.filter { !it.isNativeToken } }
+                    .first()
+
+                selectedTokens.value = tokens.filter { it.id in enabled }
+                otherTokens.value = tokens.filter { it.id !in enabled }
+            } catch (e: Exception) {
+                // todo handle error
+                Timber.e(e)
+            }
         }
     }
+
+    private fun collectTokens() {
+        combine(
+            enabledTokens,
+            selectedTokens,
+            otherTokens
+        ) { enabled, selected, other ->
+            val selectedUiTokens = selected.asUiTokens(enabled)
+            val otherUiTokens = other.asUiTokens(enabled)
+
+            uiState.update {
+                it.copy(
+                    selectedTokens = selectedUiTokens,
+                    otherTokens = otherUiTokens,
+                )
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun List<Coin>.asUiTokens(enabled: Set<String>) = asSequence()
+        .map { token ->
+            TokenUiModel(
+                isEnabled = token.id in enabled,
+                coin = token,
+            )
+        }
+        .sortedWith(compareBy { it.coin.ticker })
+        .toList()
 
 }
