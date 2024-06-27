@@ -279,5 +279,4 @@
     <string name="import_file_screen_hint_password" translatable="false">Password</string>
     <string name="import_file_screen_ok" translatable="false">OK</string>
     <string name="import_file_screen_cancel" translatable="false">Cancel</string>
-    <string name="backup_password_screen_permission_required" translatable="false">File permission required for backup operations.</string>
 </resources>
