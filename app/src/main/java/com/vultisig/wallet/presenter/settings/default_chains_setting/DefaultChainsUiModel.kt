@@ -6,7 +6,7 @@ import com.vultisig.wallet.models.Ticker
 import com.vultisig.wallet.models.logo
 
 data class DefaultChainsUiModel(
-    val allDefaultChains: List<DefaultChain> = emptyList(),
+    val chains: List<DefaultChain> = emptyList(),
     val selectedDefaultChains: List<DefaultChain> = emptyList(),
 )
 
