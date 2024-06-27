@@ -17,7 +17,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -57,7 +56,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     text = stringResource(R.string.backup_password_screen_save),
                     onClick = {
                         focusManager.clearFocus()
-                        viewModel.backupVault(true)
+                        viewModel.backupVault()
                     },
                 )
                 MultiColorButton(
@@ -76,7 +75,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             bottom = 16.dp,
                         )
                 ) {
-                    viewModel.backupVault(false)
+                    viewModel.backupVaultSkipPassword()
                 }
             }
         },
@@ -116,7 +115,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     error = uiState.passwordErrorMessage,
                     isObfuscationMode = !uiState.isPasswordVisible,
                     textFieldState = viewModel.passwordTextFieldState,
-                    onLostFocus = viewModel::validatePassword,
+                    onLostFocus = {},
                     actions = {
                         IconButton(onClick = viewModel::togglePasswordVisibility) {
                             Icon(

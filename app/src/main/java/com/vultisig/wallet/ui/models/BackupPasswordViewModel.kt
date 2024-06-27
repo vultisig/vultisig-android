@@ -70,36 +70,40 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
     }
 
-    private fun backupFile(json: String, backupFileName: String, encryptDataEnabled: Boolean) {
-        val dataToBackup: String
+    private fun backupFile(json: String, backupFileName: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (encryptDataEnabled && (!validatePassword() || !validateConfirmPassword()))
-                return
-            dataToBackup =
-                if (encryptDataEnabled && validatePassword() && validateConfirmPassword())
+            val dataToBackup = if (shouldEnableEncryption()) {
+                if (validateConfirmPassword())
                     encryptData(json, passwordTextFieldState.text.toString())
-                else json
-            val isSuccess = context.backupVaultToDownloadsDir(dataToBackup, backupFileName)
-            viewModelScope.launch {
-                if (isSuccess) {
-                    snackbarFlow.showMessage(
-                        context.getString(
-                            R.string.vault_settings_success_backup_file,
-                            backupFileName
-                        )
-                    )
-                    navigator.navigate(
-                        Destination.Home(vaultId), NavigationOptions(
-                            clearBackStack = true
-                        )
-                    )
-                } else {
-                    snackbarFlow.showMessage(
-                        context.getString(
-                            R.string.vault_settings_error_backup_file,
-                        )
-                    )
-                }
+                else null
+            } else json
+
+            dataToBackup?.let {
+                backup(dataToBackup, backupFileName)
+            }
+        }
+    }
+
+
+    private fun backup(dataToBackup: String, backupFileName: String) {
+        val isSuccess = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            context.backupVaultToDownloadsDir(dataToBackup, backupFileName)
+        } else {
+            false
+        }
+        viewModelScope.launch {
+            if (isSuccess) {
+                snackbarFlow.showMessage(
+                    context.getString(R.string.vault_settings_success_backup_file, backupFileName)
+                )
+                navigator.navigate(
+                    Destination.Home(vaultId),
+                    NavigationOptions(clearBackStack = true)
+                )
+            } else {
+                snackbarFlow.showMessage(
+                    context.getString(R.string.vault_settings_error_backup_file)
+                )
             }
         }
     }
@@ -108,30 +112,40 @@ internal class BackupPasswordViewModel @Inject constructor(
         return cryptoManager.encrypt(date, key)
     }
 
-    fun backupVault(encryptDataEnabled: Boolean) {
+    fun backupVault() {
         viewModelScope.launch {
             val vault = vault.firstOrNull() ?: return@launch
-            val thresholds = Utils.getThreshold(vault.signers.count())
-            val date = Date()
-            val format = SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault())
-            val formattedDate = format.format(date)
-            val fileName =
-                "vultisig-${vault.name}-$formattedDate-${thresholds + 1}of${vault.signers.count()}-${
-                    vault.pubKeyECDSA.takeLast(4)
-                }-${vault.localPartyID}.dat"
-
+            val fileName = generateFileName(vault)
             val vaultJson = gson.toJson(vaultAndroidToIOSMapper(vault)).encodeToHex()
-            backupFile(vaultJson, fileName, encryptDataEnabled)
+            backupFile(vaultJson, fileName)
         }
     }
 
-    fun validatePassword(): Boolean {
-        val errorMessage = if (passwordTextFieldState.text.toString().isEmpty())
-            UiText.StringResource(R.string.backup_password_screen_password_is_empty) else null
-        uiState.update {
-            it.copy(passwordErrorMessage = errorMessage)
+    fun backupVaultSkipPassword() {
+        viewModelScope.launch {
+            val vault = vault.firstOrNull() ?: return@launch
+            val fileName = generateFileName(vault)
+            val vaultJson = gson.toJson(vaultAndroidToIOSMapper(vault)).encodeToHex()
+            backup(vaultJson, fileName)
         }
-        return errorMessage == null
+    }
+
+    private fun generateFileName(vault: Vault): String {
+        val thresholds = Utils.getThreshold(vault.signers.count())
+        val date = Date()
+        val format = SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault())
+        val formattedDate = format.format(date)
+        val fileName =
+            "vultisig-${vault.name}-$formattedDate-${thresholds + 1}of${vault.signers.count()}-${
+                vault.pubKeyECDSA.takeLast(4)
+            }-${vault.localPartyID}.dat"
+        return fileName
+    }
+
+    private fun shouldEnableEncryption(): Boolean {
+        val enabled = (passwordTextFieldState.text.toString().isNotEmpty()
+                || confirmPasswordTextFieldState.text.toString().isNotEmpty())
+        return enabled
     }
 
     fun validateConfirmPassword(): Boolean {
