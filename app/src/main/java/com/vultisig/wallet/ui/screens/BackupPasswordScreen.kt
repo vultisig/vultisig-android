@@ -1,5 +1,9 @@
 package com.vultisig.wallet.ui.screens
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,6 +17,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,6 +34,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -36,6 +42,9 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
     val viewModel = hiltViewModel<BackupPasswordViewModel>()
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+        WriteFilePermissionHandler(viewModel)
 
     Scaffold(
         bottomBar = {
@@ -146,6 +155,20 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                         }
                     })
             }
+        }
+    }
+}
+
+@Composable
+private fun WriteFilePermissionHandler(viewModel: BackupPasswordViewModel) {
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        viewModel::onPermissionResult
+    )
+
+    LaunchedEffect(Unit) {
+        viewModel.permissionFlow.collectLatest {
+            requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
 }
