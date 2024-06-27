@@ -120,9 +120,7 @@ internal fun ConfirmDeleteScreen(
                         bottom = 16.dp,
                     ),
                 text = stringResource(R.string.confirm_delete_delete_vault),
-                onClick = ClickOnce {
-                    onConfirmClick()
-                },
+                onClick = onConfirmClick,
                 disabled = isDeleteButtonActive.not()
             )
         }

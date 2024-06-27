@@ -67,6 +67,7 @@ fun LanguageSettingScreen(navController: NavHostController) {
                     isSelected = language == state.selectedLanguage,
                     onClick = {
                         viewModel.onEvent(LanguageSettingEvent.ChangeLanguage(language))
+                        navController.popBackStack()
                     }
                 )
             }

@@ -129,7 +129,7 @@ private fun ImportFileScreen(
                 .padding(
                     vertical = 16.dp,
                 ),
-            onClick = ClickOnce(onContinue),
+            onClick = onContinue,
         )
     }) {
         Box(Modifier.padding(it)) {
