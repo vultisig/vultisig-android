@@ -15,7 +15,9 @@ import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asUiText
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
@@ -49,7 +51,9 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
     private val gson: Gson,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -85,6 +89,8 @@ internal class JoinKeygenViewModel @Inject constructor(
             oldResharePrefix = _oldResharePrefix,
             defaultChainsRepository = defaultChainsRepository,
             navigator = navigator,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            tokenRepository = tokenRepository,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
