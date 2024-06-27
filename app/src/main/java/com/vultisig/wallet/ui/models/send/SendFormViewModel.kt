@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
@@ -28,6 +29,7 @@ import com.vultisig.wallet.models.AllowZeroGas
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.presenter.common.TextFieldUtils
+import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc
@@ -179,24 +181,38 @@ internal class SendFormViewModel @Inject constructor(
         val selectedAccount = selectedAccount ?: return
         val selectedTokenValue = selectedAccount.tokenValue ?: return
         val gasFee = gasFee.value ?: return
+        val chain = selectedAccount.token.chain
+        val selectedToken = selectedAccount.token
+        val srcAddress = selectedToken.address
 
-        val max = if (selectedAccount.token.isNativeToken) {
-            TokenValue(
-                value = maxOf(BigInteger.ZERO, selectedTokenValue.value - gasFee.value),
-                unit = selectedTokenValue.unit,
-                decimals = selectedTokenValue.decimals,
-            )
-        } else {
-            selectedTokenValue
-        }.decimal.toPlainString()
-
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max)
+        viewModelScope.launch {
+            val max = if (selectedAccount.token.isNativeToken) {
+                val specific: BlockChainSpecificAndUtxo = blockChainSpecificRepository
+                    .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+                val gasLimit = if (specific.blockChainSpecific is BlockChainSpecific.Ethereum) {
+                    specific.blockChainSpecific.gasLimit
+                } else {
+                    BigInteger.valueOf(1)
+                }
+                TokenValue(
+                    value = maxOf(
+                        BigInteger.ZERO,
+                        selectedTokenValue.value - gasFee.value.multiply(gasLimit)
+                    ),
+                    unit = selectedTokenValue.unit,
+                    decimals = selectedTokenValue.decimals,
+                )
+            } else {
+                selectedTokenValue
+            }.decimal.toPlainString()
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max)
+        }
     }
 
     fun choosePercentageAmount(percentage: Float) {
         val selectedTokenValue = selectedAccount?.tokenValue ?: return
 
-        var tokenValue = selectedTokenValue.copy(
+        val tokenValue = selectedTokenValue.copy(
             value = (BigDecimal(selectedTokenValue.value) * percentage.toBigDecimal()).toBigInteger(),
         )
         tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue.decimal.toPlainString())
