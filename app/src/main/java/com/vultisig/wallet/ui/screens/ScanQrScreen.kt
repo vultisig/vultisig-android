@@ -71,9 +71,7 @@ internal fun ScanQrAndJoin(
     ScanQrScreen(
         navController = navController,
         onScanSuccess = { qr ->
-            Timber.d("Scanned QR code: $qr")
             if (!viewModel.join(qr) && viewModel.vaultId != null) {
-                Timber.e("Failed to join QR code: $qr")
                 navController.navigate(Destination.Send(
                     vaultId = viewModel.vaultId,
                     qr = qr,
