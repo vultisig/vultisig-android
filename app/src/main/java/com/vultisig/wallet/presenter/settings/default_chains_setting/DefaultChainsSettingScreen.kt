@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainsSettingEvent.*
+import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainsSettingEvent.Initialize
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.VaultSwitch
 import com.vultisig.wallet.ui.theme.Theme
@@ -70,7 +70,7 @@ fun DefaultChainSetting(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(state.allDefaultChains) { chain ->
+            items(state.chains) { chain ->
                 TokenSelection(
                     title = chain.title,
                     subtitle = chain.subtitle,
