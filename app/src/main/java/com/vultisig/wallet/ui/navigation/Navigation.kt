@@ -35,9 +35,9 @@ internal sealed class Destination(
     data class Send(
         val vaultId: String,
         val chainId: String? = null,
-        val qr: String? = null,
+        val address: String? = null,
     ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${qr}"
+        route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${address}"
     ) {
         companion object {
             const val staticRoute =

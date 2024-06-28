@@ -51,7 +51,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -70,14 +69,15 @@ internal fun ScanQrAndJoin(
 ) {
     ScanQrScreen(
         navController = navController,
-        onScanSuccess = { qr ->
-            if (!viewModel.join(qr) && viewModel.vaultId != null) {
-                navController.navigate(Destination.Send(
-                    vaultId = viewModel.vaultId,
-                    qr = qr,
-                ).route)
-            }
-        },
+        onScanSuccess = viewModel::joinOrSend,
+//        onScanSuccess = { qr ->
+//            if (!viewModel.joinOrSend(qr) && viewModel.vaultId != null) {
+//                navController.navigate(Destination.Send(
+//                    vaultId = viewModel.vaultId,
+//                    address = qr,
+//                ).route)
+//            }
+//        },
     )
 }
 
