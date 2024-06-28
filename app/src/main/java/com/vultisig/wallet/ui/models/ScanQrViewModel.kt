@@ -19,7 +19,7 @@ internal class ScanQrViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
+    private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
     fun joinOrSend(qr: String) {
         viewModelScope.launch {

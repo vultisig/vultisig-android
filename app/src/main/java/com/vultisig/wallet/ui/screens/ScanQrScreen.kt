@@ -70,14 +70,6 @@ internal fun ScanQrAndJoin(
     ScanQrScreen(
         navController = navController,
         onScanSuccess = viewModel::joinOrSend,
-//        onScanSuccess = { qr ->
-//            if (!viewModel.joinOrSend(qr) && viewModel.vaultId != null) {
-//                navController.navigate(Destination.Send(
-//                    vaultId = viewModel.vaultId,
-//                    address = qr,
-//                ).route)
-//            }
-//        },
     )
 }
 
