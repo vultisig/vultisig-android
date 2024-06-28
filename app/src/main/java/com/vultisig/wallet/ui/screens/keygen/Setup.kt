@@ -106,6 +106,7 @@ internal fun Setup(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
+                    .padding(32.dp)
             )
 
             DevicesOnSameNetworkHint(
