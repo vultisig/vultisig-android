@@ -373,9 +373,9 @@ private fun CoinItem(
                         .padding(4.dp)
                         .align(Alignment.Center)
                 )
-                (chainLogo.takeIf { it != tokenLogo }?.let { painterResource(id = it) })?.let {
+                chainLogo.takeIf { it != tokenLogo }?.let {
                     Image(
-                        painter = it,
+                        painter =  painterResource(id = it),
                         contentDescription = null,
                         modifier = Modifier
                             .size(12.dp)

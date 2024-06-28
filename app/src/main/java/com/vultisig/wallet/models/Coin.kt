@@ -37,12 +37,6 @@ internal fun Coin.AllowZeroGas(): Boolean {
     return this.chain == Chain.polkadot
 }
 
-internal fun Coin.isLayer2(): Boolean {
-    return when (this.chain) {
-        Chain.arbitrum, Chain.avalanche, Chain.cronosChain, Chain.base, Chain.blast, Chain.optimism, Chain.polygon, Chain.bscChain -> true
-        else -> false
-    }
-}
 
 internal object Coins {
     val SupportedCoins = listOf(

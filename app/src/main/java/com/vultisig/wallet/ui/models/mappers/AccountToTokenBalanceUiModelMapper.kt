@@ -25,7 +25,7 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
             tokenLogo = Coins.getCoinLogo(fromAccount.token.logo),
             chainLogo = fromAccount.token.chain.logo,
             isNativeToken = fromAccount.token.isNativeToken,
-            isLayer2 = fromAccount.token.isLayer2(),
+            isLayer2 = fromAccount.token.chain.isLayer2,
             tokenStandard = fromAccount.token.chain.tokenStandard,
             model = from,
         )
