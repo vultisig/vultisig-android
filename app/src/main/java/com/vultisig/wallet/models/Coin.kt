@@ -549,6 +549,6 @@ internal object Coins {
             "dot" -> R.drawable.dot
             "wETH"->R.drawable.weth
             else -> logoName
-       }
+        }
     }
 }
