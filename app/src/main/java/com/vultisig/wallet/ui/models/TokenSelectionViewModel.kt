@@ -1,5 +1,10 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.vultisig.wallet.ui.models
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -54,6 +59,9 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val otherTokens = MutableStateFlow(emptyList<Coin>())
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
+
+    @OptIn(ExperimentalFoundationApi::class)
+    val searchTextFieldState = TextFieldState()
 
     init {
         loadTokens()
@@ -115,10 +123,13 @@ internal class TokenSelectionViewModel @Inject constructor(
         combine(
             enabledTokens,
             selectedTokens,
-            otherTokens
-        ) { enabled, selected, other ->
+            otherTokens,
+            searchTextFieldState.textAsFlow()
+                .map { it.toString() },
+        ) { enabled, selected, other, query ->
             val selectedUiTokens = selected.asUiTokens(enabled)
             val otherUiTokens = other.asUiTokens(enabled)
+                .filter { it.coin.ticker.contains(query, ignoreCase = true) }
 
             uiState.update {
                 it.copy(
