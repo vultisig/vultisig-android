@@ -37,7 +37,6 @@ internal fun Coin.AllowZeroGas(): Boolean {
     return this.chain == Chain.polkadot
 }
 
-
 internal object Coins {
     val SupportedCoins = listOf(
         Coin(
