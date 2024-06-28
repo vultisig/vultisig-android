@@ -5,7 +5,9 @@ internal enum class AppLanguage(val mainName: String, val engName: String?) {
     DE("Deutsch", "German"),
     ES("Espanol", "Spanish"),
     IT("Italiano", "Italian"),
-    HR("Hrvatski", "Croatian"), ;
+    HR("Hrvatski", "Croatian"),
+    RU("Русский", "Russian"),
+    NL("Nederlands", "Dutch"),;
 
     companion object {
         fun String.fromName(): AppLanguage {
@@ -15,6 +17,8 @@ internal enum class AppLanguage(val mainName: String, val engName: String?) {
                 "Espanol" -> ES
                 "Italiano" -> IT
                 "Hrvatski" -> HR
+                "Русский" -> RU
+                "Nederlands" -> NL
                 else -> error("lang name not defined AppLanguage")
             }
         }
