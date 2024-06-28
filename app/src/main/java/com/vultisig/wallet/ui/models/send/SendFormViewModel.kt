@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -41,9 +42,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -130,6 +133,9 @@ internal class SendFormViewModel @Inject constructor(
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
+    private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
+
+
     private var lastToken = ""
     private var lastFiat = ""
 
@@ -148,6 +154,7 @@ internal class SendFormViewModel @Inject constructor(
         collectSelectedAccount()
         collectAmountChanges()
         calculateGasFees()
+        calculateSpecific()
     }
 
     fun validateDstAddress() {
@@ -181,16 +188,13 @@ internal class SendFormViewModel @Inject constructor(
         val selectedAccount = selectedAccount ?: return
         val selectedTokenValue = selectedAccount.tokenValue ?: return
         val gasFee = gasFee.value ?: return
+        val specific = specific.value ?: return
         val chain = selectedAccount.token.chain
-        val selectedToken = selectedAccount.token
-        val srcAddress = selectedToken.address
 
         viewModelScope.launch {
             val max = if (selectedAccount.token.isNativeToken) {
-                val specific: BlockChainSpecificAndUtxo = blockChainSpecificRepository
-                    .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
-                val gasLimit = if (specific.blockChainSpecific is BlockChainSpecific.Ethereum) {
-                    specific.blockChainSpecific.gasLimit
+                val gasLimit = if (chain.standard == TokenStandard.EVM) {
+                    (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
                 } else {
                     BigInteger.valueOf(1)
                 }
@@ -396,6 +400,21 @@ internal class SendFormViewModel @Inject constructor(
                         it.copy(fee = mapGasFeeToString(gasFee))
                     }
                 }
+        }
+    }
+
+    private fun calculateSpecific() {
+        viewModelScope.launch {
+            selectedSrc.filterNotNull().combine(gasFee.filterNotNull()) { selectedSrc, gasFee ->
+                val selectedAccount = selectedSrc.account
+                val chain = selectedAccount.token.chain
+                val selectedToken = selectedAccount.token
+                val srcAddress = selectedAccount.token.address
+                blockChainSpecificRepository
+                    .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+            }.collect {
+                specific.value = it
+            }
         }
     }
 
