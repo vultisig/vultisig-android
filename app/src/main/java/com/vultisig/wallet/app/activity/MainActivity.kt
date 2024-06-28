@@ -14,8 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
-import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
@@ -33,6 +33,8 @@ internal class MainActivity : AppCompatActivity() {
             }
 
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             OnBoardingComposeTheme {
