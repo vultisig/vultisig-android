@@ -342,7 +342,6 @@ internal class SendFormViewModel @Inject constructor(
                     Timber.e(it)
                 }.collect { addresses ->
                     selectedSrc.updateSrc(addresses, chain, forceChainChange)
-                    Timber.d(" ccccccChain: $chain")
                     updateUiTokens(
                         addresses
                             .asSequence()
@@ -407,8 +406,6 @@ internal class SendFormViewModel @Inject constructor(
                     val uiModel = accountToTokenBalanceUiModelMapper.map(src)
                     val showGasFee = (selectedAccount?.token?.AllowZeroGas() == false)
                     val hasMemo = src.account.token.isNativeToken
-                    Timber.d("ccccccChain Selected src: $src")
-                    Timber.d("ccccccChain Selected account: $uiModel")
                     uiState.update {
                         it.copy(
                             from = address,

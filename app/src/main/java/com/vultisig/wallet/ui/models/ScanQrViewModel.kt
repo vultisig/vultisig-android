@@ -21,53 +21,46 @@ internal class ScanQrViewModel @Inject constructor(
 
     private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
+    @OptIn(ExperimentalEncodingApi::class)
     fun joinOrSend(qr: String) {
         viewModelScope.launch {
-            var isJoinSuccessful = false
-            try {
-                join(qr)
-                isJoinSuccessful = true
+            val flowType = try {
+                DeepLinkHelper(qr).getFlowType()
             } catch (e: Exception) {
-                Timber.e(e)
-                isJoinSuccessful = false
+                Timber.e(e, "Failed to parse QR-code via DeepLinkHelper")
+                JOIN_SEND_ON_ADDRESS_FLOW
             }
-            if (!isJoinSuccessful) {
-                navigator.navigate(
-                    Destination.Send(vaultId = requireNotNull(vaultId), address = qr)
-                )
-            }
+            val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
+            navigator.navigate(
+                when (flowType) {
+                    JOIN_KEYSIGN_FLOW -> {
+                        Destination.JoinKeysign(
+                            vaultId = requireNotNull(vaultId),
+                            qr = qrBase64,
+                        )
+                    }
+
+                    JOIN_KEYGEN_FLOW -> {
+                        Destination.JoinKeygen(
+                            qr = qrBase64,
+                        )
+                    }
+                    JOIN_SEND_ON_ADDRESS_FLOW -> {
+                        Destination.Send(vaultId = requireNotNull(vaultId), address = qr)
+                    }
+
+                    else -> throw IllegalArgumentException(
+                        "Unsupported QR-code flowType: $flowType"
+                    )
+                }
+            )
         }
-    }
-
-    @OptIn(ExperimentalEncodingApi::class)
-    private suspend fun join(qr: String) {
-        val flowType = DeepLinkHelper(qr).getFlowType()
-        val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
-        navigator.navigate(
-            when (flowType) {
-                JOIN_KEYSIGN_FLOW -> {
-                    Destination.JoinKeysign(
-                        vaultId = requireNotNull(vaultId),
-                        qr = qrBase64,
-                    )
-                }
-
-                JOIN_KEYGEN_FLOW -> {
-                    Destination.JoinKeygen(
-                        qr = qrBase64,
-                    )
-                }
-
-                else -> throw IllegalArgumentException(
-                    "Unsupported QR-code flowType: $flowType"
-                )
-            }
-        )
     }
 
     companion object {
         private const val JOIN_KEYSIGN_FLOW = "SignTransaction"
         private const val JOIN_KEYGEN_FLOW = "NewVault"
+        private const val JOIN_SEND_ON_ADDRESS_FLOW = "SendOnAddress"
     }
 
 }
