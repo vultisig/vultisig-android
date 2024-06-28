@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +41,7 @@ import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.Theme.colors
 
@@ -187,6 +190,31 @@ internal fun ConfirmDeleteScreen(
                         color = colors.neutral0,
                         style = Theme.menlo.overline2,
                     )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.vault_settings_delete_vault_value),
+                        color = colors.neutral0,
+                        style = Theme.menlo.body2,
+                    )
+                    UiSpacer(size = 12.dp)
+                    if (vaultDeleteUiModel.totalFiatValue != null){
+                        Text(
+                            text = vaultDeleteUiModel.totalFiatValue,
+                            color = colors.neutral0,
+                            style = Theme.menlo.overline2,
+                        )
+                    } else{
+                        UiPlaceholderLoader(
+                            modifier = Modifier
+                                .width(24.dp)
+                        )
+                    }
+
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

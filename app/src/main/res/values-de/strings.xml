@@ -240,4 +240,5 @@
     <string name="send_form_screen_memo_optional">MEMO (optional)</string>
     <string name="vault_already_exist">Tresor mit dem Namen %s existiert bereits</string>
     <string name="vault_detail_this_device">%1s (Dieses Gerät)</string>
+    <string name="vault_settings_delete_vault_value">Vault Wert:</string>
 </resources>

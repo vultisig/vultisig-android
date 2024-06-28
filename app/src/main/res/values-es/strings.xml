@@ -240,5 +240,6 @@
     <string name="send_form_screen_memo_optional">NOTA (opcional)</string>
     <string name="vault_already_exist">La bóveda con nombre %s ya existe</string>
     <string name="vault_detail_this_device">%1s (Este Dispositivo)</string>
+    <string name="vault_settings_delete_vault_value">Vault Valor:</string>
 
 </resources>
