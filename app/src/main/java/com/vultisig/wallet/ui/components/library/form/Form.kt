@@ -65,6 +65,7 @@ internal fun FormTokenCard(
     selectedTitle: String,
     selectedIcon: ImageModel,
     availableToken: String,
+    chainLogo :Int?,
     isExpanded: Boolean,
     onClick: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
@@ -74,6 +75,7 @@ internal fun FormTokenCard(
             title = selectedTitle,
             tokenLogo = selectedIcon,
             availableToken = availableToken,
+            chainLogo = chainLogo,
             actionIcon = R.drawable.caret_down,
             onClick = onClick,
         )

@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.utils.tokenBalanceUiModels
@@ -28,6 +30,7 @@ internal fun FormTokenSelection(
         selectedIcon = selectedToken?.tokenLogo
             ?: R.drawable.ethereum,
         isExpanded = isTokenListExpanded,
+        chainLogo = selectedToken?.chainLogo,
         onClick = { isTokenListExpanded = !isTokenListExpanded },
     ) {
         availableTokens.forEach { token ->
@@ -39,8 +42,8 @@ internal fun FormTokenSelection(
             TokenCard(
                 title = token.title,
                 tokenLogo = token.tokenLogo,
-                chainLogo = token.chainLogo.takeIf { !token.isNativeToken },
-                tokenStandard = token.tokenStandard.takeIf { !token.isNativeToken },
+                chainLogo = token.chainLogo.takeIf { !token.isNativeToken || token.isLayer2 },
+                tokenStandard = token.tokenStandard.takeIf { !token.isNativeToken || token.isLayer2 },
                 actionIcon = if (token == selectedToken)
                     R.drawable.check
                 else null,

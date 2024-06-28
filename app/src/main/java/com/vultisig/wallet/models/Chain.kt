@@ -176,3 +176,9 @@ internal val Chain.isDepositSupported: Boolean
         Chain.thorChain, Chain.mayaChain -> true
         else -> false
     }
+
+internal val Chain.isLayer2: Boolean
+    get() = when (this) {
+        Chain.arbitrum, Chain.avalanche, Chain.cronosChain, Chain.base, Chain.blast, Chain.optimism, Chain.polygon, Chain.bscChain -> true
+        else -> false
+    }
