@@ -3,8 +3,9 @@ package com.vultisig.wallet.presenter.settings.default_chains_setting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
-import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainsSettingEvent.Initialize
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainsSettingEvent.ChangeChaneState
+import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainsSettingEvent.Initialize
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -18,11 +19,9 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
 
     val state = MutableStateFlow(
         DefaultChainsUiModel(
-            allDefaultChains = defaultChainsRepository.getAllDefaultChains().toUiModel()
+            chains = Chain.entries.toUiModel()
         )
     )
-
-
 
     fun onEvent(event: DefaultChainsSettingEvent) {
         when (event) {
@@ -45,7 +44,8 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
     fun changeChaneState(chain: DefaultChain, isChecked: Boolean) {
         viewModelScope.launch {
             val selectedDefaultChains = state.value.selectedDefaultChains
-            val newSelection = if (isChecked) selectedDefaultChains + chain else selectedDefaultChains - chain
+            val newSelection =
+                if (isChecked) selectedDefaultChains + chain else selectedDefaultChains - chain
             defaultChainsRepository.setSelectedDefaultChains(newSelection.map { it.toDataModel() })
         }
     }

@@ -57,6 +57,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
+import com.vultisig.wallet.ui.utils.clearFocusOnKeyboardDismiss
 
 
 @Composable
@@ -278,6 +279,7 @@ internal fun BasicFormTextField(
             }
         ),
         modifier = modifier
+            .clearFocusOnKeyboardDismiss()
             .onFocusEvent {
                 if (isFocused != it.isFocused) {
                     isFocused = it.isFocused

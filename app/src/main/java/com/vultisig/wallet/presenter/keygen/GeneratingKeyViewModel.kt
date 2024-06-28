@@ -5,15 +5,11 @@ import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
-import com.vultisig.wallet.chains.EvmHelper
-import com.vultisig.wallet.chains.SolanaHelper
-import com.vultisig.wallet.chains.THORCHainHelper
-import com.vultisig.wallet.chains.utxoHelper
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.mediator.MediatorService
-import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.tss.LocalStateAccessor
@@ -30,7 +26,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
-import wallet.core.jni.CoinType
 import kotlin.time.Duration.Companion.seconds
 
 enum class KeygenState {
@@ -51,6 +46,8 @@ internal class GeneratingKeyViewModel(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val tokenRepository: TokenRepository,
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -192,48 +189,30 @@ internal class GeneratingKeyViewModel(
 
     suspend fun saveVault(context: Context) {
         // save the vault
-        val coins: MutableList<Coin> = mutableListOf()
-        defaultChainsRepository.selectedDefaultChains.first().forEach { chain ->
-            when (chain) {
-                Chain.thorChain -> {
-                    THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode).getCoin()?.let { coin ->
-                        coins.add(coin)
-                    }
-                }
+        vaultRepository.upsert(this@GeneratingKeyViewModel.vault)
 
-                Chain.bitcoin -> {
-                    utxoHelper.getHelper(vault, CoinType.BITCOIN).getCoin()?.let { coin ->
-                        coins.add(coin)
-                    }
-                }
+        val vaultId = vault.id
 
-                Chain.bscChain -> {
-                    EvmHelper(CoinType.SMARTCHAIN, vault.pubKeyECDSA, vault.hexChainCode).getCoin()
-                        ?.let { coin ->
-                            coins.add(coin)
-                        }
-                }
+        val vault = vaultRepository.get(vaultId)
+            ?: error("Vault didn't save properly")
 
-                Chain.ethereum -> {
-                    EvmHelper(CoinType.ETHEREUM, vault.pubKeyECDSA, vault.hexChainCode).getCoin()
-                        ?.let { coin ->
-                            coins.add(coin)
-                        }
-                }
+        val nativeTokens = tokenRepository.nativeTokens.first()
+            .associateBy { it.chain }
 
-                Chain.solana -> {
-                    SolanaHelper(vault.pubKeyEDDSA).getCoin()?.let { coin ->
-                        coins.add(coin)
-                    }
-                }
-
-                else -> {
-                    //do nothing
-                }
+        defaultChainsRepository.selectedDefaultChains
+            .first()
+            .mapNotNull { nativeTokens[it] }
+            .forEach { nativeToken ->
+                val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+                    nativeToken,
+                    vault
+                )
+                val updatedCoin = nativeToken.copy(
+                    address = address,
+                    hexPublicKey = derivedPublicKey
+                )
+                vaultRepository.addTokenToVault(vaultId, updatedCoin)
             }
-        }
-
-        vaultRepository.upsert(this@GeneratingKeyViewModel.vault.copy(coins = coins))
 
         Timber.d("saveVault: success,name:${vault.name}")
 

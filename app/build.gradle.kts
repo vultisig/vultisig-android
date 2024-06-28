@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.daggerHiltAndroid)
     id("org.jetbrains.kotlin.plugin.parcelize")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.compose.compiler)
 }
 android {
     namespace = "com.vultisig.wallet"
@@ -42,9 +43,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.12"
     }
     packaging {
         resources {
