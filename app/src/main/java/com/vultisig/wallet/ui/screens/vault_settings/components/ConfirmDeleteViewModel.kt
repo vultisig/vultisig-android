@@ -61,11 +61,6 @@ internal class ConfirmDeleteViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             vaultRepository.get(vaultId)?.let { vault ->
-                var fiatValue = 0.0
-                vault.coins.forEach{ coin ->
-                    println(coin)
-
-                }
                 uiModel.update {
                     it.copy(
                         vaultDeleteUiModel = VaultDeleteUiModel(
@@ -85,6 +80,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                     }
                 }
                 .catch {
+                    // TODO: Handle error
                     Timber.e(it)
                 }.collect { accounts ->
                     val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
