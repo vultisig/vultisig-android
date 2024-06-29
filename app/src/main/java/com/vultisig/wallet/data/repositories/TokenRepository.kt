@@ -38,22 +38,26 @@ internal class TokenRepositoryImpl @Inject constructor(
         if (chain.standard == TokenStandard.EVM) {
             flow {
                 val tokens = oneInchApi.getTokens(chain)
-                emit(tokens.tokens.asSequence()
-                    .map { it.value }
-                    .map {
-                        Coin(
-                            contractAddress = it.address,
-                            chain = chain,
-                            ticker = it.symbol,
-                            logo = it.logoURI ?: "",
-                            decimal = it.decimals,
-                            isNativeToken = false,
-                            priceProviderID = "",
-                            address = "",
-                            hexPublicKey = "",
-                        )
-                    }
-                    .toList()
+                val allTokens = allTokens.first().filter { it.chain == chain }
+                emit(
+                    allTokens +
+                            tokens.tokens.asSequence()
+                                .map { it.value }
+                                .map {
+                                    Coin(
+                                        contractAddress = it.address,
+                                        chain = chain,
+                                        ticker = it.symbol,
+                                        logo = it.logoURI ?: "",
+                                        decimal = it.decimals,
+                                        isNativeToken = false,
+                                        priceProviderID = "",
+                                        address = "",
+                                        hexPublicKey = "",
+                                    )
+                                }
+                                .filter { newCoin -> allTokens.none { it.chain == newCoin.chain && it.ticker == newCoin.ticker } }
+                                .toList()
                 )
             }
         } else {
