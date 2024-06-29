@@ -15,7 +15,7 @@
 
     <application
         android:name="com.vultisig.wallet.app.VultisigApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:configChanges="layoutDirection|locale"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
