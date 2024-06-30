@@ -58,7 +58,7 @@ internal fun SendFormScreen(
     }
 
     LaunchedEffect(qrCodeResult) {
-        viewModel.setAddressFromQrCode(qrCodeResult)
+        viewModel.setAddressFromQrCode(vaultId, qrCodeResult)
     }
 
     SendFormScreen(

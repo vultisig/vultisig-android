@@ -52,11 +52,11 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
@@ -70,7 +70,7 @@ internal fun ScanQrAndJoin(
 ) {
     ScanQrScreen(
         navController = navController,
-        onScanSuccess = viewModel::join,
+        onScanSuccess = viewModel::joinOrSend,
     )
 }
 

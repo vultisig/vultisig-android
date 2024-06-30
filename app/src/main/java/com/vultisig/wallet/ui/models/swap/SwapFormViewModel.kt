@@ -534,9 +534,10 @@ internal class SwapFormViewModel @Inject constructor(
 internal fun MutableStateFlow<SendSrc?>.updateSrc(
     addresses: List<Address>,
     chain: Chain?,
+    forceChainChange: Boolean = false,
 ) {
     val selectedSrcValue = value
-    value = if (selectedSrcValue == null) {
+    value = if (selectedSrcValue == null || forceChainChange) {
         addresses.firstSendSrc(chain)
     } else {
         addresses.findCurrentSrc(selectedSrcValue)

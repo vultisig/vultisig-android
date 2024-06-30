@@ -113,9 +113,14 @@ internal class SendFormViewModel @Inject constructor(
     private lateinit var vaultId: String
     private var chain: Chain? = null
 
-    fun setAddressFromQrCode(qrCode: String?) {
+    fun setAddressFromQrCode(vaultId: String, qrCode: String?) {
         if (qrCode != null) {
             addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
+            Chain.entries.find { chain ->
+                chainAccountAddressRepository.isValid(chain, qrCode)
+            }?.let { chain ->
+                loadData(vaultId, chain.id, true)
+            }
         }
     }
 
@@ -147,10 +152,10 @@ internal class SendFormViewModel @Inject constructor(
 
     val uiState = MutableStateFlow(SendFormUiModel())
 
-    fun loadData(vaultId: String, chainId: String?) {
+    fun loadData(vaultId: String, chainId: String?, forceChainChange: Boolean = false) {
         this.vaultId = vaultId
         this.chain = chainId?.let(Chain::fromRaw)
-        loadTokens()
+        loadTokens(forceChainChange = forceChainChange)
         loadSelectedCurrency()
         collectSelectedAccount()
         collectAmountChanges()
@@ -349,7 +354,7 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(errorText = text) }
     }
 
-    private fun loadTokens() {
+    private fun loadTokens(forceChainChange: Boolean = false) {
         val chain = chain
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId)
@@ -357,8 +362,7 @@ internal class SendFormViewModel @Inject constructor(
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
-                    selectedSrc.updateSrc(addresses, chain)
-
+                    selectedSrc.updateSrc(addresses, chain, forceChainChange)
                     updateUiTokens(
                         addresses
                             .asSequence()

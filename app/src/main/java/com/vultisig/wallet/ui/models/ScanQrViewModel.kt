@@ -8,6 +8,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -21,11 +22,15 @@ internal class ScanQrViewModel @Inject constructor(
     private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
     @OptIn(ExperimentalEncodingApi::class)
-    fun join(qr: String) {
-        val flowType = DeepLinkHelper(qr).getFlowType()
-        val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
-
+    fun joinOrSend(qr: String) {
         viewModelScope.launch {
+            val flowType = try {
+                DeepLinkHelper(qr).getFlowType()
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to parse QR-code via DeepLinkHelper")
+                JOIN_SEND_ON_ADDRESS_FLOW
+            }
+            val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
             navigator.navigate(
                 when (flowType) {
                     JOIN_KEYSIGN_FLOW -> {
@@ -40,6 +45,9 @@ internal class ScanQrViewModel @Inject constructor(
                             qr = qrBase64,
                         )
                     }
+                    JOIN_SEND_ON_ADDRESS_FLOW -> {
+                        Destination.Send(vaultId = requireNotNull(vaultId), address = qr)
+                    }
 
                     else -> throw IllegalArgumentException(
                         "Unsupported QR-code flowType: $flowType"
@@ -52,6 +60,7 @@ internal class ScanQrViewModel @Inject constructor(
     companion object {
         private const val JOIN_KEYSIGN_FLOW = "SignTransaction"
         private const val JOIN_KEYGEN_FLOW = "NewVault"
+        private const val JOIN_SEND_ON_ADDRESS_FLOW = "SendOnAddress"
     }
 
 }
