@@ -42,6 +42,7 @@ fun KeysignFlowView(
 
         KeysignFlowState.KEYSIGN -> {
             LaunchedEffect(key1 = Unit) {
+                viewModel.resetQrAddress()
                 viewModel.startKeysign()
             }
 
