@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -205,6 +206,18 @@ private fun QrCameraScreen(
     val cameraProviderFuture = remember {
         ProcessCameraProvider.getInstance(localContext)
     }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraProviderFuture.addListener(
+                {
+                    cameraProviderFuture.get().unbindAll()
+                },
+                ContextCompat.getMainExecutor(localContext)
+            )
+        }
+    }
+
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
