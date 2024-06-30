@@ -7,7 +7,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,6 +54,7 @@ import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiCustomContentAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -141,7 +141,7 @@ private fun ImportFileScreen(
 
                 if (uiModel.showPasswordPrompt) {
                     UiCustomContentAlertDialog {
-                        Column(horizontalAlignment = CenterHorizontally) {
+                        UiScrollableColumn(horizontalAlignment = CenterHorizontally) {
                             Text(
                                 text = stringResource(id = R.string.import_file_screen_enter_password),
                                 style = Theme.menlo.subtitle1
@@ -175,7 +175,7 @@ private fun ImportFileScreen(
                     }
                 }
 
-                Column(
+                UiScrollableColumn(
                     horizontalAlignment = CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -217,7 +217,7 @@ private fun ImportFileScreen(
                                 )
                             }
                     ) {
-                        Column(
+                        UiScrollableColumn(
                             horizontalAlignment = CenterHorizontally,
                             modifier = Modifier.align(Center),
                         ) {

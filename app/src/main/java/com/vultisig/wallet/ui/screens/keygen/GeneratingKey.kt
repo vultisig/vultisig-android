@@ -32,6 +32,7 @@ import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
 import com.vultisig.wallet.presenter.keygen.KeygenState
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
+import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
@@ -90,7 +91,7 @@ internal fun GeneratingKey(
     errorMessage: String
 ) {
     val textColor = Theme.colors.neutral0
-    Column(
+    UiScrollableColumn(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)

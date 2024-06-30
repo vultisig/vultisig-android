@@ -2,21 +2,17 @@ package com.vultisig.wallet.ui.screens.vault_settings.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.CheckboxDefaults
@@ -37,9 +33,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.theme.Theme
@@ -128,12 +124,11 @@ internal fun ConfirmDeleteScreen(
             )
         }
     ) { padding ->
-        Column(
+        UiScrollableColumn(
             Modifier
                 .padding(padding)
                 .background(colors.oxfordBlue800)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             UiSpacer(size = 20.dp)
