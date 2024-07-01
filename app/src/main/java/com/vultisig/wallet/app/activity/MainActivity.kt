@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,7 +50,10 @@ internal class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                Box {
+                Box(
+                    modifier = Modifier
+                        .safeDrawingPadding()
+                ) {
                     SetupNavGraph(
                         navController = navController,
                         startDestination = screen,
