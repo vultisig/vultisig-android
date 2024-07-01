@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -60,7 +59,9 @@ internal fun TokenSelectionItem(
                 contentScale = ContentScale.Crop
             )
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+                    .weight(1f)
             ) {
                 Text(
                     text = title,
@@ -73,8 +74,6 @@ internal fun TokenSelectionItem(
                     style = Theme.montserrat.body3,
                 )
             }
-
-            Spacer(modifier = Modifier.weight(1f))
 
             VaultSwitch(
                 colors = SwitchDefaults.colors(
