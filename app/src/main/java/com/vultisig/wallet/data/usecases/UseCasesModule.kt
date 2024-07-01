@@ -22,4 +22,10 @@ internal interface UseCasesModule {
         impl: ConvertTokenAndValueToTokenValueUseCaseImpl
     ): ConvertTokenAndValueToTokenValueUseCase
 
+    @Binds
+    @Singleton
+    fun bindSaveVaultUseCase(
+        impl: SaveVaultUseCaseImpl
+    ): SaveVaultUseCase
+
 }

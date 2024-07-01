@@ -15,10 +15,8 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.DefaultChainsRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.KeygenMessage
 import com.vultisig.wallet.models.PeerDiscoveryPayload
@@ -50,14 +48,12 @@ enum class KeygenFlowState {
 
 @HiltViewModel
 internal class KeygenFlowViewModel @Inject constructor(
-    private val vaultRepository: VaultRepository,
-    private val defaultChainsRepository: DefaultChainsRepository,
-    private val vultisigRelay: vultisigRelay,
-    private val gson: Gson,
     navBackStackEntry: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val tokenRepository: TokenRepository,
+    private val vultisigRelay: vultisigRelay,
+    private val gson: Gson,
+    private val vaultRepository: VaultRepository,
+    private val saveVault: SaveVaultUseCase,
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -98,11 +94,8 @@ internal class KeygenFlowViewModel @Inject constructor(
             _encryptionKeyHex,
             _oldResharePrefix,
             gson,
-            vaultRepository = vaultRepository,
-            defaultChainsRepository = defaultChainsRepository,
             navigator = navigator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            tokenRepository = tokenRepository,
+            saveVault = saveVault,
         )
 
     suspend fun setData(vaultId: String, context: Context) {

@@ -5,10 +5,7 @@ import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.DefaultChainsRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
@@ -21,7 +18,6 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
@@ -44,10 +40,7 @@ internal class GeneratingKeyViewModel(
     private val gson: Gson,
 
     private val navigator: Navigator<Destination>,
-    private val vaultRepository: VaultRepository,
-    private val defaultChainsRepository: DefaultChainsRepository,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val tokenRepository: TokenRepository,
+    private val saveVault: SaveVaultUseCase,
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -188,33 +181,7 @@ internal class GeneratingKeyViewModel(
     }
 
     suspend fun saveVault(context: Context) {
-        // save the vault
-        vaultRepository.upsert(this@GeneratingKeyViewModel.vault)
-
-        val vaultId = vault.id
-
-        val vault = vaultRepository.get(vaultId)
-            ?: error("Vault didn't save properly")
-
-        val nativeTokens = tokenRepository.nativeTokens.first()
-            .associateBy { it.chain }
-
-        defaultChainsRepository.selectedDefaultChains
-            .first()
-            .mapNotNull { nativeTokens[it] }
-            .forEach { nativeToken ->
-                val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-                    nativeToken,
-                    vault
-                )
-                val updatedCoin = nativeToken.copy(
-                    address = address,
-                    hexPublicKey = derivedPublicKey
-                )
-                vaultRepository.addTokenToVault(vaultId, updatedCoin)
-            }
-
-        Timber.d("saveVault: success,name:${vault.name}")
+        saveVault(this@GeneratingKeyViewModel.vault)
 
         delay(2.seconds)
 
