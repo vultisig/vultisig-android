@@ -59,13 +59,13 @@ internal class MainActivity : AppCompatActivity() {
                         startDestination = screen,
                     )
 
+                    BiometryAuthScreen()
+
                     SnackbarHost(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         hostState = mainViewModel.snakeBarHostState
                     )
                 }
-
-                BiometryAuthScreen()
             }
         }
     }

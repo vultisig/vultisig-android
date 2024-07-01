@@ -32,6 +32,7 @@ import androidx.fragment.app.FragmentActivity
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.closestActivityOrNull
+import timber.log.Timber
 
 private val allowedAuthenticatorTypes
     get() = BIOMETRIC_STRONG or BIOMETRIC_WEAK or DEVICE_CREDENTIAL
@@ -42,9 +43,13 @@ internal fun BiometryAuthScreen(
     var isAuthorized by remember { mutableStateOf(false) }
 
     if (!isAuthorized) {
+        Timber.d("Unauthorized, checking biometric availability")
+
         val context = LocalContext.current
 
         if (context.canAuthenticateBiometric()) {
+            Timber.d("Biometric auth available, launching prompt")
+
             val promptTitle = stringResource(R.string.biometry_auth_login_button)
 
             val authorize: () -> Unit = remember(context) {
@@ -125,11 +130,15 @@ private fun Context.launchBiometricPrompt(
     promptTitle: String,
     onAuthorizationSuccess: () -> Unit,
 ) {
-    (closestActivityOrNull as? FragmentActivity)
-        ?.launchBiometricPrompt(
-            title = promptTitle,
-            onAuthorizationSuccess = onAuthorizationSuccess,
-        )
+    Timber.d("launchBiometricPrompt")
+
+    val activity = (closestActivityOrNull as? FragmentActivity)
+        ?: error("Context is not a FragmentActivity. Can't launch biometric prompt")
+
+    activity.launchBiometricPrompt(
+        title = promptTitle,
+        onAuthorizationSuccess = onAuthorizationSuccess,
+    )
 }
 
 private fun FragmentActivity.launchBiometricPrompt(
@@ -142,7 +151,18 @@ private fun FragmentActivity.launchBiometricPrompt(
                 result: BiometricPrompt.AuthenticationResult
             ) {
                 super.onAuthenticationSucceeded(result)
+                Timber.d("onAuthenticationSucceeded")
                 onAuthorizationSuccess()
+            }
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                Timber.d("onAuthenticationError: $errString")
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                Timber.d("onAuthenticationFailed")
             }
         })
 
@@ -152,6 +172,7 @@ private fun FragmentActivity.launchBiometricPrompt(
         .setConfirmationRequired(false)
         .build()
 
+    Timber.d("biometricPrompt::authenticate")
     biometricPrompt.authenticate(promptInfo)
 }
 
