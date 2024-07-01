@@ -35,7 +35,6 @@ internal class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
             OnBoardingComposeTheme {
