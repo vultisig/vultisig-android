@@ -6,7 +6,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +34,7 @@ import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.presenter.common.UiEvent.NavigateTo
 import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -71,7 +71,7 @@ internal fun WelcomeScreen(
         }
     }
 
-    Column(
+    UiScrollableColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(Theme.colors.oxfordBlue800),
@@ -149,7 +149,7 @@ internal fun WelcomeScreen(
 
 @Composable
 fun PagerScreen(onBoardingPage: OnBoardPage) {
-    Column(
+    UiScrollableColumn(
         modifier = Modifier
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,

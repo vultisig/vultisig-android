@@ -98,6 +98,7 @@ fun DiscoveryingSessionID(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
+            .fillMaxSize()
             .background(Theme.colors.oxfordBlue800)
             .padding(
                 vertical = MaterialTheme.dimens.marginMedium,

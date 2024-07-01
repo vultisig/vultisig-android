@@ -3,7 +3,6 @@ package com.vultisig.wallet.presenter.keygen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +22,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
@@ -47,7 +47,7 @@ fun KeyGenErrorScreen(
             navController = rememberNavController()
         )
 
-        Column(
+        UiScrollableColumn(
             Modifier
                 .align(Alignment.Center)
                 .padding(
@@ -70,7 +70,7 @@ fun KeyGenErrorScreen(
             )
         }
 
-        Column(
+        UiScrollableColumn(
             Modifier
                 .align(Alignment.BottomCenter)
         ) {
