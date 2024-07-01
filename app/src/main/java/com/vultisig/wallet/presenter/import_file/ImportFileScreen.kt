@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -141,7 +142,7 @@ private fun ImportFileScreen(
 
                 if (uiModel.showPasswordPrompt) {
                     UiCustomContentAlertDialog {
-                        UiScrollableColumn(horizontalAlignment = CenterHorizontally) {
+                        Column(horizontalAlignment = CenterHorizontally) {
                             Text(
                                 text = stringResource(id = R.string.import_file_screen_enter_password),
                                 style = Theme.menlo.subtitle1
@@ -217,7 +218,7 @@ private fun ImportFileScreen(
                                 )
                             }
                     ) {
-                        UiScrollableColumn(
+                        Column(
                             horizontalAlignment = CenterHorizontally,
                             modifier = Modifier.align(Center),
                         ) {
