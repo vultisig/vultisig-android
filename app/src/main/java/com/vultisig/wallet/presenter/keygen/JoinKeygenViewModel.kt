@@ -1,7 +1,6 @@
 package com.vultisig.wallet.presenter.keygen
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import androidx.compose.runtime.MutableState
@@ -15,17 +14,14 @@ import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asUiText
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.DefaultChainsRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -49,11 +45,8 @@ enum class JoinKeygenState {
 internal class JoinKeygenViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
-    private val defaultChainsRepository: DefaultChainsRepository,
     private val gson: Gson,
-    @ApplicationContext private val context: Context,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val tokenRepository: TokenRepository,
+    private val saveVault: SaveVaultUseCase,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -85,12 +78,9 @@ internal class JoinKeygenViewModel @Inject constructor(
             _sessionID,
             _encryptionKeyHex,
             gson = gson,
-            vaultRepository = vaultRepository,
             oldResharePrefix = _oldResharePrefix,
-            defaultChainsRepository = defaultChainsRepository,
             navigator = navigator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            tokenRepository = tokenRepository,
+            saveVault = saveVault,
         )
 
     @OptIn(ExperimentalEncodingApi::class)

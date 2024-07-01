@@ -16,6 +16,7 @@ import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
 import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -36,7 +37,8 @@ internal class ImportFileViewModel @Inject constructor(
     private val gson: Gson,
     private val navigator: Navigator<Destination>,
     private val cryptoManager: CryptoManager,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val saveVault: SaveVaultUseCase,
 ) : ViewModel() {
     val uiModel = MutableStateFlow(ImportFileState())
 
@@ -98,7 +100,7 @@ internal class ImportFileViewModel @Inject constructor(
 
     private suspend fun insertVaultToDb(fromJson: IOSVaultRoot) {
         val vault = vaultIOSToAndroidMapper(fromJson)
-        vaultRepository.add(vault)
+        saveVault(vault)
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id,
