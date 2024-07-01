@@ -30,7 +30,7 @@ internal class DefaultChainsRepositoryImpl @Inject constructor(
                 } catch (e: Throwable) {
                     Timber.e(e)
                     DEFAULT_CHAINS_LIST
-                }
+                }.ifEmpty { DEFAULT_CHAINS_LIST }
             }
 
     override suspend fun setSelectedDefaultChains(chains: List<Chain>) {
