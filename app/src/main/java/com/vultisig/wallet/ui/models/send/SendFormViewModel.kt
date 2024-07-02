@@ -42,11 +42,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -73,7 +71,6 @@ internal data class TokenBalanceUiModel(
 @Immutable
 internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
-    val availableTokens: List<TokenBalanceUiModel> = emptyList(),
     val from: String = "",
     val fiatCurrency: String = "",
     val fee: String? = null,
@@ -119,7 +116,7 @@ internal class SendFormViewModel @Inject constructor(
             Chain.entries.find { chain ->
                 chainAccountAddressRepository.isValid(chain, qrCode)
             }?.let { chain ->
-                loadData(vaultId, chain.id, true)
+                loadData(vaultId, chain.id, null,true)
             }
         }
     }
@@ -148,19 +145,33 @@ internal class SendFormViewModel @Inject constructor(
     val addressFieldState = TextFieldState()
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
-    val memoFieldState: TextFieldState = TextFieldState()
+    val memoFieldState = TextFieldState()
 
     val uiState = MutableStateFlow(SendFormUiModel())
 
-    fun loadData(vaultId: String, chainId: String?, forceChainChange: Boolean = false) {
-        this.vaultId = vaultId
-        this.chain = chainId?.let(Chain::fromRaw)
-        loadTokens(forceChainChange = forceChainChange)
+
+    init {
         loadSelectedCurrency()
         collectSelectedAccount()
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
+    }
+
+    fun loadData(
+        vaultId: String,
+        chainId: String?,
+        selectedTokenId: String?,
+        forceChainChange: Boolean = false
+    ) {
+        memoFieldState.clearText()
+
+        this.vaultId = vaultId
+        this.chain = chainId?.let(Chain::fromRaw)
+        loadTokens(
+            selectedTokenId = selectedTokenId,
+            forceChainChange = forceChainChange,
+        )
     }
 
     fun validateDstAddress() {
@@ -175,9 +186,15 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(tokenAmountError = errorText) }
     }
 
-    fun selectToken(token: TokenBalanceUiModel) {
-        selectedSrc.value = token.model
-        memoFieldState.clearText()
+    fun selectToken() {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.SelectToken(
+                    vaultId = vaultId,
+                    targetArg = Destination.SelectToken.ARG_SELECTED_TOKEN_ID,
+                )
+            )
+        }
     }
 
     fun setOutputAddress(address: String) {
@@ -354,7 +371,10 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(errorText = text) }
     }
 
-    private fun loadTokens(forceChainChange: Boolean = false) {
+    private fun loadTokens(
+        selectedTokenId: String?,
+        forceChainChange: Boolean = false
+    ) {
         val chain = chain
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId)
@@ -362,27 +382,8 @@ internal class SendFormViewModel @Inject constructor(
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
-                    selectedSrc.updateSrc(addresses, chain, forceChainChange)
-                    updateUiTokens(
-                        addresses
-                            .asSequence()
-                            .map { address ->
-                                address.accounts.map {
-                                    accountToTokenBalanceUiModelMapper.map(SendSrc(address, it))
-                                }
-                            }
-                            .flatten()
-                            .toList()
-                    )
+                    selectedSrc.updateSrc(selectedTokenId, addresses, chain, forceChainChange)
                 }
-        }
-    }
-
-    private fun updateUiTokens(tokenUiModels: List<TokenBalanceUiModel>) {
-        uiState.update {
-            it.copy(
-                availableTokens = tokenUiModels,
-            )
         }
     }
 

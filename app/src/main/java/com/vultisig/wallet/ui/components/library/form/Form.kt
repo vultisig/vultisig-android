@@ -66,9 +66,7 @@ internal fun FormTokenCard(
     selectedIcon: ImageModel,
     availableToken: String,
     chainLogo :Int?,
-    isExpanded: Boolean,
     onClick: () -> Unit,
-    content: @Composable ColumnScope.() -> Unit,
 ) {
     FormCard {
         TokenCard(
@@ -79,12 +77,6 @@ internal fun FormTokenCard(
             actionIcon = R.drawable.caret_down,
             onClick = onClick,
         )
-
-        AnimatedVisibility(visible = isExpanded) {
-            Column {
-                content()
-            }
-        }
     }
 }
 

@@ -52,6 +52,9 @@ internal sealed class Destination(
         route = buildRoute(vaultId, chainId)
     ) {
         companion object {
+            const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
+            const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
+
             val staticRoute = buildRoute("{$ARG_VAULT_ID}", "{$ARG_CHAIN_ID}")
 
             fun buildRoute(vaultId: String, chainId: String?) =
@@ -68,6 +71,21 @@ internal sealed class Destination(
         companion object {
             const val staticRoute =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/select_tokens"
+        }
+    }
+
+    data class SelectToken(
+        val vaultId: String,
+        val targetArg: String,
+    ) : Destination(
+        route = "select_token?${ARG_VAULT_ID}=$vaultId&${ARG_TARGET_ARG}=$targetArg"
+    ) {
+        companion object {
+            const val ARG_SELECTED_TOKEN_ID = "arg_selected_token_id"
+            const val ARG_TARGET_ARG = "target_arg"
+
+            const val staticRoute =
+                "select_token?$ARG_VAULT_ID={$ARG_VAULT_ID}&$ARG_TARGET_ARG={$ARG_TARGET_ARG}"
         }
     }
 

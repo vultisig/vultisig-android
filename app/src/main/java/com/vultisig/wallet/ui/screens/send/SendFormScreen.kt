@@ -40,7 +40,6 @@ import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextFi
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
-import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -48,13 +47,14 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun SendFormScreen(
     vaultId: String,
     chainId: String?,
+    selectedTokenId: String?,
     qrCodeResult: String?,
     viewModel: SendFormViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(vaultId, chainId) {
-        viewModel.loadData(vaultId, chainId)
+    LaunchedEffect(vaultId, chainId, selectedTokenId) {
+        viewModel.loadData(vaultId, chainId, selectedTokenId)
     }
 
     LaunchedEffect(qrCodeResult) {
@@ -90,7 +90,7 @@ internal fun SendFormScreen(
     onDstAddressLostFocus: () -> Unit = {},
     onTokenAmountLostFocus: () -> Unit = {},
     onDismissError: () -> Unit = {},
-    onSelectToken: (TokenBalanceUiModel) -> Unit = {},
+    onSelectToken: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
     onChoosePercentageAmount: (Float) -> Unit = {},
@@ -121,7 +121,6 @@ internal fun SendFormScreen(
 
             FormTokenSelection(
                 selectedToken = state.selectedCoin,
-                availableTokens = state.availableTokens,
                 onSelectToken = onSelectToken
             )
 
