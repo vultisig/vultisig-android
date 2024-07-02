@@ -42,7 +42,9 @@ fun KeysignFlowView(
 
         KeysignFlowState.KEYSIGN -> {
             LaunchedEffect(key1 = Unit) {
-                viewModel.resetQrAddress()
+                // TODO this breaks the navigation, and introduces issue with multiple
+                //   keysignViewModels being created
+                // viewModel.resetQrAddress()
                 viewModel.startKeysign()
             }
 
