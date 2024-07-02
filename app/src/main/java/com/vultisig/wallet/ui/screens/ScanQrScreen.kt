@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.screens
 
+import android.content.Context
 import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -25,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +47,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -56,7 +57,6 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
@@ -207,17 +207,6 @@ private fun QrCameraScreen(
         ProcessCameraProvider.getInstance(localContext)
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            cameraProviderFuture.addListener(
-                {
-                    cameraProviderFuture.get().unbindAll()
-                },
-                ContextCompat.getMainExecutor(localContext)
-            )
-        }
-    }
-
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -244,7 +233,10 @@ private fun QrCameraScreen(
                 .build()
             imageAnalysis.setAnalyzer(
                 ContextCompat.getMainExecutor(context),
-                BarcodeAnalyzer(onSuccess)
+                BarcodeAnalyzer {
+                    unbindCameraListener(cameraProviderFuture, localContext)
+                    onSuccess(it)
+                }
             )
 
             try {
@@ -260,6 +252,18 @@ private fun QrCameraScreen(
 
             previewView
         }
+    )
+}
+
+private fun unbindCameraListener(
+    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
+    context: Context,
+) {
+    cameraProviderFuture.addListener(
+        {
+            cameraProviderFuture.get().unbindAll()
+        },
+        ContextCompat.getMainExecutor(context)
     )
 }
 
