@@ -1,6 +1,11 @@
-package com.vultisig.wallet.ui.components.biometricAuth
+package com.vultisig.wallet.ui.components
 
 import android.content.Context
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricManager.BIOMETRIC_SUCCESS
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,6 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,44 +29,47 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.closestActivityOrNull
 import timber.log.Timber
 
+private val allowedAuthenticatorTypes
+    get() = BIOMETRIC_STRONG or BIOMETRIC_WEAK or DEVICE_CREDENTIAL
+
 @Composable
 internal fun BiometryAuthScreen(
 ) {
-    val viewmodel = hiltViewModel<BiometryAuthViewModel>()
-    val isAuthorized = viewmodel.isAuthorized
+    var isAuthorized by remember { mutableStateOf(false) }
 
     if (!isAuthorized) {
         Timber.d("Unauthorized, checking biometric availability")
 
         val context = LocalContext.current
 
-        if (viewmodel.canAuthenticateBiometric()) {
+        if (context.canAuthenticateBiometric()) {
             Timber.d("Biometric auth available, launching prompt")
 
             val promptTitle = stringResource(R.string.biometry_auth_login_button)
 
-            LaunchedEffect(Unit) {
-                viewmodel.requestAuthenticationFlow.collect {
+            val authorize: () -> Unit = remember(context) {
+                {
                     context.launchBiometricPrompt(
                         promptTitle = promptTitle,
-                        onAuthorizationSuccess = viewmodel::hideAuthScreen,
+                        onAuthorizationSuccess = { isAuthorized = true },
                     )
                 }
             }
 
+            LaunchedEffect(Unit) {
+                authorize()
+            }
+
             BiometryAuthView(
-                onRequestLogin = viewmodel::showAuthPrompt,
+                onRequestLogin = authorize,
             )
         } else {
-            viewmodel.hideAuthScreen()
+            isAuthorized = true
         }
     }
 }
@@ -110,6 +122,9 @@ private fun BiometryAuthView(
         )
     }
 }
+
+private fun Context.canAuthenticateBiometric(): Boolean = BiometricManager.from(this)
+    .canAuthenticate(allowedAuthenticatorTypes) == BIOMETRIC_SUCCESS
 
 private fun Context.launchBiometricPrompt(
     promptTitle: String,
