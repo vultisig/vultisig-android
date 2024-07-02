@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +41,7 @@ private val allowedAuthenticatorTypes
 @Composable
 internal fun BiometryAuthScreen(
 ) {
-    var isAuthorized by remember { mutableStateOf(false) }
+    var isAuthorized by rememberSaveable { mutableStateOf(false) }
 
     if (!isAuthorized) {
         Timber.d("Unauthorized, checking biometric availability")
