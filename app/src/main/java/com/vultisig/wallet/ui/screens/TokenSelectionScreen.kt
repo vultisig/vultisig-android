@@ -4,7 +4,6 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +55,7 @@ internal fun TokenSelectionScreen(
         navController = navController,
         searchTextFieldState = viewModel.searchTextFieldState,
         state = state,
+        hasTokenSwitch = true,
         onEnableToken = viewModel::enableToken,
         onDisableToken = viewModel::disableToken
     )
@@ -68,6 +67,7 @@ internal fun TokenSelectionScreen(
     navController: NavHostController,
     searchTextFieldState: TextFieldState,
     state: TokenSelectionUiModel,
+    hasTokenSwitch: Boolean,
     onEnableToken: (Coin) -> Unit = {},
     onDisableToken: (Coin) -> Unit = {},
 ) {
@@ -126,12 +126,14 @@ internal fun TokenSelectionScreen(
             TokensSection(
                 title = R.string.token_selection_selected_tokens_title,
                 tokens = state.selectedTokens,
+                hasTokenSwitch = hasTokenSwitch,
                 onEnableToken = onEnableToken,
                 onDisableToken = onDisableToken,
             )
             TokensSection(
                 title = R.string.token_selection_tokens_title,
                 tokens = state.otherTokens,
+                hasTokenSwitch = hasTokenSwitch,
                 onEnableToken = onEnableToken,
                 onDisableToken = onDisableToken,
             )
@@ -142,11 +144,14 @@ internal fun TokenSelectionScreen(
 private fun LazyListScope.TokensSection(
     @StringRes title: Int,
     tokens: List<TokenUiModel>,
+    hasTokenSwitch: Boolean,
     onEnableToken: (Coin) -> Unit,
     onDisableToken: (Coin) -> Unit,
 ) {
-    item {
-        TokensTitle(text = stringResource(id = title))
+    if (tokens.isNotEmpty()) {
+        item {
+            TokensTitle(text = stringResource(id = title))
+        }
     }
     items(tokens) { token ->
         val coin = token.coin
@@ -154,6 +159,7 @@ private fun LazyListScope.TokensSection(
             title = coin.ticker,
             subtitle = coin.chain.raw,
             logo = Coins.getCoinLogo(logoName = coin.logo),
+            hasTokenSwitch = hasTokenSwitch,
             isChecked = token.isEnabled,
             onCheckedChange = { checked ->
                 if (checked) {
@@ -183,6 +189,7 @@ fun TokenSelectionPreview() {
     TokenSelectionScreen(
         navController = rememberNavController(),
         searchTextFieldState = TextFieldState(),
-        state = TokenSelectionUiModel()
+        state = TokenSelectionUiModel(),
+        hasTokenSwitch = true,
     )
 }
