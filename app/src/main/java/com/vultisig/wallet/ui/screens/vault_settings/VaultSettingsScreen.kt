@@ -21,7 +21,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.SettingsItem
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Destination
@@ -41,7 +40,7 @@ internal fun VaultSettingsScreen(
             SnackbarHost(snackBarHostState)
         },
     ) { padding ->
-        UiScrollableColumn(
+        Column(
             modifier = Modifier
                 .consumeWindowInsets(padding)
                 .background(Theme.colors.oxfordBlue800)

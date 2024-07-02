@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,7 +26,6 @@ import com.vultisig.wallet.presenter.keygen.KeygenFlowState
 import com.vultisig.wallet.presenter.keygen.KeygenFlowViewModel
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType.Companion.asString
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
@@ -103,7 +103,7 @@ internal fun KeygenPeerDiscoveryScreen(
         endIcon = R.drawable.qr_share,
         onEndIconClick = onQrAddressClick
     ) {
-        UiScrollableColumn(
+        Column(
             horizontalAlignment = CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {

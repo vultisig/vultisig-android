@@ -55,7 +55,6 @@ import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiCustomContentAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -176,7 +175,7 @@ private fun ImportFileScreen(
                     }
                 }
 
-                UiScrollableColumn(
+                Column(
                     horizontalAlignment = CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()

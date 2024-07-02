@@ -1,10 +1,13 @@
 package com.vultisig.wallet.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -18,7 +21,6 @@ import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.components.NetworkPrompts
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
@@ -37,8 +39,8 @@ internal fun PeerDiscoveryView(
     onRemoveParticipant: (String) -> Unit = {},
 ) {
     val textColor = Theme.colors.neutral0
-    UiScrollableColumn(
-        modifier,
+    Column(
+        modifier.verticalScroll(rememberScrollState()),
         horizontalAlignment = CenterHorizontally
     ) {
         Text(

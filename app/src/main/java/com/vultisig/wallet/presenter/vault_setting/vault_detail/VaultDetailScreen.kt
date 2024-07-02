@@ -23,7 +23,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -47,7 +46,7 @@ fun VaultDetailScreen(navHostController: NavHostController) {
             centerText = stringResource(R.string.vault_settings_details_title)
         )
 
-        UiScrollableColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(all = 16.dp),

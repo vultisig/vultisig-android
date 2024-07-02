@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,7 +21,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -98,10 +99,11 @@ private fun VerifySwapScreen(
             .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
     ) {
-        UiScrollableColumn(
+        Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
-                .padding(all = 16.dp),
+                .padding(all = 16.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             FormCard {
                 Column(

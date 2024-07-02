@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,7 +39,6 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.clickOnce
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Destination
@@ -68,7 +68,7 @@ fun SettingsScreen(navController: NavHostController) {
             )
         }
     ) {
-        UiScrollableColumn(
+        Column(
             modifier = Modifier.padding(it),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
