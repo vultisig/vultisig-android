@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Tab
@@ -29,7 +30,6 @@ import com.vultisig.wallet.R.drawable
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.keygen.KeygenSetupViewModel
@@ -58,7 +58,7 @@ internal fun Setup(
             uriHandler.openUri(helpLink)
         },
     ) {
-        UiScrollableColumn(
+        Column(
             horizontalAlignment = CenterHorizontally,
         ) {
             TabRow(

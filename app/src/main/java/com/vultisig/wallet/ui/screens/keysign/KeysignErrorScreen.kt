@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -39,7 +38,7 @@ internal fun KeysignErrorView(
     navController: NavController,
     errorMessage: String = "",
 ) {
-    UiScrollableColumn(Modifier.background(Theme.colors.oxfordBlue800)) {
+    Column(Modifier.background(Theme.colors.oxfordBlue800)) {
         UiSpacer(weight = 1f)
 
         Column(

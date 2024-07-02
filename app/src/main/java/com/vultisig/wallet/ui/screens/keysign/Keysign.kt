@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +17,6 @@ import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.presenter.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
-import com.vultisig.wallet.ui.components.UiScrollableColumn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.screens.TransactionDoneView
@@ -61,7 +61,7 @@ internal fun KeysignScreen(
         )
     }
 
-    UiScrollableColumn(
+    Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
