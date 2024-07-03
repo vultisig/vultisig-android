@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -94,14 +95,26 @@ private fun VerifySwapScreen(
     onConsentAmount: (Boolean) -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Box(
+    Scaffold(
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
+        bottomBar = {
+            MultiColorButton(
+                text = confirmTitle,
+                textColor = Theme.colors.oxfordBlue800,
+                minHeight = 44.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
+                onClick = onConfirm,
+            )
+        }
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
+                .padding(it)
                 .padding(all = 16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
@@ -161,16 +174,6 @@ private fun VerifySwapScreen(
             }
         }
 
-        MultiColorButton(
-            text = confirmTitle,
-            textColor = Theme.colors.oxfordBlue800,
-            minHeight = 44.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(all = 16.dp),
-            onClick = onConfirm,
-        )
     }
 }
 
