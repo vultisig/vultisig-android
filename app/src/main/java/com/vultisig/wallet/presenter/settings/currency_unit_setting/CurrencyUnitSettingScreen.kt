@@ -1,15 +1,12 @@
 package com.vultisig.wallet.presenter.settings.currency_unit_setting
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -29,7 +26,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.clickOnce
-import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.*
+import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.ChangeCurrencyUnit
+import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.InitScreen
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -57,20 +55,20 @@ fun CurrencyUnitSettingScreen(navController: NavHostController) {
             )
         }
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
-                .padding(it)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(it),
         ) {
             state.currencyUnits.forEach { currencyUnit ->
-                CurrencyUnitSettingItem(
-                    name = currencyUnit.name,
-                    isSelected = currencyUnit == state.selectedCurrency,
-                    onClick = {
-                        viewModel.onEvent(ChangeCurrencyUnit(currencyUnit))
-                    }
-                )
+                item {
+                    CurrencyUnitSettingItem(
+                        name = currencyUnit.name,
+                        isSelected = currencyUnit == state.selectedCurrency,
+                        onClick = {
+                            viewModel.onEvent(ChangeCurrencyUnit(currencyUnit))
+                        }
+                    )
+                }
             }
         }
 
