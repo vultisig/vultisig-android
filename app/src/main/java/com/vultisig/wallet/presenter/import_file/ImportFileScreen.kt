@@ -128,6 +128,7 @@ private fun ImportFileScreen(
                 .fillMaxWidth()
                 .padding(
                     vertical = 16.dp,
+                    horizontal = 16.dp,
                 ),
             onClick = onContinue,
         )
@@ -273,6 +274,7 @@ private fun ImportFileScreen(
         }
 
     }
+
 }
 
 @OptIn(ExperimentalFoundationApi::class)
