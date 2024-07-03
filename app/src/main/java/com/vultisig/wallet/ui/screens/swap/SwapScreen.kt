@@ -53,8 +53,6 @@ internal fun SwapScreen(
 
     val progress = when (route) {
         SendDst.Send.route -> 0.25f
-        SendDst.VerifyApproval.staticRoute -> 0.35f
-        SendDst.KeysignApproval.staticRoute -> 0.4f
         SendDst.VerifyTransaction.staticRoute -> 0.5f
         SendDst.Keysign.staticRoute -> 0.75f
         else -> 0.0f
@@ -130,30 +128,6 @@ private fun SwapScreen(
                     chainId = chainId,
                     selectedSrcTokenId = selectedSrcTokenId,
                     selectedDstTokenId = selectedDstTokenId,
-                )
-            }
-            composable(
-                route = SendDst.VerifyApproval.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) {
-                VerifyApproveScreen()
-            }
-            composable(
-                route = SendDst.KeysignApproval.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) { entry ->
-                val transactionId = entry.arguments
-                    ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-
-                val keysignShareViewModel: KeysignShareViewModel =
-                    hiltViewModel(context as MainActivity)
-                keysignShareViewModel.loadSwapApprovalTransaction(transactionId)
-
-                KeysignFlowView(
-                    navController = mainNavController,
-                    onComplete = {
-                        navHostController.navigate(SendDst.VerifyTransaction(transactionId).route)
-                    }
                 )
             }
             composable(

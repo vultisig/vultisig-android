@@ -284,4 +284,5 @@
     <string name="token_selection_selected_tokens_title" translatable="false">Selected</string>
     <string name="token_selection_tokens_title" translatable="false">Tokens</string>
     <string name="token_selection_search_hint" translatable="false">Search...</string>
+    <string name="verify_swap_agree_allowance" translatable="false">I agree with providing unlimited ERC20 allowance</string>
 </resources>

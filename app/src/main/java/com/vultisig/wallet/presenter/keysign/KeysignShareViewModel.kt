@@ -71,38 +71,12 @@ internal class KeysignShareViewModel @Inject constructor(
                 vaultPublicKeyECDSA = pubKeyECDSA,
                 utxos = specific.utxos,
                 vaultLocalPartyID = vault.localPartyID,
-                approvePayload = null,
-                memo = null,
-            )
-        }
-    }
-
-    fun loadSwapApprovalTransaction(transactionId: TransactionId) {
-        runBlocking {
-            val transaction = swapTransactionRepository.getTransaction(transactionId)
-
-            val vault = vaultRepository.get(transaction.vaultId)!!
-
-            val pubKeyECDSA = vault.pubKeyECDSA
-            val srcToken = transaction.srcToken
-
-            val specific = transaction.blockChainSpecific
-
-            this@KeysignShareViewModel.vault = vault
-
-            keysignPayload = KeysignPayload(
-                coin = srcToken,
-                toAddress = srcToken.contractAddress,
-                toAmount = transaction.srcTokenValue.value,
-                blockChainSpecific = specific.blockChainSpecific,
-                vaultPublicKeyECDSA = pubKeyECDSA,
-                utxos = specific.utxos,
-                vaultLocalPartyID = vault.localPartyID,
-                approvePayload = ERC20ApprovePayload(
-                    amount = SwapTransaction.maxAllowance,
-                    spender = transaction.dstAddress,
-                ),
-                swapPayload = null,
+                approvePayload = if (transaction.isApprovalRequired)
+                    ERC20ApprovePayload(
+                        amount = SwapTransaction.maxAllowance,
+                        spender = transaction.dstAddress,
+                    )
+                else null,
                 memo = null,
             )
         }

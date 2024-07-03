@@ -240,19 +240,11 @@ internal class SwapFormViewModel @Inject constructor(
 
             swapTransactionRepository.addTransaction(transaction)
 
-            if (transaction.isApprovalRequired) {
-                sendNavigator.navigate(
-                    SendDst.VerifyApproval(
-                        transactionId = transaction.id,
-                    )
+            sendNavigator.navigate(
+                SendDst.VerifyTransaction(
+                    transactionId = transaction.id,
                 )
-            } else {
-                sendNavigator.navigate(
-                    SendDst.VerifyTransaction(
-                        transactionId = transaction.id,
-                    )
-                )
-            }
+            )
         }
     }
 

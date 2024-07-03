@@ -3,6 +3,7 @@ package com.vultisig.wallet.chains
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.data.wallet.Swaps
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.THORChainSwapPayload
@@ -15,6 +16,7 @@ import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
 import wallet.core.jni.proto.THORChainSwap
 import wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
+import java.math.BigInteger
 
 internal class THORChainSwaps(
     private val vaultHexPublicKey: String,
@@ -25,9 +27,10 @@ internal class THORChainSwaps(
         private const val AFFILIATE_FEE_RATE = "50" // 50 BP
     }
 
-    fun getPreSignedInputData(
+    private fun getPreSignedInputData(
         swapPayload: THORChainSwapPayload,
         keysignPayload: KeysignPayload,
+        nonceIncrement: BigInteger,
     ): ByteArray {
         val input = THORChainSwap.SwapInput.newBuilder()
             .setFromAsset(swapPayload.fromAsset)
@@ -83,6 +86,7 @@ internal class THORChainSwaps(
                 return helper.getPreSignedInputData(
                     keysignPayload = keysignPayload,
                     signingInput = output.ethereum,
+                    nonceIncrement = nonceIncrement,
                 )
             }
 
@@ -104,33 +108,20 @@ internal class THORChainSwaps(
     fun getPreSignedImageHash(
         swapPayload: THORChainSwapPayload,
         keysignPayload: KeysignPayload,
+        nonceIncrement: BigInteger,
     ): List<String> {
-        val inputData = getPreSignedInputData(swapPayload, keysignPayload)
-        return when (swapPayload.fromAsset.chain) {
+        val inputData = getPreSignedInputData(swapPayload, keysignPayload, nonceIncrement)
 
-            THORChainSwap.Chain.BTC, THORChainSwap.Chain.LTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH -> {
-                val hashes =
-                    TransactionCompiler.preImageHashes(keysignPayload.coin.coinType, inputData)
-                val preSigningOutput =
-                    Bitcoin.PreSigningOutput.parseFrom(hashes)
-                preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
-            }
+        val chain = swapPayload.fromCoin.chain
+        val coinType = keysignPayload.coin.coinType
 
-            THORChainSwap.Chain.THOR, THORChainSwap.Chain.ATOM, THORChainSwap.Chain.ETH, THORChainSwap.Chain.BSC, THORChainSwap.Chain.AVAX -> {
-                getPreSigningOutput(keysignPayload.coin.coinType, inputData)
-            }
-
-            THORChainSwap.Chain.BNB, THORChainSwap.Chain.UNRECOGNIZED, null -> {
-                throw Exception("Unsupported chain")
-            }
-        }
+        return Swaps.getPreSignedImageHash(inputData, coinType, chain)
     }
 
-    private fun getPreSigningOutput(coinType: CoinType, inputData: ByteArray): List<String> {
-        val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput = PreSigningOutput.parseFrom(hashes)
-        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
-    }
+    private fun getPreSigningOutput(coinType: CoinType, inputData: ByteArray): List<String> =
+        Swaps.getPreSigningOutput(
+            preImageHashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        )
 
     private fun getPreSignedApproveInputData(
         approvePayload: ERC20ApprovePayload,
@@ -145,7 +136,7 @@ internal class THORChainSwaps(
                             .setAmount(ByteString.copyFrom(approvePayload.amount.toByteArray()))
                     )
             )
-            .setToAddress(keysignPayload.toAddress)
+            .setToAddress(keysignPayload.coin.contractAddress)
             .build()
 
         return EvmHelper(
@@ -180,8 +171,9 @@ internal class THORChainSwaps(
         swapPayload: THORChainSwapPayload,
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,
+        nonceIncrement: BigInteger,
     ): SignedTransactionResult {
-        val inputData = getPreSignedInputData(swapPayload, keysignPayload)
+        val inputData = getPreSignedInputData(swapPayload, keysignPayload, nonceIncrement)
         when (swapPayload.fromAsset.chain) {
             THORChainSwap.Chain.THOR -> {
                 return THORCHainHelper(vaultHexPublicKey, vaultHexChainCode).getSignedTransaction(

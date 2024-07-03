@@ -48,6 +48,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
+import java.math.BigInteger
 import java.util.Base64
 
 enum class KeysignState {
@@ -228,30 +229,39 @@ internal class KeysignViewModel(
         }
     }
 
-    private fun getSignedTransaction(): SignedTransactionResult {
+    private suspend fun getSignedTransaction(): SignedTransactionResult {
         val swapPayload = keysignPayload.swapPayload
-        if (swapPayload != null) {
-            return when (swapPayload) {
-                is SwapPayload.ThorChain -> {
-                    THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures)
-                }
 
-                is SwapPayload.OneInch -> {
-                    OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures)
-                }
-            }
-        }
+        var nonceAcc = BigInteger.ZERO
 
         if (keysignPayload.approvePayload != null) {
-            return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+            val signedTransaction = THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                 .getSignedApproveTransaction(
                     keysignPayload.approvePayload,
                     keysignPayload,
                     signatures
                 )
+
+            val evmApi = evmApiFactory.createEvmApi(keysignPayload.coin.chain)
+            evmApi.sendTransaction(signedTransaction.rawTransaction)
+
+            nonceAcc++
         }
+
+        if (swapPayload != null) {
+            return when (swapPayload) {
+                is SwapPayload.ThorChain -> {
+                    THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
+                }
+
+                is SwapPayload.OneInch -> {
+                    OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
+                }
+            }
+        }
+
         // we could define an interface to make the following more simpler,but I will leave it for later
         when (keysignPayload.coin.chain) {
             Chain.bitcoin, Chain.dash, Chain.bitcoinCash, Chain.dogecoin, Chain.litecoin -> {

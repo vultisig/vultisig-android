@@ -51,6 +51,7 @@ internal fun VerifySwapScreen(
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
         onConfirm = viewModel::confirm,
+        onConsentAllowance = viewModel::consentAllowance,
     )
 }
 
@@ -61,6 +62,7 @@ internal fun VerifySwapScreen(
     isConsentsEnabled: Boolean = true,
     onConsentReceiveAmount: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
+    onConsentAllowance: (Boolean) -> Unit = {},
     onConfirm: () -> Unit,
 ) {
     VerifySwapScreen(
@@ -71,10 +73,13 @@ internal fun VerifySwapScreen(
         estimatedTime = state.estimatedTime.asString(),
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
+        hasConsentAllowance = state.hasConsentAllowance,
+        consentAllowance = state.consentAllowance,
         confirmTitle = confirmTitle,
         isConsentsEnabled = isConsentsEnabled,
         onConsentReceiveAmount = onConsentReceiveAmount,
         onConsentAmount = onConsentAmount,
+        onConsentAllowance = onConsentAllowance,
         onConfirm = onConfirm,
     )
 }
@@ -88,10 +93,13 @@ private fun VerifySwapScreen(
     estimatedTime: String,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
+    hasConsentAllowance: Boolean,
+    consentAllowance: Boolean,
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
     onConsentReceiveAmount: (Boolean) -> Unit,
     onConsentAmount: (Boolean) -> Unit,
+    onConsentAllowance: (Boolean) -> Unit,
     onConfirm: () -> Unit,
 ) {
     Box(
@@ -123,6 +131,13 @@ private fun VerifySwapScreen(
                         title = stringResource(R.string.verify_transaction_to_title),
                         address = dstTokenValue
                     )
+
+                    if (hasConsentAllowance) {
+                        AddressField(
+                            title = stringResource(R.string.verify_approve_amount_title),
+                            address = stringResource(R.string.verify_approve_amount_unlimited),
+                        )
+                    }
 
                     OtherField(
                         title = stringResource(R.string.verify_swap_screen_estimated_fees),
@@ -157,6 +172,14 @@ private fun VerifySwapScreen(
                         isChecked = consentReceiveAmount,
                         onCheckedChange = onConsentReceiveAmount,
                     )
+
+                    if (hasConsentAllowance) {
+                        CheckField(
+                            title = stringResource(R.string.verify_swap_agree_allowance),
+                            isChecked = consentAllowance,
+                            onCheckedChange = onConsentAllowance,
+                        )
+                    }
                 }
             }
         }
@@ -185,9 +208,12 @@ private fun VerifySwapScreenPreview() {
         estimatedTime = "Instant",
         consentAmount = true,
         consentReceiveAmount = false,
+        hasConsentAllowance = true,
+        consentAllowance = true,
         confirmTitle = "Sign",
         onConsentReceiveAmount = {},
         onConsentAmount = {},
+        onConsentAllowance = {},
         onConfirm = {},
     )
 }

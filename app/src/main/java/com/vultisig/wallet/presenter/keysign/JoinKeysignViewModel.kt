@@ -42,7 +42,6 @@ import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
-import com.vultisig.wallet.ui.models.swap.VerifyApproveUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -79,10 +78,6 @@ internal sealed class VerifyUiModel {
 
     data class Swap(
         val model: VerifySwapUiModel,
-    ) : VerifyUiModel()
-
-    data class Approve(
-        val model: VerifyApproveUiModel,
     ) : VerifyUiModel()
 
 }
@@ -215,59 +210,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         val currency = appCurrencyRepository.currency.first()
 
         when {
-            approvePayload != null -> {
-              verifyUiModel.value = VerifyUiModel.Approve(
-                    VerifyApproveUiModel(
-                        spenderAddress = approvePayload.spender,
-                    )
-                )
-            }
-            swapPayload == null -> {
-                val payloadToken = payload.coin
-                val address = payloadToken.address
-                val token = tokenRepository.getToken(payloadToken.id)!!
-                val chain = token.chain
-
-                val tokenValue = TokenValue(
-                    value = payload.toAmount,
-                    unit = token.ticker,
-                    decimals = token.decimal,
-                )
-
-                val gasFee = gasFeeRepository.getGasFee(chain, address)
-
-                val transaction = Transaction(
-                    id = UUID.randomUUID().toString(),
-
-                    vaultId = payload.vaultPublicKeyECDSA,
-                    chainId = chain.id,
-                    tokenId = token.id,
-                    srcAddress = address,
-                    dstAddress = payload.toAddress,
-                    tokenValue = tokenValue,
-                    fiatValue = convertTokenValueToFiat(
-                        token,
-                        tokenValue,
-                        currency,
-                    ),
-                    gasFee = gasFee,
-                    memo = payload.memo,
-
-                    // TODO that's mock data
-                    blockChainSpecific = BlockChainSpecific.THORChain(
-                        BigInteger.ZERO,
-                        BigInteger.ZERO,
-                        BigInteger.ZERO
-                    ),
-                )
-
-                verifyUiModel.value = VerifyUiModel.Send(
-                    VerifyTransactionUiModel(
-                        transaction = mapTransactionToUiModel(transaction),
-                    )
-                )
-            }
-            else -> {
+            swapPayload != null -> {
                 val srcToken = swapPayload.srcToken
                 val dstToken = swapPayload.dstToken
 
@@ -320,7 +263,51 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
                     }
                 }
+            }
+            else -> {
+                val payloadToken = payload.coin
+                val address = payloadToken.address
+                val token = tokenRepository.getToken(payloadToken.id)!!
+                val chain = token.chain
 
+                val tokenValue = TokenValue(
+                    value = payload.toAmount,
+                    unit = token.ticker,
+                    decimals = token.decimal,
+                )
+
+                val gasFee = gasFeeRepository.getGasFee(chain, address)
+
+                val transaction = Transaction(
+                    id = UUID.randomUUID().toString(),
+
+                    vaultId = payload.vaultPublicKeyECDSA,
+                    chainId = chain.id,
+                    tokenId = token.id,
+                    srcAddress = address,
+                    dstAddress = payload.toAddress,
+                    tokenValue = tokenValue,
+                    fiatValue = convertTokenValueToFiat(
+                        token,
+                        tokenValue,
+                        currency,
+                    ),
+                    gasFee = gasFee,
+                    memo = payload.memo,
+
+                    // TODO that's mock data
+                    blockChainSpecific = BlockChainSpecific.THORChain(
+                        BigInteger.ZERO,
+                        BigInteger.ZERO,
+                        BigInteger.ZERO
+                    ),
+                )
+
+                verifyUiModel.value = VerifyUiModel.Send(
+                    VerifyTransactionUiModel(
+                        transaction = mapTransactionToUiModel(transaction),
+                    )
+                )
             }
         }
     }

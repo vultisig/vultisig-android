@@ -32,7 +32,6 @@ import com.vultisig.wallet.presenter.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
-import com.vultisig.wallet.ui.screens.swap.VerifyApproveScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 
 @Composable
@@ -99,15 +98,6 @@ internal fun JoinKeysignView(
                         VerifySwapScreen(
                             state = model.model,
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
-                            isConsentsEnabled = false,
-                            onConfirm = viewModel::joinKeysign,
-                        )
-                    }
-
-                    is VerifyUiModel.Approve -> {
-                        VerifyApproveScreen(
-                            state = model.model,
-                            confirmTitle = stringResource(R.string.verify_approve_sign_button),
                             isConsentsEnabled = false,
                             onConfirm = viewModel::joinKeysign,
                         )
