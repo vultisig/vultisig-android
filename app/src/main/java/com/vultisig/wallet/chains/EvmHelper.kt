@@ -53,12 +53,13 @@ internal class EvmHelper(
     fun getPreSignedInputData(
         signingInput: Ethereum.SigningInput,
         keysignPayload: KeysignPayload,
+        nonceIncrement: BigInteger = BigInteger.ZERO,
     ): ByteArray {
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
 
         return signingInput.toBuilder().apply {
             chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
-            nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
+            nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
             gasLimit = ByteString.copyFrom(ethSpecifc.gasLimit.toByteArray())
             maxFeePerGas = ByteString.copyFrom(ethSpecifc.maxFeePerGasWei.toByteArray())
             maxInclusionFeePerGas = ByteString.copyFrom(ethSpecifc.priorityFeeWei.toByteArray())
@@ -71,12 +72,13 @@ internal class EvmHelper(
         gasPrice: BigInteger,
         signingInput: Ethereum.SigningInput.Builder,
         keysignPayload: KeysignPayload,
+        nonceIncrement: BigInteger = BigInteger.ZERO,
     ): ByteArray {
         val ethSpecifc = requireEthereumSpec(keysignPayload.blockChainSpecific)
 
         return signingInput.apply {
             chainId = ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray())
-            nonce = ByteString.copyFrom(ethSpecifc.nonce.toByteArray())
+            nonce = ByteString.copyFrom((ethSpecifc.nonce + nonceIncrement).toByteArray())
 
             gasLimit = ByteString.copyFrom(gas.toByteArray())
             setGasPrice(ByteString.copyFrom(gasPrice.toByteArray()))

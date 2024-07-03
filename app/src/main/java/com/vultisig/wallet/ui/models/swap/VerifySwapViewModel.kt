@@ -32,6 +32,8 @@ internal data class VerifySwapUiModel(
     val estimatedTime: UiText = UiText.Empty,
     val consentAmount: Boolean = false,
     val consentReceiveAmount: Boolean = false,
+    val hasConsentAllowance: Boolean = false,
+    val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
 )
 
@@ -71,11 +73,15 @@ internal class VerifySwapViewModel @Inject constructor(
                 is SwapPayload.ThorChain -> R.string.swap_form_provider_thorchain.asUiText()
             }
 
+            val consentAllowance = !transaction.isApprovalRequired
+
             state.update {
                 it.copy(
                     provider = providerText,
                     srcTokenValue = mapTokenValueToStringWithUnit(transaction.srcTokenValue),
                     dstTokenValue = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue),
+                    hasConsentAllowance = transaction.isApprovalRequired,
+                    consentAllowance = consentAllowance,
                     estimatedFees = fiatValueToStringMapper.map(fiatFees),
                     estimatedTime = estimatedTime,
                 )
@@ -91,13 +97,17 @@ internal class VerifySwapViewModel @Inject constructor(
         state.update { it.copy(consentAmount = consent) }
     }
 
+    fun consentAllowance(consent: Boolean) {
+        state.update { it.copy(consentAllowance = consent) }
+    }
+
     fun dismissError() {
         state.update { it.copy(errorText = null) }
     }
 
     fun confirm() {
         val hasAllConsents = state.value.let {
-            it.consentReceiveAmount && it.consentAmount
+            it.consentReceiveAmount && it.consentAmount && it.consentAllowance
         }
 
         if (hasAllConsents) {

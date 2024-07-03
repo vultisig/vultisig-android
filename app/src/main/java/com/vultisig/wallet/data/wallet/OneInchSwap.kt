@@ -14,6 +14,7 @@ import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
+import java.math.BigInteger
 
 internal class OneInchSwap(
     private val vaultHexPublicKey: String,
@@ -23,34 +24,32 @@ internal class OneInchSwap(
     fun getPreSignedImageHash(
         swapPayload: OneInchSwapPayloadJson,
         keysignPayload: KeysignPayload,
+        nonceIncrement: BigInteger,
     ): List<String> {
-        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload)
+        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
 
         val chain = swapPayload.fromCoin.chain
-        when (chain.standard) {
-            TokenStandard.UTXO -> {
-                val hashes =
-                    TransactionCompiler.preImageHashes(keysignPayload.coin.coinType, inputData)
-                val preSigningOutput =
-                    Bitcoin.PreSigningOutput.parseFrom(hashes)
-                return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
-            }
+        val coinType = keysignPayload.coin.coinType
 
-            TokenStandard.EVM, TokenStandard.THORCHAIN, TokenStandard.COSMOS -> {
-                val hashes =
-                    TransactionCompiler.preImageHashes(keysignPayload.coin.coinType, inputData)
-                val preSigningOutput =
-                    wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-                return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
-            }
+        return Swaps.getPreSignedImageHash(inputData, coinType, chain)
+    }
 
-            else -> error("Unsupported chain type $chain")
-        }
+    fun getSignedTransaction(
+        swapPayload: OneInchSwapPayloadJson,
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>,
+        nonceIncrement: BigInteger,
+    ): SignedTransactionResult {
+        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload, nonceIncrement)
+        val helper =
+            EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+        return helper.getSignedTransaction(inputData, signatures)
     }
 
     private fun getPreSignedInputData(
         quote: OneInchSwapQuoteJson,
-        keysignPayload: KeysignPayload
+        keysignPayload: KeysignPayload,
+        nonceIncrement: BigInteger,
     ): ByteArray {
         val input = SigningInput.newBuilder()
             .setToAddress(quote.tx.to)
@@ -73,18 +72,13 @@ internal class OneInchSwap(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,
             vaultHexChainCode,
-        ).getPreSignedInputData(gas, gasPrice, input, keysignPayload)
-    }
-
-    fun getSignedTransaction(
-        swapPayload: OneInchSwapPayloadJson,
-        keysignPayload: KeysignPayload,
-        signatures: Map<String, KeysignResponse>,
-    ): SignedTransactionResult {
-        val inputData = getPreSignedInputData(swapPayload.quote, keysignPayload)
-        val helper =
-            EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
-        return helper.getSignedTransaction(inputData, signatures)
+        ).getPreSignedInputData(
+            gas = gas,
+            gasPrice = gasPrice,
+            signingInput = input,
+            keysignPayload = keysignPayload,
+            nonceIncrement = nonceIncrement,
+        )
     }
 
 }
