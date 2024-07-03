@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.send
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,12 +29,12 @@ import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 internal fun SendScreen(
     navController: NavController,
     vaultId: String,
     chainId: String?,
+    selectedTokenId: String?,
     qrCodeResult: String?,
     viewModel: SendViewModel = hiltViewModel(),
 ) {
@@ -101,6 +100,7 @@ internal fun SendScreen(
                 SendFormScreen(
                     vaultId = vaultId,
                     chainId = chainId,
+                    selectedTokenId = selectedTokenId,
                     qrCodeResult = qrCodeResult,
                 )
             }
@@ -140,5 +140,6 @@ private fun SendScreenPreview() {
         qrCodeResult = null,
         vaultId = "",
         chainId = "",
+        selectedTokenId = "",
     )
 }

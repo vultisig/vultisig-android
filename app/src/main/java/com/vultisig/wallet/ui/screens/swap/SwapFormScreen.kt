@@ -37,7 +37,6 @@ import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
-import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -48,12 +47,14 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun SwapFormScreen(
     vaultId: String,
     chainId: String?,
+    selectedSrcTokenId: String? = null,
+    selectedDstTokenId: String? = null,
     viewModel: SwapFormViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(vaultId, chainId) {
-        viewModel.loadData(vaultId, chainId)
+        viewModel.loadData(selectedSrcTokenId, selectedDstTokenId, vaultId, chainId)
     }
 
     SwapFormScreen(
@@ -73,8 +74,8 @@ internal fun SwapFormScreen(
     state: SwapFormUiModel,
     srcAmountTextFieldState: TextFieldState,
     onAmountLostFocus: () -> Unit = {},
-    onSelectSrcToken: (TokenBalanceUiModel) -> Unit = {},
-    onSelectDstToken: (TokenBalanceUiModel) -> Unit = {},
+    onSelectSrcToken: () -> Unit = {},
+    onSelectDstToken: () -> Unit = {},
     onFlipSelectedTokens: () -> Unit = {},
     onSwap: () -> Unit = {},
 ) {
@@ -94,7 +95,6 @@ internal fun SwapFormScreen(
         ) {
             FormTokenSelection(
                 selectedToken = state.selectedSrcToken,
-                availableTokens = state.availableTokens,
                 onSelectToken = onSelectSrcToken,
             )
 
@@ -139,7 +139,6 @@ internal fun SwapFormScreen(
 
             FormTokenSelection(
                 selectedToken = state.selectedDstToken,
-                availableTokens = state.availableTokens,
                 onSelectToken = onSelectDstToken,
             )
 

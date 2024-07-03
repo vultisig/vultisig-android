@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.ZeroValueCurrencyToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -62,7 +63,6 @@ import kotlin.time.Duration.Companion.minutes
 internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
     val selectedDstToken: TokenBalanceUiModel? = null,
-    val availableTokens: List<TokenBalanceUiModel> = emptyList(),
     val srcFiatValue: String = "0",
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
@@ -76,6 +76,7 @@ internal data class SwapFormUiModel(
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class SwapFormViewModel @Inject constructor(
+    private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
@@ -255,12 +256,25 @@ internal class SwapFormViewModel @Inject constructor(
         }
     }
 
-    fun selectSrcToken(model: TokenBalanceUiModel) {
-        selectedSrc.value = model.model
+    fun selectSrcToken() {
+        navigateToSelectToken(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID)
     }
 
-    fun selectDstToken(model: TokenBalanceUiModel) {
-        selectedDst.value = model.model
+    fun selectDstToken() {
+        navigateToSelectToken(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID)
+    }
+
+    private fun navigateToSelectToken(
+        targetArg: String,
+    ) {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.SelectToken(
+                    vaultId = vaultId ?: return@launch,
+                    targetArg = targetArg,
+                )
+            )
+        }
     }
 
     fun flipSelectedTokens() {
@@ -269,9 +283,14 @@ internal class SwapFormViewModel @Inject constructor(
         selectedDst.value = buffer
     }
 
-    fun loadData(vaultId: String, chainId: String?) {
+    fun loadData(
+        selectedSrcTokenId: String? = null,
+        selectedDstTokenId: String? = null,
+        vaultId: String,
+        chainId: String?
+    ) {
         this.vaultId = vaultId
-        loadTokens(vaultId, chainId)
+        loadTokens(selectedSrcTokenId, selectedDstTokenId, vaultId, chainId)
     }
 
     fun validateAmount() {
@@ -279,7 +298,12 @@ internal class SwapFormViewModel @Inject constructor(
         uiState.update { it.copy(amountError = errorMessage) }
     }
 
-    private fun loadTokens(vaultId: String, chainId: String?) {
+    private fun loadTokens(
+        selectedSrcTokenId: String? = null,
+        selectedDstTokenId: String? = null,
+        vaultId: String,
+        chainId: String?
+    ) {
         val chain = chainId?.let(Chain::fromRaw)
 
         viewModelScope.launch {
@@ -291,28 +315,9 @@ internal class SwapFormViewModel @Inject constructor(
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
-                    selectedSrc.updateSrc(addresses, chain)
-                    selectedDst.updateSrc(addresses, chain)
-                    updateUiTokens(
-                        addresses
-                            .asSequence()
-                            .map { address ->
-                                address.accounts.map {
-                                    accountToTokenBalanceUiModelMapper.map(SendSrc(address, it))
-                                }
-                            }
-                            .flatten()
-                            .toList()
-                    )
+                    selectedSrc.updateSrc(selectedSrcTokenId, addresses, chain)
+                    selectedDst.updateSrc(selectedDstTokenId, addresses, chain)
                 }
-        }
-    }
-
-    private fun updateUiTokens(tokenUiModels: List<TokenBalanceUiModel>) {
-        uiState.update {
-            it.copy(
-                availableTokens = tokenUiModels,
-            )
         }
     }
 
@@ -532,44 +537,56 @@ internal class SwapFormViewModel @Inject constructor(
 
 
 internal fun MutableStateFlow<SendSrc?>.updateSrc(
+    selectedTokenId: String?,
     addresses: List<Address>,
     chain: Chain?,
     forceChainChange: Boolean = false,
 ) {
     val selectedSrcValue = value
     value = if (selectedSrcValue == null || forceChainChange) {
-        addresses.firstSendSrc(chain)
+        addresses.firstSendSrc(selectedTokenId, chain)
     } else {
-        addresses.findCurrentSrc(selectedSrcValue)
+        addresses.findCurrentSrc(selectedTokenId, selectedSrcValue)
     }
 }
 
 internal fun List<Address>.firstSendSrc(
+    selectedTokenId: String?,
     filterByChain: Chain?,
 ): SendSrc {
-    val address = if (filterByChain == null) first()
-    else first { it.chain.id == filterByChain.id }
+    val address = when {
+        selectedTokenId != null -> first { it.accounts.any { it.token.id == selectedTokenId } }
+        filterByChain != null -> first { it.chain == filterByChain }
+        else -> first()
+    }
 
-    val account = if (filterByChain == null)
-        address.accounts.first()
-    else address.accounts.first { it.token.isNativeToken }
+    val account = when {
+        selectedTokenId != null -> address.accounts.first { it.token.id == selectedTokenId }
+        filterByChain != null -> address.accounts.first { it.token.isNativeToken }
+        else -> address.accounts.first()
+    }
 
     return SendSrc(address, account)
 }
 
 internal fun List<Address>.findCurrentSrc(
+    selectedTokenId: String?,
     currentSrc: SendSrc,
 ): SendSrc {
-    val selectedAddress = currentSrc.address
-    val selectedAccount = currentSrc.account
-    val address = first {
-        it.chain == selectedAddress.chain &&
-                it.address == selectedAddress.address
+    if (selectedTokenId == null) {
+        val selectedAddress = currentSrc.address
+        val selectedAccount = currentSrc.account
+        val address = first {
+            it.chain == selectedAddress.chain &&
+                    it.address == selectedAddress.address
+        }
+        return SendSrc(
+            address,
+            address.accounts.first {
+                it.token.ticker == selectedAccount.token.ticker
+            },
+        )
+    } else {
+        return firstSendSrc(selectedTokenId, null)
     }
-    return SendSrc(
-        address,
-        address.accounts.first {
-            it.token.ticker == selectedAccount.token.ticker
-        },
-    )
 }

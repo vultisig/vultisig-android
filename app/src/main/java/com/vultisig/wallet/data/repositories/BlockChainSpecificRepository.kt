@@ -62,7 +62,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 BlockChainSpecific.THORChain(
                     accountNumber = BigInteger(
                         account.accountNumber
-                            ?: error("Account number is null. Does the address exist?")
+                            ?: "0"
                     ),
                     sequence = BigInteger(account.sequence ?: "0"),
                     fee = gasFee.value,
@@ -132,7 +132,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 BlockChainSpecific.Cosmos(
                     accountNumber = BigInteger(
                         account.accountNumber
-                            ?: error("Account number is null. Does the address exist?")
+                            ?: "0"
                     ),
                     sequence = BigInteger(account.sequence ?: "0"),
                     gas = gasFee.value,

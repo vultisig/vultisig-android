@@ -30,6 +30,7 @@ internal fun TokenSelectionItem(
     title: String,
     subtitle: String,
     logo: Any,
+    hasTokenSwitch: Boolean = true,
     isChecked: Boolean = false,
     onCheckedChange: ((Boolean) -> Unit)? = null,
 ) {
@@ -75,18 +76,20 @@ internal fun TokenSelectionItem(
                 )
             }
 
-            VaultSwitch(
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Theme.colors.neutral0,
-                    checkedBorderColor = Theme.colors.turquoise800,
-                    checkedTrackColor = Theme.colors.turquoise800,
-                    uncheckedThumbColor = Theme.colors.neutral0,
-                    uncheckedBorderColor = Theme.colors.oxfordBlue400,
-                    uncheckedTrackColor = Theme.colors.oxfordBlue400
-                ),
-                checked = isChecked,
-                onCheckedChange = null,
-            )
+            if (hasTokenSwitch) {
+                VaultSwitch(
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Theme.colors.neutral0,
+                        checkedBorderColor = Theme.colors.turquoise800,
+                        checkedTrackColor = Theme.colors.turquoise800,
+                        uncheckedThumbColor = Theme.colors.neutral0,
+                        uncheckedBorderColor = Theme.colors.oxfordBlue400,
+                        uncheckedTrackColor = Theme.colors.oxfordBlue400
+                    ),
+                    checked = isChecked,
+                    onCheckedChange = null,
+                )
+            }
         }
     }
 }
