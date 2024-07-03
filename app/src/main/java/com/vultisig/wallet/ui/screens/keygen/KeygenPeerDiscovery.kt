@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -48,14 +46,6 @@ internal fun KeygenPeerDiscovery(
     val context = LocalContext.current
     val applicationContext = context.applicationContext
 
-    LaunchedEffect(Unit) {
-        viewModel.setData(vaultId, applicationContext)
-    }
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.stopParticipantDiscovery()
-        }
-    }
 
     KeygenPeerDiscoveryScreen(
         navController = navController,
