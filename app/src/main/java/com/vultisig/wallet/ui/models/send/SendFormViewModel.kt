@@ -116,7 +116,7 @@ internal class SendFormViewModel @Inject constructor(
             Chain.entries.find { chain ->
                 chainAccountAddressRepository.isValid(chain, qrCode)
             }?.let { chain ->
-                loadData(vaultId, chain.id, null,true)
+                loadData(vaultId, chain.id, null, true)
             }
         }
     }
@@ -211,13 +211,13 @@ internal class SendFormViewModel @Inject constructor(
         val selectedAccount = selectedAccount ?: return
         val selectedTokenValue = selectedAccount.tokenValue ?: return
         val gasFee = gasFee.value ?: return
-        val specific = specific.value ?: return
         val chain = selectedAccount.token.chain
+        val specific = specific.value?.blockChainSpecific
 
         viewModelScope.launch {
             val max = if (selectedAccount.token.isNativeToken) {
-                val gasLimit = if (chain.standard == TokenStandard.EVM) {
-                    (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                val gasLimit = if (chain.standard == TokenStandard.EVM && specific != null) {
+                    (specific as BlockChainSpecific.Ethereum).gasLimit
                 } else {
                     BigInteger.valueOf(1)
                 }
@@ -411,16 +411,22 @@ internal class SendFormViewModel @Inject constructor(
 
     private fun calculateSpecific() {
         viewModelScope.launch {
-            selectedSrc.filterNotNull().combine(gasFee.filterNotNull()) { selectedSrc, gasFee ->
+            combine(
+                selectedSrc.filterNotNull(),
+                gasFee.filterNotNull(),
+            ) { selectedSrc, gasFee ->
                 val selectedAccount = selectedSrc.account
                 val chain = selectedAccount.token.chain
                 val selectedToken = selectedAccount.token
                 val srcAddress = selectedAccount.token.address
-                blockChainSpecificRepository
-                    .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
-            }.collect {
-                specific.value = it
-            }
+                try {
+                    specific.value = blockChainSpecificRepository
+                        .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+                } catch (e: Exception) {
+                    // todo handle errors
+                    Timber.e(e)
+                }
+            }.collect()
         }
     }
 
