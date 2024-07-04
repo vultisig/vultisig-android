@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.send
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -70,14 +70,26 @@ internal fun VerifyTransactionScreen(
     onConsentAmount: (Boolean) -> Unit = {},
     onConsentDst: (Boolean) -> Unit = {},
 ) {
-    Box(
+    Scaffold(
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
+        bottomBar = {
+            MultiColorButton(
+                text = confirmTitle,
+                textColor = Theme.colors.oxfordBlue800,
+                minHeight = 44.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
+                onClick = onConfirm,
+            )
+        }
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
+                .padding(it)
                 .padding(all = 16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
@@ -152,17 +164,6 @@ internal fun VerifyTransactionScreen(
                 }
             }
         }
-
-        MultiColorButton(
-            text = confirmTitle,
-            textColor = Theme.colors.oxfordBlue800,
-            minHeight = 44.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(all = 16.dp),
-            onClick = onConfirm,
-        )
     }
 }
 
