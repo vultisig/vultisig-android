@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -80,14 +81,30 @@ internal fun SwapFormScreen(
     onSwap: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
-    Box(
+    Scaffold(
         modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            MultiColorButton(
+                text = stringResource(R.string.send_continue_button),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 12.dp,
+                        vertical = 16.dp,
+                    ),
+                onClick = {
+                    focusManager.clearFocus(true)
+                    onSwap()
+                },
+            )
+        }
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
+                .padding(it)
                 .padding(
                     horizontal = 12.dp,
                     vertical = 16.dp
@@ -169,20 +186,6 @@ internal fun SwapFormScreen(
             }
         }
 
-        MultiColorButton(
-            text = stringResource(R.string.send_continue_button),
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 16.dp,
-                ),
-            onClick = {
-                focusManager.clearFocus(true)
-                onSwap()
-            },
-        )
     }
 }
 
