@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import javax.inject.Inject
 
-internal interface SaveVaultUseCase : suspend (Vault) -> Unit
+internal interface SaveVaultUseCase : suspend (Vault, Boolean) -> Unit
 
 internal class SaveVaultUseCaseImpl @Inject constructor(
     private val vaultRepository: VaultRepository,
@@ -17,9 +17,13 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
     private val defaultChainsRepository: DefaultChainsRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SaveVaultUseCase {
-    override suspend fun invoke(vault: Vault) {
+    override suspend fun invoke(vault: Vault, isReshare: Boolean) {
         Timber.d("saveVault(vault = $vault)")
-
+        if (isReshare) {
+            // when it is reshare , user already select the chain
+            vaultRepository.upsert(vault)
+            return
+        }
         vaultRepository.add(vault)
 
         // if vault has no coins, then add default coins
