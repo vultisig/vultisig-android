@@ -42,7 +42,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,7 +57,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiCustomContentAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
+import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -95,8 +94,8 @@ internal fun ImportFileScreen(
         onContinue = viewModel::saveFileToAppDir,
         snackBarHostState = snackBarHostState,
         onHidePasswordPromptDialog = viewModel::hidePasswordPromptDialog,
-        onConfirmPasswordClick = viewModel::decryptVaultData
-
+        onConfirmPasswordClick = viewModel::decryptVaultData,
+        onTogglePasswordVisibilityClick = viewModel::togglePasswordVisibility,
     )
 }
 
@@ -110,6 +109,7 @@ private fun ImportFileScreen(
     onContinue: () -> Unit = {},
     onHidePasswordPromptDialog: () -> Unit = {},
     passwordTextFieldState: TextFieldState = TextFieldState(),
+    onTogglePasswordVisibilityClick: () -> Unit = {},
     onConfirmPasswordClick: () -> Unit = {},
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
@@ -147,13 +147,26 @@ private fun ImportFileScreen(
                                 text = stringResource(id = R.string.import_file_screen_enter_password),
                                 style = Theme.menlo.subtitle1
                             )
-                            FormTextFieldCard(
+                            UiSpacer(size = 16.dp)
+                            FormBasicSecureTextField(
                                 textFieldState = passwordTextFieldState,
-                                title = "",
                                 hint = stringResource(R.string.import_file_screen_hint_password),
                                 error = uiModel.passwordErrorHint,
-                                onLostFocus = onConfirmPasswordClick,
-                                keyboardType = KeyboardType.Password
+                                onLostFocus = {},
+                                isObfuscationMode = uiModel.isPasswordObfuscated,
+                                actions = {
+                                    IconButton(onClick = onTogglePasswordVisibilityClick) {
+                                        Icon(
+                                            modifier = Modifier.width(28.dp),
+                                            painter = painterResource(
+                                                id = if (uiModel.isPasswordObfuscated)
+                                                    R.drawable.visible else R.drawable.hidden
+                                            ),
+                                            tint = Theme.colors.neutral0,
+                                            contentDescription = "change visibility button"
+                                        )
+                                    }
+                                }
                             )
 
                             TextButton(onClick = onConfirmPasswordClick) {
