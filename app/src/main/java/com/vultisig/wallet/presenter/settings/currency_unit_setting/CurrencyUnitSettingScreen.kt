@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +29,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.ChangeCurrencyUnit
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.InitScreen
+import com.vultisig.wallet.presenter.settings.default_chains_setting.TokenSelection
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -59,19 +61,16 @@ fun CurrencyUnitSettingScreen(navController: NavHostController) {
             modifier = Modifier
                 .padding(it),
         ) {
-            state.currencyUnits.forEach { currencyUnit ->
-                item {
-                    CurrencyUnitSettingItem(
-                        name = currencyUnit.name,
-                        isSelected = currencyUnit == state.selectedCurrency,
-                        onClick = {
-                            viewModel.onEvent(ChangeCurrencyUnit(currencyUnit))
-                        }
-                    )
-                }
+            items(state.currencyUnits) { currencyUnit ->
+                CurrencyUnitSettingItem(
+                    name = currencyUnit.name,
+                    isSelected = currencyUnit == state.selectedCurrency,
+                    onClick = {
+                        viewModel.onEvent(ChangeCurrencyUnit(currencyUnit))
+                    }
+                )
             }
         }
-
     }
 }
 
