@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -59,11 +60,16 @@ internal class ImportFileViewModel @Inject constructor(
         val dataToDecrypt = uiModel.value.fileContent?.toByteArray()
         dataToDecrypt?.let {
             viewModelScope.launch {
-                val vault = cryptoManager.decrypt(key, dataToDecrypt)
-                if (vault != null) {
-                    saveToDb(vault)
-                    hidePasswordPromptDialog()
-                } else {
+                try {
+                    val vault = cryptoManager.decrypt(key, dataToDecrypt)
+                    if (vault != null) {
+                        saveToDb(vault)
+                        hidePasswordPromptDialog()
+                    } else {
+                        showErrorHint()
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e)
                     showErrorHint()
                 }
             }
@@ -100,7 +106,7 @@ internal class ImportFileViewModel @Inject constructor(
 
     private suspend fun insertVaultToDb(fromJson: IOSVaultRoot) {
         val vault = vaultIOSToAndroidMapper(fromJson)
-        saveVault(vault)
+        saveVault(vault, false)
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id,

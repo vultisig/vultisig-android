@@ -1,6 +1,7 @@
 package com.vultisig.wallet.common
 
 import android.util.Base64
+import timber.log.Timber
 import java.security.MessageDigest
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
@@ -34,6 +35,7 @@ internal class AESCryptoManager @Inject constructor() : CryptoManager {
             val cipherText = cipher.doFinal(textToDecrypt)
             return cipherText.buildString()
         } catch (e: BadPaddingException) {
+            Timber.e(e, "Failed to decrypt data")
             return null
         }
     }
