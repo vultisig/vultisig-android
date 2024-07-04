@@ -148,4 +148,11 @@ internal class ImportFileViewModel @Inject constructor(
         }
     }
 
+    fun togglePasswordVisibility() {
+        val passwordVisibility = uiModel.value.isPasswordObfuscated
+        uiModel.update {
+            it.copy(isPasswordObfuscated = !passwordVisibility)
+        }
+    }
+
 }

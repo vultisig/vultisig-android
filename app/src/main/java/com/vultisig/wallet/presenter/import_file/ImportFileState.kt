@@ -9,5 +9,6 @@ internal data class ImportFileState(
     val fileContent: String? = null,
     val showPasswordPrompt: Boolean = false,
     val password: String? = null,
+    val isPasswordObfuscated: Boolean = true,
     val passwordErrorHint: UiText? = null,
 )

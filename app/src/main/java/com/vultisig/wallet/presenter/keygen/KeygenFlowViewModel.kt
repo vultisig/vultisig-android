@@ -27,6 +27,7 @@ import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -54,6 +55,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val gson: Gson,
     private val vaultRepository: VaultRepository,
     private val saveVault: SaveVaultUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -97,6 +99,12 @@ internal class KeygenFlowViewModel @Inject constructor(
             navigator = navigator,
             saveVault = saveVault,
         )
+
+    init {
+        viewModelScope.launch {
+            setData(vaultId, context.applicationContext)
+        }
+    }
 
     suspend fun setData(vaultId: String, context: Context) {
         // start mediator server
@@ -292,6 +300,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     fun moveToState(nextState: KeygenFlowState) {
+        stopParticipantDiscovery()
         currentState.value = nextState
     }
 
@@ -335,5 +344,10 @@ internal class KeygenFlowViewModel @Inject constructor(
         GlobalScope.launch(Dispatchers.IO) {
             updateKeygenPayload(context)
         }
+    }
+
+    override fun onCleared() {
+        stopParticipantDiscovery()
+        super.onCleared()
     }
 }
