@@ -1,10 +1,14 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -18,8 +22,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.ui.components.FormSearchBar
 import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ChainSelectionViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -39,6 +45,18 @@ internal fun ChainSelectionScreen(
             centerText = stringResource(R.string.chains), startIcon = R.drawable.caret_left,
             navController = navController
         )
+
+        UiSpacer(size = 8.dp)
+
+        FormSearchBar(
+            textFieldState = viewModel.searchTextFieldState,
+            modifier = Modifier
+                .padding(
+                    horizontal = 16.dp,
+                )
+        )
+
+        UiSpacer(size = 8.dp)
 
         LazyColumn(
             contentPadding = PaddingValues(all = 16.dp),

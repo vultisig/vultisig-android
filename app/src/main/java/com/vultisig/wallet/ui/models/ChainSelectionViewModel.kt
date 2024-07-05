@@ -1,5 +1,10 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.vultisig.wallet.ui.models
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,8 +15,8 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,6 +41,8 @@ internal class ChainSelectionViewModel @Inject constructor(
         requireNotNull(savedStateHandle[AddChainAccount.ARG_VAULT_ID])
 
     val uiState = MutableStateFlow(ChainSelectionUiModel())
+
+    val searchTextFieldState = TextFieldState()
 
     init {
         loadChains()
@@ -69,19 +76,24 @@ internal class ChainSelectionViewModel @Inject constructor(
 
     private fun loadChains() {
         viewModelScope.launch {
-            tokenRepository.nativeTokens
-                .zip(vaultRepository.getEnabledChains(vaultId)) { native, enabledChains ->
-                    native
-                        .sortedWith(compareBy({ it.ticker }, { it.chain.raw }))
-                        .map { nativeToken ->
-                            ChainUiModel(
-                                isEnabled = nativeToken.chain in enabledChains,
-                                coin = nativeToken,
-                            )
-                        }
-                }.collect { chains ->
-                    uiState.update { it.copy(chains = chains) }
-                }
+            combine(
+                tokenRepository.nativeTokens,
+                vaultRepository.getEnabledChains(vaultId),
+                searchTextFieldState.textAsFlow(),
+            ) { tokens, enabledChains, query ->
+                tokens
+                    .filter { query.isBlank() || it.ticker.contains(query, ignoreCase = true) }
+                    .map { token ->
+                        ChainUiModel(
+                            isEnabled = token.chain in enabledChains,
+                            coin = token,
+                        )
+                    }
+                    .sortedWith(compareBy({ it.coin.ticker }, { it.coin.chain.raw }))
+
+            }.collect { chains ->
+                uiState.update { it.copy(chains = chains) }
+            }
         }
     }
 
