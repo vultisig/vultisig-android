@@ -59,14 +59,24 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             }
 
             BlockChainSpecificAndUtxo(
-                BlockChainSpecific.THORChain(
-                    accountNumber = BigInteger(
-                        account.accountNumber
-                            ?: "0"
-                    ),
-                    sequence = BigInteger(account.sequence ?: "0"),
-                    fee = gasFee.value,
-                )
+                if (chain == Chain.mayaChain) {
+                    BlockChainSpecific.MayaChain(
+                        accountNumber = BigInteger(
+                            account.accountNumber
+                                ?: "0"
+                        ),
+                        sequence = BigInteger(account.sequence ?: "0"),
+                    )
+                } else {
+                    BlockChainSpecific.THORChain(
+                        accountNumber = BigInteger(
+                            account.accountNumber
+                                ?: "0"
+                        ),
+                        sequence = BigInteger(account.sequence ?: "0"),
+                        fee = gasFee.value,
+                    )
+                }
             )
         }
 

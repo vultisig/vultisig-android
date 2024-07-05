@@ -71,6 +71,7 @@ internal class VerifySwapViewModel @Inject constructor(
             val providerText = when (transaction.payload) {
                 is SwapPayload.OneInch -> R.string.swap_for_provider_1inch.asUiText()
                 is SwapPayload.ThorChain -> R.string.swap_form_provider_thorchain.asUiText()
+                is SwapPayload.MayaChain -> R.string.swap_form_provider_mayachain.asUiText()
             }
 
             val consentAllowance = !transaction.isApprovalRequired

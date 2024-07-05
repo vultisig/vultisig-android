@@ -24,4 +24,11 @@ internal sealed class SwapQuote {
         val data: THORChainSwapQuote,
     ) : SwapQuote()
 
+    data class MayaChain(
+        override val expectedDstValue: TokenValue,
+        override val fees: TokenValue,
+        override val estimatedTime: Duration?,
+        val data: THORChainSwapQuote,
+    ) : SwapQuote()
+
 }

@@ -262,6 +262,29 @@ internal class JoinKeysignViewModel @Inject constructor(
                             )
                         )
                     }
+
+                    is SwapPayload.MayaChain -> {
+                        val quote = swapQuoteRepository.getMayaSwapQuote(
+                            srcToken = srcToken,
+                            dstToken = dstToken,
+                            dstAddress = swapPayload.data.toAddress,
+                            tokenValue = srcTokenValue,
+                        )
+
+                        verifyUiModel.value = VerifyUiModel.Swap(
+                            VerifySwapUiModel(
+                                provider = R.string.swap_form_provider_mayachain.asUiText(),
+                                srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                                dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                                estimatedFees = fiatValueToStringMapper.map(
+                                    convertTokenValueToFiat(nativeToken, quote.fees, currency)
+                                ),
+                                estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
+                                    ?.let { UiText.DynamicString(it) }
+                                    ?: R.string.swap_screen_estimated_time_instant.asUiText(),
+                            )
+                        )
+                    }
                 }
             }
             else -> {

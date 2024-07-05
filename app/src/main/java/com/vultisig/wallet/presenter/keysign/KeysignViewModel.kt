@@ -248,17 +248,20 @@ internal class KeysignViewModel(
             nonceAcc++
         }
 
-        if (swapPayload != null) {
-            return when (swapPayload) {
+        if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
+            when (swapPayload) {
                 is SwapPayload.ThorChain -> {
-                    THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                    return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                         .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
                 }
 
                 is SwapPayload.OneInch -> {
-                    OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                    return  OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
                         .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
                 }
+
+                // Mayachain swap is done through send
+                is SwapPayload.MayaChain -> Unit
             }
         }
 

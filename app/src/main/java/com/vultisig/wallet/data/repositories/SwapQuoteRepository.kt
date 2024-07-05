@@ -1,8 +1,10 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
@@ -29,10 +31,23 @@ internal interface SwapQuoteRepository {
         isAffiliate: Boolean,
     ): OneInchSwapQuoteJson
 
+    suspend fun getMayaSwapQuote(
+        dstAddress: String,
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+    ): SwapQuote
+
+    fun resolveProvider(
+        srcToken: Coin,
+        dstToken: Coin,
+    ): SwapProvider?
+
 }
 
 internal class SwapQuoteRepositoryImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
+    private val mayaChainApi: MayaChainApi,
     private val oneInchApi: OneInchApi,
 ) : SwapQuoteRepository {
 
@@ -49,6 +64,37 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             srcAddress = srcToken.address,
             amount = tokenValue.value.toString(),
             isAffiliate = isAffiliate,
+        )
+    }
+
+    override suspend fun getMayaSwapQuote(
+        dstAddress: String,
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue
+    ): SwapQuote {
+        val mayaQuote = mayaChainApi.getSwapQuotes(
+            address = dstAddress,
+            fromAsset = srcToken.swapAssetName(),
+            toAsset = dstToken.swapAssetName(),
+            amount = tokenValue.value.toString(),
+            interval = "1"
+        )
+
+        val tokenFees = mayaQuote.fees.total
+            .mayaTokenValueToTokenValue(dstToken)
+
+        val estimatedTime = mayaQuote.totalSwapSeconds
+            ?.toDuration(DurationUnit.SECONDS)
+
+        val expectedDstTokenValue = mayaQuote.expectedAmountOut
+            .mayaTokenValueToTokenValue(dstToken)
+
+        return SwapQuote.MayaChain(
+            expectedDstValue = expectedDstTokenValue,
+            fees = tokenFees,
+            estimatedTime = estimatedTime,
+            data = mayaQuote,
         )
     }
 
@@ -107,6 +153,26 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         )
     }
 
+    private fun String.mayaTokenValueToTokenValue(
+        token: Coin,
+    ): TokenValue {
+        // convert maya token values with 10 decimal places to token values
+        // with the correct number of decimal places
+        val exponent = token.decimal - 10
+        val multiplier = if (exponent >= 0) {
+            BigDecimal.TEN
+        } else {
+            BigDecimal(0.1)
+        }.pow(abs(exponent))
+
+        return TokenValue(
+            value = this.toBigDecimal()
+                .multiply(multiplier)
+                .toBigInteger(),
+            token = token,
+        )
+    }
+
     private fun Coin.swapAssetName(): String = if (isNativeToken) {
         if (chain == Chain.gaiaChain) {
             "${chain.swapAssetName()}.ATOM"
@@ -118,6 +184,63 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     } else {
         "${chain.swapAssetName()}.${ticker}-${contractAddress}"
     }
+
+    override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
+        return srcToken.swapProviders.intersect(dstToken.swapProviders).firstOrNull()
+    }
+
+    private val thorEthTokens = listOf(
+        "ETH",
+        "USDT",
+        "USDC",
+        "WBTC",
+        "THOR",
+        "XRUNE",
+        "DAI",
+        "LUSD",
+        "GUSD",
+        "VTHOR",
+        "USDP",
+        "LINK",
+        "WSTETH",
+        "TGT",
+        "AAVE",
+        "FOX",
+        "DPI",
+        "SNX"
+    )
+    private val thorBscTokens = listOf("BNB", "USDT", "USDC")
+    private val thorAvaxTokens = listOf("AVAX", "USDC", "USDT", "SOL")
+
+    private val Coin.swapProviders: Set<SwapProvider>
+        get() = when (chain) {
+            Chain.mayaChain, Chain.dash, Chain.kujira -> setOf(SwapProvider.MAYA)
+            Chain.ethereum -> if (ticker in thorEthTokens) setOf(
+                SwapProvider.THORCHAIN,
+                SwapProvider.ONEINCH
+            ) else setOf(SwapProvider.ONEINCH)
+
+            Chain.bscChain -> if (ticker in thorBscTokens) setOf(
+                SwapProvider.THORCHAIN,
+                SwapProvider.ONEINCH
+            ) else setOf(SwapProvider.ONEINCH)
+
+            Chain.avalanche -> if (ticker in thorAvaxTokens) setOf(
+                SwapProvider.THORCHAIN,
+                SwapProvider.ONEINCH
+            ) else setOf(SwapProvider.ONEINCH)
+
+            Chain.base, Chain.optimism, Chain.polygon -> setOf(SwapProvider.ONEINCH)
+            Chain.thorChain, Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
+            Chain.gaiaChain -> setOf(
+                SwapProvider.THORCHAIN
+            )
+
+            Chain.solana, Chain.polkadot, Chain.dydx, Chain.arbitrum, Chain.blast,
+            Chain.cronosChain, /* TODO later Chain.sui, Chain.zksync*/
+            -> emptySet()
+        }
+
 
     companion object {
 
@@ -141,7 +264,7 @@ private fun Chain.swapAssetName(): String {
         Chain.kujira -> "KUJI"
         Chain.solana -> "SOL"
         Chain.dash -> "DASH"
-        Chain.mayaChain -> "CACAO"
+        Chain.mayaChain -> "MAYA"
         Chain.arbitrum -> "ARB"
         Chain.base -> "BASE"
         Chain.optimism -> "OP"
