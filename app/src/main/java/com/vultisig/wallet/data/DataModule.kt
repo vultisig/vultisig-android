@@ -55,6 +55,9 @@ internal interface DataModule {
                     BlockChainSpecific.THORChain::class.java,
                     BlockChainSpecificSerializer()
                 ).registerTypeAdapter(
+                    BlockChainSpecific.MayaChain::class.java,
+                    BlockChainSpecificSerializer()
+                ).registerTypeAdapter(
                     BlockChainSpecific.Sui::class.java,
                     BlockChainSpecificSerializer()
                 ).registerTypeAdapter(

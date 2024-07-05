@@ -3,6 +3,7 @@ package com.vultisig.wallet.chains
 import com.google.gson.Gson
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.data.wallet.Swaps
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.CosmoSignature
@@ -108,10 +109,7 @@ internal class THORCHainHelper(
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val inputData = getPreSignInputData(keysignPayload)
-        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
-        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
+        return Swaps.getPreSignedImageHash(inputData, coinType, keysignPayload.coin.chain)
     }
 
     fun getSignedTransaction(

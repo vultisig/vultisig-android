@@ -37,6 +37,32 @@ internal sealed class SwapPayload {
 
     }
 
+    data class MayaChain(
+        val data: THORChainSwapPayload
+    ) : SwapPayload() {
+
+        override val srcToken: Coin
+            get() = data.fromCoin
+
+        override val dstToken: Coin
+            get() = data.toCoin
+
+        override val srcTokenValue: TokenValue
+            get() = TokenValue(
+                value = data.fromAmount,
+                token = srcToken,
+            )
+
+        override val dstTokenValue: TokenValue
+            get() = TokenValue(
+                value = data.toAmountDecimal
+                    .movePointRight(dstToken.decimal)
+                    .toBigInteger(),
+                token = dstToken,
+            )
+
+    }
+
     data class OneInch(
         val data: OneInchSwapPayloadJson
     ) : SwapPayload() {

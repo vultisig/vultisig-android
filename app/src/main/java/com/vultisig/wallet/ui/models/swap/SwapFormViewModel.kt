@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
@@ -183,6 +184,55 @@ internal class SwapFormViewModel @Inject constructor(
                         estimatedTime = quote.estimatedTime,
                         isApprovalRequired = isApprovalRequired,
                         payload = SwapPayload.ThorChain(
+                            THORChainSwapPayload(
+                                fromAddress = srcAddress,
+                                fromCoin = srcToken,
+                                toCoin = dstToken,
+                                vaultAddress = quote.data.inboundAddress ?: srcAddress,
+                                routerAddress = quote.data.router,
+                                fromAmount = srcTokenValue.value,
+                                toAmountDecimal = dstTokenValue.decimal,
+                                toAmountLimit = "0",
+                                steamingInterval = "1",
+                                streamingQuantity = "0",
+                                expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
+                                    .inWholeSeconds.toULong(),
+                                isAffiliate = isAffiliate,
+                            )
+                        )
+                    )
+                }
+
+                is SwapQuote.MayaChain -> {
+                    val dstAddress = quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                    val allowance = allowanceRepository.getAllowance(
+                        chain = srcToken.chain,
+                        contractAddress = srcToken.contractAddress,
+                        srcAddress = srcAddress,
+                        dstAddress = dstAddress,
+                    )
+                    val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
+
+                    val srcFiatValue = convertTokenValueToFiat(
+                        srcToken, srcTokenValue, AppCurrency.USD,
+                    )
+
+                    val isAffiliate = srcFiatValue.value >=
+                            AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
+                    SwapTransaction(
+                        id = UUID.randomUUID().toString(),
+                        vaultId = vaultId,
+                        srcToken = srcToken,
+                        srcTokenValue = srcTokenValue,
+                        dstToken = dstToken,
+                        dstAddress = dstAddress,
+                        expectedDstTokenValue = dstTokenValue,
+                        blockChainSpecific = specificAndUtxo,
+                        estimatedFees = quote.fees,
+                        estimatedTime = quote.estimatedTime,
+                        isApprovalRequired = isApprovalRequired,
+                        payload = SwapPayload.MayaChain(
                             THORChainSwapPayload(
                                 fromAddress = srcAddress,
                                 fromCoin = srcToken,
@@ -398,106 +448,123 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
-                        // THORChain for cross-chain swap, 1inch for same-chain swap
-                        if (srcToken.chain != dstToken.chain) {
-                            val quote = swapQuoteRepository.getSwapQuote(
-                                dstAddress = dst.address.address,
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                tokenValue = tokenValue,
-                            )
-                            this@SwapFormViewModel.quote = quote
+                        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
 
-                            val fiatFees =
-                                convertTokenValueToFiat(dstToken, quote.fees, currency)
+                        when (provider) {
+                            SwapProvider.MAYA, SwapProvider.THORCHAIN -> {
+                                val quote = if (provider == SwapProvider.MAYA) {
+                                    swapQuoteRepository.getMayaSwapQuote(
+                                        dstAddress = dst.address.address,
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = tokenValue,
+                                    )
+                                } else {
+                                    swapQuoteRepository.getSwapQuote(
+                                        dstAddress = dst.address.address,
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = tokenValue,
+                                    )
+                                }
+                                this@SwapFormViewModel.quote = quote
 
-                            val estimatedTime = quote.estimatedTime?.let {
-                                UiText.DynamicString(mapDurationToUiString(it))
-                            } ?: R.string.swap_screen_estimated_time_instant.asUiText()
+                                val fiatFees =
+                                    convertTokenValueToFiat(dstToken, quote.fees, currency)
 
-                            val estimatedDstTokenValue = if (hasUserSetTokenValue) {
-                                mapTokenValueToDecimalUiString(
-                                    quote.expectedDstValue
+                                val estimatedTime = quote.estimatedTime?.let {
+                                    UiText.DynamicString(mapDurationToUiString(it))
+                                } ?: R.string.swap_screen_estimated_time_instant.asUiText()
+
+                                val estimatedDstTokenValue = if (hasUserSetTokenValue) {
+                                    mapTokenValueToDecimalUiString(
+                                        quote.expectedDstValue
+                                    )
+                                } else ""
+
+                                val estimatedDstFiatValue = convertTokenValueToFiat(
+                                    dstToken,
+                                    quote.expectedDstValue,
+                                    currency
                                 )
-                            } else ""
 
-                            val estimatedDstFiatValue = convertTokenValueToFiat(
-                                dstToken,
-                                quote.expectedDstValue,
-                                currency
-                            )
-
-                            uiState.update {
-                                it.copy(
-                                    provider = R.string.swap_form_provider_thorchain.asUiText(),
-                                    srcFiatValue = srcFiatValueText,
-                                    estimatedDstTokenValue = estimatedDstTokenValue,
-                                    estimatedDstFiatValue = fiatValueToString.map(
-                                        estimatedDstFiatValue
-                                    ),
-                                    fee = fiatValueToString.map(fiatFees),
-                                    estimatedTime = estimatedTime,
-                                )
+                                uiState.update {
+                                    it.copy(
+                                        provider = if (provider == SwapProvider.MAYA)
+                                            R.string.swap_form_provider_mayachain.asUiText()
+                                        else
+                                            R.string.swap_form_provider_thorchain.asUiText(),
+                                        srcFiatValue = srcFiatValueText,
+                                        estimatedDstTokenValue = estimatedDstTokenValue,
+                                        estimatedDstFiatValue = fiatValueToString.map(
+                                            estimatedDstFiatValue
+                                        ),
+                                        fee = fiatValueToString.map(fiatFees),
+                                        estimatedTime = estimatedTime,
+                                    )
+                                }
                             }
-                        } else {
-                            val srcUsdFiatValue = convertTokenValueToFiat(
-                                srcToken, tokenValue, AppCurrency.USD,
-                            )
 
-                            val isAffiliate =
-                                srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
-
-                            val quote = swapQuoteRepository.getOneInchSwapQuote(
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                tokenValue = tokenValue,
-                                isAffiliate = isAffiliate,
-                            )
-
-                            val expectedDstValue = TokenValue(
-                                value = quote.dstAmount.toBigInteger(),
-                                token = dstToken,
-                            )
-
-                            val tokenFees = TokenValue(
-                                value = quote.tx.gasPrice.toBigInteger() *
-                                        EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
-                                token = srcNativeToken
-                            )
-
-                            this@SwapFormViewModel.quote = SwapQuote.OneInch(
-                                expectedDstValue = expectedDstValue,
-                                fees = tokenFees,
-                                estimatedTime = null,
-                                data = quote
-                            )
-
-                            val fiatFees =
-                                convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
-
-                            val estimatedTime =
-                                R.string.swap_screen_estimated_time_instant.asUiText()
-
-                            val estimatedDstTokenValue = if (hasUserSetTokenValue) {
-                                mapTokenValueToDecimalUiString(expectedDstValue)
-                            } else ""
-
-                            val estimatedDstFiatValue = convertTokenValueToFiat(
-                                dstToken,
-                                expectedDstValue, currency
-                            )
-
-                            uiState.update {
-                                it.copy(
-                                    provider = R.string.swap_for_provider_1inch.asUiText(),
-                                    srcFiatValue = srcFiatValueText,
-                                    estimatedDstTokenValue = estimatedDstTokenValue,
-                                    estimatedDstFiatValue = fiatValueToString.map(
-                                        estimatedDstFiatValue
-                                    ),
-                                    fee = fiatValueToString.map(fiatFees),
-                                    estimatedTime = estimatedTime,
+                            else -> {
+                                val srcUsdFiatValue = convertTokenValueToFiat(
+                                    srcToken, tokenValue, AppCurrency.USD,
                                 )
+
+                                val isAffiliate =
+                                    srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
+                                val quote = swapQuoteRepository.getOneInchSwapQuote(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    isAffiliate = isAffiliate,
+                                )
+
+                                val expectedDstValue = TokenValue(
+                                    value = quote.dstAmount.toBigInteger(),
+                                    token = dstToken,
+                                )
+
+                                val tokenFees = TokenValue(
+                                    value = quote.tx.gasPrice.toBigInteger() *
+                                            EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
+                                    token = srcNativeToken
+                                )
+
+                                this@SwapFormViewModel.quote = SwapQuote.OneInch(
+                                    expectedDstValue = expectedDstValue,
+                                    fees = tokenFees,
+                                    estimatedTime = null,
+                                    data = quote
+                                )
+
+                                val fiatFees =
+                                    convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
+
+                                val estimatedTime =
+                                    R.string.swap_screen_estimated_time_instant.asUiText()
+
+                                val estimatedDstTokenValue = if (hasUserSetTokenValue) {
+                                    mapTokenValueToDecimalUiString(expectedDstValue)
+                                } else ""
+
+                                val estimatedDstFiatValue = convertTokenValueToFiat(
+                                    dstToken,
+                                    expectedDstValue, currency
+                                )
+
+                                uiState.update {
+                                    it.copy(
+                                        provider = R.string.swap_for_provider_1inch.asUiText(),
+                                        srcFiatValue = srcFiatValueText,
+                                        estimatedDstTokenValue = estimatedDstTokenValue,
+                                        estimatedDstFiatValue = fiatValueToString.map(
+                                            estimatedDstFiatValue
+                                        ),
+                                        fee = fiatValueToString.map(fiatFees),
+                                        estimatedTime = estimatedTime,
+                                    )
+                                }
                             }
                         }
                     } catch (e: Exception) {

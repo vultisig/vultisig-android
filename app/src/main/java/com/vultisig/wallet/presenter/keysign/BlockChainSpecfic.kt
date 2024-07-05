@@ -40,6 +40,13 @@ internal sealed class BlockChainSpecific {
         val fee: BigInteger,
     ) : BlockChainSpecific()
 
+    data class MayaChain(
+        @SerializedName("accountNumber")
+        val accountNumber: BigInteger,
+        @SerializedName("sequence")
+        val sequence: BigInteger,
+    ) : BlockChainSpecific()
+
     data class Cosmos(
         @SerializedName("accountNumber")
         val accountNumber: BigInteger,
@@ -109,6 +116,13 @@ internal class BlockChainSpecificSerializer : JsonSerializer<BlockChainSpecific>
                 thorChainJSON.addProperty("sequence", src.sequence)
                 thorChainJSON.addProperty("fee", src.fee)
                 jsonObject.add("THORChain", thorChainJSON)
+            }
+
+            is BlockChainSpecific.MayaChain -> {
+                val thorChainJSON = JsonObject()
+                thorChainJSON.addProperty("accountNumber", src.accountNumber)
+                thorChainJSON.addProperty("sequence", src.sequence)
+                jsonObject.add("MayaChain", thorChainJSON)
             }
 
             is BlockChainSpecific.Cosmos -> {
@@ -182,6 +196,14 @@ internal class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpeci
                     accountNumber = obj.get("accountNumber").asBigInteger,
                     sequence = obj.get("sequence").asBigInteger,
                     fee = obj.get("fee").asBigInteger
+                )
+            }
+
+            jsonObject.has("MayaChain") -> {
+                val obj = jsonObject.get("MayaChain").asJsonObject
+                return BlockChainSpecific.MayaChain(
+                    accountNumber = obj.get("accountNumber").asBigInteger,
+                    sequence = obj.get("sequence").asBigInteger,
                 )
             }
 

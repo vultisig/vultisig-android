@@ -63,17 +63,19 @@ internal data class KeysignPayload(
             nonceAcc++
         }
 
-        if (swapPayload != null) {
-            messages += when (swapPayload) {
+        if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
+            when (swapPayload) {
                 is SwapPayload.ThorChain -> {
-                    THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                    messages += THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                         .getPreSignedImageHash(swapPayload.data, this, nonceAcc)
                 }
 
                 is SwapPayload.OneInch -> {
-                    OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                    messages += OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
                         .getPreSignedImageHash(swapPayload.data, this, nonceAcc)
                 }
+                // mayachain is implemented through send transaction
+                else -> Unit
             }
         } else {
             messages += when (coin.chain) {
@@ -87,7 +89,8 @@ internal data class KeysignPayload(
                     solanaHelper.getPreSignedImageHash(this)
                 }
 
-                Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.cronosChain -> {
+                Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum,
+                Chain.polygon, Chain.optimism, Chain.bscChain, Chain.cronosChain -> {
                     if (coin.isNativeToken) {
                         EvmHelper(
                             coin.coinType,
@@ -169,6 +172,14 @@ internal class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
                     )
                 }
 
+                is SwapPayload.MayaChain -> {
+                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
+                    spObject.add(
+                        "mayachain",
+                        wrapperObject
+                    )
+                }
+
                 is SwapPayload.OneInch -> {
                     wrapperObject.add("_0", context?.serialize(swapPayload.data))
                     spObject.add(
@@ -215,6 +226,16 @@ internal class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
                     SwapPayload.ThorChain(
                         context.deserialize(
                             spo.get("thorchain")
+                                .asJsonObject.get("_0"),
+                            THORChainSwapPayload::class.java
+                        )
+                    )
+                }
+
+                spo.has("mayachain") -> {
+                    SwapPayload.MayaChain(
+                        context.deserialize(
+                            spo.get("mayachain")
                                 .asJsonObject.get("_0"),
                             THORChainSwapPayload::class.java
                         )

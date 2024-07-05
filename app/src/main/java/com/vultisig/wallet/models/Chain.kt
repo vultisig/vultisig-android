@@ -166,10 +166,11 @@ internal val Chain.canSelectTokens: Boolean
     }
 
 internal val Chain.IsSwapSupported: Boolean
-    get() = when (this) {
-        Chain.thorChain, Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.bitcoin, Chain.bitcoinCash, Chain.gaiaChain, Chain.litecoin, Chain.dogecoin -> true
-        Chain.solana, Chain.dash, Chain.kujira, Chain.mayaChain, Chain.cronosChain, Chain.base, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.blast, Chain.polkadot, Chain.dydx -> false
-    }
+    get() = this in arrayOf(
+        Chain.thorChain, Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
+        Chain.gaiaChain, Chain.base, Chain.optimism, Chain.polygon, Chain.avalanche, Chain.bscChain,
+        Chain.ethereum, Chain.mayaChain, Chain.dash, Chain.kujira,
+    )
 
 internal val Chain.isDepositSupported: Boolean
     get() = when (this) {
