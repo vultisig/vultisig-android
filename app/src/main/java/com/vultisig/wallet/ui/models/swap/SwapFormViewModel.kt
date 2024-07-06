@@ -71,7 +71,7 @@ internal data class SwapFormUiModel(
     val gas: String = "",
     val fee: String = "",
     val estimatedTime: UiText = UiText.DynamicString(""),
-    val amountError: UiText? = null
+    val amountError: UiText? = null,
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -329,7 +329,7 @@ internal class SwapFormViewModel @Inject constructor(
         selectedSrcTokenId: String? = null,
         selectedDstTokenId: String? = null,
         vaultId: String,
-        chainId: String?
+        chainId: String?,
     ) {
         this.vaultId = vaultId
         loadTokens(selectedSrcTokenId, selectedDstTokenId, vaultId, chainId)
@@ -344,7 +344,7 @@ internal class SwapFormViewModel @Inject constructor(
         selectedSrcTokenId: String? = null,
         selectedDstTokenId: String? = null,
         vaultId: String,
-        chainId: String?
+        chainId: String?,
     ) {
         val chain = chainId?.let(Chain::fromRaw)
 
@@ -357,8 +357,12 @@ internal class SwapFormViewModel @Inject constructor(
                     // TODO handle error
                     Timber.e(it)
                 }.collect { addresses ->
-                    selectedSrc.updateSrc(selectedSrcTokenId, addresses, chain)
-                    selectedDst.updateSrc(selectedDstTokenId, addresses, chain)
+                    try {
+                        selectedSrc.updateSrc(selectedSrcTokenId, addresses, chain)
+                        selectedDst.updateSrc(selectedDstTokenId, addresses, chain)
+                    } catch (ex: Exception) {
+                        Timber.e(ex)
+                    }
                 }
         }
     }
