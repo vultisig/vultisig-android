@@ -4,19 +4,24 @@ import android.content.Context
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -37,7 +42,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.UiCircularProgressIndicator
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
+import kotlin.math.min
 
 @Composable
 internal fun GeneratingKey(
@@ -90,76 +95,92 @@ internal fun GeneratingKey(
     errorMessage: String
 ) {
     val textColor = Theme.colors.neutral0
-    Column(
-        horizontalAlignment = CenterHorizontally,
+    Scaffold(
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
+                vertical = 16.dp,
+                horizontal = 12.dp
+            ),
+        topBar = {
+            TopBar(
+                centerText = stringResource(R.string.generating_key_title),
+                startIcon = R.drawable.caret_left,
+                navController = navController
             )
-    ) {
-        TopBar(
-            centerText = stringResource(R.string.generating_key_title),
-            startIcon = R.drawable.caret_left,
-            navController = navController
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        when (keygenState) {
-            KeygenState.CreatingInstance,
-            KeygenState.KeygenECDSA,
-            KeygenState.KeygenEdDSA,
-            KeygenState.ReshareECDSA,
-            KeygenState.ReshareEdDSA,
-            KeygenState.Success -> {
-                val title = when (keygenState) {
-                    KeygenState.CreatingInstance -> stringResource(R.string.generating_key_preparing_vault)
-                    KeygenState.KeygenECDSA -> stringResource(R.string.generating_key_screen_generating_ecdsa_key)
-                    KeygenState.KeygenEdDSA -> stringResource(R.string.generating_key_screen_generating_eddsa_key)
-                    KeygenState.ReshareECDSA -> stringResource(R.string.generating_key_screen_resharing_ecdsa_key)
-                    KeygenState.ReshareEdDSA -> stringResource(R.string.generating_key_screen_resharing_eddsa_key)
-                    KeygenState.Success -> stringResource(R.string.generating_key_screen_success)
-                    else -> ""
-                }
-
-                val progress = when (keygenState) {
-                    KeygenState.CreatingInstance -> 0.25f
-                    KeygenState.KeygenECDSA -> 0.5f
-                    KeygenState.KeygenEdDSA -> 0.75f
-                    KeygenState.ReshareECDSA -> 0.5f
-                    KeygenState.ReshareEdDSA -> 0.75f
-                    KeygenState.Success -> 1.0f
-                    else -> 0F
-                }
-
-                KeygenIndicator(
-                    statusText = title,
-                    progress = progress,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            KeygenState.ERROR -> {
-                Text(
-                    text = stringResource(R.string.generating_key_screen_keygen_failed),
-                    color = textColor,
-                    style = Theme.menlo.heading5
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-                Text(
-                    text = errorMessage,
-                    color = textColor,
-                    style = Theme.menlo.body2
+        },
+        bottomBar = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = CenterHorizontally
+            ) {
+                DevicesOnSameNetworkHint(
+                    title = stringResource(R.string.generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
                 )
             }
         }
-        Spacer(modifier = Modifier.weight(1f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it),
+            contentAlignment = Alignment.Center
+        ) {
+            when (keygenState) {
+                KeygenState.CreatingInstance,
+                KeygenState.KeygenECDSA,
+                KeygenState.KeygenEdDSA,
+                KeygenState.ReshareECDSA,
+                KeygenState.ReshareEdDSA,
+                KeygenState.Success -> {
+                    val title = when (keygenState) {
+                        KeygenState.CreatingInstance -> stringResource(R.string.generating_key_preparing_vault)
+                        KeygenState.KeygenECDSA -> stringResource(R.string.generating_key_screen_generating_ecdsa_key)
+                        KeygenState.KeygenEdDSA -> stringResource(R.string.generating_key_screen_generating_eddsa_key)
+                        KeygenState.ReshareECDSA -> stringResource(R.string.generating_key_screen_resharing_ecdsa_key)
+                        KeygenState.ReshareEdDSA -> stringResource(R.string.generating_key_screen_resharing_eddsa_key)
+                        KeygenState.Success -> stringResource(R.string.generating_key_screen_success)
+                        else -> ""
+                    }
 
-        DevicesOnSameNetworkHint(
-            title = stringResource(R.string.generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
-        )
+                    val progress = when (keygenState) {
+                        KeygenState.CreatingInstance -> 0.25f
+                        KeygenState.KeygenECDSA -> 0.5f
+                        KeygenState.KeygenEdDSA -> 0.75f
+                        KeygenState.ReshareECDSA -> 0.5f
+                        KeygenState.ReshareEdDSA -> 0.75f
+                        KeygenState.Success -> 1.0f
+                        else -> 0F
+                    }
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
+                    KeygenIndicator(
+                        statusText = title,
+                        progress = progress,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                KeygenState.ERROR -> {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.generating_key_screen_keygen_failed),
+                            color = textColor,
+                            style = Theme.menlo.heading5
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = errorMessage,
+                            color = textColor,
+                            style = Theme.menlo.body2
+                        )
+                    }
+                }
+            }
+        }
+
     }
 }
 
@@ -175,9 +196,9 @@ private fun KeygenIndicator(
         label = "KeygenIndicatorProgress"
     )
 
-    Box(
+    BoxWithConstraints(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
             .padding(32.dp),
     ) {
         Column(
@@ -198,11 +219,17 @@ private fun KeygenIndicator(
             UiCirclesLoader()
         }
 
+        val minDimen = rememberSaveable {
+            min(maxWidth.value, maxHeight.value)
+        }
+
+        val isLandscape = maxWidth > maxHeight
+
         UiCircularProgressIndicator(
             progress = { progressAnimated },
             strokeWidth = 16.dp,
-            modifier = modifier
-                .fillMaxWidth()
+            modifier = Modifier
+                .width(minDimen.dp.minus(if (isLandscape) 64.dp else 0.dp))
                 .aspectRatio(1f)
         )
     }
