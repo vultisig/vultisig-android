@@ -57,6 +57,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
@@ -138,7 +139,7 @@ internal fun ScanQrScreen(
                             bottom = 16.dp,
                         ),
                     text = stringResource(id = R.string.scan_qr_screen_return_vault),
-                    onClick = { navController.popBackStack(Screen.Setup.route, false) },
+                    onClick = { navController.popBackStack() },
                 )
 
         },
