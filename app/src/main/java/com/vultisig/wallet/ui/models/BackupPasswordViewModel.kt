@@ -127,7 +127,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
     }
 
-    private fun encryptData(date: String, key: String): String {
+    private fun encryptData(date: String, key: String): String? {
         return cryptoManager.encrypt(date, key)
     }
 
