@@ -169,7 +169,7 @@ internal val Chain.IsSwapSupported: Boolean
     get() = this in arrayOf(
         Chain.thorChain, Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
         Chain.gaiaChain, Chain.base, Chain.optimism, Chain.polygon, Chain.avalanche, Chain.bscChain,
-        Chain.ethereum, Chain.mayaChain, Chain.dash, Chain.kujira,
+        Chain.ethereum, Chain.mayaChain, Chain.dash, Chain.kujira,Chain.blast
     )
 
 internal val Chain.isDepositSupported: Boolean
