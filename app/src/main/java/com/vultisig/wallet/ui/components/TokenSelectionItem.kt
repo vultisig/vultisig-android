@@ -1,7 +1,11 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,6 +35,7 @@ internal fun TokenSelectionItem(
     title: String,
     subtitle: String,
     logo: Any,
+    @DrawableRes chainLogo: Int? = null,
     hasTokenSwitch: Boolean = true,
     isChecked: Boolean = false,
     onCheckedChange: ((Boolean) -> Unit)? = null,
@@ -48,17 +54,30 @@ internal fun TokenSelectionItem(
                 .padding(all = 12.dp)
                 .clickable { onCheckedChange?.invoke(!isChecked) },
         ) {
-            AsyncImage(
-                model = logo,
-                modifier = Modifier
-                    .padding(
-                        end = 12.dp,
+            Box {
+                AsyncImage(
+                    model = logo,
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .size(32.dp)
+                        .clip(CircleShape),
+                    contentDescription = stringResource(R.string.token_logo),
+                    contentScale = ContentScale.Crop
+                )
+                if (chainLogo != null)
+                    Image(
+                        painter = painterResource(id = chainLogo),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(12.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Theme.colors.neutral0,
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .align(Alignment.BottomEnd)
                     )
-                    .size(32.dp)
-                    .clip(CircleShape),
-                contentDescription = stringResource(R.string.token_logo),
-                contentScale = ContentScale.Crop
-            )
+            }
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
@@ -102,5 +121,6 @@ fun TokenSelectionItemPreview() {
         subtitle = "Ethereum",
         logo = R.drawable.ethereum,
         isChecked = false,
+        chainLogo = R.drawable.base,
     )
 }
