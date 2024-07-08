@@ -42,5 +42,9 @@ private fun getOnBoardingPages() = listOf(
         image = R.drawable.intro3,
         title = "Dialogue",
         description = "Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets. "
+    ), OnBoardPage(
+        image = R.drawable.intro4,
+        title = "Collaboration",
+        description = "Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead."
     )
 )

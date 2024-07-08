@@ -47,7 +47,7 @@ internal fun WelcomeScreen(
     viewModel: WelcomeViewModel = hiltViewModel(),
 ) {
     val pages = viewModel.state.pages
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { pages.size })
 
     LaunchedEffect(key1 = Unit) {
         viewModel.channel.collect { uiEvent ->
