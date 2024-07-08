@@ -2,7 +2,7 @@ package com.vultisig.wallet.common
 
 import org.junit.Test
 
-internal class AESCryptoManagerTest {
+internal class CryptoManagerTest {
 
     private val cryptoManager = AESCryptoManager()
 
