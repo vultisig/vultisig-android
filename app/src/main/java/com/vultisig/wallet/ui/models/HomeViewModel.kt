@@ -94,7 +94,7 @@ internal class HomeViewModel @Inject constructor(
                     || (state.showVaultList && state.isVaultRearrangeMode)
         }
 
-    private fun collectLastOpenedVault() { //TODO refresh list of wallets
+    private fun collectLastOpenedVault() {
         viewModelScope.launch {
             val requestedVaultId = requestedVaultId
             if (requestedVaultId != null) {
