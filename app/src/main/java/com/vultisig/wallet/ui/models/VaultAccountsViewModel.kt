@@ -124,7 +124,9 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadVaultNameJob = viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
-            uiState.update { it.copy(vaultName = vault.name, showBackupWarning = vault.backedUp.not()) }
+            uiState.update {
+                it.copy(vaultName = vault.name, showBackupWarning = vault.backedUp.not())
+            }
         }
     }
 
