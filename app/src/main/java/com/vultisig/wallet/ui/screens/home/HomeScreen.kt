@@ -56,6 +56,7 @@ internal fun HomeScreen(
         onEdit = viewModel::edit,
         onToggleVaults = viewModel::toggleVaults,
         onSelectVault = viewModel::selectVault,
+        onCreateNewVault = viewModel::createNewVault,
         isEditMode = viewModel.isEditMode
     )
 }
@@ -69,7 +70,8 @@ private fun HomeScreen(
     onEdit: () -> Unit = {},
     isEditMode: Boolean,
     onToggleVaults: () -> Unit = {},
-    onSelectVault: (vaultId: String) -> Unit = {}
+    onSelectVault: (vaultId: String) -> Unit = {},
+    onCreateNewVault: () -> Unit = {},
 ) {
     val caretRotation by animateFloatAsState(
         targetValue = if (state.showVaultList) -90f else 90f,
@@ -167,6 +169,7 @@ private fun HomeScreen(
                 VaultListScreen(
                     navController = navController,
                     onSelectVault = onSelectVault,
+                    onCreateNewVault = onCreateNewVault,
                 )
             }
         }

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -74,6 +75,15 @@ internal class HomeViewModel @Inject constructor(
                 it.copy(showVaultList = false)
             }
             lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
+        }
+    }
+
+    fun createNewVault() {
+        viewModelScope.launch {
+            uiState.update {
+                it.copy(showVaultList = false)
+            }
+            navigator.navigate(Destination.CreateNewVault)
         }
     }
 

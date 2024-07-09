@@ -234,4 +234,14 @@ internal sealed class Destination(
         }
     }
 
+    data class BackupSuggestion(val vaultId: String) :
+        Destination(route = "backup_suggestion/$vaultId") {
+        companion object {
+            const val staticRoute = "backup_suggestion/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data object CreateNewVault : Destination(
+        route = "create_new_vault"
+    )
 }

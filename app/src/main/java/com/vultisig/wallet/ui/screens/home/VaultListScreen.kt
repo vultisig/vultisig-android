@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.theme.dimens
 internal fun VaultListScreen(
     navController: NavHostController,
     onSelectVault: (vaultId: String) -> Unit = {},
+    onCreateNewVault: () -> Unit = {},
     viewModel: VaultListViewModel = hiltViewModel(),
 ) {
     val vaults by viewModel.vaults.collectAsState()
@@ -42,6 +43,7 @@ internal fun VaultListScreen(
         vaults = vaults,
         onMove = viewModel::onMove,
         onSelectVault = onSelectVault,
+        onCreateNewVault = onCreateNewVault,
     )
 }
 
@@ -50,6 +52,7 @@ private fun VaultListScreen(
     navController: NavHostController,
     vaults: List<Vault>,
     onSelectVault: (vaultId: String) -> Unit = {},
+    onCreateNewVault: () -> Unit = {},
     onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
     Box(
@@ -88,7 +91,7 @@ private fun VaultListScreen(
                 )
                 .align(Alignment.BottomCenter)
         ) {
-            navController.navigate(route = Screen.CreateNewVault.route)
+            onCreateNewVault()
         }
     }
 }

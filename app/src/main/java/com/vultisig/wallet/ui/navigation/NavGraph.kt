@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
+import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.send.SendScreen
@@ -185,6 +186,7 @@ internal fun SetupNavGraph(
         ) {
             AddVaultScreen(navController)
         }
+
         composable(
             route = Destination.AddVault.route,
         ) {
@@ -367,6 +369,18 @@ internal fun SetupNavGraph(
             route = Destination.BackupPassword.STATIC_ROUTE,
         ) {
             BackupPasswordScreen(navController)
+        }
+
+        composable(
+            route = Destination.BackupSuggestion.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
+            BackupSuggestionScreen()
         }
     }
 }
