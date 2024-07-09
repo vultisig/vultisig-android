@@ -30,14 +30,14 @@ internal fun BackupSuggestionScreen(
     viewModel : BackupSuggestionViewModel = hiltViewModel()
 ){
     BackupSuggestion(
-        skip = viewModel::skip,
+        onSkipClick = viewModel::skip,
         navigateToBackupPasswordScreen = viewModel::navigateToBackupPasswordScreen
     )
 }
 
 @Composable
 internal fun BackupSuggestion(
-    skip: () -> Unit,
+    onSkipClick: () -> Unit,
     navigateToBackupPasswordScreen: () -> Unit
 ){
     Column(
@@ -93,10 +93,9 @@ internal fun BackupSuggestion(
                     .padding(
                         start = MaterialTheme.dimens.buttonMargin,
                         end = MaterialTheme.dimens.buttonMargin
-                    )
-            ) {
-                navigateToBackupPasswordScreen()
-            }
+                    ),
+                onClick = navigateToBackupPasswordScreen
+            )
 
             MultiColorButton(
                 text = stringResource(R.string.welcome_screen_skip),
@@ -106,10 +105,9 @@ internal fun BackupSuggestion(
                 minHeight = MaterialTheme.dimens.minHeightButton,
                 modifier = Modifier
                     .padding(10.dp)
-                    .fillMaxWidth()
-            ) {
-                skip()
-            }
+                    .fillMaxWidth(),
+                onClick = onSkipClick
+            )
         }
     }
 }
@@ -118,7 +116,7 @@ internal fun BackupSuggestion(
 @Composable
 fun BackupSuggestionPreview(){
     BackupSuggestion(
-        skip = {},
+        onSkipClick = {},
         navigateToBackupPasswordScreen = {}
     )
 }

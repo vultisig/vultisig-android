@@ -376,7 +376,7 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
-                    nullable = true
+                    nullable = false
                 }
             )
         ) {
