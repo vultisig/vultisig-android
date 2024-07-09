@@ -16,6 +16,7 @@ internal class VaultIOSToAndroidMapperImpl @Inject constructor(private val gson:
         return Vault(
             id = vault.id ?: UUID.randomUUID().toString(),
             name = vault.name,
+            backedUp = true,
             pubKeyECDSA = vault.pubKeyECDSA,
             pubKeyEDDSA = vault.pubKeyEdDSA,
             hexChainCode = vault.hexChainCode,

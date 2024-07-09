@@ -27,6 +27,7 @@ import javax.inject.Inject
 @Immutable
 internal data class VaultAccountsUiModel(
     val vaultName: String = "",
+    val showBackupWarning: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
@@ -63,7 +64,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     fun loadData(vaultId: String) {
         this.vaultId = vaultId
-        loadVaultName(vaultId)
+        loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
     }
@@ -118,12 +119,12 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    private fun loadVaultName(vaultId: String) {
+    private fun loadVaultNameAndShowBackup(vaultId: String) {
         loadVaultNameJob?.cancel()
         loadVaultNameJob = viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
-            uiState.update { it.copy(vaultName = vault.name) }
+            uiState.update { it.copy(vaultName = vault.name, showBackupWarning = vault.backedUp.not()) }
         }
     }
 

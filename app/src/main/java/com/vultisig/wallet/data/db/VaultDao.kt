@@ -75,6 +75,9 @@ internal interface VaultDao {
     @Query("UPDATE vault SET name = :name WHERE id = :vaultId")
     suspend fun setVaultName(vaultId: String, name: String)
 
+    @Query("UPDATE vault SET backedUp = :backedUp WHERE id = :vaultId")
+    suspend fun setBackedUp(vaultId: String, backedUp: Boolean)
+
     @Query("DELETE FROM vault WHERE id = :vaultId")
     suspend fun delete(vaultId: String)
 

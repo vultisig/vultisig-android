@@ -18,6 +18,8 @@ internal data class VaultEntity(
     @ColumnInfo("name")
     val name: String,
 
+    @ColumnInfo("backedUp")
+    val backedUp: Boolean,
     @ColumnInfo("localPartyId")
     val localPartyID: String,
     @ColumnInfo("pubKeyEcdsa")

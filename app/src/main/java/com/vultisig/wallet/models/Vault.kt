@@ -7,6 +7,8 @@ internal data class Vault(
     val id: String,
     @SerializedName("name")
     var name: String,
+    @SerializedName("backedUp")
+    var backedUp: Boolean = false,
     @SerializedName("pubKeyECDSA")
     var pubKeyECDSA: String = "",
     @SerializedName("pubKeyEDDSA")
