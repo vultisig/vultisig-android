@@ -286,4 +286,9 @@
     <string name="token_selection_tokens_title" translatable="false">Tokens</string>
     <string name="token_selection_search_hint" translatable="false">Search...</string>
     <string name="verify_swap_agree_allowance" translatable="false">I agree with providing unlimited ERC20 allowance</string>
+    <string name="deposit_screen_title" translatable="false">Deposit</string>
+    <string name="deposit_screen_amount_title" translatable="false">Amount</string>
+    <string name="verify_deposit_memo_title" translatable="false">Memo</string>
+    <string name="verify_deposit_node_address_title" translatable="false">Node Address</string>
+    <string name="verify_deposit_gas_title" translatable="false">Gas</string>
 </resources>
