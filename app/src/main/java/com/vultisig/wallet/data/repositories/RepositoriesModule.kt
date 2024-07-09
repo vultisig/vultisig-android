@@ -127,6 +127,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindDepositTransactionRepository(
+        impl: DepositTransactionRepositoryImpl
+    ): DepositTransactionRepository
+
+    @Binds
+    @Singleton
     fun bindBalanceVisibilityRepository(
         impl: BalanceVisibilityRepositoryImpl
     ): BalanceVisibilityRepository

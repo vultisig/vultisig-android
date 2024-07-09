@@ -20,6 +20,7 @@ import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Cosmos
+import java.math.BigInteger
 
 @OptIn(ExperimentalStdlibApi::class)
 internal class THORCHainHelper(
@@ -68,22 +69,55 @@ internal class THORCHainHelper(
             throw Exception("Coin is not RUNE")
         }
         val fromAddress = AnyAddress(keysignPayload.coin.address, coinType).data()
-        val toAddress = AnyAddress(keysignPayload.toAddress, coinType).data()
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.THORChain
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
 
-        val sendAmount = Cosmos.Amount.newBuilder().apply {
-            this.denom = "rune"
-            this.amount = keysignPayload.toAmount.toString()
-        }.build()
 
-        val msgSend = Cosmos.Message.THORChainSend.newBuilder().apply {
-            this.fromAddress = ByteString.copyFrom(fromAddress)
-            this.toAddress = ByteString.copyFrom(toAddress)
-            this.addAllAmounts(listOf(sendAmount))
-        }.build()
+        val memo = keysignPayload.memo
+        val isDeposit = !memo.isNullOrEmpty() && MayaChainHelper.DEPOSIT_PREFIXES.any { memo.startsWith(it) }
+
+        val msgSend = if (isDeposit) {
+            val coin = Cosmos.THORChainCoin.newBuilder()
+                .setAsset(
+                    Cosmos.THORChainAsset.newBuilder()
+                        .setChain("THOR")
+                        .setSymbol("RUNE")
+                        .setTicker("RUNE")
+                        .setSynth(false)
+                        .build()
+                )
+                .let {
+                    if (keysignPayload.toAmount > BigInteger.ZERO) {
+                        it.setAmount(keysignPayload.toAmount.toString())
+                            .setDecimals(keysignPayload.coin.decimal.toLong())
+                    } else it
+                }
+
+            Cosmos.Message.newBuilder().apply {
+                thorchainDepositMessage = Cosmos.Message.THORChainDeposit.newBuilder().apply {
+                    this.signer = ByteString.copyFrom(fromAddress)
+                    this.memo = memo
+                    this.addCoins(coin)
+                }.build()
+            }.build()
+        } else {
+            val toAddress = AnyAddress(keysignPayload.toAddress, coinType).data()
+
+            val sendAmount = Cosmos.Amount.newBuilder().apply {
+                this.denom = keysignPayload.coin.ticker.lowercase()
+                this.amount = keysignPayload.toAmount.toString()
+            }.build()
+
+            Cosmos.Message.newBuilder().apply {
+                thorchainSendMessage = Cosmos.Message.THORChainSend.newBuilder().apply {
+                    this.fromAddress = ByteString.copyFrom(fromAddress)
+                    this.toAddress = ByteString.copyFrom(toAddress)
+                    this.addAllAmounts(listOf(sendAmount))
+                }.build()
+            }.build()
+        }
 
         val input = Cosmos.SigningInput.newBuilder().apply {
             this.publicKey = ByteString.copyFrom(publicKey.data())
@@ -96,9 +130,7 @@ internal class THORCHainHelper(
                 this.memo = it
             }
 
-            this.addAllMessages(listOf(Cosmos.Message.newBuilder().apply {
-                this.thorchainSendMessage = msgSend
-            }.build()))
+            this.addAllMessages(listOf(msgSend))
 
             this.fee = Cosmos.Fee.newBuilder().apply {
                 this.gas = THORChainGasUnit
