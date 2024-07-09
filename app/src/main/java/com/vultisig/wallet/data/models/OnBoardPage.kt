@@ -5,6 +5,6 @@ import androidx.annotation.DrawableRes
 class OnBoardPage(
     @DrawableRes
     val image: Int,
-    val title: String,
-    val description: String,
+    val title: Int,
+    val description: Int,
 ) 

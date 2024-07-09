@@ -165,7 +165,7 @@ fun PagerScreen(onBoardingPage: OnBoardPage) {
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp)
                 .padding(top = 20.dp),
-            text = onBoardingPage.description,
+            text = stringResource(id = onBoardingPage.description),
             style = Theme.montserrat.body1,
             color = Theme.colors.neutral0,
             textAlign = TextAlign.Center
