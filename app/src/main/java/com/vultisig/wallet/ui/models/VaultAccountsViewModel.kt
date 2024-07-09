@@ -176,4 +176,10 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    fun backupVault() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.BackupPassword(vaultId!!))
+        }
+    }
+
 }

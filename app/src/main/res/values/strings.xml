@@ -288,6 +288,7 @@
     <string name="verify_swap_agree_allowance" translatable="false">I agree with providing unlimited ERC20 allowance</string>
     <string name="backup_suggestion_text" translatable="false">Please Backup your Vault Shares now.</string>
     <string name="backup_suggestion_note" translatable="false">Note: Never store Vault Shares from different devices in the same location</string>
+    <string name="backup_now" translatable="false">Backup your vault now!</string>
     <string name="deposit_screen_title" translatable="false">Deposit</string>
     <string name="deposit_screen_amount_title" translatable="false">Amount</string>
     <string name="verify_deposit_memo_title" translatable="false">Memo</string>

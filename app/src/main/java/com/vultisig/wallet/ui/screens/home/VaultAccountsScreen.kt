@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.ui.components.BackupWarning
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
@@ -73,6 +74,7 @@ internal fun VaultAccountsScreen(
     VaultAccountsScreen(
         state = state,
         isRearrangeMode = isRearrangeMode,
+        showBackupWarning = true,
         onRefresh = viewModel::refreshData,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
@@ -83,7 +85,8 @@ internal fun VaultAccountsScreen(
                 Screen.AddChainAccount.createRoute(vaultId)
             )
         },
-        onToggleBalanceVisibility = viewModel::toggleBalanceVisibility
+        onToggleBalanceVisibility = viewModel::toggleBalanceVisibility,
+        onBackupWarningClick = viewModel::backupVault,
     )
 }
 
@@ -93,13 +96,15 @@ private fun VaultAccountsScreen(
     state: VaultAccountsUiModel,
     modifier: Modifier = Modifier,
     isRearrangeMode: Boolean,
+    showBackupWarning: Boolean = false,
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onRefresh: () -> Unit = {},
     onJoinKeysign: () -> Unit = {},
     onAccountClick: (AccountUiModel) -> Unit = {},
     onChooseChains: () -> Unit = {},
-    onToggleBalanceVisibility: () -> Unit = {}
+    onToggleBalanceVisibility: () -> Unit = {},
+    onBackupWarningClick: () -> Unit = {},
 ) {
     val snackBarHostState = remember {
         SnackbarHostState()
@@ -120,6 +125,9 @@ private fun VaultAccountsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
+                    if (showBackupWarning) {
+                        BackupWarning(onBackupWarningClick)
+                    }
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(24.dp),
