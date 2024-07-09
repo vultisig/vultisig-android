@@ -29,7 +29,7 @@ internal fun BackupWarning(onWarningClick: () -> Unit) {
         colors = CardDefaults.cardColors(
             containerColor = Theme.colors.errorBackground
         ),
-        onClick = { onWarningClick() }
+        onClick = onWarningClick
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
