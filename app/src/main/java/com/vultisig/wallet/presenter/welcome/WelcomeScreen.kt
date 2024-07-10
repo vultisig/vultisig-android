@@ -131,7 +131,7 @@ internal fun WelcomeScreen(
             modifier = Modifier
                 .weight(0.3f)
         )
-        if (pagerState.currentPage < 2) {
+        if (pagerState.currentPage < pages.size - 1) {
             MultiColorButton(
                 text = stringResource(R.string.welcome_screen_skip),
                 backgroundColor = Theme.colors.oxfordBlue800,
