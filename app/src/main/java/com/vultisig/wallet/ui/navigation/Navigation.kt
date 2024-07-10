@@ -62,6 +62,20 @@ internal sealed class Destination(
         }
     }
 
+    data class Deposit(
+        val vaultId: String,
+        val chainId: String,
+    ) : Destination(
+        route = buildRoute(vaultId, chainId)
+    ) {
+        companion object {
+            val staticRoute = buildRoute("{$ARG_VAULT_ID}", "{$ARG_CHAIN_ID}")
+
+            fun buildRoute(vaultId: String, chainId: String?) =
+                "vault_detail/$vaultId/account/$chainId/deposit"
+        }
+    }
+
     data class SelectTokens(
         val vaultId: String,
         val chainId: String,

@@ -291,4 +291,10 @@
     <string name="verify_deposit_memo_title" translatable="false">Memo</string>
     <string name="verify_deposit_node_address_title" translatable="false">Node Address</string>
     <string name="verify_deposit_gas_title" translatable="false">Gas</string>
+    <string name="deposit_form_amount_title" translatable="false">Amount</string>
+    <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
+    <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>
+    <string name="deposit_form_provider_hint" translatable="false">Provider</string>
+    <string name="deposit_form_operator_fee_title" translatable="false">Operator\'s Fee (optional)</string>
+    <string name="deposit_message_deposit_title" translatable="false">%s message deposit</string>
 </resources>

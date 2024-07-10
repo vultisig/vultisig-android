@@ -86,7 +86,7 @@ internal data class SendSrc(
     val account: Account,
 )
 
-private data class InvalidTransactionDataException(
+internal data class InvalidTransactionDataException(
     val text: UiText,
 ) : Exception()
 

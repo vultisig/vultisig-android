@@ -1,8 +1,10 @@
 package com.vultisig.wallet.presenter.keysign
 
 import androidx.lifecycle.ViewModel
+import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -18,6 +20,7 @@ internal class KeysignShareViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val transactionRepository: TransactionRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
+    private val depositTransaction: DepositTransactionRepository,
 ) : ViewModel() {
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
@@ -78,6 +81,32 @@ internal class KeysignShareViewModel @Inject constructor(
                     )
                 else null,
                 memo = null,
+            )
+        }
+    }
+
+    fun loadDepositTransaction(transactionId: TransactionId) {
+        runBlocking {
+            val transaction = depositTransaction.getTransaction(transactionId)
+
+            val vault = vaultRepository.get(transaction.vaultId)!!
+
+            val pubKeyECDSA = vault.pubKeyECDSA
+            val srcToken = transaction.srcToken
+
+            val specific = transaction.blockChainSpecific
+
+            this@KeysignShareViewModel.vault = vault
+
+            keysignPayload = KeysignPayload(
+                coin = srcToken,
+                toAddress = transaction.dstAddress,
+                toAmount = transaction.srcTokenValue.value,
+                blockChainSpecific = specific,
+                vaultPublicKeyECDSA = pubKeyECDSA,
+                utxos = emptyList(),
+                vaultLocalPartyID = vault.localPartyID,
+                memo = transaction.memo,
             )
         }
     }

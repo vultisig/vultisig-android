@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.screens.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
+import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
@@ -289,6 +290,22 @@ internal fun SetupNavGraph(
                 chainId = args.getString(ARG_CHAIN_ID),
                 selectedSrcTokenId = savedStateHandle.get(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID),
                 selectedDstTokenId = savedStateHandle.get(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID),
+            )
+        }
+
+        composable(
+            route = Destination.Deposit.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+                navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
+            )
+        ) { entry ->
+            val args = requireNotNull(entry.arguments)
+
+            DepositScreen(
+                navController = navController,
+                vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
+                chainId = requireNotNull(args.getString(ARG_CHAIN_ID)),
             )
         }
 
