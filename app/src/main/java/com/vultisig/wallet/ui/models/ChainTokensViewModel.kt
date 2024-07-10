@@ -99,7 +99,14 @@ internal class ChainTokensViewModel @Inject constructor(
 
 
     fun deposit() {
-
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.Deposit(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                )
+            )
+        }
     }
 
     fun selectTokens() {

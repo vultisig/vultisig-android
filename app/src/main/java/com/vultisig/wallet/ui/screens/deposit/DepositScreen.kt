@@ -32,7 +32,7 @@ import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 internal fun DepositScreen(
     navController: NavController,
     vaultId: String,
-    chainId: String?,
+    chainId: String,
     viewModel: DepositViewModel = hiltViewModel(),
 ) {
     val depositNavHostController = rememberNavController()
@@ -86,7 +86,7 @@ private fun DepositScreen(
     title: String,
     progress: Float,
     vaultId: String,
-    chainId: String?,
+    chainId: String,
 ) {
     val context = LocalContext.current
 
@@ -106,11 +106,10 @@ private fun DepositScreen(
             composable(
                 route = SendDst.Send.route,
             ) {
-                // TODO
-//                DepositFormScreen(
-//                    vaultId = vaultId,
-//                    chainId = chainId,
-//                )
+                DepositFormScreen(
+                    vaultId = vaultId,
+                    chainId = chainId,
+                )
             }
             composable(
                 route = SendDst.VerifyTransaction.staticRoute,
@@ -127,7 +126,7 @@ private fun DepositScreen(
 
                 val keysignShareViewModel: KeysignShareViewModel =
                     hiltViewModel(context as MainActivity)
-                keysignShareViewModel.loadSwapTransaction(transactionId)
+                keysignShareViewModel.loadDepositTransaction(transactionId)
 
                 KeysignFlowView(
                     navController = mainNavController,
@@ -148,7 +147,7 @@ internal fun DepositScreenPreview() {
         mainNavController = rememberNavController(),
         navHostController = rememberNavController(),
         vaultId = "",
-        chainId = null,
+        chainId = "",
         title = stringResource(id = R.string.deposit_screen_title),
         progress = 0.35f,
     )
