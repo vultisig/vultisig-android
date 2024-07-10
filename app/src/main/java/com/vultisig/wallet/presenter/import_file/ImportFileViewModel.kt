@@ -57,11 +57,11 @@ internal class ImportFileViewModel @Inject constructor(
 
     fun decryptVaultData() {
         val key: String = passwordTextFieldState.text.toString()
-        val dataToDecrypt = uiModel.value.fileContent?.toByteArray()
+        val dataToDecrypt = uiModel.value.fileContent
         dataToDecrypt?.let {
             viewModelScope.launch {
                 try {
-                    val vault = cryptoManager.decrypt(key, dataToDecrypt)
+                    val vault = cryptoManager.decrypt(dataToDecrypt, key)
                     if (vault != null) {
                         saveToDb(vault)
                         hidePasswordPromptDialog()

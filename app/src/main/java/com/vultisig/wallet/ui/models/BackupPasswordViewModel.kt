@@ -127,7 +127,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
     }
 
-    private fun encryptData(date: String, key: String): String {
+    private fun encryptData(date: String, key: String): String? {
         return cryptoManager.encrypt(date, key)
     }
 
@@ -152,10 +152,13 @@ internal class BackupPasswordViewModel @Inject constructor(
     private fun generateFileName(vault: Vault): String {
         val thresholds = Utils.getThreshold(vault.signers.count())
         val date = Date()
-        val format = SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault())
+        val format = SimpleDateFormat(
+            "yyyy-MM",
+            java.util.Locale.getDefault()
+        )
         val formattedDate = format.format(date)
         val fileName =
-            "vultisig-${vault.name}-$formattedDate-${thresholds + 1}of${vault.signers.count()}-${
+            "vultisig-${vault.name}-$formattedDate-${thresholds}of${vault.signers.count()}-${
                 vault.pubKeyECDSA.takeLast(4)
             }-${vault.localPartyID}.dat"
         return fileName

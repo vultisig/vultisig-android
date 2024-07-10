@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -12,6 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.KeysignState
@@ -19,6 +19,7 @@ import com.vultisig.wallet.presenter.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
+import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -27,16 +28,20 @@ internal fun Keysign(
     viewModel: KeysignViewModel,
     onComplete: () -> Unit,
 ) {
-    LaunchedEffect(key1 = Unit) {
-        // kick it off to generate key
-        viewModel.startKeysign()
-    }
+
+    val wrapperViewModel = hiltViewModel(
+        creationCallback = { factory: KeySignWrapperViewModel.Factory ->
+            factory.create(viewModel)
+        }
+    )
+
+    val keysignViewModel = wrapperViewModel.viewModel
 
     KeysignScreen(
-        state = viewModel.currentState.collectAsState().value,
-        errorMessage = viewModel.errorMessage.value,
-        txHash = viewModel.txHash.collectAsState().value,
-        transactionLink = viewModel.txLink.collectAsState().value,
+        state = keysignViewModel.currentState.collectAsState().value,
+        errorMessage = keysignViewModel.errorMessage.value,
+        txHash = keysignViewModel.txHash.collectAsState().value,
+        transactionLink = keysignViewModel.txLink.collectAsState().value,
         onComplete = onComplete,
     )
 }

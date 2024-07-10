@@ -10,6 +10,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
 import com.vultisig.wallet.chains.EvmHelper
+import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.UiText
@@ -38,6 +39,7 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -78,6 +80,10 @@ internal sealed class VerifyUiModel {
 
     data class Swap(
         val model: VerifySwapUiModel,
+    ) : VerifyUiModel()
+
+    data class Deposit(
+        val model: VerifyDepositUiModel,
     ) : VerifyUiModel()
 
 }
@@ -206,7 +212,6 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val swapPayload = payload.swapPayload
-        val approvePayload = payload.approvePayload
         val currency = appCurrencyRepository.currency.first()
 
         when {
@@ -288,49 +293,78 @@ internal class JoinKeysignViewModel @Inject constructor(
                 }
             }
             else -> {
-                val payloadToken = payload.coin
-                val address = payloadToken.address
-                val token = tokenRepository.getToken(payloadToken.id)!!
-                val chain = token.chain
+                val memo = payload.memo
+                val isDeposit = !memo.isNullOrEmpty() && MayaChainHelper.DEPOSIT_PREFIXES.any { memo.startsWith(it) }
 
-                val tokenValue = TokenValue(
-                    value = payload.toAmount,
-                    unit = token.ticker,
-                    decimals = token.decimal,
-                )
+                if (isDeposit) {
+                    val specific = payload.blockChainSpecific as BlockChainSpecific.THORChain
 
-                val gasFee = gasFeeRepository.getGasFee(chain, address)
+                    verifyUiModel.value = VerifyUiModel.Deposit(
+                        VerifyDepositUiModel(
+                            fromAddress = payload.coin.address,
+                            // TODO toAddress is empty on ios, get node address from memo
+                            nodeAddress = payload.toAddress,
+                            srcTokenValue = mapTokenValueToStringWithUnit(
+                                TokenValue(
+                                    value = payload.toAmount,
+                                    token = payload.coin,
+                                )
 
-                val transaction = Transaction(
-                    id = UUID.randomUUID().toString(),
-
-                    vaultId = payload.vaultPublicKeyECDSA,
-                    chainId = chain.id,
-                    tokenId = token.id,
-                    srcAddress = address,
-                    dstAddress = payload.toAddress,
-                    tokenValue = tokenValue,
-                    fiatValue = convertTokenValueToFiat(
-                        token,
-                        tokenValue,
-                        currency,
-                    ),
-                    gasFee = gasFee,
-                    memo = payload.memo,
-
-                    // TODO that's mock data
-                    blockChainSpecific = BlockChainSpecific.THORChain(
-                        BigInteger.ZERO,
-                        BigInteger.ZERO,
-                        BigInteger.ZERO
-                    ),
-                )
-
-                verifyUiModel.value = VerifyUiModel.Send(
-                    VerifyTransactionUiModel(
-                        transaction = mapTransactionToUiModel(transaction),
+                            ),
+                            estimatedFees = mapTokenValueToStringWithUnit(
+                                TokenValue(
+                                    value = specific.fee,
+                                    token = payload.coin,
+                                )
+                            ),
+                            memo = memo ?: "",
+                        )
                     )
-                )
+                } else {
+                    val payloadToken = payload.coin
+                    val address = payloadToken.address
+                    val token = tokenRepository.getToken(payloadToken.id)!!
+                    val chain = token.chain
+
+                    val tokenValue = TokenValue(
+                        value = payload.toAmount,
+                        unit = token.ticker,
+                        decimals = token.decimal,
+                    )
+
+                    val gasFee = gasFeeRepository.getGasFee(chain, address)
+
+                    val transaction = Transaction(
+                        id = UUID.randomUUID().toString(),
+
+                        vaultId = payload.vaultPublicKeyECDSA,
+                        chainId = chain.id,
+                        tokenId = token.id,
+                        srcAddress = address,
+                        dstAddress = payload.toAddress,
+                        tokenValue = tokenValue,
+                        fiatValue = convertTokenValueToFiat(
+                            token,
+                            tokenValue,
+                            currency,
+                        ),
+                        gasFee = gasFee,
+                        memo = payload.memo,
+
+                        // TODO that's mock data
+                        blockChainSpecific = BlockChainSpecific.THORChain(
+                            BigInteger.ZERO,
+                            BigInteger.ZERO,
+                            BigInteger.ZERO
+                        ),
+                    )
+
+                    verifyUiModel.value = VerifyUiModel.Send(
+                        VerifyTransactionUiModel(
+                            transaction = mapTransactionToUiModel(transaction),
+                        )
+                    )
+                }
             }
         }
     }

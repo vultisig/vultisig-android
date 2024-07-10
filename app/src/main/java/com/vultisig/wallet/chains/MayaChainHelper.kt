@@ -35,7 +35,7 @@ internal class MayaChainHelper(
     companion object {
         const val MayaChainGasUnit: Long = 2000000000
 
-        private val DEPOSIT_PREFIXES = listOf(
+        val DEPOSIT_PREFIXES = listOf(
             "SWAP:",
             "s:",
             "=",

@@ -28,6 +28,8 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
+import com.vultisig.wallet.models.isLayer2
+import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.components.FormSearchBar
 import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.components.TopBar
@@ -128,6 +130,7 @@ private fun LazyListScope.TokensSection(
             title = coin.ticker,
             subtitle = coin.chain.raw,
             logo = Coins.getCoinLogo(logoName = coin.logo),
+            chainLogo = token.coin.chain.logo.takeIf { token.coin.chain.isLayer2 || !token.coin.isNativeToken },
             hasTokenSwitch = hasTokenSwitch,
             isChecked = token.isEnabled,
             onCheckedChange = { checked ->
