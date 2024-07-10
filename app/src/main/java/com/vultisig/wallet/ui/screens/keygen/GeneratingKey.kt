@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -199,7 +199,7 @@ private fun KeygenIndicator(
     BoxWithConstraints(
         contentAlignment = Alignment.Center,
         modifier = modifier
-            .padding(32.dp),
+            .padding(16.dp),
     ) {
         Column(
             horizontalAlignment = CenterHorizontally,
@@ -219,17 +219,15 @@ private fun KeygenIndicator(
             UiCirclesLoader()
         }
 
-        val minDimen = rememberSaveable {
+        val minDimen = remember {
             min(maxWidth.value, maxHeight.value)
         }
-
-        val isLandscape = maxWidth > maxHeight
 
         UiCircularProgressIndicator(
             progress = { progressAnimated },
             strokeWidth = 16.dp,
             modifier = Modifier
-                .width(minDimen.dp.minus(if (isLandscape) 64.dp else 0.dp))
+                .width(minDimen.dp)
                 .aspectRatio(1f)
         )
     }
