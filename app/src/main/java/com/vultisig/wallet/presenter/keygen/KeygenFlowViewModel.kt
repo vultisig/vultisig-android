@@ -80,6 +80,22 @@ internal class KeygenFlowViewModel @Inject constructor(
             navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
         )
     val selection = MutableLiveData<List<String>>()
+
+    val isContinueButtonEnabled: Boolean
+        get() = when (vaultSetupType) {
+            VaultSetupType.TWO_OF_TWO -> {
+                selection.value?.size == 2
+            }
+
+            VaultSetupType.TWO_OF_THREE -> {
+                selection.value?.size == 3
+            }
+
+            VaultSetupType.M_OF_N -> {
+                (selection.value?.size ?: 0) >= 2
+            }
+        }
+
     val keygenPayloadState: MutableState<String>
         get() = _keygenPayload
 
@@ -152,27 +168,6 @@ internal class KeygenFlowViewModel @Inject constructor(
             this.vault.localPartyID = Utils.deviceName
         }
         this.selection.value = listOf(this.vault.localPartyID)
-        viewModelScope.launch {
-            selection.asFlow().collect { newList ->
-                when (vaultSetupType) {
-                    VaultSetupType.TWO_OF_TWO -> {
-                        if (newList.size == 2) {
-                            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
-                        }
-                    }
-
-                    VaultSetupType.TWO_OF_THREE -> {
-                        if (newList.size == 3) {
-                            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
-                        }
-                    }
-
-                    VaultSetupType.M_OF_N -> {
-                        // let user to decide
-                    }
-                }
-            }
-        }
         _oldResharePrefix = this.vault.resharePrefix
         updateKeygenPayload(context)
     }

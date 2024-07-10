@@ -54,6 +54,7 @@ internal fun KeygenPeerDiscovery(
         keygenPayloadState = keygenPayloadState,
         vaultSetupType = viewModel.vaultSetupType.asString(),
         networkPromptOption = networkPromptOption,
+        isAbleContinue = viewModel.isContinueButtonEnabled,
         onQrAddressClick = {
             val qrBitmap = generateQrBitmap(keygenPayloadState)
             context.share(qrBitmap)
@@ -76,6 +77,7 @@ internal fun KeygenPeerDiscoveryScreen(
     keygenPayloadState: String,
     vaultSetupType: String,
     networkPromptOption: NetworkPromptOption,
+    isAbleContinue: Boolean,
     onQrAddressClick: () -> Unit = {},
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
@@ -97,17 +99,6 @@ internal fun KeygenPeerDiscoveryScreen(
             horizontalAlignment = CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            if (selectionState.isNotEmpty() && selectionState.count() > 1) {
-                Text(
-                    text = stringResource(
-                        R.string.keygen_peer_descovery_of_vault,
-                        Utils.getThreshold(selectionState.count()),
-                        selectionState.count()
-                    ),
-                    color = textColor,
-                    style = Theme.montserrat.subtitle2
-                )
-            }
 
             PeerDiscoveryView(
                 modifier = Modifier.weight(1f),
@@ -126,7 +117,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 textColor = Theme.colors.oxfordBlue600Main,
                 minHeight = 44.dp,
                 textStyle = Theme.montserrat.subtitle1,
-                disabled = selectionState.size < 2,
+                disabled = isAbleContinue.not(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -148,6 +139,7 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
         networkPromptOption = NetworkPromptOption.LOCAL,
+        isAbleContinue = true,
         vaultSetupType = "M/N",
     )
 }
