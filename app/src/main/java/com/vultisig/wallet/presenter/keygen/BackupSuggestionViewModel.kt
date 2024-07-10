@@ -33,8 +33,7 @@ internal class BackupSuggestionViewModel @Inject constructor(
     fun navigateToBackupPasswordScreen() {
         viewModelScope.launch {
             navigator.navigate(
-                Destination.BackupPassword(vaultId),
-                opts = NavigationOptions(popUpTo = Destination.Home.staticRoute)
+                Destination.BackupPassword(vaultId)
             )
         }
     }
