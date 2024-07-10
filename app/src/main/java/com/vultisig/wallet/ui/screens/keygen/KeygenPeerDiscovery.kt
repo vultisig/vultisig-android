@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -17,7 +16,6 @@ import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.presenter.keygen.KeygenFlowState
@@ -54,7 +52,7 @@ internal fun KeygenPeerDiscovery(
         keygenPayloadState = keygenPayloadState,
         vaultSetupType = viewModel.vaultSetupType.asString(),
         networkPromptOption = networkPromptOption,
-        isAbleContinue = viewModel.isContinueButtonEnabled,
+        isContinueEnabled = viewModel.isContinueButtonEnabled,
         onQrAddressClick = {
             val qrBitmap = generateQrBitmap(keygenPayloadState)
             context.share(qrBitmap)
@@ -77,7 +75,7 @@ internal fun KeygenPeerDiscoveryScreen(
     keygenPayloadState: String,
     vaultSetupType: String,
     networkPromptOption: NetworkPromptOption,
-    isAbleContinue: Boolean,
+    isContinueEnabled: Boolean,
     onQrAddressClick: () -> Unit = {},
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
@@ -117,7 +115,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 textColor = Theme.colors.oxfordBlue600Main,
                 minHeight = 44.dp,
                 textStyle = Theme.montserrat.subtitle1,
-                disabled = isAbleContinue.not(),
+                disabled = !isContinueEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -139,7 +137,7 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
         networkPromptOption = NetworkPromptOption.LOCAL,
-        isAbleContinue = true,
+        isContinueEnabled = true,
         vaultSetupType = "M/N",
     )
 }
