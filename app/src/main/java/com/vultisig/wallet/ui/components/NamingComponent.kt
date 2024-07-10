@@ -14,6 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,6 +30,8 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun NamingComponent(
     title: String = "",
+    hint: String = "",
+    hintColor: Color = Theme.colors.neutral100,
     saveButtonText: String = "",
     textFieldState: TextFieldState = rememberTextFieldState(),
     navHostController: NavHostController = rememberNavController(),
@@ -82,7 +85,8 @@ internal fun NamingComponent(
         ) {
             FormTextFieldCard(
                 title = inputTitle,
-                hint = "",
+                hint = hint,
+                hintColor = hintColor,
                 error = errorText,
                 keyboardType = KeyboardType.Text,
                 textFieldState = textFieldState,

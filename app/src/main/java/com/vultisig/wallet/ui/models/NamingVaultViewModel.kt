@@ -43,8 +43,8 @@ internal class NamingVaultViewModel @Inject constructor(
         return null
     }
 
-    fun navigateToKeygen() {
-        val name = namingTextFieldState.text.toString()
+    fun navigateToKeygen(placeholder: String) {
+        val name = namingTextFieldState.text.toString().ifEmpty { placeholder }
         val errorMessage = validateVaultName(name)
         errorMessageState.update { errorMessage }
         if (errorMessage != null)

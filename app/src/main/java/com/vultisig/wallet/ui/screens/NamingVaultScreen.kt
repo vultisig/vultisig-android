@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.NamingComponent
 import com.vultisig.wallet.ui.models.NamingVaultViewModel
+import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -17,14 +18,17 @@ internal fun NamingVaultScreen(
     navController: NavHostController,
 ) {
     val viewModel = hiltViewModel<NamingVaultViewModel>()
+    val placeholder = stringResource(id = R.string.naming_vault_screen_vault_placeholder)
 
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_setup),
         textFieldState = viewModel.namingTextFieldState,
         navHostController = navController,
         inputTitle = stringResource(id = R.string.naming_vault_screen_vault_name),
+        hint = placeholder,
+        hintColor = Theme.colors.neutral500,
         saveButtonText = stringResource(id = R.string.naming_vault_screen_continue),
-        onSave = viewModel::navigateToKeygen,
+        onSave = { viewModel.navigateToKeygen(placeholder) },
         errorText = viewModel.errorMessageState.collectAsState().value
     )
 }
