@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -72,6 +73,7 @@ fun SettingsScreen(navController: NavHostController) {
     ) {
         Column(
             modifier = Modifier
+                .fillMaxHeight()
                 .padding(it)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -85,7 +87,8 @@ fun SettingsScreen(navController: NavHostController) {
 
             AppSettingItem(
                 R.drawable.settings_globe,
-                stringResource(R.string.settings_screen_language), state.selectedLocal.mainName
+                stringResource(R.string.settings_screen_language),
+                state.selectedLocal.mainName
             ) {
                 viewModel.navigateTo(Destination.LanguageSetting)
             }
@@ -93,7 +96,8 @@ fun SettingsScreen(navController: NavHostController) {
 
             AppSettingItem(
                 R.drawable.settings_dollar,
-                stringResource(R.string.settings_screen_currency), state.selectedCurrency.name
+                stringResource(R.string.settings_screen_currency),
+                state.selectedCurrency.name
             ) {
                 viewModel.navigateTo(Destination.CurrencyUnitSetting)
             }
@@ -140,7 +144,10 @@ fun SettingsScreen(navController: NavHostController) {
                     )
                     type = "text/plain"
                 }
-                val shareIntent = Intent.createChooser(sendIntent, null)
+                val shareIntent = Intent.createChooser(
+                    sendIntent,
+                    null
+                )
                 context.startActivity(shareIntent)
             }
 
@@ -196,8 +203,14 @@ private fun AppSettingItem(
     val colors = Theme.colors
     Card(
         modifier = Modifier
-            .clickOnce(enabled = true, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .clickOnce(
+                enabled = true,
+                onClick = onClick
+            )
+            .padding(
+                horizontal = 12.dp,
+                vertical = 8.dp
+            )
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
