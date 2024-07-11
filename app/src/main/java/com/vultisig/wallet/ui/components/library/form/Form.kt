@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -161,6 +162,7 @@ internal fun FormTextFieldCard(
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     onLostFocus: () -> Unit = {},
+    hintColor: Color = Theme.colors.neutral100,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     TextFieldValidator(
@@ -174,7 +176,8 @@ internal fun FormTextFieldCard(
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
                 actions = actions,
-                onLostFocus = onLostFocus
+                onLostFocus = onLostFocus,
+                hintColor = hintColor,
             )
         }
     }
@@ -218,6 +221,7 @@ internal fun FormTextField(
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     actions: (@Composable RowScope.() -> Unit)? = null,
+    hintColor: Color = Theme.colors.neutral100,
     onLostFocus: () -> Unit,
 ) {
     Row(
@@ -232,6 +236,7 @@ internal fun FormTextField(
     ) {
         BasicFormTextField(
             hint = hint,
+            hintColor = hintColor,
             keyboardType = keyboardType,
             textFieldState = textFieldState,
             onLostFocus = onLostFocus,
@@ -254,6 +259,7 @@ internal fun BasicFormTextField(
     onLostFocus: () -> Unit,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = Theme.menlo.body1,
+    hintColor: Color = Theme.colors.neutral100,
 ) {
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
@@ -286,7 +292,7 @@ internal fun BasicFormTextField(
             if (textFieldState.text.isEmpty()) {
                 Text(
                     text = hint,
-                    color = Theme.colors.neutral100,
+                    color = hintColor,
                     style = textStyle,
                 )
             }
@@ -454,11 +460,11 @@ internal fun FormTitleCollapsibleTextField(
         AnimatedVisibility(visible = isExpanded) {
             FormCard {
                 FormTextField(
-                    hint,
-                    keyboardType,
-                    textFieldState,
-                    actions,
-                    onLostFocus,
+                    hint = hint,
+                    keyboardType = keyboardType,
+                    textFieldState = textFieldState,
+                    actions = actions,
+                    onLostFocus = onLostFocus,
                 )
             }
         }
