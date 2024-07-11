@@ -34,8 +34,6 @@ internal interface VaultRepository {
 
     suspend fun setVaultName(vaultId: String, name: String)
 
-    suspend fun setBackedUp(vaultId: String, backedUp: Boolean)
-
     suspend fun delete(vaultId: String)
 
     suspend fun deleteTokenFromVault(vaultId: String, tokenId: String)
@@ -85,10 +83,6 @@ internal class VaultRepositoryImpl @Inject constructor(
         vaultDao.setVaultName(vaultId, name)
     }
 
-    override suspend fun setBackedUp(vaultId: String, backedUp: Boolean) {
-        vaultDao.setBackedUp(vaultId, backedUp)
-    }
-
     override suspend fun delete(vaultId: String) {
         vaultDao.delete(vaultId)
     }
@@ -110,7 +104,6 @@ internal class VaultRepositoryImpl @Inject constructor(
         return Vault(
             id = vault.vault.id,
             name = vault.vault.name,
-            backedUp = vault.vault.backedUp,
             pubKeyECDSA = vault.vault.pubKeyEcdsa,
             pubKeyEDDSA = vault.vault.pubKeyEddsa,
             hexChainCode = vault.vault.hexChainCode,
@@ -147,7 +140,6 @@ internal class VaultRepositoryImpl @Inject constructor(
             vault = VaultEntity(
                 id = vaultId,
                 name = vault.name,
-                backedUp = vault.backedUp,
                 pubKeyEcdsa = vault.pubKeyECDSA,
                 pubKeyEddsa = vault.pubKeyEDDSA,
                 hexChainCode = vault.hexChainCode,

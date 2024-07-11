@@ -101,13 +101,3 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
         )
     }
 }
-
-internal val MIGRATION_6_7 = object : Migration(6, 7) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL(
-            """
-            ALTER TABLE `vault` ADD COLUMN `backedUp` INT NOT NULL DEFAULT (1)
-            """.trimMargin()
-        )
-    }
-}

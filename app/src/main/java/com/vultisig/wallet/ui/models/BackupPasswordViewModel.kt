@@ -112,7 +112,6 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
         viewModelScope.launch {
             if (isSuccess) {
-                vaultRepository.setBackedUp(vaultId, true)
                 snackbarFlow.showMessage(
                     context.getString(R.string.vault_settings_success_backup_file, backupFileName)
                 )

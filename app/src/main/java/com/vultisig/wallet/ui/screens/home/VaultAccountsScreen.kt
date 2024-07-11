@@ -74,6 +74,7 @@ internal fun VaultAccountsScreen(
     VaultAccountsScreen(
         state = state,
         isRearrangeMode = isRearrangeMode,
+        showBackupWarning = true,
         onRefresh = viewModel::refreshData,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
@@ -95,6 +96,7 @@ private fun VaultAccountsScreen(
     state: VaultAccountsUiModel,
     modifier: Modifier = Modifier,
     isRearrangeMode: Boolean,
+    showBackupWarning: Boolean = false,
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onRefresh: () -> Unit = {},
@@ -123,7 +125,7 @@ private fun VaultAccountsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
-                    if (state.showBackupWarning) {
+                    if (showBackupWarning) {
                         BackupWarning(onBackupWarningClick)
                     }
                     Column(
