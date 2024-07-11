@@ -24,36 +24,37 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun FormSelection(
-    selectedTitle: String,
-    options: List<String>,
-    onSelectOption: (String) -> Unit,
+internal fun <T> FormSelection(
+    selected: T,
+    options: List<T>,
+    mapTypeToString: (T) -> String,
+    onSelectOption: (T) -> Unit,
 ) {
     var isListExpanded by remember { mutableStateOf(false) }
 
     FormCard {
         SelectionCard(
-            title = selectedTitle,
+            title = mapTypeToString(selected),
             actionIcon = R.drawable.caret_down,
             onClick = { isListExpanded = !isListExpanded },
         )
 
         AnimatedVisibility(visible = isListExpanded) {
             Column {
-                options.forEach { title ->
+                options.forEach { option ->
                     UiHorizontalDivider(
                         modifier = Modifier
                             .padding(horizontal = 12.dp)
                     )
 
                     SelectionCard(
-                        title = title,
-                        actionIcon = if (selectedTitle == title)
+                        title = mapTypeToString(option),
+                        actionIcon = if (selected == option)
                             R.drawable.check
                         else null,
                         onClick = {
                             isListExpanded = false
-                            onSelectOption(title)
+                            onSelectOption(option)
                         }
                     )
                 }
@@ -101,8 +102,9 @@ private fun SelectionCard(
 @Composable
 private fun FormSelectionPreview() {
     FormSelection(
-        selectedTitle = "Rune",
+        selected = "Rune",
         options = listOf("Rune", "BTC", "ETH", "BNB"),
+        mapTypeToString = { it },
         onSelectOption = {}
     )
 }

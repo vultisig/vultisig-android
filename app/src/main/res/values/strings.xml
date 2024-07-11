@@ -297,5 +297,6 @@
     <string name="deposit_form_provider_hint" translatable="false">Provider</string>
     <string name="deposit_form_operator_fee_title" translatable="false">Operator\'s Fee (optional)</string>
     <string name="deposit_message_deposit_title" translatable="false">%s message deposit</string>
+    <string name="deposit_form_custom_memo_title" translatable="false">Custom memo</string>
     <string name="naming_vault_screen_vault_placeholder" translatable="false">Main Vault</string>
 </resources>

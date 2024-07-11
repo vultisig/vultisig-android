@@ -124,10 +124,12 @@ private fun VerifyDepositScreen(
                         address = memo,
                     )
 
-                    AddressField(
-                        title = stringResource(R.string.verify_deposit_node_address_title),
-                        address = nodeAddress,
-                    )
+                    if (nodeAddress.isNotBlank()) {
+                        AddressField(
+                            title = stringResource(R.string.verify_deposit_node_address_title),
+                            address = nodeAddress,
+                        )
+                    }
 
                     OtherField(
                         title = stringResource(R.string.verify_deposit_gas_title),
