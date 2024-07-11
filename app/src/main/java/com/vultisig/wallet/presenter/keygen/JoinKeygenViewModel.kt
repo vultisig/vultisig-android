@@ -15,6 +15,7 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.models.PeerDiscoveryPayload
@@ -49,6 +50,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val gson: Gson,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -84,6 +86,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
+            vaultDataStoreRepository = vaultDataStoreRepository,
         )
 
     @OptIn(ExperimentalEncodingApi::class)

@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -53,6 +54,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
 
     private val vaultRepository: VaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
@@ -126,7 +128,7 @@ internal class VaultAccountsViewModel @Inject constructor(
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
             uiState.update { it.copy(vaultName = vault.name) }
-            val isVaultBackedUp = vaultRepository.getVaultBackupStatus(vaultId).first()
+            val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
             uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
         }
     }

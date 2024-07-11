@@ -16,6 +16,7 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
@@ -57,6 +58,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
@@ -100,7 +102,8 @@ internal class KeygenFlowViewModel @Inject constructor(
             gson,
             navigator = navigator,
             saveVault = saveVault,
-            lastOpenedVaultRepository = lastOpenedVaultRepository
+            lastOpenedVaultRepository = lastOpenedVaultRepository,
+            vaultDataStoreRepository = vaultDataStoreRepository,
         )
 
     init {

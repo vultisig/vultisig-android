@@ -1,19 +1,19 @@
-package com.vultisig.wallet.data.managers
+package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-internal interface VaultDataStoreManager {
+internal interface VaultDataStoreRepository {
     suspend fun setBackupStatus(vaultId: String, status: Boolean)
 
     suspend fun readBackupStatus(vaultId: String): Flow<Boolean>
 }
 
-internal class VaultDataStoreManagerImpl @Inject constructor(
+internal class VaultDataStoreRepositoryImpl @Inject constructor(
     private val appDataStore: AppDataStore,
-) : VaultDataStoreManager {
+) : VaultDataStoreRepository {
     override suspend fun setBackupStatus(vaultId: String, status: Boolean) {
         appDataStore.editData { preferences ->
             preferences[onVaultBackupKey(vaultId)] = status

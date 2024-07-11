@@ -6,6 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssAction
@@ -43,6 +44,7 @@ internal class GeneratingKeyViewModel(
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
 ) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
@@ -185,9 +187,9 @@ internal class GeneratingKeyViewModel(
     suspend fun saveVault(context: Context) {
         saveVault(
             this@GeneratingKeyViewModel.vault,
-            this@GeneratingKeyViewModel.action == TssAction.ReShare,
-            false
+            this@GeneratingKeyViewModel.action == TssAction.ReShare
         )
+        vaultDataStoreRepository.setBackupStatus(vaultId = vault.id, false)
 
         delay(2.seconds)
 

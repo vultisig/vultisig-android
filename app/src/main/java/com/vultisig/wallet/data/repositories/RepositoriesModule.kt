@@ -137,4 +137,10 @@ internal interface RepositoriesModule {
         impl: BalanceVisibilityRepositoryImpl
     ): BalanceVisibilityRepository
 
+    @Binds
+    @Singleton
+    fun bindVaultDataStoreManager(
+        impl: VaultDataStoreRepositoryImpl
+    ): VaultDataStoreRepository
+
 }

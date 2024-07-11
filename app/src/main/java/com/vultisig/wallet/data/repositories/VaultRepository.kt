@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
-import com.vultisig.wallet.data.managers.VaultDataStoreRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.KeyShare
@@ -29,7 +28,7 @@ internal interface VaultRepository {
 
     suspend fun hasVaults(): Boolean
 
-    suspend fun add(vault: Vault, haveBackup: Boolean = false)
+    suspend fun add(vault: Vault)
 
     suspend fun upsert(vault: Vault)
 
@@ -42,17 +41,11 @@ internal interface VaultRepository {
     suspend fun deleteChainFromVault(vaultId: String, chain: Chain)
 
     suspend fun addTokenToVault(vaultId: String, token: Coin)
-
-    suspend fun setVaultBackupStatus(vaultId: String, status: Boolean)
-
-    suspend fun getVaultBackupStatus(vaultId: String): Flow<Boolean>
-
 }
 
 internal class VaultRepositoryImpl @Inject constructor(
     private val vaultDao: VaultDao,
     private val tokenRepository: TokenRepository,
-    private val vaultDataStoreRepository: VaultDataStoreRepository,
 ) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
@@ -77,12 +70,8 @@ internal class VaultRepositoryImpl @Inject constructor(
     override suspend fun hasVaults(): Boolean =
         vaultDao.hasVaults()
 
-    override suspend fun add(vault: Vault, haveBackup: Boolean) {
+    override suspend fun add(vault: Vault) {
         vaultDao.insert(vault.toVaultDb())
-        vaultDataStoreRepository.setBackupStatus(
-            vaultId = vault.id,
-            status = haveBackup,
-        )
     }
 
     override suspend fun upsert(vault: Vault) {
@@ -107,14 +96,6 @@ internal class VaultRepositoryImpl @Inject constructor(
 
     override suspend fun addTokenToVault(vaultId: String, token: Coin) {
         vaultDao.insertCoins(listOf(token.toCoinEntity(vaultId)))
-    }
-
-    override suspend fun setVaultBackupStatus(vaultId: String, status: Boolean) {
-        vaultDataStoreRepository.setBackupStatus(vaultId, status)
-    }
-
-    override suspend fun getVaultBackupStatus(vaultId: String): Flow<Boolean> {
-        return vaultDataStoreRepository.readBackupStatus(vaultId)
     }
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {

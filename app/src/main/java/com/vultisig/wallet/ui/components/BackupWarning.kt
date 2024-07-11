@@ -26,9 +26,9 @@ internal fun BackupWarning(onWarningClick: () -> Unit) {
             .fillMaxWidth()
             .padding(bottom = 16.dp),
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(2.dp, Color(0xffDA2E2E)),
+        border = BorderStroke(2.dp, Theme.colors.alert),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0x59DA2E2E)
+            containerColor = Theme.colors.alertBackground
         ),
         onClick = onWarningClick
     ) {
@@ -40,7 +40,7 @@ internal fun BackupWarning(onWarningClick: () -> Unit) {
             UiIcon(
                 drawableResId = R.drawable.ic_warning,
                 size = 24.dp,
-                tint = Color(0xffDA2E2E),
+                tint = Theme.colors.alert,
                 modifier = Modifier.padding(16.dp),
             )
             Text(
