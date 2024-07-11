@@ -185,7 +185,8 @@ internal class GeneratingKeyViewModel(
     suspend fun saveVault(context: Context) {
         saveVault(
             this@GeneratingKeyViewModel.vault,
-            this@GeneratingKeyViewModel.action == TssAction.ReShare
+            this@GeneratingKeyViewModel.action == TssAction.ReShare,
+            false
         )
 
         delay(2.seconds)

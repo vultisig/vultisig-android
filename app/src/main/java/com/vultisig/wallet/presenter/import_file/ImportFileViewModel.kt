@@ -106,7 +106,7 @@ internal class ImportFileViewModel @Inject constructor(
 
     private suspend fun insertVaultToDb(fromJson: IOSVaultRoot) {
         val vault = vaultIOSToAndroidMapper(fromJson)
-        saveVault(vault, false)
+        saveVault(vault, false, true)
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id,

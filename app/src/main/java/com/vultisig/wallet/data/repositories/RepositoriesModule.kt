@@ -50,7 +50,7 @@ internal interface RepositoriesModule {
     @Singleton
     @Binds
     abstract fun bindOnBoardRepository(
-        impl: DataStoreRepositoryImpl,
+        impl: OnBoardRepositoryImpl,
     ): OnBoardRepository
 
     @Binds

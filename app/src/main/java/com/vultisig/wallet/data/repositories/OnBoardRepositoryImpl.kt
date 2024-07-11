@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import javax.inject.Inject
 
 
-internal class DataStoreRepositoryImpl @Inject constructor(private val appDataStore: AppDataStore) :
+internal class OnBoardRepositoryImpl @Inject constructor(private val appDataStore: AppDataStore) :
     OnBoardRepository {
 
 

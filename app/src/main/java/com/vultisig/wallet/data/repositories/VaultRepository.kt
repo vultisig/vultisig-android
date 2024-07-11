@@ -1,11 +1,15 @@
 package com.vultisig.wallet.data.repositories
 
+import android.content.SharedPreferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.vultisig.wallet.data.db.VaultDao
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
+import com.vultisig.wallet.data.managers.VaultDataStoreManager
+import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.KeyShare
@@ -28,7 +32,7 @@ internal interface VaultRepository {
 
     suspend fun hasVaults(): Boolean
 
-    suspend fun add(vault: Vault)
+    suspend fun add(vault: Vault, haveBackup: Boolean = false)
 
     suspend fun upsert(vault: Vault)
 
@@ -42,11 +46,16 @@ internal interface VaultRepository {
 
     suspend fun addTokenToVault(vaultId: String, token: Coin)
 
+    suspend fun setVaultBackupStatus(vaultId: String, status: Boolean)
+
+    suspend fun getVaultBackupStatus(vaultId: String): Flow<Boolean>
+
 }
 
 internal class VaultRepositoryImpl @Inject constructor(
     private val vaultDao: VaultDao,
     private val tokenRepository: TokenRepository,
+    private val vaultDataStoreManager: VaultDataStoreManager,
 ) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
@@ -71,8 +80,12 @@ internal class VaultRepositoryImpl @Inject constructor(
     override suspend fun hasVaults(): Boolean =
         vaultDao.hasVaults()
 
-    override suspend fun add(vault: Vault) {
+    override suspend fun add(vault: Vault, haveBackup: Boolean) {
         vaultDao.insert(vault.toVaultDb())
+        vaultDataStoreManager.setBackupStatus(
+            vaultId = vault.id,
+            status = haveBackup,
+        )
     }
 
     override suspend fun upsert(vault: Vault) {
@@ -97,6 +110,14 @@ internal class VaultRepositoryImpl @Inject constructor(
 
     override suspend fun addTokenToVault(vaultId: String, token: Coin) {
         vaultDao.insertCoins(listOf(token.toCoinEntity(vaultId)))
+    }
+
+    override suspend fun setVaultBackupStatus(vaultId: String, status: Boolean) {
+        vaultDataStoreManager.setBackupStatus(vaultId, status)
+    }
+
+    override suspend fun getVaultBackupStatus(vaultId: String): Flow<Boolean> {
+        return vaultDataStoreManager.readBackupStatus(vaultId)
     }
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
