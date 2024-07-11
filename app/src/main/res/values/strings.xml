@@ -286,11 +286,22 @@
     <string name="token_selection_tokens_title" translatable="false">Tokens</string>
     <string name="token_selection_search_hint" translatable="false">Search...</string>
     <string name="verify_swap_agree_allowance" translatable="false">I agree with providing unlimited ERC20 allowance</string>
+    <string name="backup_suggestion_text" translatable="false">Please Backup your Vault Shares now.</string>
+    <string name="backup_suggestion_note" translatable="false">Note: Never store Vault Shares from different devices in the same location</string>
+    <string name="backup_now" translatable="false">Backup your vault now!</string>
     <string name="deposit_screen_title" translatable="false">Deposit</string>
     <string name="deposit_screen_amount_title" translatable="false">Amount</string>
     <string name="verify_deposit_memo_title" translatable="false">Memo</string>
     <string name="verify_deposit_node_address_title" translatable="false">Node Address</string>
     <string name="verify_deposit_gas_title" translatable="false">Gas</string>
+    <string name="onboard_intro1_title" translatable="false">Meeting</string>
+    <string name="onboard_intro1_desc" translatable="false">Vultisig is a secure, multi-device crypto vault, compatible with 30+ chains and 10,000+ tokens. Vultisig is fully self-custodial.</string>
+    <string name="onboard_intro2_title" translatable="false">Coordination</string>
+    <string name="onboard_intro2_desc" translatable="false">Vultisig does not track your activities or require any registrations. Vultisig is fully open-source, ensuring transparency and trust.</string>
+    <string name="onboard_intro3_title" translatable="false">Dialogue</string>
+    <string name="onboard_intro3_desc" translatable="false">Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets.</string>
+    <string name="onboard_intro4_title" translatable="false">Collaboration</string>
+    <string name="onboard_intro4_desc" translatable="false">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
     <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>

@@ -22,6 +22,7 @@ import com.vultisig.wallet.common.backupVaultToDownloadsDir
 import com.vultisig.wallet.common.backupVaultToDownloadsDirAtLeastQ
 import com.vultisig.wallet.common.encodeToHex
 import com.vultisig.wallet.data.mappers.VaultAndroidToIOSMapper
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
@@ -57,6 +58,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     private val gson: Gson,
     private val navigator: Navigator<Destination>,
     private val cryptoManager: CryptoManager,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val snackbarFlow: SnackbarFlow,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -112,6 +114,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
         viewModelScope.launch {
             if (isSuccess) {
+                vaultDataStoreRepository.setBackupStatus(vaultId, true)
                 snackbarFlow.showMessage(
                     context.getString(R.string.vault_settings_success_backup_file, backupFileName)
                 )

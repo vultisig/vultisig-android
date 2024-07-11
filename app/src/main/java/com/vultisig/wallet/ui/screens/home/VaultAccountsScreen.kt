@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.ui.components.BackupWarning
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
@@ -83,7 +84,8 @@ internal fun VaultAccountsScreen(
                 Screen.AddChainAccount.createRoute(vaultId)
             )
         },
-        onToggleBalanceVisibility = viewModel::toggleBalanceVisibility
+        onToggleBalanceVisibility = viewModel::toggleBalanceVisibility,
+        onBackupWarningClick = viewModel::backupVault,
     )
 }
 
@@ -99,7 +101,8 @@ private fun VaultAccountsScreen(
     onJoinKeysign: () -> Unit = {},
     onAccountClick: (AccountUiModel) -> Unit = {},
     onChooseChains: () -> Unit = {},
-    onToggleBalanceVisibility: () -> Unit = {}
+    onToggleBalanceVisibility: () -> Unit = {},
+    onBackupWarningClick: () -> Unit = {},
 ) {
     val snackBarHostState = remember {
         SnackbarHostState()
@@ -120,6 +123,9 @@ private fun VaultAccountsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
+                    if (state.showBackupWarning) {
+                        BackupWarning(onBackupWarningClick)
+                    }
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(24.dp),

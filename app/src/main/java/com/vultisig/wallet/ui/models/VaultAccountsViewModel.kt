@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -18,6 +19,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,6 +29,7 @@ import javax.inject.Inject
 @Immutable
 internal data class VaultAccountsUiModel(
     val vaultName: String = "",
+    val showBackupWarning: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
@@ -51,6 +54,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
 
     private val vaultRepository: VaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
@@ -63,7 +67,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     fun loadData(vaultId: String) {
         this.vaultId = vaultId
-        loadVaultName(vaultId)
+        loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
     }
@@ -118,12 +122,14 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    private fun loadVaultName(vaultId: String) {
+    private fun loadVaultNameAndShowBackup(vaultId: String) {
         loadVaultNameJob?.cancel()
         loadVaultNameJob = viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
                 ?: return@launch
             uiState.update { it.copy(vaultName = vault.name) }
+            val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
+            uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
         }
     }
 
@@ -173,6 +179,12 @@ internal class VaultAccountsViewModel @Inject constructor(
                 it.copy(isBalanceValueVisible = isBalanceValueVisible)
             }
             balanceVisibilityRepository.setVisibility(vaultId!!, isBalanceValueVisible)
+        }
+    }
+
+    fun backupVault() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.BackupPassword(vaultId!!))
         }
     }
 
