@@ -12,7 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -33,13 +32,10 @@ internal fun KeygenPeerDiscovery(
     vaultId: String,
     viewModel: KeygenFlowViewModel,
 ) {
+    val uiState = viewModel.uiState.collectAsState()
 
-    val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
-    val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
 
-    val keygenPayloadState = viewModel.keygenPayloadState.value
-
-    val networkPromptOption = viewModel.networkOption.value
+    val networkPromptOption = uiState.value.networkOption
 
     val context = LocalContext.current
     val applicationContext = context.applicationContext
@@ -47,14 +43,14 @@ internal fun KeygenPeerDiscovery(
 
     KeygenPeerDiscoveryScreen(
         navController = navController,
-        selectionState = selectionState,
-        participants = participants,
-        keygenPayloadState = keygenPayloadState,
-        vaultSetupType = viewModel.vaultSetupType.asString(),
+        selectionState = uiState.value.selection,
+        participants = uiState.value.participants,
+        keygenPayloadState = uiState.value.keygenPayload,
+        vaultSetupType = uiState.value.vaultSetupType.asString(),
         networkPromptOption = networkPromptOption,
-        isContinueEnabled = viewModel.isContinueButtonEnabled,
+        isContinueEnabled = uiState.value.isContinueButtonEnabled,
         onQrAddressClick = {
-            val qrBitmap = generateQrBitmap(keygenPayloadState)
+            val qrBitmap = generateQrBitmap(uiState.value.keygenPayload)
             context.share(qrBitmap)
         },
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
