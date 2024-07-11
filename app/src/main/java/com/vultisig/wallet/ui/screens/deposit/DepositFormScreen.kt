@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
+import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -58,11 +59,13 @@ internal fun DepositFormScreen(
         nodeAddressFieldState = model.nodeAddressFieldState,
         providerFieldState = model.providerFieldState,
         operatorFeeFieldState = model.operatorFeeFieldState,
+        customMemoFieldState = model.customMemoFieldState,
         onTokenAmountLostFocus = model::validateTokenAmount,
         onNodeAddressLostFocus = model::validateNodeAddress,
         onProviderLostFocus = model::validateProvider,
         onOperatorFeeLostFocus = model::validateOperatorFee,
         onSelectDepositOption = model::selectDepositOption,
+        onCustomMemoLostFocus = model::validateCustomMemo,
         onDismissError = model::dismissError,
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
@@ -78,11 +81,13 @@ internal fun DepositFormScreen(
     nodeAddressFieldState: TextFieldState,
     providerFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
+    customMemoFieldState: TextFieldState,
     onTokenAmountLostFocus: () -> Unit = {},
     onNodeAddressLostFocus: () -> Unit = {},
     onProviderLostFocus: () -> Unit = {},
     onOperatorFeeLostFocus: () -> Unit = {},
-    onSelectDepositOption: (String) -> Unit = {},
+    onCustomMemoLostFocus: () -> Unit = {},
+    onSelectDepositOption: (DepositOption) -> Unit = {},
     onDismissError: () -> Unit = {},
     onSetNodeAddress: (String) -> Unit = {},
     onSetProvider: (String) -> Unit = {},
@@ -125,87 +130,107 @@ internal fun DepositFormScreen(
                 )
             }
 
-
             FormSelection(
-                selectedTitle = state.depositOption,
+                selected = state.depositOption,
                 options = state.depositOptions,
+                mapTypeToString = { it.name },
                 onSelectOption = onSelectDepositOption,
             )
 
-            FormTextFieldCard(
-                title = stringResource(R.string.deposit_form_amount_title),
-                hint = stringResource(R.string.send_amount_currency_hint),
-                keyboardType = KeyboardType.Number,
-                textFieldState = tokenAmountFieldState,
-                onLostFocus = onTokenAmountLostFocus,
-                error = state.tokenAmountError,
-            )
+            val depositOption = state.depositOption
 
-            FormTextFieldCard(
-                title = stringResource(R.string.deposit_form_node_address_title),
-                hint = stringResource(R.string.deposit_form_node_address_title),
-                keyboardType = KeyboardType.Text,
-                textFieldState = nodeAddressFieldState,
-                onLostFocus = onNodeAddressLostFocus,
-                error = state.nodeAddressError,
-            ) {
-                val clipboard = LocalClipboardManager.current
-
-                UiIcon(
-                    drawableResId = R.drawable.copy,
-                    size = 20.dp,
-                    onClick = {
-                        clipboard.getText()
-                            ?.toString()
-                            ?.let(onSetNodeAddress)
-                    }
+            if (depositOption != DepositOption.Leave) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_amount_title),
+                    hint = stringResource(R.string.send_amount_currency_hint),
+                    keyboardType = KeyboardType.Number,
+                    textFieldState = tokenAmountFieldState,
+                    onLostFocus = onTokenAmountLostFocus,
+                    error = state.tokenAmountError,
                 )
+            }
 
-                UiSpacer(size = 8.dp)
+            if (depositOption != DepositOption.Custom) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_node_address_title),
+                    hint = stringResource(R.string.deposit_form_node_address_title),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = nodeAddressFieldState,
+                    onLostFocus = onNodeAddressLostFocus,
+                    error = state.nodeAddressError,
+                ) {
+                    val clipboard = LocalClipboardManager.current
+
+                    UiIcon(
+                        drawableResId = R.drawable.copy,
+                        size = 20.dp,
+                        onClick = {
+                            clipboard.getText()
+                                ?.toString()
+                                ?.let(onSetNodeAddress)
+                        }
+                    )
+
+                    UiSpacer(size = 8.dp)
 //                UiIcon(
 //                    drawableResId = R.drawable.camera,
 //                    size = 20.dp,
 //                    onClick = onScan,
 //                )
+                }
             }
 
-            FormTextFieldCard(
-                title = stringResource(R.string.deposit_form_provider_title),
-                hint = stringResource(R.string.deposit_form_provider_hint),
-                keyboardType = KeyboardType.Text,
-                textFieldState = providerFieldState,
-                onLostFocus = onProviderLostFocus,
-                error = state.providerError,
-            ) {
-                val clipboard = LocalClipboardManager.current
+            if (depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)){
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_provider_title),
+                    hint = stringResource(R.string.deposit_form_provider_hint),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = providerFieldState,
+                    onLostFocus = onProviderLostFocus,
+                    error = state.providerError,
+                ) {
+                    val clipboard = LocalClipboardManager.current
 
-                UiIcon(
-                    drawableResId = R.drawable.copy,
-                    size = 20.dp,
-                    onClick = {
-                        clipboard.getText()
-                            ?.toString()
-                            ?.let(onSetProvider)
-                    }
-                )
+                    UiIcon(
+                        drawableResId = R.drawable.copy,
+                        size = 20.dp,
+                        onClick = {
+                            clipboard.getText()
+                                ?.toString()
+                                ?.let(onSetProvider)
+                        }
+                    )
 
-                UiSpacer(size = 8.dp)
+                    UiSpacer(size = 8.dp)
 //                UiIcon(
 //                    drawableResId = R.drawable.camera,
 //                    size = 20.dp,
 //                    onClick = onScan,
 //                )
+                }
             }
 
+            if (depositOption == DepositOption.Bond) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_operator_fee_title),
+                    hint = "0.0",
+                    keyboardType = KeyboardType.Number,
+                    textFieldState = operatorFeeFieldState,
+                    onLostFocus = onOperatorFeeLostFocus,
+                    error = state.operatorFeeError,
+                )
+            }
 
-            FormTextFieldCard(
-                title = stringResource(R.string.deposit_form_operator_fee_title),
-                hint = "0.0",
-                keyboardType = KeyboardType.Number,
-                textFieldState = operatorFeeFieldState,
-                onLostFocus = onOperatorFeeLostFocus,
-                error = state.operatorFeeError,
-            )
+            if (depositOption == DepositOption.Custom) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_custom_memo_title),
+                    hint = stringResource(R.string.deposit_form_custom_memo_title),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = customMemoFieldState,
+                    onLostFocus = onCustomMemoLostFocus,
+                    error = state.customMemoError,
+                )
+            }
 
             UiSpacer(size = 80.dp)
         }
@@ -236,5 +261,6 @@ internal fun DepositFormScreenPreview() {
         nodeAddressFieldState = TextFieldState(),
         providerFieldState = TextFieldState(),
         operatorFeeFieldState = TextFieldState(),
+        customMemoFieldState = TextFieldState(),
     )
 }

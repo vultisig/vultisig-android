@@ -23,4 +23,42 @@ internal sealed class DepositMemo {
 
     }
 
+    data class Unbond(
+        val nodeAddress: String,
+        val srcTokenValue: TokenValue,
+        val providerAddress: String?,
+    ) : DepositMemo() {
+
+        override fun toString(): String = buildString {
+            append("UNBOND:")
+            append(nodeAddress)
+            append(":")
+            append(srcTokenValue.value)
+            if (!providerAddress.isNullOrBlank()) {
+                append(":")
+                append(providerAddress)
+            }
+        }
+
+    }
+
+    data class Leave(
+        val nodeAddress: String,
+    ) : DepositMemo() {
+
+        override fun toString(): String = buildString {
+            append("LEAVE:")
+            append(nodeAddress)
+        }
+
+    }
+
+    data class Custom(
+        val memo: String,
+    ) : DepositMemo() {
+
+        override fun toString(): String = memo
+
+    }
+
 }
