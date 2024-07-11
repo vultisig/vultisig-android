@@ -1,15 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
-import android.content.SharedPreferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.vultisig.wallet.data.db.VaultDao
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
 import com.vultisig.wallet.data.db.models.VaultWithKeySharesAndTokens
-import com.vultisig.wallet.data.managers.VaultDataStoreManager
-import com.vultisig.wallet.data.sources.AppDataStore
+import com.vultisig.wallet.data.managers.VaultDataStoreRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.KeyShare
@@ -55,7 +52,7 @@ internal interface VaultRepository {
 internal class VaultRepositoryImpl @Inject constructor(
     private val vaultDao: VaultDao,
     private val tokenRepository: TokenRepository,
-    private val vaultDataStoreManager: VaultDataStoreManager,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
 ) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
@@ -82,7 +79,7 @@ internal class VaultRepositoryImpl @Inject constructor(
 
     override suspend fun add(vault: Vault, haveBackup: Boolean) {
         vaultDao.insert(vault.toVaultDb())
-        vaultDataStoreManager.setBackupStatus(
+        vaultDataStoreRepository.setBackupStatus(
             vaultId = vault.id,
             status = haveBackup,
         )
@@ -113,11 +110,11 @@ internal class VaultRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setVaultBackupStatus(vaultId: String, status: Boolean) {
-        vaultDataStoreManager.setBackupStatus(vaultId, status)
+        vaultDataStoreRepository.setBackupStatus(vaultId, status)
     }
 
     override suspend fun getVaultBackupStatus(vaultId: String): Flow<Boolean> {
-        return vaultDataStoreManager.readBackupStatus(vaultId)
+        return vaultDataStoreRepository.readBackupStatus(vaultId)
     }
 
     private suspend fun VaultWithKeySharesAndTokens.toVault(): Vault {
