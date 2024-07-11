@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.Chain
@@ -53,6 +54,7 @@ internal interface EvmApi {
     suspend fun getMaxPriorityFeePerGas(): BigInteger
     suspend fun getNonce(address: String): BigInteger
     suspend fun getGasPrice(): BigInteger
+    suspend fun findCustomToken(contractAddress: String): List<RpcResponse>
 }
 
 internal interface EvmApiFactory {
@@ -281,5 +283,57 @@ internal class EvmApiImp(
             }
         }
         return jsonObject.get("result").asString
+    }
+
+    override suspend fun findCustomToken(contractAddress: String): List<RpcResponse> {
+        val payload1 = RpcPayload(
+            jsonrpc = "2.0",
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to contractAddress,
+                    "data" to "0x06fdde03"
+                ),
+                "latest"
+            ),
+            id = 1,
+        )
+        val payload2 = RpcPayload(
+            jsonrpc = "2.0",
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to contractAddress,
+                    "data" to "0x95d89b41"
+                ),
+                "latest"
+            ),
+            id = 2,
+        )
+        val payload3 = RpcPayload(
+            jsonrpc = "2.0",
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to contractAddress,
+                    "data" to "0x313ce567"
+                ),
+                "latest"
+            ),
+            id = 3,
+        )
+        val response = httpClient.post(getRPCEndpoint()) {
+            header("Content-Type", "application/json")
+            setBody(gson.toJson(listOf(payload1, payload2, payload3)))
+        }
+        val responseContent = response.bodyAsText()
+        return try {
+            gson.fromJson(
+                responseContent,
+                object : TypeToken<List<RpcResponse>>() {}.type
+            )
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 }

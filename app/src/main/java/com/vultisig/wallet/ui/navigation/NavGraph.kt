@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.ScanQrScreen
@@ -367,6 +368,12 @@ internal fun SetupNavGraph(
             route = Destination.BackupPassword.STATIC_ROUTE,
         ) {
             BackupPasswordScreen(navController)
+        }
+
+        composable(
+            route = Destination.CustomToken.STATIC_ROUTE,
+        ) {
+            CustomTokenScreen(navController)
         }
     }
 }

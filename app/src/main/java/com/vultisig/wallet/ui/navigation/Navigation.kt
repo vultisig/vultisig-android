@@ -234,4 +234,11 @@ internal sealed class Destination(
         }
     }
 
+    internal data class CustomToken(val chainId: String) :
+        Destination(route = "custom_token/$chainId") {
+        companion object {
+            const val ARG_CHAIN_ID = "chain_id"
+            const val STATIC_ROUTE = "custom_token/{$ARG_CHAIN_ID}"
+        }
+    }
 }

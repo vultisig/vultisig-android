@@ -33,6 +33,8 @@ import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.components.FormSearchBar
 import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel
@@ -53,7 +55,8 @@ internal fun TokenSelectionScreen(
         state = state,
         hasTokenSwitch = true,
         onEnableToken = viewModel::enableToken,
-        onDisableToken = viewModel::disableToken
+        onDisableToken = viewModel::disableToken,
+        onAddCustomToken = viewModel::navigateToCustomTokenScreen,
     )
 }
 
@@ -66,6 +69,7 @@ internal fun TokenSelectionScreen(
     hasTokenSwitch: Boolean,
     onEnableToken: (Coin) -> Unit = {},
     onDisableToken: (Coin) -> Unit = {},
+    onAddCustomToken: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -88,7 +92,11 @@ internal fun TokenSelectionScreen(
                 )
         )
 
-        UiSpacer(size = 8.dp)
+        UiPlusButton(
+            modifier = Modifier.padding(16.dp),
+            title = stringResource(id = R.string.token_selection_screen_custom_token),
+            onClick = onAddCustomToken
+        )
 
         LazyColumn(
             contentPadding = PaddingValues(all = 16.dp),

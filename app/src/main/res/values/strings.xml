@@ -291,6 +291,11 @@
     <string name="verify_deposit_memo_title" translatable="false">Memo</string>
     <string name="verify_deposit_node_address_title" translatable="false">Node Address</string>
     <string name="verify_deposit_gas_title" translatable="false">Gas</string>
+    <string name="token_selection_screen_custom_token" translatable="false">Custom Token</string>
+    <string name="custom_token_find_your_custom_token" translatable="false">Find Your Custom Token</string>
+    <string name="custom_token_enter_contract_address" translatable="false">Enter Contract Address</string>
+    <string name="custom_token_token_not_found" translatable="false">Token not found</string>
+    <string name="custom_token_add_token" translatable="false">Add %1$s Token</string>
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
     <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>
