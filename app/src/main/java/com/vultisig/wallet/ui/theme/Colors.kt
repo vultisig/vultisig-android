@@ -38,8 +38,8 @@ internal data class Colors(
     val turquoise200: Color = Color(0xffA6FBE8),
 
     val red: Color = Color(0xffFF4040),
-    val errorBackground: Color = Color(0x59DA2E2E),
-    val errorBorder: Color = Color(0xffDA2E2E),
+    val alertBackground: Color = Color(0x59DA2E2E),
+    val alert: Color = Color(0xffDA2E2E),
 ) {
     companion object {
         val Default = Colors()
