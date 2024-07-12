@@ -314,6 +314,7 @@ internal class SwapFormViewModel @Inject constructor(
                 Destination.SelectToken(
                     vaultId = vaultId ?: return@launch,
                     targetArg = targetArg,
+                    swapSelect = true,
                 )
             )
         }
