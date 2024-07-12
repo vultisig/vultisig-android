@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,7 +31,8 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun DeviceList(navController: NavHostController, viewModel: KeygenFlowViewModel) {
     val textColor = Theme.colors.neutral0
-    val items = viewModel.uiState.collectAsState().value.selection
+    val uiState by viewModel.uiState.collectAsState()
+    val items = uiState.selection
     Scaffold(
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)

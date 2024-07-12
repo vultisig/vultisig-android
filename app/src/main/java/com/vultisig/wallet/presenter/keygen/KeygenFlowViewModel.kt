@@ -59,8 +59,8 @@ internal data class KeygenFlowUiModel(
     val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
     val vaultSetupType: VaultSetupType = VaultSetupType.TWO_OF_TWO,
 ) {
-    val isContinueButtonEnabled: Boolean
-        get() = when (vaultSetupType) {
+    val isContinueButtonEnabled =
+        when (vaultSetupType) {
             VaultSetupType.TWO_OF_TWO -> {
                 selection.size == 2
             }

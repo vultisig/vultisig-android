@@ -6,12 +6,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -32,25 +34,20 @@ internal fun KeygenPeerDiscovery(
     vaultId: String,
     viewModel: KeygenFlowViewModel,
 ) {
-    val uiState = viewModel.uiState.collectAsState()
-
-
-    val networkPromptOption = uiState.value.networkOption
-
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val applicationContext = context.applicationContext
 
-
     KeygenPeerDiscoveryScreen(
         navController = navController,
-        selectionState = uiState.value.selection,
-        participants = uiState.value.participants,
-        keygenPayloadState = uiState.value.keygenPayload,
-        vaultSetupType = uiState.value.vaultSetupType.asString(),
-        networkPromptOption = networkPromptOption,
-        isContinueEnabled = uiState.value.isContinueButtonEnabled,
+        selectionState = uiState.selection,
+        participants = uiState.participants,
+        keygenPayloadState = uiState.keygenPayload,
+        vaultSetupType = uiState.vaultSetupType.asString(),
+        networkPromptOption = uiState.networkOption,
+        isContinueEnabled = uiState.isContinueButtonEnabled,
         onQrAddressClick = {
-            val qrBitmap = generateQrBitmap(uiState.value.keygenPayload)
+            val qrBitmap = generateQrBitmap(uiState.keygenPayload)
             context.share(qrBitmap)
         },
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
