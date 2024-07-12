@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -34,7 +35,9 @@ internal data class VaultAccountsUiModel(
     val totalFiatValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
     val accounts: List<AccountUiModel> = emptyList(),
-)
+) {
+    val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
+}
 
 internal data class AccountUiModel(
     val model: Address,

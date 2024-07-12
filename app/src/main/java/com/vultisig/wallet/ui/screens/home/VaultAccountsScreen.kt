@@ -174,13 +174,14 @@ private fun VaultAccountsScreen(
                                 modifier = Modifier.weight(1f),
                                 onClick = onSend,
                             )
-
-                            VaultActionButton(
-                                text = stringResource(R.string.chain_account_view_swap),
-                                color = Theme.colors.persianBlue200,
-                                modifier = Modifier.weight(1f),
-                                onClick = onSwap,
-                            )
+                            if (state.isSwapEnabled) {
+                                VaultActionButton(
+                                    text = stringResource(R.string.chain_account_view_swap),
+                                    color = Theme.colors.persianBlue200,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = onSwap,
+                                )
+                            }
                         }
                     }
                 }
