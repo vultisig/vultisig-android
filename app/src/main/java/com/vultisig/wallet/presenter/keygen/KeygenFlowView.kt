@@ -2,6 +2,7 @@ package com.vultisig.wallet.presenter.keygen
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -15,7 +16,8 @@ fun KeygenFlowView(
     vaultId: String,
 ) {
     val viewModel: KeygenFlowViewModel = hiltViewModel()
-    when (viewModel.currentState.value) {
+    val uiState = viewModel.uiState.collectAsState()
+    when (uiState.value.currentState) {
         KeygenFlowState.PEER_DISCOVERY -> {
             KeygenPeerDiscovery(navController, vaultId, viewModel)
         }
