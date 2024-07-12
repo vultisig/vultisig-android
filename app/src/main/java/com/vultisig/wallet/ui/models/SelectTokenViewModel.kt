@@ -50,17 +50,16 @@ internal class SelectTokenViewModel @Inject constructor(
     private fun loadTokens() {
         viewModelScope.launch {
 
-            val enabled =
+            val enabled = vaultRepository.getEnabledTokens(vaultId).first()
+
+            val enabledFiltered =
                 if (swapSelect)
-                    vaultRepository.getEnabledTokens(vaultId)
-                        .first()
-                        .filter { it.chain.IsSwapSupported }
+                    enabled.filter { it.chain.IsSwapSupported }
                 else
-                    vaultRepository.getEnabledTokens(vaultId)
-                        .first()
+                    enabled
 
             try {
-                selectedTokens.value = enabled
+                selectedTokens.value = enabledFiltered
             } catch (e: Exception) {
                 // todo handle error
                 Timber.e(e)
