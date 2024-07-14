@@ -41,7 +41,6 @@ internal interface VaultRepository {
     suspend fun deleteChainFromVault(vaultId: String, chain: Chain)
 
     suspend fun addTokenToVault(vaultId: String, token: Coin)
-
 }
 
 internal class VaultRepositoryImpl @Inject constructor(

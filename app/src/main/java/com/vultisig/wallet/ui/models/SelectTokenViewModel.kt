@@ -10,7 +10,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -31,6 +33,8 @@ internal class SelectTokenViewModel @Inject constructor(
     private val vaultId: String =
         requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
+    private val swapSelect: Boolean = savedStateHandle[ARG_SWAP_SELECT]?: false
+
     private val selectedTokens = MutableStateFlow(emptyList<Coin>())
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
@@ -45,11 +49,17 @@ internal class SelectTokenViewModel @Inject constructor(
 
     private fun loadTokens() {
         viewModelScope.launch {
-            val enabled = vaultRepository.getEnabledTokens(vaultId)
-                .first()
+
+            val enabled = vaultRepository.getEnabledTokens(vaultId).first()
+
+            val enabledFiltered =
+                if (swapSelect)
+                    enabled.filter { it.chain.IsSwapSupported }
+                else
+                    enabled
 
             try {
-                selectedTokens.value = enabled
+                selectedTokens.value = enabledFiltered
             } catch (e: Exception) {
                 // todo handle error
                 Timber.e(e)

@@ -297,7 +297,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val isDeposit = !memo.isNullOrEmpty() && MayaChainHelper.DEPOSIT_PREFIXES.any { memo.startsWith(it) }
 
                 if (isDeposit) {
-                    val specific = payload.blockChainSpecific as BlockChainSpecific.THORChain
+                    val fee = when (val specific = payload.blockChainSpecific) {
+                        is BlockChainSpecific.MayaChain -> MayaChainHelper.MayaChainGasUnit.toBigInteger()
+                        is BlockChainSpecific.THORChain -> specific.fee
+                        else -> error("BlockChainSpecific $specific is not supported")
+                    }
 
                     verifyUiModel.value = VerifyUiModel.Deposit(
                         VerifyDepositUiModel(
@@ -313,7 +317,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             ),
                             estimatedFees = mapTokenValueToStringWithUnit(
                                 TokenValue(
-                                    value = specific.fee,
+                                    value = fee,
                                     token = payload.coin,
                                 )
                             ),

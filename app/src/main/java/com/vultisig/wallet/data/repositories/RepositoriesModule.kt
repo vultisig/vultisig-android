@@ -50,7 +50,7 @@ internal interface RepositoriesModule {
     @Singleton
     @Binds
     abstract fun bindOnBoardRepository(
-        impl: DataStoreRepositoryImpl,
+        impl: OnBoardRepositoryImpl,
     ): OnBoardRepository
 
     @Binds
@@ -139,8 +139,8 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindFindCustomTokenRepository(
-        impl: FindCustomTokenRepositoryImpl
-    ): FindCustomTokenRepository
+    fun bindVaultDataStoreManager(
+        impl: VaultDataStoreRepositoryImpl
+    ): VaultDataStoreRepository
 
 }

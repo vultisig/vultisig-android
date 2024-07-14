@@ -91,15 +91,19 @@ internal sealed class Destination(
     data class SelectToken(
         val vaultId: String,
         val targetArg: String,
+        val swapSelect: Boolean = false,
     ) : Destination(
-        route = "select_token?${ARG_VAULT_ID}=$vaultId&${ARG_TARGET_ARG}=$targetArg"
+        route = "select_token?${ARG_VAULT_ID}=$vaultId&${ARG_TARGET_ARG}=$targetArg" +
+                "&${ARG_SWAP_SELECT}=$swapSelect"
     ) {
         companion object {
             const val ARG_SELECTED_TOKEN_ID = "arg_selected_token_id"
             const val ARG_TARGET_ARG = "target_arg"
+            const val ARG_SWAP_SELECT = "swap_select"
 
             const val staticRoute =
-                "select_token?$ARG_VAULT_ID={$ARG_VAULT_ID}&$ARG_TARGET_ARG={$ARG_TARGET_ARG}"
+                "select_token?$ARG_VAULT_ID={$ARG_VAULT_ID}&$ARG_TARGET_ARG={$ARG_TARGET_ARG}" +
+                        "&$ARG_SWAP_SELECT={$ARG_SWAP_SELECT}"
         }
     }
 
@@ -234,11 +238,14 @@ internal sealed class Destination(
         }
     }
 
-    internal data class CustomToken(val chainId: String) :
-        Destination(route = "custom_token/$chainId") {
+    data class BackupSuggestion(val vaultId: String) :
+        Destination(route = "backup_suggestion/$vaultId") {
         companion object {
-            const val ARG_CHAIN_ID = "chain_id"
-            const val STATIC_ROUTE = "custom_token/{$ARG_CHAIN_ID}"
+            const val staticRoute = "backup_suggestion/{$ARG_VAULT_ID}"
         }
     }
+
+    data object CreateNewVault : Destination(
+        route = "create_new_vault"
+    )
 }

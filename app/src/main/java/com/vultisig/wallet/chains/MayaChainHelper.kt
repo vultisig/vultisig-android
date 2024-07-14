@@ -12,7 +12,6 @@ import com.vultisig.wallet.models.transactionHash
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignatureWithRecoveryID
-import com.vultisig.wallet.ui.utils.coin
 import tss.KeysignResponse
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
@@ -108,7 +107,6 @@ internal class MayaChainHelper(
 
     fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val fromAddress = AnyAddress(keysignPayload.coin.address, coinType, "maya").data()
-        val toAddress = AnyAddress(keysignPayload.toAddress, coinType, "maya").data()
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.MayaChain
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
@@ -142,6 +140,8 @@ internal class MayaChainHelper(
                 }.build()
             }.build()
         } else {
+            val toAddress = AnyAddress(keysignPayload.toAddress, coinType, "maya").data()
+
             val sendAmount = Cosmos.Amount.newBuilder().apply {
                 this.denom = keysignPayload.coin.ticker.lowercase()
                 this.amount = keysignPayload.toAmount.toString()

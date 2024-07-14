@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import javax.inject.Inject
 
 
-internal class DataStoreRepositoryImpl @Inject constructor(private val appDataStore: AppDataStore) :
+internal class OnBoardRepositoryImpl @Inject constructor(private val appDataStore: AppDataStore) :
     OnBoardRepository {
 
 
@@ -32,15 +32,19 @@ internal class DataStoreRepositoryImpl @Inject constructor(private val appDataSt
 private fun getOnBoardingPages() = listOf(
     OnBoardPage(
         image = R.drawable.intro1,
-        title = "Meeting",
-        description = "Vultisig is a secure, multi-device crypto vault, compatible with 30+ chains and 10,000+ tokens. Vultisig is fully self-custodial."
+        title = R.string.onboard_intro1_title,
+        description = R.string.onboard_intro1_desc
     ), OnBoardPage(
         image = R.drawable.intro2,
-        title = "Coordination",
-        description = "Vultisig does not track your activities or require any registrations. Vultisig is fully open-source, ensuring transparency and trust."
+        title = R.string.onboard_intro2_title,
+        description = R.string.onboard_intro2_desc,
     ), OnBoardPage(
         image = R.drawable.intro3,
-        title = "Dialogue",
-        description = "Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets. "
+        title = R.string.onboard_intro3_title,
+        description = R.string.onboard_intro3_desc,
+    ), OnBoardPage(
+        image = R.drawable.intro4,
+        title = R.string.onboard_intro4_title,
+        description =R.string.onboard_intro4_desc,
     )
 )

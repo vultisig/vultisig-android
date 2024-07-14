@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -17,7 +17,6 @@ import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.presenter.keygen.KeygenFlowState
@@ -35,27 +34,20 @@ internal fun KeygenPeerDiscovery(
     vaultId: String,
     viewModel: KeygenFlowViewModel,
 ) {
-
-    val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
-    val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
-
-    val keygenPayloadState = viewModel.keygenPayloadState.value
-
-    val networkPromptOption = viewModel.networkOption.value
-
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val applicationContext = context.applicationContext
 
-
     KeygenPeerDiscoveryScreen(
         navController = navController,
-        selectionState = selectionState,
-        participants = participants,
-        keygenPayloadState = keygenPayloadState,
-        vaultSetupType = viewModel.vaultSetupType.asString(),
-        networkPromptOption = networkPromptOption,
+        selectionState = uiState.selection,
+        participants = uiState.participants,
+        keygenPayloadState = uiState.keygenPayload,
+        vaultSetupType = uiState.vaultSetupType.asString(),
+        networkPromptOption = uiState.networkOption,
+        isContinueEnabled = uiState.isContinueButtonEnabled,
         onQrAddressClick = {
-            val qrBitmap = generateQrBitmap(keygenPayloadState)
+            val qrBitmap = generateQrBitmap(uiState.keygenPayload)
             context.share(qrBitmap)
         },
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
@@ -76,6 +68,7 @@ internal fun KeygenPeerDiscoveryScreen(
     keygenPayloadState: String,
     vaultSetupType: String,
     networkPromptOption: NetworkPromptOption,
+    isContinueEnabled: Boolean,
     onQrAddressClick: () -> Unit = {},
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
@@ -97,17 +90,6 @@ internal fun KeygenPeerDiscoveryScreen(
             horizontalAlignment = CenterHorizontally,
             modifier = Modifier.fillMaxSize()
         ) {
-            if (selectionState.isNotEmpty() && selectionState.count() > 1) {
-                Text(
-                    text = stringResource(
-                        R.string.keygen_peer_descovery_of_vault,
-                        Utils.getThreshold(selectionState.count()),
-                        selectionState.count()
-                    ),
-                    color = textColor,
-                    style = Theme.montserrat.subtitle2
-                )
-            }
 
             PeerDiscoveryView(
                 modifier = Modifier.weight(1f),
@@ -126,7 +108,7 @@ internal fun KeygenPeerDiscoveryScreen(
                 textColor = Theme.colors.oxfordBlue600Main,
                 minHeight = 44.dp,
                 textStyle = Theme.montserrat.subtitle1,
-                disabled = selectionState.size < 2,
+                disabled = !isContinueEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -148,6 +130,7 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
         networkPromptOption = NetworkPromptOption.LOCAL,
+        isContinueEnabled = true,
         vaultSetupType = "M/N",
     )
 }

@@ -15,6 +15,8 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
@@ -31,6 +33,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -47,6 +51,30 @@ enum class KeygenFlowState {
     PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
 }
 
+internal data class KeygenFlowUiModel(
+    val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
+    val selection: List<String> = emptyList(),
+    val participants: List<String> = emptyList(),
+    val keygenPayload: String = "",
+    val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
+    val vaultSetupType: VaultSetupType = VaultSetupType.TWO_OF_TWO,
+) {
+    val isContinueButtonEnabled =
+        when (vaultSetupType) {
+            VaultSetupType.TWO_OF_TWO -> {
+                selection.size == 2
+            }
+
+            VaultSetupType.TWO_OF_THREE -> {
+                selection.size == 3
+            }
+
+            VaultSetupType.M_OF_N -> {
+                selection.size >= 2
+            }
+        }
+}
+
 @HiltViewModel
 internal class KeygenFlowViewModel @Inject constructor(
     navBackStackEntry: SavedStateHandle,
@@ -55,42 +83,41 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val gson: Gson,
     private val vaultRepository: VaultRepository,
     private val saveVault: SaveVaultUseCase,
+    private val lastOpenedVaultRepository: LastOpenedVaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    val uiState = MutableStateFlow(
+        KeygenFlowUiModel(
+            vaultSetupType =
+            VaultSetupType.fromInt(
+                navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
+            )
+        )
+    )
+
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
     private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
     private var serverAddress: String = "http://127.0.0.1:18080" // local mediator server
     private var participantDiscovery: ParticipantDiscovery? = null
     private var action: TssAction = TssAction.KEYGEN
     private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "New Vault")
-    private val _keygenPayload: MutableState<String> = mutableStateOf("")
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _oldResharePrefix: String = ""
 
-    var currentState: MutableState<KeygenFlowState> = mutableStateOf(KeygenFlowState.PEER_DISCOVERY)
-    var errorMessage: MutableState<String> = mutableStateOf("")
 
-    var vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
-    val vaultSetupType =
-        VaultSetupType.fromInt(
-            navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
-        )
-    val selection = MutableLiveData<List<String>>()
-    val keygenPayloadState: MutableState<String>
-        get() = _keygenPayload
+    private val vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
 
     val localPartyID: String
         get() = vault.localPartyID
-    val participants: MutableLiveData<List<String>>
-        get() = participantDiscovery?.participants ?: MutableLiveData(listOf())
 
-    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.LOCAL)
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
             vault,
             this.action,
-            selection.value ?: emptyList(),
-            vault.signers.filter { (selection.value ?: emptyList()).contains(it) },
+            uiState.value.selection,
+            vault.signers.filter { uiState.value.selection.contains(it) },
             serverAddress,
             sessionID,
             _encryptionKeyHex,
@@ -98,6 +125,8 @@ internal class KeygenFlowViewModel @Inject constructor(
             gson,
             navigator = navigator,
             saveVault = saveVault,
+            lastOpenedVaultRepository = lastOpenedVaultRepository,
+            vaultDataStoreRepository = vaultDataStoreRepository,
         )
 
     init {
@@ -132,7 +161,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         if (vultisigRelay.IsRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY
-            networkOption.value = NetworkPromptOption.INTERNET
+            uiState.update { it.copy(networkOption = NetworkPromptOption.INTERNET) }
         }
         this.action = action
         this.vault = vault
@@ -145,28 +174,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         if (this.vault.localPartyID.isEmpty()) {
             this.vault.localPartyID = Utils.deviceName
         }
-        this.selection.value = listOf(this.vault.localPartyID)
-        viewModelScope.launch {
-            selection.asFlow().collect { newList ->
-                when (vaultSetupType) {
-                    VaultSetupType.TWO_OF_TWO -> {
-                        if (newList.size == 2) {
-                            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
-                        }
-                    }
-
-                    VaultSetupType.TWO_OF_THREE -> {
-                        if (newList.size == 3) {
-                            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
-                        }
-                    }
-
-                    VaultSetupType.M_OF_N -> {
-                        // let user to decide
-                    }
-                }
-            }
-        }
+        uiState.update { it.copy(selection = listOf(this.vault.localPartyID)) }
         _oldResharePrefix = this.vault.resharePrefix
         updateKeygenPayload(context)
     }
@@ -179,14 +187,15 @@ internal class KeygenFlowViewModel @Inject constructor(
         viewModelScope.launch {
             participantDiscovery?.participants?.asFlow()?.collect { newList ->
                 // add all participants to the selection
+                uiState.update { it.copy(participants = newList) }
                 for (participant in newList) {
                     addParticipant(participant)
                 }
             }
         }
-        when (action) {
+
+        val keygenPayload = when (action) {
             TssAction.KEYGEN -> {
-                _keygenPayload.value =
                     "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" + PeerDiscoveryPayload.Keygen(
                         keygenMessage = KeygenMessage(
                             sessionID = sessionID,
@@ -200,22 +209,22 @@ internal class KeygenFlowViewModel @Inject constructor(
             }
 
             TssAction.ReShare -> {
-                _keygenPayload.value =
-                    "vultisig://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" + PeerDiscoveryPayload.Reshare(
-                        reshareMessage = ReshareMessage(
-                            sessionID = sessionID,
-                            hexChainCode = vault.hexChainCode,
-                            serviceName = serviceName,
-                            pubKeyECDSA = vault.pubKeyECDSA,
-                            oldParties = vault.signers,
-                            encryptionKeyHex = this._encryptionKeyHex,
-                            useVultisigRelay = vultisigRelay.IsRelayEnabled,
-                            oldResharePrefix = vault.resharePrefix,
-                            vaultName = vault.name
-                        )
-                    ).toJson(gson)
+                "vultisig://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" + PeerDiscoveryPayload.Reshare(
+                    reshareMessage = ReshareMessage(
+                        sessionID = sessionID,
+                        hexChainCode = vault.hexChainCode,
+                        serviceName = serviceName,
+                        pubKeyECDSA = vault.pubKeyECDSA,
+                        oldParties = vault.signers,
+                        encryptionKeyHex = this._encryptionKeyHex,
+                        useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                        oldResharePrefix = vault.resharePrefix,
+                        vaultName = vault.name
+                    )
+                ).toJson(gson)
             }
         }
+        uiState.update { it.copy(keygenPayload = keygenPayload) }
 
         if (!vultisigRelay.IsRelayEnabled)
         // when relay is disabled, start the mediator service
@@ -290,23 +299,25 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     fun addParticipant(participant: String) {
-        val currentList = selection.value ?: emptyList()
+        val currentList = uiState.value.selection
         if (currentList.contains(participant)) return
-        selection.value = currentList + participant
+        uiState.update { it.copy( selection = currentList + participant) }
     }
 
     fun removeParticipant(participant: String) {
-        selection.value = selection.value?.minus(participant)
+        uiState.update { it.copy(selection = uiState.value.selection.minus(participant)) }
     }
 
     fun moveToState(nextState: KeygenFlowState) {
-        stopParticipantDiscovery()
-        currentState.value = nextState
+        viewModelScope.launch {
+            stopParticipantDiscovery()
+            uiState.update { it.copy(currentState = nextState) }
+        }
     }
 
     fun startKeygen() {
         try {
-            val keygenCommittee = selection.value ?: emptyList()
+            val keygenCommittee = uiState.value.selection
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
             val payload = gson.toJson(keygenCommittee)
             val request = okhttp3.Request.Builder().url("$serverAddress/start/$sessionID")
@@ -326,18 +337,18 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
-        if (networkOption.value == option) return
+        if (uiState.value.networkOption == option) return
         when (option) {
             NetworkPromptOption.LOCAL -> {
                 vultisigRelay.IsRelayEnabled = false
                 serverAddress = "http://127.0.0.1:18080"
-                networkOption.value = option
+                uiState.update { it.copy(networkOption = option) }
             }
 
             NetworkPromptOption.INTERNET -> {
                 vultisigRelay.IsRelayEnabled = true
                 serverAddress = Endpoints.VULTISIG_RELAY
-                networkOption.value = option
+                uiState.update { it.copy(networkOption = option) }
             }
         }
 

@@ -47,7 +47,7 @@ internal fun WelcomeScreen(
     viewModel: WelcomeViewModel = hiltViewModel(),
 ) {
     val pages = viewModel.state.pages
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { pages.size })
 
     LaunchedEffect(key1 = Unit) {
         viewModel.channel.collect { uiEvent ->
@@ -131,7 +131,7 @@ internal fun WelcomeScreen(
             modifier = Modifier
                 .weight(0.3f)
         )
-        if (pagerState.currentPage < 2) {
+        if (pagerState.currentPage < pages.size - 1) {
             MultiColorButton(
                 text = stringResource(R.string.welcome_screen_skip),
                 backgroundColor = Theme.colors.oxfordBlue800,
@@ -165,7 +165,7 @@ fun PagerScreen(onBoardingPage: OnBoardPage) {
                 .fillMaxWidth()
                 .padding(horizontal = 40.dp)
                 .padding(top = 20.dp),
-            text = onBoardingPage.description,
+            text = stringResource(id = onBoardingPage.description),
             style = Theme.montserrat.body1,
             color = Theme.colors.neutral0,
             textAlign = TextAlign.Center
