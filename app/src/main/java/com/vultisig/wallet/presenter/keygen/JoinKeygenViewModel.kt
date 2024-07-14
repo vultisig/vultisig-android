@@ -183,11 +183,20 @@ internal class JoinKeygenViewModel @Inject constructor(
                                 errorMessage.value =
                                     R.string.vault_already_exist.asUiText(_vault.name).toString()
                                 currentState.value = JoinKeygenState.FailedToStart
+                                return@launch
                             }
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
-                                errorMessage.value = "Wrong vault"
+                                errorMessage.value =
+                                    R.string.join_keysign_wrongvault.asUiText().toString()
                                 currentState.value = JoinKeygenState.FailedToStart
+                                return@launch
+                            }
+                            if (_vault.resharePrefix != payload.reshareMessage.oldResharePrefix) {
+                                errorMessage.value =
+                                    R.string.join_keysign_wrongresahre.asUiText().toString()
+                                currentState.value = JoinKeygenState.FailedToStart
+                                return@launch
                             }
                         }
                     }
