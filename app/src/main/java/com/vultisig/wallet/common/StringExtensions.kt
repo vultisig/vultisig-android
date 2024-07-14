@@ -34,23 +34,3 @@ fun String.toByteString(): ByteString {
 fun String.toHexBytesInByteString(): ByteString {
     return ByteString.copyFrom(this.toHexBytes())
 }
-
-fun String?.decodeContractString(): String? {
-    try {
-        if (isNullOrEmpty()) return ""
-        val bytes =
-            removePrefix("0x")
-                .chunked(2)
-                .map { it.toInt(16).toByte() }
-                .toByteArray()
-        val length = BigInteger(bytes.sliceArray(32..63)).toInt()
-        return String(bytes.sliceArray(64 until 64 + length)).lowercase()
-    } catch (e: Exception) {
-        return null
-    }
-}
-
-fun String?.decodeContractDecimal(): Int {
-    if (isNullOrEmpty()) return 0
-    return BigInteger(removePrefix("0x"), 16).toInt()
-}

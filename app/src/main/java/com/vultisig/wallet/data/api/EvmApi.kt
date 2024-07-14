@@ -286,17 +286,35 @@ internal class EvmApiImp(
     }
 
     override suspend fun findCustomToken(contractAddress: String): List<RpcResponse> {
+        val (payload1, payload2) = generateCustomTokenPayload(contractAddress)
+        return try {
+            val response = httpClient.post(getRPCEndpoint()) {
+                header("Content-Type", "application/json")
+                setBody(gson.toJson(listOf(payload1, payload2)))
+            }
+            val responseContent = response.bodyAsText()
+            val responseList = gson.fromJson<List<RpcResponse>?>(
+                responseContent,
+                object : TypeToken<List<RpcResponse>>() {}.type
+            )
+            responseList
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun generateCustomTokenPayload(contractAddress: String): Pair<RpcPayload, RpcPayload> {
         val payload1 = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_call",
             params = listOf(
                 mapOf(
                     "to" to contractAddress,
-                    "data" to "0x06fdde03"
+                    "data" to CUSTOM_TOKEN_REQUEST_TICKER_DATA
                 ),
                 "latest"
             ),
-            id = 1,
+            id = CUSTOM_TOKEN_RESPONSE_TICKER_ID,
         )
         val payload2 = RpcPayload(
             jsonrpc = "2.0",
@@ -304,36 +322,12 @@ internal class EvmApiImp(
             params = listOf(
                 mapOf(
                     "to" to contractAddress,
-                    "data" to "0x95d89b41"
+                    "data" to CUSTOM_TOKEN_REQUEST_DECIMAL_DATA
                 ),
                 "latest"
             ),
-            id = 2,
+            id = CUSTOM_TOKEN_RESPONSE_DECIMAL_ID,
         )
-        val payload3 = RpcPayload(
-            jsonrpc = "2.0",
-            method = "eth_call",
-            params = listOf(
-                mapOf(
-                    "to" to contractAddress,
-                    "data" to "0x313ce567"
-                ),
-                "latest"
-            ),
-            id = 3,
-        )
-        val response = httpClient.post(getRPCEndpoint()) {
-            header("Content-Type", "application/json")
-            setBody(gson.toJson(listOf(payload1, payload2, payload3)))
-        }
-        val responseContent = response.bodyAsText()
-        return try {
-            gson.fromJson(
-                responseContent,
-                object : TypeToken<List<RpcResponse>>() {}.type
-            )
-        } catch (e: Exception) {
-            emptyList()
-        }
+        return Pair(payload1, payload2)
     }
 }

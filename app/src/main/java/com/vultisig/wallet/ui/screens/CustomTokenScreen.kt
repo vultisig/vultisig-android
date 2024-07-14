@@ -44,7 +44,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
@@ -59,8 +58,10 @@ import com.vultisig.wallet.ui.theme.Theme
 
 
 @Composable
-internal fun CustomTokenScreen(navController: NavHostController) {
-    val viewModel = hiltViewModel<CustomTokenViewModel>()
+internal fun CustomTokenScreen(
+    navController: NavHostController,
+    viewModel: CustomTokenViewModel = hiltViewModel(),
+) {
     val uiModel by viewModel.uiModel.collectAsState()
     val clipboardManager = LocalClipboardManager.current
     CustomTokenScreen(
@@ -70,19 +71,19 @@ internal fun CustomTokenScreen(navController: NavHostController) {
         onPasteClick = {
             viewModel.pasteToSearchField(clipboardManager.getText()?.text ?: "")
         },
-        onSearchClick = viewModel::onSearchClick,
+        onSearchClick = viewModel::searchCustomToken,
         onAddTokenClick = navController::popBackStack
     )
 }
 
 @Composable
 private fun CustomTokenScreen(
-    navController: NavHostController = rememberNavController(),
-    state: CustomTokenState = CustomTokenState(),
-    searchFieldState: TextFieldState = rememberTextFieldState(),
-    onPasteClick: () -> Unit = {},
-    onSearchClick: () -> Unit = {},
-    onAddTokenClick: () -> Unit = {}
+    navController: NavHostController,
+    state: CustomTokenState,
+    searchFieldState: TextFieldState,
+    onPasteClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onAddTokenClick: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -181,7 +182,7 @@ private fun SearchTokenResult(
                 .padding(all = 12.dp),
         ) {
             AsyncImage(
-                model = Coins.getCoinLogo(logoName = token.logo),
+                model = token.logo,
                 modifier = Modifier
                     .padding(
                         end = 12.dp,
@@ -250,7 +251,7 @@ private fun SearchTokenTextField(
             FormTextFieldCard(
                 hint = stringResource(R.string.custom_token_enter_contract_address),
                 error = null,
-                keyboardType = KeyboardType.Ascii,
+                keyboardType = KeyboardType.Text,
                 textFieldState = searchTextFieldState,
                 actions = {
                     Icon(
@@ -284,5 +285,12 @@ private fun SearchTokenTextField(
 @Composable
 @Preview
 private fun CustomTokenScreenPreview() {
-    CustomTokenScreen()
+    CustomTokenScreen(
+        navController = rememberNavController(),
+        state = CustomTokenState(),
+        searchFieldState = rememberTextFieldState(),
+        onPasteClick = {},
+        onSearchClick = {},
+        onAddTokenClick = {},
+    )
 }

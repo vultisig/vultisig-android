@@ -10,7 +10,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.FindCustomTokenRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
@@ -49,7 +48,6 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val findCustomTokenRepository: FindCustomTokenRepository,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -71,20 +69,6 @@ internal class TokenSelectionViewModel @Inject constructor(
     init {
         loadTokens()
         collectTokens()
-        collectSearchedToken()
-    }
-
-    private fun collectSearchedToken() {
-        viewModelScope.launch {
-            findCustomTokenRepository.searchedToken.collect {
-                if (it != null)
-                    saveSearchedCustomToken(it)
-            }
-        }
-    }
-
-    private fun saveSearchedCustomToken(coin: Coin) {
-
     }
 
     fun enableToken(coin: Coin) {

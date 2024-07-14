@@ -7,20 +7,19 @@ import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
-import com.vultisig.wallet.data.repositories.FindCustomTokenRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -41,10 +40,10 @@ internal data class CustomTokenResult(
 @HiltViewModel
 @OptIn(ExperimentalFoundationApi::class)
 internal class CustomTokenViewModel @Inject constructor(
-    private val findCustomTokenRepository: FindCustomTokenRepository,
+    private val tokenRepository: TokenRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    appCurrencyRepository: AppCurrencyRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(CustomTokenState())
@@ -52,31 +51,31 @@ internal class CustomTokenViewModel @Inject constructor(
     val searchFieldState: TextFieldState = TextFieldState()
     private val chainId =
         requireNotNull(savedStateHandle.get<String>(Destination.CustomToken.ARG_CHAIN_ID))
-    private val appCurrency = appCurrencyRepository
-        .currency
-        .stateIn(
-            viewModelScope,
-            SharingStarted.Eagerly,
-            appCurrencyRepository.defaultCurrency,
-        )
+    private lateinit var appCurrency: AppCurrency
 
-    fun onSearchClick() {
+    init {
         viewModelScope.launch {
-            enableLoading()
+            appCurrency = appCurrencyRepository.currency.first()
+        }
+    }
 
-            val result =
-                findCustomTokenRepository(
+    fun searchCustomToken() {
+        viewModelScope.launch {
+            showLoading()
+
+            val searchedToken =
+                tokenRepository.getTokenByContract(
                     Chain.fromRaw(chainId),
                     searchFieldState.text.toString()
                 )
 
-            if (result == null) {
+            if (searchedToken == null) {
                 showError()
             } else {
-                val rawPrice = calculatePrice(result)
+                val rawPrice = calculatePrice(searchedToken)
                 val tokenFiatValue = FiatValue(
                     rawPrice,
-                    appCurrency.value.ticker
+                    appCurrency.ticker
                 )
                 val price = fiatValueToStringMapper.map(tokenFiatValue)
                 mutableState.update {
@@ -84,7 +83,7 @@ internal class CustomTokenViewModel @Inject constructor(
                         isLoading = false,
                         hasError = false,
                         searchResult = CustomTokenResult(
-                            token = result,
+                            token = searchedToken,
                             price = price
                         ),
                     )
@@ -97,10 +96,9 @@ internal class CustomTokenViewModel @Inject constructor(
 
     private suspend fun calculatePrice(result: Coin): BigDecimal {
         tokenPriceRepository.refresh(listOf(result))
-        val currency = appCurrency.value
         return tokenPriceRepository.getPrice(
             result,
-            currency
+            appCurrency
         ).first()
     }
 
@@ -115,7 +113,7 @@ internal class CustomTokenViewModel @Inject constructor(
     }
 
 
-    private fun enableLoading() {
+    private fun showLoading() {
         mutableState.update {
             it.copy(
                 isLoading = true,
