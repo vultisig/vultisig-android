@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.vultisig.wallet.presenter.keygen
 
 import android.annotation.SuppressLint
@@ -14,6 +16,11 @@ import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asUiText
+import com.vultisig.wallet.common.unzipZlib
+import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
+import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
+import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
+import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -24,11 +31,15 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.protobuf.ProtoBuf
 import okhttp3.OkHttpClient
 import timber.log.Timber
 import java.net.HttpURLConnection
@@ -48,6 +59,9 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val gson: Gson,
+    private val protoBuf: ProtoBuf,
+    private val mapKeygenMessageFromProto: KeygenMessageFromProtoMapper,
+    private val mapReshareMessageFromProto: ReshareMessageFromProtoMapper,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
@@ -106,11 +120,31 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
                     .decodeToString()
 
-                val qrCodeContent = DeepLinkHelper(content).getJsonData()
-                qrCodeContent ?: run {
-                    throw Exception("invalid QR code")
+                val deepLink = DeepLinkHelper(content)
+
+                val qrCodeContent =
+                    deepLink.getJsonData() ?: error("Invalid QR code")
+
+                val contentBytes = qrCodeContent.decodeBase64Bytes().unzipZlib()
+
+                val payload = when (deepLink.getTssAction()) {
+                    TssAction.KEYGEN -> PeerDiscoveryPayload.Keygen(
+                        mapKeygenMessageFromProto(
+                            protoBuf.decodeFromByteArray<KeygenMessageProto>(contentBytes)
+                        )
+                    )
+
+                    TssAction.ReShare -> PeerDiscoveryPayload.Reshare(
+                        mapReshareMessageFromProto(
+                            protoBuf.decodeFromByteArray<ReshareMessageProto>(contentBytes)
+                        )
+                    )
+
+                    else -> error("Invalid TssAction")
                 }
-                when (val payload = PeerDiscoveryPayload.fromJson(gson, qrCodeContent)) {
+                Timber.d("Decoded KeygenMessage: $payload")
+
+                when (payload) {
                     is PeerDiscoveryPayload.Keygen -> {
                         this@JoinKeygenViewModel._action = TssAction.KEYGEN
                         this@JoinKeygenViewModel._sessionID = payload.keygenMessage.sessionID

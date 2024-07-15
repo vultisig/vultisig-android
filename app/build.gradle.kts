@@ -1,3 +1,6 @@
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.proto
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -6,6 +9,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.parcelize")
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.protobuf)
 }
 android {
     namespace = "com.vultisig.wallet"
@@ -50,6 +55,32 @@ android {
             excludes += "/META-INF/LICENSE*.md"
         }
     }
+
+    sourceSets.getByName("main") {
+        proto {
+            srcDir("${project.rootProject.rootDir}/commondata/proto")
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.23.4"
+    }
+
+    plugins {
+        id("kotlinx-protobuf-gen") {
+            artifact = "io.github.dogacel:kotlinx-protobuf-gen:alpha-SNAPSHOT:jvm8@jar"
+        }
+    }
+
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                id("kotlinx-protobuf-gen") {}
+            }
+        }
+    }
 }
 
 dependencies {
@@ -58,6 +89,8 @@ dependencies {
 
     // kotlinx
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization)
+    implementation(libs.kotlinx.datetime)
 
     // androidx
     implementation(libs.androidx.core.ktx)

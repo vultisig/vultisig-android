@@ -10,20 +10,31 @@ pluginManagement {
 
         mavenCentral()
         gradlePluginPortal()
+        // for protobuf generator
+        maven {
+            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        }
     }
 }
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        google()
+        mavenCentral()
         maven {
             url = uri("https://maven.pkg.github.com/trustwallet/wallet-core")
             credentials {
                 username = System.getenv("GITHUB_USER")
                 password = System.getenv("GITHUB_TOKEN")
             }
+            content {
+                includeGroup("com.trustwallet")
+            }
         }
-        google()
-        mavenCentral()
+        // for protobuf generator
+        maven {
+            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+        }
     }
 }
 

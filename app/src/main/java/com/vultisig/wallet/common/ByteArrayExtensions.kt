@@ -54,7 +54,7 @@ fun ByteArray.zipZlibAndBase64Encode(): String {
     return Base64.encode(outputStream.toByteArray())
 }
 
-fun ByteArray.unzipZlib(): String {
+fun ByteArray.unzipZlib(): ByteArray {
     val inflater = Inflater(true)
     val outputStream = ByteArrayOutputStream()
 
@@ -70,7 +70,7 @@ fun ByteArray.unzipZlib(): String {
         }
 
         inflater.end()
-        outputStream.toString("UTF-8")
+        outputStream.toByteArray()
     }
 }
 
