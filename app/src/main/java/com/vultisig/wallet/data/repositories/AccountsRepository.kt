@@ -53,8 +53,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
             chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
         }
 
-        send(addresses)
-
         val loadPrices = supervisorScope {
             async { tokenPriceRepository.refresh(vaultCoins) }
         }
