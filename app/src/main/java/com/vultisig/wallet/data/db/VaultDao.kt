@@ -20,6 +20,10 @@ internal interface VaultDao {
     suspend fun loadById(vaultId: String): VaultWithKeySharesAndTokens?
 
     @Transaction
+    @Query("SELECT * FROM vault WHERE pubKeyEcdsa = :pubKeyEcdsa")
+    suspend fun loadByEcdsa(pubKeyEcdsa: String): VaultWithKeySharesAndTokens?
+
+    @Transaction
     @Query("SELECT * FROM vault")
     suspend fun loadAll(): List<VaultWithKeySharesAndTokens>
 

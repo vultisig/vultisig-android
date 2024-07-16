@@ -5,3 +5,5 @@ interface Mapper<I, O> {
 }
 
 typealias MapperFunc<I, O> = (from: I) -> O
+
+typealias SuspendMapperFunc<I, O> = suspend (from: I) -> O

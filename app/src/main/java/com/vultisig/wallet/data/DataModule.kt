@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.vultisig.wallet.data
 
 import android.content.Context
@@ -32,6 +34,8 @@ import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.protobuf.ProtoBuf
 import javax.inject.Singleton
 
 @Module
@@ -105,6 +109,10 @@ internal interface DataModule {
                 )
                 .create()
         }
+
+        @Provides
+        @Singleton
+        fun provideProtoBuf(): ProtoBuf = ProtoBuf
 
         @Provides
         @Singleton

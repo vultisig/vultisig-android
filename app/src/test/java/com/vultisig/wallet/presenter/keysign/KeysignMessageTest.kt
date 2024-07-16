@@ -11,10 +11,10 @@ import org.junit.Test
 import java.math.BigInteger
 import java.util.UUID
 
-class KeysignMesssageTest {
+class KeysignMessageTest {
     @Test
     fun testToJson() {
-        val keysignMesssage = KeysignMesssage(
+        val keysignMessage = KeysignMessage(
             sessionID = UUID.randomUUID().toString(),
             serviceName = "serviceName",
             payload = KeysignPayload(
@@ -37,11 +37,11 @@ class KeysignMesssageTest {
             fee = BigInteger("2000000")
         )
         val gson = DataModule.provideGson()
-        val json = gson.toJson(keysignMesssage)
+        val json = gson.toJson(keysignMessage)
         Assert.assertEquals(true, gson.toJson(t).contains("THORChain"))
-        val result = gson.fromJson(json, KeysignMesssage::class.java)
-        Assert.assertEquals(keysignMesssage.sessionID, result.sessionID)
-        Assert.assertEquals(keysignMesssage.serviceName, result.serviceName)
+        val result = gson.fromJson(json, KeysignMessage::class.java)
+        Assert.assertEquals(keysignMessage.sessionID, result.sessionID)
+        Assert.assertEquals(keysignMessage.serviceName, result.serviceName)
         Assert.assertEquals(
             true,
             (result.payload.blockChainSpecific as? BlockChainSpecific.THORChain) != null
