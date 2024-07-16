@@ -194,7 +194,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                             }
                             if (_vault.resharePrefix != payload.reshareMessage.oldResharePrefix) {
                                 errorMessage.value =
-                                    R.string.join_keygen_wrong_resahre.asUiText().toString()
+                                    R.string.join_keygen_wrong_reshare.asUiText().toString()
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }

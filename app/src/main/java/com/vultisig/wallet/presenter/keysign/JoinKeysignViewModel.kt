@@ -199,7 +199,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val deepLink = DeepLinkHelper(content)
                 if (deepLink.hasResharePrefix()) {
                     if (_currentVault.resharePrefix != deepLink.getResharePrefix()) {
-                        errorMessage.value = R.string.join_keysign_wrong_resahre.asUiText().toString()
+                        errorMessage.value = R.string.join_keysign_wrong_reshare.asUiText().toString()
                         currentState.value = JoinKeysignState.Error
                         return@launch
                     }
