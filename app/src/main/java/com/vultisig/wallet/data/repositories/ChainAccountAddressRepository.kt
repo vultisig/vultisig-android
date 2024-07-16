@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.chains.MayaChainHelper
@@ -19,7 +21,7 @@ internal interface ChainAccountAddressRepository {
     suspend fun getAddress(
         chain: Chain,
         vault: Vault,
-    ): String
+    ): Pair<String, String>
 
     suspend fun getAddress(
         type: CoinType,
@@ -44,31 +46,13 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override suspend fun getAddress(
         chain: Chain,
         vault: Vault,
-    ): String = getAddress(
-        chain.coinType,
-        PublicKeyHelper.getPublicKey(
-            vault.pubKeyECDSA,
-            vault.hexChainCode,
-            chain.coinType,
-        )
-    )
-
-    override suspend fun getAddress(
-        type: CoinType,
-        publicKey: PublicKey,
-    ): String = type.deriveAddressFromPublicKey(publicKey)
-
-    @OptIn(ExperimentalStdlibApi::class)
-    override suspend fun getAddress(
-        coin: Coin,
-        vault: Vault,
     ): Pair<String, String> {
-        when (coin.chain.TssKeysignType) {
+        when (chain.TssKeysignType) {
             TssKeyType.ECDSA -> {
                 val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-                    vault.pubKeyECDSA, vault.hexChainCode, coin.coinType.derivationPath()
+                    vault.pubKeyECDSA, vault.hexChainCode, chain.coinType.derivationPath()
                 )
-                if (coin.chain == Chain.mayaChain) {
+                if (chain == Chain.mayaChain) {
                     return Pair(
                         MayaChainHelper(
                             vault.pubKeyECDSA,
@@ -79,7 +63,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                     val publicKey =
                         PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
                     return Pair(
-                        coin.coinType.deriveAddressFromPublicKey(publicKey),
+                        chain.coinType.deriveAddressFromPublicKey(publicKey),
                         derivedPublicKey
                     )
                 }
@@ -88,11 +72,21 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
             TssKeyType.EDDSA -> {
                 val publicKey =
                     PublicKey(vault.pubKeyEDDSA.hexToByteArray(), PublicKeyType.ED25519)
-                return Pair(coin.coinType.deriveAddressFromPublicKey(publicKey), vault.pubKeyEDDSA)
+                return Pair(chain.coinType.deriveAddressFromPublicKey(publicKey), vault.pubKeyEDDSA)
             }
         }
 
     }
+
+    override suspend fun getAddress(
+        type: CoinType,
+        publicKey: PublicKey,
+    ): String = type.deriveAddressFromPublicKey(publicKey)
+
+    override suspend fun getAddress(
+        coin: Coin,
+        vault: Vault,
+    ): Pair<String, String> = getAddress(coin.chain, vault)
 
     override fun isValid(
         chain: Chain,

@@ -6,7 +6,7 @@ internal data class UtxoInfo(
     @SerializedName("hash")
     val hash: String,
     @SerializedName("amount")
-    val amount: ULong,
+    val amount: Long,
     @SerializedName("index")
     val index: UInt,
 )

@@ -24,6 +24,8 @@ internal interface VaultRepository {
 
     suspend fun get(vaultId: String): Vault?
 
+    suspend fun getByEcdsa(pubKeyEcdsa: String): Vault?
+
     suspend fun getAll(): List<Vault>
 
     suspend fun hasVaults(): Boolean
@@ -63,6 +65,9 @@ internal class VaultRepositoryImpl @Inject constructor(
 
     override suspend fun get(vaultId: String): Vault? =
         vaultDao.loadById(vaultId)?.toVault()
+
+    override suspend fun getByEcdsa(pubKeyEcdsa: String): Vault? =
+        vaultDao.loadByEcdsa(pubKeyEcdsa)?.toVault()
 
     override suspend fun getAll(): List<Vault> =
         vaultDao.loadAll().map { it.toVault() }

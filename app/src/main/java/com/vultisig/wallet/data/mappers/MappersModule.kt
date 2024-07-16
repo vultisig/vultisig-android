@@ -49,4 +49,16 @@ internal interface MappersModule {
         impl: ReshareMessageToProtoMapperImpl
     ): ReshareMessageToProtoMapper
 
+    @Binds
+    @Singleton
+    fun bindKeysignMessageFromProtoMapper(
+        impl: KeysignMessageFromProtoMapperImpl
+    ): KeysignMessageFromProtoMapper
+
+    @Binds
+    @Singleton
+    fun bindKeysignPayloadProtoMapper(
+        impl: KeysignPayloadProtoMapperImpl
+    ): KeysignPayloadProtoMapper
+
 }

@@ -3,7 +3,7 @@ package com.vultisig.wallet.presenter.keysign
 import com.google.gson.annotations.SerializedName
 
 
-internal data class KeysignMesssage(
+internal data class KeysignMessage(
     @SerializedName("sessionID")
     val sessionID: String,
     @SerializedName("serviceName")
