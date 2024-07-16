@@ -258,9 +258,9 @@
 
 
     <!-- TODO needs translation-->
-    <string name="join_keysign_wrongvault" translatable="false">Wrong vault</string>
-    <string name="join_keysign_wrongresahre" translatable="false">Wrong ReShare</string>
-    <string name="joinkeysign_wrongresahre" translatable="false">Wrong ReShare</string>
+    <string name="join_keysign_wrong_vault" translatable="false">Wrong vault</string>
+    <string name="join_keygen_wrong_resahre" translatable="false">Wrong ReShare</string>
+    <string name="join_keysign_wrong_resahre" translatable="false">Wrong ReShare</string>
     <string name="swap_screen_provider_title" translatable="false">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>

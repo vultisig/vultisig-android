@@ -188,13 +188,13 @@ internal class JoinKeygenViewModel @Inject constructor(
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                                 errorMessage.value =
-                                    R.string.join_keysign_wrongvault.asUiText().toString()
+                                    R.string.join_keysign_wrong_vault.asUiText().toString()
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
                             if (_vault.resharePrefix != payload.reshareMessage.oldResharePrefix) {
                                 errorMessage.value =
-                                    R.string.join_keysign_wrongresahre.asUiText().toString()
+                                    R.string.join_keygen_wrong_resahre.asUiText().toString()
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
