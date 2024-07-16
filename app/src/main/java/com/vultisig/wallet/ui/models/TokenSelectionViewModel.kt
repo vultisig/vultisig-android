@@ -9,13 +9,17 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.CustomTokenRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -42,9 +46,12 @@ internal data class TokenUiModel(
 @HiltViewModel
 internal class TokenSelectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val customTokenRepository: CustomTokenRepository,
+    private val gson: Gson,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -92,6 +99,12 @@ internal class TokenSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             vaultRepository.deleteTokenFromVault(vaultId, coin.id)
             enabledTokens.update { it - coin.id }
+        }
+    }
+
+    fun navigateToCustomTokenScreen() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.CustomToken(chainId))
         }
     }
 
@@ -150,4 +163,37 @@ internal class TokenSelectionViewModel @Inject constructor(
         .sortedWith(compareBy { it.coin.ticker })
         .toList()
 
+    fun enableSearchedToken(coinString: String?) {
+        if (coinString == null)
+            return
+        viewModelScope.launch {
+            gson.fromJson(coinString, Coin::class.java).apply {
+                if (enabledTokens.value.contains(id))
+                    return@apply
+                enableToken(this)
+                showTokenAsEnabled(this)
+                val allTokens = tokenRepository
+                    .getChainTokens(Chain.fromRaw(chainId)).first().map { it.id }
+                if (!allTokens.contains(id))
+                    customTokenRepository.insert(this)
+            }
+        }
+    }
+
+
+    private fun showTokenAsEnabled(token: Coin) {
+        val inOtherTokens = otherTokens.value.map { it.id }.any { it == token.id }
+        val updatedSelectedTokens = selectedTokens.value.toMutableList()
+        if (!updatedSelectedTokens.map { it.id }.contains(token.id))
+            updatedSelectedTokens += token
+        selectedTokens.update {
+            updatedSelectedTokens
+        }
+        if (inOtherTokens) {
+            val updatedOtherTokens = otherTokens.value.filter { it.id != token.id }
+            otherTokens.update {
+                updatedOtherTokens
+            }
+        }
+    }
 }

@@ -143,4 +143,10 @@ internal interface RepositoriesModule {
         impl: VaultDataStoreRepositoryImpl
     ): VaultDataStoreRepository
 
+    @Binds
+    @Singleton
+    fun bindCustomTokenRepository(
+        impl: CustomTokenRepositoryImpl
+    ): CustomTokenRepository
+
 }
