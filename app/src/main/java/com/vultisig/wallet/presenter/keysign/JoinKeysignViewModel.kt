@@ -175,6 +175,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     throw Exception("Invalid QR code content")
                 }
                 val rawJson = qrCodeContent.decodeBase64Bytes().unzipZlib()
+                    .toString(Charsets.UTF_8)
                 Timber.d(
                     "QR code content: %s", rawJson
                 )
