@@ -86,7 +86,7 @@ internal class utxoHelper(
                 .setSequence(Long.MAX_VALUE.toInt())
                 .build()
             val utxoItem = Bitcoin.UnspentTransaction.newBuilder()
-                .setAmount(item.amount.toLong())
+                .setAmount(item.amount)
                 .setOutPoint(output)
                 .setScript(ByteString.copyFrom(lockScript.data()))
 
@@ -147,7 +147,7 @@ internal class utxoHelper(
                 .setSequence(Long.MAX_VALUE.toInt())
                 .build()
             val utxoItem = Bitcoin.UnspentTransaction.newBuilder()
-                .setAmount(item.amount.toLong())
+                .setAmount(item.amount)
                 .setOutPoint(output)
                 .setScript(ByteString.copyFrom(lockScript.data()))
 

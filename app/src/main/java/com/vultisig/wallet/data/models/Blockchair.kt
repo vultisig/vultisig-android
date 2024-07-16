@@ -13,7 +13,7 @@ internal data class BlockchairUtxoInfo(
     @SerializedName("transaction_hash") val transactionHash: String,
     val index: Int,
     @SerializedName("value")
-    val value: ULong,
+    val value: Long,
 )
 
 internal data class BlockchairInfo(

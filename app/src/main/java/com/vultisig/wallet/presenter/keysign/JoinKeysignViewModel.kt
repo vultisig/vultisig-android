@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package com.vultisig.wallet.presenter.keysign
 
 import android.net.nsd.NsdManager
@@ -23,6 +25,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
@@ -56,10 +59,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.protobuf.ProtoBuf
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
+import vultisig.keysign.v1.KeysignMessage
 import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.net.URL
@@ -105,7 +112,9 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
 
     private val vaultRepository: VaultRepository,
+    private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
     private val gson: Gson,
+    private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
@@ -175,14 +184,13 @@ internal class JoinKeysignViewModel @Inject constructor(
                     throw Exception("Invalid QR code content")
                 }
                 val rawJson = qrCodeContent.decodeBase64Bytes().unzipZlib()
-                    .toString(Charsets.UTF_8)
-                Timber.d(
-                    "QR code content: %s", rawJson
-                )
-                val payload = gson.fromJson(
-                    rawJson,
-                    KeysignMesssage::class.java
-                )
+
+                val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
+                Timber.d("Decoded KeysignMessageProto: $payloadProto")
+
+                val payload = mapKeysignMessageFromProto(payloadProto)
+                Timber.d("Mapped proto to KeysignMessage: $payload")
+
                 if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
                     errorMessage.value = "Wrong vault"
                     currentState.value = JoinKeysignState.Error

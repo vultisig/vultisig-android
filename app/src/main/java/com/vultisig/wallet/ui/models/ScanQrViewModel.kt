@@ -23,6 +23,7 @@ internal class ScanQrViewModel @Inject constructor(
 
     @OptIn(ExperimentalEncodingApi::class)
     fun joinOrSend(qr: String) {
+        Timber.d("joinOrSend(qr = $qr)")
         viewModelScope.launch {
             val flowType = try {
                 DeepLinkHelper(qr).getFlowType()
