@@ -65,7 +65,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     text = stringResource(R.string.backup_password_screen_save),
                     onClick = {
                         focusManager.clearFocus()
-                        viewModel.backupVault()
+                        viewModel.backupEncryptedVault()
                     },
                 )
                 MultiColorButton(
@@ -84,7 +84,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             bottom = 16.dp,
                         )
                 ) {
-                    viewModel.backupVaultSkipPassword()
+                    viewModel.backupUnencryptedVault()
                 }
             }
         },
