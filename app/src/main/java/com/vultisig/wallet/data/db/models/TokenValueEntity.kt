@@ -18,4 +18,7 @@ internal data class TokenValueEntity(
 
     @ColumnInfo("tokenValue")
     val tokenValue: String, // BigInteger
-)
+){
+    val tokenId: String
+        get() = "$ticker-$chain"
+}

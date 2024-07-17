@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
+import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Chain.arbitrum
@@ -50,6 +51,11 @@ internal interface BalanceRepository {
         address: String,
         coin: Coin,
     ): TokenBalance
+
+    suspend fun getCachedTokenBalances(
+        addresses: List<String>,
+        coins: List<Coin>
+    ): List<TokenBalanceWrapped>
 
     fun getTokenBalance(
         address: String,
@@ -102,6 +108,46 @@ internal class BalanceRepositoryImpl @Inject constructor(
             tokenValue = tokenValue,
             fiatValue = fiatValue,
         )
+    }
+
+    override suspend fun getCachedTokenBalances(
+        addresses: List<String>,
+        coins: List<Coin>,
+    ): List<TokenBalanceWrapped> {
+        val currency = appCurrencyRepository.currency.first()
+
+        val tokenEntities = tokenValueDao.getTokenValues(addresses)
+
+        val prices = tokenPriceRepository.getCachedPrices(coins.map { it.id }, currency)
+
+        return tokenEntities.map { tokenEntity ->
+            val price = prices.find { it.first == tokenEntity.tokenId }?.second
+            val tokenValue = TokenValue(
+                value = tokenEntity.tokenValue.toBigInteger(),
+                unit = tokenEntity.ticker,
+                decimals = coins.find { it.id == tokenEntity.tokenId }?.decimal ?: 0,
+            )
+
+            val fiatValue = if (price != null) {
+                FiatValue(
+                    tokenValue.decimal
+                        .multiply(price)
+                        .setScale(2, RoundingMode.HALF_UP),
+                    currency.ticker
+                )
+            } else {
+                null
+            }
+
+            TokenBalanceWrapped(
+                tokenBalance = TokenBalance(
+                    tokenValue = tokenValue,
+                    fiatValue = fiatValue,
+                ),
+                address = tokenEntity.address,
+                coinId = tokenEntity.tokenId,
+            )
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
