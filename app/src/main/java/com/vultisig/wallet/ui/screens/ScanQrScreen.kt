@@ -30,6 +30,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,10 +58,13 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
-import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.addWhiteBorder
+import com.vultisig.wallet.ui.utils.uriToBitmap
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 internal const val ARG_QR_CODE = "qr_code"
 
@@ -98,6 +102,7 @@ internal fun ScanQrScreen(
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var isScanned by remember { mutableStateOf(false) }
 
@@ -113,11 +118,22 @@ internal fun ScanQrScreen(
         }
     }
 
+
+
     val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
-        if (uri != null) {
-            createScanner()
-                .process(InputImage.fromFilePath(context, uri))
-                .addOnSuccessListener(onSuccess)
+        coroutineScope.launch {
+            if (uri != null) {
+                val result = scanImage(InputImage.fromFilePath(context, uri))
+                val barcodes = if (result.isEmpty()) {
+                    val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
+                        .addWhiteBorder(2F)
+                    val inputImage = InputImage.fromBitmap(bitmap, 0)
+                    val resultBarcodes = scanImage(inputImage)
+                    bitmap.recycle()
+                    resultBarcodes
+                } else result
+                onSuccess(barcodes)
+            }
         }
     }
     val appColor = Theme.colors
@@ -296,3 +312,9 @@ private fun createScanner() = BarcodeScanning.getClient(
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
         .build()
 )
+
+private suspend fun scanImage(inputImage: InputImage) = suspendCoroutine { cont ->
+    createScanner()
+        .process(inputImage)
+        .addOnSuccessListener { cont.resume(it) }
+}
