@@ -2,7 +2,13 @@
 
 package com.vultisig.wallet.ui.screens
 
+import android.content.ContentResolver
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.net.Uri
 import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -57,10 +63,12 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
-import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.addWhiteBorder
+import com.vultisig.wallet.ui.utils.uriToBitmap
 import timber.log.Timber
+import java.io.FileDescriptor
+import java.io.IOException
 
 internal const val ARG_QR_CODE = "qr_code"
 
@@ -113,11 +121,25 @@ internal fun ScanQrScreen(
         }
     }
 
+    val onScannerSuccess: (List<Barcode>, Uri?) -> Unit = { barcodes, uri ->
+        if (barcodes.isEmpty() && !isScanned && uri != null) {
+            val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
+            val inputImage = InputImage.fromBitmap(bitmap.addWhiteBorder(2F), 0)
+            createScanner()
+                .process(inputImage)
+                .addOnSuccessListener(onSuccess)
+        } else {
+            onSuccess(barcodes)
+        }
+    }
+
     val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
         if (uri != null) {
             createScanner()
                 .process(InputImage.fromFilePath(context, uri))
-                .addOnSuccessListener(onSuccess)
+                .addOnSuccessListener { barcodes ->
+                    onScannerSuccess(barcodes, uri)
+                }
         }
     }
     val appColor = Theme.colors
