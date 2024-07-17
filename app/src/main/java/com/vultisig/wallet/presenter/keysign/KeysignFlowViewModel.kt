@@ -37,6 +37,7 @@ import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.AddressProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -82,7 +83,8 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
-    private val addressProvider: AddressProvider
+    private val addressProvider: AddressProvider,
+    @ApplicationContext  private val context: Context
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -455,5 +457,11 @@ internal class KeysignFlowViewModel @Inject constructor(
         address = address,
         contractAddress = contractAddress,
     )
+
+    override fun onCleared() {
+        resetQrAddress()
+        stopService(context)
+        super.onCleared()
+    }
 
 }
