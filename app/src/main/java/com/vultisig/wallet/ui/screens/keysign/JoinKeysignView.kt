@@ -123,7 +123,6 @@ internal fun JoinKeysignView(
                 }
                 val kState = keysignViewModel.currentState.collectAsState().value
                 keysignState = kState
-                //foound
                 KeysignScreen(
                     state = kState,
                     errorMessage = keysignViewModel.errorMessage.value,
