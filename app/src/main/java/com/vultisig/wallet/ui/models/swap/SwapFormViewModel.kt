@@ -113,6 +113,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val selectedDst = MutableStateFlow<SendSrc?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
+    private val isReversed = MutableStateFlow(false)
 
     init {
         collectSelectedAccounts()
@@ -299,11 +300,17 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     fun selectSrcToken() {
+        resetIsReversed()
         navigateToSelectToken(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID)
     }
 
     fun selectDstToken() {
+        resetIsReversed()
         navigateToSelectToken(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID)
+    }
+
+    private fun resetIsReversed() {
+        isReversed.update { false }
     }
 
     private fun navigateToSelectToken(
@@ -314,13 +321,13 @@ internal class SwapFormViewModel @Inject constructor(
                 Destination.SelectToken(
                     vaultId = vaultId ?: return@launch,
                     targetArg = targetArg,
-                    swapSelect = true,
                 )
             )
         }
     }
 
     fun flipSelectedTokens() {
+        isReversed.update { true }
         val buffer = selectedSrc.value
         selectedSrc.value = selectedDst.value
         selectedDst.value = buffer
@@ -332,6 +339,8 @@ internal class SwapFormViewModel @Inject constructor(
         vaultId: String,
         chainId: String?,
     ) {
+        if(isReversed.value)
+            return
         this.vaultId = vaultId
         loadTokens(selectedSrcTokenId, selectedDstTokenId, vaultId, chainId)
     }
