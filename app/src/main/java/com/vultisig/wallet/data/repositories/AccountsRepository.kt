@@ -53,8 +53,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
             chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
         }
 
-        send(addresses)
-
         val loadPrices = supervisorScope {
             async { tokenPriceRepository.refresh(vaultCoins) }
         }
@@ -79,9 +77,16 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
                     addresses[index] = account.copy(accounts = cachedAccounts)
 
-                    send(addresses)
+                }
+            }.awaitAll()
+            send(addresses)
+        }
 
+        coroutineScope {
+            addresses.mapIndexed { index, account ->
+                async {
                     try {
+                        val address = account.address
                         loadPrices.await()
 
                         val newAccounts = supervisorScope {
@@ -97,13 +102,13 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
                         addresses[index] = account.copy(accounts = newAccounts)
 
-                        send(addresses)
                     } catch (e: Exception) {
                         Timber.e(e)
                         // ignore
                     }
                 }
             }.awaitAll()
+            send(addresses)
         }
         awaitClose()
     }
