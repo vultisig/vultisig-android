@@ -42,6 +42,7 @@ internal fun TransactionDoneScreen(
             transactionHash = transactionHash,
             transactionLink = transactionLink,
             onComplete = navController::popBackStack,
+            //
         )
     }
 }
@@ -51,7 +52,7 @@ internal fun TransactionDoneView(
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
-    isThorSwap : Boolean = false
+    isThorSwap : Boolean = false,
 ) {
     val uriHandler = LocalUriHandler.current
     Column(

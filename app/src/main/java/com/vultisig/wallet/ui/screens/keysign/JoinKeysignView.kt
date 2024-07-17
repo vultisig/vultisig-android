@@ -128,6 +128,7 @@ internal fun JoinKeysignView(
                     errorMessage = keysignViewModel.errorMessage.value,
                     txHash = keysignViewModel.txHash.collectAsState().value,
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
+                    isThorSwap = keysignViewModel.isThorSwap,
                     onComplete = {
                         navController.navigate(Screen.Home.route)
                     }
