@@ -36,7 +36,7 @@ internal fun Keysign(
     )
 
     val keysignViewModel = wrapperViewModel.viewModel
-    
+
     KeysignScreen(
         state = keysignViewModel.currentState.collectAsState().value,
         errorMessage = keysignViewModel.errorMessage.value,
