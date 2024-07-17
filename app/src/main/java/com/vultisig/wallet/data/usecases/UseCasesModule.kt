@@ -28,4 +28,16 @@ internal interface UseCasesModule {
         impl: SaveVaultUseCaseImpl
     ): SaveVaultUseCase
 
+    @Binds
+    @Singleton
+    fun bindParseVaultFromStringUseCase(
+        impl: ParseVaultFromStringUseCaseImpl
+    ): ParseVaultFromStringUseCase
+
+    @Binds
+    @Singleton
+    fun bindCreateVaultBackupUseCase(
+        impl: CreateVaultBackupUseCaseImpl
+    ): CreateVaultBackupUseCase
+
 }

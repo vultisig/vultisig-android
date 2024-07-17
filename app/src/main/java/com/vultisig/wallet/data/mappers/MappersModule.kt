@@ -61,4 +61,10 @@ internal interface MappersModule {
         impl: KeysignPayloadProtoMapperImpl
     ): KeysignPayloadProtoMapper
 
+    @Binds
+    @Singleton
+    fun bindMapVaultToProto(
+        impl: MapVaultToProtoImpl
+    ): MapVaultToProto
+
 }

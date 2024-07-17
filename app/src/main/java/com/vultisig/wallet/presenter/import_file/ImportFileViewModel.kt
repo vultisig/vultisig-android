@@ -7,19 +7,14 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.CryptoManager
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.decodeFromHex
 import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
-import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.repositories.VaultDataStoreRepositoryImpl
-import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.models.IOSVaultRoot
+import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,14 +30,11 @@ import javax.inject.Inject
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
-    private val vaultRepository: VaultRepository,
-    private val vaultIOSToAndroidMapper: VaultIOSToAndroidMapper,
-    private val gson: Gson,
     private val navigator: Navigator<Destination>,
-    private val cryptoManager: CryptoManager,
     @ApplicationContext private val context: Context,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val saveVault: SaveVaultUseCase,
+    private val parseVaultFromString: ParseVaultFromStringUseCase,
 ) : ViewModel() {
     val uiModel = MutableStateFlow(ImportFileState())
 
@@ -60,17 +52,12 @@ internal class ImportFileViewModel @Inject constructor(
 
     fun decryptVaultData() {
         val key: String = passwordTextFieldState.text.toString()
-        val dataToDecrypt = uiModel.value.fileContent
-        dataToDecrypt?.let {
+        val vaultFileContent = uiModel.value.fileContent
+        if (vaultFileContent != null) {
             viewModelScope.launch {
                 try {
-                    val vault = cryptoManager.decrypt(dataToDecrypt, key)
-                    if (vault != null) {
-                        saveToDb(vault)
-                        hidePasswordPromptDialog()
-                    } else {
-                        showErrorHint()
-                    }
+                    saveToDb(vaultFileContent, key)
+                    hidePasswordPromptDialog()
                 } catch (e: Exception) {
                     Timber.e(e)
                     showErrorHint()
@@ -85,7 +72,7 @@ internal class ImportFileViewModel @Inject constructor(
             return
         viewModelScope.launch {
             try {
-                saveToDb(fileContent)
+                saveToDb(fileContent, null)
             } catch (e: Exception) {
                 uiModel.update {
                     it.copy(
@@ -98,17 +85,15 @@ internal class ImportFileViewModel @Inject constructor(
         }
     }
 
-    private suspend fun saveToDb(fileContent: String) {
+    private suspend fun saveToDb(fileContent: String, password: String?) {
         try {
-            val fromJson = gson.fromJson(fileContent.decodeFromHex(), IOSVaultRoot::class.java)
-            insertVaultToDb(fromJson)
+            insertVaultToDb(parseVaultFromString(fileContent, password))
         } catch (e: SQLiteConstraintException) {
             snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
         }
     }
 
-    private suspend fun insertVaultToDb(fromJson: IOSVaultRoot) {
-        val vault = vaultIOSToAndroidMapper(fromJson)
+    private suspend fun insertVaultToDb(vault: Vault) {
         saveVault(vault, false)
         vaultDataStoreRepository.setBackupStatus(vault.id, true)
         navigator.navigate(
