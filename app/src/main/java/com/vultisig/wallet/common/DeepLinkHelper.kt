@@ -19,6 +19,14 @@ class DeepLinkHelper(private val input: String) {
         return parameters["jsonData"]
     }
 
+    fun getResharePrefix(): String? {
+        return parameters["resharePrefix"]
+    }
+
+    fun hasResharePrefix(): Boolean {
+        return parameters.containsKey("resharePrefix")
+    }
+
     fun getFlowType(): String? {
         return parameters["type"]
     }
