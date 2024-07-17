@@ -84,7 +84,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
-    @ApplicationContext  private val context: Context
+    @ApplicationContext  private val context: Context,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
