@@ -454,6 +454,11 @@ internal class KeysignFlowViewModel @Inject constructor(
         ticker = ticker,
         address = address,
         contractAddress = contractAddress,
+        decimals = decimal,
+        priceProviderId = priceProviderID,
+        isNativeToken = isNativeToken,
+        hexPublicKey = hexPublicKey,
+        logo = logo,
     )
 
 }
