@@ -102,7 +102,6 @@ internal fun TransactionDoneView(
                     style = Theme.menlo.subtitle3,
                 )
                 Text(
-                    modifier = Modifier.align(Alignment.End),
                     text= stringResource(R.string.transaction_done_swap_progress),
                     color = Theme.colors.neutral0,
                     style = Theme.menlo.subtitle2,
