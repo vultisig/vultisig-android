@@ -11,11 +11,11 @@ import java.io.IOException
 
 internal fun uriToBitmap(contentResolver: ContentResolver, selectedFileUri: Uri): Bitmap? {
     try {
-        val parcelFileDescriptor = contentResolver.openFileDescriptor(selectedFileUri, "r")
-        val fileDescriptor: FileDescriptor = requireNotNull(parcelFileDescriptor).fileDescriptor
-        val image = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-        parcelFileDescriptor.close()
-        return image
+        contentResolver.openFileDescriptor(selectedFileUri, "r").use {
+            val fileDescriptor: FileDescriptor = requireNotNull(it).fileDescriptor
+            val image = BitmapFactory.decodeFileDescriptor(fileDescriptor)
+            return image
+        }
     } catch (e: IOException) {
         e.printStackTrace()
     }
@@ -28,5 +28,6 @@ internal fun Bitmap.addWhiteBorder(borderSize: Float): Bitmap {
     val canvas = Canvas(bmpWithBorder)
     canvas.drawColor(Color.WHITE)
     canvas.drawBitmap(this, borderSize, borderSize, null)
+    this.recycle()
     return bmpWithBorder
 }
