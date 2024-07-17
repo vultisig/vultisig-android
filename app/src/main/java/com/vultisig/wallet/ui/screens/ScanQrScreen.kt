@@ -126,7 +126,8 @@ internal fun ScanQrScreen(
                 val result = scanImage(InputImage.fromFilePath(context, uri))
                 val barcodes = if (result.isEmpty()) {
                     val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
-                    val inputImage = InputImage.fromBitmap(bitmap.addWhiteBorder(2F), 0)
+                        .addWhiteBorder(2F)
+                    val inputImage = InputImage.fromBitmap(bitmap, 0)
                     bitmap.recycle()
                     scanImage(inputImage)
                 } else result
