@@ -126,6 +126,7 @@ private fun SwapScreen(
                 SwapFormScreen(
                     vaultId = vaultId,
                     chainId = chainId,
+                    mainNavController = mainNavController,
                     selectedSrcTokenId = selectedSrcTokenId,
                     selectedDstTokenId = selectedDstTokenId,
                 )
