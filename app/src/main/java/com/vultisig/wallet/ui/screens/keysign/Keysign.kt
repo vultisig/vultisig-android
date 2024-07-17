@@ -42,6 +42,7 @@ internal fun Keysign(
         errorMessage = keysignViewModel.errorMessage.value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
+        //found
         onComplete = onComplete,
     )
 }
@@ -72,6 +73,7 @@ internal fun KeysignScreen(
     ) {
         if (state == KeysignState.KeysignFinished) {
             TransactionDoneView(
+                //found
                 transactionHash = txHash,
                 transactionLink = transactionLink,
                 onComplete = onComplete,
