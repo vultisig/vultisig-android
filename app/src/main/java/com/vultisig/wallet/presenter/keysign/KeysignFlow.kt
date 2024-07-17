@@ -33,11 +33,6 @@ fun KeysignFlowView(
         mutableStateOf(false)
     }
 
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-
-        }
-    }
     when (viewModel.currentState.value) {
         KeysignFlowState.PEER_DISCOVERY -> {
             KeysignPeerDiscovery(
