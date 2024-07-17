@@ -58,10 +58,16 @@ internal class AccountsRepositoryImpl @Inject constructor(
         }
 
         addresses.apply {
-            val balances = balanceRepository.getCachedTokenBalances(addresses.map { adr -> adr.address to adr.accounts.map { it.token }})
+            val balances = balanceRepository.getCachedTokenBalances(
+                addresses.map { adr -> adr.address},
+                addresses.map { adr -> adr.accounts.map { it.token }}.flatten())
             mapIndexed { index, account ->
                 val newAccounts = account.accounts.map { acc ->
-                    acc.applyBalance(balances.first { it.address == account.address &&  it.coinId == acc.token.id}.tokenBalance)
+                    acc.applyBalance(
+                        balances.first {
+                            it.address == account.address &&  it.coinId == acc.token.id
+                        }.tokenBalance
+                    )
                 }
                 addresses[index] = account.copy(accounts = newAccounts)
             }

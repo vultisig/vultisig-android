@@ -22,7 +22,7 @@ internal interface TokenValueDao {
     @Query(
         "SELECT * FROM tokenValue WHERE address IN (:addresses)"
     )
-    suspend fun getTokenEntities(
+    suspend fun getTokenValues(
         addresses: List<String>,
     ): List<TokenValueEntity>
 

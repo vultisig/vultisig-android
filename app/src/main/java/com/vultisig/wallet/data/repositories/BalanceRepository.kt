@@ -53,7 +53,8 @@ internal interface BalanceRepository {
     ): TokenBalance
 
     suspend fun getCachedTokenBalances(
-        addresses: List<Pair<String, List<Coin>>>,
+        addresses: List<String>,
+        coins: List<Coin>
     ): List<TokenBalanceWrapped>
 
     fun getTokenBalance(
@@ -110,23 +111,21 @@ internal class BalanceRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCachedTokenBalances(
-        addresses: List<Pair<String, List<Coin>>>,
+        addresses: List<String>,
+        coins: List<Coin>,
     ): List<TokenBalanceWrapped> {
         val currency = appCurrencyRepository.currency.first()
 
-        val tokenEntities = tokenValueDao.getTokenEntities(addresses.map { it.first })
-
-        val coins = addresses.map { it.second }.flatten()
+        val tokenEntities = tokenValueDao.getTokenValues(addresses)
 
         val prices = tokenPriceRepository.getCachedPrices(coins.map { it.id }, currency)
 
         return tokenEntities.map { tokenEntity ->
-            val tokenEntityCoinId = "${tokenEntity.ticker}-${tokenEntity.chain}"
-            val price = prices.find { it.first == tokenEntityCoinId }?.second
+            val price = prices.find { it.first == tokenEntity.tokenId }?.second
             val tokenValue = TokenValue(
                 value = tokenEntity.tokenValue.toBigInteger(),
                 unit = tokenEntity.ticker,
-                decimals = coins.find { it.id == tokenEntityCoinId }?.decimal ?: 0,
+                decimals = coins.find { it.id == tokenEntity.tokenId }?.decimal ?: 0,
             )
 
             val fiatValue = if (price != null) {
@@ -146,10 +145,9 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     fiatValue = fiatValue,
                 ),
                 address = tokenEntity.address,
-                coinId = tokenEntityCoinId,
+                coinId = tokenEntity.tokenId,
             )
         }
-
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
