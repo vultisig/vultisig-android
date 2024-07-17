@@ -82,6 +82,8 @@ internal class KeysignViewModel(
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
+    var IsThorSwap =
+        keysignPayload != null && keysignPayload.swapPayload is SwapPayload.ThorChain
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")

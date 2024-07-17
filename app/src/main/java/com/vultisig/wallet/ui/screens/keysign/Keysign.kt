@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.presenter.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
@@ -36,14 +37,14 @@ internal fun Keysign(
     )
 
     val keysignViewModel = wrapperViewModel.viewModel
-
+    val isThorSwap=viewModel.IsThorSwap
     KeysignScreen(
         state = keysignViewModel.currentState.collectAsState().value,
         errorMessage = keysignViewModel.errorMessage.value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
-        //found
         onComplete = onComplete,
+        isThorSwap = isThorSwap,
     )
 }
 
@@ -54,6 +55,7 @@ internal fun KeysignScreen(
     transactionLink: String,
     errorMessage: String,
     onComplete: () -> Unit,
+    isThorSwap: Boolean = false,
 ) {
     KeepScreenOn()
     val text = when (state) {
@@ -73,10 +75,10 @@ internal fun KeysignScreen(
     ) {
         if (state == KeysignState.KeysignFinished) {
             TransactionDoneView(
-                //found
                 transactionHash = txHash,
                 transactionLink = transactionLink,
                 onComplete = onComplete,
+                isThorSwap = isThorSwap,
             )
         } else {
             UiSpacer(weight = 1f)

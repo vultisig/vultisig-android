@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.magnifier
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiIcon
@@ -49,7 +51,9 @@ internal fun TransactionDoneView(
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
+    isThorSwap : Boolean = false
 ) {
+    val uriHandler = LocalUriHandler.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,7 +70,6 @@ internal fun TransactionDoneView(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        //found
                         text = stringResource(R.string.transation_done_form_title),
                         color = Theme.colors.neutral0,
                         style = Theme.montserrat.heading5,
@@ -83,7 +86,6 @@ internal fun TransactionDoneView(
                         }
                     )
 
-                    val uriHandler = LocalUriHandler.current
 
                     UiIcon(
                         drawableResId = R.drawable.ic_link,
@@ -101,11 +103,18 @@ internal fun TransactionDoneView(
                     color = Theme.colors.turquoise800,
                     style = Theme.menlo.subtitle3,
                 )
-                Text(
-                    text= stringResource(R.string.transaction_done_swap_progress),
-                    color = Theme.colors.neutral0,
-                    style = Theme.menlo.subtitle2,
-                )
+                if (isThorSwap) {
+                    Text(
+                        modifier = Modifier
+                            .align(Alignment.End)
+                            .clickOnce {
+                                uriHandler.openUri("https://track.ninerealms.com/$transactionHash")
+                            },
+                        text = stringResource(R.string.transaction_done_swap_progress),
+                        color = Theme.colors.neutral0,
+                        style = Theme.menlo.subtitle2,
+                    )
+                }
             }
         }
 

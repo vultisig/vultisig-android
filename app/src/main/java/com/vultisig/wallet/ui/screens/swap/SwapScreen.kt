@@ -148,7 +148,6 @@ private fun SwapScreen(
                 keysignShareViewModel.loadSwapTransaction(transactionId)
 
                 KeysignFlowView(
-                    //found
                     navController = mainNavController,
                     onComplete = {
                         mainNavController.navigate(Screen.Home.route)
