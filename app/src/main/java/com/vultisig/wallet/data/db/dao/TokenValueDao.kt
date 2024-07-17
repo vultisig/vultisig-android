@@ -19,6 +19,13 @@ internal interface TokenValueDao {
         ticker: String
     ): String?
 
+    @Query(
+        "SELECT * FROM tokenValue WHERE address IN (:addresses)"
+    )
+    suspend fun getTokenEntities(
+        addresses: List<String>,
+    ): List<TokenValueEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTokenValue(tokenValue: TokenValueEntity)
 

@@ -57,30 +57,17 @@ internal class AccountsRepositoryImpl @Inject constructor(
             async { tokenPriceRepository.refresh(vaultCoins) }
         }
 
-        coroutineScope {
-            addresses.mapIndexed { index, account ->
-                async {
-                    val address = account.address
-
-                    val cachedAccounts = coroutineScope {
-                        account.accounts.map { acc ->
-                            async {
-                                val balance = balanceRepository.getCachedTokenBalance(
-                                    address,
-                                    acc.token,
-                                )
-
-                                acc.applyBalance(balance)
-                            }
-                        }.awaitAll()
-                    }
-
-                    addresses[index] = account.copy(accounts = cachedAccounts)
-
+        addresses.apply {
+            val balances = balanceRepository.getCachedTokenBalances(addresses.map { adr -> adr.address to adr.accounts.map { it.token }})
+            mapIndexed { index, account ->
+                val newAccounts = account.accounts.map { acc ->
+                    acc.applyBalance(balances.first { it.address == account.address &&  it.coinId == acc.token.id}.tokenBalance)
                 }
-            }.awaitAll()
-            send(addresses)
+                addresses[index] = account.copy(accounts = newAccounts)
+            }
         }
+
+        send(addresses)
 
         coroutineScope {
             addresses.mapIndexed { index, account ->
