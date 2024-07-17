@@ -62,8 +62,6 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import timber.log.Timber
-import java.io.FileDescriptor
-import java.io.IOException
 
 internal const val ARG_QR_CODE = "qr_code"
 
