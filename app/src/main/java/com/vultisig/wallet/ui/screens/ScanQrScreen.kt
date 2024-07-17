@@ -3,7 +3,6 @@
 package com.vultisig.wallet.ui.screens
 
 import android.content.Context
-import android.net.Uri
 import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
