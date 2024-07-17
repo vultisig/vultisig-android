@@ -494,6 +494,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
 
                                 uiState.update {
+                                    //found
                                     it.copy(
                                         provider = if (provider == SwapProvider.MAYA)
                                             R.string.swap_form_provider_mayachain.asUiText()
@@ -560,6 +561,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                                 uiState.update {
                                     it.copy(
+                                        //found
                                         provider = R.string.swap_for_provider_1inch.asUiText(),
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
