@@ -42,7 +42,6 @@ internal fun TransactionDoneScreen(
             transactionHash = transactionHash,
             transactionLink = transactionLink,
             onComplete = navController::popBackStack,
-            //
         )
     }
 }

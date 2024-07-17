@@ -34,7 +34,6 @@ internal fun Keysign(
             factory.create(viewModel)
         }
     )
-
     val keysignViewModel = wrapperViewModel.viewModel
     KeysignScreen(
         state = keysignViewModel.currentState.collectAsState().value,
