@@ -56,25 +56,27 @@ internal class AccountsRepositoryImpl @Inject constructor(
         val loadPrices = supervisorScope {
             async { tokenPriceRepository.refresh(vaultCoins) }
         }
-
         addresses.apply {
             val balances = balanceRepository.getCachedTokenBalances(
-                addresses.map { adr -> adr.address},
-                addresses.map { adr -> adr.accounts.map { it.token }}.flatten())
+                addresses.map { adr -> adr.address },
+                addresses.map { adr -> adr.accounts.map { it.token } }.flatten()
+            )
+
             mapIndexed { index, account ->
                 val newAccounts = account.accounts.map { acc ->
-                    acc.applyBalance(
-                        balances.first {
-                            it.address == account.address &&  it.coinId == acc.token.id
-                        }.tokenBalance
-                    )
+                    val balance = balances.firstOrNull() {
+                        it.address == account.address && it.coinId == acc.token.id
+                    }
+                    if (balance != null) {
+                        acc.applyBalance(balance.tokenBalance)
+                    } else {
+                        acc
+                    }
                 }
                 addresses[index] = account.copy(accounts = newAccounts)
             }
         }
-
         send(addresses)
-
         coroutineScope {
             addresses.mapIndexed { index, account ->
                 async {
@@ -85,8 +87,9 @@ internal class AccountsRepositoryImpl @Inject constructor(
                         val newAccounts = supervisorScope {
                             account.accounts.map {
                                 async {
-                                    val balance = balanceRepository.getTokenBalance(address, it.token)
-                                        .first()
+                                    val balance =
+                                        balanceRepository.getTokenBalance(address, it.token)
+                                            .first()
 
                                     it.applyBalance(balance)
                                 }
