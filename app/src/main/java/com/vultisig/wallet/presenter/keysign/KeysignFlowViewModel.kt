@@ -7,10 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
@@ -109,7 +106,6 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
     val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.LOCAL)
-    private var isKeygenStarted = mutableStateOf(false)
 
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -434,8 +430,6 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     suspend fun startKeysign() {
-        if (isKeygenStarted.value)
-            return
         withContext(Dispatchers.IO) {
             try {
                 val keygenCommittee = selection.value ?: emptyList()
@@ -449,12 +443,10 @@ internal class KeysignFlowViewModel @Inject constructor(
                     } else {
                         Timber.e("Fail to start keysign: Response code: ${response.code}")
 
-                        isKeygenStarted.value = false
                     }
                 }
             } catch (e: Exception) {
                 Timber.e("Failed to start keysign: ${e.stackTraceToString()}")
-                isKeygenStarted.value = false
             }
         }
     }

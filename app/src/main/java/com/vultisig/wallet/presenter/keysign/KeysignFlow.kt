@@ -29,6 +29,9 @@ fun KeysignFlowView(
         // information is not available, go back
         viewModel.moveToState(KeysignFlowState.ERROR)
     }
+    var isKeygenStarted by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     when (viewModel.currentState.value) {
         KeysignFlowState.PEER_DISCOVERY -> {
@@ -44,7 +47,10 @@ fun KeysignFlowView(
                 // TODO this breaks the navigation, and introduces issue with multiple
                 //   keysignViewModels being created
                 // viewModel.resetQrAddress()
+                if (isKeygenStarted)
+                    return@LaunchedEffect
                 viewModel.startKeysign()
+                isKeygenStarted = true
             }
 
             Keysign(
