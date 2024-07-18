@@ -306,6 +306,10 @@
     <string name="onboard_intro4_title" translatable="false">Collaboration</string>
     <string name="onboard_intro4_desc" translatable="false">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
+    <string name="share_vault_qr_title" translatable="false">Share Vault QR</string>
+    <string name="share_vault_qr_save_or_share" translatable="false">Save or Share</string>
+    <string name="share_vault_qr_card_title" translatable="false">Main Vault</string>
+    <string name="share_vault_qr_card_keys" translatable="false">ECDSA Key: %s\nEdDSA Key: %s</string>
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
     <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>
     <string name="deposit_form_provider_hint" translatable="false">Provider</string>

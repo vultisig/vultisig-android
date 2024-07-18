@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
+import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
@@ -394,6 +395,16 @@ internal fun SetupNavGraph(
             )
         ) {
             BackupSuggestionScreen()
+        }
+        composable(
+            route = Destination.ShareVaultQr.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            )
+        ) {
+            ShareVaultQrScreen(
+                navController = navController
+            )
         }
     }
 }

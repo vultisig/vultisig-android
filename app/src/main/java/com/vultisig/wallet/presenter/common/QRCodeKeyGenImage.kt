@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -73,6 +74,8 @@ internal fun QRCodeKeyGenImage(
 @Composable
 internal fun rememberQRBitmapPainter(
     qrCodeContent: String,
+    mainColor: Color = Theme.colors.neutral900,
+    backgroundColor: Color = Theme.colors.neutral0,
 ): BitmapPainter {
     var bitmap by remember(qrCodeContent) {
         mutableStateOf<Bitmap?>(null)
@@ -83,7 +86,7 @@ internal fun rememberQRBitmapPainter(
 
         launch(Dispatchers.IO) {
             bitmap = try {
-                generateQrBitmap(qrCodeContent)
+                generateQrBitmap(qrCodeContent, mainColor, backgroundColor)
             } catch (ex: WriterException) {
                 null
             }
@@ -107,6 +110,8 @@ internal fun rememberQRBitmapPainter(
 }
  internal fun generateQrBitmap(
     qrCodeContent: String,
+    mainColor: Color = Color.Black,
+    backgroundColor: Color = Color.White,
 ): Bitmap {
     val hintMap = mapOf(EncodeHintType.MARGIN to 0)
 
@@ -132,7 +137,7 @@ internal fun rememberQRBitmapPainter(
         for (y in 0 until matrixHeight) {
             val shouldColorPixel = bitmapMatrix?.get(x, y) ?: false
             val pixelColor =
-                if (shouldColorPixel) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+                if (shouldColorPixel) mainColor.toArgb() else backgroundColor.toArgb()
 
             bitmap.setPixel(x, y, pixelColor)
         }

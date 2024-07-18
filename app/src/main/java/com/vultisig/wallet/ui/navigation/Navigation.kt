@@ -259,6 +259,14 @@ internal sealed class Destination(
         }
     }
 
+    data class ShareVaultQr(val vaultId: String) :
+        Destination(route = "share_vault_qr/$vaultId") {
+        companion object {
+            const val ARG_VAULT_ID = "vault_id"
+            const val staticRoute = "share_vault_qr/{$ARG_VAULT_ID}"
+        }
+    }
+
     data object CreateNewVault : Destination(
         route = "create_new_vault"
     )
