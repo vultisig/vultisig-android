@@ -299,13 +299,20 @@ internal fun SetupNavGraph(
             val args = requireNotNull(entry.arguments)
 
             val savedStateHandle = entry.savedStateHandle
-
+            val currentSrc =
+                savedStateHandle.get<String?>(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID)
+            val currentDst =
+                savedStateHandle.get<String?>(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID)
             SwapScreen(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
-                selectedSrcTokenId = savedStateHandle.get(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID),
-                selectedDstTokenId = savedStateHandle.get(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID),
+                selectedSrcTokenId = currentSrc,
+                selectedDstTokenId = currentDst,
+                onFlipTokenIds = {
+                    savedStateHandle[Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID] = currentDst
+                    savedStateHandle[Destination.Swap.ARG_SELECTED_DST_TOKEN_ID] = currentSrc
+                },
             )
         }
 
