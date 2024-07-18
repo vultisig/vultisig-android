@@ -4,6 +4,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -23,17 +24,13 @@ fun KeysignFlowView(
     onComplete: () -> Unit,
 ) {
     val viewModel: KeysignFlowViewModel = hiltViewModel()
-    val context = LocalContext.current.applicationContext
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     if (sharedViewModel.vault == null || sharedViewModel.keysignPayload == null) {
         // information is not available, go back
         viewModel.moveToState(KeysignFlowState.ERROR)
     }
-    var isKeygenStarted by rememberSaveable {
-        mutableStateOf(false)
-    }
 
-    when (viewModel.currentState.value) {
+    when (viewModel.currentState.collectAsState().value) {
         KeysignFlowState.PEER_DISCOVERY -> {
             KeysignPeerDiscovery(
                 sharedViewModel.vault!!,
@@ -43,16 +40,6 @@ fun KeysignFlowView(
         }
 
         KeysignFlowState.KEYSIGN -> {
-            LaunchedEffect(key1 = Unit) {
-                // TODO this breaks the navigation, and introduces issue with multiple
-                //   keysignViewModels being created
-                // viewModel.resetQrAddress()
-                if (isKeygenStarted)
-                    return@LaunchedEffect
-                viewModel.startKeysign()
-                isKeygenStarted = true
-            }
-
             Keysign(
                 viewModel = viewModel.keysignViewModel,
                 onComplete = onComplete,

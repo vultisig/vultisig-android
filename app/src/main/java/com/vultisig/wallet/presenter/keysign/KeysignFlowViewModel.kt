@@ -10,6 +10,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
@@ -41,6 +42,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -94,8 +98,8 @@ internal class KeysignFlowViewModel @Inject constructor(
     private var _currentVault: Vault? = null
     private var _keysignPayload: KeysignPayload? = null
     private val _keysignMessage: MutableState<String> = mutableStateOf("")
-    var currentState: MutableState<KeysignFlowState> =
-        mutableStateOf(KeysignFlowState.PEER_DISCOVERY)
+    var currentState: MutableStateFlow<KeysignFlowState> =
+        MutableStateFlow(KeysignFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
     val selection = MutableLiveData<List<String>>()
     val localPartyID: String?
@@ -127,6 +131,18 @@ internal class KeysignFlowViewModel @Inject constructor(
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
         )
+
+    init {
+        viewModelScope.launch {
+            currentState.collect { state ->
+                if (state == KeysignFlowState.KEYSIGN) {
+                    // TODO this breaks the navigation, and introduces issue with multiple
+                    //   keysignViewModels being created
+                    startKeysign()
+                }
+            }
+        }
+    }
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
         _currentVault = vault
@@ -396,7 +412,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     fun moveToState(nextState: KeysignFlowState) {
-        currentState.value = nextState
+        currentState.update { nextState }
     }
 
     fun stopParticipantDiscovery() {
@@ -429,7 +445,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
-    suspend fun startKeysign() {
+    private suspend fun startKeysign() {
         withContext(Dispatchers.IO) {
             try {
                 val keygenCommittee = selection.value ?: emptyList()
