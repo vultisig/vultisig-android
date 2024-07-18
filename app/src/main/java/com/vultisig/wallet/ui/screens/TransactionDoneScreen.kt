@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -51,9 +52,10 @@ internal fun TransactionDoneView(
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
-    isThorSwap : Boolean = false,
+    isThorChainSwap : Boolean = false,
 ) {
     val uriHandler = LocalUriHandler.current
+    val context= LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -103,12 +105,17 @@ internal fun TransactionDoneView(
                     color = Theme.colors.turquoise800,
                     style = Theme.menlo.subtitle3,
                 )
-                if (isThorSwap) {
+                if (isThorChainSwap) {
                     Text(
                         modifier = Modifier
                             .align(Alignment.End)
                             .clickOnce {
-                                uriHandler.openUri("https://track.ninerealms.com/$transactionHash")
+                                uriHandler.openUri(
+                                    context.getString(
+                                        R.string.transaction_done_track_ninerealms,
+                                        transactionHash
+                                    )
+                                )
                             },
                         text = stringResource(R.string.transaction_done_swap_progress),
                         color = Theme.colors.neutral0,

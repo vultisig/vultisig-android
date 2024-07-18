@@ -43,7 +43,7 @@ internal fun Keysign(
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
         onComplete = onComplete,
-        isThorSwap = viewModel.isThorSwap,
+        isThorChainSwap = viewModel.isThorChainSwap,
     )
 }
 
@@ -54,7 +54,7 @@ internal fun KeysignScreen(
     transactionLink: String,
     errorMessage: String,
     onComplete: () -> Unit,
-    isThorSwap: Boolean = false,
+    isThorChainSwap: Boolean = false,
 ) {
     KeepScreenOn()
     val text = when (state) {
@@ -77,7 +77,7 @@ internal fun KeysignScreen(
                 transactionHash = txHash,
                 transactionLink = transactionLink,
                 onComplete = onComplete,
-                isThorSwap = isThorSwap,
+                isThorChainSwap = isThorChainSwap,
             )
         } else {
             UiSpacer(weight = 1f)

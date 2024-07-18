@@ -314,4 +314,5 @@
     <string name="deposit_form_custom_memo_title" translatable="false">Custom memo</string>
     <string name="naming_vault_screen_vault_placeholder" translatable="false">Main Vault</string>
     <string name="transaction_done_swap_progress" translatable="false">Swap Progress</string>
+    <string name="transaction_done_track_ninerealms" translatable="false">https://track.ninerealms.com/%1$s</string>
 </resources>
