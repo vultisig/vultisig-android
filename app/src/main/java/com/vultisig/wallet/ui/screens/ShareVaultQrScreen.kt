@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,12 +14,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -30,7 +34,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.rememberQRBitmapPainter
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
@@ -43,10 +46,24 @@ internal fun ShareVaultQrScreen(
     viewModel: ShareVaultQrViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+
+    val context = LocalContext.current
+    val mainColor = Theme.colors.neutral0
+    val backgroundColor = Theme.colors.transparent
+
+    LaunchedEffect(state.shareVaultQrString) {
+        viewModel.loadLogoIcon(mainColor = mainColor,
+            backgroundColor = backgroundColor,
+            logo = BitmapFactory.decodeResource(
+                context.resources,
+                R.drawable.ic_qr_vultisig
+            ))
+    }
     ShareVaultQrScreen(
         navController = navController,
         ecdsa = state.shareVaultQrModel.public_key_ecdsa,
         eddsa = state.shareVaultQrModel.public_key_eddsa,
+        qrBitmapPainter = state.qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
         onButtonClicked = {
             viewModel.onSaveOrShareClicked()
@@ -59,11 +76,10 @@ internal fun ShareVaultQrScreen(
     navController: NavController,
     ecdsa: String,
     eddsa: String,
+    qrBitmapPainter: BitmapPainter,
     shareVaultQrString: String?,
     onButtonClicked: () -> Unit,
 ) {
-    val context = LocalContext.current
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -121,15 +137,7 @@ internal fun ShareVaultQrScreen(
                         ) {}
                     }else{
                         Image(
-                            painter = rememberQRBitmapPainter(
-                                qrCodeContent = shareVaultQrString,
-                                mainColor = Theme.colors.neutral0,
-                                backgroundColor = Theme.colors.transparent,
-                                logo = BitmapFactory.decodeResource(
-                                    context.resources,
-                                    R.drawable.ic_qr_vultisig
-                                )
-                            ),
+                            painter = qrBitmapPainter,
                             contentDescription = "qr",
                             contentScale = ContentScale.FillWidth,
                             modifier = Modifier
@@ -168,6 +176,7 @@ internal fun ShareVaultQrScreenPreview() {
         ecdsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
         eddsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
         shareVaultQrString = "placeholder",
+        qrBitmapPainter = BitmapPainter(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()),
         onButtonClicked = {},
     )
 }
