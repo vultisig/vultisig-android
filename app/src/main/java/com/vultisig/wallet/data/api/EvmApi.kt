@@ -6,6 +6,7 @@ import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toKeccak256
+import com.vultisig.wallet.data.models.CustomTokenResponse
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
@@ -54,7 +55,7 @@ internal interface EvmApi {
     suspend fun getMaxPriorityFeePerGas(): BigInteger
     suspend fun getNonce(address: String): BigInteger
     suspend fun getGasPrice(): BigInteger
-    suspend fun findCustomToken(contractAddress: String): List<RpcResponse>
+    suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse>
 }
 
 internal interface EvmApiFactory {
@@ -285,7 +286,7 @@ internal class EvmApiImp(
         return jsonObject.get("result").asString
     }
 
-    override suspend fun findCustomToken(contractAddress: String): List<RpcResponse> {
+    override suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse> {
         val (payload1, payload2) = generateCustomTokenPayload(contractAddress)
         return try {
             val response = httpClient.post(getRPCEndpoint()) {
@@ -297,7 +298,12 @@ internal class EvmApiImp(
                 responseContent,
                 object : TypeToken<List<RpcResponse>>() {}.type
             )
-            responseList
+            responseList.map {
+                CustomTokenResponse(
+                    id = it.id,
+                    result = it.result,
+                )
+            }
         } catch (e: Exception) {
             emptyList()
         }

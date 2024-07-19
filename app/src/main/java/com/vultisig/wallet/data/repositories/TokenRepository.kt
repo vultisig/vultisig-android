@@ -96,12 +96,13 @@ internal class TokenRepositoryImpl @Inject constructor(
         var ticker = ""
         var decimal = 0
         rpcResponses.forEach {
-            if (it.error != null) {
+            if (it.result == null) {
                 return null
             }
-            if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID) ticker = it.result!!.decodeContractString() ?: return null
+            if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
+                ticker = it.result.decodeContractString() ?: return null
             else decimal =
-                it.result!!.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
+                it.result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
         }
         val coin = Coin(
             chain = chain,
