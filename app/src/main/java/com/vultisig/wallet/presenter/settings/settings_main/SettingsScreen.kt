@@ -103,6 +103,13 @@ fun SettingsScreen(navController: NavHostController) {
             }
 
             AppSettingItem(
+                logo = R.drawable.ic_bookmark,
+                title = stringResource(R.string.address_book_settings_title),
+            ) {
+                viewModel.navigateTo(Destination.AddressBook())
+            }
+
+            AppSettingItem(
                 R.drawable.settings_coin,
                 stringResource(R.string.settings_screen_default_chains)
             ) {

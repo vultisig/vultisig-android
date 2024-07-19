@@ -101,3 +101,19 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
         )
     }
 }
+
+
+internal val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `address_book_entry` (
+                `chainId` TEXT NOT NULL,
+                `address` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                PRIMARY KEY(`chainId`, `address`)
+            )
+       """.trimIndent()
+        )
+    }
+}
