@@ -321,23 +321,13 @@ internal class SwapFormViewModel @Inject constructor(
         }
     }
 
-    fun flipSelectedTokens(savedStateHandle: SavedStateHandle?) {
+    fun flipSelectedTokens(onFlipTokenValues: () -> Unit) {
         val buffer = selectedSrc.value
         selectedSrc.value = selectedDst.value
         selectedDst.value = buffer
-        savedStateHandle?.updateValues()
+        onFlipTokenValues()
     }
 
-    private fun SavedStateHandle.updateValues() {
-        set(
-            Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID,
-            selectedSrc.value?.account?.token?.id
-        )
-        set(
-            Destination.Swap.ARG_SELECTED_DST_TOKEN_ID,
-            selectedDst.value?.account?.token?.id
-        )
-    }
 
     fun loadData(
         selectedSrcTokenId: String? = null,

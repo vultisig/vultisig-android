@@ -52,7 +52,7 @@ internal fun SwapFormScreen(
     selectedSrcTokenId: String? = null,
     selectedDstTokenId: String? = null,
     viewModel: SwapFormViewModel = hiltViewModel(),
-    mainNavController: NavController,
+    onFlipTokenIds: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -68,8 +68,7 @@ internal fun SwapFormScreen(
         onSelectSrcToken = viewModel::selectSrcToken,
         onSelectDstToken = viewModel::selectDstToken,
         onFlipSelectedTokens = {
-            val savedStateHandle = mainNavController.currentBackStackEntry?.savedStateHandle
-            viewModel.flipSelectedTokens(savedStateHandle)
+            viewModel.flipSelectedTokens(onFlipTokenIds)
         },
     )
 }
