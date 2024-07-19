@@ -8,14 +8,10 @@ import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.proto.v1.ThorChainSwapPayloadProto
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.THORChainSwapPayload
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import java.math.BigDecimal
@@ -23,24 +19,18 @@ import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface KeysignPayloadProtoMapper :
-    SuspendMapperFunc<KeysignPayloadProto, KeysignPayload>
+    MapperFunc<KeysignPayloadProto, KeysignPayload>
 
-internal class KeysignPayloadProtoMapperImpl @Inject constructor(
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val vaultRepository: VaultRepository,
-    private val tokenRepository: TokenRepository,
-) : KeysignPayloadProtoMapper {
+internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayloadProtoMapper {
 
-    override suspend fun invoke(from: KeysignPayloadProto): KeysignPayload {
-        val vault = requireNotNull(vaultRepository.getByEcdsa(from.vaultPublicKeyEcdsa))
-
+    override fun invoke(from: KeysignPayloadProto): KeysignPayload {
         return KeysignPayload(
             vaultLocalPartyID = from.vaultLocalPartyId,
             vaultPublicKeyECDSA = from.vaultPublicKeyEcdsa,
             toAddress = from.toAddress,
             toAmount = BigInteger(from.toAmount),
             memo = from.memo,
-            coin = requireNotNull(from.coin).toCoin(vault),
+            coin = requireNotNull(from.coin).toCoin(),
             utxos = from.utxoInfo
                 .asSequence()
                 .filterNotNull()
@@ -62,8 +52,8 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor(
                 from.oneinchSwapPayload != null -> from.oneinchSwapPayload.let {
                     SwapPayload.OneInch(
                         OneInchSwapPayloadJson(
-                            fromCoin = requireNotNull(it.fromCoin).toCoin(vault),
-                            toCoin = requireNotNull(it.toCoin).toCoin(vault),
+                            fromCoin = requireNotNull(it.fromCoin).toCoin(),
+                            toCoin = requireNotNull(it.toCoin).toCoin(),
                             fromAmount = BigInteger(it.fromAmount),
                             toAmountDecimal = BigDecimal(it.toAmountDecimal),
                             quote = requireNotNull(it.quote).let {
@@ -87,13 +77,13 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor(
 
                 from.thorchainSwapPayload != null -> from.thorchainSwapPayload.let {
                     SwapPayload.ThorChain(
-                        it.toThorChainSwapPayload(vault)
+                        it.toThorChainSwapPayload()
                     )
                 }
 
                 from.mayachainSwapPayload != null -> from.mayachainSwapPayload.let {
                     SwapPayload.MayaChain(
-                        it.toThorChainSwapPayload(vault)
+                        it.toThorChainSwapPayload()
                     )
                 }
 
@@ -170,39 +160,23 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor(
         )
     }
 
-    private suspend fun CoinProto.toCoin(vault: Vault): Coin {
-        val chain = Chain.fromRaw(chain)
+    private fun CoinProto.toCoin(): Coin = Coin(
+        chain = Chain.fromRaw(chain),
+        ticker = ticker,
+        address = address,
+        contractAddress = contractAddress,
+        hexPublicKey = hexPublicKey,
+        decimal = decimals,
+        priceProviderID = priceProviderId,
+        logo = logo,
+        isNativeToken = isNativeToken,
+    )
 
-        val (address, derivedPublicKey) = chainAccountAddressRepository
-            .getAddress(chain, vault)
-
-        val coin = Coin(
-            chain = chain,
-            ticker = ticker,
-            address = address,
-            contractAddress = contractAddress,
-            hexPublicKey = derivedPublicKey,
-            decimal = 0,
-            priceProviderID = "",
-            logo = "",
-            isNativeToken = false,
-        )
-
-        val token = tokenRepository.getToken(coin.id)
-
-        return coin.copy(
-            decimal = token?.decimal ?: 0,
-            logo = token?.logo ?: "",
-            priceProviderID = token?.priceProviderID ?: "",
-            isNativeToken = token?.isNativeToken ?: false,
-        )
-    }
-
-    private suspend fun ThorChainSwapPayloadProto.toThorChainSwapPayload(vault: Vault) =
+    private fun ThorChainSwapPayloadProto.toThorChainSwapPayload() =
         THORChainSwapPayload(
             fromAddress = fromAddress,
-            fromCoin = requireNotNull(fromCoin).toCoin(vault),
-            toCoin = requireNotNull(toCoin).toCoin(vault),
+            fromCoin = requireNotNull(fromCoin).toCoin(),
+            toCoin = requireNotNull(toCoin).toCoin(),
             vaultAddress = vaultAddress,
             routerAddress = routerAddress,
             fromAmount = BigInteger(fromAmount),

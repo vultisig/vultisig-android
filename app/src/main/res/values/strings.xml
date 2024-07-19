@@ -258,6 +258,9 @@
 
 
     <!-- TODO needs translation-->
+    <string name="join_keysign_wrong_vault" translatable="false">Wrong vault</string>
+    <string name="join_keygen_wrong_reshare" translatable="false">Wrong ReShare</string>
+    <string name="join_keysign_wrong_reshare" translatable="false">Wrong ReShare</string>
     <string name="swap_screen_provider_title" translatable="false">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
@@ -315,4 +318,6 @@
     <string name="deposit_message_deposit_title" translatable="false">%s message deposit</string>
     <string name="deposit_form_custom_memo_title" translatable="false">Custom memo</string>
     <string name="naming_vault_screen_vault_placeholder" translatable="false">Main Vault</string>
+    <string name="transaction_done_swap_progress" translatable="false">Swap Progress</string>
+    <string name="transaction_done_track_ninerealms" translatable="false">https://track.ninerealms.com/%1$s</string>
 </resources>
