@@ -29,11 +29,7 @@ fun KeysignFlowView(
         // information is not available, go back
         viewModel.moveToState(KeysignFlowState.ERROR)
     }
-
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-        }
-    }
+    
     when (viewModel.currentState.collectAsState().value) {
         KeysignFlowState.PEER_DISCOVERY -> {
             KeysignPeerDiscovery(
