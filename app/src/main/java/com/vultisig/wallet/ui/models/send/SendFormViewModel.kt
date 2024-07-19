@@ -13,6 +13,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.TokenStandard
@@ -24,6 +25,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.models.AllowZeroGas
@@ -105,6 +107,7 @@ internal class SendFormViewModel @Inject constructor(
     private val gasFeeRepository: GasFeeRepository,
     private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -204,6 +207,16 @@ internal class SendFormViewModel @Inject constructor(
     fun scanAddress() {
         viewModelScope.launch {
             navigator.navigate(Destination.ScanQr)
+        }
+    }
+
+    fun openAddressBook()  {
+        viewModelScope.launch {
+            navigator.navigate(Destination.AddressBook(
+                requestId = REQUEST_ADDRESS_ID,
+            ))
+            val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
+            setOutputAddress(address.address)
         }
     }
 
@@ -540,6 +553,10 @@ internal class SendFormViewModel @Inject constructor(
             return UiText.StringResource(R.string.send_error_no_amount)
         }
         return null
+    }
+
+    companion object {
+        private const val REQUEST_ADDRESS_ID = "request_address_id"
     }
 
 }

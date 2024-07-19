@@ -47,6 +47,8 @@ import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
+import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
+import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -282,6 +284,24 @@ internal fun SetupNavGraph(
             )
         ) {
             ScanQrAndJoin(navController = navController)
+        }
+
+        composable(
+            route = Destination.AddressBook.staticRoute,
+            arguments = listOf(
+                navArgument(Destination.ARG_REQUEST_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
+            AddressBookScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.AddAddressEntry.staticRoute,
+        ) {
+            AddAddressEntryScreen(navController = navController)
         }
 
         composable(

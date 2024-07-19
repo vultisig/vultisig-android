@@ -315,4 +315,13 @@
     <string name="naming_vault_screen_vault_placeholder" translatable="false">Main Vault</string>
     <string name="transaction_done_swap_progress" translatable="false">Swap Progress</string>
     <string name="transaction_done_track_ninerealms" translatable="false">https://track.ninerealms.com/%1$s</string>
+    <string name="address_book_toolbar_title" translatable="false">Address Book</string>
+    <string name="address_book_settings_title" translatable="false">Address Book</string>
+    <string name="address_book_edit_mode_done" translatable="false">Done</string>
+    <string name="address_book_add_address_button" translatable="false">Add Address</string>
+    <string name="add_address_title" translatable="false">Add Address</string>
+    <string name="add_address_save_address_button" translatable="false">Save Address</string>
+    <string name="add_address_title_title" translatable="false">Title</string>
+    <string name="add_address_address_title" translatable="false">Address</string>
+    <string name="add_address_type_hint" translatable="false">Type here</string>
 </resources>
