@@ -1,7 +1,9 @@
 package com.vultisig.wallet.ui.screens
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -30,14 +32,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.saveBitmapToDownloadsDir
+import com.vultisig.wallet.common.saveBitmapToDownloadsDirAtLeastQ
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
 
 
 @Composable
@@ -51,6 +57,9 @@ internal fun ShareVaultQrScreen(
     val mainColor = Theme.colors.neutral0
     val backgroundColor = Theme.colors.transparent
 
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+        WriteFilePermissionHandler(viewModel.permissionFlow, viewModel::onPermissionResult)
+
     LaunchedEffect(state.shareVaultQrString) {
         viewModel.loadLogoIcon(mainColor = mainColor,
             backgroundColor = backgroundColor,
@@ -59,6 +68,7 @@ internal fun ShareVaultQrScreen(
                 R.drawable.ic_qr_vultisig
             ))
     }
+
     ShareVaultQrScreen(
         navController = navController,
         ecdsa = state.shareVaultQrModel.public_key_ecdsa,
@@ -66,7 +76,23 @@ internal fun ShareVaultQrScreen(
         qrBitmapPainter = state.qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
         onButtonClicked = {
-            viewModel.onSaveOrShareClicked()
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.saveBitmapToDownloadsDirAtLeastQ(
+                    requireNotNull(state.toShareBitmap),
+                    requireNotNull(state.fileName),
+                )
+            } else {
+                saveBitmapToDownloadsDir(
+                    requireNotNull(state.toShareBitmap),
+                    requireNotNull(state.fileName),
+                    )
+            }
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.putExtra(Intent.EXTRA_STREAM, uri)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.setType("image/png")
+            val shareIntent = Intent.createChooser(intent, null)
+            context.startActivity(shareIntent)
         },
     )
 }

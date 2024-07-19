@@ -285,6 +285,7 @@
     <string name="import_file_screen_ok" translatable="false">OK</string>
     <string name="import_file_screen_cancel" translatable="false">Cancel</string>
     <string name="backup_password_screen_permission_required" translatable="false">File permission is required for backup operations.</string>
+    <string name="share_qr_screen_permission_required" translatable="false">File permission is required for share operations.</string>
     <string name="token_selection_selected_tokens_title" translatable="false">Selected</string>
     <string name="token_selection_tokens_title" translatable="false">Tokens</string>
     <string name="token_selection_search_hint" translatable="false">Search...</string>

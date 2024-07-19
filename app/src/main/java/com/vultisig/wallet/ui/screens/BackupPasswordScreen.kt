@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -44,7 +45,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
     val focusManager = LocalFocusManager.current
 
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
-        WriteFilePermissionHandler(viewModel)
+        WriteFilePermissionHandler(viewModel.permissionFlow, viewModel::onPermissionResult)
 
     Scaffold(
         bottomBar = {
@@ -155,20 +156,6 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                         }
                     })
             }
-        }
-    }
-}
-
-@Composable
-private fun WriteFilePermissionHandler(viewModel: BackupPasswordViewModel) {
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        viewModel::onPermissionResult
-    )
-
-    LaunchedEffect(Unit) {
-        viewModel.permissionFlow.collectLatest {
-            requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
 }
