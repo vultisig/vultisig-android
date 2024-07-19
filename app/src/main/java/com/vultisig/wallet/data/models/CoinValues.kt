@@ -9,6 +9,12 @@ internal data class TokenBalance(
     val fiatValue: FiatValue?,
 )
 
+internal data class TokenBalanceWrapped(
+    val tokenBalance: TokenBalance,
+    val address: String,
+    val coinId: String,
+)
+
 internal data class TokenValue(
     val value: BigInteger,
     val unit: String,

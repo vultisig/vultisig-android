@@ -23,6 +23,11 @@ internal interface TokenPriceRepository {
         appCurrency: AppCurrency,
     ): BigDecimal?
 
+    suspend fun getCachedPrices(
+        tokenIds: List<String>,
+        appCurrency: AppCurrency,
+    ): List<Pair<String, BigDecimal>>
+
     fun getPrice(
         token: Coin,
         appCurrency: AppCurrency,
@@ -49,6 +54,13 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     ): BigDecimal? = tokenPriceDao
         .getTokenPrice(tokenId, appCurrency.ticker.lowercase())
         ?.let { BigDecimal(it) }
+
+    override suspend fun getCachedPrices(
+        tokenIds: List<String>,
+        appCurrency: AppCurrency
+    ): List<Pair<String, BigDecimal>> = tokenPriceDao
+        .getTokenPrices(tokenIds, appCurrency.ticker.lowercase())
+        .map { it.tokenId to BigDecimal(it.price) }
 
     @ExperimentalCoroutinesApi
     override fun getPrice(

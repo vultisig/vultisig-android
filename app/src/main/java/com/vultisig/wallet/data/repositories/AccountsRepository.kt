@@ -53,42 +53,43 @@ internal class AccountsRepositoryImpl @Inject constructor(
             chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
         }
 
-        send(addresses)
-
         val loadPrices = supervisorScope {
             async { tokenPriceRepository.refresh(vaultCoins) }
         }
+        addresses.apply {
+            val balances = balanceRepository.getCachedTokenBalances(
+                addresses.map { adr -> adr.address },
+                addresses.map { adr -> adr.accounts.map { it.token } }.flatten()
+            )
 
+            mapIndexed { index, account ->
+                val newAccounts = account.accounts.map { acc ->
+                    val balance = balances.firstOrNull() {
+                        it.address == account.address && it.coinId == acc.token.id
+                    }
+                    if (balance != null) {
+                        acc.applyBalance(balance.tokenBalance)
+                    } else {
+                        acc
+                    }
+                }
+                addresses[index] = account.copy(accounts = newAccounts)
+            }
+        }
+        send(addresses)
         coroutineScope {
             addresses.mapIndexed { index, account ->
                 async {
-                    val address = account.address
-
-                    val cachedAccounts = coroutineScope {
-                        account.accounts.map { acc ->
-                            async {
-                                val balance = balanceRepository.getCachedTokenBalance(
-                                    address,
-                                    acc.token,
-                                )
-
-                                acc.applyBalance(balance)
-                            }
-                        }.awaitAll()
-                    }
-
-                    addresses[index] = account.copy(accounts = cachedAccounts)
-
-                    send(addresses)
-
                     try {
+                        val address = account.address
                         loadPrices.await()
 
                         val newAccounts = supervisorScope {
                             account.accounts.map {
                                 async {
-                                    val balance = balanceRepository.getTokenBalance(address, it.token)
-                                        .first()
+                                    val balance =
+                                        balanceRepository.getTokenBalance(address, it.token)
+                                            .first()
 
                                     it.applyBalance(balance)
                                 }
@@ -97,13 +98,13 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
                         addresses[index] = account.copy(accounts = newAccounts)
 
-                        send(addresses)
                     } catch (e: Exception) {
                         Timber.e(e)
                         // ignore
                     }
                 }
             }.awaitAll()
+            send(addresses)
         }
         awaitClose()
     }
