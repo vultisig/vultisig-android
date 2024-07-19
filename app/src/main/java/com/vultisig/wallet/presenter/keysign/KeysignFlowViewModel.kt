@@ -136,8 +136,6 @@ internal class KeysignFlowViewModel @Inject constructor(
         viewModelScope.launch {
             currentState.collect { state ->
                 if (state == KeysignFlowState.KEYSIGN) {
-                    // TODO this breaks the navigation, and introduces issue with multiple
-                    //   keysignViewModels being created
                     startKeysign()
                 }
             }
