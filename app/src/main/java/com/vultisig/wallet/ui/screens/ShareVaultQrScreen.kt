@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens
 
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +62,8 @@ internal fun ShareVaultQrScreen(
     shareVaultQrString: String?,
     onButtonClicked: () -> Unit,
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -121,6 +125,10 @@ internal fun ShareVaultQrScreen(
                                 qrCodeContent = shareVaultQrString,
                                 mainColor = Theme.colors.neutral0,
                                 backgroundColor = Theme.colors.transparent,
+                                logo = BitmapFactory.decodeResource(
+                                    context.resources,
+                                    R.drawable.ic_qr_vultisig
+                                )
                             ),
                             contentDescription = "qr",
                             contentScale = ContentScale.FillWidth,
