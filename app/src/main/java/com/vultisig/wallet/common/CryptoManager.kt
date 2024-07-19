@@ -1,6 +1,5 @@
 package com.vultisig.wallet.common
 
-import android.util.Base64
 import timber.log.Timber
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -14,8 +13,8 @@ import kotlin.text.Charsets.UTF_8
 
 
 internal interface CryptoManager {
-    fun encrypt(plainText: String, password: String): String?
-    fun decrypt(data: String, password: String): String?
+    fun encrypt(data: ByteArray, password: String): ByteArray?
+    fun decrypt(data: ByteArray, password: String): ByteArray?
 }
 
 
@@ -26,9 +25,8 @@ internal class AESCryptoManager @Inject constructor() : CryptoManager {
     private val algorithm = "AES"
 
 
-    override fun encrypt(plainText: String, password: String): String? {
+    override fun encrypt(data: ByteArray, password: String): ByteArray? {
         try {
-            val data = plainText.toByteArray(UTF_8)
             val keyBytes = messageDigest.digest(password.toByteArray(UTF_8))
             val keySpec = SecretKeySpec(
                 keyBytes,
@@ -47,10 +45,7 @@ internal class AESCryptoManager @Inject constructor() : CryptoManager {
             )
             val encryptedData = cipher.doFinal(data)
             val combined = iv + encryptedData
-            return Base64.encodeToString(
-                combined,
-                Base64.DEFAULT
-            )
+            return combined
         } catch (e: Exception) {
             Timber.e(
                 e,
@@ -61,24 +56,20 @@ internal class AESCryptoManager @Inject constructor() : CryptoManager {
     }
 
 
-    override fun decrypt(data: String, password: String): String? {
+    override fun decrypt(data: ByteArray, password: String): ByteArray? {
         try {
             val keyBytes = messageDigest.digest(password.toByteArray(UTF_8))
             val keySpec = SecretKeySpec(
                 keyBytes,
                 algorithm
             )
-            val cipherData = Base64.decode(
-                data,
-                Base64.DEFAULT
-            )
-            val iv = cipherData.copyOfRange(
+            val iv = data.copyOfRange(
                 0,
                 12
             )
-            val encryptedData = cipherData.copyOfRange(
+            val encryptedData = data.copyOfRange(
                 12,
-                cipherData.size
+                data.size
             )
             cipher.init(
                 Cipher.DECRYPT_MODE,
@@ -88,34 +79,30 @@ internal class AESCryptoManager @Inject constructor() : CryptoManager {
                     iv
                 )
             )
-            return cipher.doFinal(encryptedData).buildString()
+            return cipher.doFinal(encryptedData)
         } catch (e: Exception) {
             Timber.e(
                 e,
                 "switch to old version decryption"
             )
             return decryptOldVersion(
-                data = data.toByteArray(),
+                data = data,
                 password = password
             )
         }
     }
 
 
-    private fun decryptOldVersion(data: ByteArray, password: String): String? {
+    private fun decryptOldVersion(data: ByteArray, password: String): ByteArray? {
         try {
-            val textToDecrypt = Base64.decode(
-                data,
-                android.util.Base64.DEFAULT
-            )
             val oldCipher = Cipher.getInstance("AES/CBC/PKCS7PADDING")
             oldCipher.init(
                 Cipher.DECRYPT_MODE,
                 generateKey(password),
                 IvParameterSpec(ByteArray(16))
             )
-            val cipherText = oldCipher.doFinal(textToDecrypt)
-            return cipherText.buildString()
+            val cipherText = oldCipher.doFinal(data)
+            return cipherText
         } catch (e: BadPaddingException) {
             Timber.e(
                 e,

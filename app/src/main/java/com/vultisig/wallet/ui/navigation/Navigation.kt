@@ -13,6 +13,7 @@ internal sealed class Destination(
     companion object {
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
+        const val ARG_TOKEN_ID = "token_id"
         const val ARG_QR = "qr"
     }
 
@@ -29,6 +30,19 @@ internal sealed class Destination(
         companion object {
             const val staticRoute =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
+        }
+    }
+
+    data class TokenDetail(
+        val vaultId: String,
+        val chainId: String,
+        val tokenId: String,
+    ) : Destination(
+        route = "vault_detail/${vaultId}/account/${chainId}/${tokenId}"
+    ) {
+        companion object {
+            const val staticRoute =
+                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/{$ARG_TOKEN_ID}"
         }
     }
 

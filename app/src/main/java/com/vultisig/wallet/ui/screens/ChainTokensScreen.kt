@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,6 +83,7 @@ internal fun ChainTokensScreen(
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
         onSelectTokens = viewModel::selectTokens,
+        onTokenClick = viewModel::openToken,
     )
 }
 
@@ -94,6 +96,7 @@ private fun ChainTokensScreen(
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
+    onTokenClick: (ChainTokenUiModel) -> Unit = {},
 ) {
     val appColor = Theme.colors
     val buyVltiButtonVisible = false
@@ -238,6 +241,7 @@ private fun ChainTokensScreen(
                                     fiatBalance = token.fiatBalance,
                                     tokenLogo = token.tokenLogo,
                                     chainLogo = token.chainLogo,
+                                    onClick = { onTokenClick(token) },
                                 )
                             }
                         }
@@ -346,12 +350,13 @@ private fun ChainAccountInfo(
 }
 
 @Composable
-private fun CoinItem(
+internal fun CoinItem(
     title: String,
     balance: String?,
     fiatBalance: String?,
     tokenLogo: ImageModel,
-    @DrawableRes chainLogo: Int,
+    @DrawableRes chainLogo: Int?,
+    onClick: () -> Unit = {},
 ) {
     val appColor = Theme.colors
 
@@ -360,6 +365,7 @@ private fun CoinItem(
             .padding(
                 vertical = 12.dp
             )
+            .clickable(onClick = onClick)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -375,7 +381,7 @@ private fun CoinItem(
                 )
                 chainLogo.takeIf { it != tokenLogo }?.let {
                     Image(
-                        painter =  painterResource(id = it),
+                        painter = painterResource(id = it),
                         contentDescription = null,
                         modifier = Modifier
                             .size(12.dp)

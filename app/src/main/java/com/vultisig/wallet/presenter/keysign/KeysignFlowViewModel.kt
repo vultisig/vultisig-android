@@ -300,7 +300,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         Timber.d("keysignProto: $keysignProto")
 
         _keysignMessage.value =
-            "vultisig://vultisig.com?type=SignTransaction&vault=${vault.pubKeyECDSA}&jsonData=" +
+            "vultisig://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" +
                     keysignProto.zipZlibAndBase64Encode()
         addressProvider.update(_keysignMessage.value)
         if (!vultisigRelay.IsRelayEnabled) {
@@ -454,6 +454,11 @@ internal class KeysignFlowViewModel @Inject constructor(
         ticker = ticker,
         address = address,
         contractAddress = contractAddress,
+        decimals = decimal,
+        priceProviderId = priceProviderID,
+        isNativeToken = isNativeToken,
+        hexPublicKey = hexPublicKey,
+        logo = logo,
     )
 
 }
