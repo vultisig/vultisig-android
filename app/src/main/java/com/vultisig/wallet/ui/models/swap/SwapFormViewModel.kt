@@ -146,11 +146,10 @@ internal class SwapFormViewModel @Inject constructor(
                 ?.movePointRight(selectedSrc.account.token.decimal)
                 ?.toBigInteger()
 
-            val balance =
-                selectedSrc.let(accountToTokenBalanceUiModelMapper::map).balance?.toBigDecimal()
-                    ?.movePointRight(
-                        selectedSrc.account.token.decimal
-                    )?.toBigInteger() ?: return
+            val selectedSrcBalance = selectedSrc.account.tokenValue?.decimal
+                ?.movePointRight(
+                    selectedSrc.account.token.decimal
+                )?.toBigInteger() ?: return
 
             val srcTokenValue = srcAmountInt
                 ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
@@ -158,7 +157,7 @@ internal class SwapFormViewModel @Inject constructor(
 
 
             if (srcToken.isNativeToken) {
-                if (srcAmountInt + gasFee.value > balance) {
+                if (srcAmountInt + gasFee.value > selectedSrcBalance) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
@@ -170,7 +169,7 @@ internal class SwapFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_token)
                     )
 
-                if (balance < srcAmountInt
+                if (selectedSrcBalance < srcAmountInt
                     || nativeTokenValue < gasFee.value
                 ) {
                     throw InvalidTransactionDataException(
@@ -420,7 +419,7 @@ internal class SwapFormViewModel @Inject constructor(
     private fun collectSelectedAccounts() {
         viewModelScope.launch {
             combine(
-                selectedSrc,//
+                selectedSrc,
                 selectedDst,
             ) { src, dst ->
                 val srcUiModel = src?.let(accountToTokenBalanceUiModelMapper::map)
@@ -640,7 +639,7 @@ internal class SwapFormViewModel @Inject constructor(
         return null
     }
 
-    fun onDismissError() {
+    fun hideError() {
         uiState.update {
             it.copy(error = null)
         }
