@@ -65,7 +65,7 @@ internal fun SwapFormScreen(
         onAmountLostFocus = viewModel::validateAmount,
         onSwap = viewModel::swap,
         onSelectSrcToken = viewModel::selectSrcToken,
-        onDismissError = viewModel::onDismissError,
+        onDismissError = viewModel::hideError,
         onSelectDstToken = viewModel::selectDstToken,
         onFlipSelectedTokens = viewModel::flipSelectedTokens,
     )
