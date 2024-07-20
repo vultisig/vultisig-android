@@ -7,6 +7,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -86,22 +87,6 @@ internal class JoinKeygenViewModel @Inject constructor(
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
     var errorMessage: MutableState<String> = mutableStateOf("")
-    val generatingKeyViewModel: GeneratingKeyViewModel
-        get() = GeneratingKeyViewModel(
-            _vault,
-            _action,
-            _keygenCommittee,
-            _oldCommittee.filter { _keygenCommittee.contains(it) },
-            _serverAddress,
-            _sessionID,
-            _encryptionKeyHex,
-            gson = gson,
-            oldResharePrefix = _oldResharePrefix,
-            navigator = navigator,
-            saveVault = saveVault,
-            lastOpenedVaultRepository = lastOpenedVaultRepository,
-            vaultDataStoreRepository = vaultDataStoreRepository,
-        )
 
     @OptIn(ExperimentalEncodingApi::class)
     fun setScanResult(qrBase64: String) {

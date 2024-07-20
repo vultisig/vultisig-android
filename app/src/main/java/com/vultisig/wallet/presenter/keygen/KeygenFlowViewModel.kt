@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -119,22 +120,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     val localPartyID: String
         get() = vault.localPartyID
 
-    val generatingKeyViewModel: GeneratingKeyViewModel
-        get() = GeneratingKeyViewModel(
-            vault,
-            this.action,
-            uiState.value.selection,
-            vault.signers.filter { uiState.value.selection.contains(it) },
-            serverAddress,
-            sessionID,
-            _encryptionKeyHex,
-            _oldResharePrefix,
-            gson,
-            navigator = navigator,
-            saveVault = saveVault,
-            lastOpenedVaultRepository = lastOpenedVaultRepository,
-            vaultDataStoreRepository = vaultDataStoreRepository,
-        )
 
     init {
         viewModelScope.launch {
