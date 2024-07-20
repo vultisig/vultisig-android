@@ -146,10 +146,7 @@ internal class SwapFormViewModel @Inject constructor(
                 ?.movePointRight(selectedSrc.account.token.decimal)
                 ?.toBigInteger()
 
-            val selectedSrcBalance = selectedSrc.account.tokenValue?.decimal
-                ?.movePointRight(
-                    selectedSrc.account.token.decimal
-                )?.toBigInteger() ?: return
+            val selectedSrcBalance = selectedSrc.account.tokenValue?.value ?: return
 
             val srcTokenValue = srcAmountInt
                 ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
