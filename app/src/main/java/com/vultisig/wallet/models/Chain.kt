@@ -45,8 +45,13 @@ internal enum class Chain(
         get() = raw
 
     companion object {
-        fun fromRaw(raw: String): Chain =
-            Chain.entries.first { it.raw == raw }
+        fun fromRaw(raw: String): Chain {
+            val formattedRaw = raw.replace(
+                "-",
+                " "
+            )
+            return Chain.entries.first { it.raw == formattedRaw }
+        }
     }
 }
 
