@@ -89,7 +89,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 approvePayload = if (transaction.isApprovalRequired)
                     ERC20ApprovePayload(
                         amount = SwapTransaction.maxAllowance,
-                        spender = transaction.dstAddress.replace("bitcoincash:", ""),
+                        spender = transaction.dstAddress,
                     )
                 else null,
                 memo = null,

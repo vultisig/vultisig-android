@@ -133,6 +133,7 @@ internal class SwapFormViewModel @Inject constructor(
 
             val srcToken = selectedSrc.account.token
             val dstToken =selectedDst.account.token
+
             if (srcToken == dstToken) {
                 throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.swap_screen_same_asset_error_message)
