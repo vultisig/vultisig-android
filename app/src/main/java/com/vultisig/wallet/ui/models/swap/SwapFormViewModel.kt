@@ -132,7 +132,7 @@ internal class SwapFormViewModel @Inject constructor(
             val gasFee = gasFee.value ?: return
 
             val srcToken = selectedSrc.account.token
-            val dstToken =selectedDst.account.token
+            val dstToken = selectedDst.account.token
 
             if (srcToken == dstToken) {
                 throw InvalidTransactionDataException(
