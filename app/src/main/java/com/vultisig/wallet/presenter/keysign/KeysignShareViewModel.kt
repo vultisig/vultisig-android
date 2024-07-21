@@ -1,13 +1,15 @@
 package com.vultisig.wallet.presenter.keysign
 
 import androidx.lifecycle.ViewModel
-import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.Vault
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,12 +67,19 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
 
+            var swapPayload: SwapPayload = transaction.payload
+            var dstToken = swapPayload.dstToken
+            if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.bitcoinCash) {
+                dstToken = dstToken.adjustBitcoinCashAddressFormat()
+                swapPayload = swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
+            }
+
             keysignPayload = KeysignPayload(
                 coin = srcToken,
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.srcTokenValue.value,
                 blockChainSpecific = specific.blockChainSpecific,
-                swapPayload = transaction.payload,
+                swapPayload = swapPayload,
                 vaultPublicKeyECDSA = pubKeyECDSA,
                 utxos = specific.utxos,
                 vaultLocalPartyID = vault.localPartyID,
@@ -84,6 +93,12 @@ internal class KeysignShareViewModel @Inject constructor(
             )
         }
     }
+    private fun Coin.adjustBitcoinCashAddressFormat() = copy(
+        address = address.replace(
+            "bitcoincash:",
+            ""
+        )
+    )
 
     fun loadDepositTransaction(transactionId: TransactionId) {
         runBlocking {
