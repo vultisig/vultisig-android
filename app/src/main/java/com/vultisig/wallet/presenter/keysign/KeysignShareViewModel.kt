@@ -1,13 +1,15 @@
 package com.vultisig.wallet.presenter.keysign
 
 import androidx.lifecycle.ViewModel
-import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.Vault
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,25 +67,44 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
 
+            var swapPayload: SwapPayload = transaction.payload
+            var dstToken = swapPayload.dstToken
+            if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.bitcoinCash) {
+                dstToken = adjustBitcoinCashAddressFormat(
+                    dstToken,
+                    swapPayload
+                )
+                swapPayload = swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
+            }
+
             keysignPayload = KeysignPayload(
                 coin = srcToken,
                 toAddress = transaction.dstAddress,
                 toAmount = transaction.srcTokenValue.value,
                 blockChainSpecific = specific.blockChainSpecific,
-                swapPayload = transaction.payload,
+                swapPayload = swapPayload,
                 vaultPublicKeyECDSA = pubKeyECDSA,
                 utxos = specific.utxos,
                 vaultLocalPartyID = vault.localPartyID,
                 approvePayload = if (transaction.isApprovalRequired)
                     ERC20ApprovePayload(
                         amount = SwapTransaction.maxAllowance,
-                        spender = transaction.dstAddress,
+                        spender = transaction.dstAddress.replace("bitcoincash:", ""),
                     )
                 else null,
                 memo = null,
             )
         }
     }
+    private fun adjustBitcoinCashAddressFormat(
+        dstToken: Coin,
+        swapPayload: SwapPayload
+    ) = dstToken.copy(
+        address = swapPayload.dstToken.address.replace(
+            "bitcoincash:",
+            ""
+        )
+    )
 
     fun loadDepositTransaction(transactionId: TransactionId) {
         runBlocking {

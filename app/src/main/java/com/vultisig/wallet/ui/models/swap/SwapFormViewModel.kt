@@ -132,11 +132,7 @@ internal class SwapFormViewModel @Inject constructor(
             val gasFee = gasFee.value ?: return
 
             val srcToken = selectedSrc.account.token
-            val dstToken =
-                selectedDst.account.token.copy(
-                    address = selectedDst.address.address.replace("bitcoincash:", "")
-                )
-
+            val dstToken =selectedDst.account.token
             if (srcToken == dstToken) {
                 throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.swap_screen_same_asset_error_message)
