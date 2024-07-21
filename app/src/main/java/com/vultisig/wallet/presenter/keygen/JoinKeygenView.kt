@@ -38,7 +38,6 @@ internal fun JoinKeygenView(
     viewModel: JoinKeygenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val generatingKeyViewModel: GeneratingKeyViewModel = hiltViewModel()
 
     LaunchedEffect(qrCodeResult) {
         viewModel.setScanResult(qrCodeResult)
@@ -75,7 +74,7 @@ internal fun JoinKeygenView(
         }
 
         JoinKeygenState.Keygen -> {
-            GeneratingKey(navController = navController, generatingKeyViewModel)
+            GeneratingKey(navController = navController, viewModel.generatingKeyViewModel)
         }
 
         JoinKeygenState.FailedToStart -> {

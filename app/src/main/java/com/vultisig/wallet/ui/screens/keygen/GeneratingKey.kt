@@ -56,6 +56,12 @@ internal fun GeneratingKey(
         viewModel.generateKey()
     }
 
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            viewModel.stopService(context)
+        }
+    }
+
     val state = viewModel.currentState.value
 
     when (state) {

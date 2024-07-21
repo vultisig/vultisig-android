@@ -177,12 +177,9 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_QR) { type = NavType.StringType }
             )
-        ) { entry ->
-            val qrCodeResult = entry.arguments?.getString(ARG_QR)!!
-
+        ) {
             JoinKeysignView(
                 navController = navController,
-                qrCodeResult = qrCodeResult,
             )
         }
 

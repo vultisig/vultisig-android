@@ -17,8 +17,6 @@ fun KeygenFlowView(
 ) {
     val viewModel: KeygenFlowViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState()
-    val generatingKeyViewModel: GeneratingKeyViewModel = hiltViewModel()
-
     when (uiState.value.currentState) {
         KeygenFlowState.PEER_DISCOVERY -> {
             KeygenPeerDiscovery(navController, vaultId, viewModel)
@@ -29,7 +27,7 @@ fun KeygenFlowView(
         }
 
         KeygenFlowState.KEYGEN -> {
-            GeneratingKey(navController, generatingKeyViewModel)
+            GeneratingKey(navController, viewModel.generatingKeyViewModel)
         }
 
         KeygenFlowState.ERROR -> {

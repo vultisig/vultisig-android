@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -19,24 +18,20 @@ import com.vultisig.wallet.tss.TssMessenger
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
-import java.util.UUID
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 enum class KeygenState {
     CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
 }
 
-@HiltViewModel
-internal class GeneratingKeyViewModel  @Inject constructor(
+internal class GeneratingKeyViewModel(
+    private val vault: Vault,
     private val action: TssAction,
     private val keygenCommittee: List<String>,
     private val oldCommittee: List<String>,
@@ -50,11 +45,7 @@ internal class GeneratingKeyViewModel  @Inject constructor(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
-    @ApplicationContext private val context: Context,
-) : ViewModel() {
-    var vault: Vault? = null
-
-
+) {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
@@ -220,9 +211,5 @@ internal class GeneratingKeyViewModel  @Inject constructor(
         context.stopService(intent)
         Timber.d("stop MediatorService: Mediator service stopped")
 
-    }
-    override fun onCleared() {
-        stopService(context)
-        super.onCleared()
     }
 }
