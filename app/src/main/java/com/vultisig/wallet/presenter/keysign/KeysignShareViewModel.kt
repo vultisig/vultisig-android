@@ -70,10 +70,7 @@ internal class KeysignShareViewModel @Inject constructor(
             var swapPayload: SwapPayload = transaction.payload
             var dstToken = swapPayload.dstToken
             if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.bitcoinCash) {
-                dstToken = adjustBitcoinCashAddressFormat(
-                    dstToken,
-                    swapPayload
-                )
+                dstToken = dstToken.adjustBitcoinCashAddressFormat()
                 swapPayload = swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
             }
 
@@ -96,11 +93,8 @@ internal class KeysignShareViewModel @Inject constructor(
             )
         }
     }
-    private fun adjustBitcoinCashAddressFormat(
-        dstToken: Coin,
-        swapPayload: SwapPayload
-    ) = dstToken.copy(
-        address = swapPayload.dstToken.address.replace(
+    private fun Coin.adjustBitcoinCashAddressFormat() = copy(
+        address = address.replace(
             "bitcoincash:",
             ""
         )
