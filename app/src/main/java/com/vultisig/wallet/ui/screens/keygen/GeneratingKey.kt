@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.keygen
 
-import android.content.Context
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -18,18 +17,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -41,6 +38,7 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.UiCircularProgressIndicator
+import com.vultisig.wallet.ui.models.GeneratingKeyWrapperViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import kotlin.math.min
 
@@ -50,41 +48,17 @@ internal fun GeneratingKey(
     viewModel: GeneratingKeyViewModel,
 ) {
     KeepScreenOn()
-    val context: Context = LocalContext.current.applicationContext
-    LaunchedEffect(key1 = Unit) {
-        // kick it off to generate key
-        viewModel.generateKey()
-    }
-
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-            viewModel.stopService(context)
-        }
-    }
-
-    val state = viewModel.currentState.value
-
-    when (state) {
-        KeygenState.ERROR -> {
-            LaunchedEffect(key1 = viewModel) {
-                // stop the service , restart it when user need it
-                viewModel.stopService(context)
+    val wrapperViewModel =
+        hiltViewModel(
+            creationCallback = { factory: GeneratingKeyWrapperViewModel.Factory ->
+                factory.create(viewModel)
             }
-        }
-
-        KeygenState.Success -> {
-            LaunchedEffect(Unit) {
-                viewModel.saveVault(context)
-            }
-        }
-
-        else -> Unit
-    }
+        )
 
     GeneratingKey(
         navController = navController,
-        keygenState = viewModel.currentState.value,
-        errorMessage = viewModel.errorMessage.value,
+        keygenState = wrapperViewModel.viewModel.currentState.value,
+        errorMessage = wrapperViewModel.viewModel.errorMessage.value,
     )
 }
 
