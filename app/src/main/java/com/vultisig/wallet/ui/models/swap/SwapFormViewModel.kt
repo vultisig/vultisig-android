@@ -328,7 +328,6 @@ internal class SwapFormViewModel @Inject constructor(
         onFlipTokenValues()
     }
 
-
     fun loadData(
         selectedSrcTokenId: String? = null,
         selectedDstTokenId: String? = null,
