@@ -9,10 +9,15 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
 import androidx.annotation.RequiresApi
+import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.IOException
+
+const val DIRECTORY_NAME = "Vultisig"
+const val QRCODE_DIRECTORY_NAME = "QRCodes"
+const val BACKUPS_DIRECTORY_NAME = "Backups"
 
 
 @RequiresApi(Build.VERSION_CODES.Q)
@@ -20,7 +25,10 @@ internal fun Context.backupVaultToDownloadsDirAtLeastQ(json: String, backupFileN
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, backupFileName)
         put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
-        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            Environment.DIRECTORY_DOWNLOADS + "/$DIRECTORY_NAME/$BACKUPS_DIRECTORY_NAME"
+        )
     }
 
     val resolver = contentResolver
@@ -43,10 +51,17 @@ internal fun Context.backupVaultToDownloadsDirAtLeastQ(json: String, backupFileN
 
 internal fun backupVaultToDownloadsDir(json: String, backupFileName: String): Boolean {
     if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
-        val downloadsDirectory =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val jsonFile = File(downloadsDirectory, backupFileName)
+        val downloadsDirectory = File(
+            Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            ).absolutePath + "/$DIRECTORY_NAME/$BACKUPS_DIRECTORY_NAME"
+        )
+
         try {
+            if (!downloadsDirectory.exists()) {
+                downloadsDirectory.mkdirs()
+            }
+            val jsonFile = File(downloadsDirectory, backupFileName)
             FileWriter(jsonFile).use { fileWriter ->
                 fileWriter.write(json)
                 return true
@@ -63,7 +78,10 @@ internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: 
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
         put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        put(
+            MediaStore.MediaColumns.RELATIVE_PATH,
+            Environment.DIRECTORY_DOWNLOADS + "/$DIRECTORY_NAME/$QRCODE_DIRECTORY_NAME"
+        )
     }
 
     val resolver = contentResolver
@@ -74,6 +92,7 @@ internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: 
         resolver.openOutputStream(downloadUri).use { bitmapStream ->
             if (bitmapStream != null) {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, bitmapStream)
+                bitmap.recycle()
                 downloadUri
             } else {
                 null
@@ -84,16 +103,25 @@ internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: 
     }
 }
 
-internal fun saveBitmapToDownloadsDir(bitmap: Bitmap, fileName: String): Uri? {
+internal fun Context.saveBitmapToDownloadsDir(bitmap: Bitmap, fileName: String): Uri? {
     if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
-        val downloadsDirectory =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val file = File(downloadsDirectory, fileName)
+        val downloadsDirectory = File(
+            Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            ).absolutePath + "/$DIRECTORY_NAME/$QRCODE_DIRECTORY_NAME"
+        )
         return try {
+            if (!downloadsDirectory.exists()) {
+                downloadsDirectory.mkdirs()
+            }
+            val file = File(downloadsDirectory, fileName)
             val stream = FileOutputStream(file)
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
             stream.close()
-            Uri.fromFile(file)
+            bitmap.recycle()
+            FileProvider.getUriForFile(
+                this, "$packageName.provider", file
+            )
         } catch (e: Exception) {
             null
         }

@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.screens
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,13 +34,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.saveBitmapToDownloadsDir
-import com.vultisig.wallet.common.saveBitmapToDownloadsDirAtLeastQ
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
@@ -57,16 +56,24 @@ internal fun ShareVaultQrScreen(
     val mainColor = Theme.colors.neutral0
     val backgroundColor = Theme.colors.transparent
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
-        WriteFilePermissionHandler(viewModel.permissionFlow, viewModel::onPermissionResult)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) WriteFilePermissionHandler(
+        viewModel.permissionFlow, viewModel::onPermissionResult
+    )
 
     LaunchedEffect(state.shareVaultQrString) {
-        viewModel.loadLogoIcon(mainColor = mainColor,
+        viewModel.loadQrCode(
+            mainColor = mainColor,
             backgroundColor = backgroundColor,
             logo = BitmapFactory.decodeResource(
-                context.resources,
-                R.drawable.ic_qr_vultisig
-            ))
+                context.resources, R.drawable.ic_qr_vultisig
+            )
+        )
+    }
+
+    LaunchedEffect(state.fileUri) {
+        state.fileUri?.let {
+            shareQr(it, context)
+        }
     }
 
     ShareVaultQrScreen(
@@ -76,23 +83,11 @@ internal fun ShareVaultQrScreen(
         qrBitmapPainter = state.qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
         onButtonClicked = {
-            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                context.saveBitmapToDownloadsDirAtLeastQ(
-                    requireNotNull(state.toShareBitmap),
-                    requireNotNull(state.fileName),
-                )
+            if (state.fileUri == null) {
+                viewModel.onSaveClicked()
             } else {
-                saveBitmapToDownloadsDir(
-                    requireNotNull(state.toShareBitmap),
-                    requireNotNull(state.fileName),
-                    )
+                shareQr(requireNotNull(state.fileUri), context)
             }
-            val intent = Intent(Intent.ACTION_SEND)
-            intent.putExtra(Intent.EXTRA_STREAM, uri)
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            intent.setType("image/png")
-            val shareIntent = Intent.createChooser(intent, null)
-            context.startActivity(shareIntent)
         },
     )
 }
@@ -153,7 +148,7 @@ internal fun ShareVaultQrScreen(
                         )
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                ){
+                ) {
                     if (shareVaultQrString == null) {
                         Box(
                             modifier = Modifier
@@ -161,7 +156,7 @@ internal fun ShareVaultQrScreen(
                                 .fillMaxWidth()
                                 .background(Theme.colors.neutral0),
                         ) {}
-                    }else{
+                    } else {
                         Image(
                             painter = qrBitmapPainter,
                             contentDescription = "qr",
@@ -180,8 +175,7 @@ internal fun ShareVaultQrScreen(
                         color = Theme.colors.neutral0,
                     )
                     Text(
-                        modifier = Modifier
-                            .padding( top = 16.dp, bottom = 32.dp),
+                        modifier = Modifier.padding(top = 16.dp, bottom = 32.dp),
                         text = stringResource(R.string.share_vault_qr_card_keys, ecdsa, eddsa),
                         style = Theme.montserrat.body1.copy(
                             fontSize = 10.sp,
@@ -194,6 +188,17 @@ internal fun ShareVaultQrScreen(
     }
 }
 
+private fun shareQr(
+    fileUri: Uri, context: Context
+) {
+    val intent = Intent(Intent.ACTION_SEND)
+    intent.putExtra(Intent.EXTRA_STREAM, fileUri)
+    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    intent.setType("image/png")
+    val shareIntent = Intent.createChooser(intent, null)
+    context.startActivity(shareIntent)
+}
+
 @Preview
 @Composable
 internal fun ShareVaultQrScreenPreview() {
@@ -202,7 +207,9 @@ internal fun ShareVaultQrScreenPreview() {
         ecdsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
         eddsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
         shareVaultQrString = "placeholder",
-        qrBitmapPainter = BitmapPainter(Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()),
+        qrBitmapPainter = BitmapPainter(
+            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
+        ),
         onButtonClicked = {},
     )
 }

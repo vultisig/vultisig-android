@@ -50,7 +50,7 @@
     <string name="chain_account_buy_vtx">BUY $VULT</string>
     <string name="save">Save</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
-    <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
+    <string name="vault_settings_success_backup_file">file saved in Downloads/Vultisig/Backups/%1$s</string>
     <string name="vault_edit_this_name_already_exist">this name already exist</string>
     <string name="send_screen_max">MAX</string>
     <string name="ok">OK</string>
@@ -308,7 +308,7 @@
     <string name="onboard_intro4_desc" translatable="false">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
     <string name="share_vault_qr_title" translatable="false">Share Vault QR</string>
-    <string name="share_vault_qr_save_or_share" translatable="false">Save or Share</string>
+    <string name="share_vault_qr_save_or_share" translatable="false">Save and Share</string>
     <string name="share_vault_qr_card_title" translatable="false">Main Vault</string>
     <string name="share_vault_qr_card_keys" translatable="false">ECDSA Key: %s\nEdDSA Key: %s</string>
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>

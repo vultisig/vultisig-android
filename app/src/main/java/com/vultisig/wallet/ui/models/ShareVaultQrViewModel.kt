@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -19,11 +21,12 @@ import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.buildString
+import com.vultisig.wallet.common.saveBitmapToDownloadsDir
+import com.vultisig.wallet.common.saveBitmapToDownloadsDirAtLeastQ
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.ShareVaultQrModel
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -38,13 +41,14 @@ import java.security.MessageDigest
 import javax.inject.Inject
 
 internal data class ShareVaultQrState(
-    val shareVaultQrModel: ShareVaultQrModel = ShareVaultQrModel("","","","",""),
+    val shareVaultQrModel: ShareVaultQrModel = ShareVaultQrModel("", "", "", "", ""),
     val shareVaultQrString: String? = null,
     val qrBitmapPainter: BitmapPainter = BitmapPainter(
         Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
     ),
     val toShareBitmap: Bitmap? = null,
     val fileName: String? = null,
+    val fileUri: Uri? = null,
 )
 
 @HiltViewModel
@@ -54,15 +58,14 @@ internal class ShareVaultQrViewModel @Inject constructor(
     private val snackbarFlow: SnackbarFlow,
     @ApplicationContext private val context: Context,
     private val gson: Gson,
-): ViewModel() {
+) : ViewModel() {
     private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
     val state = MutableStateFlow(ShareVaultQrState())
 
     private var hasWritePermission by mutableStateOf(
         ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            context, Manifest.permission.WRITE_EXTERNAL_STORAGE
         ) == PackageManager.PERMISSION_GRANTED
     )
 
@@ -73,8 +76,9 @@ internal class ShareVaultQrViewModel @Inject constructor(
         viewModelScope.launch {
             vaultRepository.get(requireNotNull(vaultId))?.let { vault ->
                 val messageDigest = MessageDigest.getInstance("SHA-256")
-                val uid = "${vault.name} - ${vault.pubKeyECDSA} - " +
-                        "${vault.pubKeyEDDSA} - ${vault.hexChainCode}"
+                val uid =
+                    "${vault.name} - ${vault.pubKeyECDSA} - " +
+                            "${vault.pubKeyEDDSA} - ${vault.hexChainCode}"
                 messageDigest.update(uid.toByteArray())
                 val uidEncoded = messageDigest.digest().buildString()
                 val shareVaultQrModel = ShareVaultQrModel(
@@ -98,21 +102,17 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
-    internal fun loadLogoIcon(
-        mainColor: Color,
-        backgroundColor: Color,
-        logo : Bitmap? = null
+    internal fun loadQrCode(
+        mainColor: Color, backgroundColor: Color, logo: Bitmap? = null
     ) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO){
+            withContext(Dispatchers.IO) {
                 val qrBitmap = generateBitmap(
-                    logo = logo,
-                    mainColor = mainColor,
-                    backgroundColor = backgroundColor)
+                    logo = logo, mainColor = mainColor, backgroundColor = backgroundColor
+                )
 
                 val bitmapPainter = BitmapPainter(
-                    qrBitmap.asImageBitmap(),
-                    filterQuality = FilterQuality.None
+                    qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
                 )
                 state.update {
                     it.copy(
@@ -122,9 +122,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         toShareBitmap = generateBitmap(
-                            logo = logo,
-                            mainColor = mainColor,
-                            backgroundColor = Color(0xff0D86BB)
+                            logo = logo, mainColor = mainColor, backgroundColor = Color(0xff0D86BB)
                         )
                     )
                 }
@@ -133,17 +131,12 @@ internal class ShareVaultQrViewModel @Inject constructor(
     }
 
     private fun generateBitmap(
-        logo: Bitmap?,
-        mainColor: Color,
-        backgroundColor: Color
+        logo: Bitmap?, mainColor: Color, backgroundColor: Color
     ): Bitmap {
         val qrBitmap = try {
             if (logo != null && state.value.shareVaultQrString != null) {
                 generateQrBitmap(
-                    requireNotNull(state.value.shareVaultQrString),
-                    mainColor,
-                    backgroundColor,
-                    logo
+                    requireNotNull(state.value.shareVaultQrString), mainColor, backgroundColor, logo
                 )
             } else null
         } catch (ex: WriterException) {
@@ -158,7 +151,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
         return qrBitmap
     }
 
-    fun onPermissionResult(isGranted: Boolean) {
+    internal fun onPermissionResult(isGranted: Boolean) {
         if (!isGranted) {
             viewModelScope.launch {
                 snackbarFlow.showMessage(
@@ -168,7 +161,24 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
-    fun onSaveOrShareClicked() {
-        // TODO: Implement onSaveOrShareClick
+    internal fun onSaveClicked() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                context.saveBitmapToDownloadsDirAtLeastQ(
+                    requireNotNull(state.value.toShareBitmap),
+                    requireNotNull(state.value.fileName),
+                )
+            } else {
+                context.saveBitmapToDownloadsDir(
+                    requireNotNull(state.value.toShareBitmap),
+                    requireNotNull(state.value.fileName),
+                )
+            }
+            state.update {
+                it.copy(
+                    fileUri = uri
+                )
+            }
+        }
     }
 }
