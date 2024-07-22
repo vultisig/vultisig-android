@@ -125,6 +125,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
+    private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveryingSessionID)
@@ -166,6 +167,10 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     val verifyUiModel =
         MutableStateFlow<VerifyUiModel>(VerifyUiModel.Send(VerifyTransactionUiModel()))
+
+    init {
+        setScanResult(qrBase64)
+    }
 
     @OptIn(ExperimentalEncodingApi::class)
     fun setScanResult(qrBase64: String) {
@@ -434,7 +439,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
     }
 
-    fun cleanUp() {
+    private fun cleanUp() {
         _jobWaitingForKeysignStart?.cancel()
     }
 
@@ -486,5 +491,10 @@ internal class JoinKeysignViewModel @Inject constructor(
             )
         }
         return false
+    }
+
+    override fun onCleared() {
+        cleanUp()
+        super.onCleared()
     }
 }
