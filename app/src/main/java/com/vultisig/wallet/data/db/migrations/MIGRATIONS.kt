@@ -117,3 +117,38 @@ internal val MIGRATION_6_7 = object : Migration(6, 7) {
         )
     }
 }
+
+
+internal val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.updateChainNameValue("Maya Chain", "MayaChain")
+        db.updateChainNameValue("Cronos Chain", "CronosChain")
+        db.updateChainNameValue("Bitcoin Cash", "Bitcoin-Cash")
+        db.updateChainNameValue("Gaia Chain", "Gaia")
+    }
+}
+
+private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: String) {
+    execSQL(
+        """
+            UPDATE coin SET
+                id = REPLACE(id, '$before', '$after'),
+                chain = REPLACE(chain, '$before', '$after')
+                WHERE id LIKE '%$before'
+            """.trimIndent()
+    )
+    execSQL(
+        """
+            UPDATE tokenPrice SET
+                tokenId = REPLACE(tokenId, '$before', '$after')
+                WHERE tokenId LIKE '%$before'
+            """.trimIndent()
+    )
+    execSQL(
+        """
+            UPDATE tokenValue SET
+                chain = REPLACE(chain, '$before', '$after')
+                WHERE chain LIKE '%$before'
+            """.trimIndent()
+    )
+}

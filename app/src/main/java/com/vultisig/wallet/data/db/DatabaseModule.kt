@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
 import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
 import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
 import com.vultisig.wallet.data.db.migrations.MIGRATION_6_7
+import com.vultisig.wallet.data.db.migrations.MIGRATION_7_8
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,7 +38,7 @@ internal interface DatabaseModule {
             )
                 .addMigrations(
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
-                    MIGRATION_5_6, MIGRATION_6_7,
+                    MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
                 )
                 .build()
 
