@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 
 internal open class Dst(
@@ -133,12 +134,13 @@ internal sealed class Destination(
     }
 
     data class AddressBook(
+        val chain: Chain? = null,
         val requestId: String? = null,
     ) : Destination(
-        route = "address_book?$ARG_REQUEST_ID=$requestId"
+        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
     ) {
         companion object {
-            const val staticRoute = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}"
+            const val staticRoute = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
         }
     }
 
