@@ -22,8 +22,6 @@ import com.google.zxing.WriterException
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.buildString
 import com.vultisig.wallet.common.saveBitmapToDownloads
-import com.vultisig.wallet.common.saveBitmapToDownloadsDirLegacy
-import com.vultisig.wallet.common.saveBitmapToDownloadsDirAtLeastQ
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.ShareVaultQrModel
 import com.vultisig.wallet.presenter.common.generateQrBitmap
