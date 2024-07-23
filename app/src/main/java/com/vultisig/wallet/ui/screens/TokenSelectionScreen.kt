@@ -35,6 +35,8 @@ import com.vultisig.wallet.ui.components.FormSearchBar
 import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiPlusButton
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel
