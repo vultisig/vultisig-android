@@ -36,7 +36,6 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
     private val customTokenRepository: CustomTokenRepository,
 ) : TokenRepository {
-
     override suspend fun getToken(tokenId: String): Coin? =
         allTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 

@@ -160,10 +160,7 @@ private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: St
     )
 }
 
-internal val MIGRATION_8_9 = object : Migration(
-    8,
-    9
-) {
+internal val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """

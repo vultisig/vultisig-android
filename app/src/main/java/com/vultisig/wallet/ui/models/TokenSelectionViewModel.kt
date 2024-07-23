@@ -89,10 +89,7 @@ internal class TokenSelectionViewModel @Inject constructor(
                 hexPublicKey = derivedPublicKey
             )
 
-            vaultRepository.addTokenToVault(
-                vaultId,
-                updatedCoin
-            )
+            vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
             enabledTokens.update { it + updatedCoin.id }
         }
@@ -100,10 +97,7 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun disableToken(coin: Coin) {
         viewModelScope.launch {
-            vaultRepository.deleteTokenFromVault(
-                vaultId,
-                coin.id
-            )
+            vaultRepository.deleteTokenFromVault(vaultId, coin.id)
             enabledTokens.update { it - coin.id }
         }
     }
