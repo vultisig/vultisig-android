@@ -26,7 +26,6 @@ import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssAction
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.presenter.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -57,15 +56,13 @@ enum class KeygenFlowState {
 }
 
 internal data class KeygenFlowUiModel(
+    val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
     val selection: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
     val keygenPayload: String = "",
     val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
     val vaultSetupType: VaultSetupType = VaultSetupType.TWO_OF_TWO,
 ) {
-
-
-
     val isContinueButtonEnabled =
         when (vaultSetupType) {
             VaultSetupType.TWO_OF_TWO -> {
@@ -97,9 +94,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val mapKeygenMessageToProto: KeygenMessageToProtoMapper,
     private val mapReshareMessageToProto: ReshareMessageToProtoMapper,
 ) : ViewModel() {
-
-    var currentState: MutableStateFlow<KeygenFlowState> =
-        MutableStateFlow(KeygenFlowState.PEER_DISCOVERY)
 
     val uiState = MutableStateFlow(
         KeygenFlowUiModel(
@@ -326,7 +320,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     fun moveToState(nextState: KeygenFlowState) {
         viewModelScope.launch {
             stopParticipantDiscovery()
-            currentState.update { nextState}
+            uiState.update { it.copy(currentState = nextState) }
         }
     }
 
