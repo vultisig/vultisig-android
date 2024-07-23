@@ -14,8 +14,10 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -42,6 +44,7 @@ internal data class TokenUiModel(
 @HiltViewModel
 internal class TokenSelectionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -92,6 +95,12 @@ internal class TokenSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             vaultRepository.deleteTokenFromVault(vaultId, coin.id)
             enabledTokens.update { it - coin.id }
+        }
+    }
+
+    fun navigateToCustomTokenScreen() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.CustomToken(chainId))
         }
     }
 

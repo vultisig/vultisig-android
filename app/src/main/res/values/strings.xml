@@ -303,6 +303,11 @@
     <string name="onboard_intro3_desc" translatable="false">Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets.</string>
     <string name="onboard_intro4_title" translatable="false">Collaboration</string>
     <string name="onboard_intro4_desc" translatable="false">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
+    <string name="token_selection_screen_custom_token" translatable="false">Custom Token</string>
+    <string name="custom_token_find_your_custom_token" translatable="false">Find Your Custom Token</string>
+    <string name="custom_token_enter_contract_address" translatable="false">Enter Contract Address</string>
+    <string name="custom_token_token_not_found" translatable="false">Token not found</string>
+    <string name="custom_token_add_token" translatable="false">Add %1$s Token</string>
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
     <string name="share_vault_qr_title" translatable="false">Share Vault QR</string>
     <string name="share_vault_qr_save_or_share" translatable="false">Save and Share</string>
