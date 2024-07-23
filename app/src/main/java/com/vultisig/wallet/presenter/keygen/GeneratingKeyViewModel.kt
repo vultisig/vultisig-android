@@ -4,6 +4,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
@@ -20,6 +23,8 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
@@ -40,19 +45,41 @@ internal class GeneratingKeyViewModel(
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
     private val gson: Gson,
-
+    private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
-) {
+) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
-    val currentState: MutableState<KeygenState> = mutableStateOf(KeygenState.CreatingInstance)
+    val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
     val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
+
+    init {
+        viewModelScope.launch {
+            collectCurrentState()
+        }
+    }
+
+    private suspend fun collectCurrentState() {
+        currentState.collect { state ->
+            when (state) {
+                KeygenState.ERROR -> {
+                    stopService(context.applicationContext)
+                }
+
+                KeygenState.Success -> {
+                    saveVault(context.applicationContext)
+                }
+
+                else -> Unit
+            }
+        }
+    }
 
     suspend fun generateKey() {
         currentState.value = KeygenState.CreatingInstance
