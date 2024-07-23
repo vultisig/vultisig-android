@@ -96,6 +96,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 chainContractAddresses[token.chain] = existingChain + token
             }
         }
+
         val pricesWithProviderIds = coinGeckoApi.getCryptoPrices(priceProviderIds, currencies)
             .asSequence()
             .mapNotNull { (priceProviderId, value) ->
