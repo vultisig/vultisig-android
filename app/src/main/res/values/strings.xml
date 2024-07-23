@@ -282,6 +282,7 @@
     <string name="import_file_screen_ok" translatable="false">OK</string>
     <string name="import_file_screen_cancel" translatable="false">Cancel</string>
     <string name="backup_password_screen_permission_required" translatable="false">File permission is required for backup operations.</string>
+    <string name="share_qr_screen_permission_required" translatable="false">File permission is required for share operations.</string>
     <string name="token_selection_selected_tokens_title" translatable="false">Selected</string>
     <string name="token_selection_tokens_title" translatable="false">Tokens</string>
     <string name="token_selection_search_hint" translatable="false">Search...</string>
@@ -303,6 +304,10 @@
     <string name="onboard_intro4_title" translatable="false">Collaboration</string>
     <string name="onboard_intro4_desc" translatable="false">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
+    <string name="share_vault_qr_title" translatable="false">Share Vault QR</string>
+    <string name="share_vault_qr_save_or_share" translatable="false">Save and Share</string>
+    <string name="share_vault_qr_card_title" translatable="false">Main Vault</string>
+    <string name="share_vault_qr_card_keys" translatable="false">ECDSA Key: %s\nEdDSA Key: %s</string>
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
     <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>
     <string name="deposit_form_provider_hint" translatable="false">Provider</string>
