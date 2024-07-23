@@ -29,7 +29,6 @@ internal data class VerifySwapUiModel(
     val srcTokenValue: String = "",
     val dstTokenValue: String = "",
     val estimatedFees: String = "",
-    val estimatedTime: UiText = UiText.Empty,
     val consentAmount: Boolean = false,
     val consentReceiveAmount: Boolean = false,
     val hasConsentAllowance: Boolean = false,
@@ -64,10 +63,6 @@ internal class VerifySwapViewModel @Inject constructor(
                 transaction.estimatedFees, currency
             )
 
-            val estimatedTime = transaction.estimatedTime?.let {
-                UiText.DynamicString(mapDurationToUiString(it))
-            } ?: R.string.swap_screen_estimated_time_instant.asUiText()
-
             val providerText = when (transaction.payload) {
                 is SwapPayload.OneInch -> R.string.swap_for_provider_1inch.asUiText()
                 is SwapPayload.ThorChain -> R.string.swap_form_provider_thorchain.asUiText()
@@ -84,7 +79,6 @@ internal class VerifySwapViewModel @Inject constructor(
                     hasConsentAllowance = transaction.isApprovalRequired,
                     consentAllowance = consentAllowance,
                     estimatedFees = fiatValueToStringMapper.map(fiatFees),
-                    estimatedTime = estimatedTime,
                 )
             }
         }

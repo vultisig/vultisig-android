@@ -184,14 +184,11 @@
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_src_amount_hint">Ingresar Cantidad</string>
     <string name="swap_form_estimated_fees_title">Tarifas estimadas</string>
-    <string name="swap_form_estimated_time_title">Hora prevista</string>
     <string name="swap_form_dst_token_title">A</string>
     <string name="swap_screen_title">Intercambiar</string>
     <string name="swap_form_gas_title">Gas (auto)</string>
     <string name="share_qr_utils_choose_an_app">Elige una aplicación</string>
-    <string name="swap_screen_estimated_time_instant">Instantánea</string>
     <string name="verify_swap_screen_estimated_fees">Tarifas estimadas</string>
-    <string name="verify_swap_screen_estimated_time">Hora prevista</string>
     <string name="verify_swap_agree_receive_amount">Estoy de acuerdo con la cantidad que recibiré después del intercambio.</string>
     <string name="verify_swap_consent_amount">El monto del intercambio es correcto</string>
     <string name="settings_screen_vault_settings">Configuración Cajas Fuertes</string>

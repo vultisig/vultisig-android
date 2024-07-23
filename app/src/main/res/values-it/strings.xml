@@ -183,13 +183,10 @@
     <string name="swap_form_invalid_amount">importo non valido</string>
     <string name="send_from_invalid_amount">importo non valido</string>
     <string name="send_error_insufficient_balance">Fondi insufficienti</string>
-    <string name="swap_screen_estimated_time_instant">Immediata</string>
     <string name="verify_swap_agree_receive_amount">Accetto l\'importo che riceverò dopo lo scambio</string>
     <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="failed_to_start_error">Impossibile avviare, errore: %1$s</string>
     <string name="joinkeysign_fail_to_start">Impossibile avviare, errore:</string>
-    <string name="swap_form_estimated_time_title">Tempo stimato</string>
-    <string name="verify_swap_screen_estimated_time">Tempo stimato</string>
     <string name="swap_form_estimated_fees_title">Tariffe stimate</string>
     <string name="verify_swap_screen_estimated_fees">Tariffe stimate</string>
     <string name="keysign_screen_error_please_try_again">Errore! Riprova. %1$s</string>
