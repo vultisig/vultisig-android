@@ -76,7 +76,8 @@ internal fun CustomTokenScreen(
         onAddTokenClick = {
             viewModel.convertCoinToString(onConvertCompleted = {
                 navController.previousBackStackEntry?.savedStateHandle?.set(
-                    Destination.CustomToken.ARG_CUSTOM_COIN, it
+                    Destination.CustomToken.ARG_CUSTOM_COIN,
+                    it
                 )
                 navController.popBackStack()
             })

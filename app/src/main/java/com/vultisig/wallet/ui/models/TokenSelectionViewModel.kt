@@ -89,7 +89,10 @@ internal class TokenSelectionViewModel @Inject constructor(
                 hexPublicKey = derivedPublicKey
             )
 
-            vaultRepository.addTokenToVault(vaultId, updatedCoin)
+            vaultRepository.addTokenToVault(
+                vaultId,
+                updatedCoin
+            )
 
             enabledTokens.update { it + updatedCoin.id }
         }
@@ -97,7 +100,10 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun disableToken(coin: Coin) {
         viewModelScope.launch {
-            vaultRepository.deleteTokenFromVault(vaultId, coin.id)
+            vaultRepository.deleteTokenFromVault(
+                vaultId,
+                coin.id
+            )
             enabledTokens.update { it - coin.id }
         }
     }
@@ -142,7 +148,12 @@ internal class TokenSelectionViewModel @Inject constructor(
         ) { enabled, selected, other, query ->
             val selectedUiTokens = selected.asUiTokens(enabled)
             val otherUiTokens = other.asUiTokens(enabled)
-                .filter { it.coin.ticker.contains(query, ignoreCase = true) }
+                .filter {
+                    it.coin.ticker.contains(
+                        query,
+                        ignoreCase = true
+                    )
+                }
 
             uiState.update {
                 it.copy(
@@ -167,7 +178,10 @@ internal class TokenSelectionViewModel @Inject constructor(
         if (coinString == null)
             return
         viewModelScope.launch {
-            gson.fromJson(coinString, Coin::class.java).apply {
+            gson.fromJson(
+                coinString,
+                Coin::class.java
+            ).apply {
                 if (enabledTokens.value.contains(id))
                     return@apply
                 enableToken(this)

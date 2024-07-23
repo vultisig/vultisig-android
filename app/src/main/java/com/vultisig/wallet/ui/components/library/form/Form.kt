@@ -66,7 +66,7 @@ internal fun FormTokenCard(
     selectedTitle: String,
     selectedIcon: ImageModel,
     availableToken: String,
-    chainLogo :Int?,
+    chainLogo: Int?,
     onClick: () -> Unit,
 ) {
     FormCard {

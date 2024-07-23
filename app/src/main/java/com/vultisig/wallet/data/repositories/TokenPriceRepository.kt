@@ -56,14 +56,20 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         tokenId: String,
         appCurrency: AppCurrency
     ): BigDecimal? = tokenPriceDao
-        .getTokenPrice(tokenId, appCurrency.ticker.lowercase())
+        .getTokenPrice(
+            tokenId,
+            appCurrency.ticker.lowercase()
+        )
         ?.let { BigDecimal(it) }
 
     override suspend fun getCachedPrices(
         tokenIds: List<String>,
         appCurrency: AppCurrency
     ): List<Pair<String, BigDecimal>> = tokenPriceDao
-        .getTokenPrices(tokenIds, appCurrency.ticker.lowercase())
+        .getTokenPrices(
+            tokenIds,
+            appCurrency.ticker.lowercase()
+        )
         .map { it.tokenId to BigDecimal(it.price) }
 
     @ExperimentalCoroutinesApi
@@ -97,7 +103,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             }
         }
 
-        val pricesWithProviderIds = coinGeckoApi.getCryptoPrices(priceProviderIds, currencies)
+        val pricesWithProviderIds = coinGeckoApi.getCryptoPrices(
+            priceProviderIds,
+            currencies
+        )
             .asSequence()
             .mapNotNull { (priceProviderId, value) ->
                 val tokenId = tokensByPriceProviderIds[priceProviderId]?.id
@@ -107,7 +116,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             }
             .toMap()
 
-        savePrices(pricesWithProviderIds, currency)
+        savePrices(
+            pricesWithProviderIds,
+            currency
+        )
 
         chainContractAddresses
             .map { (chain, tokens) ->
@@ -124,7 +136,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                     }
                     .toMap()
 
-                savePrices(pricesWithContractAddress, currency)
+                savePrices(
+                    pricesWithContractAddress,
+                    currency
+                )
             }
     }
 
