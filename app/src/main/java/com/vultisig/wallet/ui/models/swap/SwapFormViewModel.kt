@@ -71,7 +71,6 @@ internal data class SwapFormUiModel(
     val provider: UiText = UiText.Empty,
     val gas: String = "",
     val fee: String = "",
-    val estimatedTime: UiText = UiText.DynamicString(""),
     val error: UiText? = null,
 )
 
@@ -219,7 +218,6 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            estimatedTime = quote.estimatedTime,
                             isApprovalRequired = isApprovalRequired,
                             payload = SwapPayload.ThorChain(
                                 THORChainSwapPayload(
@@ -270,7 +268,6 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            estimatedTime = quote.estimatedTime,
                             isApprovalRequired = isApprovalRequired,
                             payload = SwapPayload.MayaChain(
                                 THORChainSwapPayload(
@@ -314,7 +311,6 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            estimatedTime = quote.estimatedTime,
                             isApprovalRequired = isApprovalRequired,
                             payload = SwapPayload.OneInch(
                                 OneInchSwapPayloadJson(
@@ -522,10 +518,6 @@ internal class SwapFormViewModel @Inject constructor(
                                 val fiatFees =
                                     convertTokenValueToFiat(dstToken, quote.fees, currency)
 
-                                val estimatedTime = quote.estimatedTime?.let {
-                                    UiText.DynamicString(mapDurationToUiString(it))
-                                } ?: R.string.swap_screen_estimated_time_instant.asUiText()
-
                                 val estimatedDstTokenValue = if (hasUserSetTokenValue) {
                                     mapTokenValueToDecimalUiString(
                                         quote.expectedDstValue
@@ -550,7 +542,6 @@ internal class SwapFormViewModel @Inject constructor(
                                             estimatedDstFiatValue
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
-                                        estimatedTime = estimatedTime,
                                     )
                                 }
                             }
@@ -584,15 +575,11 @@ internal class SwapFormViewModel @Inject constructor(
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
-                                    estimatedTime = null,
                                     data = quote
                                 )
 
                                 val fiatFees =
                                     convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
-
-                                val estimatedTime =
-                                    R.string.swap_screen_estimated_time_instant.asUiText()
 
                                 val estimatedDstTokenValue = if (hasUserSetTokenValue) {
                                     mapTokenValueToDecimalUiString(expectedDstValue)
@@ -612,7 +599,6 @@ internal class SwapFormViewModel @Inject constructor(
                                             estimatedDstFiatValue
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
-                                        estimatedTime = estimatedTime,
                                     )
                                 }
                             }

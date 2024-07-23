@@ -87,6 +87,14 @@ internal class HomeViewModel @Inject constructor(
         }
     }
 
+    fun shareVaultQr(){
+        viewModelScope.launch {
+            uiState.value.selectedVaultId?.let { vaultId ->
+                navigator.navigate(Destination.ShareVaultQr(vaultId))
+            }
+        }
+    }
+
     val isEditMode: Boolean
         get() {
             val state = uiState.value

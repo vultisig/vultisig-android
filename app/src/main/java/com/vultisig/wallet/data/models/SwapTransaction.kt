@@ -3,7 +3,6 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.models.Coin
 import java.math.BigInteger
-import kotlin.time.Duration
 
 internal data class SwapTransaction(
     val id: TransactionId,
@@ -15,7 +14,6 @@ internal data class SwapTransaction(
     val expectedDstTokenValue: TokenValue,
     val blockChainSpecific: BlockChainSpecificAndUtxo,
     val estimatedFees: TokenValue,
-    val estimatedTime: Duration?,
     val payload: SwapPayload,
     val isApprovalRequired: Boolean,
 ) {

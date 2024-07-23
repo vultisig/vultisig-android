@@ -192,11 +192,6 @@ internal fun SwapFormScreen(
                     title = stringResource(R.string.swap_form_estimated_fees_title),
                     value = state.fee
                 )
-
-                FormDetails(
-                    title = stringResource(R.string.swap_form_estimated_time_title),
-                    value = state.estimatedTime.asString()
-                )
             }
         }
 
