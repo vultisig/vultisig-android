@@ -104,7 +104,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
-            context = context
+            context = context,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
