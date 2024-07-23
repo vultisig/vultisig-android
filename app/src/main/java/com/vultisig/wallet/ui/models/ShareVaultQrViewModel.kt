@@ -56,14 +56,8 @@ internal class ShareVaultQrViewModel @Inject constructor(
 
     val state = MutableStateFlow(ShareVaultQrState())
 
-    private val toShareBitmap =
-        MutableStateFlow<Bitmap?>(null)
-    val qrBitmapPainter =
-        MutableStateFlow(
-            BitmapPainter(
-                Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
-            )
-        )
+    private val toShareBitmap = MutableStateFlow<Bitmap?>(null)
+    val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
 
 
     private var hasWritePermission by mutableStateOf(
@@ -78,7 +72,6 @@ internal class ShareVaultQrViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             vaultRepository.get(requireNotNull(vaultId))?.let { vault ->
-
                 val uid =
                     ("${vault.name} - ${vault.pubKeyECDSA} - " +
                             "${vault.pubKeyEDDSA} - ${vault.hexChainCode}").sha256()
@@ -122,6 +115,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 toShareBitmap.value = generateBitmap(
                     logo = logo, mainColor = mainColor, backgroundColor = shareBackgroundColor
                 )
+                logo?.recycle()
             }
         }
     }
@@ -159,6 +153,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 requireNotNull(toShareBitmap.value),
                 requireNotNull(state.value.fileName)
             )
+            toShareBitmap.value?.recycle()
             state.update {
                 it.copy(
                     fileUri = uri

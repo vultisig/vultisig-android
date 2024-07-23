@@ -18,13 +18,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
@@ -100,7 +100,7 @@ internal fun ShareVaultQrScreen(
     navController: NavController,
     ecdsa: String,
     eddsa: String,
-    qrBitmapPainter: BitmapPainter,
+    qrBitmapPainter: BitmapPainter?,
     shareVaultQrString: String?,
     onButtonClicked: () -> Unit,
 ) {
@@ -152,7 +152,7 @@ internal fun ShareVaultQrScreen(
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    if (shareVaultQrString == null) {
+                    if (shareVaultQrString == null || qrBitmapPainter == null) {
                         Box(
                             modifier = Modifier
                                 .padding(32.dp)
