@@ -5,7 +5,7 @@ import org.junit.Test
 internal class CryptoManagerTest {
 
     private val cryptoManager = AESCryptoManager()
-/*
+
     @Test
     fun encrypt() {
         val plainText = "aBcDe12345"
@@ -21,5 +21,5 @@ internal class CryptoManagerTest {
         val decText = "aBcDe12345"
         val assertedDec = cryptoManager.decrypt(encText, password) ?: ""
         assert(assertedDec == decText)
-    }*/
+    }
 }
