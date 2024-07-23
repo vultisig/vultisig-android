@@ -23,6 +23,7 @@ import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SELECTED_TOKEN_ID
@@ -33,10 +34,12 @@ import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
+import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
@@ -286,7 +289,11 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.AddressBook.staticRoute,
             arguments = listOf(
-                navArgument(Destination.ARG_REQUEST_ID) {
+                navArgument(ARG_REQUEST_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument(ARG_CHAIN_ID) {
                     type = NavType.StringType
                     nullable = true
                 }
@@ -411,6 +418,22 @@ internal fun SetupNavGraph(
             )
         ) {
             BackupSuggestionScreen()
+        }
+        composable(
+            route = Destination.ShareVaultQr.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            )
+        ) {
+            ShareVaultQrScreen(
+                navController = navController
+            )
+        }
+
+        composable(
+            route = Destination.CustomToken.STATIC_ROUTE,
+        ) {
+            CustomTokenScreen(navController)
         }
     }
 }

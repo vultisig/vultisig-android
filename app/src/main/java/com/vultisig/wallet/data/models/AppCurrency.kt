@@ -14,7 +14,15 @@ internal enum class AppCurrency(
 
     GPB(ticker = "GPB"),
 
-    JPY(ticker = "JPY");
+    JPY(ticker = "JPY"),
+
+    CNY(ticker = "CNY"),
+
+    CAD(ticker = "CAD"),
+
+    SGD(ticker = "SGD"),
+
+    SEK(ticker = "SEK");
 
     companion object {
 

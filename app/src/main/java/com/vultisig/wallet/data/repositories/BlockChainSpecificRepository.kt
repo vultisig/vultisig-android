@@ -113,7 +113,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     byteFee = gasFee.value,
                     sendMaxAmount = false,
                 ),
-                utxos = utxos?.utxos?.map {
+                utxos = utxos?.utxos?.sortedBy { it.value }?.toList()?.map {
                     UtxoInfo(
                         hash = it.transactionHash,
                         amount = it.value,

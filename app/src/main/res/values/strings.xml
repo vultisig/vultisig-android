@@ -214,14 +214,11 @@
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_src_amount_hint">Enter Amount</string>
     <string name="swap_form_estimated_fees_title">Estimated Fees</string>
-    <string name="swap_form_estimated_time_title">Estimated Time</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="swap_screen_title">Swap</string>
     <string name="swap_form_gas_title">Gas (auto)</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
-    <string name="swap_screen_estimated_time_instant">Instant</string>
     <string name="verify_swap_screen_estimated_fees">Estimated Fees</string>
-    <string name="verify_swap_screen_estimated_time">Estimated Time</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
     <string name="chain_token_screen_address_copied">%1$s copied to clipboard</string>
@@ -285,6 +282,7 @@
     <string name="import_file_screen_ok" translatable="false">OK</string>
     <string name="import_file_screen_cancel" translatable="false">Cancel</string>
     <string name="backup_password_screen_permission_required" translatable="false">File permission is required for backup operations.</string>
+    <string name="share_qr_screen_permission_required" translatable="false">File permission is required for share operations.</string>
     <string name="token_selection_selected_tokens_title" translatable="false">Selected</string>
     <string name="token_selection_tokens_title" translatable="false">Tokens</string>
     <string name="token_selection_search_hint" translatable="false">Search...</string>
@@ -305,7 +303,16 @@
     <string name="onboard_intro3_desc" translatable="false">Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets.</string>
     <string name="onboard_intro4_title" translatable="false">Collaboration</string>
     <string name="onboard_intro4_desc" translatable="false">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
+    <string name="token_selection_screen_custom_token" translatable="false">Custom Token</string>
+    <string name="custom_token_find_your_custom_token" translatable="false">Find Your Custom Token</string>
+    <string name="custom_token_enter_contract_address" translatable="false">Enter Contract Address</string>
+    <string name="custom_token_token_not_found" translatable="false">Token not found</string>
+    <string name="custom_token_add_token" translatable="false">Add %1$s Token</string>
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
+    <string name="share_vault_qr_title" translatable="false">Share Vault QR</string>
+    <string name="share_vault_qr_save_or_share" translatable="false">Save and Share</string>
+    <string name="share_vault_qr_card_title" translatable="false">Main Vault</string>
+    <string name="share_vault_qr_card_keys" translatable="false">ECDSA Key: %s\nEdDSA Key: %s</string>
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
     <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>
     <string name="deposit_form_provider_hint" translatable="false">Provider</string>

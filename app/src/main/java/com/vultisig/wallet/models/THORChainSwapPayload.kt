@@ -64,7 +64,7 @@ internal data class THORChainSwapPayload(
             else -> throw Exception("Unsupported chain")
         }
         if (!coin.isNativeToken) {
-            asset.setTokenId(if (source) coin.contractAddress else "${coin.address}-${coin.contractAddress}")
+            asset.setTokenId(if (source) coin.contractAddress else "${coin.ticker}-${coin.contractAddress}")
         }
         return asset.build()
     }

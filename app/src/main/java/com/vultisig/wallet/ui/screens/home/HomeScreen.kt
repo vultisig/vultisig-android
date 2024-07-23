@@ -23,6 +23,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -57,6 +58,7 @@ internal fun HomeScreen(
         onToggleVaults = viewModel::toggleVaults,
         onSelectVault = viewModel::selectVault,
         onCreateNewVault = viewModel::createNewVault,
+        onShareVaultQr = viewModel::shareVaultQr,
         isEditMode = viewModel.isEditMode
     )
 }
@@ -72,6 +74,7 @@ private fun HomeScreen(
     onToggleVaults: () -> Unit = {},
     onSelectVault: (vaultId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
+    onShareVaultQr: () -> Unit = {},
 ) {
     val caretRotation by animateFloatAsState(
         targetValue = if (state.showVaultList) -90f else 90f,
@@ -129,22 +132,33 @@ private fun HomeScreen(
                     }
                 },
                 actions = {
-                    if (state.showVaultList) {
-                        if (isEditMode)
+                    val modifier = remember { Modifier.padding(horizontal = 16.dp) }
+                    when{
+                        state.showVaultList && isEditMode -> {
                             Text(
                                 text = stringResource(id = R.string.home_scree_done),
                                 style = Theme.menlo.subtitle1,
                                 fontWeight = FontWeight.Bold,
                                 color = Theme.colors.neutral0,
-                                modifier = Modifier.clickOnce(onClick = onEdit)
+                                modifier = modifier.clickOnce(onClick = onEdit)
                             )
-                        else
+                        }
+                        state.showVaultList && !isEditMode -> {
                             Icon(
                                 painter = painterResource(id = R.drawable.baseline_edit_square_24),
                                 contentDescription = "edit",
                                 tint = Theme.colors.neutral0,
-                                modifier = Modifier.clickOnce(onClick = onEdit)
+                                modifier = modifier.clickOnce(onClick = onEdit)
                             )
+                        }
+                        state.selectedVaultId != null -> {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_share),
+                                contentDescription = "share",
+                                tint = Theme.colors.neutral0,
+                                modifier = modifier.clickOnce(onClick = onShareVaultQr)
+                            )
+                        }
                     }
                 }
             )

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.models.Chain
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface TokenRepository {
@@ -21,6 +23,8 @@ internal interface TokenRepository {
 
     suspend fun getNativeToken(chainId: String): Coin
 
+    suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin?
+
     val allTokens: Flow<List<Coin>>
 
     val nativeTokens: Flow<List<Coin>>
@@ -29,8 +33,8 @@ internal interface TokenRepository {
 
 internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
+    private val evmApiFactory: EvmApiFactory,
 ) : TokenRepository {
-
     override suspend fun getToken(tokenId: String): Coin? =
         allTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 
@@ -69,6 +73,37 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it.first { it.chain.id == chainId } }.first()
 
+    override suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin? {
+        val chain = Chain.fromRaw(chainId)
+        val rpcResponses = evmApiFactory.createEvmApi(chain)
+            .findCustomToken(contractAddress)
+        if (rpcResponses.isEmpty())
+            return null
+        var ticker = ""
+        var decimal = 0
+        rpcResponses.forEach {
+            if (it.result == null) {
+                return null
+            }
+            if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
+                ticker = it.result.decodeContractString() ?: return null
+            else decimal =
+                it.result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
+        }
+        val coin = Coin(
+            chain = chain,
+            ticker = ticker.uppercase(),
+            logo = "https://tokens-data.1inch.io/images/$contractAddress.png",
+            address = "",
+            decimal = decimal,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = contractAddress,
+            isNativeToken = false,
+        )
+        return coin
+    }
+
     override val allTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
 
     override val nativeTokens: Flow<List<Coin>> = allTokens
@@ -76,5 +111,30 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     private fun Iterable<Coin>.filterNatives() =
         filter { it.isNativeToken }
+
+    private fun String.decodeContractString(): String? {
+        try {
+            val bytes =
+                removePrefix("0x")
+                    .chunked(2)
+                    .map { it.toInt(16).toByte() }
+                    .toByteArray()
+            val length = BigInteger(bytes.sliceArray(32..63)).toInt()
+            return String(bytes.sliceArray(64 until 64 + length)).lowercase()
+        } catch (e: Exception) {
+            return null
+        }
+    }
+
+    private fun String.decodeContractDecimal(): Int {
+        return BigInteger(
+            removePrefix("0x"),
+            16
+        ).toInt()
+    }
+
+    companion object {
+        private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
+    }
 
 }

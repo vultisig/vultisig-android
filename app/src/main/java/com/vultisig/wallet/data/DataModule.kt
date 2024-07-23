@@ -36,6 +36,8 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
+import org.apache.commons.compress.compressors.CompressorStreamFactory
+import org.apache.commons.compress.compressors.CompressorStreamProvider
 import javax.inject.Singleton
 
 @Module
@@ -131,6 +133,11 @@ internal interface DataModule {
         fun provideAppDataStore(
             @ApplicationContext context: Context
         ): AppDataStore = AppDataStore(context)
+
+        @Provides
+        @Singleton
+        fun provideCompressorStreamProvider(): CompressorStreamProvider =
+            CompressorStreamFactory()
 
     }
 

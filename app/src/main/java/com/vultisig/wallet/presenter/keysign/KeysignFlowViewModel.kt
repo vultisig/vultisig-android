@@ -15,7 +15,6 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
-import com.vultisig.wallet.common.zipZlibAndBase64Encode
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -28,6 +27,7 @@ import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.ERC20ApprovePayload
@@ -39,11 +39,11 @@ import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.AddressProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,6 +89,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
     @ApplicationContext  private val context: Context,
+    private val compressQr: CompressQrUseCase,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -315,9 +316,12 @@ internal class KeysignFlowViewModel @Inject constructor(
 
         Timber.d("keysignProto: $keysignProto")
 
+        val data = compressQr(keysignProto).encodeBase64()
+
         _keysignMessage.value =
-            "vultisig://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" +
-                    keysignProto.zipZlibAndBase64Encode()
+            "vultisig://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" + data
+
+
         addressProvider.update(_keysignMessage.value)
         if (!vultisigRelay.IsRelayEnabled) {
             startMediatorService(context)

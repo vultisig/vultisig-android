@@ -21,6 +21,9 @@ internal data class Colors(
     val darkPurpleMain: Color = Color(0xff0F0623),
     val darkPurple800: Color = Color(0xff1E103E),
     val darkPurple500: Color = Color(0xff3B2D59),
+    val tallShips: Color = Color(0xff0D86BB),
+    val aquamarine: Color = Color(0xff33E6BF),
+    val sapphireGlitter: Color = Color(0xff0439C7),
 
     val oxfordBlue800: Color = Color(0xff02122B),
     val oxfordBlue600Main: Color = Color(0xff061B3A),
