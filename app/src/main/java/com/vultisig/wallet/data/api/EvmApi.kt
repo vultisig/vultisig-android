@@ -296,8 +296,18 @@ internal class EvmApiImp(
         val (payload1, payload2) = generateCustomTokenPayload(contractAddress)
         return try {
             val response = httpClient.post(getRPCEndpoint()) {
-                header("Content-Type", "application/json")
-                setBody(gson.toJson(listOf(payload1, payload2)))
+                header(
+                    "Content-Type",
+                    "application/json"
+                )
+                setBody(
+                    gson.toJson(
+                        listOf(
+                            payload1,
+                            payload2
+                        )
+                    )
+                )
             }
             val responseContent = response.bodyAsText()
             val responseList = gson.fromJson<List<RpcResponse>?>(
@@ -342,6 +352,9 @@ internal class EvmApiImp(
             ),
             id = customTokenResponseDecimalId,
         )
-        return Pair(payload1, payload2)
+        return Pair(
+            payload1,
+            payload2
+        )
     }
 }

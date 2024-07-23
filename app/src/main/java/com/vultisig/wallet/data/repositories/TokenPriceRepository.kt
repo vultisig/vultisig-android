@@ -138,7 +138,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             contractAddress,
             currency
         )
-        savePrices(mapOf(contractAddress to priceAndContract), currency)
+        savePrices(
+            mapOf(contractAddress to priceAndContract),
+            currency
+        )
         val price = priceAndContract.values.first()
         return price
     }

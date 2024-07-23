@@ -128,7 +128,10 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     private fun String.decodeContractDecimal(): Int {
-        return BigInteger(removePrefix("0x"), 16).toInt()
+        return BigInteger(
+            removePrefix("0x"),
+            16
+        ).toInt()
     }
 
 }

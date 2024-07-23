@@ -248,7 +248,10 @@ private fun SearchTokenTextField(
     onSearchClick: () -> Unit = {},
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
             FormTextFieldCard(
                 hint = stringResource(R.string.custom_token_enter_contract_address),
                 error = null,
