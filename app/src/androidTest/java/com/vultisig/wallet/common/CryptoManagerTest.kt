@@ -23,5 +23,3 @@ internal class CryptoManagerTest {
         assert(assertedDec == decText)
     }
 }
-
-
