@@ -97,9 +97,6 @@ internal class EvmApiImp(
     private val httpClient: HttpClient,
     private val rpcEndpoint: String,
 ) : EvmApi {
-
-
-
     private fun getRPCEndpoint(): String = rpcEndpoint
     override suspend fun getBalance(coin: Coin): BigInteger {
         return try {
