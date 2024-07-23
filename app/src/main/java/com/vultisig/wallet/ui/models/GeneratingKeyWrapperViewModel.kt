@@ -27,19 +27,6 @@ internal class GeneratingKeyWrapperViewModel @AssistedInject constructor(
     init {
         viewModelScope.launch {
             viewModel.generateKey()
-            snapshotFlow { viewModel.currentState.value }.collect { state ->
-                when (state) {
-                    KeygenState.ERROR -> {
-                        viewModel.stopService(context.applicationContext)
-                    }
-
-                    KeygenState.Success -> {
-                        viewModel.saveVault(context.applicationContext)
-                    }
-
-                    else -> Unit
-                }
-            }
         }
     }
 

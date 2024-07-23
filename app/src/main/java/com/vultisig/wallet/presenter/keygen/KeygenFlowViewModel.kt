@@ -134,6 +134,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
+            context = context,
         )
 
     init {
