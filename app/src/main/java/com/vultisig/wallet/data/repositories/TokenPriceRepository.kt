@@ -37,6 +37,10 @@ internal interface TokenPriceRepository {
         tokens: List<Coin>,
     )
 
+    suspend fun getPriceByContactAddress(
+        chainId: String,
+        contractAddress: String,
+    ): BigDecimal
 }
 
 
@@ -124,6 +128,21 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun getPriceByContactAddress(
+        chainId: String,
+        contractAddress: String,
+    ): BigDecimal {
+        val currency = appCurrencyRepository.currency.first().ticker.lowercase()
+        val priceAndContract = fetchPriceWithContractAddress(
+            Chain.fromRaw(chainId),
+            contractAddress,
+            currency
+        )
+        savePrices(mapOf(contractAddress to priceAndContract), currency)
+        val price = priceAndContract.values.first()
+        return price
+    }
+
     private suspend fun savePrices(
         tokenIdToPrices: Map<String, CurrencyToPrice>,
         currency: String,
@@ -153,5 +172,16 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             contractAddresses = tokens.map { it.contractAddress },
             currencies = currencies,
         )
+
+    private suspend fun fetchPriceWithContractAddress(
+        chain: Chain,
+        contractAddress: String,
+        currency: String,
+    ): CurrencyToPrice =
+        coinGeckoApi.getContractsPrice(
+            chain = chain,
+            contractAddresses = listOf(contractAddress),
+            currencies = listOf(currency),
+        ).values.first()
 
 }

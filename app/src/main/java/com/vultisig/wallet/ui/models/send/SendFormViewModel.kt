@@ -213,7 +213,6 @@ internal class SendFormViewModel @Inject constructor(
     fun openAddressBook()  {
         viewModelScope.launch {
             navigator.navigate(Destination.AddressBook(
-                chain = chain ?: selectedAccount?.token?.chain,
                 requestId = REQUEST_ADDRESS_ID,
             ))
             val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)

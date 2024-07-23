@@ -151,11 +151,4 @@ private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: St
                 WHERE chain LIKE '%$before'
             """.trimIndent()
     )
-    execSQL(
-        """
-            UPDATE address_book_entry SET
-                chainId = REPLACE(chainId, '$before', '$after')
-                WHERE chainId LIKE '%$before'
-            """.trimIndent()
-    )
 }

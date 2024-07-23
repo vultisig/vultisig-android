@@ -44,6 +44,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
@@ -51,8 +52,7 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
-import com.vultisig.wallet.ui.models.CustomTokenResult
-import com.vultisig.wallet.ui.models.CustomTokenState
+import com.vultisig.wallet.ui.models.CustomTokenUiModel
 import com.vultisig.wallet.ui.models.CustomTokenViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -79,7 +79,7 @@ internal fun CustomTokenScreen(
 @Composable
 private fun CustomTokenScreen(
     navController: NavHostController,
-    state: CustomTokenState,
+    state: CustomTokenUiModel,
     searchFieldState: TextFieldState,
     onPasteClick: () -> Unit,
     onSearchClick: () -> Unit,
@@ -116,9 +116,10 @@ private fun CustomTokenScreen(
                     TokenNotFoundError()
                 }
 
-                state.searchResult != null -> {
+                state.token != null -> {
                     SearchTokenResult(
-                        searchTokenResult = state.searchResult,
+                        token = state.token,
+                        price = state.price,
                         onAddTokenClick = onAddTokenClick
                     )
                 }
@@ -165,7 +166,8 @@ private fun ColumnScope.TokenNotFoundError() {
 @Composable
 private fun SearchTokenResult(
     onAddTokenClick: () -> Unit,
-    searchTokenResult: CustomTokenResult
+    token: Coin,
+    price: String,
 ) {
     Card(
         modifier = Modifier
@@ -175,7 +177,6 @@ private fun SearchTokenResult(
             containerColor = Theme.colors.oxfordBlue600Main
         )
     ) {
-        val token = searchTokenResult.token
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -215,7 +216,7 @@ private fun SearchTokenResult(
 
             UiSpacer(size = 12.dp)
             Text(
-                text = searchTokenResult.price,
+                text = price,
                 color = Theme.colors.neutral100,
                 style = Theme.menlo.subtitle1,
             )
@@ -231,7 +232,7 @@ private fun SearchTokenResult(
             Text(
                 text = stringResource(
                     R.string.custom_token_add_token,
-                    searchTokenResult.token.ticker
+                    token.ticker
                 ),
                 style = Theme.montserrat.subtitle1
             )
@@ -287,7 +288,7 @@ private fun SearchTokenTextField(
 private fun CustomTokenScreenPreview() {
     CustomTokenScreen(
         navController = rememberNavController(),
-        state = CustomTokenState(),
+        state = CustomTokenUiModel(),
         searchFieldState = rememberTextFieldState(),
         onPasteClick = {},
         onSearchClick = {},

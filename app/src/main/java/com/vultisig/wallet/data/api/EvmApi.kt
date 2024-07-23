@@ -97,6 +97,12 @@ internal class EvmApiImp(
     private val httpClient: HttpClient,
     private val rpcEndpoint: String,
 ) : EvmApi {
+
+    private val customTokenResponseTickerId = 2
+    private val customTokenResponseDecimalId = 3
+    private val customTokenRequestTickerData = "0x95d89b41"
+    private val customTokenRequestDecimalData = "0x313ce567"
+
     private fun getRPCEndpoint(): String = rpcEndpoint
     override suspend fun getBalance(coin: Coin): BigInteger {
         return try {
@@ -309,18 +315,20 @@ internal class EvmApiImp(
         }
     }
 
-    private fun generateCustomTokenPayload(contractAddress: String): Pair<RpcPayload, RpcPayload> {
+    private fun generateCustomTokenPayload(
+        contractAddress: String
+    ): Pair<RpcPayload, RpcPayload> {
         val payload1 = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_call",
             params = listOf(
                 mapOf(
                     "to" to contractAddress,
-                    "data" to CUSTOM_TOKEN_REQUEST_TICKER_DATA
+                    "data" to customTokenRequestTickerData
                 ),
                 "latest"
             ),
-            id = CUSTOM_TOKEN_RESPONSE_TICKER_ID,
+            id = customTokenResponseTickerId,
         )
         val payload2 = RpcPayload(
             jsonrpc = "2.0",
@@ -328,11 +336,11 @@ internal class EvmApiImp(
             params = listOf(
                 mapOf(
                     "to" to contractAddress,
-                    "data" to CUSTOM_TOKEN_REQUEST_DECIMAL_DATA
+                    "data" to customTokenRequestDecimalData
                 ),
                 "latest"
             ),
-            id = CUSTOM_TOKEN_RESPONSE_DECIMAL_ID,
+            id = customTokenResponseDecimalId,
         )
         return Pair(payload1, payload2)
     }
