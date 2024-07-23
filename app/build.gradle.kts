@@ -135,6 +135,8 @@ dependencies {
 
     // other
     implementation(libs.accompanist.permissions)
+    implementation(libs.apache.compress)
+    implementation(libs.apache.compress.xz)
     implementation(libs.gson)
     implementation(libs.guava)
     implementation(libs.mlkit.barcode)

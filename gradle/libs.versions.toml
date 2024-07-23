@@ -1,6 +1,8 @@
 [versions]
 accompanistPermissions = "0.34.0"
 agp = "8.4.2"
+apache-compress="1.26.2"
+apache-compress-xz="1.9"
 barcodeScanning = "17.2.0"
 bcprovJdk15on = "1.68"
 biometric = "1.1.0"
@@ -52,6 +54,9 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version = "2.51.1" }
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version = "2.51.1" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
+
+apache-compress = { module="org.apache.commons:commons-compress", version.ref ="apache-compress" }
+apache-compress-xz = { module="org.tukaani:xz", version.ref ="apache-compress-xz" }
 
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.8.0" }
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "serialization" }

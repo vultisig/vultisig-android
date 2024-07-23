@@ -40,4 +40,16 @@ internal interface UseCasesModule {
         impl: CreateVaultBackupUseCaseImpl
     ): CreateVaultBackupUseCase
 
+    @Binds
+    @Singleton
+    fun bindCompressQrUseCase(
+        impl: CompressQrUseCaseImpl
+    ): CompressQrUseCase
+
+    @Binds
+    @Singleton
+    fun bindDecompressQrUseCase(
+        impl: DecomressQrUseCaseImpl
+    ): DecompressQrUseCase
+
 }
