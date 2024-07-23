@@ -102,23 +102,60 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
     }
 }
 
+
 internal val MIGRATION_6_7 = object : Migration(6, 7) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
-            CREATE TABLE IF NOT EXISTS `customToken` (
-                `id` TEXT NOT NULL,
-                `chain` TEXT NOT NULL,
-                `ticker` TEXT NOT NULL,
-                `decimals` INTEGER NOT NULL,
-                `logo` TEXT NOT NULL,
-                `priceProviderId` TEXT NOT NULL,
-                `contractAddress` TEXT NOT NULL,
+            CREATE TABLE IF NOT EXISTS `address_book_entry` (
+                `chainId` TEXT NOT NULL,
                 `address` TEXT NOT NULL,
-                `hexPublicKey` TEXT NOT NULL,
-                PRIMARY KEY(`id`)
+                `title` TEXT NOT NULL,
+                PRIMARY KEY(`chainId`, `address`)
             )
-            """.trimMargin()
+       """.trimIndent()
         )
     }
+}
+
+
+internal val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.updateChainNameValue("Maya Chain", "MayaChain")
+        db.updateChainNameValue("Cronos Chain", "CronosChain")
+        db.updateChainNameValue("Bitcoin Cash", "Bitcoin-Cash")
+        db.updateChainNameValue("Gaia Chain", "Gaia")
+    }
+}
+
+private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: String) {
+    execSQL(
+        """
+            UPDATE coin SET
+                id = REPLACE(id, '$before', '$after'),
+                chain = REPLACE(chain, '$before', '$after')
+                WHERE id LIKE '%$before'
+            """.trimIndent()
+    )
+    execSQL(
+        """
+            UPDATE tokenPrice SET
+                tokenId = REPLACE(tokenId, '$before', '$after')
+                WHERE tokenId LIKE '%$before'
+            """.trimIndent()
+    )
+    execSQL(
+        """
+            UPDATE tokenValue SET
+                chain = REPLACE(chain, '$before', '$after')
+                WHERE chain LIKE '%$before'
+            """.trimIndent()
+    )
+    execSQL(
+        """
+            UPDATE address_book_entry SET
+                chainId = REPLACE(chainId, '$before', '$after')
+                WHERE chainId LIKE '%$before'
+            """.trimIndent()
+    )
 }

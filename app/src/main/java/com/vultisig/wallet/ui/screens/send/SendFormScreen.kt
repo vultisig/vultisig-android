@@ -75,6 +75,7 @@ internal fun SendFormScreen(
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onChoosePercentageAmount = viewModel::choosePercentageAmount,
         onScan = viewModel::scanAddress,
+        onAddressBookClick = viewModel::openAddressBook,
         onSend = viewModel::send,
     )
 }
@@ -94,6 +95,7 @@ internal fun SendFormScreen(
     onSetOutputAddress: (String) -> Unit = {},
     onChooseMaxTokenAmount: () -> Unit = {},
     onChoosePercentageAmount: (Float) -> Unit = {},
+    onAddressBookClick: () -> Unit = {},
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
 ) {
@@ -162,10 +164,19 @@ internal fun SendFormScreen(
                 )
 
                 UiSpacer(size = 8.dp)
+
                 UiIcon(
                     drawableResId = R.drawable.camera,
                     size = 20.dp,
                     onClick = onScan,
+                )
+
+                UiSpacer(size = 8.dp)
+
+                UiIcon(
+                    drawableResId = R.drawable.ic_bookmark,
+                    size = 20.dp,
+                    onClick = onAddressBookClick,
                 )
             }
 

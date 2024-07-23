@@ -14,14 +14,12 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.vultisigRelay
-import com.vultisig.wallet.common.zipZlibAndBase64Encode
-import com.vultisig.wallet.data.mappers.KeygenMessageToProtoMapper
-import com.vultisig.wallet.data.mappers.ReshareMessageToProtoMapper
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.models.TssAction
@@ -31,6 +29,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -91,8 +90,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
-    private val mapKeygenMessageToProto: KeygenMessageToProtoMapper,
-    private val mapReshareMessageToProto: ReshareMessageToProtoMapper,
+    private val compressQr: CompressQrUseCase,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(
@@ -204,33 +202,37 @@ internal class KeygenFlowViewModel @Inject constructor(
         val keygenPayload = when (action) {
             TssAction.KEYGEN -> {
                 "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
-                        protoBuf.encodeToByteArray(
-                            KeygenMessageProto(
-                                sessionId = sessionID,
-                                hexChainCode = vault.hexChainCode,
-                                serviceName = serviceName,
-                                encryptionKeyHex = this._encryptionKeyHex,
-                                useVultisigRelay = vultisigRelay.IsRelayEnabled,
-                                vaultName = this.vault.name,
+                        compressQr(
+                            protoBuf.encodeToByteArray(
+                                KeygenMessageProto(
+                                    sessionId = sessionID,
+                                    hexChainCode = vault.hexChainCode,
+                                    serviceName = serviceName,
+                                    encryptionKeyHex = this._encryptionKeyHex,
+                                    useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                                    vaultName = this.vault.name,
+                                )
                             )
-                        ).zipZlibAndBase64Encode()
+                        ).encodeBase64()
             }
 
             TssAction.ReShare -> {
                 "vultisig://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" +
-                        protoBuf.encodeToByteArray(
-                            ReshareMessageProto(
-                                sessionId = sessionID,
-                                hexChainCode = vault.hexChainCode,
-                                serviceName = serviceName,
-                                publicKeyEcdsa = vault.pubKeyECDSA,
-                                oldParties = vault.signers,
-                                encryptionKeyHex = this._encryptionKeyHex,
-                                useVultisigRelay = vultisigRelay.IsRelayEnabled,
-                                oldResharePrefix = vault.resharePrefix,
-                                vaultName = vault.name
+                        compressQr(
+                            protoBuf.encodeToByteArray(
+                                ReshareMessageProto(
+                                    sessionId = sessionID,
+                                    hexChainCode = vault.hexChainCode,
+                                    serviceName = serviceName,
+                                    publicKeyEcdsa = vault.pubKeyECDSA,
+                                    oldParties = vault.signers,
+                                    encryptionKeyHex = this._encryptionKeyHex,
+                                    useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                                    oldResharePrefix = vault.resharePrefix,
+                                    vaultName = vault.name
+                                )
                             )
-                        ).zipZlibAndBase64Encode()
+                        ).encodeBase64()
             }
         }
         uiState.update { it.copy(keygenPayload = keygenPayload) }
