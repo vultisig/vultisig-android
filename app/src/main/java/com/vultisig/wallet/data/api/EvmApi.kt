@@ -6,6 +6,7 @@ import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toKeccak256
+import com.vultisig.wallet.data.models.CustomTokenResponse
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
@@ -357,4 +358,3 @@ internal class EvmApiImp(
         )
     }
 }
-internal data class CustomTokenResponse(val id: Int, val result: String?)
