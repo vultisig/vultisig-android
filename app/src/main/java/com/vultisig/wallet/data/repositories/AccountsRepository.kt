@@ -53,9 +53,9 @@ internal class AccountsRepositoryImpl @Inject constructor(
             chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
         }
 
-        val loadPrices = supervisorScope {
+        val loadPrices =
             async { tokenPriceRepository.refresh(vaultCoins) }
-        }
+
         addresses.apply {
             val balances = balanceRepository.getCachedTokenBalances(
                 addresses.map { adr -> adr.address },
