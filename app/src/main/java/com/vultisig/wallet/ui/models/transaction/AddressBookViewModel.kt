@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -39,13 +40,23 @@ internal class AddressBookViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
-    private val requestId: String? = savedStateHandle.get(Destination.ARG_REQUEST_ID)
+    private val requestId: String? = savedStateHandle[Destination.ARG_REQUEST_ID]
+    private val chainId: String? = savedStateHandle[Destination.ARG_CHAIN_ID]
 
     val state = MutableStateFlow(AddressBookUiModel())
 
     fun loadData() {
+        val chain = chainId?.let(Chain::fromRaw)
         viewModelScope.launch {
             val entries = addressBookRepository.getEntries()
+                .let { entries ->
+                    if (chain != null) {
+                        entries.filter { it.chain == chain }
+                    } else {
+                        entries
+                    }
+                }
+
             state.update { state ->
                 state.copy(entries = entries.map {
                     AddressBookEntryUiModel(
