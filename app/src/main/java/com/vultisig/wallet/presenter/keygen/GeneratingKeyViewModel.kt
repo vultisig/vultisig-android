@@ -87,7 +87,6 @@ internal class GeneratingKeyViewModel(
             createInstance()
         }
 
-
         try {
             this.tssInstance?.let {
                 keygenWithRetry(it, 1)
