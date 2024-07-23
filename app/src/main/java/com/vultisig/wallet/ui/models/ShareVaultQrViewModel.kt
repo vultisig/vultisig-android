@@ -21,7 +21,8 @@ import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.buildString
-import com.vultisig.wallet.common.saveBitmapToDownloadsDir
+import com.vultisig.wallet.common.saveBitmapToDownloads
+import com.vultisig.wallet.common.saveBitmapToDownloadsDirLegacy
 import com.vultisig.wallet.common.saveBitmapToDownloadsDirAtLeastQ
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.ShareVaultQrModel
@@ -46,7 +47,6 @@ internal data class ShareVaultQrState(
     val qrBitmapPainter: BitmapPainter = BitmapPainter(
         Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
     ),
-    val toShareBitmap: Bitmap? = null,
     val fileName: String? = null,
     val fileUri: Uri? = null,
 )
@@ -62,6 +62,10 @@ internal class ShareVaultQrViewModel @Inject constructor(
     private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
     val state = MutableStateFlow(ShareVaultQrState())
+
+    private val toShareBitmap =
+        MutableStateFlow<Bitmap?>(null)
+
 
     private var hasWritePermission by mutableStateOf(
         ContextCompat.checkSelfPermission(
@@ -83,9 +87,9 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 val uidEncoded = messageDigest.digest().buildString()
                 val shareVaultQrModel = ShareVaultQrModel(
                     name = vault.id,
-                    public_key_ecdsa = vault.pubKeyECDSA,
-                    public_key_eddsa = vault.pubKeyEDDSA,
-                    hex_chain_code = vault.hexChainCode,
+                    publicKeyEcdsa = vault.pubKeyECDSA,
+                    publicKeyEddsa = vault.pubKeyEDDSA,
+                    hexChainCode = vault.hexChainCode,
                     uid = uidEncoded
                 )
                 state.update {
@@ -103,13 +107,15 @@ internal class ShareVaultQrViewModel @Inject constructor(
     }
 
     internal fun loadQrCode(
-        mainColor: Color, backgroundColor: Color, logo: Bitmap? = null
+        mainColor: Color,
+        backgroundColor: Color,
+        logo: Bitmap? = null,
     ) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val qrBitmap = generateBitmap(
                     logo = logo, mainColor = mainColor, backgroundColor = backgroundColor
-                )
+                ) ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
 
                 val bitmapPainter = BitmapPainter(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
@@ -119,20 +125,18 @@ internal class ShareVaultQrViewModel @Inject constructor(
                         qrBitmapPainter = bitmapPainter
                     )
                 }
-                state.update {
-                    it.copy(
-                        toShareBitmap = generateBitmap(
-                            logo = logo, mainColor = mainColor, backgroundColor = Color(0xff0D86BB)
-                        )
-                    )
-                }
+                toShareBitmap.value = generateBitmap(
+                    logo = logo, mainColor = mainColor, backgroundColor = Color(0xff0D86BB)
+                )
             }
         }
     }
 
     private fun generateBitmap(
-        logo: Bitmap?, mainColor: Color, backgroundColor: Color
-    ): Bitmap {
+        logo: Bitmap?,
+        mainColor: Color,
+        backgroundColor: Color,
+    ): Bitmap? {
         val qrBitmap = try {
             if (logo != null && state.value.shareVaultQrString != null) {
                 generateQrBitmap(
@@ -141,12 +145,6 @@ internal class ShareVaultQrViewModel @Inject constructor(
             } else null
         } catch (ex: WriterException) {
             null
-        } ?: Bitmap.createBitmap(
-            1,
-            1,
-            Bitmap.Config.ARGB_8888,
-        ).apply {
-            eraseColor(0x00000000)
         }
         return qrBitmap
     }
@@ -163,17 +161,10 @@ internal class ShareVaultQrViewModel @Inject constructor(
 
     internal fun onSaveClicked() {
         viewModelScope.launch(Dispatchers.IO) {
-            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                context.saveBitmapToDownloadsDirAtLeastQ(
-                    requireNotNull(state.value.toShareBitmap),
-                    requireNotNull(state.value.fileName),
-                )
-            } else {
-                context.saveBitmapToDownloadsDir(
-                    requireNotNull(state.value.toShareBitmap),
-                    requireNotNull(state.value.fileName),
-                )
-            }
+            val uri = context.saveBitmapToDownloads(
+                requireNotNull(toShareBitmap.value),
+                requireNotNull(state.value.fileName)
+            )
             state.update {
                 it.copy(
                     fileUri = uri

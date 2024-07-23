@@ -37,8 +37,8 @@ import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-const val QR_CODE_SCALE_FACTOR = 8
-const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
+private const val QR_CODE_SCALE_FACTOR = 8
+private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
 
 @Composable
 internal fun QRCodeKeyGenImage(
@@ -164,6 +164,8 @@ internal fun rememberQRBitmapPainter(
     val yLogo = (scaledBitmap.height - scaledLogo.height) / 2f
 
     canvas.drawBitmap(scaledLogo, xLogo, yLogo, null)
+     bitmap.recycle()
+     scaledLogo.recycle()
 
     return scaledBitmap
 }

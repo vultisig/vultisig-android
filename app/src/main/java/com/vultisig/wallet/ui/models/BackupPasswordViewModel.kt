@@ -16,6 +16,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.BACKUPS_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.backupVaultToDownloadsDir
@@ -103,7 +104,10 @@ internal class BackupPasswordViewModel @Inject constructor(
             if (isSuccess) {
                 vaultDataStoreRepository.setBackupStatus(vaultId, true)
                 snackbarFlow.showMessage(
-                    context.getString(R.string.vault_settings_success_backup_file, backupFileName)
+                    context.getString(
+                        R.string.vault_settings_success_backup_file,
+                        "$BACKUPS_DIRECTORY_NAME_FULL/$backupFileName"
+                    )
                 )
                 navigator.navigate(
                     Destination.Home(vaultId),

@@ -78,8 +78,8 @@ internal fun ShareVaultQrScreen(
 
     ShareVaultQrScreen(
         navController = navController,
-        ecdsa = state.shareVaultQrModel.public_key_ecdsa,
-        eddsa = state.shareVaultQrModel.public_key_eddsa,
+        ecdsa = state.shareVaultQrModel.publicKeyEcdsa,
+        eddsa = state.shareVaultQrModel.publicKeyEddsa,
         qrBitmapPainter = state.qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
         onButtonClicked = {
