@@ -35,7 +35,6 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
 ) : TokenRepository {
-    private val customTokenResponseTickerId = 2
     override suspend fun getToken(tokenId: String): Coin? =
         allTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 
@@ -86,7 +85,7 @@ internal class TokenRepositoryImpl @Inject constructor(
             if (it.result == null) {
                 return null
             }
-            if (it.id == customTokenResponseTickerId)
+            if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
                 ticker = it.result.decodeContractString() ?: return null
             else decimal =
                 it.result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
@@ -132,6 +131,10 @@ internal class TokenRepositoryImpl @Inject constructor(
             removePrefix("0x"),
             16
         ).toInt()
+    }
+
+    companion object {
+        private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
     }
 
 }
