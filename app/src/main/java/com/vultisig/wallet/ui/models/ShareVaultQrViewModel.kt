@@ -106,6 +106,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
     internal fun loadQrCode(
         mainColor: Color,
         backgroundColor: Color,
+        shareBackgroundColor: Color,
         logo: Bitmap? = null,
     ) {
         viewModelScope.launch {
@@ -119,7 +120,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 )
                 qrBitmapPainter.value = bitmapPainter
                 toShareBitmap.value = generateBitmap(
-                    logo = logo, mainColor = mainColor, backgroundColor = Color(0xff0D86BB)
+                    logo = logo, mainColor = mainColor, backgroundColor = shareBackgroundColor
                 )
             }
         }
