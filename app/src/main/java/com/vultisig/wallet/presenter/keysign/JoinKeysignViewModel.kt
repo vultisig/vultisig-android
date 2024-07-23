@@ -15,7 +15,6 @@ import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -43,7 +42,6 @@ import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
-import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -105,7 +103,6 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
-    private val durationToUiStringMapper: DurationToUiStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
     private val gasFeeRepository: GasFeeRepository,
@@ -263,7 +260,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 estimatedFees = fiatValueToStringMapper.map(
                                     convertTokenValueToFiat(nativeToken, estimatedTokenFees, currency)
                                 ),
-                                estimatedTime = R.string.swap_screen_estimated_time_instant.asUiText(),
                             )
                         )
                     }
@@ -284,9 +280,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 estimatedFees = fiatValueToStringMapper.map(
                                     convertTokenValueToFiat(nativeToken, quote.fees, currency)
                                 ),
-                                estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
-                                    ?.let { UiText.DynamicString(it) }
-                                    ?: R.string.swap_screen_estimated_time_instant.asUiText(),
                             )
                         )
                     }
@@ -307,9 +300,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 estimatedFees = fiatValueToStringMapper.map(
                                     convertTokenValueToFiat(nativeToken, quote.fees, currency)
                                 ),
-                                estimatedTime = quote.estimatedTime?.let(durationToUiStringMapper)
-                                    ?.let { UiText.DynamicString(it) }
-                                    ?: R.string.swap_screen_estimated_time_instant.asUiText(),
                             )
                         )
                     }

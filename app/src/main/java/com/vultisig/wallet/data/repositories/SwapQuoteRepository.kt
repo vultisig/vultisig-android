@@ -12,8 +12,6 @@ import com.vultisig.wallet.models.Coin
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.math.abs
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 internal interface SwapQuoteRepository {
 
@@ -84,16 +82,12 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val tokenFees = mayaQuote.fees.total
             .mayaTokenValueToTokenValue(dstToken)
 
-        val estimatedTime = mayaQuote.totalSwapSeconds
-            ?.toDuration(DurationUnit.SECONDS)
-
         val expectedDstTokenValue = mayaQuote.expectedAmountOut
             .mayaTokenValueToTokenValue(dstToken)
 
         return SwapQuote.MayaChain(
             expectedDstValue = expectedDstTokenValue,
             fees = tokenFees,
-            estimatedTime = estimatedTime,
             data = mayaQuote,
         )
     }
@@ -119,16 +113,12 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val tokenFees = thorQuote.fees.total
             .thorTokenValueToTokenValue(dstToken)
 
-        val estimatedTime = thorQuote.totalSwapSeconds
-            ?.toDuration(DurationUnit.SECONDS)
-
         val expectedDstTokenValue = thorQuote.expectedAmountOut
             .thorTokenValueToTokenValue(dstToken)
 
         return SwapQuote.ThorChain(
             expectedDstValue = expectedDstTokenValue,
             fees = tokenFees,
-            estimatedTime = estimatedTime,
             data = thorQuote,
         )
     }
