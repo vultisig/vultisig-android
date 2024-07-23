@@ -2,6 +2,7 @@ package com.vultisig.wallet.common
 
 import okio.ByteString.Companion.decodeBase64
 import okio.ByteString.Companion.decodeHex
+import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
@@ -44,4 +45,20 @@ fun String.md5(): String {
     val md = java.security.MessageDigest.getInstance("MD5")
     val digest = md.digest(bytes)
     return digest.joinToString("") { "%02x".format(it) }
+}
+
+fun String.sha256(): String {
+    try {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(this.toByteArray(Charsets.UTF_8))
+        val hexString = StringBuilder()
+        for (i in hash.indices) {
+            val hex = Integer.toHexString(0xff and hash[i].toInt())
+            if (hex.length == 1) hexString.append('0')
+            hexString.append(hex)
+        }
+        return hexString.toString()
+    } catch (ex: Exception) {
+        throw RuntimeException(ex)
+    }
 }

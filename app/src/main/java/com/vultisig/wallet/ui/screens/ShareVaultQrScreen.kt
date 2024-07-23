@@ -51,6 +51,7 @@ internal fun ShareVaultQrScreen(
     viewModel: ShareVaultQrViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val qrBitmapPainter by viewModel.qrBitmapPainter.collectAsState()
 
     val context = LocalContext.current
     val mainColor = Theme.colors.neutral0
@@ -80,7 +81,7 @@ internal fun ShareVaultQrScreen(
         navController = navController,
         ecdsa = state.shareVaultQrModel.publicKeyEcdsa,
         eddsa = state.shareVaultQrModel.publicKeyEddsa,
-        qrBitmapPainter = state.qrBitmapPainter,
+        qrBitmapPainter = qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
         onButtonClicked = {
             if (state.fileUri == null) {

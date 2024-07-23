@@ -153,8 +153,10 @@ internal fun rememberQRBitmapPainter(
 
     val scaledWidth = bitmap.width * QR_CODE_SCALE_FACTOR
     val scaledHeight = bitmap.height * QR_CODE_SCALE_FACTOR
-    val scaledLogoWidth = scaledWidth / QR_CODE_VS_LOGO_SCALE_FACTOR
-    val scaledLogoHeight = scaledHeight / QR_CODE_VS_LOGO_SCALE_FACTOR
+     val scaledLogoWidthTemp = scaledWidth / QR_CODE_VS_LOGO_SCALE_FACTOR
+    val scaledLogoHeightTemp = scaledHeight / QR_CODE_VS_LOGO_SCALE_FACTOR
+    val scaledLogoWidth = if (scaledLogoWidthTemp == 0) 1 else scaledLogoWidthTemp
+    val scaledLogoHeight = if (scaledLogoHeightTemp == 0) 1 else scaledLogoHeightTemp
     val scaledLogo = logo.scale(scaledLogoWidth, scaledLogoHeight)
     val scaledBitmap = bitmap.scale(scaledWidth, scaledHeight, false)
 
@@ -164,8 +166,10 @@ internal fun rememberQRBitmapPainter(
     val yLogo = (scaledBitmap.height - scaledLogo.height) / 2f
 
     canvas.drawBitmap(scaledLogo, xLogo, yLogo, null)
-     bitmap.recycle()
-     scaledLogo.recycle()
+    if (bitmap != scaledBitmap)
+        bitmap.recycle()
+
+    scaledLogo.recycle()
 
     return scaledBitmap
 }

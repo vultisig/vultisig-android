@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,8 +19,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.buildString
 import com.vultisig.wallet.common.saveBitmapToDownloads
+import com.vultisig.wallet.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.ShareVaultQrModel
 import com.vultisig.wallet.presenter.common.generateQrBitmap
@@ -36,15 +35,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.security.MessageDigest
 import javax.inject.Inject
 
 internal data class ShareVaultQrState(
     val shareVaultQrModel: ShareVaultQrModel = ShareVaultQrModel("", "", "", "", ""),
     val shareVaultQrString: String? = null,
-    val qrBitmapPainter: BitmapPainter = BitmapPainter(
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
-    ),
     val fileName: String? = null,
     val fileUri: Uri? = null,
 )
@@ -63,6 +58,12 @@ internal class ShareVaultQrViewModel @Inject constructor(
 
     private val toShareBitmap =
         MutableStateFlow<Bitmap?>(null)
+    val qrBitmapPainter =
+        MutableStateFlow(
+            BitmapPainter(
+                Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
+            )
+        )
 
 
     private var hasWritePermission by mutableStateOf(
@@ -77,18 +78,16 @@ internal class ShareVaultQrViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             vaultRepository.get(requireNotNull(vaultId))?.let { vault ->
-                val messageDigest = MessageDigest.getInstance("SHA-256")
+
                 val uid =
-                    "${vault.name} - ${vault.pubKeyECDSA} - " +
-                            "${vault.pubKeyEDDSA} - ${vault.hexChainCode}"
-                messageDigest.update(uid.toByteArray())
-                val uidEncoded = messageDigest.digest().buildString()
+                    ("${vault.name} - ${vault.pubKeyECDSA} - " +
+                            "${vault.pubKeyEDDSA} - ${vault.hexChainCode}").sha256()
                 val shareVaultQrModel = ShareVaultQrModel(
-                    name = vault.id,
+                    name = vault.name,
                     publicKeyEcdsa = vault.pubKeyECDSA,
                     publicKeyEddsa = vault.pubKeyEDDSA,
                     hexChainCode = vault.hexChainCode,
-                    uid = uidEncoded
+                    uid = uid
                 )
                 state.update {
                     it.copy(
@@ -118,11 +117,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 val bitmapPainter = BitmapPainter(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
                 )
-                state.update {
-                    it.copy(
-                        qrBitmapPainter = bitmapPainter
-                    )
-                }
+                qrBitmapPainter.value = bitmapPainter
                 toShareBitmap.value = generateBitmap(
                     logo = logo, mainColor = mainColor, backgroundColor = Color(0xff0D86BB)
                 )
