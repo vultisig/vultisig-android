@@ -31,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -64,6 +65,7 @@ internal fun SwapFormScreen(
         onAmountLostFocus = viewModel::validateAmount,
         onSwap = viewModel::swap,
         onSelectSrcToken = viewModel::selectSrcToken,
+        onDismissError = viewModel::hideError,
         onSelectDstToken = viewModel::selectDstToken,
         onFlipSelectedTokens = viewModel::flipSelectedTokens,
     )
@@ -77,6 +79,7 @@ internal fun SwapFormScreen(
     onAmountLostFocus: () -> Unit = {},
     onSelectSrcToken: () -> Unit = {},
     onSelectDstToken: () -> Unit = {},
+    onDismissError: () -> Unit = {},
     onFlipSelectedTokens: () -> Unit = {},
     onSwap: () -> Unit = {},
 ) {
@@ -99,6 +102,17 @@ internal fun SwapFormScreen(
             )
         }
     ) {
+
+        val errorText = state.error
+        if (errorText != null) {
+            UiAlertDialog(
+                title = stringResource(R.string.dialog_default_error_title),
+                text = errorText.asString(),
+                confirmTitle = stringResource(R.string.try_again),
+                onDismiss = onDismissError,
+            )
+        }
+
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -2,8 +2,10 @@ package com.vultisig.wallet.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
+import com.vultisig.wallet.data.db.models.AddressBookEntryEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
@@ -21,8 +23,9 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         VaultOrderEntity::class,
         TokenValueEntity::class,
         TokenPriceEntity::class,
+        AddressBookEntryEntity::class,
     ],
-    version = 6,
+    version = 8,
     exportSchema = false,
 )
 internal abstract class AppDatabase : RoomDatabase() {
@@ -34,5 +37,7 @@ internal abstract class AppDatabase : RoomDatabase() {
     abstract fun tokenValueDao(): TokenValueDao
 
     abstract fun tokenPriceDao(): TokenPriceDao
+
+    abstract fun addressBookEntryDao(): AddressBookEntryDao
 
 }

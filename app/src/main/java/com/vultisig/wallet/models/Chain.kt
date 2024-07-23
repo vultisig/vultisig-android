@@ -15,13 +15,13 @@ internal enum class Chain(
     val feeUnit: String,
 ) {
     thorChain("THORChain", TokenStandard.THORCHAIN, "Rune"),
-    mayaChain("Maya Chain", TokenStandard.THORCHAIN, "cacao"),
+    mayaChain("MayaChain", TokenStandard.THORCHAIN, "cacao"),
 
     // ERC20
     arbitrum("Arbitrum", EVM, "Gwei"),
     avalanche("Avalanche", EVM, "Gwei"),
     base("Base", EVM, "Gwei"),
-    cronosChain("Cronos Chain", EVM, "Gwei"),
+    cronosChain("CronosChain", EVM, "Gwei"),
     bscChain("BSC", EVM, "Gwei"),
     blast("Blast", EVM, "Gwei"),
     ethereum("Ethereum", EVM, "Gwei"),
@@ -30,13 +30,13 @@ internal enum class Chain(
 
     // BITCOIN
     bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
-    bitcoinCash("Bitcoin Cash", UTXO, "BCH/vbyte"),
+    bitcoinCash("Bitcoin-Cash", UTXO, "BCH/vbyte"),
     litecoin("Litecoin", UTXO, "LTC/vbyte"),
     dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
     dash("Dash", UTXO, "DASH/vbyte"),
 
     solana("Solana", SOL, "SOL"),
-    gaiaChain("Gaia Chain", COSMOS, "uatom"),
+    gaiaChain("Gaia", COSMOS, "uatom"),
     kujira("Kujira", COSMOS, "ukuji"),
     dydx("Dydx", COSMOS, "adydx"),
     polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT");

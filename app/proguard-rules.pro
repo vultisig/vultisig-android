@@ -55,6 +55,10 @@
 -keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
 
 
+# Apache Commons Compress
+# We don't use these compression algorithms
+-dontwarn com.github.luben.zstd.**
+-dontwarn org.brotli.dec.**
 
 
 # Spark

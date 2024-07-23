@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.ZeroValueCurrencyToStringMapper
+import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.navigation.Destination
@@ -71,7 +72,7 @@ internal data class SwapFormUiModel(
     val gas: String = "",
     val fee: String = "",
     val estimatedTime: UiText = UiText.DynamicString(""),
-    val amountError: UiText? = null,
+    val error: UiText? = null,
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -122,179 +123,223 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     fun swap() {
-        // TODO verify swap info
-        val vaultId = vaultId ?: return
-        val selectedSrc = selectedSrc.value ?: return
-        val selectedDst = selectedDst.value ?: return
+        try {
+            // TODO verify swap info
+            val vaultId = vaultId ?: return
+            val selectedSrc = selectedSrc.value ?: return
+            val selectedDst = selectedDst.value ?: return
 
-        val gasFee = gasFee.value ?: return
+            val gasFee = gasFee.value ?: return
 
-        val srcToken = selectedSrc.account.token
-        val dstToken = selectedDst.account.token
+            val srcToken = selectedSrc.account.token
+            val dstToken = selectedDst.account.token
 
-        val srcAddress = selectedSrc.address.address
+            if (srcToken == dstToken) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.swap_screen_same_asset_error_message)
+                )
+            }
 
-        val srcTokenValue = srcAmount
-            ?.movePointRight(selectedSrc.account.token.decimal)
-            ?.toBigInteger()
-            ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
-            ?: return
+            val srcAddress = selectedSrc.address.address
 
-        val quote = quote ?: return
+            val srcAmountInt = srcAmount
+                ?.movePointRight(selectedSrc.account.token.decimal)
+                ?.toBigInteger()
 
-        viewModelScope.launch {
-            val dstTokenValue = quote.expectedDstValue
+            val selectedSrcBalance = selectedSrc.account.tokenValue?.value ?: return
 
-            val specificAndUtxo = blockChainSpecificRepository.getSpecific(
-                srcToken.chain,
-                srcAddress,
-                srcToken,
-                gasFee,
-                isSwap = true,
-            )
+            val srcTokenValue = srcAmountInt
+                ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
+                ?: return
 
-            val transaction = when (quote) {
-                is SwapQuote.ThorChain -> {
-                    val dstAddress = quote.data.router ?: quote.data.inboundAddress ?: srcAddress
-                    val allowance = allowanceRepository.getAllowance(
-                        chain = srcToken.chain,
-                        contractAddress = srcToken.contractAddress,
-                        srcAddress = srcAddress,
-                        dstAddress = dstAddress,
-                    )
-                    val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
-                    val srcFiatValue = convertTokenValueToFiat(
-                        srcToken, srcTokenValue, AppCurrency.USD,
-                    )
-
-                    val isAffiliate = srcFiatValue.value >=
-                            AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
-
-                    SwapTransaction(
-                        id = UUID.randomUUID().toString(),
-                        vaultId = vaultId,
-                        srcToken = srcToken,
-                        srcTokenValue = srcTokenValue,
-                        dstToken = dstToken,
-                        dstAddress = dstAddress,
-                        expectedDstTokenValue = dstTokenValue,
-                        blockChainSpecific = specificAndUtxo,
-                        estimatedFees = quote.fees,
-                        estimatedTime = quote.estimatedTime,
-                        isApprovalRequired = isApprovalRequired,
-                        payload = SwapPayload.ThorChain(
-                            THORChainSwapPayload(
-                                fromAddress = srcAddress,
-                                fromCoin = srcToken,
-                                toCoin = dstToken,
-                                vaultAddress = quote.data.inboundAddress ?: srcAddress,
-                                routerAddress = quote.data.router,
-                                fromAmount = srcTokenValue.value,
-                                toAmountDecimal = dstTokenValue.decimal,
-                                toAmountLimit = "0",
-                                steamingInterval = "1",
-                                streamingQuantity = "0",
-                                expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
-                                    .inWholeSeconds.toULong(),
-                                isAffiliate = isAffiliate,
-                            )
-                        )
+            if (srcToken.isNativeToken) {
+                if (srcAmountInt + gasFee.value > selectedSrcBalance) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
                 }
-
-                is SwapQuote.MayaChain -> {
-                    val dstAddress = quote.data.router ?: quote.data.inboundAddress ?: srcAddress
-                    val allowance = allowanceRepository.getAllowance(
-                        chain = srcToken.chain,
-                        contractAddress = srcToken.contractAddress,
-                        srcAddress = srcAddress,
-                        dstAddress = dstAddress,
-                    )
-                    val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
-
-                    val srcFiatValue = convertTokenValueToFiat(
-                        srcToken, srcTokenValue, AppCurrency.USD,
+            } else {
+                val nativeTokenAccount = selectedSrc.address.accounts.find { it.token.isNativeToken }
+                val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
                     )
 
-                    val isAffiliate = srcFiatValue.value >=
-                            AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
-
-                    SwapTransaction(
-                        id = UUID.randomUUID().toString(),
-                        vaultId = vaultId,
-                        srcToken = srcToken,
-                        srcTokenValue = srcTokenValue,
-                        dstToken = dstToken,
-                        dstAddress = dstAddress,
-                        expectedDstTokenValue = dstTokenValue,
-                        blockChainSpecific = specificAndUtxo,
-                        estimatedFees = quote.fees,
-                        estimatedTime = quote.estimatedTime,
-                        isApprovalRequired = isApprovalRequired,
-                        payload = SwapPayload.MayaChain(
-                            THORChainSwapPayload(
-                                fromAddress = srcAddress,
-                                fromCoin = srcToken,
-                                toCoin = dstToken,
-                                vaultAddress = quote.data.inboundAddress ?: srcAddress,
-                                routerAddress = quote.data.router,
-                                fromAmount = srcTokenValue.value,
-                                toAmountDecimal = dstTokenValue.decimal,
-                                toAmountLimit = "0",
-                                steamingInterval = "1",
-                                streamingQuantity = "0",
-                                expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
-                                    .inWholeSeconds.toULong(),
-                                isAffiliate = isAffiliate,
-                            )
-                        )
-                    )
-                }
-
-                is SwapQuote.OneInch -> {
-                    val dstAddress = quote.data.tx.to
-
-                    val allowance = allowanceRepository.getAllowance(
-                        chain = srcToken.chain,
-                        contractAddress = srcToken.contractAddress,
-                        srcAddress = srcAddress,
-                        dstAddress = dstAddress,
-                    )
-                    val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
-
-                    SwapTransaction(
-                        id = UUID.randomUUID().toString(),
-                        vaultId = vaultId,
-                        srcToken = srcToken,
-                        srcTokenValue = srcTokenValue,
-                        dstToken = dstToken,
-                        dstAddress = dstAddress,
-                        expectedDstTokenValue = dstTokenValue,
-                        blockChainSpecific = specificAndUtxo,
-                        estimatedFees = quote.fees,
-                        estimatedTime = quote.estimatedTime,
-                        isApprovalRequired = isApprovalRequired,
-                        payload = SwapPayload.OneInch(
-                            OneInchSwapPayloadJson(
-                                fromCoin = srcToken,
-                                toCoin = dstToken,
-                                fromAmount = srcTokenValue.value,
-                                toAmountDecimal = dstTokenValue.decimal,
-                                quote = quote.data,
-                            )
-                        )
+                if (selectedSrcBalance < srcAmountInt
+                    || nativeTokenValue < gasFee.value
+                ) {
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
                 }
             }
 
-            swapTransactionRepository.addTransaction(transaction)
 
-            sendNavigator.navigate(
-                SendDst.VerifyTransaction(
-                    transactionId = transaction.id,
+            val quote = quote ?: return
+
+            viewModelScope.launch {
+                val dstTokenValue = quote.expectedDstValue
+
+                val specificAndUtxo = blockChainSpecificRepository.getSpecific(
+                    srcToken.chain,
+                    srcAddress,
+                    srcToken,
+                    gasFee,
+                    isSwap = true,
                 )
-            )
+
+                val transaction = when (quote) {
+                    is SwapQuote.ThorChain -> {
+                        val dstAddress =
+                            quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                        val allowance = allowanceRepository.getAllowance(
+                            chain = srcToken.chain,
+                            contractAddress = srcToken.contractAddress,
+                            srcAddress = srcAddress,
+                            dstAddress = dstAddress,
+                        )
+                        val isApprovalRequired =
+                            allowance != null && allowance < srcTokenValue.value
+
+                        val srcFiatValue = convertTokenValueToFiat(
+                            srcToken, srcTokenValue, AppCurrency.USD,
+                        )
+
+                        val isAffiliate = srcFiatValue.value >=
+                                AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
+                        SwapTransaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = vaultId,
+                            srcToken = srcToken,
+                            srcTokenValue = srcTokenValue,
+                            dstToken = dstToken,
+                            dstAddress = dstAddress,
+                            expectedDstTokenValue = dstTokenValue,
+                            blockChainSpecific = specificAndUtxo,
+                            estimatedFees = quote.fees,
+                            estimatedTime = quote.estimatedTime,
+                            isApprovalRequired = isApprovalRequired,
+                            payload = SwapPayload.ThorChain(
+                                THORChainSwapPayload(
+                                    fromAddress = srcAddress,
+                                    fromCoin = srcToken,
+                                    toCoin = dstToken,
+                                    vaultAddress = quote.data.inboundAddress ?: srcAddress,
+                                    routerAddress = quote.data.router,
+                                    fromAmount = srcTokenValue.value,
+                                    toAmountDecimal = dstTokenValue.decimal,
+                                    toAmountLimit = "0",
+                                    steamingInterval = "1",
+                                    streamingQuantity = "0",
+                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
+                                        .inWholeSeconds.toULong(),
+                                    isAffiliate = isAffiliate,
+                                )
+                            )
+                        )
+                    }
+
+                    is SwapQuote.MayaChain -> {
+                        val dstAddress =
+                            quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                        val allowance = allowanceRepository.getAllowance(
+                            chain = srcToken.chain,
+                            contractAddress = srcToken.contractAddress,
+                            srcAddress = srcAddress,
+                            dstAddress = dstAddress,
+                        )
+                        val isApprovalRequired =
+                            allowance != null && allowance < srcTokenValue.value
+
+                        val srcFiatValue = convertTokenValueToFiat(
+                            srcToken, srcTokenValue, AppCurrency.USD,
+                        )
+
+                        val isAffiliate = srcFiatValue.value >=
+                                AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
+                        SwapTransaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = vaultId,
+                            srcToken = srcToken,
+                            srcTokenValue = srcTokenValue,
+                            dstToken = dstToken,
+                            dstAddress = dstAddress,
+                            expectedDstTokenValue = dstTokenValue,
+                            blockChainSpecific = specificAndUtxo,
+                            estimatedFees = quote.fees,
+                            estimatedTime = quote.estimatedTime,
+                            isApprovalRequired = isApprovalRequired,
+                            payload = SwapPayload.MayaChain(
+                                THORChainSwapPayload(
+                                    fromAddress = srcAddress,
+                                    fromCoin = srcToken,
+                                    toCoin = dstToken,
+                                    vaultAddress = quote.data.inboundAddress ?: srcAddress,
+                                    routerAddress = quote.data.router,
+                                    fromAmount = srcTokenValue.value,
+                                    toAmountDecimal = dstTokenValue.decimal,
+                                    toAmountLimit = "0",
+                                    steamingInterval = "1",
+                                    streamingQuantity = "0",
+                                    expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
+                                        .inWholeSeconds.toULong(),
+                                    isAffiliate = isAffiliate,
+                                )
+                            )
+                        )
+                    }
+
+                    is SwapQuote.OneInch -> {
+                        val dstAddress = quote.data.tx.to
+
+                        val allowance = allowanceRepository.getAllowance(
+                            chain = srcToken.chain,
+                            contractAddress = srcToken.contractAddress,
+                            srcAddress = srcAddress,
+                            dstAddress = dstAddress,
+                        )
+                        val isApprovalRequired =
+                            allowance != null && allowance < srcTokenValue.value
+
+                        SwapTransaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = vaultId,
+                            srcToken = srcToken,
+                            srcTokenValue = srcTokenValue,
+                            dstToken = dstToken,
+                            dstAddress = dstAddress,
+                            expectedDstTokenValue = dstTokenValue,
+                            blockChainSpecific = specificAndUtxo,
+                            estimatedFees = quote.fees,
+                            estimatedTime = quote.estimatedTime,
+                            isApprovalRequired = isApprovalRequired,
+                            payload = SwapPayload.OneInch(
+                                OneInchSwapPayloadJson(
+                                    fromCoin = srcToken,
+                                    toCoin = dstToken,
+                                    fromAmount = srcTokenValue.value,
+                                    toAmountDecimal = dstTokenValue.decimal,
+                                    quote = quote.data,
+                                )
+                            )
+                        )
+                    }
+                }
+
+                swapTransactionRepository.addTransaction(transaction)
+
+                sendNavigator.navigate(
+                    SendDst.VerifyTransaction(
+                        transactionId = transaction.id,
+                    )
+                )
+            }
+        } catch (e: InvalidTransactionDataException) {
+            showError(e.text)
+            return
         }
     }
 
@@ -338,7 +383,7 @@ internal class SwapFormViewModel @Inject constructor(
 
     fun validateAmount() {
         val errorMessage = validateSrcAmount(srcAmountState.text.toString())
-        uiState.update { it.copy(amountError = errorMessage) }
+        uiState.update { it.copy(error = errorMessage) }
     }
 
     private fun loadTokens(
@@ -589,6 +634,18 @@ internal class SwapFormViewModel @Inject constructor(
             return UiText.StringResource(R.string.swap_error_no_amount)
         }
         return null
+    }
+
+    fun hideError() {
+        uiState.update {
+            it.copy(error = null)
+        }
+    }
+
+    private fun showError(error: UiText) {
+        uiState.update {
+            it.copy(error = error)
+        }
     }
 
     companion object {

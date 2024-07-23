@@ -16,7 +16,6 @@ import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asUiText
-import com.vultisig.wallet.common.unzipZlib
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
@@ -24,6 +23,7 @@ import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
@@ -65,6 +65,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val decompressQr: DecompressQrUseCase,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -125,7 +126,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val qrCodeContent =
                     deepLink.getJsonData() ?: error("Invalid QR code")
 
-                val contentBytes = qrCodeContent.decodeBase64Bytes().unzipZlib()
+                val contentBytes = decompressQr(qrCodeContent.decodeBase64Bytes())
 
                 val payload = when (deepLink.getTssAction()) {
                     TssAction.KEYGEN -> PeerDiscoveryPayload.Keygen(

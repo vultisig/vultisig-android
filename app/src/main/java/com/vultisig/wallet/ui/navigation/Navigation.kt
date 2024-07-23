@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 
 internal open class Dst(
@@ -14,6 +15,7 @@ internal sealed class Destination(
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_TOKEN_ID = "token_id"
+        const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
     }
 
@@ -131,9 +133,26 @@ internal sealed class Destination(
         }
     }
 
+    data class AddressBook(
+        val chain: Chain? = null,
+        val requestId: String? = null,
+    ) : Destination(
+        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
+    ) {
+        companion object {
+            const val staticRoute = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+        }
+    }
+
+    data object AddAddressEntry : Destination(
+        route = "address_book/add"
+    ) {
+        const val staticRoute = "address_book/add"
+    }
+
 
     data object Back : Destination(
-        route = ""
+        route = "back"
     )
 
     data class Home(
