@@ -155,4 +155,10 @@ internal interface RepositoriesModule {
         impl: RequestResultRepositoryImpl
     ): RequestResultRepository
 
+    @Binds
+    @Singleton
+    fun bindCustomTokenRepository(
+        impl: CustomTokenRepositoryImpl
+    ): CustomTokenRepository
+
 }

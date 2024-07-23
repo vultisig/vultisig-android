@@ -8,33 +8,26 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal data class CustomTokenState(
+internal data class CustomTokenUiModel(
     val isLoading: Boolean = false,
     val hasError: Boolean = false,
-    val searchResult: CustomTokenResult? = null
-)
-
-internal data class CustomTokenResult(
-    val token: Coin,
-    val price: String,
+    val token: Coin? = null,
+    val price: String = "",
 )
 
 
@@ -48,18 +41,10 @@ internal class CustomTokenViewModel @Inject constructor(
     private val gson: Gson,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    private val mutableState = MutableStateFlow(CustomTokenState())
-    val uiModel = mutableState.asStateFlow()
+    val uiModel = MutableStateFlow(CustomTokenUiModel())
     val searchFieldState: TextFieldState = TextFieldState()
     private val chainId =
         requireNotNull(savedStateHandle.get<String>(Destination.CustomToken.ARG_CHAIN_ID))
-    private lateinit var appCurrency: AppCurrency
-
-    init {
-        viewModelScope.launch {
-            appCurrency = appCurrencyRepository.currency.first()
-        }
-    }
 
     fun searchCustomToken() {
         viewModelScope.launch {
@@ -67,7 +52,7 @@ internal class CustomTokenViewModel @Inject constructor(
 
             val searchedToken =
                 tokenRepository.getTokenByContract(
-                    Chain.fromRaw(chainId),
+                    chainId,
                     searchFieldState.text.toString()
                 )
 
@@ -75,52 +60,49 @@ internal class CustomTokenViewModel @Inject constructor(
                 showError()
             } else {
                 val rawPrice = calculatePrice(searchedToken)
+                val currency = appCurrencyRepository.currency.first()
                 val tokenFiatValue = FiatValue(
                     rawPrice,
-                    appCurrency.ticker
+                    currency.ticker
                 )
                 val price = fiatValueToStringMapper.map(tokenFiatValue)
-                mutableState.update {
+                uiModel.update {
                     it.copy(
                         isLoading = false,
                         hasError = false,
-                        searchResult = CustomTokenResult(
-                            token = searchedToken,
-                            price = price
-                        ),
+                        token = searchedToken,
+                        price = price
                     )
                 }
-
-
             }
         }
     }
 
-    private suspend fun calculatePrice(result: Coin): BigDecimal {
-        tokenPriceRepository.refresh(listOf(result))
-        return tokenPriceRepository.getPrice(
-            result,
-            appCurrency
-        ).first()
-    }
+    private suspend fun calculatePrice(result: Coin): BigDecimal =
+        tokenPriceRepository.getPriceByContactAddress(
+            chainId,
+            result.contractAddress
+        )
 
     private fun showError() {
-        mutableState.update {
+        uiModel.update {
             it.copy(
                 isLoading = false,
                 hasError = true,
-                searchResult = null,
+                token = null,
+                price = "",
             )
         }
     }
 
 
     private fun showLoading() {
-        mutableState.update {
+        uiModel.update {
             it.copy(
                 isLoading = true,
                 hasError = false,
-                searchResult = null,
+                token = null,
+                price = "",
             )
         }
     }
@@ -131,7 +113,7 @@ internal class CustomTokenViewModel @Inject constructor(
 
     fun convertCoinToString(onConvertCompleted: (String) -> Unit) {
         viewModelScope.launch {
-            val foundCoin = mutableState.value.searchResult?.token ?: return@launch
+            val foundCoin = uiModel.value.token ?: return@launch
             onConvertCompleted(gson.toJson(foundCoin))
         }
     }

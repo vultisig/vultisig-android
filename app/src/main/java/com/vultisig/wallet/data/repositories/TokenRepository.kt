@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.api.CUSTOM_TOKEN_RESPONSE_TICKER_ID
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.models.TokenStandard
@@ -24,7 +23,7 @@ internal interface TokenRepository {
 
     suspend fun getNativeToken(chainId: String): Coin
 
-    suspend fun getTokenByContract(chain: Chain, contractAddress: String): Coin?
+    suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin?
 
     val allTokens: Flow<List<Coin>>
 
@@ -37,7 +36,7 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
     private val customTokenRepository: CustomTokenRepository,
 ) : TokenRepository {
-
+    private val customTokenResponseTickerId = 2
     override suspend fun getToken(tokenId: String): Coin? =
         allTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 
@@ -88,7 +87,8 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it.first { it.chain.id == chainId } }.first()
 
-    override suspend fun getTokenByContract(chain: Chain, contractAddress: String): Coin? {
+    override suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin? {
+        val chain = Chain.fromRaw(chainId)
         val rpcResponses = evmApiFactory.createEvmApi(chain)
             .findCustomToken(contractAddress)
         if (rpcResponses.isEmpty())
@@ -99,7 +99,7 @@ internal class TokenRepositoryImpl @Inject constructor(
             if (it.result == null) {
                 return null
             }
-            if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
+            if (it.id == customTokenResponseTickerId)
                 ticker = it.result.decodeContractString() ?: return null
             else decimal =
                 it.result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
@@ -141,7 +141,10 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     private fun String.decodeContractDecimal(): Int {
-        return BigInteger(removePrefix("0x"), 16).toInt()
+        return BigInteger(
+            removePrefix("0x"),
+            16
+        ).toInt()
     }
 
 }
