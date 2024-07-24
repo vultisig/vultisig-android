@@ -138,6 +138,8 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
+    private var messagesToSign: List<String> = emptyList()
+
     private var _jobWaitingForKeysignStart: Job? = null
 
     val keysignPayload: KeysignPayload?
@@ -149,7 +151,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             serverAddress = _serverAddress,
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
-            messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault),
+            messagesToSign = messagesToSign,
             keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
             gson = gson,
@@ -466,6 +468,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                             Timber.d("Keysign committee: $_keysignCommittee")
                             Timber.d("local party: $_localPartyID")
                             if (this._keysignCommittee.contains(_localPartyID)) {
+                                this.messagesToSign = keysignPayload!!
+                                    .getKeysignMessages(_currentVault)
                                 return true
                             }
                         }
@@ -480,6 +484,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             Timber.e(
                 "Failed to check keysign start: ${e.stackTraceToString()}"
             )
+            errorMessage.value = e.message.toString()
+            currentState.value = JoinKeysignState.Error
         }
         return false
     }
