@@ -167,7 +167,7 @@ internal class TokenSelectionViewModel @Inject constructor(
             TokenUiModel(
                 isEnabled = token.id in enabled,
                 coin = token,
-            )X
+            )
         }
         .sortedWith(compareBy { it.coin.ticker })
         .toList()
