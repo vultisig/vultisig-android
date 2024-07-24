@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.CustomTokenUiModel
 import com.vultisig.wallet.ui.models.CustomTokenViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -72,8 +73,9 @@ internal fun CustomTokenScreen(
             viewModel.pasteToSearchField(clipboardManager.getText()?.text ?: "")
         },
         onSearchClick = viewModel::searchCustomToken,
-        onAddTokenClick = navController::popBackStack
-    )
+        onAddTokenClick = {
+            viewModel.addCoinToTempRepo(onAddCompleted = navController::popBackStack)
+        })
 }
 
 @Composable

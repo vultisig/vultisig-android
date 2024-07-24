@@ -9,9 +9,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,6 +39,7 @@ internal class CustomTokenViewModel @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val requestResultRepository: RequestResultRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val uiModel = MutableStateFlow(CustomTokenUiModel())
@@ -107,5 +110,13 @@ internal class CustomTokenViewModel @Inject constructor(
 
     fun pasteToSearchField(data: String) {
         searchFieldState.setTextAndPlaceCursorAtEnd(data)
+    }
+
+    fun addCoinToTempRepo(onAddCompleted: () -> Unit) {
+        viewModelScope.launch {
+            val foundCoin = uiModel.value.token ?: return@launch
+            requestResultRepository.respond(REQUEST_SEARCHED_TOKEN_ID, foundCoin)
+            onAddCompleted()
+        }
     }
 }

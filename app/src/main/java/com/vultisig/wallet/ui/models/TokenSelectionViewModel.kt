@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.text2.input.textAsFlow
@@ -10,6 +11,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
@@ -48,6 +50,7 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -71,23 +74,34 @@ internal class TokenSelectionViewModel @Inject constructor(
         collectTokens()
     }
 
-    fun enableToken(coin: Coin) {
+    fun checkCustomToken() {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId)
-                ?: error("No vault with $vaultId")
+                val searchedToken = requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
+                enableSearchedToken(searchedToken)
+        }
+    }
 
-            val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-                coin,
-                vault
-            )
-            val updatedCoin = coin.copy(
-                address = address,
-                hexPublicKey = derivedPublicKey
-            )
+    fun enableToken(coin: Coin) = viewModelScope.launch {
+        val vault = vaultRepository.get(vaultId)
+            ?: error("No vault with $vaultId")
 
+        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+            coin,
+            vault
+        )
+        val updatedCoin = coin.copy(
+            address = address,
+            hexPublicKey = derivedPublicKey
+        )
+
+        try {
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
             enabledTokens.update { it + updatedCoin.id }
+        } catch (e: SQLiteConstraintException) {
+            // Importing existing tokens (from search result)
+            // into the coin table causes an exception, which we ignore.
+            Timber.e(e, "Try to import the existing token.")
         }
     }
 
@@ -108,19 +122,22 @@ internal class TokenSelectionViewModel @Inject constructor(
         val chain = Chain.fromRaw(chainId)
 
         viewModelScope.launch {
-            val enabled = vaultRepository.getEnabledTokens(vaultId)
-                .map { enabled -> enabled.map { it.id }.toSet() }
+            val enabled = vaultRepository
+                .getEnabledTokens(vaultId)
                 .first()
+                .filter { !it.isNativeToken && it.chain == chain }
 
-            enabledTokens.value = enabled
+            selectedTokens.value = enabled
+
+            val enabledTokenIds = enabled.map { it.id }.toSet()
+            enabledTokens.value = enabledTokenIds
 
             try {
                 val tokens = tokenRepository.getChainTokens(chain)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
                     .first()
 
-                selectedTokens.value = tokens.filter { it.id in enabled }
-                otherTokens.value = tokens.filter { it.id !in enabled }
+                otherTokens.value = tokens.filter { it.id !in enabledTokenIds }
             } catch (e: Exception) {
                 // todo handle error
                 Timber.e(e)
@@ -159,4 +176,18 @@ internal class TokenSelectionViewModel @Inject constructor(
         .sortedWith(compareBy { it.coin.ticker })
         .toList()
 
+    private fun enableSearchedToken(coin: Coin) {
+        viewModelScope.launch {
+            coin.apply {
+                if (enabledTokens.value.contains(id))
+                    return@apply
+                enableToken(this).join()
+                loadTokens()
+            }
+        }
+    }
+
+    companion object {
+        const val REQUEST_SEARCHED_TOKEN_ID = "request_searched_token_id"
+    }
 }
