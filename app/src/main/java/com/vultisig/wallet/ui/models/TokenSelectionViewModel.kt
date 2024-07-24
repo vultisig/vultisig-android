@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.text2.input.textAsFlow
@@ -73,32 +74,34 @@ internal class TokenSelectionViewModel @Inject constructor(
         collectTokens()
     }
 
-    fun checkCustomToken(contractAddress: String?) {
+    fun checkCustomToken() {
         viewModelScope.launch {
-            contractAddress?.let {
-                val searchedToken = requestResultRepository.request<Coin>(contractAddress)
+                val searchedToken = requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
                 enableSearchedToken(searchedToken)
-            }
         }
     }
 
-    fun enableToken(coin: Coin) {
-        viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId)
-                ?: error("No vault with $vaultId")
+    fun enableToken(coin: Coin) = viewModelScope.launch {
+        val vault = vaultRepository.get(vaultId)
+            ?: error("No vault with $vaultId")
 
-            val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-                coin,
-                vault
-            )
-            val updatedCoin = coin.copy(
-                address = address,
-                hexPublicKey = derivedPublicKey
-            )
+        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+            coin,
+            vault
+        )
+        val updatedCoin = coin.copy(
+            address = address,
+            hexPublicKey = derivedPublicKey
+        )
 
+        try {
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
             enabledTokens.update { it + updatedCoin.id }
+        } catch (e: SQLiteConstraintException) {
+            // Importing existing tokens (from search result)
+            // into the coin table causes an exception, which we ignore.
+            Timber.e(e, "Try to import the existing token.")
         }
     }
 
@@ -178,25 +181,13 @@ internal class TokenSelectionViewModel @Inject constructor(
             coin.apply {
                 if (enabledTokens.value.contains(id))
                     return@apply
-                enableToken(this)
-                showTokenAsEnabled(this)
+                enableToken(this).join()
+                loadTokens()
             }
         }
     }
 
-    private fun showTokenAsEnabled(token: Coin) {
-        val inOtherTokens = otherTokens.value.map { it.id }.any { it == token.id }
-        val updatedSelectedTokens = selectedTokens.value.toMutableList()
-        if (!updatedSelectedTokens.map { it.id }.contains(token.id))
-            updatedSelectedTokens += token
-        selectedTokens.update {
-            updatedSelectedTokens
-        }
-        if (inOtherTokens) {
-            val updatedOtherTokens = otherTokens.value.filter { it.id != token.id }
-            otherTokens.update {
-                updatedOtherTokens
-            }
-        }
+    companion object {
+        const val REQUEST_SEARCHED_TOKEN_ID = "request_searched_token_id"
     }
 }

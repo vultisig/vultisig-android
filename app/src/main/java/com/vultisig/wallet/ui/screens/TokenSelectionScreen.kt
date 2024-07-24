@@ -51,10 +51,7 @@ internal fun TokenSelectionScreen(
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
-        val customCoinString = navController.currentBackStackEntry
-            ?.savedStateHandle
-            ?.get<String>(Destination.ARG_REQUEST_ID)
-        viewModel.checkCustomToken(customCoinString)
+        viewModel.checkCustomToken()
     }
 
     TokenSelectionScreen(

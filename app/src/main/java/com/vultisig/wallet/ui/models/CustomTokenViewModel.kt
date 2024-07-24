@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -111,11 +112,11 @@ internal class CustomTokenViewModel @Inject constructor(
         searchFieldState.setTextAndPlaceCursorAtEnd(data)
     }
 
-    fun addCoinToTempRepo(onAddCompleted: (contractAddress: String) -> Unit) {
+    fun addCoinToTempRepo(onAddCompleted: () -> Unit) {
         viewModelScope.launch {
             val foundCoin = uiModel.value.token ?: return@launch
-            requestResultRepository.respond(foundCoin.contractAddress, foundCoin)
-            onAddCompleted(foundCoin.contractAddress)
+            requestResultRepository.respond(REQUEST_SEARCHED_TOKEN_ID, foundCoin)
+            onAddCompleted()
         }
     }
 }
