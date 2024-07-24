@@ -20,12 +20,6 @@ internal data class CustomTokenEntity(
     val decimals: Int,
     @ColumnInfo("logo")
     val logo: String,
-    @ColumnInfo("priceProviderId")
-    val priceProviderID: String,
     @ColumnInfo("contractAddress")
     val contractAddress: String,
-    @ColumnInfo("address")
-    val address: String,
-    @ColumnInfo("hexPublicKey")
-    val hexPublicKey: String,
 )

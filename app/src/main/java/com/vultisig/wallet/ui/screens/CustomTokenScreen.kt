@@ -74,9 +74,9 @@ internal fun CustomTokenScreen(
         },
         onSearchClick = viewModel::searchCustomToken,
         onAddTokenClick = {
-            viewModel.convertCoinToString(onConvertCompleted = {
+            viewModel.addCoinToTempRepo(onAddCompleted = {
                 navController.previousBackStackEntry?.savedStateHandle?.set(
-                    Destination.CustomToken.ARG_CUSTOM_COIN,
+                    Destination.ARG_REQUEST_ID,
                     it
                 )
                 navController.popBackStack()

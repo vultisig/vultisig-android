@@ -7,9 +7,9 @@ import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Coin
@@ -38,7 +38,7 @@ internal class CustomTokenViewModel @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
-    private val gson: Gson,
+    private val requestResultRepository: RequestResultRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val uiModel = MutableStateFlow(CustomTokenUiModel())
@@ -111,10 +111,11 @@ internal class CustomTokenViewModel @Inject constructor(
         searchFieldState.setTextAndPlaceCursorAtEnd(data)
     }
 
-    fun convertCoinToString(onConvertCompleted: (String) -> Unit) {
+    fun addCoinToTempRepo(onAddCompleted: (contractAddress: String) -> Unit) {
         viewModelScope.launch {
             val foundCoin = uiModel.value.token ?: return@launch
-            onConvertCompleted(gson.toJson(foundCoin))
+            requestResultRepository.respond(foundCoin.contractAddress, foundCoin)
+            onAddCompleted(foundCoin.contractAddress)
         }
     }
 }

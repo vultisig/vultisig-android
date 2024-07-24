@@ -40,22 +40,19 @@ private fun CustomTokenEntity.toCoin() = Coin(
     chain = Chain.fromRaw(chain),
     ticker = ticker,
     logo = logo,
-    address = address,
+    address = "",
     decimal = decimals,
-    hexPublicKey = hexPublicKey,
+    hexPublicKey = "",
     contractAddress = contractAddress,
     isNativeToken = false,
-    priceProviderID = priceProviderID
+    priceProviderID = "",
 )
 
 private fun Coin.toCustomTokenEntity() = CustomTokenEntity(
     id = "${this.ticker}-${this.chain.raw}",
     chain = this.chain.raw,
     ticker = this.ticker,
-    address = this.address,
     decimals = this.decimal,
-    hexPublicKey = this.hexPublicKey,
-    priceProviderID = this.priceProviderID,
     contractAddress = this.contractAddress,
     logo = this.logo,
 )

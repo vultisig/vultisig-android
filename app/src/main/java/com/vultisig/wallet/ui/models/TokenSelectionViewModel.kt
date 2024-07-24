@@ -9,9 +9,9 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.CustomTokenRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
@@ -51,7 +51,7 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val customTokenRepository: CustomTokenRepository,
-    private val gson: Gson,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -73,6 +73,15 @@ internal class TokenSelectionViewModel @Inject constructor(
     init {
         loadTokens()
         collectTokens()
+    }
+
+    fun checkCustomToken(contractAddress: String?) {
+        viewModelScope.launch {
+            contractAddress?.let {
+                val searchedToken = requestResultRepository.request<Coin>(contractAddress)
+                enableSearchedToken(searchedToken)
+            }
+        }
     }
 
     fun enableToken(coin: Coin) {
@@ -168,14 +177,9 @@ internal class TokenSelectionViewModel @Inject constructor(
         .sortedWith(compareBy { it.coin.ticker })
         .toList()
 
-    fun enableSearchedToken(coinString: String?) {
-        if (coinString == null)
-            return
+    private fun enableSearchedToken(coin: Coin) {
         viewModelScope.launch {
-            gson.fromJson(
-                coinString,
-                Coin::class.java
-            ).apply {
+            coin.apply {
                 if (enabledTokens.value.contains(id))
                     return@apply
                 enableToken(this)
