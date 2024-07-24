@@ -99,6 +99,8 @@ internal class KeysignFlowViewModel @Inject constructor(
     private var _currentVault: Vault? = null
     private var _keysignPayload: KeysignPayload? = null
     private val _keysignMessage: MutableState<String> = mutableStateOf("")
+    private var messagesToSign = emptyList<String>()
+
     var currentState: MutableStateFlow<KeysignFlowState> =
         MutableStateFlow(KeysignFlowState.PEER_DISCOVERY)
     var errorMessage: MutableState<String> = mutableStateOf("")
@@ -119,7 +121,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             serverAddress = _serverAddress,
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
-            messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!),
+            messagesToSign = messagesToSign,
             keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
             gson = gson,
@@ -414,7 +416,15 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     fun moveToState(nextState: KeysignFlowState) {
-        currentState.update { nextState }
+        try {
+            if (nextState == KeysignFlowState.KEYSIGN) {
+                messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!)
+            }
+            currentState.update { nextState }
+        } catch (e: Exception) {
+            errorMessage.value = e.message.toString()
+            moveToState(KeysignFlowState.ERROR)
+        }
     }
 
     fun stopParticipantDiscovery() {

@@ -63,6 +63,9 @@ internal class SolanaHelper(
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
         Timber.d("solana error:${preSigningOutput.errorMessage}")
+        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+            throw Exception(preSigningOutput.errorMessage)
+        }
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
     }
 
