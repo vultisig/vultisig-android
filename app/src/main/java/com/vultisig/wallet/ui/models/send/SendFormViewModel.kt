@@ -119,7 +119,7 @@ internal class SendFormViewModel @Inject constructor(
             Chain.entries.find { chain ->
                 chainAccountAddressRepository.isValid(chain, qrCode)
             }?.let { chain ->
-                loadData(vaultId, chain.id, null, true)
+                loadData(vaultId, chain.id, null, null, true)
             }
         }
     }
@@ -141,7 +141,7 @@ internal class SendFormViewModel @Inject constructor(
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
 
-
+    private var isSelectedStartingToken = false
     private var lastToken = ""
     private var lastFiat = ""
 
@@ -165,14 +165,22 @@ internal class SendFormViewModel @Inject constructor(
         vaultId: String,
         chainId: String?,
         selectedTokenId: String?,
+        startWithTokenId: String?,
         forceChainChange: Boolean = false
     ) {
         memoFieldState.clearText()
 
+        val selectedToken = if (isSelectedStartingToken) {
+            selectedTokenId
+        } else {
+            isSelectedStartingToken = true
+            startWithTokenId
+        }
+
         this.vaultId = vaultId
         this.chain = chainId?.let(Chain::fromRaw)
         loadTokens(
-            selectedTokenId = selectedTokenId,
+            selectedTokenId = selectedToken,
             forceChainChange = forceChainChange,
         )
     }

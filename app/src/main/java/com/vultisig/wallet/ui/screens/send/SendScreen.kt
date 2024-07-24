@@ -34,6 +34,7 @@ internal fun SendScreen(
     navController: NavController,
     vaultId: String,
     chainId: String?,
+    startWithTokenId: String?,
     selectedTokenId: String?,
     qrCodeResult: String?,
     viewModel: SendViewModel = hiltViewModel(),
@@ -100,6 +101,7 @@ internal fun SendScreen(
                 SendFormScreen(
                     vaultId = vaultId,
                     chainId = chainId,
+                    startWithTokenId = startWithTokenId,
                     selectedTokenId = selectedTokenId,
                     qrCodeResult = qrCodeResult,
                 )
@@ -140,6 +142,7 @@ private fun SendScreenPreview() {
         qrCodeResult = null,
         vaultId = "",
         chainId = "",
+        startWithTokenId = null,
         selectedTokenId = "",
     )
 }
