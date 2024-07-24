@@ -294,7 +294,6 @@ internal sealed class Destination(
         companion object {
             const val ARG_CHAIN_ID = "chain_id"
             const val STATIC_ROUTE = "custom_token/{$ARG_CHAIN_ID}"
-            const val ARG_CUSTOM_COIN = "custom_contract_address"
         }
     }
 }

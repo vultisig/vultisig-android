@@ -151,12 +151,7 @@ internal class TokenSelectionViewModel @Inject constructor(
         ) { enabled, selected, other, query ->
             val selectedUiTokens = selected.asUiTokens(enabled)
             val otherUiTokens = other.asUiTokens(enabled)
-                .filter {
-                    it.coin.ticker.contains(
-                        query,
-                        ignoreCase = true
-                    )
-                }
+                .filter { it.coin.ticker.contains(query, ignoreCase = true) }
 
             uiState.update {
                 it.copy(
@@ -172,7 +167,7 @@ internal class TokenSelectionViewModel @Inject constructor(
             TokenUiModel(
                 isEnabled = token.id in enabled,
                 coin = token,
-            )
+            )X
         }
         .sortedWith(compareBy { it.coin.ticker })
         .toList()
