@@ -20,6 +20,9 @@ internal object Swaps {
         return when (chain.standard) {
             TokenStandard.UTXO -> {
                 val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preImageHashes)
+                if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+                    throw Exception(preSigningOutput.errorMessage)
+                }
                 preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             }
 
@@ -32,6 +35,9 @@ internal object Swaps {
 
     fun getPreSigningOutput(preImageHashes: ByteArray): List<String> {
         val preSigningOutput = PreSigningOutput.parseFrom(preImageHashes)
+        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+            throw Exception(preSigningOutput.errorMessage)
+        }
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
