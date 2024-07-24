@@ -51,13 +51,14 @@ internal sealed class Destination(
     data class Send(
         val vaultId: String,
         val chainId: String? = null,
+        val tokenId: String? = null,
         val address: String? = null,
     ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${address}"
+        route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${address}&$ARG_TOKEN_ID=${tokenId}"
     ) {
         companion object {
             const val staticRoute =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send?qr={$ARG_QR}"
+                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send?qr={$ARG_QR}&$ARG_TOKEN_ID={$ARG_TOKEN_ID}"
         }
     }
 

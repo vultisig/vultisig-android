@@ -59,6 +59,7 @@ internal class TokenDetailViewModel @Inject constructor(
                 Destination.Send(
                     vaultId = vaultId,
                     chainId = chainRaw,
+                    tokenId = tokenId,
                 )
             )
         }

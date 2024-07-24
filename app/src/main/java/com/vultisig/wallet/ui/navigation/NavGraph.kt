@@ -251,6 +251,10 @@ internal fun SetupNavGraph(
                     // else only tokens from chain
                     nullable = true
                 },
+                navArgument(ARG_TOKEN_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
                 navArgument(ARG_QR) {
                     type = NavType.StringType
                     nullable = true
@@ -262,9 +266,10 @@ internal fun SetupNavGraph(
 
             SendScreen(
                 navController = navController,
-                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE)?: args.getString(ARG_QR),
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR),
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
+                startWithTokenId = args.getString(ARG_TOKEN_ID),
                 selectedTokenId = savedStateHandle.remove(ARG_SELECTED_TOKEN_ID),
             )
         }

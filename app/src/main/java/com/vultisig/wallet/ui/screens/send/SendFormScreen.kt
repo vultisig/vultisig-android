@@ -47,14 +47,15 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun SendFormScreen(
     vaultId: String,
     chainId: String?,
+    startWithTokenId: String?,
     selectedTokenId: String?,
     qrCodeResult: String?,
     viewModel: SendFormViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(vaultId, chainId, selectedTokenId) {
-        viewModel.loadData(vaultId, chainId, selectedTokenId)
+    LaunchedEffect(vaultId, chainId, selectedTokenId, startWithTokenId) {
+        viewModel.loadData(vaultId, chainId, selectedTokenId, startWithTokenId)
     }
 
     LaunchedEffect(qrCodeResult) {
