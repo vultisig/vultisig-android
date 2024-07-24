@@ -119,6 +119,9 @@ internal class KujiraHelper(
         val hashes = wallet.core.jni.TransactionCompiler.preImageHashes(coinType, result)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+            throw Exception(preSigningOutput.errorMessage)
+        }
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
