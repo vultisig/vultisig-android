@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -45,39 +46,39 @@ internal class AccountsRepositoryImpl @Inject constructor(
         }
 
     override fun loadAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
-        val vault = getVault(vaultId)
-        val vaultCoins = vault.coins
-        val coins = vaultCoins.groupBy { it.chain }
+        supervisorScope {
+            val vault = getVault(vaultId)
+            val vaultCoins = vault.coins
+            val coins = vaultCoins.groupBy { it.chain }
 
-        val addresses = coins.mapTo(mutableListOf()) { (chain, coins) ->
-            chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
-        }
-
-        val loadPrices = supervisorScope {
-            async { tokenPriceRepository.refresh(vaultCoins) }
-        }
-        addresses.apply {
-            val balances = balanceRepository.getCachedTokenBalances(
-                addresses.map { adr -> adr.address },
-                addresses.map { adr -> adr.accounts.map { it.token } }.flatten()
-            )
-
-            mapIndexed { index, account ->
-                val newAccounts = account.accounts.map { acc ->
-                    val balance = balances.firstOrNull() {
-                        it.address == account.address && it.coinId == acc.token.id
-                    }
-                    if (balance != null) {
-                        acc.applyBalance(balance.tokenBalance)
-                    } else {
-                        acc
-                    }
-                }
-                addresses[index] = account.copy(accounts = newAccounts)
+            val addresses = coins.mapTo(mutableListOf()) { (chain, coins) ->
+                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
             }
-        }
-        send(addresses)
-        coroutineScope {
+            val loadPrices =
+                async { tokenPriceRepository.refresh(vaultCoins) }
+
+            addresses.apply {
+                val balances = balanceRepository.getCachedTokenBalances(
+                    addresses.map { adr -> adr.address },
+                    addresses.map { adr -> adr.accounts.map { it.token } }.flatten()
+                )
+
+                mapIndexed { index, account ->
+                    val newAccounts = account.accounts.map { acc ->
+                        val balance = balances.firstOrNull() {
+                            it.address == account.address && it.coinId == acc.token.id
+                        }
+                        if (balance != null) {
+                            acc.applyBalance(balance.tokenBalance)
+                        } else {
+                            acc
+                        }
+                    }
+                    addresses[index] = account.copy(accounts = newAccounts)
+                }
+            }
+            send(addresses)
+
             addresses.mapIndexed { index, account ->
                 async {
                     try {
@@ -105,8 +106,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 }
             }.awaitAll()
             send(addresses)
+            awaitClose()
         }
-        awaitClose()
     }
 
     override fun loadAddress(
