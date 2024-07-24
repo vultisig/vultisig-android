@@ -10,7 +10,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.CustomTokenRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -50,7 +49,6 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val customTokenRepository: CustomTokenRepository,
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
@@ -121,19 +119,22 @@ internal class TokenSelectionViewModel @Inject constructor(
         val chain = Chain.fromRaw(chainId)
 
         viewModelScope.launch {
-            val enabled = vaultRepository.getEnabledTokens(vaultId)
-                .map { enabled -> enabled.map { it.id }.toSet() }
+            val enabled = vaultRepository
+                .getEnabledTokens(vaultId)
                 .first()
+                .filter { !it.isNativeToken && it.chain == chain }
 
-            enabledTokens.value = enabled
+            selectedTokens.value = enabled
+
+            val enabledTokenIds = enabled.map { it.id }.toSet()
+            enabledTokens.value = enabledTokenIds
 
             try {
                 val tokens = tokenRepository.getChainTokens(chain)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
                     .first()
 
-                selectedTokens.value = tokens.filter { it.id in enabled }
-                otherTokens.value = tokens.filter { it.id !in enabled }
+                otherTokens.value = tokens.filter { it.id !in enabledTokenIds }
             } catch (e: Exception) {
                 // todo handle error
                 Timber.e(e)
@@ -179,14 +180,9 @@ internal class TokenSelectionViewModel @Inject constructor(
                     return@apply
                 enableToken(this)
                 showTokenAsEnabled(this)
-                val allTokens = tokenRepository
-                    .getChainTokens(Chain.fromRaw(chainId)).first().map { it.id }
-                if (!allTokens.contains(id))
-                    customTokenRepository.insert(this)
             }
         }
     }
-
 
     private fun showTokenAsEnabled(token: Coin) {
         val inOtherTokens = otherTokens.value.map { it.id }.any { it == token.id }

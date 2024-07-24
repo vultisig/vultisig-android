@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.db
 
 import android.content.Context
 import androidx.room.Room
-import com.vultisig.wallet.data.db.dao.CustomTokenDao
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
@@ -13,7 +12,6 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
 import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
 import com.vultisig.wallet.data.db.migrations.MIGRATION_6_7
 import com.vultisig.wallet.data.db.migrations.MIGRATION_7_8
-import com.vultisig.wallet.data.db.migrations.MIGRATION_8_9
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,7 +44,6 @@ internal interface DatabaseModule {
                     MIGRATION_5_6,
                     MIGRATION_6_7,
                     MIGRATION_7_8,
-                    MIGRATION_8_9,
                 )
                 .build()
 
@@ -75,12 +72,6 @@ internal interface DatabaseModule {
         fun provideTokenPriceDao(
             appDatabase: AppDatabase,
         ): TokenPriceDao = appDatabase.tokenPriceDao()
-
-        @Provides
-        @Singleton
-        fun provideCustomTokenDao(
-            appDatabase: AppDatabase,
-        ): CustomTokenDao = appDatabase.customTokenDao()
 
         @Provides
         @Singleton

@@ -34,7 +34,6 @@ internal interface TokenRepository {
 internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
-    private val customTokenRepository: CustomTokenRepository,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
         allTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
@@ -44,37 +43,26 @@ internal class TokenRepositoryImpl @Inject constructor(
             flow {
                 val tokens = oneInchApi.getTokens(chain)
                 val allTokens = allTokens.first().filter { it.chain == chain }
-                val customTokens = customTokenRepository.getAll(chain.id).toMutableList()
-                val oneInchTokens = tokens.tokens.asSequence()
-                    .map { it.value }
-                    .map {
-                        Coin(
-                            contractAddress = it.address,
-                            chain = chain,
-                            ticker = it.symbol,
-                            logo = it.logoURI ?: "",
-                            decimal = it.decimals,
-                            isNativeToken = false,
-                            priceProviderID = "",
-                            address = "",
-                            hexPublicKey = "",
-                        )
-                    }
-                    .filter { newCoin -> allTokens.none { it.chain == newCoin.chain && it.ticker == newCoin.ticker } }
-                    .toList()
 
-                customTokens.forEach {
-                    if (oneInchTokens.map { oneInchToken -> oneInchToken.id }.contains(it.id) ||
-                        allTokens.map { token -> token.id }.contains(it.id)
-                    ) {
-                        customTokenRepository.remove(it.id)
-                        customTokens.remove(it)
-                    }
-                }
                 emit(
                     allTokens +
-                            customTokens +
-                            oneInchTokens
+                            tokens.tokens.asSequence()
+                                .map { it.value }
+                                .map {
+                                    Coin(
+                                        contractAddress = it.address,
+                                        chain = chain,
+                                        ticker = it.symbol,
+                                        logo = it.logoURI ?: "",
+                                        decimal = it.decimals,
+                                        isNativeToken = false,
+                                        priceProviderID = "",
+                                        address = "",
+                                        hexPublicKey = "",
+                                    )
+                                }
+                                .filter { newCoin -> allTokens.none { it.chain == newCoin.chain && it.ticker == newCoin.ticker } }
+                                .toList()
                 )
             }
         } else {
