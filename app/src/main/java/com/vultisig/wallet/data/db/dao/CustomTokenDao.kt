@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.Flow
 internal interface CustomTokenDao {
 
     @Query("SELECT * FROM customToken WHERE chain = :chainId")
-    fun getAll(chainId: String): Flow<List<CustomTokenEntity>>
+    suspend fun getAll(chainId: String): List<CustomTokenEntity>
 
     @Query("SELECT * FROM customToken WHERE contractAddress = :contractAddress")
     suspend fun findByContractAddress(contractAddress: String): CustomTokenEntity
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert
     suspend fun insert(coin: CustomTokenEntity)
 
     @Query("DELETE FROM customToken where id = :id")

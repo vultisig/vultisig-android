@@ -44,7 +44,7 @@ internal class TokenRepositoryImpl @Inject constructor(
             flow {
                 val tokens = oneInchApi.getTokens(chain)
                 val allTokens = allTokens.first().filter { it.chain == chain }
-                val customTokens = customTokenRepository.getAll(chain.id).first().toMutableList()
+                val customTokens = customTokenRepository.getAll(chain.id).toMutableList()
                 val oneInchTokens = tokens.tokens.asSequence()
                     .map { it.value }
                     .map {

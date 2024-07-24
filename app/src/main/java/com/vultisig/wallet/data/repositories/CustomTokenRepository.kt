@@ -4,13 +4,11 @@ import com.vultisig.wallet.data.db.dao.CustomTokenDao
 import com.vultisig.wallet.data.db.models.CustomTokenEntity
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 internal interface CustomTokenRepository {
 
-    fun getAll(chainId: String): Flow<List<Coin>>
+    suspend fun getAll(chainId: String): List<Coin>
 
     suspend fun insert(coin: Coin)
 
@@ -22,8 +20,8 @@ internal interface CustomTokenRepository {
 internal class CustomTokenRepositoryImpl @Inject constructor(
     private val customTokenDao: CustomTokenDao
 ) : CustomTokenRepository {
-    override fun getAll(chainId: String): Flow<List<Coin>> =
-        customTokenDao.getAll(chainId).map { entity -> entity.map { it.toCoin() } }
+    override suspend fun getAll(chainId: String): List<Coin> =
+        customTokenDao.getAll(chainId).map { it.toCoin() }
 
 
     override suspend fun insert(coin: Coin) {
