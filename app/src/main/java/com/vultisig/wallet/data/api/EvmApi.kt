@@ -275,6 +275,7 @@ internal class EvmApiImp(
                 message.contains("Transaction is temporarily banned") ||
                 message.contains("nonce too low: next nonce") ||
                 message.contains("transaction already exists") ||
+                message.contains("nonce too low: address") || // this message happens on layer 2
                 message.contains("tx already in mempool")
             ) {
                 // even the server returns an error , but this still consider as success

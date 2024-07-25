@@ -85,7 +85,13 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val gasLimit = BigInteger(
                 when {
                     isSwap -> "600000"
-                    token.isNativeToken -> "23000"
+                    token.isNativeToken -> {
+                        if (chain == Chain.arbitrum)
+                            "120000" // arbitrum has higher gas limit
+                        else
+                            "23000"
+                    }
+
                     else -> "120000"
                 }
             )

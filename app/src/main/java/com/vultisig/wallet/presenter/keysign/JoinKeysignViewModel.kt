@@ -342,7 +342,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } else {
                     val payloadToken = payload.coin
                     val address = payloadToken.address
-                    val token = tokenRepository.getToken(payloadToken.id)!!
+                    val token = payloadToken
                     val chain = token.chain
 
                     val tokenValue = TokenValue(
