@@ -76,8 +76,10 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun checkCustomToken() {
         viewModelScope.launch {
-                val searchedToken = requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
+            val searchedToken = requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
+            searchedToken?.let {
                 enableSearchedToken(searchedToken)
+            }
         }
     }
 
