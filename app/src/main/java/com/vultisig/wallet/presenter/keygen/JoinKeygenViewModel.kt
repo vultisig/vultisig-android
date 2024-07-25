@@ -3,6 +3,7 @@
 package com.vultisig.wallet.presenter.keygen
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import androidx.compose.runtime.MutableState
@@ -16,7 +17,6 @@ import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asUiText
-import com.vultisig.wallet.common.unzipZlib
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.models.PeerDiscoveryPayload
 import com.vultisig.wallet.models.TssAction
@@ -31,6 +32,7 @@ import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -65,6 +67,8 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val decompressQr: DecompressQrUseCase,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -101,6 +105,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
+            context = context,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -125,7 +130,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val qrCodeContent =
                     deepLink.getJsonData() ?: error("Invalid QR code")
 
-                val contentBytes = qrCodeContent.decodeBase64Bytes().unzipZlib()
+                val contentBytes = decompressQr(qrCodeContent.decodeBase64Bytes())
 
                 val payload = when (deepLink.getTssAction()) {
                     TssAction.KEYGEN -> PeerDiscoveryPayload.Keygen(

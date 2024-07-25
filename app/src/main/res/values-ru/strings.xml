@@ -212,14 +212,11 @@
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_src_amount_hint">Введите сумму</string>
     <string name="swap_form_estimated_fees_title">Ориентировочные сборы</string>
-    <string name="swap_form_estimated_time_title">Ориентировочное время</string>
     <string name="swap_form_dst_token_title">В</string>
     <string name="swap_screen_title">Обмен</string>
     <string name="swap_form_gas_title">Газ (авто)</string>
     <string name="share_qr_utils_choose_an_app">Выберите приложение</string>
-    <string name="swap_screen_estimated_time_instant">Мгновенно</string>
     <string name="verify_swap_screen_estimated_fees">Ориентировочные сборы</string>
-    <string name="verify_swap_screen_estimated_time">Ориентировочное время</string>
     <string name="verify_swap_agree_receive_amount">Я согласен с суммой, которую получу после обмена</string>
     <string name="verify_swap_consent_amount">Сумма обмена корректна</string>
     <string name="chain_token_screen_address_copied">%1$s скопировано в буфер обмена</string>

@@ -315,6 +315,28 @@ internal object Coins {
             isNativeToken = true,
         ),
         Coin(
+            chain = Chain.base,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.base,
+            ticker = "WEWE",
+            logo = "wewe",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
+            isNativeToken = false,
+        ),
+        Coin(
             chain = Chain.arbitrum,
             ticker = "ETH",
             logo = "eth",
@@ -548,6 +570,7 @@ internal object Coins {
             "fox" -> R.drawable.fox
             "dot" -> R.drawable.dot
             "wETH"->R.drawable.weth
+            "wewe" -> R.drawable.wewe
             else -> logoName
         }
     }

@@ -185,6 +185,31 @@ internal fun FormTextFieldCard(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
+internal fun FormTextFieldCard(
+    hint: String,
+    error: UiText?,
+    keyboardType: KeyboardType,
+    textFieldState: TextFieldState,
+    onLostFocus: () -> Unit = {},
+    actions: (@Composable RowScope.() -> Unit)? = null,
+) {
+    TextFieldValidator(
+        errorText = error,
+    ) {
+        FormCard {
+            FormTextField(
+                hint = hint,
+                keyboardType = keyboardType,
+                textFieldState = textFieldState,
+                actions = actions,
+                onLostFocus = onLostFocus
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
 internal fun FormTextFieldCardWithPercentage(
     title: String,
     hint: String,
@@ -552,17 +577,20 @@ internal fun TextFieldValidator(
 ) {
     Column {
         content()
-        UiSpacer(size = 8.dp)
         AnimatedContent(
             targetState = errorText,
             label = "error message"
         ) { errorMessage ->
-            if (errorMessage != null)
-                Text(
-                    text = errorMessage.asString(),
-                    color = Theme.colors.error,
-                    style = Theme.menlo.body1
-                )
+            if (errorMessage != null) {
+                Column {
+                    UiSpacer(size = 8.dp)
+                    Text(
+                        text = errorMessage.asString(),
+                        color = Theme.colors.error,
+                        style = Theme.menlo.body1
+                    )
+                }
+            }
         }
 
     }

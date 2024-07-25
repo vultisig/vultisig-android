@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 
 internal open class Dst(
@@ -14,6 +15,7 @@ internal sealed class Destination(
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_TOKEN_ID = "token_id"
+        const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
     }
 
@@ -49,13 +51,14 @@ internal sealed class Destination(
     data class Send(
         val vaultId: String,
         val chainId: String? = null,
+        val tokenId: String? = null,
         val address: String? = null,
     ) : Destination(
-        route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${address}"
+        route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${address}&$ARG_TOKEN_ID=${tokenId}"
     ) {
         companion object {
             const val staticRoute =
-                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send?qr={$ARG_QR}"
+                "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send?qr={$ARG_QR}&$ARG_TOKEN_ID={$ARG_TOKEN_ID}"
         }
     }
 
@@ -131,9 +134,26 @@ internal sealed class Destination(
         }
     }
 
+    data class AddressBook(
+        val chain: Chain? = null,
+        val requestId: String? = null,
+    ) : Destination(
+        route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
+    ) {
+        companion object {
+            const val staticRoute = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+        }
+    }
+
+    data object AddAddressEntry : Destination(
+        route = "address_book/add"
+    ) {
+        const val staticRoute = "address_book/add"
+    }
+
 
     data object Back : Destination(
-        route = ""
+        route = "back"
     )
 
     data class Home(
@@ -259,7 +279,22 @@ internal sealed class Destination(
         }
     }
 
+    data class ShareVaultQr(val vaultId: String) :
+        Destination(route = "share_vault_qr/$vaultId") {
+        companion object {
+            const val ARG_VAULT_ID = "vault_id"
+            const val staticRoute = "share_vault_qr/{$ARG_VAULT_ID}"
+        }
+    }
+
     data object CreateNewVault : Destination(
         route = "create_new_vault"
     )
+    internal data class CustomToken(val chainId: String) :
+        Destination(route = "custom_token/$chainId") {
+        companion object {
+            const val ARG_CHAIN_ID = "chain_id"
+            const val STATIC_ROUTE = "custom_token/{$ARG_CHAIN_ID}"
+        }
+    }
 }

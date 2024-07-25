@@ -4,8 +4,6 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +28,7 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.presenter.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.components.ProgressScreen
+import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
@@ -38,21 +37,9 @@ import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 @Composable
 internal fun JoinKeysignView(
     navController: NavHostController,
-    qrCodeResult: String,
 ) {
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
-
-    LaunchedEffect(qrCodeResult) {
-        viewModel.setScanResult(qrCodeResult)
-    }
-
-    DisposableEffect(key1 = Unit) {
-        onDispose {
-            viewModel.cleanUp()
-        }
-    }
-
     var keysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
 
     JoinKeysignScreen(
@@ -115,12 +102,12 @@ internal fun JoinKeysignView(
             }
 
             Keysign -> {
-                val keysignViewModel = remember { viewModel.keysignViewModel }
-                val hasStartedKeysign = remember { mutableStateOf(false) }
-                if (!hasStartedKeysign.value) {
-                    keysignViewModel.startKeysign()
-                    hasStartedKeysign.value = true
-                }
+                val wrapperViewModel = hiltViewModel(
+                    creationCallback = { factory: KeySignWrapperViewModel.Factory ->
+                        factory.create(viewModel.keysignViewModel)
+                    }
+                )
+                val keysignViewModel = wrapperViewModel.viewModel
                 val kState = keysignViewModel.currentState.collectAsState().value
                 keysignState = kState
                 KeysignScreen(

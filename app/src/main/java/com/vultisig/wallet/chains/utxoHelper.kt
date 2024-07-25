@@ -64,6 +64,9 @@ internal class utxoHelper(
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
+        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+            throw Exception(preSigningOutput.errorMessage)
+        }
         return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
     }
 

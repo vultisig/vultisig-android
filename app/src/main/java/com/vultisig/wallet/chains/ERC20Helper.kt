@@ -2,7 +2,6 @@ package com.vultisig.wallet.chains
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
-import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
@@ -14,6 +13,7 @@ import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Ethereum
+import java.math.BigInteger
 
 internal class ERC20Helper(
     private val coinType: CoinType,
@@ -24,7 +24,7 @@ internal class ERC20Helper(
         val ethSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()
-            .setChainId(ByteString.copyFrom(coinType.chainId().toHexByteArray()))
+            .setChainId(ByteString.copyFrom(BigInteger(coinType.chainId()).toByteArray()))
             .setNonce(ByteString.copyFrom(ethSpecific.nonce.toByteArray()))
             .setGasLimit(ByteString.copyFrom(ethSpecific.gasLimit.toByteArray()))
             .setMaxFeePerGas(ByteString.copyFrom(ethSpecific.maxFeePerGasWei.toByteArray()))
@@ -50,6 +50,9 @@ internal class ERC20Helper(
         val hashes = TransactionCompiler.preImageHashes(coinType, result)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+            throw Exception(preSigningOutput.errorMessage)
+        }
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 

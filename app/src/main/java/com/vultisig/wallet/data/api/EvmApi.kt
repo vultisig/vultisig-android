@@ -3,8 +3,10 @@ package com.vultisig.wallet.data.api
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toKeccak256
+import com.vultisig.wallet.data.models.CustomTokenResponse
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
@@ -53,6 +55,7 @@ internal interface EvmApi {
     suspend fun getMaxPriorityFeePerGas(): BigInteger
     suspend fun getNonce(address: String): BigInteger
     suspend fun getGasPrice(): BigInteger
+    suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse>
 }
 
 internal interface EvmApiFactory {
@@ -272,6 +275,7 @@ internal class EvmApiImp(
                 message.contains("Transaction is temporarily banned") ||
                 message.contains("nonce too low: next nonce") ||
                 message.contains("transaction already exists") ||
+                message.contains("nonce too low: address") || // this message happens on layer 2
                 message.contains("tx already in mempool")
             ) {
                 // even the server returns an error , but this still consider as success
@@ -282,4 +286,77 @@ internal class EvmApiImp(
         }
         return jsonObject.get("result").asString
     }
+
+    override suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse> {
+        val (payload1, payload2) = generateCustomTokenPayload(contractAddress)
+        return try {
+            val response = httpClient.post(getRPCEndpoint()) {
+                header(
+                    "Content-Type",
+                    "application/json"
+                )
+                setBody(
+                    gson.toJson(
+                        listOf(
+                            payload1,
+                            payload2
+                        )
+                    )
+                )
+            }
+            val responseContent = response.bodyAsText()
+            val responseList = gson.fromJson<List<RpcResponse>?>(
+                responseContent,
+                object : TypeToken<List<RpcResponse>>() {}.type
+            )
+            responseList.map {
+                CustomTokenResponse(
+                    id = it.id,
+                    result = it.result,
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun generateCustomTokenPayload(
+        contractAddress: String
+    ): Pair<RpcPayload, RpcPayload> {
+        val payload1 = RpcPayload(
+            jsonrpc = "2.0",
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to contractAddress,
+                    "data" to CUSTOM_TOKEN_REQUEST_TICKER_DATA
+                ),
+                "latest"
+            ),
+            id = CUSTOM_TOKEN_RESPONSE_TICKER_ID,
+        )
+        val payload2 = RpcPayload(
+            jsonrpc = "2.0",
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to contractAddress,
+                    "data" to CUSTOM_TOKEN_REQUEST_DECIMAL_DATA
+                ),
+                "latest"
+            ),
+            id = CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_,
+        )
+        return Pair(
+            payload1,
+            payload2
+        )
+    }
+    companion object {
+        private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
+        private const val CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_= 3
+        private const val CUSTOM_TOKEN_REQUEST_TICKER_DATA = "0x95d89b41"
+        private const val CUSTOM_TOKEN_REQUEST_DECIMAL_DATA = "0x313ce567"
+    }
 }
+

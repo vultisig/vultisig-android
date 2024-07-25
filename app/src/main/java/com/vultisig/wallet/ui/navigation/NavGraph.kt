@@ -23,6 +23,7 @@ import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SELECTED_TOKEN_ID
@@ -33,10 +34,12 @@ import com.vultisig.wallet.ui.screens.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
+import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
@@ -47,6 +50,8 @@ import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
+import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
+import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
@@ -175,12 +180,9 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_QR) { type = NavType.StringType }
             )
-        ) { entry ->
-            val qrCodeResult = entry.arguments?.getString(ARG_QR)!!
-
+        ) {
             JoinKeysignView(
                 navController = navController,
-                qrCodeResult = qrCodeResult,
             )
         }
 
@@ -249,6 +251,10 @@ internal fun SetupNavGraph(
                     // else only tokens from chain
                     nullable = true
                 },
+                navArgument(ARG_TOKEN_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
                 navArgument(ARG_QR) {
                     type = NavType.StringType
                     nullable = true
@@ -260,9 +266,10 @@ internal fun SetupNavGraph(
 
             SendScreen(
                 navController = navController,
-                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE)?: args.getString(ARG_QR),
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR),
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
+                startWithTokenId = args.getString(ARG_TOKEN_ID),
                 selectedTokenId = savedStateHandle.remove(ARG_SELECTED_TOKEN_ID),
             )
         }
@@ -282,6 +289,28 @@ internal fun SetupNavGraph(
             )
         ) {
             ScanQrAndJoin(navController = navController)
+        }
+
+        composable(
+            route = Destination.AddressBook.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_REQUEST_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument(ARG_CHAIN_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
+            AddressBookScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.AddAddressEntry.staticRoute,
+        ) {
+            AddAddressEntryScreen(navController = navController)
         }
 
         composable(
@@ -401,6 +430,22 @@ internal fun SetupNavGraph(
             )
         ) {
             BackupSuggestionScreen()
+        }
+        composable(
+            route = Destination.ShareVaultQr.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            )
+        ) {
+            ShareVaultQrScreen(
+                navController = navController
+            )
+        }
+
+        composable(
+            route = Destination.CustomToken.STATIC_ROUTE,
+        ) {
+            CustomTokenScreen(navController)
         }
     }
 }

@@ -139,8 +139,20 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindVaultDataStoreManager(
+    fun bindVaultDataStoreRepository(
         impl: VaultDataStoreRepositoryImpl
     ): VaultDataStoreRepository
+
+    @Binds
+    @Singleton
+    fun bindAddressBookEntryRepository(
+        impl: AddressBookRepositoryImpl
+    ): AddressBookRepository
+
+    @Binds
+    @Singleton
+    fun bindRequestResultRepository(
+        impl: RequestResultRepositoryImpl
+    ): RequestResultRepository
 
 }

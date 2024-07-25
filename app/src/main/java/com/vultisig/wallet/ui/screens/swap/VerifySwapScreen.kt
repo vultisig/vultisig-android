@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.swap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +12,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -71,7 +69,6 @@ internal fun VerifySwapScreen(
         srcTokenValue = state.srcTokenValue,
         dstTokenValue = state.dstTokenValue,
         estimatedFees = state.estimatedFees,
-        estimatedTime = state.estimatedTime.asString(),
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
         hasConsentAllowance = state.hasConsentAllowance,
@@ -91,7 +88,6 @@ private fun VerifySwapScreen(
     srcTokenValue: String,
     dstTokenValue: String,
     estimatedFees: String,
-    estimatedTime: String,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
     hasConsentAllowance: Boolean,
@@ -158,11 +154,6 @@ private fun VerifySwapScreen(
                     )
 
                     OtherField(
-                        title = stringResource(R.string.verify_swap_screen_estimated_time),
-                        value = estimatedTime,
-                    )
-
-                    OtherField(
                         title = stringResource(R.string.verify_swap_provider_title),
                         value = provider,
                         divider = false,
@@ -208,7 +199,6 @@ private fun VerifySwapScreenPreview() {
         srcTokenValue = "1 RUNE",
         dstTokenValue = "1 ETH",
         estimatedFees = "1.00$",
-        estimatedTime = "Instant",
         consentAmount = true,
         consentReceiveAmount = false,
         hasConsentAllowance = true,

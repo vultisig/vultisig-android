@@ -1,6 +1,7 @@
 package com.vultisig.wallet.presenter.common
 
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,9 +23,11 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.scale
 import androidx.core.graphics.toColorInt
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -33,6 +36,9 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
+private const val QR_CODE_SCALE_FACTOR = 8
+private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
 
 @Composable
 internal fun QRCodeKeyGenImage(
@@ -73,6 +79,9 @@ internal fun QRCodeKeyGenImage(
 @Composable
 internal fun rememberQRBitmapPainter(
     qrCodeContent: String,
+    mainColor: Color = Theme.colors.neutral900,
+    backgroundColor: Color = Theme.colors.neutral0,
+    logo : Bitmap? = null
 ): BitmapPainter {
     var bitmap by remember(qrCodeContent) {
         mutableStateOf<Bitmap?>(null)
@@ -83,7 +92,7 @@ internal fun rememberQRBitmapPainter(
 
         launch(Dispatchers.IO) {
             bitmap = try {
-                generateQrBitmap(qrCodeContent)
+                generateQrBitmap(qrCodeContent, mainColor, backgroundColor, logo)
             } catch (ex: WriterException) {
                 null
             }
@@ -107,6 +116,9 @@ internal fun rememberQRBitmapPainter(
 }
  internal fun generateQrBitmap(
     qrCodeContent: String,
+    mainColor: Color = Color.Black,
+    backgroundColor: Color = Color.White,
+    logo : Bitmap? = null,
 ): Bitmap {
     val hintMap = mapOf(EncodeHintType.MARGIN to 0)
 
@@ -132,12 +144,34 @@ internal fun rememberQRBitmapPainter(
         for (y in 0 until matrixHeight) {
             val shouldColorPixel = bitmapMatrix?.get(x, y) ?: false
             val pixelColor =
-                if (shouldColorPixel) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+                if (shouldColorPixel) mainColor.toArgb() else backgroundColor.toArgb()
 
             bitmap.setPixel(x, y, pixelColor)
         }
     }
-    return bitmap
+    if (logo == null) return bitmap
+
+    val scaledWidth = bitmap.width * QR_CODE_SCALE_FACTOR
+    val scaledHeight = bitmap.height * QR_CODE_SCALE_FACTOR
+     val scaledLogoWidthTemp = scaledWidth / QR_CODE_VS_LOGO_SCALE_FACTOR
+    val scaledLogoHeightTemp = scaledHeight / QR_CODE_VS_LOGO_SCALE_FACTOR
+    val scaledLogoWidth = if (scaledLogoWidthTemp == 0) 1 else scaledLogoWidthTemp
+    val scaledLogoHeight = if (scaledLogoHeightTemp == 0) 1 else scaledLogoHeightTemp
+    val scaledLogo = logo.scale(scaledLogoWidth, scaledLogoHeight)
+    val scaledBitmap = bitmap.scale(scaledWidth, scaledHeight, false)
+
+    val canvas = Canvas(scaledBitmap)
+
+    val xLogo = (scaledBitmap.width - scaledLogo.width) / 2f
+    val yLogo = (scaledBitmap.height - scaledLogo.height) / 2f
+
+    canvas.drawBitmap(scaledLogo, xLogo, yLogo, null)
+    if (bitmap != scaledBitmap)
+        bitmap.recycle()
+
+    scaledLogo.recycle()
+
+    return scaledBitmap
 }
 
 @Preview

@@ -2,10 +2,8 @@ package com.vultisig.wallet.presenter.keysign
 
 
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.unzipZlib
 import com.vultisig.wallet.data.DataModule
 import com.vultisig.wallet.models.Coins
-import io.ktor.util.decodeBase64Bytes
 import org.junit.Assert
 import org.junit.Test
 import java.math.BigInteger
@@ -54,11 +52,4 @@ class KeysignMessageTest {
         print(gson.toJson(result1))
     }
 
-    @Test
-    fun testDecode() {
-        val input =
-            """XVLLbtswEPwXXmsHFEVSlG9+AQlauIaT9BL0sCKXtqxn9HDsBPn3rmSnQMsTubuzOzPcD1bDJa/AsdkHO0Gfdz8qC/kWmu7ysGIzlm4PVYnTxTJmE2artBwK6ya1uG2qU+qweSAs6w5VYw9A6aGq7Bqw3dy5BtuWshQcITvokM30nQknrEtthg0ld8+bNRV4xOcy7YZAXyIFHNq0gHzAG3rm1b6ia3NNjrOeLjUOdJ7uf+6W4/DZx+fnhMHfwQOtAI3mWf2a1ecjcYzjCHPjM1+EZXkEya2Ub6rPvpreUMubmAbeFpBDaWkSE/x6KJ62G+jSEz5VGRKma3ocNazQDy5SMb/jggoPeN72SZ7a73gZomEYCDpGOy+dVtxpL0IrrdKgwQbGJLFHGwmlAu6RxyLGxHMJXkQSkfOYkcICi+rqa1fN/1VLtSaKjr4oRHsuzpfX7BgW8bmDzByQ7/fRpe7f36/IoupLovrCvrFJcNP2++bDY03++9T+bzADawfYpi+S4f8CrnmgJ6zF1x5Hm/jwB313rojTC7Ub14o8IAPWy9XjfHQBNddaBQYSE3nrrFcIYSQkJCGi1jGiwSQSOiJDnOFSGVAR+e8jGue8GVxoSXZaleOeLuOVWavFcmpWUTCVOg6mc7Okp9E6WAfxYhVLNkCaEy3iBorhP38RsbRN99NARZQk+s2l7qglUb3H87B5KKR3IrYycS70OgxDNJ4rEQOqkAuuSDw4kSiXoEMwKhQahJRGaBkpoK59i19zdpgDLYGnrcbPPw=="""
-        val inputBytes = input.decodeBase64Bytes()
-        val result = inputBytes.unzipZlib()
-    }
 }
