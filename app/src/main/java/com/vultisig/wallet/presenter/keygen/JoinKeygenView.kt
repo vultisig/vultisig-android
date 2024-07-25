@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -26,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.InformationNoteSnackBar
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
 import com.vultisig.wallet.ui.theme.Theme
@@ -48,47 +51,57 @@ internal fun JoinKeygenView(
             viewModel.cleanUp()
         }
     }
-    when (viewModel.currentState.value) {
-        JoinKeygenState.DiscoveryingSessionID -> {
-            DiscoveryingSessionID(navController = navController)
-        }
-
-        JoinKeygenState.DiscoverService -> {
-            val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-            viewModel.discoveryMediator(nsdManager)
-            DiscoverService(navController = navController)
-        }
-
-        JoinKeygenState.JoinKeygen -> {
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.joinKeygen()
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        when (viewModel.currentState.value) {
+            JoinKeygenState.DiscoveryingSessionID -> {
+                DiscoveryingSessionID(navController = navController)
             }
-            JoiningKeygen(navController = navController)
-        }
 
-        JoinKeygenState.WaitingForKeygenStart -> {
-            LaunchedEffect(key1 = viewModel) {
-                viewModel.waitForKeygenToStart()
+            JoinKeygenState.DiscoverService -> {
+                val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+                viewModel.discoveryMediator(nsdManager)
+                DiscoverService(navController = navController)
             }
-            WaitingForKeygenToStart(navController = navController)
-        }
 
-        JoinKeygenState.Keygen -> {
-            GeneratingKey(navController = navController, viewModel.generatingKeyViewModel)
-        }
+            JoinKeygenState.JoinKeygen -> {
+                LaunchedEffect(key1 = viewModel) {
+                    viewModel.joinKeygen()
+                }
+                JoiningKeygen(navController = navController)
+            }
 
-        JoinKeygenState.FailedToStart -> {
-            KeygenFailedToStart(
-                navController = navController,
-                errorMessage = viewModel.errorMessage.value
-            )
-        }
+            JoinKeygenState.WaitingForKeygenStart -> {
+                LaunchedEffect(key1 = viewModel) {
+                    viewModel.waitForKeygenToStart()
+                }
+                WaitingForKeygenToStart(navController = navController)
+            }
 
-        JoinKeygenState.ERROR -> {
-            KeygenFailedToStart(
-                navController = navController,
-                errorMessage = viewModel.errorMessage.value
-            )
+            JoinKeygenState.Keygen -> {
+                GeneratingKey(navController = navController, viewModel.generatingKeyViewModel)
+            }
+
+            JoinKeygenState.FailedToStart -> {
+                KeygenFailedToStart(
+                    navController = navController,
+                    errorMessage = viewModel.errorMessage.value
+                )
+            }
+
+            JoinKeygenState.ERROR -> {
+                KeygenFailedToStart(
+                    navController = navController,
+                    errorMessage = viewModel.errorMessage.value
+                )
+            }
+        }
+        SnackbarHost(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            hostState = viewModel.warningHostState
+        ){
+            InformationNoteSnackBar(text = stringResource(id = R.string.keygen_info_note))
         }
     }
 }

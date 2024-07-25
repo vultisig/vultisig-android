@@ -43,6 +43,8 @@ internal data class Colors(
     val red: Color = Color(0xffFF4040),
     val alertBackground: Color = Color(0x59DA2E2E),
     val alert: Color = Color(0xffDA2E2E),
+    val miamiMarmalade: Color = Color(0xffF7961B),
+    val miamiMarmaladeFaded: Color = Color(0x59F7961B),
 ) {
     companion object {
         val Default = Colors()

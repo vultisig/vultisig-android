@@ -6,6 +6,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -36,6 +38,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,6 +54,8 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+
+const val WARNING_TIMEOUT = 10000L
 
 enum class JoinKeygenState {
     DiscoveryingSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart, ERROR
@@ -90,6 +95,17 @@ internal class JoinKeygenViewModel @Inject constructor(
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
     var errorMessage: MutableState<String> = mutableStateOf("")
+    val warningHostState = SnackbarHostState()
+
+    private val warningLauncher =
+        viewModelScope.launch {
+            delay(WARNING_TIMEOUT)
+            warningHostState.showSnackbar(
+                errorMessage.value,
+                duration = SnackbarDuration.Indefinite
+            )
+        }
+
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
             _vault,
@@ -268,6 +284,8 @@ internal class JoinKeygenViewModel @Inject constructor(
     }
 
     suspend fun waitForKeygenToStart() {
+        warningLauncher.cancel()
+        warningHostState.currentSnackbarData?.dismiss()
         jobWaitingForKeygenStart = viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 while (isActive) {
