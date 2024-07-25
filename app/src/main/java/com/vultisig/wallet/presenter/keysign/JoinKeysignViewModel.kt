@@ -244,7 +244,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val srcTokenValue = swapPayload.srcTokenValue
                 val dstTokenValue = swapPayload.dstTokenValue
 
-                val nativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
+                val nativeToken = tokenRepository.getNativeToken(dstToken.chain.id)
 
                 when (swapPayload) {
                     is SwapPayload.OneInch -> {
