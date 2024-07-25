@@ -27,7 +27,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
@@ -50,15 +49,12 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun SwapFormScreen(
     vaultId: String,
     chainId: String?,
-    selectedSrcTokenId: String? = null,
-    selectedDstTokenId: String? = null,
     viewModel: SwapFormViewModel = hiltViewModel(),
-    onFlipTokenIds: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(vaultId, chainId) {
-        viewModel.loadData(selectedSrcTokenId, selectedDstTokenId, vaultId, chainId)
+        viewModel.loadData(vaultId, chainId)
     }
 
     SwapFormScreen(
@@ -69,9 +65,7 @@ internal fun SwapFormScreen(
         onSelectSrcToken = viewModel::selectSrcToken,
         onDismissError = viewModel::hideError,
         onSelectDstToken = viewModel::selectDstToken,
-        onFlipSelectedTokens = {
-            viewModel.flipSelectedTokens(onFlipTokenIds)
-        },
+        onFlipSelectedTokens = viewModel::flipSelectedTokens,
     )
 }
 

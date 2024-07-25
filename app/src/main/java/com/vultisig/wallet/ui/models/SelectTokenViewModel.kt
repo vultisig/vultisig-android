@@ -8,6 +8,7 @@ import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.IsSwapSupported
@@ -28,6 +29,7 @@ import javax.inject.Inject
 internal class SelectTokenViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -45,6 +47,13 @@ internal class SelectTokenViewModel @Inject constructor(
     init {
         loadTokens()
         collectTokens()
+    }
+
+    fun enableToken(targetArg: String, tokenId: String, onEnableCompleted: () -> Unit) {
+        viewModelScope.launch {
+            requestResultRepository.respond(targetArg, tokenId)
+            onEnableCompleted()
+        }
     }
 
     private fun loadTokens() {

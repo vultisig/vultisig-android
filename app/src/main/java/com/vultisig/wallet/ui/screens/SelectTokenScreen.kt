@@ -25,10 +25,7 @@ internal fun SelectTokenScreen(
         state = state,
         hasTokenSwitch = false,
         onEnableToken = {
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set(targetArg, it.id)
-            navController.popBackStack()
+            viewModel.enableToken(targetArg, it.id, navController::popBackStack)
         },
         onDisableToken = {}
     )
