@@ -77,7 +77,7 @@ internal fun InformationNote(
 
 @Preview
 @Composable
-fun InformationNotePreview() {
+private fun InformationNotePreview() {
     InformationNote(
         text = "This is a warning message,\nThis is a warning message",
     )
