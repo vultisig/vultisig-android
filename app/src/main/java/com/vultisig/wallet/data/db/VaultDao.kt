@@ -33,7 +33,7 @@ internal interface VaultDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertVault(vault: VaultEntity)
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCoins(coins: List<CoinEntity>)
 
     @Insert(onConflict = OnConflictStrategy.ABORT)

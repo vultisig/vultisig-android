@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
+import com.vultisig.wallet.data.api.models.OneInchTokensJson
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -24,6 +26,8 @@ internal interface TokenRepository {
     suspend fun getNativeToken(chainId: String): Coin
 
     suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin?
+
+    suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
 
     val allTokens: Flow<List<Coin>>
 
@@ -45,23 +49,13 @@ internal class TokenRepositoryImpl @Inject constructor(
                 val allTokens = allTokens.first().filter { it.chain == chain }
                 emit(
                     allTokens +
-                            tokens.tokens.asSequence()
-                                .map { it.value }
-                                .map {
-                                    Coin(
-                                        contractAddress = it.address,
-                                        chain = chain,
-                                        ticker = it.symbol,
-                                        logo = it.logoURI ?: "",
-                                        decimal = it.decimals,
-                                        isNativeToken = false,
-                                        priceProviderID = "",
-                                        address = "",
-                                        hexPublicKey = "",
-                                    )
+                            tokens.toCoins(chain)
+                                .filter { newCoin ->
+                                    allTokens.none {
+                                        it.chain == newCoin.chain
+                                                && it.ticker == newCoin.ticker
+                                    }
                                 }
-                                .filter { newCoin -> allTokens.none { it.chain == newCoin.chain && it.ticker == newCoin.ticker } }
-                                .toList()
                 )
             }
         } else {
@@ -104,6 +98,15 @@ internal class TokenRepositoryImpl @Inject constructor(
         return coin
     }
 
+    override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
+        Timber.d("getTokensWithBalance(chain = $chain, address = $address)")
+        val contractsWithBalance = oneInchApi.getContractsWithBalance(chain, address)
+        if (contractsWithBalance.isEmpty()) return emptyList()
+
+        val oneInchTokensWithBalance = oneInchApi.getTokensByContracts(chain, contractsWithBalance)
+        return oneInchTokensWithBalance.toCoins(chain)
+    }
+
     override val allTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
 
     override val nativeTokens: Flow<List<Coin>> = allTokens
@@ -132,6 +135,24 @@ internal class TokenRepositoryImpl @Inject constructor(
             16
         ).toInt()
     }
+
+    private fun OneInchTokensJson.toCoins(chain: Chain): List<Coin> =
+        tokens.asSequence()
+            .map { it.value }
+            .map {
+                Coin(
+                    contractAddress = it.address,
+                    chain = chain,
+                    ticker = it.symbol,
+                    logo = it.logoURI ?: "",
+                    decimal = it.decimals,
+                    isNativeToken = false,
+                    priceProviderID = "",
+                    address = "",
+                    hexPublicKey = "",
+                )
+            }
+            .toList()
 
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
 import com.vultisig.wallet.models.Chain
@@ -8,6 +9,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface OneInchApi {
@@ -23,6 +25,16 @@ internal interface OneInchApi {
 
     suspend fun getTokens(
         chain: Chain,
+    ): OneInchTokensJson
+
+    suspend fun getContractsWithBalance(
+        chain: Chain,
+        address: String,
+    ): List<String>
+
+    suspend fun getTokensByContracts(
+        chain: Chain,
+        contractAddresses: List<String>,
     ): OneInchTokensJson
 
 }
@@ -67,6 +79,32 @@ internal class OneInchApiImpl @Inject constructor(
     ): OneInchTokensJson {
         val response =
             httpClient.get("https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}/tokens")
+        return gson.fromJson(response.bodyAsText(), OneInchTokensJson::class.java)
+    }
+
+    override suspend fun getContractsWithBalance(chain: Chain, address: String): List<String> {
+        val response =
+            httpClient.get("https://api.vultisig.com/1inch/balance/v1.2/${chain.oneInchChainId()}/balances/$address")
+        val text = response.bodyAsText()
+
+        return gson.fromJson<Map<String, String>>(
+            text,
+            object : TypeToken<Map<String, String>>() {}.type
+        ).mapNotNull { (key, value) ->
+            if (value.toBigInteger() > BigInteger.ZERO) key else null
+        }
+    }
+
+    override suspend fun getTokensByContracts(
+        chain: Chain,
+        contractAddresses: List<String>
+    ): OneInchTokensJson {
+        val response = httpClient.get(
+            "https://api.vultisig.com/1inch/token/v1.2/${chain.oneInchChainId()}/custom"
+        ) {
+            parameter("addresses", contractAddresses.joinToString(","))
+        }
+
         return gson.fromJson(response.bodyAsText(), OneInchTokensJson::class.java)
     }
 

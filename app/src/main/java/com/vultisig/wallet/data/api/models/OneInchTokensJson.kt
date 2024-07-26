@@ -19,7 +19,7 @@ internal data class OneInchTokenJson(
     @SerializedName("logoURI")
     val logoURI: String?,
     @SerializedName("eip2612")
-    val eip2612: Boolean,
+    val eip2612: Boolean? = null,
     @SerializedName("tags")
-    val tags: List<String>
+    val tags: List<String>? = null,
 )
