@@ -55,7 +55,7 @@ import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-const val WARNING_TIMEOUT = 10000L
+private const val WARNING_TIMEOUT = 10000L
 
 enum class JoinKeygenState {
     DiscoveryingSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart, ERROR

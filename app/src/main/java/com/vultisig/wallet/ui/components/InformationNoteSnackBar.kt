@@ -20,10 +20,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun InformationNoteSnackBar(modifier: Modifier = Modifier, text: String){
-    Snackbar(
-        containerColor = Color.Transparent,
-    ){
+internal fun InformationNoteSnackBar(
+    text: String,
+    modifier: Modifier = Modifier,
+){
+    Snackbar(containerColor = Color.Transparent){
         InformationNote(
             modifier = modifier,
             text = text
@@ -32,11 +33,18 @@ internal fun InformationNoteSnackBar(modifier: Modifier = Modifier, text: String
 }
 
 @Composable
-internal fun InformationNote(modifier: Modifier = Modifier, text: String) {
+internal fun InformationNote(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp, start = 8.dp, end = 8.dp),
+            .padding(
+                bottom = 16.dp,
+                start = 8.dp,
+                end = 8.dp,
+            ),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(2.dp, Theme.colors.miamiMarmalade),
         colors = CardDefaults.cardColors(
