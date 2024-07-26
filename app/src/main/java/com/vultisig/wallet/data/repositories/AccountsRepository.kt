@@ -7,11 +7,9 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
@@ -51,7 +49,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             val vaultCoins = vault.coins
             val coins = vaultCoins.groupBy { it.chain }
 
-            val addresses = coins.mapTo(mutableListOf()) { (chain, coins) ->
+            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
                 chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
             }
             val loadPrices =
@@ -118,6 +116,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         val coins = vault.coins.filter { it.chain == chain }
 
         val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+            ?: return@flow
 
         emit(account)
 

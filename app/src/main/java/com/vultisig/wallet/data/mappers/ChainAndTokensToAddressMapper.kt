@@ -11,22 +11,27 @@ internal data class ChainAndTokens(
     val tokens: List<Coin>,
 )
 
-internal interface ChainAndTokensToAddressMapper : Mapper<ChainAndTokens, Address>
+internal interface ChainAndTokensToAddressMapper : Mapper<ChainAndTokens, Address?>
 
 internal class ChainAndTokensToAddressMapperImpl @Inject constructor() :
     ChainAndTokensToAddressMapper {
 
-    override fun map(from: ChainAndTokens): Address =
-        Address(
-            chain = from.chain,
-            address = from.tokens.first { it.isNativeToken }.address,
-            accounts = from.tokens.map {
-                Account(
-                    token = it,
-                    tokenValue = null,
-                    fiatValue = null,
+    override fun map(from: ChainAndTokens) =
+        from.tokens
+            .firstOrNull { it.isNativeToken }
+            ?.let { nativeToken ->
+                Address(
+                    chain = from.chain,
+                    address = nativeToken.address,
+                    accounts = from.tokens.map {
+                        Account(
+                            token = it,
+                            tokenValue = null,
+                            fiatValue = null,
+                        )
+                    }
                 )
             }
-        )
+
 
 }

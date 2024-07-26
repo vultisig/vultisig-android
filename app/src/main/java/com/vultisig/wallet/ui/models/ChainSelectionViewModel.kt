@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class ChainSelectionUiModel(
@@ -48,21 +49,38 @@ internal class ChainSelectionViewModel @Inject constructor(
         loadChains()
     }
 
-    fun enableAccount(coin: Coin) {
+    fun enableAccount(nativeToken: Coin) {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
                 ?: error("No vault with $vaultId")
 
             val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-                coin,
+                nativeToken,
                 vault
             )
-            val updatedCoin = coin.copy(
+            val updatedCoin = nativeToken.copy(
                 address = address,
                 hexPublicKey = derivedPublicKey
             )
 
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
+
+            try {
+                tokenRepository
+                    .getTokensWithBalance(nativeToken.chain, address)
+                    .filter { it.id != nativeToken.id }
+                    .forEach { token ->
+                        val updatedToken = token.copy(
+                            address = address,
+                            hexPublicKey = derivedPublicKey
+                        )
+                        vaultRepository.addTokenToVault(vaultId, updatedToken)
+                    }
+            } catch (e: Exception) {
+                Timber.e(e)
+                // ignore
+            }
+
             loadChains()
         }
     }

@@ -46,11 +46,27 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
                         nativeToken,
                         insertedVault
                     )
-                    val updatedCoin = nativeToken.copy(
+                    val updatedNativeToken = nativeToken.copy(
                         address = address,
                         hexPublicKey = derivedPublicKey
                     )
-                    vaultRepository.addTokenToVault(vaultId, updatedCoin)
+                    vaultRepository.addTokenToVault(vaultId, updatedNativeToken)
+
+                    try {
+//                        tokenRepository
+//                            .getTokensWithBalance(nativeToken.chain, address)
+//                            .filter { it.id != nativeToken.id }
+//                            .forEach { token ->
+//                                val updatedToken = token.copy(
+//                                    address = address,
+//                                    hexPublicKey = derivedPublicKey
+//                                )
+//                                vaultRepository.addTokenToVault(vaultId, updatedToken)
+//                            }
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        // ignore
+                    }
                 }
         }
     }
