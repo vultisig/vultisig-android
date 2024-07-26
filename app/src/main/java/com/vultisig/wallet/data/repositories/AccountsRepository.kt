@@ -106,8 +106,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 }
             }.awaitAll()
             send(addresses)
-            awaitClose()
         }
+        awaitClose()
     }
 
     override fun loadAddress(
