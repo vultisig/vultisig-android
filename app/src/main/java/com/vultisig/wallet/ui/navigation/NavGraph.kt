@@ -235,9 +235,8 @@ internal fun SetupNavGraph(
                 navArgument(ARG_TARGET_ARG) { type = NavType.StringType },
                 navArgument(ARG_SWAP_SELECT) { type = NavType.BoolType }
             )
-        ) { entry ->
+        ) {
             SelectTokenScreen(
-                targetArg = requireNotNull(entry.arguments?.getString(ARG_TARGET_ARG)),
                 navController = navController
             )
         }

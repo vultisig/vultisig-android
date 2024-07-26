@@ -224,7 +224,7 @@ internal class SendFormViewModel @Inject constructor(
                 chain = chain ?: selectedAccount?.token?.chain,
                 requestId = REQUEST_ADDRESS_ID,
             ))
-            val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)!!
+            val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
             setOutputAddress(address.address)
         }
     }

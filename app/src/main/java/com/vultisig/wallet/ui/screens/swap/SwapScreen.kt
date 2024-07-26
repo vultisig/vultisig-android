@@ -119,7 +119,7 @@ private fun SwapScreen(
             ) {
                 SwapFormScreen(
                     vaultId = vaultId,
-                    chainId = chainId
+                    chainId = chainId,
                 )
             }
             composable(
