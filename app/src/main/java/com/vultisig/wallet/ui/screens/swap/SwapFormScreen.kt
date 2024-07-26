@@ -30,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiBarContainer
@@ -38,10 +39,12 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
+import com.vultisig.wallet.ui.components.library.form.FormError
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigInteger
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -173,6 +176,10 @@ internal fun SwapFormScreen(
                 onSelectToken = onSelectDstToken,
             )
 
+            FormDetails(
+                title = stringResource(R.string.swap_form_estimated_fees_title),
+                value = state.fee
+            )
             UiSpacer(size = 0.dp)
 
             Column(
@@ -192,6 +199,17 @@ internal fun SwapFormScreen(
                     title = stringResource(R.string.swap_form_estimated_fees_title),
                     value = state.fee
                 )
+            }
+            if (state.minimumAmount != BigInteger.ZERO.toString()) {
+                state.selectedSrcToken?.let { selectedToken ->
+                    FormError(
+                        errorMessage = stringResource(
+                            R.string.swap_form_minimum_amount,
+                            state.minimumAmount,
+                            selectedToken.title
+                        )
+                    )
+                }
             }
         }
 

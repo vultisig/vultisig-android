@@ -69,6 +69,7 @@ internal data class SwapFormUiModel(
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
     val provider: UiText = UiText.Empty,
+    val minimumAmount: String =BigInteger.ZERO.toString()
     val gas: String = "",
     val fee: String = "",
     val error: UiText? = null,
@@ -514,6 +515,28 @@ internal class SwapFormViewModel @Inject constructor(
                                     )
                                 }
                                 this@SwapFormViewModel.quote = quote
+
+                                val recommendedMinAmountIn:BigInteger= when (quote) {
+                                    is SwapQuote.ThorChain-> {
+                                        quote.data.recommendedMinAmountIn
+                                    }
+                                    is SwapQuote.MayaChain->{
+                                        quote.data.recommendedMinAmountIn
+                                    }
+                                    is SwapQuote.OneInch -> {
+                                        BigInteger.ZERO
+                                    }
+                                }
+                                amount?.let {
+                                    if (amount < recommendedMinAmountIn.toBigDecimal()) {
+                                       uiState.update {
+                                           it.copy(minimumAmount =recommendedMinAmountIn.toBigDecimal().toPlainString() )
+                                       }
+                                    }
+                                }
+
+
+
 
                                 val fiatFees =
                                     convertTokenValueToFiat(dstToken, quote.fees, currency)

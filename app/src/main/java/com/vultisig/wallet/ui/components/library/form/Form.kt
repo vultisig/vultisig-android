@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -54,6 +55,7 @@ import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.PercentText
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -567,6 +569,24 @@ internal fun FormDetails(
             style = Theme.menlo.body1
         )
     }
+}
+
+@Composable
+internal fun FormError(
+    errorMessage: String,
+) {
+    Column {
+        UiHorizontalDivider()
+        Row {
+            Text(
+                text = errorMessage,
+                color = Theme.colors.red,
+                style = Theme.montserrat.body1,
+            )
+            UiSpacer(weight = 1f)
+        }
+    }
+
 }
 
 
