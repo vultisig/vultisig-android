@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
@@ -53,7 +54,7 @@ internal fun InformationNote(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Absolute.SpaceBetween,
+            horizontalArrangement = Arrangement.Absolute.Left,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UiIcon(
@@ -72,4 +73,12 @@ internal fun InformationNote(
             )
         }
     }
+}
+
+@Preview
+@Composable
+private fun InformationNotePreview() {
+    InformationNote(
+        text = "This is a warning message,\nThis is a warning message",
+    )
 }
