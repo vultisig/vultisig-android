@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.InformationNote
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -66,15 +67,10 @@ internal fun KeysignErrorView(
         UiSpacer(weight = 1f)
 
         Column {
-            Text(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally),
+            InformationNote(
+                modifier = Modifier.padding(horizontal = 8.dp),
                 text = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
-                style = Theme.menlo.body1,
-                color = Theme.colors.neutral0,
-                textAlign = TextAlign.Center
             )
-            UiSpacer(size = 8.dp)
 
             MultiColorButton(
                 text = stringResource(R.string.try_again),

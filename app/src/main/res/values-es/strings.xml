@@ -5,7 +5,7 @@
     <string name="danger_icon">Icono de peligro</string>
     <string name="signing_error_please_try_again">Error al Firmar. Por favor intenta de nuevo.</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos. Asegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
+    <string name="bottom_warning_msg_keygen_error_screen">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="try_again">Intentar de Nuevo</string>
     <string name="vault_choose_chains">Elegir Cadenas</string>
     <string name="plus_icon">Icono más</string>
@@ -150,7 +150,7 @@
     <string name="device_list_desc2">No tienes un tercer dispositivo de respaldo, así que debes hacer una copia de seguridad de una parte del cofre de forma segura más tarde.</string>
     <string name="device_list_desc3">Tu dispositivo de respaldo no es necesario a menos que pierdas uno de tus dispositivos principales.</string>
     <string name="failed_to_start_error">Error al iniciar, error: %1$s</string>
-    <string name="keep_devices_on_the_same_wifi_network">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos. Asegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
+    <string name="keep_devices_on_the_same_wifi_network">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="join_keygen_view_new_vault">Nueva CAJA FUERTE %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
     <string name="token_settings_supply">Oferta: %1$s</string>

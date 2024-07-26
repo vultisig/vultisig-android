@@ -171,8 +171,8 @@
     <string name="signing_error_keygen">Keygen</string>
     <string name="setup_keep_devices_on_the_same_wifi_network_with_vultisig_open">Držite uređaje na istoj WiFi mreži s otvorenim Vultisig-om.</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Držite uređaje na istoj WiFi mreži s otvorenim Vultisig-om.</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje. Uvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
-    <string name="keep_devices_on_the_same_wifi_network">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje. Uvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
+    <string name="bottom_warning_msg_keygen_error_screen">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje.\nUvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
+    <string name="keep_devices_on_the_same_wifi_network">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje.\nUvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
     <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Držite uređaje na istoj mreži s otvorenim Vultisig-om.</string>
     <string name="keygen_peer_discovery_desc1">Držite sve uređaje na istoj WiFi mreži s otvorenom aplikacijom Vultisig. (Možda neće raditi na WiFi-ju hotela/zračne luke)</string>
     <string name="keysign_peer_discovery_desc1">Držite sve uređaje na istoj mreži s otvorenom aplikacijom Vultisig. (Možda neće raditi na WiFi-ju hotela/zračne luke)</string>

@@ -8,7 +8,7 @@
     <string name="danger_icon">Gevaarpictogram</string>
     <string name="signing_error_please_try_again">Ondertekeningsfout. Probeer het opnieuw.</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk,\n correct kluis en paar apparaten.\n Zorg ervoor dat er geen andere apparaten zijn\n het draaien van Vultisig.</string>
+    <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk, correct kluis en paar apparaten.\nZorg ervoor dat er geen andere apparaten zijn het draaien van Vultisig.</string>
     <string name="try_again">Probeer opnieuw</string>
     <string name="vault_choose_chains">Kies kettingen</string>
     <string name="plus_icon">Plus-pictogram</string>
@@ -160,7 +160,7 @@
     <string name="device_list_desc3">Uw reserveapparaat is niet nodig tenzij u een van uw hoofdapparaten verliest.</string>
     <string name="failed_to_start_error">Niet gelukt om te starten, fout: %1$s</string>
     <string name="keygen_peer_descovery_of_vault">%1$s van %2$s kluis</string>
-    <string name="keep_devices_on_the_same_wifi_network">Houd apparaten op hetzelfde WiFi-netwerk, juiste kluis en koppel apparaten. \nZorg ervoor dat geen andere apparaten \nVultisig draaien.</string>
+    <string name="keep_devices_on_the_same_wifi_network">Houd apparaten op hetzelfde WiFi-netwerk, juiste kluis en koppel apparaten.\nZorg ervoor dat geen andere apparaten \nVultisig draaien.</string>
     <string name="join_keygen_view_new_vault">Nieuwe kluis %1$s</string>
     <string name="camera_bind_error">Camerabindingsfout %1$s</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>

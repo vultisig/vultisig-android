@@ -171,8 +171,8 @@
     <string name="signing_error_keygen">Gerador de chaves</string>
     <string name="setup_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenha os dispositivos na mesma rede WiFi com o Vultisig aberto.</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenha os dispositivos na mesma rede WiFi com o Vultisig aberto.</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos. Certifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
-    <string name="keep_devices_on_the_same_wifi_network">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos. Certifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
+    <string name="bottom_warning_msg_keygen_error_screen">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos.\nCertifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
+    <string name="keep_devices_on_the_same_wifi_network">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos.\nCertifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
     <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenha os dispositivos na mesma rede com o Vultisig aberto.</string>
     <string name="keygen_peer_discovery_desc1">Mantenha todos os dispositivos no mesmo WiFi com o aplicativo Vultisig aberto. (Pode não funcionar no WiFi do hotel/aeroporto)</string>
     <string name="keysign_peer_discovery_desc1">Mantenha todos os dispositivos na mesma rede com o aplicativo Vultisig aberto. (Pode não funcionar no WiFi do hotel/aeroporto)</string>

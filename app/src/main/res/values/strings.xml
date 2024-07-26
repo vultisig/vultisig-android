@@ -9,7 +9,7 @@
     <string name="danger_icon">Danger Icon</string>
     <string name="signing_error_please_try_again">Signing Error. Please try again.</string>
     <string name="signing_error_please_try_again_s">Signing Error. Please try again. %s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network,\n correct vault and pair devices.\n Make sure no other devices are\n running Vultisig.</string>
+    <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network, correct vault and pair devices.\nMake sure no other devices are running Vultisig.</string>
     <string name="try_again">Try again</string>
     <string name="vault_choose_chains">Choose Chains</string>
     <string name="plus_icon">Plus Icon</string>
@@ -162,7 +162,7 @@
     <string name="device_list_desc3">Your backup device is not needed unless you lose one of your main devices.</string>
     <string name="failed_to_start_error">Failed to start,error: %1$s</string>
     <string name="keygen_peer_descovery_of_vault">%1$s of %2$s Vault</string>
-    <string name="keep_devices_on_the_same_wifi_network">Keep devices on the same WiFi Network, correct vault and pair devices. \nMake sure no other devices are \nrunning vultisig.</string>
+    <string name="keep_devices_on_the_same_wifi_network">Keep devices on the same WiFi Network, correct vault and pair devices.\nMake sure no other devices are running vultisig.</string>
     <string name="join_keygen_view_new_vault">New Vault %1$s</string>
     <string name="camera_bind_error">Camera bind error %1$s</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
