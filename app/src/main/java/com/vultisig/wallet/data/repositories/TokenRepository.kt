@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
-import com.vultisig.wallet.data.api.models.OneInchTokensJson
+import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
@@ -49,7 +49,7 @@ internal class TokenRepositoryImpl @Inject constructor(
                 val allTokens = allTokens.first().filter { it.chain == chain }
                 emit(
                     allTokens +
-                            tokens.toCoins(chain)
+                            tokens.tokens.toCoins(chain)
                                 .filter { newCoin ->
                                     allTokens.none {
                                         it.chain == newCoin.chain
@@ -99,6 +99,9 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
+        // cant get this for non EVM chains right now
+        if (chain.standard != TokenStandard.EVM) return emptyList()
+
         Timber.d("getTokensWithBalance(chain = $chain, address = $address)")
         val contractsWithBalance = oneInchApi.getContractsWithBalance(chain, address)
         if (contractsWithBalance.isEmpty()) return emptyList()
@@ -136,8 +139,8 @@ internal class TokenRepositoryImpl @Inject constructor(
         ).toInt()
     }
 
-    private fun OneInchTokensJson.toCoins(chain: Chain): List<Coin> =
-        tokens.asSequence()
+    private fun Map<String, OneInchTokenJson>.toCoins(chain: Chain): List<Coin> =
+        asSequence()
             .map { it.value }
             .map {
                 Coin(

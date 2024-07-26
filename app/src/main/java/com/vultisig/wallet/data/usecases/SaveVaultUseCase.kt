@@ -1,11 +1,9 @@
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
@@ -48,35 +46,29 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
                         nativeToken,
                         insertedVault
                     )
-                    val updatedCoin = nativeToken.copy(
+                    val updatedNativeToken = nativeToken.copy(
                         address = address,
                         hexPublicKey = derivedPublicKey
                     )
-                    vaultRepository.addTokenToVault(vaultId, updatedCoin)
+                    vaultRepository.addTokenToVault(vaultId, updatedNativeToken)
+
+                    try {
+//                        tokenRepository
+//                            .getTokensWithBalance(nativeToken.chain, address)
+//                            .filter { it.id != nativeToken.id }
+//                            .forEach { token ->
+//                                val updatedToken = token.copy(
+//                                    address = address,
+//                                    hexPublicKey = derivedPublicKey
+//                                )
+//                                vaultRepository.addTokenToVault(vaultId, updatedToken)
+//                            }
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        // ignore
+                    }
                 }
         }
-
-        // discover tokens with balance
-        Chain.entries
-            .filter { it.standard == TokenStandard.EVM }
-            .forEach { chain ->
-                try {
-                    val (address, derivedPublicKey) = chainAccountAddressRepository
-                        .getAddress(chain, vault)
-
-                    val tokens = tokenRepository.getTokensWithBalance(chain, address)
-
-                    tokens.forEach { token ->
-                        val updatedToken = token.copy(
-                            address = address,
-                            hexPublicKey = derivedPublicKey
-                        )
-                        vaultRepository.addTokenToVault(vault.id, updatedToken)
-                    }
-                } catch (e: Exception) {
-                    // no problem
-                }
-            }
     }
 
 }
