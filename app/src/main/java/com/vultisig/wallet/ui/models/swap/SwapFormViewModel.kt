@@ -69,7 +69,7 @@ internal data class SwapFormUiModel(
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
     val provider: UiText = UiText.Empty,
-    val minimumAmount: String =BigInteger.ZERO.toString()
+    val minimumAmount: String =BigInteger.ZERO.toString(),
     val gas: String = "",
     val fee: String = "",
     val error: UiText? = null,
