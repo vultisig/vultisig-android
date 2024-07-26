@@ -18,7 +18,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -83,6 +82,7 @@ internal fun ShareVaultQrScreen(
         navController = navController,
         ecdsa = state.shareVaultQrModel.publicKeyEcdsa,
         eddsa = state.shareVaultQrModel.publicKeyEddsa,
+        name = state.shareVaultQrModel.name,
         qrBitmapPainter = qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
         onButtonClicked = {
@@ -100,6 +100,7 @@ internal fun ShareVaultQrScreen(
     navController: NavController,
     ecdsa: String,
     eddsa: String,
+    name: String,
     qrBitmapPainter: BitmapPainter?,
     shareVaultQrString: String?,
     onButtonClicked: () -> Unit,
@@ -171,7 +172,7 @@ internal fun ShareVaultQrScreen(
                     }
 
                     Text(
-                        text = stringResource(R.string.share_vault_qr_title),
+                        text = name,
                         style = Theme.menlo.heading5.copy(
                             fontWeight = FontWeight.Bold,
                         ),
@@ -209,6 +210,7 @@ internal fun ShareVaultQrScreenPreview() {
         navController = rememberNavController(),
         ecdsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
         eddsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
+        name = "Main Vault",
         shareVaultQrString = "placeholder",
         qrBitmapPainter = BitmapPainter(
             Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
