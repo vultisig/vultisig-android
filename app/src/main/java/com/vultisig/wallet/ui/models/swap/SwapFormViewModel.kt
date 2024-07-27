@@ -548,9 +548,6 @@ internal class SwapFormViewModel @Inject constructor(
                                     }
                                 }
 
-
-
-
                                 val fiatFees =
                                     convertTokenValueToFiat(dstToken, quote.fees, currency)
 
