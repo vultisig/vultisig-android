@@ -577,14 +577,12 @@ internal fun FormError(
 ) {
     Column {
         UiHorizontalDivider()
-        Row {
-            Text(
-                text = errorMessage,
-                color = Theme.colors.red,
-                style = Theme.montserrat.body1,
-            )
-            UiSpacer(weight = 1f)
-        }
+        Text(
+            text = errorMessage,
+            color = Theme.colors.red,
+            style = Theme.montserrat.body1,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

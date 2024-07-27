@@ -177,10 +177,6 @@ internal fun SwapFormScreen(
                 onSelectToken = onSelectDstToken,
             )
 
-            FormDetails(
-                title = stringResource(R.string.swap_form_estimated_fees_title),
-                value = state.fee
-            )
             UiSpacer(size = 0.dp)
 
             Column(

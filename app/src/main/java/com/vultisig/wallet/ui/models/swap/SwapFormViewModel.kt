@@ -69,11 +69,11 @@ internal data class SwapFormUiModel(
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
     val provider: UiText = UiText.Empty,
-    val minimumAmount: String =BigInteger.ZERO.toString(),
+    val minimumAmount: String = BigInteger.ZERO.toString(),
     val gas: String = "",
     val fee: String = "",
     val error: UiText? = null,
-    val isSwapDisabled : Boolean = false
+    val isSwapDisabled: Boolean = false,
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -530,13 +530,13 @@ internal class SwapFormViewModel @Inject constructor(
                                         BigInteger.ZERO
                                     }
                                 }
-                                val recommendedMinAmountToken =
+                                val recommendedMinAmountTokenString =
                                     mapTokenValueToDecimalUiString(tokenValue.copy(value = recommendedMinAmountIn))
                                 amount?.let {
                                     uiState.update {
-                                        if (amount < recommendedMinAmountToken.toBigDecimal()) {
+                                        if (amount < recommendedMinAmountTokenString.toBigDecimal()) {
                                             it.copy(
-                                                minimumAmount = recommendedMinAmountToken,
+                                                minimumAmount = recommendedMinAmountTokenString,
                                                 isSwapDisabled = true
                                             )
                                         } else {
