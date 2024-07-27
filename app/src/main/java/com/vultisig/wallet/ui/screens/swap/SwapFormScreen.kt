@@ -102,6 +102,7 @@ internal fun SwapFormScreen(
                     focusManager.clearFocus(true)
                     onSwap()
                 },
+                disabled = state.isSwapDisabled,
             )
         }
     ) {

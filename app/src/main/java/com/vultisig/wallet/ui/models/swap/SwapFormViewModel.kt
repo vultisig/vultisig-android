@@ -73,6 +73,7 @@ internal data class SwapFormUiModel(
     val gas: String = "",
     val fee: String = "",
     val error: UiText? = null,
+    val isSwapDisabled : Boolean = false
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -516,22 +517,34 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                                 this@SwapFormViewModel.quote = quote
 
-                                val recommendedMinAmountIn:BigInteger= when (quote) {
-                                    is SwapQuote.ThorChain-> {
+                                val recommendedMinAmountIn: BigInteger = when (quote) {
+                                    is SwapQuote.ThorChain -> {
                                         quote.data.recommendedMinAmountIn
                                     }
-                                    is SwapQuote.MayaChain->{
+
+                                    is SwapQuote.MayaChain -> {
                                         quote.data.recommendedMinAmountIn
                                     }
+
                                     is SwapQuote.OneInch -> {
                                         BigInteger.ZERO
                                     }
                                 }
+                                val recommendedMinAmountToken =
+                                    mapTokenValueToDecimalUiString(tokenValue.copy(value = recommendedMinAmountIn))
                                 amount?.let {
-                                    if (amount < recommendedMinAmountIn.toBigDecimal()) {
-                                       uiState.update {
-                                           it.copy(minimumAmount =recommendedMinAmountIn.toBigDecimal().toPlainString() )
-                                       }
+                                    uiState.update {
+                                        if (amount < recommendedMinAmountToken.toBigDecimal()) {
+                                            it.copy(
+                                                minimumAmount = recommendedMinAmountToken,
+                                                isSwapDisabled = true
+                                            )
+                                        } else {
+                                            it.copy(
+                                                minimumAmount = BigInteger.ZERO.toString(),
+                                                isSwapDisabled = false
+                                            )
+                                        }
                                     }
                                 }
 
