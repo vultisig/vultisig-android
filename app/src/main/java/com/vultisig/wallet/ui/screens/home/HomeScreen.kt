@@ -184,6 +184,7 @@ private fun HomeScreen(
                     navController = navController,
                     onSelectVault = onSelectVault,
                     onCreateNewVault = onCreateNewVault,
+                    isRearrangeMode = state.isVaultRearrangeMode,
                 )
             }
         }
