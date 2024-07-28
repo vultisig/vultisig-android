@@ -37,6 +37,7 @@ internal fun NamingComponent(
     navHostController: NavHostController = rememberNavController(),
     inputTitle: String = "",
     errorText: UiText? = null,
+    onLostFocus: () -> Unit = {},
     snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onSave: () -> Unit = {}
 ) {
@@ -90,7 +91,7 @@ internal fun NamingComponent(
                 error = errorText,
                 keyboardType = KeyboardType.Text,
                 textFieldState = textFieldState,
-                onLostFocus = onSave
+                onLostFocus = onLostFocus
             )
         }
     }

@@ -29,6 +29,7 @@ internal fun NamingVaultScreen(
         hintColor = Theme.colors.neutral500,
         saveButtonText = stringResource(id = R.string.naming_vault_screen_continue),
         onSave = { viewModel.navigateToKeygen(placeholder) },
+        onLostFocus = viewModel::validate,
         errorText = viewModel.errorMessageState.collectAsState().value
     )
 }

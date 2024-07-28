@@ -41,7 +41,8 @@ internal fun VaultRenameScreen(
         textFieldState = viewModel.renameTextFieldState,
         navHostController = navController,
         snackBarHostState = snackBarHostState,
-        errorText = viewModel.errorMessageState.collectAsState().value ,
+        errorText = viewModel.errorMessageState.collectAsState().value,
+        onLostFocus = viewModel::validate,
         onSave = viewModel::saveName
     )
 }
