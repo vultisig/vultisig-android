@@ -235,9 +235,8 @@ internal fun SetupNavGraph(
                 navArgument(ARG_TARGET_ARG) { type = NavType.StringType },
                 navArgument(ARG_SWAP_SELECT) { type = NavType.BoolType }
             )
-        ) { entry ->
+        ) {
             SelectTokenScreen(
-                targetArg = requireNotNull(entry.arguments?.getString(ARG_TARGET_ARG)),
                 navController = navController
             )
         }
@@ -326,15 +325,10 @@ internal fun SetupNavGraph(
             )
         ) { entry ->
             val args = requireNotNull(entry.arguments)
-
-            val savedStateHandle = entry.savedStateHandle
-
             SwapScreen(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
-                selectedSrcTokenId = savedStateHandle.get(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID),
-                selectedDstTokenId = savedStateHandle.get(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID),
             )
         }
 

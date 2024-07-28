@@ -8,11 +8,15 @@ import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.IsSwapSupported
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
+import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -28,10 +32,16 @@ import javax.inject.Inject
 internal class SelectTokenViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
+    private val requestResultRepository: RequestResultRepository,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     private val vaultId: String =
         requireNotNull(savedStateHandle[ARG_VAULT_ID])
+
+    private val targetArg: String =
+        requireNotNull(savedStateHandle[ARG_TARGET_ARG])
+
 
     private val swapSelect: Boolean = savedStateHandle[ARG_SWAP_SELECT]?: false
 
@@ -45,6 +55,13 @@ internal class SelectTokenViewModel @Inject constructor(
     init {
         loadTokens()
         collectTokens()
+    }
+
+    fun enableToken(token: Coin) {
+        viewModelScope.launch {
+            requestResultRepository.respond(targetArg, token)
+            navigator.navigate(Destination.Back)
+        }
     }
 
     private fun loadTokens() {
