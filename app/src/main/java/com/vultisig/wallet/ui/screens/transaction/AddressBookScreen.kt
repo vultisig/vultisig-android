@@ -157,7 +157,7 @@ internal fun AddressBookScreen(
             }
         },
         bottomBar = {
-            if (isEditModeEnabled) {
+            if (isEditModeEnabled || state.entries.isEmpty()) {
                 MultiColorButton(
                     text = stringResource(R.string.address_book_add_address_button),
                     textColor = Theme.colors.oxfordBlue800,
