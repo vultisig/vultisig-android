@@ -8,7 +8,7 @@ internal data class OneInchSwapQuoteJson(
     @SerializedName("tx")
     val tx: OneInchSwapTxJson,
     @SerializedName("error")
-    val error: String?,
+    val error: String? = null,
 )
 
 internal data class OneInchSwapTxJson(
