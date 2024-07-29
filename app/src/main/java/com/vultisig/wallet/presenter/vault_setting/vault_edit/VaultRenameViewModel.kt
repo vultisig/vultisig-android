@@ -80,7 +80,7 @@ internal class VaultRenameViewModel @Inject constructor(
     fun validate() {
         viewModelScope.launch {
             val errorMessage = validateName(renameTextFieldState.text.toString())
-            errorMessageState.update { errorMessage }
+            errorMessageState.value = errorMessage
         }
     }
 
