@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.errors.SwapError
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
@@ -55,7 +56,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): OneInchSwapQuoteJson {
-        return oneInchApi.getSwapQuote(
+        val oneInchQuote = oneInchApi.getSwapQuote(
             chain = srcToken.chain,
             srcTokenContractAddress = srcToken.contractAddress,
             dstTokenContractAddress = dstToken.contractAddress,
@@ -63,6 +64,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             amount = tokenValue.value.toString(),
             isAffiliate = isAffiliate,
         )
+
+        if (oneInchQuote.error != null) {
+            throw SwapError(oneInchQuote.error)
+        }
+        return oneInchQuote
     }
 
     override suspend fun getMayaSwapQuote(
@@ -78,6 +84,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             amount = tokenValue.value.toString(),
             interval = "5"
         )
+
+        if (mayaQuote.error != null) {
+            throw SwapError(mayaQuote.error)
+        }
 
         val tokenFees = mayaQuote.fees.total
             .mayaTokenValueToTokenValue(dstToken)
@@ -109,6 +119,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             amount = thorTokenValue.toString(),
             interval = "1"
         )
+
+        if (thorQuote.error != null) {
+            throw SwapError(thorQuote.error)
+        }
 
         val tokenFees = thorQuote.fees.total
             .thorTokenValueToTokenValue(dstToken)

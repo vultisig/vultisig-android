@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
+import com.vultisig.wallet.data.api.errors.SwapError
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
@@ -525,6 +526,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
                         val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
+                            ?: throw SwapError("Swap is not supported for this pair")
 
                         when (provider) {
                             SwapProvider.MAYA, SwapProvider.THORCHAIN -> {
@@ -664,6 +666,9 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
                         }
+                    } catch (e: SwapError) {
+                        // TODO handle error after 634 merged
+                        Timber.e("swapError $e")
                     } catch (e: Exception) {
                         // TODO handle error
                         Timber.e(e)
