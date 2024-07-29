@@ -52,14 +52,12 @@ import java.math.BigInteger
 internal fun SwapFormScreen(
     vaultId: String,
     chainId: String?,
-    selectedSrcTokenId: String? = null,
-    selectedDstTokenId: String? = null,
     viewModel: SwapFormViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(vaultId, chainId) {
-        viewModel.loadData(selectedSrcTokenId, selectedDstTokenId, vaultId, chainId)
+        viewModel.loadData(vaultId, chainId)
     }
 
     SwapFormScreen(

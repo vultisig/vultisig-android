@@ -14,7 +14,6 @@ import com.vultisig.wallet.ui.models.SelectTokenViewModel
 @Composable
 internal fun SelectTokenScreen(
     navController: NavHostController,
-    targetArg: String,
     viewModel: SelectTokenViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -24,12 +23,7 @@ internal fun SelectTokenScreen(
         searchTextFieldState = viewModel.searchTextFieldState,
         state = state,
         hasTokenSwitch = false,
-        onEnableToken = {
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set(targetArg, it.id)
-            navController.popBackStack()
-        },
+        onEnableToken = viewModel::enableToken,
         onDisableToken = {}
     )
 }

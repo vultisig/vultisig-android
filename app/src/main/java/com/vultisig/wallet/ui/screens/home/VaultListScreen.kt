@@ -35,12 +35,14 @@ internal fun VaultListScreen(
     onSelectVault: (vaultId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     viewModel: VaultListViewModel = hiltViewModel(),
+    isRearrangeMode: Boolean,
 ) {
     val vaults by viewModel.vaults.collectAsState()
 
     VaultListScreen(
         navController = navController,
         vaults = vaults,
+        isRearrangeMode = isRearrangeMode,
         onMove = viewModel::onMove,
         onSelectVault = onSelectVault,
         onCreateNewVault = onCreateNewVault,
@@ -50,6 +52,7 @@ internal fun VaultListScreen(
 @Composable
 private fun VaultListScreen(
     navController: NavHostController,
+    isRearrangeMode: Boolean,
     vaults: List<Vault>,
     onSelectVault: (vaultId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
@@ -65,6 +68,7 @@ private fun VaultListScreen(
         VerticalReorderList(
             onMove = onMove,
             data = vaults,
+            isReorderEnabled = isRearrangeMode,
             key = { it.id },
             contentPadding = PaddingValues(
                 top = 16.dp,
@@ -102,6 +106,7 @@ private fun VaultListScreenPreview() {
     val navController = rememberNavController()
     VaultListScreen(
         navController = navController,
+        isRearrangeMode = false,
         vaults = listOf(
             Vault(
                 id = "",
