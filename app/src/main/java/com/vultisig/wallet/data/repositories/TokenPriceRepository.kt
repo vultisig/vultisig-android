@@ -138,12 +138,15 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             contractAddress,
             currency
         )
-        savePrices(
-            mapOf(contractAddress to priceAndContract),
-            currency
-        )
-        val price = priceAndContract.values.first()
-        return price
+        priceAndContract?.let {
+            savePrices(
+                mapOf(contractAddress to it),
+                currency
+            )
+            val price = it.values.first()
+            return price
+        }
+        return BigDecimal.ZERO
     }
 
     private suspend fun savePrices(
@@ -180,11 +183,11 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         chain: Chain,
         contractAddress: String,
         currency: String,
-    ): CurrencyToPrice =
+    ): CurrencyToPrice? =
         coinGeckoApi.getContractsPrice(
             chain = chain,
             contractAddresses = listOf(contractAddress),
             currencies = listOf(currency),
-        ).values.first()
+        ).values.firstOrNull()
 
 }
