@@ -100,7 +100,10 @@ internal fun AddAddressEntryScreen(
                                 title = chain.raw,
                                 availableToken = "",
                                 tokenLogo = chain.logo,
-                                onClick = { onSelectChainClick(chain) },
+                                onClick = {
+                                    isChainsExpanded = false
+                                    onSelectChainClick(chain)
+                                },
                                 actionIcon = if (selectedChain == chain)
                                     R.drawable.check
                                 else null
