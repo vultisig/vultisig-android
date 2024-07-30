@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.IsSwapSupported
@@ -28,6 +29,7 @@ internal data class TokenDetailUiModel(
     val token: ChainTokenUiModel = ChainTokenUiModel(),
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
+    val isBalanceVisible: Boolean = true,
 )
 
 @HiltViewModel
@@ -37,6 +39,7 @@ internal class TokenDetailViewModel @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val accountsRepository: AccountsRepository,
+    private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
@@ -48,6 +51,16 @@ internal class TokenDetailViewModel @Inject constructor(
     val uiState = MutableStateFlow(TokenDetailUiModel())
 
     private var loadDataJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
+            uiState.update {
+                it.copy(isBalanceVisible = isBalanceVisible)
+            }
+        }
+    }
+
 
     fun refresh() {
         loadData()

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.models.Chain
@@ -40,6 +41,7 @@ internal data class ChainTokensUiModel(
     val canDeposit: Boolean = true,
     val canSwap: Boolean = true,
     val canSelectTokens: Boolean = false,
+    val isBalanceVisible: Boolean = true,
 )
 
 @Immutable
@@ -62,6 +64,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
     private val tokensRepository: TokenRepository,
+    private val balanceVisibilityRepository: BalanceVisibilityRepository,
 ) : ViewModel() {
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
@@ -71,6 +74,15 @@ internal class ChainTokensViewModel @Inject constructor(
     val uiState = MutableStateFlow(ChainTokensUiModel())
 
     private var loadDataJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
+            uiState.update {
+                it.copy(isBalanceVisible = isBalanceVisible)
+            }
+        }
+    }
 
     fun refresh() {
         loadData()

@@ -49,6 +49,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.ToggleVisibilityText
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
@@ -227,6 +228,7 @@ private fun ChainTokensScreen(
                                         )
                                     }
                                 },
+                                isBalanceVisible = uiModel.isBalanceVisible,
                                 onQrBtnClick = {
                                     navController.navigate(Destination.QrAddressScreen(uiModel.chainAddress).route)
                                 }
@@ -237,6 +239,7 @@ private fun ChainTokensScreen(
 
                                 CoinItem(
                                     title = token.name,
+                                    isBalanceVisible = uiModel.isBalanceVisible,
                                     balance = token.balance,
                                     fiatBalance = token.fiatBalance,
                                     tokenLogo = token.tokenLogo,
@@ -265,6 +268,7 @@ private fun ChainTokensScreen(
 private fun ChainAccountInfo(
     address: String,
     name: String,
+    isBalanceVisible: Boolean,
     @DrawableRes chainLogo: Int?,
     totalBalance: String?,
     explorerURL: String,
@@ -327,8 +331,9 @@ private fun ChainAccountInfo(
         }
 
         if (totalBalance != null) {
-            Text(
+            ToggleVisibilityText(
                 text = totalBalance,
+                isVisible = isBalanceVisible,
                 style = Theme.menlo.heading5,
                 color = appColor.neutral0,
                 maxLines = 1,
@@ -354,6 +359,7 @@ internal fun CoinItem(
     title: String,
     balance: String?,
     fiatBalance: String?,
+    isBalanceVisible: Boolean,
     tokenLogo: ImageModel,
     @DrawableRes chainLogo: Int?,
     onClick: () -> Unit = {},
@@ -409,8 +415,9 @@ internal fun CoinItem(
             UiSpacer(size = 8.dp)
 
             if (balance != null) {
-                Text(
+                ToggleVisibilityText(
                     text = balance,
+                    isVisible = isBalanceVisible,
                     style = Theme.menlo.subtitle1,
                     color = appColor.neutral100,
                     maxLines = 1,
@@ -427,8 +434,9 @@ internal fun CoinItem(
         UiSpacer(size = 12.dp)
 
         if (fiatBalance != null) {
-            Text(
+            ToggleVisibilityText(
                 text = fiatBalance,
+                isVisible = isBalanceVisible,
                 style = Theme.menlo.subtitle1,
                 color = appColor.neutral100,
             )
@@ -451,6 +459,7 @@ private fun ChainCoinScreenPreview() {
             chainAddress = "0x1234567890",
             totalBalance = "0.000000",
             explorerURL = "https://etherscan.io/",
+            isBalanceVisible = true,
             tokens = listOf(
                 ChainTokenUiModel(
                     name = "USDT",
