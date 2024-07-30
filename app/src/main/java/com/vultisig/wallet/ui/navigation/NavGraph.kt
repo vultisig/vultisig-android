@@ -26,7 +26,6 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
-import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SELECTED_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
@@ -269,7 +268,6 @@ internal fun SetupNavGraph(
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
                 startWithTokenId = args.getString(ARG_TOKEN_ID),
-                selectedTokenId = savedStateHandle.remove(ARG_SELECTED_TOKEN_ID),
             )
         }
         composable(

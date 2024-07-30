@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -106,7 +107,7 @@ internal class SwapFormViewModel @Inject constructor(
     val srcAmountState = TextFieldState()
 
     private var vaultId: String? = null
-    private var chainId: String? = null
+    private var chain: Chain? = null
 
     private var quote: SwapQuote? = null
 
@@ -120,8 +121,13 @@ internal class SwapFormViewModel @Inject constructor(
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
+    private val addresses = MutableStateFlow<List<Address>>(emptyList())
+
+    private var selectTokensJob: Job? = null
+
     init {
         collectSelectedAccounts()
+        collectSelectedTokens()
 
         calculateGas()
         calculateFees()
@@ -165,7 +171,8 @@ internal class SwapFormViewModel @Inject constructor(
                     )
                 }
             } else {
-                val nativeTokenAccount = selectedSrc.address.accounts.find { it.token.isNativeToken }
+                val nativeTokenAccount =
+                    selectedSrc.address.accounts.find { it.token.isNativeToken }
                 val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_token)
@@ -369,14 +376,11 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private suspend fun checkTokenSelectionResponse(targetArg: String) {
+        val result = requestResultRepository.request<Coin>(targetArg).id
         if (targetArg == Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID) {
-            val src = requestResultRepository
-                .request<Coin>(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID)
-            selectedSrcId.update { src.id }
+            selectedSrcId.value = result
         } else {
-            val dst = requestResultRepository
-                .request<Coin>(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID)
-            selectedDstId.update { dst.id }
+            selectedDstId.value = result
         }
     }
 
@@ -390,16 +394,11 @@ internal class SwapFormViewModel @Inject constructor(
         vaultId: String,
         chainId: String?,
     ) {
-        this.vaultId = vaultId
-        this.chainId = chainId
+        this.chain = chainId?.let(Chain::fromRaw)
 
-        viewModelScope.launch {
-            loadTokens(
-                selectedSrcId.value,
-                selectedDstId.value,
-                vaultId,
-                chainId,
-            )
+        if (this.vaultId != vaultId) {
+            this.vaultId = vaultId
+            loadTokens(vaultId)
         }
     }
 
@@ -409,13 +408,8 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private fun loadTokens(
-        selectedSrcTokenId: String? = null,
-        selectedDstTokenId: String? = null,
         vaultId: String,
-        chainId: String?,
     ) {
-        val chain = chainId?.let(Chain::fromRaw)
-
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId)
                 .map { addresses ->
@@ -424,14 +418,22 @@ internal class SwapFormViewModel @Inject constructor(
                 .catch {
                     // TODO handle error
                     Timber.e(it)
-                }.collect { addresses ->
-                    try {
-                        selectedSrc.updateSrc(selectedSrcTokenId, addresses, chain)
-                        selectedDst.updateSrc(selectedDstTokenId, addresses, chain)
-                    } catch (ex: Exception) {
-                        Timber.e(ex)
-                    }
-                }
+                }.collect(addresses)
+        }
+    }
+
+    private fun collectSelectedTokens() {
+        selectTokensJob?.cancel()
+        selectTokensJob = viewModelScope.launch {
+            combine(
+                addresses,
+                selectedSrcId,
+                selectedDstId,
+            ) { addresses, srcTokenId, dstTokenId ->
+                val chain = chain
+                selectedSrc.updateSrc(srcTokenId, addresses, chain)
+                selectedDst.updateSrc(dstTokenId, addresses, chain)
+            }.collect()
         }
     }
 
@@ -443,8 +445,7 @@ internal class SwapFormViewModel @Inject constructor(
             ) { src, dst ->
                 val srcUiModel = src?.let(accountToTokenBalanceUiModelMapper::map)
                 val dstUiModel = dst?.let(accountToTokenBalanceUiModelMapper::map)
-                selectedSrcId.update { src?.account?.token?.id }
-                selectedDstId.update { dst?.account?.token?.id }
+
                 uiState.update {
                     it.copy(
                         selectedSrcToken = srcUiModel,
@@ -674,13 +675,16 @@ internal fun MutableStateFlow<SendSrc?>.updateSrc(
     selectedTokenId: String?,
     addresses: List<Address>,
     chain: Chain?,
-    forceChainChange: Boolean = false,
 ) {
     val selectedSrcValue = value
-    value = if (selectedSrcValue == null || forceChainChange) {
-        addresses.firstSendSrc(selectedTokenId, chain)
+    value = if (addresses.isEmpty()) {
+        null
     } else {
-        addresses.findCurrentSrc(selectedTokenId, selectedSrcValue)
+        if (selectedSrcValue == null) {
+            addresses.firstSendSrc(selectedTokenId, chain)
+        } else {
+            addresses.findCurrentSrc(selectedTokenId, selectedSrcValue)
+        }
     }
 }
 

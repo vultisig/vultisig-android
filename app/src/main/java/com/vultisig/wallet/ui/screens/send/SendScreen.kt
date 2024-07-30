@@ -35,7 +35,6 @@ internal fun SendScreen(
     vaultId: String,
     chainId: String?,
     startWithTokenId: String?,
-    selectedTokenId: String?,
     qrCodeResult: String?,
     viewModel: SendViewModel = hiltViewModel(),
 ) {
@@ -102,7 +101,6 @@ internal fun SendScreen(
                     vaultId = vaultId,
                     chainId = chainId,
                     startWithTokenId = startWithTokenId,
-                    selectedTokenId = selectedTokenId,
                     qrCodeResult = qrCodeResult,
                 )
             }
@@ -143,6 +141,5 @@ private fun SendScreenPreview() {
         vaultId = "",
         chainId = "",
         startWithTokenId = null,
-        selectedTokenId = "",
     )
 }

@@ -103,30 +103,7 @@ internal val Chain.Ticker: String
         Chain.polkadot -> "DOT"
         Chain.dydx -> "DYDX"
     }
-internal val Chain.SwapAsset: String
-    get() = when (this) {
-        Chain.thorChain -> "thor"
-        Chain.solana -> "sol"
-        Chain.ethereum -> "eth"
-        Chain.avalanche -> "avax"
-        Chain.base -> "base"
-        Chain.blast -> "blast"
-        Chain.arbitrum -> "arb"
-        Chain.polygon -> "matic"
-        Chain.optimism -> "op"
-        Chain.bscChain -> "bnb"
-        Chain.bitcoin -> "btc"
-        Chain.bitcoinCash -> "bch"
-        Chain.litecoin -> "ltc"
-        Chain.dogecoin -> "doge"
-        Chain.dash -> "dash"
-        Chain.gaiaChain -> "uatom"
-        Chain.kujira -> "kuji"
-        Chain.mayaChain -> "cacao"
-        Chain.cronosChain -> "cro"
-        Chain.polkadot -> "dot"
-        Chain.dydx -> "dydx"
-    }
+
 internal val Chain.logo: Int
     get() = when (this) {
         Chain.thorChain -> R.drawable.rune
@@ -167,9 +144,11 @@ internal val Chain.canSelectTokens: Boolean
 
 internal val Chain.IsSwapSupported: Boolean
     get() = this in arrayOf(
-        Chain.thorChain, Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
-        Chain.gaiaChain, Chain.base, Chain.optimism, Chain.polygon, Chain.avalanche, Chain.bscChain,
-        Chain.ethereum, Chain.mayaChain, Chain.dash, Chain.kujira,
+        Chain.thorChain, Chain.mayaChain, Chain.gaiaChain, Chain.kujira,
+
+        Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin, Chain.dash,
+
+        Chain.avalanche, Chain.base, Chain.bscChain, Chain.ethereum, Chain.optimism, Chain.polygon,
     )
 
 internal val Chain.isDepositSupported: Boolean
