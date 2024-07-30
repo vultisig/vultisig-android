@@ -44,6 +44,11 @@ internal enum class Chain(
     val id: String
         get() = raw
 
+    val uiName = when (raw) {
+        "Gaia" -> "Cosmos"
+        else -> raw
+    }
+
     companion object {
         fun fromRaw(raw: String): Chain =
             Chain.entries.first { it.raw == raw }

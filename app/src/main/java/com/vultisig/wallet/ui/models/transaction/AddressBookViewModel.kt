@@ -63,7 +63,7 @@ internal class AddressBookViewModel @Inject constructor(
                         model = it,
                         image = it.chain.logo,
                         name = it.title,
-                        network = it.chain.name.capitalize(Locale.current),
+                        network = it.chain.uiName.capitalize(Locale.current),
                         address = it.address,
                     )
                 })
