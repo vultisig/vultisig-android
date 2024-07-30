@@ -285,7 +285,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
                                     toAmountLimit = "0",
-                                    steamingInterval = "1",
+                                    steamingInterval = "5",
                                     streamingQuantity = "0",
                                     expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
                                         .inWholeSeconds.toULong(),

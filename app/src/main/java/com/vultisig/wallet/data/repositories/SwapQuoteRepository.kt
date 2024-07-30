@@ -76,7 +76,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = tokenValue.value.toString(),
-            interval = "1"
+            interval = "5"
         )
 
         val tokenFees = mayaQuote.fees.total
