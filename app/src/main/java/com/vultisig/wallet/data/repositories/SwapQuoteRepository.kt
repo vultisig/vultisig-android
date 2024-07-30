@@ -65,9 +65,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        if (oneInchQuote.error != null) {
-            throw SwapError(oneInchQuote.error)
-        }
+        SwapError.handleSwapError(oneInchQuote.error)
         return oneInchQuote
     }
 
@@ -85,9 +83,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             interval = "5"
         )
 
-        if (mayaQuote.error != null) {
-            throw SwapError(mayaQuote.error)
-        }
+        SwapError.handleSwapError(mayaQuote.error)
 
         val tokenFees = mayaQuote.fees.total
             .mayaTokenValueToTokenValue(dstToken)
@@ -120,9 +116,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             interval = "1"
         )
 
-        if (thorQuote.error != null) {
-            throw SwapError(thorQuote.error)
-        }
+        SwapError.handleSwapError(thorQuote.error)
 
         val tokenFees = thorQuote.fees.total
             .thorTokenValueToTokenValue(dstToken)
