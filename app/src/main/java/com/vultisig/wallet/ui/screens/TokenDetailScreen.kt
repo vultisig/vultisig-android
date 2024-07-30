@@ -147,6 +147,7 @@ private fun TokenDetailScreen(
                                 fiatBalance = token.fiatBalance,
                                 tokenLogo = token.tokenLogo,
                                 chainLogo = token.chainLogo,
+                                isBalanceVisible = uiModel.isBalanceVisible,
                             )
                         }
                     }
