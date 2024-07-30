@@ -1,8 +1,8 @@
 package com.vultisig.wallet.ui.models
 
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +13,7 @@ import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,6 +25,7 @@ import javax.inject.Inject
 internal class NamingVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
 
@@ -45,9 +47,7 @@ internal class NamingVaultViewModel @Inject constructor(
 
     fun navigateToKeygen(placeholder: String) {
         val name = namingTextFieldState.text.toString().ifEmpty { placeholder }
-        val errorMessage = validateVaultName(name)
-        errorMessageState.update { errorMessage }
-        if (errorMessage != null)
+        if (errorMessageState.value != null)
             return
         viewModelScope.launch {
             navigator.navigate(
@@ -57,6 +57,13 @@ internal class NamingVaultViewModel @Inject constructor(
                     vaultSetupType)
             )
         }
+    }
+
+    fun validate() {
+        val placeholder = context.getString(R.string.naming_vault_screen_vault_placeholder)
+        val name = namingTextFieldState.text.toString().ifEmpty { placeholder }
+        val errorMessage = validateVaultName(name)
+        errorMessageState.update { errorMessage }
     }
 
     private fun isNameNotValid(s: String) =
