@@ -110,19 +110,25 @@ internal class SendFormViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
-    private lateinit var vaultId: String
-    private var chain: Chain? = null
+    private var vaultId: String? = null
 
-    fun setAddressFromQrCode(vaultId: String, qrCode: String?) {
+    fun setAddressFromQrCode(qrCode: String?) {
         if (qrCode != null) {
             addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
             Chain.entries.find { chain ->
                 chainAccountAddressRepository.isValid(chain, qrCode)
             }?.let { chain ->
-                loadData(vaultId, chain.id, null, null, true)
+                this@SendFormViewModel.chain.value = chain
+                selectedTokenId.value = null
             }
         }
     }
+
+    private val addresses = MutableStateFlow<List<Address>>(emptyList())
+
+    private val selectedTokenId = MutableStateFlow<String?>(null)
+
+    private val chain = MutableStateFlow<Chain?>(null)
 
     private val selectedSrc = MutableStateFlow<SendSrc?>(null)
 
@@ -156,6 +162,7 @@ internal class SendFormViewModel @Inject constructor(
     init {
         loadSelectedCurrency()
         collectSelectedAccount()
+        collectSelectedToken()
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
@@ -164,25 +171,20 @@ internal class SendFormViewModel @Inject constructor(
     fun loadData(
         vaultId: String,
         chainId: String?,
-        selectedTokenId: String?,
         startWithTokenId: String?,
-        forceChainChange: Boolean = false
     ) {
         memoFieldState.clearText()
 
-        val selectedToken = if (isSelectedStartingToken) {
-            selectedTokenId
-        } else {
+        if (!isSelectedStartingToken) {
             isSelectedStartingToken = true
-            startWithTokenId
+            selectedTokenId.value = startWithTokenId
+            chain.value = chainId?.let(Chain::fromRaw)
         }
 
-        this.vaultId = vaultId
-        this.chain = chainId?.let(Chain::fromRaw)
-        loadTokens(
-            selectedTokenId = selectedToken,
-            forceChainChange = forceChainChange,
-        )
+        if (this.vaultId != vaultId) {
+            this.vaultId = vaultId
+            loadTokens(vaultId)
+        }
     }
 
     fun validateDstAddress() {
@@ -198,6 +200,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun selectToken() {
+        val vaultId = vaultId ?: return
         viewModelScope.launch {
             navigator.navigate(
                 Destination.SelectToken(
@@ -205,6 +208,10 @@ internal class SendFormViewModel @Inject constructor(
                     targetArg = Destination.SelectToken.ARG_SELECTED_TOKEN_ID,
                 )
             )
+            requestResultRepository.request<Coin?>(Destination.SelectToken.ARG_SELECTED_TOKEN_ID)
+                ?.let {
+                    selectedTokenId.value = it.id
+                }
         }
     }
 
@@ -221,10 +228,12 @@ internal class SendFormViewModel @Inject constructor(
     fun openAddressBook()  {
         viewModelScope.launch {
             navigator.navigate(Destination.AddressBook(
-                chain = chain ?: selectedAccount?.token?.chain,
                 requestId = REQUEST_ADDRESS_ID,
             ))
             val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
+            selectedSrc.value = null
+            selectedTokenId.value = null
+            chain.value = address.chain
             setOutputAddress(address.address)
         }
     }
@@ -274,6 +283,11 @@ internal class SendFormViewModel @Inject constructor(
     fun send() {
         viewModelScope.launch {
             try {
+                val vaultId = vaultId
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_token)
+                    )
+
                 val selectedAccount = selectedAccount
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_token)
@@ -393,19 +407,29 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(errorText = text) }
     }
 
-    private fun loadTokens(
-        selectedTokenId: String?,
-        forceChainChange: Boolean = false
-    ) {
-        val chain = chain
+    private fun loadTokens(vaultId: String) {
         viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId)
                 .catch {
                     // TODO handle error
                     Timber.e(it)
-                }.collect { addresses ->
-                    selectedSrc.updateSrc(selectedTokenId, addresses, chain, forceChainChange)
+                }.collect(addresses)
+        }
+    }
+
+    private fun collectSelectedToken() {
+        viewModelScope.launch {
+            combine(
+                addresses,
+                selectedTokenId,
+                chain,
+            ) { addresses, selectedTokenId, chain ->
+                try {
+                    selectedSrc.updateSrc(selectedTokenId, addresses, chain)
+                } catch (e: Exception) {
+                    Timber.e(e)
                 }
+            }.collect()
         }
     }
 

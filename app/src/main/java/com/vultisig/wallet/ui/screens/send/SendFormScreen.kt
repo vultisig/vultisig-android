@@ -48,18 +48,17 @@ internal fun SendFormScreen(
     vaultId: String,
     chainId: String?,
     startWithTokenId: String?,
-    selectedTokenId: String?,
     qrCodeResult: String?,
     viewModel: SendFormViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(vaultId, chainId, selectedTokenId, startWithTokenId) {
-        viewModel.loadData(vaultId, chainId, selectedTokenId, startWithTokenId)
+    LaunchedEffect(vaultId, chainId, startWithTokenId) {
+        viewModel.loadData(vaultId, chainId, startWithTokenId)
     }
 
     LaunchedEffect(qrCodeResult) {
-        viewModel.setAddressFromQrCode(vaultId, qrCodeResult)
+        viewModel.setAddressFromQrCode(qrCodeResult)
     }
 
     SendFormScreen(
