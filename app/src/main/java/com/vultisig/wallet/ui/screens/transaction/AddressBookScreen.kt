@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +46,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormCard
+import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.transaction.AddressBookEntryUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookUiModel
 import com.vultisig.wallet.ui.models.transaction.AddressBookViewModel
@@ -64,7 +63,6 @@ internal fun AddressBookScreen(
         model.loadData()
     }
 
-    // todo reorder addresses
     AddressBookScreen(
         navController = navController,
         state = state,
@@ -72,6 +70,7 @@ internal fun AddressBookScreen(
         onDeleteAddressClick = model::deleteAddress,
         onToggleEditMode = model::toggleEditMode,
         onAddAddressClick = model::addAddress,
+        onMove = model::move
     )
 }
 
@@ -83,6 +82,7 @@ internal fun AddressBookScreen(
     onDeleteAddressClick: (AddressBookEntryUiModel) -> Unit = {},
     onToggleEditMode: () -> Unit = {},
     onAddAddressClick: () -> Unit = {},
+    onMove: (from: Int, to: Int) -> Unit,
 ) {
     val isEditModeEnabled = state.isEditModeEnabled
     Scaffold(
@@ -138,22 +138,24 @@ internal fun AddressBookScreen(
             )
         },
         content = { scaffoldPadding ->
-            LazyColumn(
+            VerticalReorderList(
+                data = state.entries,
+                onMove = onMove,
+                key = { it.model.id },
+                isReorderEnabled = state.isEditModeEnabled,
                 modifier = Modifier.padding(scaffoldPadding),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(state.entries) { entry ->
-                    AddressItem(
-                        image = entry.image,
-                        name = entry.name,
-                        network = entry.network,
-                        address = entry.address,
-                        isEditModeEnabled = isEditModeEnabled,
-                        onClick = { onAddressClick(entry) },
-                        onDeleteClick = { onDeleteAddressClick(entry) }
-                    )
-                }
+            ) { entry ->
+                AddressItem(
+                    image = entry.image,
+                    name = entry.name,
+                    network = entry.network,
+                    address = entry.address,
+                    isEditModeEnabled = isEditModeEnabled,
+                    onClick = { onAddressClick(entry) },
+                    onDeleteClick = { onDeleteAddressClick(entry) }
+                )
             }
         },
         bottomBar = {
@@ -279,5 +281,6 @@ private fun AddressBookScreenPreview() {
             ),
         ),
         onAddressClick = {},
+        onMove = { _, _ -> },
     )
 }
