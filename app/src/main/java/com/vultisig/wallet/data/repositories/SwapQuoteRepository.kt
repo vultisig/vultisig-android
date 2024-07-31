@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.errors.SwapError
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
@@ -65,7 +65,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        SwapError.handleSwapError(oneInchQuote.error)
+        SwapException.handleSwapError(oneInchQuote.error)
         return oneInchQuote
     }
 
@@ -83,7 +83,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             interval = "5"
         )
 
-        SwapError.handleSwapError(mayaQuote.error)
+        SwapException.handleSwapError(mayaQuote.error)
 
         val tokenFees = mayaQuote.fees.total
             .mayaTokenValueToTokenValue(dstToken)
@@ -116,7 +116,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             interval = "1"
         )
 
-        SwapError.handleSwapError(thorQuote.error)
+        SwapException.handleSwapError(thorQuote.error)
 
         val tokenFees = thorQuote.fees.total
             .thorTokenValueToTokenValue(dstToken)

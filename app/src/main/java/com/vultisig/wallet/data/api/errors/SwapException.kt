@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.api.errors
 
-internal sealed class SwapError(message: String): Exception(message){
-    class SwapIsNotSupported(message: String): SwapError(message)
-    class AmountCannotBeZero(message: String): SwapError(message)
-    class SameAssets(message: String): SwapError(message)
+internal sealed class SwapException(message: String): Exception(message){
+    class SwapIsNotSupported(message: String): SwapException(message)
+    class AmountCannotBeZero(message: String): SwapException(message)
+    class SameAssets(message: String): SwapException(message)
 
     companion object {
         fun handleSwapError(error: String?) {

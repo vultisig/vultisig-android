@@ -9,7 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
-import com.vultisig.wallet.data.api.errors.SwapError
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
@@ -508,7 +508,7 @@ internal class SwapFormViewModel @Inject constructor(
                     try {
 
                         if (srcToken == dstToken) {
-                            throw SwapError.SameAssets("")
+                            throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
                         }
                         val hasUserSetTokenValue = srcTokenValue != null
 
@@ -534,7 +534,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
                         val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
-                            ?: throw SwapError.SwapIsNotSupported("Swap is not supported for this pair")
+                            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
 
                         when (provider) {
                             SwapProvider.MAYA, SwapProvider.THORCHAIN -> {
@@ -676,13 +676,13 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
                         }
-                    } catch (e: SwapError) {
+                    } catch (e: SwapException) {
                         val formError = when (e) {
-                            is SwapError.SwapIsNotSupported ->
+                            is SwapException.SwapIsNotSupported ->
                                 UiText.StringResource(R.string.swap_route_not_available)
-                            is SwapError.AmountCannotBeZero ->
+                            is SwapException.AmountCannotBeZero ->
                                 UiText.StringResource(R.string.swap_form_invalid_amount)
-                            is SwapError.SameAssets ->
+                            is SwapException.SameAssets ->
                                 UiText.StringResource(R.string.swap_screen_same_asset_error_message)
                         }
                         uiState.update {
