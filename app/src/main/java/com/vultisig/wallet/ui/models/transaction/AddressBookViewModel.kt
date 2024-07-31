@@ -5,16 +5,21 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.OrderRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -38,27 +43,54 @@ internal class AddressBookViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val addressBookRepository: AddressBookRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val orderRepository: OrderRepository<AddressBookOrderEntity>,
 ) : ViewModel() {
 
     private val requestId: String? = savedStateHandle[Destination.ARG_REQUEST_ID]
     private val chainId: String? = savedStateHandle[Destination.ARG_CHAIN_ID]
 
+    private var reIndexJob: Job? = null
+
+    private val addressBookEntries = MutableStateFlow<List<AddressBookEntry>>(emptyList())
+
     val state = MutableStateFlow(AddressBookUiModel())
+
+    init {
+        collectEntries()
+    }
 
     fun loadData() {
         val chain = chainId?.let(Chain::fromRaw)
         viewModelScope.launch {
-            val entries = addressBookRepository.getEntries()
-                .let { entries ->
-                    if (chain != null) {
-                        entries.filter { it.chain == chain }
-                    } else {
-                        entries
+            orderRepository.loadOrders(null).map { orders ->
+                val orderMap = orders.associateBy { it.value }
+
+                val entries = addressBookRepository.getEntries()
+                    .let { entries ->
+                        if (chain != null) {
+                            entries.filter { it.chain == chain }
+                        } else {
+                            entries
+                        }
+                    }
+
+                entries.forEach {
+                    if (it.id !in orderMap) {
+                        orderRepository.insert(null, it.id)
                     }
                 }
 
-            state.update { state ->
-                state.copy(entries = entries.map {
+                entries.sortedByDescending {
+                    orderMap[it.id]?.order
+                }
+            }.collect(addressBookEntries)
+        }
+    }
+
+    private fun collectEntries() {
+        viewModelScope.launch {
+            addressBookEntries.map { entries ->
+                entries.map {
                     AddressBookEntryUiModel(
                         model = it,
                         image = it.chain.logo,
@@ -66,7 +98,11 @@ internal class AddressBookViewModel @Inject constructor(
                         network = it.chain.name.capitalize(Locale.current),
                         address = it.address,
                     )
-                })
+                }
+            }.collect { entries ->
+                state.update { state ->
+                    state.copy(entries = entries)
+                }
             }
         }
     }
@@ -94,6 +130,22 @@ internal class AddressBookViewModel @Inject constructor(
     fun addAddress() {
         viewModelScope.launch {
             navigator.navigate(Destination.AddAddressEntry)
+        }
+    }
+
+    fun move(from: Int, to: Int) {
+        val updatedPositionsList = addressBookEntries.value.toMutableList().apply {
+            add(to, removeAt(from))
+        }
+        addressBookEntries.value = updatedPositionsList
+
+        reIndexJob?.cancel()
+        reIndexJob = viewModelScope.launch {
+            delay(500)
+            val midOrder = updatedPositionsList[to].id
+            val upperOrder = updatedPositionsList.getOrNull(to + 1)?.id
+            val lowerOrder = updatedPositionsList.getOrNull(to - 1)?.id
+            orderRepository.updateItemOrder(null, upperOrder, midOrder, lowerOrder)
         }
     }
 
