@@ -40,6 +40,8 @@ internal data class THORChainSwapQuote(
     val warning: String,
     @SerializedName("router")
     val router: String?,
+    @SerializedName("error")
+    val error: String?,
 )
 
 internal data class Fees(
