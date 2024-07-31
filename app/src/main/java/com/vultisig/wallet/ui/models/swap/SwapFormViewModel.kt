@@ -618,7 +618,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
 
-                            else -> {
+                            SwapProvider.ONEINCH -> {
                                 val srcUsdFiatValue = convertTokenValueToFiat(
                                     srcToken, tokenValue, AppCurrency.USD,
                                 )
@@ -674,6 +674,15 @@ internal class SwapFormViewModel @Inject constructor(
                                         formError = null,
                                     )
                                 }
+                            }
+
+                            SwapProvider.LIFI -> {
+                                val quote = swapQuoteRepository.getLiFiSwapQuote(
+                                    srcAddress = src.address.address,
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                )
                             }
                         }
                     } catch (e: SwapException) {

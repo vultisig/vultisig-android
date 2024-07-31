@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -37,6 +38,13 @@ internal interface SwapQuoteRepository {
         tokenValue: TokenValue,
     ): SwapQuote
 
+    suspend fun getLiFiSwapQuote(
+        srcAddress: String,
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+    ): SwapQuote
+
     fun resolveProvider(
         srcToken: Coin,
         dstToken: Coin,
@@ -48,6 +56,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     private val thorChainApi: ThorChainApi,
     private val mayaChainApi: MayaChainApi,
     private val oneInchApi: OneInchApi,
+    private val liFiChainApi: LiFiChainApi,
 ) : SwapQuoteRepository {
 
     override suspend fun getOneInchSwapQuote(
@@ -129,6 +138,41 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fees = tokenFees,
             data = thorQuote,
         )
+    }
+
+    override suspend fun getLiFiSwapQuote(
+        srcAddress: String,
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+    ): SwapQuote {
+        val thorTokenValue = tokenValue.decimal
+            .movePointRight(FIXED_THORSWAP_DECIMALS)
+            .toBigInteger()
+
+        val thorQuote = liFiChainApi.getSwapQuote(
+            fromChain = srcToken.chain.swapAssetName(),
+            toChain = dstToken.chain.swapAssetName(),
+            fromToken = srcToken.ticker,
+            toToken = dstToken.ticker,
+            fromAmount = thorTokenValue.toString(),
+            fromAddress = srcAddress,
+        )
+        throw Exception("Not implemented")
+
+//        SwapException.handleSwapException(thorQuote.error)
+//
+//        val tokenFees = thorQuote.fees.total
+//            .thorTokenValueToTokenValue(dstToken)
+//
+//        val expectedDstTokenValue = thorQuote.expectedAmountOut
+//            .thorTokenValueToTokenValue(dstToken)
+//
+//        return SwapQuote.ThorChain(
+//            expectedDstValue = expectedDstTokenValue,
+//            fees = tokenFees,
+//            data = thorQuote,
+//        )
     }
 
     private fun String.thorTokenValueToTokenValue(
@@ -215,26 +259,35 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             Chain.mayaChain, Chain.dash, Chain.kujira -> setOf(SwapProvider.MAYA)
             Chain.ethereum -> if (ticker in thorEthTokens) setOf(
                 SwapProvider.THORCHAIN,
-                SwapProvider.ONEINCH
-            ) else setOf(SwapProvider.ONEINCH)
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
+            ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
             Chain.bscChain -> if (ticker in thorBscTokens) setOf(
                 SwapProvider.THORCHAIN,
-                SwapProvider.ONEINCH
-            ) else setOf(SwapProvider.ONEINCH)
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
+            ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
             Chain.avalanche -> if (ticker in thorAvaxTokens) setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH
-            ) else setOf(SwapProvider.ONEINCH)
+            ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
-            Chain.base, Chain.optimism, Chain.polygon -> setOf(SwapProvider.ONEINCH)
-            Chain.thorChain, Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
+            Chain.base, Chain.optimism, Chain.polygon -> setOf(
+                SwapProvider.ONEINCH, SwapProvider.LIFI
+            )
+            Chain.thorChain -> setOf(
+                SwapProvider.THORCHAIN,
+                SwapProvider.MAYA,
+            )
+            Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
             Chain.gaiaChain -> setOf(
                 SwapProvider.THORCHAIN
             )
+            Chain.arbitrum, Chain.blast -> setOf(SwapProvider.LIFI)
 
-            Chain.solana, Chain.polkadot, Chain.dydx, Chain.arbitrum, Chain.blast,
+            Chain.solana, Chain.polkadot, Chain.dydx,
             Chain.cronosChain, /* TODO later Chain.sui, Chain.zksync*/
             -> emptySet()
         }
