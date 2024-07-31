@@ -562,6 +562,9 @@ internal class SendFormViewModel @Inject constructor(
                 return null
             }
 
+            if (price== BigDecimal.ZERO)
+                return null
+
             transform(decimalValue, price, selectedToken)
                 .toPlainString()
         } else {
