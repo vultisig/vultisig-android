@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import dagger.Binds
 import dagger.Module
@@ -154,5 +155,11 @@ internal interface RepositoriesModule {
     fun bindRequestResultRepository(
         impl: RequestResultRepositoryImpl
     ): RequestResultRepository
+
+    @Binds
+    @Singleton
+    fun bindAddressBookOrderRepository(
+        impl: AddressBookOrderRepository
+    ): OrderRepository<AddressBookOrderEntity>
 
 }

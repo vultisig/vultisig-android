@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.db
 import android.content.Context
 import androidx.room.Room
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
+import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.migrations.MIGRATION_1_2
@@ -12,6 +13,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_4_5
 import com.vultisig.wallet.data.db.migrations.MIGRATION_5_6
 import com.vultisig.wallet.data.db.migrations.MIGRATION_6_7
 import com.vultisig.wallet.data.db.migrations.MIGRATION_7_8
+import com.vultisig.wallet.data.db.migrations.MIGRATION_8_9
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,7 +40,7 @@ internal interface DatabaseModule {
             )
                 .addMigrations(
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
-                    MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
+                    MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
                 )
                 .build()
 
@@ -73,6 +75,12 @@ internal interface DatabaseModule {
         fun provideAddressBookEntryDao(
             appDatabase: AppDatabase,
         ): AddressBookEntryDao = appDatabase.addressBookEntryDao()
+
+        @Provides
+        @Singleton
+        fun provideAddressBookOrderDao(
+            appDatabase: AppDatabase,
+        ): AddressBookOrderDao = appDatabase.addressBookOrderDao()
 
     }
 

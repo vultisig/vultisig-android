@@ -25,7 +25,7 @@ internal fun <T : Any> VerticalReorderList(
     modifier: Modifier = Modifier,
     isReorderEnabled: Boolean = true,
     data: List<T>,
-    key: (item: T) -> Any = { it },
+    key: (item: T) -> Any,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     onMove: (from: Int, to: Int) -> Unit,

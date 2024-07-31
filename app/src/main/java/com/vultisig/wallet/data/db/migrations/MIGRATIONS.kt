@@ -159,3 +159,15 @@ private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: St
             """.trimIndent()
     )
 }
+
+internal val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `addressBookOrder` (
+            `value` TEXT PRIMARY KEY NOT NULL,
+            `order` REAL NOT NULL)
+            """.trimIndent()
+        )
+    }
+}
