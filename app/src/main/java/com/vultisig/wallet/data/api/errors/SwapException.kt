@@ -6,7 +6,7 @@ internal sealed class SwapException(message: String): Exception(message){
     class SameAssets(message: String): SwapException(message)
 
     companion object {
-        fun handleSwapError(error: String?) {
+        fun handleSwapException(error: String?) {
             if (error.isNullOrBlank()) return
             with(error.lowercase()){
                 when  {
