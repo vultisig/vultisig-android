@@ -58,7 +58,7 @@ internal class BlockChairApiImp @Inject constructor(
                 return it
             }
             val response =
-                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}") {
+                httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
                     header("Content-Type", "application/json")
                 }
             val responseData = response.bodyAsText()
