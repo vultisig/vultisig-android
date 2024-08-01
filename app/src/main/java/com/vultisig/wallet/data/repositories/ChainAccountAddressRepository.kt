@@ -62,8 +62,12 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 } else {
                     val publicKey =
                         PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+                    val address = adjustAddressPrefix(
+                        chain.coinType,
+                        chain.coinType.deriveAddressFromPublicKey(publicKey)
+                    )
                     return Pair(
-                        chain.coinType.deriveAddressFromPublicKey(publicKey),
+                        address,
                         derivedPublicKey
                     )
                 }
@@ -81,7 +85,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override suspend fun getAddress(
         type: CoinType,
         publicKey: PublicKey,
-    ): String = type.deriveAddressFromPublicKey(publicKey)
+    ): String = adjustAddressPrefix(type, type.deriveAddressFromPublicKey(publicKey))
 
     override suspend fun getAddress(
         coin: Coin,
@@ -96,5 +100,10 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     } else {
         chain.coinType.validate(address)
     }
+
+    private fun adjustAddressPrefix(type: CoinType, address: String): String =
+        if (type == CoinType.BITCOINCASH) {
+            address.replace("bitcoincash:", "")
+        } else address
 
 }
