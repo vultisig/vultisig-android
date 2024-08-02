@@ -99,7 +99,7 @@ internal fun AddAddressEntryScreen(
                     if (isChainsExpanded) {
                         state.chains.forEach { chain ->
                             TokenCard(
-                                title = chain.uiName,
+                                title = chain.raw,
                                 availableToken = "",
                                 tokenLogo = chain.logo,
                                 onClick = {

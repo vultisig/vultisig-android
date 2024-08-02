@@ -66,7 +66,7 @@ internal fun ChainSelectionScreen(
                 val token = chain.coin
                 TokenSelectionItem(
                     title = token.ticker,
-                    subtitle = token.chain.uiName,
+                    subtitle = token.chain.raw,
                     logo = token.chain.logo,
                     isChecked = chain.isEnabled,
                     onCheckedChange = { checked ->

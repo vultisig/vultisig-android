@@ -141,7 +141,7 @@ private fun LazyListScope.TokensSection(
         val coin = token.coin
         TokenSelectionItem(
             title = coin.ticker,
-            subtitle = coin.chain.uiName,
+            subtitle = coin.chain.raw,
             logo = Coins.getCoinLogo(logoName = coin.logo),
             chainLogo = token.coin.chain.logo.takeIf { token.coin.chain.isLayer2 || !token.coin.isNativeToken },
             hasTokenSwitch = hasTokenSwitch,

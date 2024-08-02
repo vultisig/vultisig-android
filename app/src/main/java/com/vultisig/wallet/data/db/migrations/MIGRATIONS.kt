@@ -128,6 +128,7 @@ internal val MIGRATION_7_8 = object : Migration(7, 8) {
     }
 }
 
+
 private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: String) {
     execSQL(
         """
@@ -195,5 +196,11 @@ internal val MIGRATION_9_10 = object : Migration(9, 10) {
             WHERE chainId = 'Bitcoin-Cash'
        """.trimIndent()
         )
+    }
+}
+
+internal val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.updateChainNameValue("Gaia", "Cosmos")
     }
 }

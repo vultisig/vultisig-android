@@ -188,7 +188,7 @@ internal class ChainTokensViewModel @Inject constructor(
 
                 uiState.update {
                     it.copy(
-                        chainName = Chain.fromRaw(chainRaw).uiName,
+                        chainName = chainRaw,
                         chainAddress = accountAddress,
                         chainLogo = chain.logo,
                         tokens = tokens,
