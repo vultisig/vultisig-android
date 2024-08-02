@@ -159,3 +159,41 @@ private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: St
             """.trimIndent()
     )
 }
+
+internal val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `addressBookOrder` (
+            `value` TEXT PRIMARY KEY NOT NULL,
+            `order` REAL NOT NULL)
+            """.trimIndent()
+        )
+    }
+}
+
+internal val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            UPDATE coin
+            SET address = replace(address, 'bitcoincash:', '')
+            WHERE chain = 'Bitcoin-Cash'
+       """.trimIndent()
+        )
+        db.execSQL(
+            """
+            UPDATE tokenValue
+            SET address = replace(address, 'bitcoincash:', '')
+            WHERE chain = 'Bitcoin-Cash'
+       """.trimIndent()
+        )
+        db.execSQL(
+            """
+            UPDATE address_book_entry
+            SET address = replace(address, 'bitcoincash:', '')
+            WHERE chainId = 'Bitcoin-Cash'
+       """.trimIndent()
+        )
+    }
+}

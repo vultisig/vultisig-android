@@ -330,6 +330,7 @@
     <string name="address_book_edit_mode_done" translatable="false">Done</string>
     <string name="address_book_add_address_button" translatable="false">Add Address</string>
     <string name="add_address_title" translatable="false">Add Address</string>
+    <string name="swap_route_not_available" translatable="false">Swap route not available</string>
     <string name="add_address_save_address_button" translatable="false">Save Address</string>
     <string name="add_address_title_title" translatable="false">Title</string>
     <string name="add_address_address_title" translatable="false">Address</string>

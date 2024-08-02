@@ -195,13 +195,18 @@ internal fun SwapFormScreen(
                     value = state.fee
                 )
             }
-            if (state.minimumAmount != BigInteger.ZERO.toString()) {
-                state.selectedSrcToken?.let { selectedToken ->
+            when {
+                state.formError != null -> {
+                    FormError(
+                        errorMessage = state.formError.asString()
+                    )
+                }
+                state.minimumAmount != BigInteger.ZERO.toString() -> {
                     FormError(
                         errorMessage = stringResource(
                             R.string.swap_form_minimum_amount,
                             state.minimumAmount,
-                            selectedToken.title
+                            state.selectedSrcToken?.title ?: ""
                         )
                     )
                 }

@@ -9,6 +9,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
@@ -76,6 +77,7 @@ internal data class SwapFormUiModel(
     val gas: String = "",
     val fee: String = "",
     val error: UiText? = null,
+    val formError: UiText? = null,
     val isSwapDisabled: Boolean = false,
 )
 
@@ -387,9 +389,12 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     fun flipSelectedTokens() {
-        val buffer = selectedSrc.value
-        selectedSrc.value = selectedDst.value
-        selectedDst.value = buffer
+        viewModelScope.launch {
+            val buffer = selectedSrc.value
+            selectedSrc.value = selectedDst.value
+            selectedDst.value = buffer
+        }
+
     }
 
     fun loadData(
@@ -501,6 +506,10 @@ internal class SwapFormViewModel @Inject constructor(
                         ?.toBigInteger()
 
                     try {
+
+                        if (srcToken == dstToken) {
+                            throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
+                        }
                         val hasUserSetTokenValue = srcTokenValue != null
 
                         val tokenValue = srcTokenValue?.let {
@@ -525,6 +534,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
                         val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
+                            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
 
                         when (provider) {
                             SwapProvider.MAYA, SwapProvider.THORCHAIN -> {
@@ -603,6 +613,7 @@ internal class SwapFormViewModel @Inject constructor(
                                             estimatedDstFiatValue
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
+                                        formError = null
                                     )
                                 }
                             }
@@ -660,10 +671,33 @@ internal class SwapFormViewModel @Inject constructor(
                                             estimatedDstFiatValue
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
+                                        formError = null,
+                                        isSwapDisabled = false,
                                     )
                                 }
                             }
                         }
+                    } catch (e: SwapException) {
+                        val formError = when (e) {
+                            is SwapException.SwapIsNotSupported ->
+                                UiText.StringResource(R.string.swap_route_not_available)
+                            is SwapException.AmountCannotBeZero ->
+                                UiText.StringResource(R.string.swap_form_invalid_amount)
+                            is SwapException.SameAssets ->
+                                UiText.StringResource(R.string.swap_screen_same_asset_error_message)
+                        }
+                        uiState.update {
+                            it.copy(
+                                provider = UiText.Empty,
+                                srcFiatValue = "0",
+                                estimatedDstTokenValue = "0",
+                                estimatedDstFiatValue = "0",
+                                fee = "0",
+                                isSwapDisabled = true,
+                                formError = formError
+                            )
+                        }
+                        Timber.e("swapError $e")
                     } catch (e: Exception) {
                         // TODO handle error
                         Timber.e(e)
