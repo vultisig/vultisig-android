@@ -8,7 +8,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.ui.screens.keysign.Keysign
 import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignPeerDiscovery
@@ -19,8 +18,6 @@ fun KeysignFlowView(
     navController: NavController,
     onComplete: () -> Unit,
 ) {
-    KeepScreenOn()
-
     val viewModel: KeysignFlowViewModel = hiltViewModel()
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     if (sharedViewModel.vault == null || sharedViewModel.keysignPayload == null) {

@@ -162,4 +162,10 @@ internal interface RepositoriesModule {
         impl: AddressBookOrderRepository
     ): OrderRepository<AddressBookOrderEntity>
 
+    @Binds
+    @Singleton
+    fun bindSPLTokenRepository(
+        impl: SPLTokenRepositoryImpl
+    ): SPLTokenRepository
+
 }

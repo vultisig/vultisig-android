@@ -16,7 +16,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoverService
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoveryingSessionID
@@ -39,8 +38,6 @@ import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 internal fun JoinKeysignView(
     navController: NavHostController,
 ) {
-    KeepScreenOn()
-
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
     var keysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
