@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
@@ -43,7 +44,7 @@ internal interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-    ): SwapQuote
+    ): OneInchSwapQuoteJson
 
     fun resolveProvider(
         srcToken: Coin,
@@ -140,17 +141,18 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         )
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     override suspend fun getLiFiSwapQuote(
         srcAddress: String,
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
-    ): SwapQuote {
+    ): OneInchSwapQuoteJson {
         val thorTokenValue = tokenValue.decimal
             .movePointRight(FIXED_THORSWAP_DECIMALS)
             .toBigInteger()
 
-        val thorQuote = liFiChainApi.getSwapQuote(
+        val liFiQuote = liFiChainApi.getSwapQuote(
             fromChain = srcToken.chain.swapAssetName(),
             toChain = dstToken.chain.swapAssetName(),
             fromToken = srcToken.ticker,
@@ -158,21 +160,17 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAmount = thorTokenValue.toString(),
             fromAddress = srcAddress,
         )
-        throw Exception("Not implemented")
-
-//        SwapException.handleSwapException(thorQuote.error)
-//
-//        val tokenFees = thorQuote.fees.total
-//            .thorTokenValueToTokenValue(dstToken)
-//
-//        val expectedDstTokenValue = thorQuote.expectedAmountOut
-//            .thorTokenValueToTokenValue(dstToken)
-//
-//        return SwapQuote.ThorChain(
-//            expectedDstValue = expectedDstTokenValue,
-//            fees = tokenFees,
-//            data = thorQuote,
-//        )
+        return OneInchSwapQuoteJson(
+            dstAmount = liFiQuote.estimate.toAmount,
+            tx = OneInchSwapTxJson(
+                from = liFiQuote.transactionRequest.from,
+                to = liFiQuote.transactionRequest.to,
+                data = liFiQuote.transactionRequest.data,
+                gas = liFiQuote.transactionRequest.gasLimit.substring(startIndex = 2).hexToLong(),
+                value = liFiQuote.transactionRequest.value.substring(startIndex = 2).hexToLong().toString(),
+                gasPrice = liFiQuote.transactionRequest.gasPrice.substring(startIndex = 2).hexToLong().toString(),
+            )
+        )
     }
 
     private fun String.thorTokenValueToTokenValue(

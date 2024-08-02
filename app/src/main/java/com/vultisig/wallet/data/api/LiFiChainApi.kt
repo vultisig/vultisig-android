@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
 import javax.inject.Inject
 
 internal interface LiFiChainApi {
@@ -14,7 +16,7 @@ internal interface LiFiChainApi {
         toToken: String,
         fromAmount: String,
         fromAddress: String,
-    )
+    ) : LiFiSwapQuoteJson
 }
 
 internal class LiFiChainApiImpl @Inject constructor(
@@ -28,7 +30,7 @@ internal class LiFiChainApiImpl @Inject constructor(
         toToken: String,
         fromAmount: String,
         fromAddress: String,
-    ) {
+    ): LiFiSwapQuoteJson {
         val response = httpClient
             .get("https://li.quest/v1/quote"){
                 parameter("fromChain", fromChain)
@@ -38,5 +40,6 @@ internal class LiFiChainApiImpl @Inject constructor(
                 parameter("fromAmount", fromAmount)
                 parameter("fromAddress", fromAddress)
             }
+        return gson.fromJson(response.bodyAsText(), LiFiSwapQuoteJson::class.java)
     }
 }
