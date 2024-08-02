@@ -13,7 +13,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.asFlow
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -31,7 +30,6 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun KeygenPeerDiscovery(
     navController: NavHostController,
-    vaultId: String,
     viewModel: KeygenFlowViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsState()

@@ -14,14 +14,13 @@ import com.vultisig.wallet.ui.screens.keygen.KeygenPeerDiscovery
 @Composable
 fun KeygenFlowView(
     navController: NavHostController,
-    vaultId: String,
 ) {
     KeepScreenOn()
     val viewModel: KeygenFlowViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState()
     when (uiState.value.currentState) {
         KeygenFlowState.PEER_DISCOVERY -> {
-            KeygenPeerDiscovery(navController, vaultId, viewModel)
+            KeygenPeerDiscovery(navController, viewModel)
         }
 
         KeygenFlowState.DEVICE_CONFIRMATION -> {
