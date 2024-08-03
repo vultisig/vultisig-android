@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoverService
@@ -129,6 +130,15 @@ internal fun JoinKeysignView(
                 KeysignErrorView(
                     navController = navController,
                     errorMessage = viewModel.errorMessage.value,
+                    onTryAgain = {
+                        if (viewModel.errorMessage.value == R.string.joinkeysign_wrongvault.asUiText()
+                                .toString()
+                        ) {
+                            viewModel.navigateToMain()
+                        } else {
+                            navController.popBackStack()
+                        }
+                    },
                 )
             }
         }

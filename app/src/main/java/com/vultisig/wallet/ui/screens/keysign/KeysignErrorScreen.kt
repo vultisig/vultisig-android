@@ -27,10 +27,12 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun KeysignErrorScreen(
     navController: NavController,
     errorMessage: String = "",
+    onTryAgain: () -> Unit,
 ) {
     KeysignErrorView(
         navController = navController,
-        errorMessage = errorMessage
+        errorMessage = errorMessage,
+        onTryAgain = onTryAgain,
     )
 }
 
@@ -38,6 +40,7 @@ internal fun KeysignErrorScreen(
 internal fun KeysignErrorView(
     navController: NavController,
     errorMessage: String = "",
+    onTryAgain: () -> Unit,
 ) {
     Column(Modifier.background(Theme.colors.oxfordBlue800)) {
         UiSpacer(weight = 1f)
@@ -83,7 +86,7 @@ internal fun KeysignErrorView(
                     .fillMaxWidth()
                     .padding(all = 16.dp)
             ) {
-                navController.popBackStack()
+                onTryAgain()
             }
         }
     }
@@ -92,6 +95,6 @@ internal fun KeysignErrorView(
 @Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable
 private fun PreviewKeysignError() {
-    KeysignErrorView(navController = rememberNavController())
 
+    KeysignErrorView(navController = rememberNavController()){}
 }

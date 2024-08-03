@@ -5,9 +5,11 @@ package com.vultisig.wallet.presenter.keysign
 import android.net.nsd.NsdManager
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.navOptions
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
@@ -47,6 +49,7 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
@@ -197,7 +200,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 Timber.d("Mapped proto to KeysignMessage: $payload")
 
                 if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-                    errorMessage.value = "Wrong vault"
+                    errorMessage.value = R.string.joinkeysign_wrongvault.asUiText().toString()
                     currentState.value = JoinKeysignState.Error
                     return@launch
                 }
@@ -489,6 +492,14 @@ internal class JoinKeysignViewModel @Inject constructor(
             currentState.value = JoinKeysignState.Error
         }
         return false
+    }
+    fun navigateToMain(){
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.Home(vaultId),
+                NavigationOptions(clearBackStack = true)
+            )
+        }
     }
 
     override fun onCleared() {
