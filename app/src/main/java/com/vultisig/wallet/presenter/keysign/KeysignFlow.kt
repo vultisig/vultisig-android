@@ -5,10 +5,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.presenter.common.KeepScreenOn
+import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.keysign.Keysign
 import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignPeerDiscovery
@@ -53,7 +57,10 @@ fun KeysignFlowView(
         KeysignFlowState.ERROR -> {
             KeysignErrorScreen(
                 navController = navController,
-                errorMessage = viewModel.errorMessage.value
+                errorMessage = viewModel.errorMessage.value,
+                onTryAgain = {
+                    navController.popBackStack()
+                },
             )
         }
 
