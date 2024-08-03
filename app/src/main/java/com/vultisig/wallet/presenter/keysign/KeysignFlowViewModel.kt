@@ -419,6 +419,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         try {
             if (nextState == KeysignFlowState.KEYSIGN) {
                 messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!)
+                resetQrAddress()
             }
             currentState.update { nextState }
         } catch (e: Exception) {
