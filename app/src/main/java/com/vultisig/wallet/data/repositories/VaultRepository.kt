@@ -48,7 +48,6 @@ internal interface VaultRepository {
 internal class VaultRepositoryImpl @Inject constructor(
     private val vaultDao: VaultDao,
     private val tokenRepository: TokenRepository,
-    private val splTokenRepository: SPLTokenRepository,
 ) : VaultRepository {
 
     override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
@@ -64,28 +63,8 @@ internal class VaultRepositoryImpl @Inject constructor(
                     .toSet()
             }
 
-    override suspend fun get(vaultId: String): Vault? {
-        val vault = vaultDao.loadById(vaultId)?.toVault()
-        return vault?.let { it ->
-            val vaultCoins = vault.coins.toMutableList()
-            val solanaAddress = vaultCoins
-                .firstOrNull { it.chain == Chain.solana }?.address
-            solanaAddress?.let {
-                val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
-                saveSPLTokens(vault, splTokens)
-                vaultCoins += splTokens
-            }
-            it.copy(coins = vaultCoins)
-        }
-    }
-
-    private suspend fun saveSPLTokens(vault: Vault, splTokens: List<Coin>) {
-        val currentTokens = vault.coins
-        splTokens.forEach { splToken ->
-            if (!currentTokens.map { ct -> ct.id }.contains(splToken.id))
-                addTokenToVault(vault.id, splToken)
-        }
-    }
+    override suspend fun get(vaultId: String): Vault? =
+        vaultDao.loadById(vaultId)?.toVault()
 
     override suspend fun getByEcdsa(pubKeyEcdsa: String): Vault? =
         vaultDao.loadByEcdsa(pubKeyEcdsa)?.toVault()

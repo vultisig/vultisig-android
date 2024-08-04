@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import io.ktor.client.HttpClient
@@ -18,17 +17,11 @@ data class SolanaFeeObject(
     val slot: BigInteger,
 )
 
-private data class SPLTokenRequest(
-    val tokens: List<String>
-)
-
 internal interface SolanaApi {
     suspend fun getBalance(address: String): String
     suspend fun getRecentBlockHash(): String
     suspend fun getHighPriorityFee(account: String): String
     suspend fun broadcastTransaction(tx: String): String?
-    suspend fun getSPLTokensAddress(contractAddress: String): String?
-    suspend fun getSPLTokens(addresses: List<String>): String?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -36,7 +29,6 @@ internal class SolanaApiImp @Inject constructor(
     private val httpClient: HttpClient,
 ) : SolanaApi {
     private val rpcEndpoint = "https://api.mainnet-beta.solana.com"
-    private val splTokensEndpoint = "https://api.solana.fm/v1/tokens"
     override suspend fun getBalance(address: String): String {
         val payload = RpcPayload(
             jsonrpc = "2.0",
@@ -143,61 +135,4 @@ internal class SolanaApiImp @Inject constructor(
         }
 
     }
-
-    override suspend fun getSPLTokens(addresses:List<String>): String? {
-        try {
-            val requestBody = SPLTokenRequest(
-                tokens = addresses
-            )
-            val response = httpClient.post(splTokensEndpoint) {
-                header("Content-Type", "application/json")
-                setBody(gson.toJson(requestBody))
-            }
-            val responseRawString = response.bodyAsText()
-            val result = gson.fromJson(responseRawString, JsonObject::class.java)
-            if (result.has("error")) {
-                Timber.tag("SolanaApiImp").d("Error getting spl tokens: $responseRawString")
-                return null
-            }
-            return result.toString()
-        } catch (e: Exception) {
-            Timber.tag("SolanaApiImp").e("Error getting high priority fee: ${e.message}")
-            return null
-        }
-    }
-
-    override suspend fun getSPLTokensAddress(contractAddress: String): String? {
-        try {
-            val payload = RpcPayload(
-                jsonrpc = "2.0",
-                method = "getTokenAccountsByOwner",
-                params = listOf(
-                    contractAddress,
-                    mapOf("programId" to "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-                    mapOf("encoding" to "jsonParsed")
-                ),
-                id = 1,
-            )
-            val response = httpClient.post(rpcEndpoint) {
-                header("Content-Type", "application/json")
-                setBody(gson.toJson(payload))
-            }
-            val responseContent = response.bodyAsText()
-            Timber.d(responseContent)
-            val rpcResp: JsonObject = gson.fromJson(responseContent, JsonObject::class.java)
-
-            if (rpcResp.has("error")) {
-                Timber.d("get spl token addresses error: ${rpcResp.get("error")}")
-                return null
-            }
-            val value: JsonArray = rpcResp.getAsJsonObject("result")
-                .getAsJsonArray("value")
-            return value.toString()
-        } catch (e: Exception) {
-            Timber.e(e)
-            return null
-        }
-    }
-
-
 }

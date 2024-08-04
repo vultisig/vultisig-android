@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.mappers
 
 import com.google.gson.Gson
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.models.KeyShare
 import com.vultisig.wallet.models.Vault
@@ -23,9 +25,16 @@ internal class VaultIOSToAndroidMapperImpl @Inject constructor(private val gson:
             signers = vault.signers,
             resharePrefix = vault.keyshares[0].keyshare.extractResharePrefix(),
             keyshares = vault.keyshares.map { KeyShare(it.pubkey,it.keyshare) },
-            coins = vault.coins?: emptyList()
+            coins = vault.coins?.map { coin ->
+                coin.copy(address = adjustAddressPrefix(coin))
+            } ?: emptyList()
         )
     }
+
+    private fun adjustAddressPrefix(coin: Coin) =
+        if (coin.chain == Chain.bitcoinCash) {
+            coin.address.replace("bitcoincash:", "")
+        } else coin.address
 
     private fun String.extractResharePrefix(): String {
         return gson.fromJson(this, HashMap::class.java)["reshare_prefix"].toString()
