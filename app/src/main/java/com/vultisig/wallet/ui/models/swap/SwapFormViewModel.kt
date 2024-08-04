@@ -613,7 +613,8 @@ internal class SwapFormViewModel @Inject constructor(
                                             estimatedDstFiatValue
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
-                                        formError = null
+                                        formError = null,
+                                        isSwapDisabled = false,
                                     )
                                 }
                             }
@@ -640,7 +641,8 @@ internal class SwapFormViewModel @Inject constructor(
 
                                 val tokenFees = TokenValue(
                                     value = quote.tx.gasPrice.toBigInteger() *
-                                            EvmHelper.DefaultEthSwapGasUnit.toBigInteger(),
+                                            (quote.tx.gas.takeIf { it != 0L }
+                                                ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger(),
                                     token = srcNativeToken
                                 )
 
