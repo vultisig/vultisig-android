@@ -11,7 +11,7 @@ import com.vultisig.wallet.models.Vault
 import java.math.BigInteger
 import javax.inject.Inject
 
-private data class SPLAddressResponse(
+private data class SPLTokenResponse(
     val mint: String,
     val amount: BigInteger,
 )
@@ -28,15 +28,15 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
 ) : SPLTokenRepository {
 
     override suspend fun getTokens(address: String, vault: Vault): List<Coin> {
-        val splTokensAddress = solanaApi.getSPLTokensAddress(address)
-        val splAddressResponses = gson
+        val rawSPLTokens = solanaApi.getSPLTokens(address)
+        val splTokenResponse = gson
             .fromJson(
-                splTokensAddress, JsonArray::class.java
-            ).map { processRawSPLAddress(it) }
+                rawSPLTokens, JsonArray::class.java
+            ).map { processRawSPLToken(it) }
         val result = gson.fromJson(
-            solanaApi.getSPLTokens(splAddressResponses.map { it.mint }), JsonObject::class.java
+            solanaApi.getSPLTokensInfo(splTokenResponse.map { it.mint }), JsonObject::class.java
         )
-        val splTokens = splAddressResponses.map { key ->
+        val splTokens = splTokenResponse.map { key ->
             createCoin(result, key, vault)
         }
         return splTokens
@@ -44,10 +44,10 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
 
     override suspend fun getBalance(address: String, coin: Coin): BigInteger {
         return try {
-            val splTokensAddress = solanaApi.getSPLTokensAddress(address)
-            splTokensAddress?.let {
-                val responses = gson.fromJson(splTokensAddress, JsonArray::class.java)
-                    .map { processRawSPLAddress(it) }
+            val splTokens = solanaApi.getSPLTokens(address)
+            splTokens?.let {
+                val responses = gson.fromJson(splTokens, JsonArray::class.java)
+                    .map { processRawSPLToken(it) }
                 responses.first { it.mint == coin.contractAddress }.amount
             } ?: BigInteger.ZERO
         } catch (e: Exception) {
@@ -56,7 +56,7 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
     }
 
     private suspend fun createCoin(
-        result: JsonObject, key: SPLAddressResponse, vault: Vault
+        result: JsonObject, key: SPLTokenResponse, vault: Vault
     ): Coin {
         val value = result.getAsJsonObject(key.mint)
         val ticker = value.getAsJsonObject("tokenMetadata")
@@ -87,13 +87,13 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
         return coin.copy(address = derivedAddress, hexPublicKey = derivedPublicKey)
     }
 
-    private fun processRawSPLAddress(res: JsonElement): SPLAddressResponse {
+    private fun processRawSPLToken(res: JsonElement): SPLTokenResponse {
         val info = res.asJsonObject.getAsJsonObject("account")
             .getAsJsonObject("data")
             .getAsJsonObject("parsed").getAsJsonObject("info")
         val mint = info.getAsJsonPrimitive("mint").asString
         val amount = info.getAsJsonObject("tokenAmount")
             .getAsJsonPrimitive("amount").asBigInteger
-        return SPLAddressResponse(mint, amount)
+        return SPLTokenResponse(mint, amount)
     }
 }

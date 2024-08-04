@@ -27,8 +27,8 @@ internal interface SolanaApi {
     suspend fun getRecentBlockHash(): String
     suspend fun getHighPriorityFee(account: String): String
     suspend fun broadcastTransaction(tx: String): String?
-    suspend fun getSPLTokensAddress(contractAddress: String): String?
-    suspend fun getSPLTokens(addresses: List<String>): String?
+    suspend fun getSPLTokens(walletAddress: String): String?
+    suspend fun getSPLTokensInfo(tokens: List<String>): String?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -36,7 +36,7 @@ internal class SolanaApiImp @Inject constructor(
     private val httpClient: HttpClient,
 ) : SolanaApi {
     private val rpcEndpoint = "https://api.mainnet-beta.solana.com"
-    private val splTokensEndpoint = "https://api.solana.fm/v1/tokens"
+    private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     override suspend fun getBalance(address: String): String {
         val payload = RpcPayload(
             jsonrpc = "2.0",
@@ -144,12 +144,12 @@ internal class SolanaApiImp @Inject constructor(
 
     }
 
-    override suspend fun getSPLTokens(addresses:List<String>): String? {
+    override suspend fun getSPLTokensInfo(tokens:List<String>): String? {
         try {
             val requestBody = SPLTokenRequest(
-                tokens = addresses
+                tokens = tokens
             )
-            val response = httpClient.post(splTokensEndpoint) {
+            val response = httpClient.post(splTokensInfoEndpoint) {
                 header("Content-Type", "application/json")
                 setBody(gson.toJson(requestBody))
             }
@@ -166,13 +166,13 @@ internal class SolanaApiImp @Inject constructor(
         }
     }
 
-    override suspend fun getSPLTokensAddress(contractAddress: String): String? {
+    override suspend fun getSPLTokens(walletAddress: String): String? {
         try {
             val payload = RpcPayload(
                 jsonrpc = "2.0",
                 method = "getTokenAccountsByOwner",
                 params = listOf(
-                    contractAddress,
+                    walletAddress,
                     mapOf("programId" to "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
                     mapOf("encoding" to "jsonParsed")
                 ),
