@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -36,6 +37,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private val balanceRepository: BalanceRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val chainAndTokensToAddressMapper: ChainAndTokensToAddressMapper,
+    private val splTokenRepository: SPLTokenRepository,
 ) : AccountsRepository {
 
     private suspend fun getVault(vaultId: String): Vault =
@@ -47,9 +49,23 @@ internal class AccountsRepositoryImpl @Inject constructor(
         supervisorScope {
             val vault = getVault(vaultId)
             val vaultCoins = vault.coins
-            val coins = vaultCoins.groupBy { it.chain }
+            var coins = vaultCoins.groupBy { it.chain }
 
-            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
+            var addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
+                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+            }
+
+            send(addresses)
+
+            coins = coins.onEach { chainAndCoins ->
+                if (chainAndCoins.key.id == Chain.solana.id) {
+                    val tokens = chainAndCoins.value.toMutableList()
+                    checkSPLCoins(tokens, vault)
+                    chainAndCoins.key to tokens
+                }
+            }
+
+            addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
                 chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
             }
             val loadPrices =
@@ -108,14 +124,38 @@ internal class AccountsRepositoryImpl @Inject constructor(
         awaitClose()
     }
 
+    private suspend fun checkSPLCoins(
+        coins: MutableList<Coin>,
+        vault: Vault
+    ) {
+        val solanaAddress = coins
+            .firstOrNull { it.chain == Chain.solana }?.address
+        solanaAddress?.let {
+            val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
+            splTokens.forEach { spl ->
+                if (!coins.map { it.id }.contains(spl.id)) {
+                    vaultRepository.addTokenToVault(vault.id, spl)
+                    coins += spl
+                }
+            }
+        }
+    }
+
     override fun loadAddress(
         vaultId: String,
         chain: Chain,
     ): Flow<Address> = flow {
         val vault = getVault(vaultId)
-        val coins = vault.coins.filter { it.chain == chain }
+        val coins = vault.coins.filter { it.chain == chain }.toMutableList()
 
-        val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+        var account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+            ?: return@flow
+
+        emit(account)
+
+        checkSPLCoins(coins, vault)
+
+        account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
             ?: return@flow
 
         emit(account)
