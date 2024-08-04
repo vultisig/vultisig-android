@@ -130,15 +130,7 @@ internal fun JoinKeysignView(
                 KeysignErrorView(
                     navController = navController,
                     errorMessage = viewModel.errorMessage.value,
-                    onTryAgain = {
-                        if (viewModel.errorMessage.value == R.string.joinkeysign_wrongvault.asUiText()
-                                .toString()
-                        ) {
-                            viewModel.navigateToMain()
-                        } else {
-                            navController.popBackStack()
-                        }
-                    },
+                    onTryAgain = viewModel::onTryAgain,
                 )
             }
         }

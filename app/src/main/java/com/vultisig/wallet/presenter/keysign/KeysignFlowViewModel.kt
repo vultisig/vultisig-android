@@ -37,6 +37,8 @@ import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.AddressProvider
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -90,6 +92,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val addressProvider: AddressProvider,
     @ApplicationContext  private val context: Context,
     private val compressQr: CompressQrUseCase,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -495,6 +498,12 @@ internal class KeysignFlowViewModel @Inject constructor(
         resetQrAddress()
         stopService(context)
         super.onCleared()
+    }
+
+    fun onTryAgain() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
     }
 
 }

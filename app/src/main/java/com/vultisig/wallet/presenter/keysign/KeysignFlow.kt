@@ -58,9 +58,7 @@ fun KeysignFlowView(
             KeysignErrorScreen(
                 navController = navController,
                 errorMessage = viewModel.errorMessage.value,
-                onTryAgain = {
-                    navController.popBackStack()
-                },
+                onTryAgain =viewModel::onTryAgain,
             )
         }
 
