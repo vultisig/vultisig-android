@@ -438,15 +438,11 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     fun onTryAgain() {
         viewModelScope.launch {
-            if (errorMessage.value == R.string.joinkeysign_wrongvault.asUiText()
-                    .toString()
-            ) {
-
+            if (errorMessage.value == R.string.joinkeysign_wrongvault.asUiText().toString()) {
                 navigator.navigate(
                     Destination.Home(vaultId),
                     NavigationOptions(clearBackStack = true)
                 )
-
             } else {
                 navigator.navigate(Destination.Back)
             }
