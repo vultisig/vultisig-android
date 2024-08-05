@@ -7,19 +7,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
 import com.vultisig.wallet.ui.screens.keygen.KeygenPeerDiscovery
 
 @Composable
 fun KeygenFlowView(
     navController: NavHostController,
-    vaultId: String,
 ) {
+    KeepScreenOn()
     val viewModel: KeygenFlowViewModel = hiltViewModel()
     val uiState = viewModel.uiState.collectAsState()
     when (uiState.value.currentState) {
         KeygenFlowState.PEER_DISCOVERY -> {
-            KeygenPeerDiscovery(navController, vaultId, viewModel)
+            KeygenPeerDiscovery(navController, viewModel)
         }
 
         KeygenFlowState.DEVICE_CONFIRMATION -> {

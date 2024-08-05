@@ -2,16 +2,12 @@ package com.vultisig.wallet.data.wallet
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.chains.EvmHelper
-import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toHexBytesInByteString
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import tss.KeysignResponse
-import wallet.core.jni.TransactionCompiler
-import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Ethereum.SigningInput
 import wallet.core.jni.proto.Ethereum.Transaction
 import java.math.BigInteger
@@ -67,7 +63,8 @@ internal class OneInchSwap(
             )
 
         val gasPrice = quote.tx.gasPrice.toBigInteger()
-        val gas = quote.tx.gas.toBigInteger()
+        val gas = (quote.tx.gas.takeIf { it != 0L }
+            ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger()
         return EvmHelper(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,

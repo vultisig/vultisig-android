@@ -52,6 +52,7 @@ internal fun AddAddressEntryScreen(
         addressTextFieldState = model.addressTextFieldState,
         onSelectChainClick = model::selectChain,
         onSaveAddressClick = model::saveAddress,
+        onAddressFieldLostFocus = model::validateAddress,
     )
 }
 
@@ -63,6 +64,7 @@ internal fun AddAddressEntryScreen(
     addressTextFieldState: TextFieldState,
     onSelectChainClick: (Chain) -> Unit = {},
     onSaveAddressClick: () -> Unit = {},
+    onAddressFieldLostFocus: () -> Unit = {},
 ) {
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
@@ -123,9 +125,10 @@ internal fun AddAddressEntryScreen(
                 FormTextFieldCard(
                     title = stringResource(R.string.add_address_address_title),
                     hint = stringResource(R.string.add_address_type_hint),
-                    error = null,
+                    error = state.addressError,
                     keyboardType = KeyboardType.Text,
                     textFieldState = addressTextFieldState,
+                    onLostFocus = onAddressFieldLostFocus,
                 )
             }
         },

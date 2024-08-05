@@ -95,11 +95,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
         SwapException.handleSwapException(mayaQuote.error)
 
-        val tokenFees = mayaQuote.fees.total
-            .mayaTokenValueToTokenValue(dstToken)
+        val tokenFees = TokenValue(mayaQuote.fees.total.toBigInteger(), dstToken)
 
-        val expectedDstTokenValue = mayaQuote.expectedAmountOut
-            .mayaTokenValueToTokenValue(dstToken)
+        val expectedDstTokenValue = TokenValue(mayaQuote.expectedAmountOut.toBigInteger(), dstToken)
 
         return SwapQuote.MayaChain(
             expectedDstValue = expectedDstTokenValue,
@@ -129,10 +127,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         SwapException.handleSwapException(thorQuote.error)
 
         val tokenFees = thorQuote.fees.total
-            .thorTokenValueToTokenValue(dstToken)
+            .thorTokenValueToTokenValue(dstToken, FIXED_THORSWAP_DECIMALS)
 
         val expectedDstTokenValue = thorQuote.expectedAmountOut
-            .thorTokenValueToTokenValue(dstToken)
+            .thorTokenValueToTokenValue(dstToken, FIXED_THORSWAP_DECIMALS)
 
         return SwapQuote.ThorChain(
             expectedDstValue = expectedDstTokenValue,
@@ -175,30 +173,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
     private fun String.thorTokenValueToTokenValue(
         token: Coin,
-    ): TokenValue {
-        // convert thor token values with 8 decimal places to token values
-        // with the correct number of decimal places
-        val exponent = token.decimal - 8
-        val multiplier = if (exponent >= 0) {
-            BigDecimal.TEN
-        } else {
-            BigDecimal(0.1)
-        }.pow(abs(exponent))
-
-        return TokenValue(
-            value = this.toBigDecimal()
-                .multiply(multiplier)
-                .toBigInteger(),
-            token = token,
-        )
-    }
-
-    private fun String.mayaTokenValueToTokenValue(
-        token: Coin,
+        decimals: Int,
     ): TokenValue {
         // convert maya token values with 10 decimal places to token values
         // with the correct number of decimal places
-        val exponent = token.decimal - 10
+        val exponent = token.decimal - decimals
         val multiplier = if (exponent >= 0) {
             BigDecimal.TEN
         } else {

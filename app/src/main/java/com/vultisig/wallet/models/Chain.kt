@@ -36,7 +36,7 @@ internal enum class Chain(
     dash("Dash", UTXO, "DASH/vbyte"),
 
     solana("Solana", SOL, "SOL"),
-    gaiaChain("Gaia", COSMOS, "uatom"),
+    gaiaChain("Cosmos", COSMOS, "uatom"),
     kujira("Kujira", COSMOS, "ukuji"),
     dydx("Dydx", COSMOS, "adydx"),
     polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT");
