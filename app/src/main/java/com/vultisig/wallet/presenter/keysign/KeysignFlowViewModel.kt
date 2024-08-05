@@ -419,7 +419,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         try {
             if (nextState == KeysignFlowState.KEYSIGN) {
                 messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!)
-                resetQrAddress()
+                cleanQrAddress()
             }
             currentState.update { nextState }
         } catch (e: Exception) {
@@ -432,7 +432,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         _participantDiscovery?.stop()
     }
 
-    fun resetQrAddress(){
+    private fun cleanQrAddress(){
         addressProvider.clean()
     }
 
@@ -493,7 +493,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     )
 
     override fun onCleared() {
-        resetQrAddress()
+        cleanQrAddress()
         stopService(context)
         super.onCleared()
     }
