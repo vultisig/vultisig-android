@@ -8,8 +8,11 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
+import kotlinx.datetime.Clock.System
+import kotlinx.datetime.Instant
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 private data class SPLTokenResponse(
     val mint: String,
@@ -27,8 +30,11 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
     private val gson: Gson,
 ) : SPLTokenRepository {
 
+    private val tempResponseStorage = mutableMapOf<String, String?>()
+    private val responseSaveTime = mutableMapOf<String, Instant>()
+
     override suspend fun getTokens(address: String, vault: Vault): List<Coin> {
-        val rawSPLTokens = solanaApi.getSPLTokens(address)
+        val rawSPLTokens = getCachedSPLTokens(address)
         val splTokenResponse = gson
             .fromJson(
                 rawSPLTokens, JsonArray::class.java
@@ -44,7 +50,7 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
 
     override suspend fun getBalance(address: String, coin: Coin): BigInteger {
         return try {
-            val splTokens = solanaApi.getSPLTokens(address)
+            val splTokens = getCachedSPLTokens(address)
             splTokens?.let {
                 val responses = gson.fromJson(splTokens, JsonArray::class.java)
                     .map { processRawSPLToken(it) }
@@ -53,6 +59,19 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             BigInteger.ZERO
         }
+    }
+
+    private suspend fun getCachedSPLTokens(address: String): String? {
+        val splTokenReadTime = System.now()
+        val splTokenSaveTime = responseSaveTime[address]
+        val shouldRefreshResponse = splTokenSaveTime == null ||
+                splTokenReadTime - splTokenSaveTime > SAVE_RESPONSE_DURATION
+        return if (shouldRefreshResponse) {
+            solanaApi.getSPLTokens(address)?.apply {
+                tempResponseStorage[address] = this
+                responseSaveTime[address] = System.now()
+            }
+        } else tempResponseStorage[address]
     }
 
     private suspend fun createCoin(
@@ -95,5 +114,9 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
         val amount = info.getAsJsonObject("tokenAmount")
             .getAsJsonPrimitive("amount").asBigInteger
         return SPLTokenResponse(mint, amount)
+    }
+
+    companion object {
+        private val SAVE_RESPONSE_DURATION = 60.seconds
     }
 }
