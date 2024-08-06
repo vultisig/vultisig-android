@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.models.chainId
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.math.abs
@@ -150,8 +151,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): OneInchSwapQuoteJson {
 
         val liFiQuote = liFiChainApi.getSwapQuote(
-            fromChain = srcToken.chain.swapAssetName(),
-            toChain = dstToken.chain.swapAssetName(),
+            fromChain = srcToken.chain.chainId?.toString()
+                ?: srcToken.chain.swapAssetName(),
+            toChain = dstToken.chain.chainId?.toString()
+                ?: dstToken.chain.swapAssetName(),
             fromToken = srcToken.ticker,
             toToken = dstToken.ticker,
             fromAmount = tokenValue.value.toString(),
@@ -250,17 +253,24 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.avalanche -> if (ticker in thorAvaxTokens) setOf(
                 SwapProvider.THORCHAIN,
-                SwapProvider.ONEINCH
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
             ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
-            Chain.base, Chain.optimism, Chain.polygon -> setOf(
+            Chain.base -> setOf(SwapProvider.LIFI)
+
+            Chain.optimism, Chain.polygon -> setOf(
                 SwapProvider.ONEINCH, SwapProvider.LIFI
             )
             Chain.thorChain -> setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.MAYA,
             )
-            Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
+            Chain.bitcoin -> setOf(
+                SwapProvider.THORCHAIN,
+                SwapProvider.MAYA,
+            )
+            Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
             Chain.gaiaChain -> setOf(
                 SwapProvider.THORCHAIN
             )
