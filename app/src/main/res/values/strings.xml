@@ -336,4 +336,9 @@
     <string name="add_address_title_title" translatable="false">Title</string>
     <string name="add_address_address_title" translatable="false">Address</string>
     <string name="add_address_type_hint" translatable="false">Type here</string>
+    <string name="deposit_form_basis_points_title" translatable="false">Basis points</string>
+    <string name="deposit_form_screen_affiliate_address" translatable="false">Affiliate (Optional)</string>
+    <string name="deposit_form_screen_affiliate_fee_optional" translatable="false">Affiliate Fee (Optional)</string>
+    <string name="deposit_form_remove_from_pool" translatable="false">Remove from pool</string>
+    <string name="deposit_form_add_to_pool" translatable="false">Add to pool</string>
 </resources>
