@@ -12,7 +12,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.chainId
+import com.vultisig.wallet.models.oneInchChainId
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.math.abs
@@ -151,10 +151,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): OneInchSwapQuoteJson {
 
         val liFiQuote = liFiChainApi.getSwapQuote(
-            fromChain = srcToken.chain.chainId?.toString()
-                ?: srcToken.chain.swapAssetName(),
-            toChain = dstToken.chain.chainId?.toString()
-                ?: dstToken.chain.swapAssetName(),
+            fromChain = srcToken.chain.oneInchChainId().toString(),
+            toChain = dstToken.chain.oneInchChainId().toString(),
             fromToken = srcToken.ticker,
             toToken = dstToken.ticker,
             fromAmount = tokenValue.value.toString(),

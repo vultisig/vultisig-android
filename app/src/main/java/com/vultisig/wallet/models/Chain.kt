@@ -165,8 +165,8 @@ internal val Chain.isLayer2: Boolean
         else -> false
     }
 
-internal val Chain.chainId: Int?
-    get() = when (this) {
+internal fun Chain.oneInchChainId(): Int =
+    when (this) {
         Chain.ethereum -> 1
         Chain.avalanche -> 43114
         Chain.base -> 8453
@@ -176,7 +176,9 @@ internal val Chain.chainId: Int?
         Chain.optimism -> 10
         Chain.bscChain -> 56
         Chain.cronosChain -> 25
-//        Chain.zksync -> 324
-        else -> null
+
+        // TODO add later
+        // Chain.zksync -> 324
+        else -> error("Chain $this is not supported by 1inch API")
     }
 
