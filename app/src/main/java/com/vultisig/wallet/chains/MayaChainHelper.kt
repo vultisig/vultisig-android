@@ -69,7 +69,9 @@ internal class MayaChainHelper(
             "switch",
             "yggdrasil+",
             "yggdrasil-",
-            "DYDX_VOTE:"
+            "DYDX_VOTE:",
+            "POOL+",
+            "POOL-",
         )
 
     }
