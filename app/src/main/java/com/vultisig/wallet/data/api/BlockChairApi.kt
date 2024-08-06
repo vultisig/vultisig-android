@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.api
 
-import com.google.common.cache.Cache
-import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.vultisig.wallet.data.models.BlockchairInfo
@@ -32,11 +30,6 @@ internal class BlockChairApiImp @Inject constructor(
     private val gson: Gson,
     private val httpClient: HttpClient,
 ) : BlockChairApi {
-    private val cache: Cache<String, BlockchairInfo> = CacheBuilder
-        .newBuilder()
-        .maximumSize(100)
-        .expireAfterWrite(5, java.util.concurrent.TimeUnit.MINUTES)
-        .build()
 
     private fun getChainName(chain: Chain): String = when (chain) {
         Chain.bitcoin -> "bitcoin"
@@ -54,9 +47,6 @@ internal class BlockChairApiImp @Inject constructor(
         address: String,
     ): BlockchairInfo? {
         try {
-            cache.getIfPresent(address)?.let {
-                return it
-            }
             val response =
                 httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
                     header("Content-Type", "application/json")
@@ -66,7 +56,6 @@ internal class BlockChairApiImp @Inject constructor(
             val rootObject = gson.fromJson(responseData, JsonObject::class.java)
             val data = rootObject.getAsJsonObject("data").getAsJsonObject().get(address)
             val blockchairInfo = gson.fromJson(data, BlockchairInfo::class.java)
-            cache.put(address, blockchairInfo)
             return blockchairInfo
         } catch (e: Exception) {
             Timber.e("fail to get address info from blockchair: ${e.message}")
