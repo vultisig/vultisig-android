@@ -94,8 +94,6 @@ sealed interface JoinKeysignState {
     data class Error(val errorType: JoinKeysignError) : JoinKeysignState
 }
 
-
-
 internal sealed class VerifyUiModel {
 
     data class Send(
