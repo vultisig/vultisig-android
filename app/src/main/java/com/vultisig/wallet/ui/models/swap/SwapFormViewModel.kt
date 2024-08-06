@@ -682,11 +682,11 @@ internal class SwapFormViewModel @Inject constructor(
                             SwapProvider.LIFI -> {
                                 val quote = swapQuoteRepository.getLiFiSwapQuote(
                                     srcAddress = src.address.address,
+                                    dstAddress = dst.address.address,
                                     srcToken = srcToken,
                                     dstToken = dstToken,
                                     tokenValue = tokenValue,
                                 )
-                                Timber.d("adsfadfadf quote $quote") // TODO remove
 
                                 val expectedDstValue = TokenValue(
                                     value = quote.dstAmount.toBigInteger(),
@@ -694,8 +694,9 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
 
                                 val tokenFees = TokenValue(
-                                    value = quote.tx.gasPrice.toBigInteger() *
-                                            quote.tx.gas.toBigInteger(),
+                                    value = quote.tx.gasPrice.toBigInteger()
+                                            * (quote.tx.gas.takeIf { it != 0L }
+                                        ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger(),
                                     token = srcNativeToken
                                 )
 

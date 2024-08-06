@@ -16,6 +16,7 @@ internal interface LiFiChainApi {
         toToken: String,
         fromAmount: String,
         fromAddress: String,
+        toAddress: String,
     ) : LiFiSwapQuoteJson
 }
 
@@ -30,6 +31,7 @@ internal class LiFiChainApiImpl @Inject constructor(
         toToken: String,
         fromAmount: String,
         fromAddress: String,
+        toAddress: String,
     ): LiFiSwapQuoteJson {
         val response = httpClient
             .get("https://li.quest/v1/quote"){
@@ -39,6 +41,7 @@ internal class LiFiChainApiImpl @Inject constructor(
                 parameter("toToken", toToken)
                 parameter("fromAmount", fromAmount)
                 parameter("fromAddress", fromAddress)
+                parameter("toAddress", toAddress)
             }
         return gson.fromJson(response.bodyAsText(), LiFiSwapQuoteJson::class.java)
     }

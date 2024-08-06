@@ -7,6 +7,8 @@ internal data class LiFiSwapQuoteJson(
     val estimate: LiFiSwapEstimateJson,
     @SerializedName("transactionRequest")
     val transactionRequest: LiFiSwapTxJson,
+    @SerializedName("message")
+    val message: String? = null,
 )
 
 internal data class LiFiSwapTxJson(

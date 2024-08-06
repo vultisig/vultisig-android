@@ -125,7 +125,6 @@ internal class KeysignViewModel(
                 Timber.d("signing message: $message")
                 signMessageWithRetry(this.tssInstance!!, message, 1)
             }
-            Timber.e("adsfadfadf broadcastTransaction signatures: $signatures") //TODO delete
             broadcastTransaction()
             currentState.value = KeysignState.KeysignFinished
             this._messagePuller?.stop()
@@ -149,17 +148,14 @@ internal class KeysignViewModel(
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
             keysignReq.messageToSign = Base64.getEncoder().encodeToString(message.toHexBytes())
             keysignReq.derivePath = keysignPayload.coin.coinType.derivationPath()
-            Timber.e("adsfadfadf signMessageWithRetry keysignReq: $keysignReq") //TODO delete
             val keysignResp = when (keyType) {
                 TssKeyType.ECDSA -> {
-                    Timber.e("adsfadfadf pubKeyECDSA 1") //TODO delete
                     keysignReq.pubKey = vault.pubKeyECDSA
                     currentState.value = KeysignState.KeysignECDSA
                     service.keysignECDSA(keysignReq)
                 }
 
                 TssKeyType.EDDSA -> {
-                    Timber.e("adsfadfadf pubKeyEDDSA 2") //TODO delete
                     keysignReq.pubKey = vault.pubKeyEDDSA
                     currentState.value = KeysignState.KeysignEdDSA
                     service.keysignEdDSA(keysignReq)

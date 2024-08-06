@@ -41,6 +41,7 @@ internal interface SwapQuoteRepository {
 
     suspend fun getLiFiSwapQuote(
         srcAddress: String,
+        dstAddress: String,
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
@@ -142,22 +143,23 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun getLiFiSwapQuote(
         srcAddress: String,
+        dstAddress: String,
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
     ): OneInchSwapQuoteJson {
-        val thorTokenValue = tokenValue.decimal
-            .movePointRight(FIXED_THORSWAP_DECIMALS)
-            .toBigInteger()
 
         val liFiQuote = liFiChainApi.getSwapQuote(
             fromChain = srcToken.chain.swapAssetName(),
             toChain = dstToken.chain.swapAssetName(),
             fromToken = srcToken.ticker,
             toToken = dstToken.ticker,
-            fromAmount = thorTokenValue.toString(),
+            fromAmount = tokenValue.value.toString(),
             fromAddress = srcAddress,
+            toAddress = dstAddress,
         )
+        SwapException.handleSwapException(liFiQuote.message)
+
         return OneInchSwapQuoteJson(
             dstAmount = liFiQuote.estimate.toAmount,
             tx = OneInchSwapTxJson(

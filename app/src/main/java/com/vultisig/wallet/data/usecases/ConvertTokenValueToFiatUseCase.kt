@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.models.Coin
 import kotlinx.coroutines.flow.first
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal interface ConvertTokenValueToFiatUseCase :
@@ -20,10 +21,20 @@ internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
         tokenValue: TokenValue,
         appCurrency: AppCurrency,
     ): FiatValue {
-        val price = tokenPriceRepository.getPrice(
+        val priceDraft = tokenPriceRepository.getPrice(
             token,
             appCurrency,
         ).first()
+
+        val price = if (priceDraft == BigDecimal.ZERO) {
+            tokenPriceRepository.refresh(listOf(token))
+            tokenPriceRepository.getPrice(
+                token,
+                appCurrency,
+            ).first()
+        } else {
+            priceDraft
+        }
 
         val decimal = tokenValue.decimal
 

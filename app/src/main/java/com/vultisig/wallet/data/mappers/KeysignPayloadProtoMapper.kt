@@ -14,7 +14,6 @@ import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
-import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -25,7 +24,6 @@ internal interface KeysignPayloadProtoMapper :
 internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayloadProtoMapper {
 
     override fun invoke(from: KeysignPayloadProto): KeysignPayload {
-        Timber.e("adsfadfadf KeysignPayloadProto: oneinchSwapPayload ${from.oneinchSwapPayload}") //TODO delete
         return KeysignPayload(
             vaultLocalPartyID = from.vaultLocalPartyId,
             vaultPublicKeyECDSA = from.vaultPublicKeyEcdsa,
