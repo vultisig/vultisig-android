@@ -501,7 +501,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         super.onCleared()
     }
 
-    fun onTryAgain() {
+    fun tryAgain() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }

@@ -336,4 +336,6 @@
     <string name="add_address_title_title" translatable="false">Title</string>
     <string name="add_address_address_title" translatable="false">Address</string>
     <string name="add_address_type_hint" translatable="false">Type here</string>
+    <string name="join_keysign_invalid_qr" translatable="false">Invalid QR code content</string>
+    <string name="join_keysign_failed_to_start" translatable="false">Failed to join keysign</string>
 </resources>

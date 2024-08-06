@@ -5,11 +5,9 @@ package com.vultisig.wallet.presenter.keysign
 import android.net.nsd.NsdManager
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.navOptions
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
@@ -17,6 +15,7 @@ import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -76,9 +75,26 @@ import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-enum class JoinKeysignState {
-    DiscoveryingSessionID, DiscoverService, JoinKeysign, WaitingForKeysignStart, Keysign, FailedToStart, Error
+sealed class JoinKeysignError(val message: UiText) {
+    data class FailedToCheck(val exceptionMessage: String) :
+        JoinKeysignError(UiText.DynamicString(exceptionMessage))
+
+    data object WrongVault : JoinKeysignError(R.string.join_keysign_wrong_vault.asUiText())
+    data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
+    data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
+    data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
 }
+
+sealed interface JoinKeysignState {
+    data object DiscoveryingSessionID : JoinKeysignState
+    data object DiscoverService : JoinKeysignState
+    data object JoinKeysign : JoinKeysignState
+    data object WaitingForKeysignStart : JoinKeysignState
+    data object Keysign : JoinKeysignState
+    data class Error(val errorType: JoinKeysignError) : JoinKeysignState
+}
+
+
 
 internal sealed class VerifyUiModel {
 
@@ -130,7 +146,6 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     var currentState: MutableState<JoinKeysignState> =
         mutableStateOf(JoinKeysignState.DiscoveryingSessionID)
-    var errorMessage: MutableState<String> = mutableStateOf("")
     private var _localPartyID: String = ""
     private var _sessionID: String = ""
     private var _serviceName: String = ""
@@ -200,15 +215,13 @@ internal class JoinKeysignViewModel @Inject constructor(
                 Timber.d("Mapped proto to KeysignMessage: $payload")
 
                 if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-                    errorMessage.value = R.string.joinkeysign_wrongvault.asUiText().toString()
-                    currentState.value = JoinKeysignState.Error
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
                     return@launch
                 }
                 val deepLink = DeepLinkHelper(content)
                 if (deepLink.hasResharePrefix()) {
                     if (_currentVault.resharePrefix != deepLink.getResharePrefix()) {
-                        errorMessage.value = R.string.join_keysign_wrong_reshare.asUiText().toString()
-                        currentState.value = JoinKeysignState.Error
+                        currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongReShare)
                         return@launch
                     }
                 }
@@ -229,8 +242,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Timber.d(e, "Failed to parse QR code")
-                errorMessage.value = "Invalid QR code content"
-                currentState.value = JoinKeysignState.Error
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
         }
     }
@@ -429,22 +441,18 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
-                    errorMessage.value = "Failed to join keysign"
-                    currentState.value = JoinKeysignState.FailedToStart
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedToStart)
                 }
             }
         }
     }
 
-    fun onTryAgain() {
+    fun tryAgain() {
         viewModelScope.launch {
-            if (errorMessage.value == R.string.joinkeysign_wrongvault.asUiText().toString()) {
-                navigator.navigate(
-                    Destination.Home(vaultId),
-                    NavigationOptions(clearBackStack = true)
-                )
-            } else {
-                navigator.navigate(Destination.Back)
+            val keysignError = currentState.value as JoinKeysignState.Error
+            when (keysignError.errorType) {
+                JoinKeysignError.WrongVault -> navigator.navigate(Destination.Home(showVaultList = true), opts =  NavigationOptions(clearBackStack = true))
+                else -> navigator.navigate(Destination.Back)
             }
         }
     }
@@ -500,8 +508,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             Timber.e(
                 "Failed to check keysign start: ${e.stackTraceToString()}"
             )
-            errorMessage.value = e.message.toString()
-            currentState.value = JoinKeysignState.Error
+            currentState.value =
+                JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
         return false
     }
