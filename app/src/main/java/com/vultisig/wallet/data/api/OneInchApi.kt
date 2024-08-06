@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.oneInchChainId
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -117,22 +118,4 @@ internal class OneInchApiImpl @Inject constructor(
         private const val ONEINCH_REFERRER_FEE = 0.5
         private const val ONEINCH_NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     }
-
 }
-
-private fun Chain.oneInchChainId(): Int =
-    when (this) {
-        Chain.ethereum -> 1
-        Chain.avalanche -> 43114
-        Chain.base -> 8453
-        Chain.blast -> 238
-        Chain.arbitrum -> 42161
-        Chain.polygon -> 137
-        Chain.optimism -> 10
-        Chain.bscChain -> 56
-        Chain.cronosChain -> 25
-
-        // TODO add later
-        // Chain.zksync -> 324
-        else -> error("Chain $this is not supported by 1inch API")
-    }
