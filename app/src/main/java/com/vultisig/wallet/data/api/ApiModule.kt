@@ -64,4 +64,10 @@ internal interface ApiModule {
         impl: OneInchApiImpl
     ): OneInchApi
 
+    @Binds
+    @Singleton
+    fun bindLiFiChainApi(
+        impl: LiFiChainApiImpl
+    ): LiFiChainApi
+
 }

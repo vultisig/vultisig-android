@@ -149,6 +149,8 @@ internal val Chain.IsSwapSupported: Boolean
         Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin, Chain.dash,
 
         Chain.avalanche, Chain.base, Chain.bscChain, Chain.ethereum, Chain.optimism, Chain.polygon,
+
+        Chain.arbitrum, Chain.blast,
     )
 
 internal val Chain.isDepositSupported: Boolean

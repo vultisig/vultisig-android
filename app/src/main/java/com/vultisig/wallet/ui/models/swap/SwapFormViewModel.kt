@@ -619,7 +619,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
 
-                            else -> {
+                            SwapProvider.ONEINCH -> {
                                 val srcUsdFiatValue = convertTokenValueToFiat(
                                     srcToken, tokenValue, AppCurrency.USD,
                                 )
@@ -674,7 +674,61 @@ internal class SwapFormViewModel @Inject constructor(
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
                                         formError = null,
-                                        isSwapDisabled = false,
+                                        isSwapDisabled = false
+                                    )
+                                }
+                            }
+
+                            SwapProvider.LIFI -> {
+                                val quote = swapQuoteRepository.getLiFiSwapQuote(
+                                    srcAddress = src.address.address,
+                                    dstAddress = dst.address.address,
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                )
+
+                                val expectedDstValue = TokenValue(
+                                    value = quote.dstAmount.toBigInteger(),
+                                    token = dstToken,
+                                )
+
+                                val tokenFees = TokenValue(
+                                    value = quote.tx.gasPrice.toBigInteger()
+                                            * (quote.tx.gas.takeIf { it != 0L }
+                                        ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger(),
+                                    token = srcNativeToken
+                                )
+
+                                this@SwapFormViewModel.quote = SwapQuote.OneInch(
+                                    expectedDstValue = expectedDstValue,
+                                    fees = tokenFees,
+                                    data = quote
+                                )
+
+                                val fiatFees =
+                                    convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
+
+                                val estimatedDstTokenValue = if (hasUserSetTokenValue) {
+                                    mapTokenValueToDecimalUiString(expectedDstValue)
+                                } else ""
+
+                                val estimatedDstFiatValue = convertTokenValueToFiat(
+                                    dstToken,
+                                    expectedDstValue, currency
+                                )
+
+                                uiState.update {
+                                    it.copy(
+                                        provider = R.string.swap_for_provider_li_fi.asUiText(),
+                                        srcFiatValue = srcFiatValueText,
+                                        estimatedDstTokenValue = estimatedDstTokenValue,
+                                        estimatedDstFiatValue = fiatValueToString.map(
+                                            estimatedDstFiatValue
+                                        ),
+                                        fee = fiatValueToString.map(fiatFees),
+                                        formError = null,
+                                        isSwapDisabled = false
                                     )
                                 }
                             }
