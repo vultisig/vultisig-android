@@ -147,6 +147,7 @@ dependencies {
     implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
+    implementation(libs.rive)
 
     // test
     testImplementation(libs.junit)

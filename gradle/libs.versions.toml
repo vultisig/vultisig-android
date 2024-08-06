@@ -37,6 +37,7 @@ ksp = "2.0.0-1.0.22"
 appcompat = "1.7.0"
 serialization = "1.7.1"
 protobuf = "0.9.4"
+rive = "8.7.0"
 
 [libraries]
 accompanist-permissions = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -95,6 +96,8 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+
+rive = { module = "app.rive:rive-android", version.ref = "rive" }
 
 
 [plugins]
