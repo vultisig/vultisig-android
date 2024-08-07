@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -46,6 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
@@ -85,6 +86,7 @@ internal fun ChainTokensScreen(
         onDeposit = viewModel::deposit,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
+        onBuyWeweClick = viewModel::buyWewe,
     )
 }
 
@@ -98,9 +100,9 @@ private fun ChainTokensScreen(
     onDeposit: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
+    onBuyWeweClick: () -> Unit = {},
 ) {
     val appColor = Theme.colors
-    val buyVltiButtonVisible = false
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember {
@@ -125,7 +127,7 @@ private fun ChainTokensScreen(
                 )
             },
             bottomBar = {
-                if (buyVltiButtonVisible) {
+                if (uiModel.chainName == Chain.base.raw) {
                     MultiColorButton(
                         minHeight = 44.dp,
                         backgroundColor = appColor.turquoise800,
@@ -144,22 +146,20 @@ private fun ChainTokensScreen(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.logo_button),
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_wewe),
                                     contentDescription = null,
-                                    modifier = Modifier.width(16.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    modifier = Modifier.size(40.dp),
                                 )
+                                Spacer(modifier = Modifier.width(16.dp))
                                 Text(
-                                    text = stringResource(id = R.string.chain_account_buy_vtx),
+                                    text = stringResource(id = R.string.chain_account_buy_wewe),
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     style = Theme.montserrat.subtitle1
                                 )
                             }
                         },
-                        onClick = {
-                            // TODO what to do here?
-                        }
+                        onClick = onBuyWeweClick
                     )
                 }
             }

@@ -218,7 +218,7 @@
     <string name="verify_transaction_fiat_amount_title">Iznos u (%s)</string>
     <string name="send_error_no_address">Adresa je nevažeća</string>
     <string name="vault_settings_error_backup_file">dogodila se pogreška</string>
-    <string name="chain_account_buy_vtx">KUPITE $VULT</string>
+    <string name="chain_account_buy_wewe">KUPITE $VULT</string>
     <string name="send_amount_currency">Iznos (u %s)</string>
     <string name="vault_settings_backup_subtitle">Sigurnosno kopirajte svoj udio u trezoru</string>
     <string name="chains">Lanci</string>

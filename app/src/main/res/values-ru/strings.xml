@@ -46,7 +46,7 @@
     <string name="chain_account_view_send">ОТПРАВИТЬ</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
     <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
-    <string name="chain_account_buy_vtx">КУПИТЬ $VULT</string>
+    <string name="chain_account_buy_wewe">КУПИТЬ $VULT</string>
     <string name="save">Сохранить</string>
     <string name="vault_settings_error_backup_file">произошла ошибка</string>
     <string name="vault_settings_success_backup_file">файл сохранен в Загрузках/%1$s</string>

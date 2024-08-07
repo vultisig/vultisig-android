@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
@@ -9,8 +10,10 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.IsSwapSupported
@@ -30,6 +33,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+private const val WEWE_TICKER = "WEWE"
 @Immutable
 internal data class ChainTokensUiModel(
     val isRefreshing: Boolean = false,
@@ -66,6 +70,8 @@ internal class ChainTokensViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val tokensRepository: TokenRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val vaultRepository: VaultRepository,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
@@ -143,6 +149,48 @@ internal class ChainTokensViewModel @Inject constructor(
                     tokenId = model.id,
                 )
             )
+        }
+    }
+
+    fun buyWewe() {
+        viewModelScope.launch {
+            val weweTokenId = "$WEWE_TICKER-$chainRaw"
+            val weweToken = uiState.value.tokens
+                .firstOrNull{
+                    it.id == weweTokenId
+                }
+            if(weweToken == null){
+                enableCoinById(weweTokenId)
+            }
+            navigator.navigate(
+                Destination.Swap(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                    dstTokenId = weweTokenId
+                )
+            )
+        }
+    }
+
+    private fun enableCoinById(coinId: String) = viewModelScope.launch {
+        val coin = Coins.SupportedCoins.find { it.id == coinId }
+            ?: error("No coin")
+        val vault = vaultRepository.get(vaultId)
+            ?: error("No vault with $vaultId")
+
+        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+            coin,
+            vault
+        )
+        val updatedCoin = coin.copy(
+            address = address,
+            hexPublicKey = derivedPublicKey
+        )
+
+        try {
+            vaultRepository.addTokenToVault(vaultId, updatedCoin)
+        } catch (e: SQLiteConstraintException) {
+            Timber.e(e, "Try to import the existing token.")
         }
     }
 
