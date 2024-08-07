@@ -1,23 +1,21 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment.Companion.BottomCenter
-import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -30,10 +28,10 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun AddVaultScreen(
@@ -55,20 +53,11 @@ private fun AddVaultScreen(
     navController: NavHostController,
     onOpenHelp: () -> Unit,
 ) {
-    val textColor = MaterialTheme.colorScheme.onBackground
     val isFirstEntry = navController.previousBackStackEntry == null
-    Box(
+    Scaffold(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.colors.oxfordBlue800)
-    ) {
-
-        Column(
-            modifier = Modifier
-                .align(Center)
-                .fillMaxHeight(),
-            horizontalAlignment = CenterHorizontally
-        ) {
+            .background(Theme.colors.oxfordBlue800),
+        topBar = {
             TopBar(
                 navController = navController,
                 centerText = "",
@@ -76,73 +65,102 @@ private fun AddVaultScreen(
                 endIcon = R.drawable.question,
                 onEndIconClick = onOpenHelp,
             )
-            Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
-            Image(
-                painter = painterResource(id = R.drawable.vultisig), contentDescription = "vultisig"
-            )
-            Text(
-                text = stringResource(R.string.create_new_vault_screen_vultisig),
-                color = textColor,
-                style = Theme.montserrat.heading3.copy(fontSize = 50.sp)
-            )
-            Spacer(modifier = Modifier.height(40.dp))
-            Text(
-                text = stringResource(R.string.create_new_vault_screen_secure_crypto_vault),
-                color = textColor,
-                style = Theme.montserrat.body3.copy(
-                    letterSpacing = 2.sp, fontWeight = FontWeight.Bold
-                ),
-            )
+        },
+        bottomBar = {
+            Column(
+                horizontalAlignment = CenterHorizontally
+            ) {
+                MultiColorButton(
+                    text = stringResource(R.string.create_new_vault_screen_create_a_new_vault),
+                    minHeight = 44.dp,
+                    backgroundColor = Theme.colors.turquoise800,
+                    textColor = Theme.colors.oxfordBlue800,
+                    iconColor = Theme.colors.turquoise800,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp,
+                        )
+                ) {
+                    navController.navigate(route = Screen.Setup.createRoute(Destination.KeygenFlow.DEFAULT_NEW_VAULT))
+                }
+                UiSpacer(size = 4.dp)
+                MultiColorButton(
+                    text = stringResource(R.string.create_new_vault_screen_import_an_existing_vault),
+                    backgroundColor = Theme.colors.oxfordBlue800,
+                    textColor = Theme.colors.turquoise800,
+                    iconColor = Theme.colors.oxfordBlue800,
+                    borderSize = 1.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    minHeight = 44.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            bottom = 16.dp,
+                        )
+                ) {
+                    navController.navigate(Screen.ImportFile.route)
+                }
+            }
         }
-        Column(
-            modifier = Modifier
-                .align(BottomCenter),
-            horizontalAlignment = CenterHorizontally
-        ) {
+    ) { padding ->
+        val configuration = LocalConfiguration.current
+        when (configuration.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE ->
+                Row(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = CenterVertically
+                ) {
+                    MainContent()
+                }
 
-            MultiColorButton(
-                text = stringResource(R.string.create_new_vault_screen_create_a_new_vault),
-                minHeight = 44.dp,
-                backgroundColor = Theme.colors.turquoise800,
-                textColor = Theme.colors.oxfordBlue800,
-                iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.subtitle1,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = MaterialTheme.dimens.marginMedium,
-                        end = MaterialTheme.dimens.marginMedium,
-                        bottom = MaterialTheme.dimens.marginMedium,
-                    )
-            ) {
-                navController.navigate(route = Screen.Setup.createRoute(Destination.KeygenFlow.DEFAULT_NEW_VAULT))
-            }
-            Spacer(modifier = Modifier.size(MaterialTheme.dimens.extraSmall))
-            MultiColorButton(
-                text = stringResource(R.string.create_new_vault_screen_import_an_existing_vault),
-                backgroundColor = Theme.colors.oxfordBlue800,
-                textColor = Theme.colors.turquoise800,
-                iconColor = Theme.colors.oxfordBlue800,
-                borderSize = 1.dp,
-                textStyle = Theme.montserrat.subtitle1,
-                minHeight = 44.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = MaterialTheme.dimens.marginMedium,
-                        end = MaterialTheme.dimens.marginMedium,
-                        bottom = MaterialTheme.dimens.buttonMargin,
-                    )
-            ) {
-                navController.navigate(Screen.ImportFile.route)
-            }
-
-
+            else ->
+                Column(
+                    modifier = Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                    horizontalAlignment = CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    MainContent()
+                }
         }
     }
 }
 
-@Preview(showBackground = true)
+@Composable
+private fun MainContent() {
+    Image(
+        painter = painterResource(id = R.drawable.vultisig),
+        contentDescription = "vultisig"
+    )
+    Column {
+        Text(
+            text = stringResource(R.string.create_new_vault_screen_vultisig),
+            color = Theme.colors.neutral100,
+            style = Theme.montserrat.heading3.copy(fontSize = 50.sp)
+        )
+        UiSpacer(size = 40.dp)
+        Text(
+            text = stringResource(R.string.create_new_vault_screen_secure_crypto_vault),
+            color = Theme.colors.neutral100,
+            style = Theme.montserrat.body3.copy(
+                letterSpacing = 2.sp,
+                fontWeight = FontWeight.Bold
+            ),
+        )
+    }
+}
+
+@Preview
 @Composable
 fun CreateNewVaultPreview() {
     val navController = rememberNavController()
