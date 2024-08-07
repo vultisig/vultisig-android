@@ -100,7 +100,11 @@ internal class ChainSelectionViewModel @Inject constructor(
                 searchTextFieldState.textAsFlow(),
             ) { tokens, enabledChains, query ->
                 tokens
-                    .filter { query.isBlank() || it.ticker.contains(query, ignoreCase = true) }
+                    .filter {
+                        query.isBlank() ||
+                                it.ticker.contains(query, ignoreCase = true) ||
+                                it.chain.name.contains(query, ignoreCase = true)
+                    }
                     .map { token ->
                         ChainUiModel(
                             isEnabled = token.chain in enabledChains,
