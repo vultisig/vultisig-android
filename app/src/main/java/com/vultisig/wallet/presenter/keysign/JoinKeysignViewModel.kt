@@ -449,11 +449,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         viewModelScope.launch {
             val keysignError = currentState.value as JoinKeysignState.Error
             when (keysignError.errorType) {
-                JoinKeysignError.WrongVault -> navigator.navigate(
-                    Destination.Home(showVaultList = true),
-                    opts = NavigationOptions(clearBackStack = true)
-                )
-
+                JoinKeysignError.WrongVault -> navigateToHome()
                 else -> navigator.navigate(Destination.Back)
             }
         }
@@ -515,6 +511,14 @@ internal class JoinKeysignViewModel @Inject constructor(
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
         return false
+    }
+    fun navigateToHome() {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.Home(showVaultList = true),
+                opts = NavigationOptions(clearBackStack = true)
+            )
+        }
     }
 
     override fun onCleared() {

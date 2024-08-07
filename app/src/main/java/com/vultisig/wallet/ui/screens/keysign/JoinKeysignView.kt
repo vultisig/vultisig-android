@@ -18,7 +18,6 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.keysign.JoinKeysignError
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoverService
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoveryingSessionID
@@ -48,7 +47,7 @@ internal fun JoinKeysignView(
 
     JoinKeysignScreen(
         navController = navController,
-        state = viewModel.currentState.value,
+        viewModel =viewModel,
         keysignState = keysignState,
     ) { state ->
         when (state) {
@@ -139,16 +138,25 @@ internal fun JoinKeysignView(
 @Composable
 private fun JoinKeysignScreen(
     navController: NavHostController,
-    state: JoinKeysignState,
+    viewModel: JoinKeysignViewModel,
     keysignState: KeysignState,
     content: @Composable BoxScope.(JoinKeysignState) -> Unit = {},
 ) {
+    val state =viewModel.currentState.value
     ProgressScreen(
         navController = navController,
         title = stringResource(
-            id = if (keysignState != KeysignState.KeysignFinished) R.string.keysign
-            else R.string.transaction_done_title
+            id = if (keysignState != KeysignState.KeysignFinished) {
+                R.string.keysign
+            } else {
+                R.string.transaction_done_title
+            }
         ),
+        onStartIconClick = {
+            if (keysignState == KeysignState.KeysignFinished) {
+                viewModel.navigateToHome()
+            }
+        },
         progress = when (state) {
             DiscoveryingSessionID -> 0.1f
             DiscoverService -> 0.25f
@@ -166,7 +174,7 @@ private fun JoinKeysignScreen(
 private fun JoinKeysignViewPreview() {
     JoinKeysignScreen(
         navController = rememberNavController(),
-        state = Error(errorType = JoinKeysignError.WrongVault),
+        viewModel = hiltViewModel(),
         keysignState = KeysignState.CreatingInstance,
     )
 }
