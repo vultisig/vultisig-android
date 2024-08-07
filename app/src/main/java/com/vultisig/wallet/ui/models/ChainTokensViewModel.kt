@@ -32,6 +32,7 @@ import javax.inject.Inject
 
 @Immutable
 internal data class ChainTokensUiModel(
+    val isRefreshing: Boolean = false,
     val chainName: String = "",
     val chainAddress: String = "",
     @DrawableRes val chainLogo: Int? = null,
@@ -148,6 +149,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private fun loadData() {
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
+            uiState.update { it.copy(isRefreshing = true) }
             val chain = requireNotNull(Chain.entries.find { it.raw == chainRaw })
             accountsRepository.loadAddress(
                 vaultId = vaultId,
@@ -156,6 +158,8 @@ internal class ChainTokensViewModel @Inject constructor(
                 // TODO handle error
                 Timber.e(it)
             }.collect { address ->
+                uiState.update { it.copy(isRefreshing = false) }
+
                 val totalFiatValue = address.accounts
                     .calculateAccountsTotalFiatValue()
 
