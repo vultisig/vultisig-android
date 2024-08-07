@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
@@ -107,21 +107,21 @@ private fun ChainTokensScreen(
         SnackbarHostState()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(appColor.oxfordBlue800)
+    BoxWithSwipeRefresh(
+        onSwipe = onRefresh,
+        isRefreshing = uiModel.isRefreshing,
+        modifier = Modifier.fillMaxSize()
     ) {
-        Scaffold(snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
+        Scaffold(
+            contentColor = Theme.colors.oxfordBlue800,
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            },
             topBar = {
                 TopBar(
                     navController = navController,
                     centerText = uiModel.chainName,
                     startIcon = R.drawable.caret_left,
-                    endIcon = R.drawable.clockwise,
-                    onEndIconClick = onRefresh
                 )
             },
             bottomBar = {

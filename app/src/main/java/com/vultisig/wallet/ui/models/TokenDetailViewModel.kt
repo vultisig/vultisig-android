@@ -27,6 +27,7 @@ import javax.inject.Inject
 @Immutable
 internal data class TokenDetailUiModel(
     val token: ChainTokenUiModel = ChainTokenUiModel(),
+    val isRefreshing: Boolean = false,
     val canDeposit: Boolean = false,
     val canSwap: Boolean = false,
     val isBalanceVisible: Boolean = true,
@@ -104,6 +105,8 @@ internal class TokenDetailViewModel @Inject constructor(
     private fun loadData() {
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
+            uiState.update { it.copy(isRefreshing = true) }
+
             val chain = requireNotNull(Chain.fromRaw(chainRaw))
 
             accountsRepository.loadAddress(
@@ -113,6 +116,8 @@ internal class TokenDetailViewModel @Inject constructor(
                 // TODO handle error
                 Timber.e(it)
             }.collect { address ->
+                uiState.update { it.copy(isRefreshing = false) }
+                
                 val token = address.accounts
                     .first { it.token.id == tokenId }
                     .let { account ->
