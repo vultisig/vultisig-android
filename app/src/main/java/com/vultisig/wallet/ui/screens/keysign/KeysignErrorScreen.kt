@@ -14,8 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.InformationNote
 import com.vultisig.wallet.ui.components.MultiColorButton
@@ -25,19 +23,18 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun KeysignErrorScreen(
-    navController: NavController,
     errorMessage: String = "",
+    tryAgain: () -> Unit,
 ) {
     KeysignErrorView(
-        navController = navController,
-        errorMessage = errorMessage
+        onTryAgain = tryAgain,
     )
 }
 
 @Composable
 internal fun KeysignErrorView(
-    navController: NavController,
     errorMessage: String = "",
+    onTryAgain: () -> Unit,
 ) {
     Column(Modifier.background(Theme.colors.oxfordBlue800)) {
         UiSpacer(weight = 1f)
@@ -79,12 +76,11 @@ internal fun KeysignErrorView(
                 textColor = Theme.colors.oxfordBlue800,
                 iconColor = Theme.colors.turquoise800,
                 textStyle = Theme.montserrat.subtitle1,
+                onClick = onTryAgain,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(all = 16.dp)
-            ) {
-                navController.popBackStack()
-            }
+                    .padding(all = 16.dp),
+            )
         }
     }
 }
@@ -92,6 +88,6 @@ internal fun KeysignErrorView(
 @Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable
 private fun PreviewKeysignError() {
-    KeysignErrorView(navController = rememberNavController())
 
+    KeysignErrorView(onTryAgain = {})
 }
