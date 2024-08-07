@@ -164,3 +164,21 @@ internal val Chain.isLayer2: Boolean
         Chain.arbitrum, Chain.avalanche, Chain.cronosChain, Chain.base, Chain.blast, Chain.optimism, Chain.polygon, Chain.bscChain -> true
         else -> false
     }
+
+internal fun Chain.oneInchChainId(): Int =
+    when (this) {
+        Chain.ethereum -> 1
+        Chain.avalanche -> 43114
+        Chain.base -> 8453
+        Chain.blast -> 81457
+        Chain.arbitrum -> 42161
+        Chain.polygon -> 137
+        Chain.optimism -> 10
+        Chain.bscChain -> 56
+        Chain.cronosChain -> 25
+
+        // TODO add later
+        // Chain.zksync -> 324
+        else -> error("Chain $this is not supported by 1inch API")
+    }
+

@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.models.oneInchChainId
 import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.math.abs
@@ -86,19 +87,25 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstToken: Coin,
         tokenValue: TokenValue
     ): SwapQuote {
+        val thorTokenValue = tokenValue.value.toString()
+            .thorTokenValueToTokenValue(srcToken, 8)
+            .value
+
         val mayaQuote = mayaChainApi.getSwapQuotes(
             address = dstAddress,
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
-            amount = tokenValue.value.toString(),
+            amount = thorTokenValue.toString(),
             interval = "5"
         )
 
         SwapException.handleSwapException(mayaQuote.error)
 
-        val tokenFees = TokenValue(mayaQuote.fees.total.toBigInteger(), dstToken)
+        val tokenFees = mayaQuote.fees.total
+            .thorTokenValueToTokenValue(dstToken, 8)
 
-        val expectedDstTokenValue = TokenValue(mayaQuote.expectedAmountOut.toBigInteger(), dstToken)
+        val expectedDstTokenValue = mayaQuote.expectedAmountOut
+            .thorTokenValueToTokenValue(dstToken, 8)
 
         return SwapQuote.MayaChain(
             expectedDstValue = expectedDstTokenValue,
@@ -150,8 +157,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): OneInchSwapQuoteJson {
 
         val liFiQuote = liFiChainApi.getSwapQuote(
-            fromChain = srcToken.chain.swapAssetName(),
-            toChain = dstToken.chain.swapAssetName(),
+            fromChain = srcToken.chain.oneInchChainId().toString(),
+            toChain = dstToken.chain.oneInchChainId().toString(),
             fromToken = srcToken.ticker,
             toToken = dstToken.ticker,
             fromAmount = tokenValue.value.toString(),
@@ -167,8 +174,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 to = liFiQuote.transactionRequest.to,
                 data = liFiQuote.transactionRequest.data,
                 gas = liFiQuote.transactionRequest.gasLimit.substring(startIndex = 2).hexToLong(),
-                value = liFiQuote.transactionRequest.value.substring(startIndex = 2).hexToLong().toString(),
-                gasPrice = liFiQuote.transactionRequest.gasPrice.substring(startIndex = 2).hexToLong().toString(),
+                value = liFiQuote.transactionRequest.value.substring(startIndex = 2).hexToLong()
+                    .toString(),
+                gasPrice = liFiQuote.transactionRequest.gasPrice.substring(startIndex = 2)
+                    .hexToLong().toString(),
             )
         )
     }
@@ -179,6 +188,13 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): TokenValue {
         // convert maya token values with 10 decimal places to token values
         // with the correct number of decimal places
+        if (token.chain == Chain.mayaChain) {
+            return TokenValue(
+                value = this.toBigInteger(),
+                token = token,
+            )
+        }
+
         val exponent = token.decimal - decimals
         val multiplier = if (exponent >= 0) {
             BigDecimal.TEN
@@ -250,20 +266,31 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.avalanche -> if (ticker in thorAvaxTokens) setOf(
                 SwapProvider.THORCHAIN,
-                SwapProvider.ONEINCH
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
             ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
-            Chain.base, Chain.optimism, Chain.polygon -> setOf(
+            Chain.base -> setOf(SwapProvider.LIFI)
+
+            Chain.optimism, Chain.polygon -> setOf(
                 SwapProvider.ONEINCH, SwapProvider.LIFI
             )
+
             Chain.thorChain -> setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.MAYA,
             )
-            Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
+
+            Chain.bitcoin -> setOf(
+                SwapProvider.THORCHAIN,
+                SwapProvider.MAYA,
+            )
+
+            Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
             Chain.gaiaChain -> setOf(
                 SwapProvider.THORCHAIN
             )
+
             Chain.arbitrum, Chain.blast -> setOf(SwapProvider.LIFI)
 
             Chain.solana, Chain.polkadot, Chain.dydx,
