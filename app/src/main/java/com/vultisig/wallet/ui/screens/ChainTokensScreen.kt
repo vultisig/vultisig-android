@@ -414,9 +414,9 @@ internal fun CoinItem(
 
             UiSpacer(size = 8.dp)
 
-            if (balance != null) {
+            if (fiatBalance != null) {
                 ToggleVisibilityText(
-                    text = balance,
+                    text = fiatBalance,
                     isVisible = isBalanceVisible,
                     style = Theme.menlo.subtitle1,
                     color = appColor.neutral100,
@@ -433,9 +433,9 @@ internal fun CoinItem(
 
         UiSpacer(size = 12.dp)
 
-        if (fiatBalance != null) {
+        if (balance != null) {
             ToggleVisibilityText(
-                text = fiatBalance,
+                text = balance,
                 isVisible = isBalanceVisible,
                 style = Theme.menlo.subtitle1,
                 color = appColor.neutral100,
