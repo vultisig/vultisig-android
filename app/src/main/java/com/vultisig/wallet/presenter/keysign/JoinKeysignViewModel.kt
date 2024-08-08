@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
+import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
@@ -46,6 +47,7 @@ import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.swap.SwapFormViewModel.Companion.AFFILIATE_FEE_USD_THRESHOLD
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -281,11 +283,19 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
 
                     is SwapPayload.ThorChain -> {
+                        val srcUsdFiatValue = convertTokenValueToFiat(
+                            srcToken, srcTokenValue, AppCurrency.USD,
+                        )
+
+                        val isAffiliate =
+                            srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
                         val quote = swapQuoteRepository.getSwapQuote(
                             srcToken = srcToken,
                             dstToken = dstToken,
                             dstAddress = swapPayload.data.toAddress,
                             tokenValue = srcTokenValue,
+                            isAffiliate = isAffiliate,
                         )
 
                         verifyUiModel.value = VerifyUiModel.Swap(
@@ -301,11 +311,20 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
 
                     is SwapPayload.MayaChain -> {
+                        val srcUsdFiatValue = convertTokenValueToFiat(
+                            srcToken, srcTokenValue, AppCurrency.USD,
+                        )
+
+                        val isAffiliate =
+                            srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
+
                         val quote = swapQuoteRepository.getMayaSwapQuote(
                             srcToken = srcToken,
                             dstToken = dstToken,
                             dstAddress = swapPayload.data.toAddress,
                             tokenValue = srcTokenValue,
+                            isAffiliate = isAffiliate
                         )
 
                         verifyUiModel.value = VerifyUiModel.Swap(
