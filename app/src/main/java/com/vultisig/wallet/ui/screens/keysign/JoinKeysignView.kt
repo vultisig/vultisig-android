@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import android.content.Context
 import android.net.nsd.NsdManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -18,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.common.KeepScreenOn
+import com.vultisig.wallet.presenter.keysign.JoinKeysignError
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoverService
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoveryingSessionID
@@ -45,11 +47,15 @@ internal fun JoinKeysignView(
     val context = LocalContext.current
     var keysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
 
+    if (keysignState == KeysignState.KeysignFinished) {
+        viewModel.enableNavigationToHome()
+    }
     JoinKeysignScreen(
         navController = navController,
-        viewModel =viewModel,
+        state = viewModel.currentState.value,
         keysignState = keysignState,
-    ) { state ->
+        onBack = viewModel::navigateToHome
+        ) { state ->
         when (state) {
             DiscoveryingSessionID,
             WaitingForKeysignStart,
@@ -121,7 +127,8 @@ internal fun JoinKeysignView(
                     isThorChainSwap = keysignViewModel.isThorChainSwap,
                     onComplete = {
                         navController.navigate(Screen.Home.route)
-                    }
+                    },
+                    onBack = keysignViewModel::navigateToHome
                 )
             }
 
@@ -138,25 +145,20 @@ internal fun JoinKeysignView(
 @Composable
 private fun JoinKeysignScreen(
     navController: NavHostController,
-    viewModel: JoinKeysignViewModel,
+    state: JoinKeysignState,
     keysignState: KeysignState,
+    onBack: () -> Unit = {},
     content: @Composable BoxScope.(JoinKeysignState) -> Unit = {},
-) {
-    val state =viewModel.currentState.value
+
+    ) {
+    BackHandler(onBack = onBack)
     ProgressScreen(
         navController = navController,
         title = stringResource(
-            id = if (keysignState != KeysignState.KeysignFinished) {
-                R.string.keysign
-            } else {
-                R.string.transaction_done_title
-            }
+            id = if (keysignState != KeysignState.KeysignFinished) R.string.keysign
+            else R.string.transaction_done_title
         ),
-        onStartIconClick = {
-            if (keysignState == KeysignState.KeysignFinished) {
-                viewModel.navigateToHome()
-            }
-        },
+        onStartIconClick = onBack,
         progress = when (state) {
             DiscoveryingSessionID -> 0.1f
             DiscoverService -> 0.25f
@@ -174,7 +176,7 @@ private fun JoinKeysignScreen(
 private fun JoinKeysignViewPreview() {
     JoinKeysignScreen(
         navController = rememberNavController(),
-        viewModel = hiltViewModel(),
+        state = Error(errorType = JoinKeysignError.WrongVault),
         keysignState = KeysignState.CreatingInstance,
     )
 }

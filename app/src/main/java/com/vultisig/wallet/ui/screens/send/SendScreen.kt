@@ -1,13 +1,9 @@
 package com.vultisig.wallet.ui.screens.send
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +19,6 @@ import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.presenter.keysign.KeysignFlowView
 import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
-import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.send.SendViewModel
 import com.vultisig.wallet.ui.navigation.Screen
@@ -44,7 +39,6 @@ internal fun SendScreen(
     viewModel: SendViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    var isNavigateToHome: Boolean by remember { mutableStateOf(false) }
 
     val sendNav = rememberNavController()
 
@@ -77,6 +71,7 @@ internal fun SendScreen(
         SendDst.Keysign.staticRoute -> stringResource(R.string.keysign)
         else -> stringResource(R.string.send_screen_title)
     }
+
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
     ProgressScreen(
@@ -90,15 +85,8 @@ internal fun SendScreen(
                 context.share(qrBitmap)
             }
         } ?: {},
-        onStartIconClick = {
-            if (isNavigateToHome){
-                viewModel.navigateToHome()
-            }else{
-                navController.popBackStack()
-            }
-        }
+        onStartIconClick =viewModel::navigateToHome,
     ) {
-
         NavHost(
             navController = sendNav,
             startDestination = SendDst.Send.route,
@@ -139,10 +127,8 @@ internal fun SendScreen(
                     onComplete = {
                         navController.navigate(Screen.Home.route)
                     },
-                    onStateChange = { state ->
-                        if (state == KeysignState.KeysignFinished) {
-                            isNavigateToHome = true
-                    }
+                    onKeysignFinished = {
+                        viewModel.enableNavigationToHome()
                     }
                 )
             }

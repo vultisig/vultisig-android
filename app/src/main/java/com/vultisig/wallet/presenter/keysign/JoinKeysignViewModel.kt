@@ -158,6 +158,8 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private var _jobWaitingForKeysignStart: Job? = null
 
+    private var isNavigateToHome: Boolean = false
+
     val keysignPayload: KeysignPayload?
         get() = _keysignPayload
     val keysignViewModel: KeysignViewModel
@@ -179,6 +181,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             solanaApi = solanaApi,
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
+            navigator = navigator,
         )
 
     val verifyUiModel =
@@ -449,7 +452,11 @@ internal class JoinKeysignViewModel @Inject constructor(
         viewModelScope.launch {
             val keysignError = currentState.value as JoinKeysignState.Error
             when (keysignError.errorType) {
-                JoinKeysignError.WrongVault -> navigateToHome()
+                JoinKeysignError.WrongVault -> navigator.navigate(
+                    Destination.Home(showVaultList = true),
+                    opts = NavigationOptions(clearBackStack = true)
+                )
+
                 else -> navigator.navigate(Destination.Back)
             }
         }
@@ -512,12 +519,21 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
         return false
     }
+    fun enableNavigationToHome() {
+        isNavigateToHome = true
+    }
     fun navigateToHome() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Home(showVaultList = true),
-                opts = NavigationOptions(clearBackStack = true)
-            )
+            if (isNavigateToHome) {
+                navigator.navigate(
+                    Destination.Home(),
+                    NavigationOptions(
+                        clearBackStack = true
+                    )
+                )
+            } else {
+                navigator.navigate(Destination.Back)
+            }
         }
     }
 

@@ -18,7 +18,7 @@ import com.vultisig.wallet.ui.screens.keysign.KeysignPeerDiscovery
 fun KeysignFlowView(
     navController: NavController,
     onComplete: () -> Unit,
-    onStateChange: (KeysignState) -> Unit={},
+    onKeysignFinished: () -> Unit = {},
 ) {
     KeepScreenOn()
 
@@ -48,7 +48,7 @@ fun KeysignFlowView(
             Keysign(
                 viewModel = viewModel.keysignViewModel,
                 onComplete = onComplete,
-                onStateChange = onStateChange,
+                onKeysignFinished = onKeysignFinished,
             )
         }
 
