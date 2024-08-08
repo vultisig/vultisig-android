@@ -52,4 +52,10 @@ internal interface UseCasesModule {
         impl: DecomressQrUseCaseImpl
     ): DecompressQrUseCase
 
+    @Binds
+    @Singleton
+    fun bindEnableTokenUseCase(
+        impl: EnableTokenUseCaseImpl
+    ): EnableTokenUseCase
+
 }

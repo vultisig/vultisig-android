@@ -11,7 +11,9 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.models.canSelectTokens
@@ -43,6 +45,7 @@ internal data class ChainTokensUiModel(
     val canSwap: Boolean = true,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
+    val isBuyWeweVisible: Boolean = false,
 )
 
 @Immutable
@@ -66,7 +69,9 @@ internal class ChainTokensViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val tokensRepository: TokenRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
+    private val tokens = MutableStateFlow(emptyList<Coin>())
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
     private val vaultId: String =
@@ -146,6 +151,21 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
+    fun buyWewe() {
+        viewModelScope.launch {
+            if(!tokens.value.contains(Coins.wewe)){
+                enableTokenUseCase(vaultId, Coins.wewe)
+            }
+            navigator.navigate(
+                Destination.Swap(
+                    vaultId = vaultId,
+                    chainId = chainRaw,
+                    dstTokenId = Coins.wewe.id,
+                )
+            )
+        }
+    }
+
     private fun loadData() {
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
@@ -163,25 +183,28 @@ internal class ChainTokensViewModel @Inject constructor(
                 val totalFiatValue = address.accounts
                     .calculateAccountsTotalFiatValue()
 
-                val tokens = address.accounts
+                val accounts = address.accounts
                     .sortedWith(
                         compareBy({ !it.token.isNativeToken },
                             { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
                     )
-                    .map { account ->
-                        val token = account.token
-                        ChainTokenUiModel(
-                            id = token.id,
-                            name = token.ticker,
-                            balance = account.tokenValue
-                                ?.let(mapTokenValueToDecimalUiString)
-                                ?: "",
-                            fiatBalance = account.fiatValue
-                                ?.let(fiatValueToStringMapper::map),
-                            tokenLogo = Coins.getCoinLogo(token.logo),
-                            chainLogo = chain.logo,
-                        )
-                    }
+
+                val tokensFromAccounts = accounts.map { it.token }
+                tokens.update { it + tokensFromAccounts }
+                val uiTokens = accounts.map { account ->
+                    val token = account.token
+                    ChainTokenUiModel(
+                        id = token.id,
+                        name = token.ticker,
+                        balance = account.tokenValue
+                            ?.let(mapTokenValueToDecimalUiString)
+                            ?: "",
+                        fiatBalance = account.fiatValue
+                            ?.let(fiatValueToStringMapper::map),
+                        tokenLogo = Coins.getCoinLogo(token.logo),
+                        chainLogo = chain.logo,
+                    )
+                }
 
                 val accountAddress = address.address
                 val explorerUrl = explorerLinkRepository
@@ -195,12 +218,13 @@ internal class ChainTokensViewModel @Inject constructor(
                         chainName = chainRaw,
                         chainAddress = accountAddress,
                         chainLogo = chain.logo,
-                        tokens = tokens,
+                        tokens = uiTokens,
                         explorerURL = explorerUrl,
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
                         canSelectTokens = chain.canSelectTokens,
+                        isBuyWeweVisible = chain == Chain.base
                     )
                 }
             }
