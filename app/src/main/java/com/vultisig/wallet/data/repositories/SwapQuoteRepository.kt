@@ -99,7 +99,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = thorTokenValue.toString(),
-            interval = "5",
+            interval = "3",
             isAffiliate = isAffiliate,
         )
 
