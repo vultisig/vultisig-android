@@ -81,7 +81,7 @@ internal sealed class Destination(
             )
 
             fun buildRoute(vaultId: String, chainId: String?, dstTokenId: String?) =
-                "vault_detail/$vaultId/account/$chainId/swap/$dstTokenId"
+                "vault_detail/$vaultId/account/$chainId/swap?$ARG_DST_TOKEN_ID=$dstTokenId"
         }
     }
 
