@@ -153,19 +153,14 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun buyWewe() {
         viewModelScope.launch {
-            val weweTokenId = Coins.wewe.id
-            val weweToken = uiState.value.tokens
-                .firstOrNull{
-                    it.id == weweTokenId
-                }
-            if(weweToken == null){
+            if(!tokens.value.contains(Coins.wewe)){
                 enableTokenUseCase(vaultId, Coins.wewe)
             }
             navigator.navigate(
                 Destination.Swap(
                     vaultId = vaultId,
                     chainId = chainRaw,
-                    dstTokenId = weweTokenId
+                    dstTokenId = Coins.wewe.id,
                 )
             )
         }
