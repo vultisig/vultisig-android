@@ -24,6 +24,7 @@ internal interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        isAffiliate: Boolean,
     ): SwapQuote
 
     suspend fun getOneInchSwapQuote(
@@ -38,6 +39,7 @@ internal interface SwapQuoteRepository {
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        isAffiliate: Boolean,
     ): SwapQuote
 
     suspend fun getLiFiSwapQuote(
@@ -85,7 +87,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         dstAddress: String,
         srcToken: Coin,
         dstToken: Coin,
-        tokenValue: TokenValue
+        tokenValue: TokenValue,
+        isAffiliate: Boolean,
     ): SwapQuote {
         val thorTokenValue = tokenValue.value.toString()
             .thorTokenValueToTokenValue(srcToken, 8)
@@ -96,7 +99,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = thorTokenValue.toString(),
-            interval = "5"
+            interval = "5",
+            isAffiliate = isAffiliate,
         )
 
         SwapException.handleSwapException(mayaQuote.error)
@@ -119,6 +123,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         srcToken: Coin,
         dstToken: Coin,
         tokenValue: TokenValue,
+        isAffiliate: Boolean,
     ): SwapQuote {
         val thorTokenValue = tokenValue.decimal
             .movePointRight(FIXED_THORSWAP_DECIMALS)
@@ -129,7 +134,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = thorTokenValue.toString(),
-            interval = "1"
+            interval = "1",
+            isAffiliate = isAffiliate,
         )
 
         SwapException.handleSwapException(thorQuote.error)

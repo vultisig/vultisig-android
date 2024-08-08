@@ -511,10 +511,13 @@ internal class SwapFormViewModel @Inject constructor(
                         ?.toBigInteger()
 
                     try {
-
                         if (srcToken == dstToken) {
                             throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
                         }
+
+                        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
+                            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+
                         val hasUserSetTokenValue = srcTokenValue != null
 
                         val tokenValue = srcTokenValue?.let {
@@ -538,17 +541,22 @@ internal class SwapFormViewModel @Inject constructor(
 
                         val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
-                        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
-                            ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
-
                         when (provider) {
                             SwapProvider.MAYA, SwapProvider.THORCHAIN -> {
+                                val srcUsdFiatValue = convertTokenValueToFiat(
+                                    srcToken, tokenValue, AppCurrency.USD,
+                                )
+
+                                val isAffiliate =
+                                    srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
+
                                 val quote = if (provider == SwapProvider.MAYA) {
                                     swapQuoteRepository.getMayaSwapQuote(
                                         dstAddress = dst.address.address,
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
+                                        isAffiliate = isAffiliate,
                                     )
                                 } else {
                                     swapQuoteRepository.getSwapQuote(
@@ -556,6 +564,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
+                                        isAffiliate = isAffiliate,
                                     )
                                 }
                                 this@SwapFormViewModel.quote = quote
@@ -792,7 +801,7 @@ internal class SwapFormViewModel @Inject constructor(
 
     companion object {
 
-        private const val AFFILIATE_FEE_USD_THRESHOLD = 100
+        const val AFFILIATE_FEE_USD_THRESHOLD = 100
 
     }
 
