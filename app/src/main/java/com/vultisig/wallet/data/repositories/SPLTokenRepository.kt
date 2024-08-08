@@ -22,7 +22,7 @@ private data class SPLTokenResponse(
 
 internal interface SPLTokenRepository {
     suspend fun getTokens(address: String, vault: Vault): List<Coin>
-    suspend fun getBalance(address: String, coin: Coin): BigInteger
+    suspend fun getBalance(coin: Coin): BigInteger
 }
 
 internal class SPLTokenRepositoryImpl @Inject constructor(
@@ -47,7 +47,7 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
             tokenValueDao.insertTokenValue(
                 TokenValueEntity(
                     Chain.solana.id,
-                    address,
+                    coin.address,
                     coin.ticker,
                     key.amount.toString()
                 )
@@ -57,7 +57,7 @@ internal class SPLTokenRepositoryImpl @Inject constructor(
         return splTokens
     }
 
-    override suspend fun getBalance(address: String, coin: Coin): BigInteger {
+    override suspend fun getBalance(coin: Coin): BigInteger {
         return try {
             tokenValueDao.getTokenValue(
                 Chain.solana.id,
