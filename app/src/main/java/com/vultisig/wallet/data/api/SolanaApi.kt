@@ -1,14 +1,17 @@
 package com.vultisig.wallet.data.api
 
+import androidx.annotation.Keep
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.util.appendIfNameAndValueAbsent
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -16,10 +19,6 @@ import javax.inject.Inject
 data class SolanaFeeObject(
     val prioritizationFee: BigInteger,
     val slot: BigInteger,
-)
-
-private data class SPLTokenRequest(
-    val tokens: List<String>
 )
 
 internal interface SolanaApi {
@@ -146,11 +145,11 @@ internal class SolanaApiImp @Inject constructor(
 
     override suspend fun getSPLTokensInfo(tokens:List<String>): String? {
         try {
-            val requestBody = SPLTokenRequest(
+            val requestBody = SPLTokenRequestJson(
                 tokens = tokens
             )
             val response = httpClient.post(splTokensInfoEndpoint) {
-                header("Content-Type", "application/json")
+                headers.appendIfNameAndValueAbsent("Content-Type", "application/json")
                 setBody(gson.toJson(requestBody))
             }
             val responseRawString = response.bodyAsText()
@@ -173,13 +172,13 @@ internal class SolanaApiImp @Inject constructor(
                 method = "getTokenAccountsByOwner",
                 params = listOf(
                     walletAddress,
-                    mapOf("programId" to "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-                    mapOf("encoding" to "jsonParsed")
+                    mapOf("programId" to PROGRAM_ID_SPL_REQUEST_PARAM),
+                    mapOf("encoding" to ENCODING_SPL_REQUEST_PARAM)
                 ),
                 id = 1,
             )
             val response = httpClient.post(rpcEndpoint) {
-                header("Content-Type", "application/json")
+                headers.appendIfNameAndValueAbsent("Content-Type", "application/json")
                 setBody(gson.toJson(payload))
             }
             val responseContent = response.bodyAsText()
@@ -199,5 +198,17 @@ internal class SolanaApiImp @Inject constructor(
         }
     }
 
+
+    companion object {
+        private const val PROGRAM_ID_SPL_REQUEST_PARAM =
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
+    }
+
+    @Keep
+    private data class SPLTokenRequestJson(
+        @SerializedName("tokens")
+        val tokens: List<String>
+    )
 
 }

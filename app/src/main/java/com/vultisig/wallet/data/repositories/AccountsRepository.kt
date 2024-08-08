@@ -48,24 +48,11 @@ internal class AccountsRepositoryImpl @Inject constructor(
     override fun loadAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
         supervisorScope {
             val vault = getVault(vaultId)
-            val vaultCoins = vault.coins
-            var coins = vaultCoins.groupBy { it.chain }
-
-            var addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
-                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
-            }
-
-            send(addresses)
-
-            coins = coins.onEach { chainAndCoins ->
-                if (chainAndCoins.key.id == Chain.solana.id) {
-                    val tokens = chainAndCoins.value.toMutableList()
-                    checkSPLCoins(tokens, vault)
-                    chainAndCoins.key to tokens
-                }
-            }
-
-            addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
+            val currentCoins = vault.coins
+            val vaultCoins = currentCoins +
+                    getSPLCoins(currentCoins.filter { it.chain == Chain.solana }, vault)
+            val coins = vaultCoins.groupBy { it.chain }
+            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
                 chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
             }
             val loadPrices =
@@ -124,21 +111,22 @@ internal class AccountsRepositoryImpl @Inject constructor(
         awaitClose()
     }
 
-    private suspend fun checkSPLCoins(
-        coins: MutableList<Coin>,
+    private suspend fun getSPLCoins(
+        solanaCoins: List<Coin>,
         vault: Vault
-    ) {
-        val solanaAddress = coins
-            .firstOrNull { it.chain == Chain.solana }?.address
+    ): List<Coin> {
+        val solanaAddress = solanaCoins.firstOrNull()?.address
+        val newSPLTokens = mutableListOf<Coin>()
         solanaAddress?.let {
             val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
             splTokens.forEach { spl ->
-                if (!coins.map { it.id }.contains(spl.id)) {
+                if (!solanaCoins.any { it.id == spl.id }) {
                     vaultRepository.addTokenToVault(vault.id, spl)
-                    coins += spl
+                    newSPLTokens += spl
                 }
             }
         }
+        return newSPLTokens
     }
 
     override fun loadAddress(
@@ -146,22 +134,24 @@ internal class AccountsRepositoryImpl @Inject constructor(
         chain: Chain,
     ): Flow<Address> = flow {
         val vault = getVault(vaultId)
-        val coins = vault.coins.filter { it.chain == chain }.toMutableList()
+        val coins = vault.coins.filter { it.chain == chain }
 
         var account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
             ?: return@flow
 
         emit(account)
 
-        checkSPLCoins(coins, vault)
+        val updatedCoins = if (chain == Chain.solana)
+            coins + getSPLCoins(coins, vault)
+        else coins
 
-        account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+        account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, updatedCoins))
             ?: return@flow
 
         emit(account)
 
         val loadPrices = supervisorScope {
-            async { tokenPriceRepository.refresh(coins) }
+            async { tokenPriceRepository.refresh(updatedCoins) }
         }
 
         val address = account.address

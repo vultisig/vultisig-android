@@ -2,17 +2,18 @@ package com.vultisig.wallet.data.repositories
 
 import com.google.gson.Gson
 import com.google.gson.JsonArray
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.vultisig.wallet.data.api.SolanaApi
+import com.vultisig.wallet.data.db.dao.TokenValueDao
+import com.vultisig.wallet.data.db.models.TokenValueEntity
+import com.vultisig.wallet.data.models.SPLJsonResponse
+import com.vultisig.wallet.data.models.SPLListTokenResponse
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
-import kotlinx.datetime.Clock.System
-import kotlinx.datetime.Instant
+import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 private data class SPLTokenResponse(
     val mint: String,
@@ -27,96 +28,77 @@ internal interface SPLTokenRepository {
 internal class SPLTokenRepositoryImpl @Inject constructor(
     private val solanaApi: SolanaApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val tokenValueDao: TokenValueDao,
     private val gson: Gson,
 ) : SPLTokenRepository {
 
-    private val tempResponseStorage = mutableMapOf<String, String?>()
-    private val responseSaveTime = mutableMapOf<String, Instant>()
-
     override suspend fun getTokens(address: String, vault: Vault): List<Coin> {
-        val rawSPLTokens = getCachedSPLTokens(address)
+        val rawSPLTokens = solanaApi.getSPLTokens(address) ?: return emptyList()
         val splTokenResponse = gson
             .fromJson(
                 rawSPLTokens, JsonArray::class.java
-            ).map { processRawSPLToken(it) }
+            ).map { processRawSPLToken(it.toString()) }
+
         val result = gson.fromJson(
             solanaApi.getSPLTokensInfo(splTokenResponse.map { it.mint }), JsonObject::class.java
         )
         val splTokens = splTokenResponse.map { key ->
-            createCoin(result, key, vault)
+            val coin = createCoin(result, key, vault)
+            tokenValueDao.insertTokenValue(
+                TokenValueEntity(
+                    Chain.solana.id,
+                    address,
+                    coin.ticker,
+                    key.amount.toString()
+                )
+            )
+            coin
         }
         return splTokens
     }
 
     override suspend fun getBalance(address: String, coin: Coin): BigInteger {
         return try {
-            val splTokens = getCachedSPLTokens(address)
-            splTokens?.let {
-                val responses = gson.fromJson(splTokens, JsonArray::class.java)
-                    .map { processRawSPLToken(it) }
-                responses.first { it.mint == coin.contractAddress }.amount
-            } ?: BigInteger.ZERO
+            tokenValueDao.getTokenValue(
+                Chain.solana.id,
+                coin.address,
+                coin.ticker,
+            )!!.toBigInteger()
         } catch (e: Exception) {
+            Timber.e("get spl balance error", e)
             BigInteger.ZERO
         }
     }
 
-    private suspend fun getCachedSPLTokens(address: String): String? {
-        val splTokenReadTime = System.now()
-        val splTokenSaveTime = responseSaveTime[address]
-        val shouldRefreshResponse = splTokenSaveTime == null ||
-                splTokenReadTime - splTokenSaveTime > SAVE_RESPONSE_DURATION
-        return if (shouldRefreshResponse) {
-            solanaApi.getSPLTokens(address)?.apply {
-                tempResponseStorage[address] = this
-                responseSaveTime[address] = System.now()
-            }
-        } else tempResponseStorage[address]
-    }
 
     private suspend fun createCoin(
         result: JsonObject, key: SPLTokenResponse, vault: Vault
     ): Coin {
         val value = result.getAsJsonObject(key.mint)
-        val ticker = value.getAsJsonObject("tokenMetadata")
-            .getAsJsonObject("onChainInfo")
-            .getAsJsonPrimitive("symbol").asString
-        val logo = value.getAsJsonObject("tokenList")
-            .getAsJsonPrimitive("image").asString
-        val decimals = value.getAsJsonPrimitive("decimals").asInt
-        val priceProviderId = value.getAsJsonObject("tokenList")
-            .getAsJsonObject("extensions")
-            .getAsJsonPrimitive("coingeckoId").asString
-
+        val tokenResponse = gson.fromJson(
+            value.toString(),
+            SPLListTokenResponse::class.java
+        )
         val coin = Coin(
             chain = Chain.solana,
-            ticker = ticker,
-            logo = logo,
-            decimal = decimals,
-            priceProviderID = priceProviderId,
+            ticker = tokenResponse.tokenList.ticker,
+            logo = tokenResponse.tokenList.logo,
+            decimal = tokenResponse.decimals,
+            priceProviderID = tokenResponse.tokenList.extensions.coingeckoId,
             contractAddress = key.mint,
             isNativeToken = false,
             address = "",
             hexPublicKey = ""
         )
-        val (derivedAddress, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-            coin,
-            vault
-        )
+        val (derivedAddress, derivedPublicKey) = chainAccountAddressRepository
+            .getAddress(coin, vault)
         return coin.copy(address = derivedAddress, hexPublicKey = derivedPublicKey)
     }
 
-    private fun processRawSPLToken(res: JsonElement): SPLTokenResponse {
-        val info = res.asJsonObject.getAsJsonObject("account")
-            .getAsJsonObject("data")
-            .getAsJsonObject("parsed").getAsJsonObject("info")
-        val mint = info.getAsJsonPrimitive("mint").asString
-        val amount = info.getAsJsonObject("tokenAmount")
-            .getAsJsonPrimitive("amount").asBigInteger
+    private fun processRawSPLToken(res: String): SPLTokenResponse {
+        val response = gson.fromJson(res, SPLJsonResponse::class.java)
+        val amount = response.account.data.parsed.info.tokenAmount.amount.toBigInteger()
+        val mint = response.account.data.parsed.info.mint
         return SPLTokenResponse(mint, amount)
-    }
-
-    companion object {
-        private val SAVE_RESPONSE_DURATION = 60.seconds
     }
 }
