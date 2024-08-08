@@ -5,8 +5,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import wallet.core.jni.CoinType
 
-internal const val WEWE_TICKER = "WEWE"
-
 internal data class Coin(
     @SerializedName("chain")
     val chain: Chain,
@@ -40,7 +38,21 @@ internal fun Coin.AllowZeroGas(): Boolean {
 }
 
 internal object Coins {
+
+    val wewe = Coin(
+        chain = Chain.base,
+        ticker = "WEWE",
+        logo = "wewe",
+        address = "",
+        decimal = 18,
+        hexPublicKey = "",
+        priceProviderID = "",
+        contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
+        isNativeToken = false,
+    )
+
     val SupportedCoins = listOf(
+        wewe,
         Coin(
             chain = Chain.bitcoin,
             ticker = "BTC",
@@ -325,17 +337,6 @@ internal object Coins {
             hexPublicKey = "",
             priceProviderID = "usd-coin",
             contractAddress = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            isNativeToken = false,
-        ),
-        Coin(
-            chain = Chain.base,
-            ticker = WEWE_TICKER,
-            logo = "wewe",
-            address = "",
-            decimal = 18,
-            hexPublicKey = "",
-            priceProviderID = "",
-            contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
             isNativeToken = false,
         ),
         Coin(

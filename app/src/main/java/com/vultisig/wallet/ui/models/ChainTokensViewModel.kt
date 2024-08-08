@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.database.sqlite.SQLiteConstraintException
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
@@ -10,15 +9,13 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
-import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.IsSwapSupported
-import com.vultisig.wallet.models.WEWE_TICKER
 import com.vultisig.wallet.models.canSelectTokens
 import com.vultisig.wallet.models.isDepositSupported
 import com.vultisig.wallet.models.logo
@@ -48,9 +45,8 @@ internal data class ChainTokensUiModel(
     val canSwap: Boolean = true,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
-){
-    val isBuyWeweVisible = chainName == Chain.base.raw
-}
+    val isBuyWeweVisible: Boolean = false,
+)
 
 @Immutable
 internal data class ChainTokenUiModel(
@@ -75,6 +71,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
+    private val tokens = MutableStateFlow(emptyList<Coin>())
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
     private val vaultId: String =
@@ -156,13 +153,13 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun buyWewe() {
         viewModelScope.launch {
-            val weweTokenId = "$WEWE_TICKER-$chainRaw"
+            val weweTokenId = Coins.wewe.id
             val weweToken = uiState.value.tokens
                 .firstOrNull{
                     it.id == weweTokenId
                 }
             if(weweToken == null){
-                enableCoinById(weweTokenId)
+                enableTokenUseCase(vaultId, Coins.wewe)
             }
             navigator.navigate(
                 Destination.Swap(
@@ -172,12 +169,6 @@ internal class ChainTokensViewModel @Inject constructor(
                 )
             )
         }
-    }
-
-    private fun enableCoinById(coinId: String) = viewModelScope.launch {
-        val coin = Coins.SupportedCoins.find { it.id == coinId }
-            ?: error("No coin")
-        enableTokenUseCase(vaultId, coin)
     }
 
     private fun loadData() {
@@ -197,25 +188,28 @@ internal class ChainTokensViewModel @Inject constructor(
                 val totalFiatValue = address.accounts
                     .calculateAccountsTotalFiatValue()
 
-                val tokens = address.accounts
+                val accounts = address.accounts
                     .sortedWith(
                         compareBy({ !it.token.isNativeToken },
                             { (it.fiatValue?.value ?: it.tokenValue?.decimal)?.unaryMinus() })
                     )
-                    .map { account ->
-                        val token = account.token
-                        ChainTokenUiModel(
-                            id = token.id,
-                            name = token.ticker,
-                            balance = account.tokenValue
-                                ?.let(mapTokenValueToDecimalUiString)
-                                ?: "",
-                            fiatBalance = account.fiatValue
-                                ?.let(fiatValueToStringMapper::map),
-                            tokenLogo = Coins.getCoinLogo(token.logo),
-                            chainLogo = chain.logo,
-                        )
-                    }
+
+                val tokensFromAccounts = accounts.map { it.token }
+                tokens.update { it + tokensFromAccounts }
+                val uiTokens = accounts.map { account ->
+                    val token = account.token
+                    ChainTokenUiModel(
+                        id = token.id,
+                        name = token.ticker,
+                        balance = account.tokenValue
+                            ?.let(mapTokenValueToDecimalUiString)
+                            ?: "",
+                        fiatBalance = account.fiatValue
+                            ?.let(fiatValueToStringMapper::map),
+                        tokenLogo = Coins.getCoinLogo(token.logo),
+                        chainLogo = chain.logo,
+                    )
+                }
 
                 val accountAddress = address.address
                 val explorerUrl = explorerLinkRepository
@@ -229,12 +223,13 @@ internal class ChainTokensViewModel @Inject constructor(
                         chainName = chainRaw,
                         chainAddress = accountAddress,
                         chainLogo = chain.logo,
-                        tokens = tokens,
+                        tokens = uiTokens,
                         explorerURL = explorerUrl,
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
                         canSelectTokens = chain.canSelectTokens,
+                        isBuyWeweVisible = chain == Chain.base
                     )
                 }
             }
