@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.data.models.CosmosBalance
 import com.vultisig.wallet.models.cosmos.CosmosBalanceResponse
@@ -37,6 +38,7 @@ internal interface ThorChainApi {
         toAsset: String,
         amount: String,
         interval: String,
+        isAffiliate: Boolean,
     ): THORChainSwapQuote
 
     suspend fun broadcastTransaction(tx: String): String?
@@ -66,6 +68,7 @@ internal class ThorChainApiImpl @Inject constructor(
         toAsset: String,
         amount: String,
         interval: String,
+        isAffiliate: Boolean,
     ): THORChainSwapQuote {
         val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
@@ -74,6 +77,10 @@ internal class ThorChainApiImpl @Inject constructor(
                 parameter("amount", amount)
                 parameter("destination", address)
                 parameter("streaming_interval", interval)
+                if (isAffiliate) {
+                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
+                }
                 header(xClientID, xClientIDValue)
             }
         return gson.fromJson(response.bodyAsText(), THORChainSwapQuote::class.java)
