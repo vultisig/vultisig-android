@@ -76,7 +76,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
-    private val splTokenRepository: SPLTokenRepository,
+    private val splTokenRepository: SplTokenRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val polkadotApi: PolkadotApi,
@@ -238,6 +238,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     solanaApi.getBalance(address).toBigInteger()
                 } else {
                     splTokenRepository.getBalance(coin)
+                        ?: splTokenRepository.getCachedBalance(coin)
                 }
             }
             polkadot -> polkadotApi.getBalanace(address)

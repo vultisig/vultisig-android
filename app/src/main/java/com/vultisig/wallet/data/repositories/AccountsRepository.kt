@@ -37,7 +37,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private val balanceRepository: BalanceRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val chainAndTokensToAddressMapper: ChainAndTokensToAddressMapper,
-    private val splTokenRepository: SPLTokenRepository,
+    private val splTokenRepository: SplTokenRepository,
 ) : AccountsRepository {
 
     private suspend fun getVault(vaultId: String): Vault =
@@ -48,9 +48,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
     override fun loadAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
         supervisorScope {
             val vault = getVault(vaultId)
-            val currentCoins = vault.coins
-            val vaultCoins = currentCoins +
-                    getSPLCoins(currentCoins.filter { it.chain == Chain.solana }, vault)
+            val vaultCoins = vault.coins
             val coins = vaultCoins.groupBy { it.chain }
             val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
                 chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))

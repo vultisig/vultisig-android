@@ -165,7 +165,7 @@ internal interface RepositoriesModule {
     @Binds
     @Singleton
     fun bindSPLTokenRepository(
-        impl: SPLTokenRepositoryImpl
-    ): SPLTokenRepository
+        impl: SplTokenRepositoryImpl
+    ): SplTokenRepository
 
 }
