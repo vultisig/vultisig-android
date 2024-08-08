@@ -68,10 +68,6 @@ internal fun DepositFormScreen(
         onCustomMemoLostFocus = model::validateCustomMemo,
         basisPointsFieldState = model.basisPointsFieldState,
         onBasisPointsLostFocus = model::validateBasisPoints,
-        affiliateFieldState = model.affiliateFieldState,
-        onAffiliateLostFocus = model::validateAffiliate,
-        affiliateFeeFieldState = model.affiliateFeeFieldState,
-        onAffiliateFeeLostFocus = model::validateAffiliateFee,
         onDismissError = model::dismissError,
         onSetNodeAddress = model::setNodeAddress,
         onSetProvider = model::setProvider,
@@ -95,10 +91,6 @@ internal fun DepositFormScreen(
     onCustomMemoLostFocus: () -> Unit = {},
     basisPointsFieldState: TextFieldState,
     onBasisPointsLostFocus: () -> Unit = {},
-    affiliateFieldState: TextFieldState,
-    onAffiliateLostFocus: () -> Unit = {},
-    affiliateFeeFieldState: TextFieldState,
-    onAffiliateFeeLostFocus: () -> Unit = {},
     onSelectDepositOption: (DepositOption) -> Unit = {},
     onDismissError: () -> Unit = {},
     onSetNodeAddress: (String) -> Unit = {},
@@ -171,30 +163,12 @@ internal fun DepositFormScreen(
                         )
                     } else {
                         FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_basis_points_title),
+                            title = stringResource(R.string.deposit_form_percentage_to_remove_title),
                             hint = "0",
                             keyboardType = KeyboardType.Number,
                             textFieldState = basisPointsFieldState,
                             onLostFocus = onBasisPointsLostFocus,
                             error = state.basisPointsError,
-                        )
-
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_screen_affiliate_address),
-                            hint = stringResource(R.string.deposit_form_screen_affiliate_address),
-                            keyboardType = KeyboardType.Text,
-                            textFieldState = affiliateFieldState,
-                            onLostFocus = onAffiliateLostFocus,
-                            error = state.affiliateError,
-                        )
-
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_screen_affiliate_fee_optional),
-                            hint = "0.0",
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = affiliateFeeFieldState,
-                            onLostFocus = onAffiliateFeeLostFocus,
-                            error = state.affiliateFeeError,
                         )
                     }
                 }
@@ -326,7 +300,5 @@ internal fun DepositFormScreenPreview() {
         operatorFeeFieldState = TextFieldState(),
         customMemoFieldState = TextFieldState(),
         basisPointsFieldState = TextFieldState(),
-        affiliateFieldState = TextFieldState(),
-        affiliateFeeFieldState = TextFieldState(),
     )
 }

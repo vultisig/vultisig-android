@@ -343,4 +343,5 @@
     <string name="deposit_form_add_to_pool" translatable="false">Add to pool</string>
     <string name="join_keysign_invalid_qr" translatable="false">Invalid QR code content</string>
     <string name="join_keysign_failed_to_start" translatable="false">Failed to join keysign</string>
+    <string name="deposit_form_percentage_to_remove_title" translatable="false">Percentage to remove</string>
 </resources>
