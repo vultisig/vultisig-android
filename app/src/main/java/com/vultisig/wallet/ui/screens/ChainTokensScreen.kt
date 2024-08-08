@@ -127,7 +127,7 @@ private fun ChainTokensScreen(
                 )
             },
             bottomBar = {
-                if (uiModel.chainName == Chain.base.raw) {
+                if (uiModel.isBuyWeweVisible) {
                     MultiColorButton(
                         minHeight = 44.dp,
                         backgroundColor = appColor.turquoise800,

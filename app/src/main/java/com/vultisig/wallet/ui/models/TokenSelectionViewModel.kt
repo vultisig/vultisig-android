@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.ui.navigation.Destination
@@ -49,8 +50,8 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -82,26 +83,8 @@ internal class TokenSelectionViewModel @Inject constructor(
     }
 
     fun enableToken(coin: Coin) = viewModelScope.launch {
-        val vault = vaultRepository.get(vaultId)
-            ?: error("No vault with $vaultId")
-
-        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-            coin,
-            vault
-        )
-        val updatedCoin = coin.copy(
-            address = address,
-            hexPublicKey = derivedPublicKey
-        )
-
-        try {
-            vaultRepository.addTokenToVault(vaultId, updatedCoin)
-
-            enabledTokens.update { it + updatedCoin.id }
-        } catch (e: SQLiteConstraintException) {
-            // Importing existing tokens (from search result)
-            // into the coin table causes an exception, which we ignore.
-            Timber.e(e, "Try to import the existing token.")
+        enableTokenUseCase(vaultId, coin)?.let { updatedCoinId->
+            enabledTokens.update { it + updatedCoinId }
         }
     }
 

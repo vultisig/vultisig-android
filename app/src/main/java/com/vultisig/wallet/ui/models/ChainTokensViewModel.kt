@@ -14,9 +14,11 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.IsSwapSupported
+import com.vultisig.wallet.models.WEWE_TICKER
 import com.vultisig.wallet.models.canSelectTokens
 import com.vultisig.wallet.models.isDepositSupported
 import com.vultisig.wallet.models.logo
@@ -33,7 +35,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-private const val WEWE_TICKER = "WEWE"
 @Immutable
 internal data class ChainTokensUiModel(
     val isRefreshing: Boolean = false,
@@ -47,7 +48,9 @@ internal data class ChainTokensUiModel(
     val canSwap: Boolean = true,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
-)
+){
+    val isBuyWeweVisible = chainName == Chain.base.raw
+}
 
 @Immutable
 internal data class ChainTokenUiModel(
@@ -70,8 +73,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val tokensRepository: TokenRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
-    private val vaultRepository: VaultRepository,
-    private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
     private val chainRaw: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_CHAIN_ID))
@@ -175,23 +177,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private fun enableCoinById(coinId: String) = viewModelScope.launch {
         val coin = Coins.SupportedCoins.find { it.id == coinId }
             ?: error("No coin")
-        val vault = vaultRepository.get(vaultId)
-            ?: error("No vault with $vaultId")
-
-        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-            coin,
-            vault
-        )
-        val updatedCoin = coin.copy(
-            address = address,
-            hexPublicKey = derivedPublicKey
-        )
-
-        try {
-            vaultRepository.addTokenToVault(vaultId, updatedCoin)
-        } catch (e: SQLiteConstraintException) {
-            Timber.e(e, "Try to import the existing token.")
-        }
+        enableTokenUseCase(vaultId, coin)
     }
 
     private fun loadData() {

@@ -5,6 +5,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import wallet.core.jni.CoinType
 
+internal const val WEWE_TICKER = "WEWE"
+
 internal data class Coin(
     @SerializedName("chain")
     val chain: Chain,
@@ -327,7 +329,7 @@ internal object Coins {
         ),
         Coin(
             chain = Chain.base,
-            ticker = "WEWE",
+            ticker = WEWE_TICKER,
             logo = "wewe",
             address = "",
             decimal = 18,
