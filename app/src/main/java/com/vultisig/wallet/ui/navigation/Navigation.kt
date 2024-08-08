@@ -15,6 +15,7 @@ internal sealed class Destination(
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_TOKEN_ID = "token_id"
+        const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
     }
@@ -65,17 +66,22 @@ internal sealed class Destination(
     data class Swap(
         val vaultId: String,
         val chainId: String? = null,
+        val dstTokenId: String? = null,
     ) : Destination(
-        route = buildRoute(vaultId, chainId)
+        route = buildRoute(vaultId, chainId, dstTokenId)
     ) {
         companion object {
             const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
             const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
 
-            val staticRoute = buildRoute("{$ARG_VAULT_ID}", "{$ARG_CHAIN_ID}")
+            val staticRoute = buildRoute(
+                "{$ARG_VAULT_ID}",
+                "{$ARG_CHAIN_ID}",
+                "{$ARG_DST_TOKEN_ID}"
+            )
 
-            fun buildRoute(vaultId: String, chainId: String?) =
-                "vault_detail/$vaultId/account/$chainId/swap"
+            fun buildRoute(vaultId: String, chainId: String?, dstTokenId: String?) =
+                "vault_detail/$vaultId/account/$chainId/swap?$ARG_DST_TOKEN_ID=$dstTokenId"
         }
     }
 
@@ -158,17 +164,24 @@ internal sealed class Destination(
 
     data class Home(
         val openVaultId: String? = null,
+        val showVaultList: Boolean = false,
     ) : Destination(
-        route = buildRoute(openVaultId)
+        route = buildRoute(
+            openVaultId,
+            showVaultList.toString()
+        )
     ) {
         companion object {
+            const val ARG_SHOW_VAULT_LIST = "=show_vault_list"
             val staticRoute = buildRoute(
                 "{$ARG_VAULT_ID}",
+                "{$ARG_SHOW_VAULT_LIST}"
             )
 
             private fun buildRoute(
                 vaultId: String?,
-            ) = "home?vault_id=$vaultId"
+                showVaultList: String,
+            ) = "home?vault_id=$vaultId&show_vault_list=$showVaultList"
         }
     }
 

@@ -47,7 +47,7 @@
     <string name="chain_account_view_send">SEND</string>
     <string name="chain_account_view_swap">SWAP</string>
     <string name="chain_account_view_deposit">DEPOSIT</string>
-    <string name="chain_account_buy_vtx">BUY $VULT</string>
+    <string name="chain_account_buy_wewe">BUY $WEWE</string>
     <string name="save">Save</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
@@ -263,6 +263,7 @@
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
     <string name="swap_form_minimum_amount" translatable="false">Swap amount too small. Recommended amount %s %s </string>
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
+    <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="verify_approve_amount_title" translatable="false">Amount to approve</string>
     <string name="verify_approve_amount_unlimited" translatable="false">UNLIMITED</string>
     <string name="verify_approve_spender_title" translatable="false">Spender</string>
@@ -335,4 +336,11 @@
     <string name="add_address_title_title" translatable="false">Title</string>
     <string name="add_address_address_title" translatable="false">Address</string>
     <string name="add_address_type_hint" translatable="false">Type here</string>
+    <string name="deposit_form_basis_points_title" translatable="false">Basis points</string>
+    <string name="deposit_form_screen_affiliate_address" translatable="false">Affiliate (Optional)</string>
+    <string name="deposit_form_screen_affiliate_fee_optional" translatable="false">Affiliate Fee (Optional)</string>
+    <string name="deposit_form_remove_from_pool" translatable="false">Remove from pool</string>
+    <string name="deposit_form_add_to_pool" translatable="false">Add to pool</string>
+    <string name="join_keysign_invalid_qr" translatable="false">Invalid QR code content</string>
+    <string name="join_keysign_failed_to_start" translatable="false">Failed to join keysign</string>
 </resources>

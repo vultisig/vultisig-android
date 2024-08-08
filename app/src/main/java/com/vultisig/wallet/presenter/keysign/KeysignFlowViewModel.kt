@@ -37,6 +37,8 @@ import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.AddressProvider
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -90,6 +92,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val addressProvider: AddressProvider,
     @ApplicationContext  private val context: Context,
     private val compressQr: CompressQrUseCase,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -419,6 +422,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         try {
             if (nextState == KeysignFlowState.KEYSIGN) {
                 messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!)
+                cleanQrAddress()
             }
             currentState.update { nextState }
         } catch (e: Exception) {
@@ -431,7 +435,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         _participantDiscovery?.stop()
     }
 
-    fun resetQrAddress(){
+    private fun cleanQrAddress(){
         addressProvider.clean()
     }
 
@@ -492,9 +496,15 @@ internal class KeysignFlowViewModel @Inject constructor(
     )
 
     override fun onCleared() {
-        resetQrAddress()
+        cleanQrAddress()
         stopService(context)
         super.onCleared()
+    }
+
+    fun tryAgain() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
     }
 
 }

@@ -151,11 +151,6 @@ private fun VerifySwapScreen(
                     OtherField(
                         title = stringResource(R.string.verify_swap_screen_estimated_fees),
                         value = estimatedFees,
-                    )
-
-                    OtherField(
-                        title = stringResource(R.string.verify_swap_provider_title),
-                        value = provider,
                         divider = false,
                     )
                 }

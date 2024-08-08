@@ -22,6 +22,7 @@ import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScree
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
@@ -321,6 +322,10 @@ internal fun SetupNavGraph(
                     // else only tokens from chain
                     nullable = true
                 },
+                navArgument(ARG_DST_TOKEN_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
             )
         ) { entry ->
             val args = requireNotNull(entry.arguments)
@@ -328,6 +333,7 @@ internal fun SetupNavGraph(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
+                dstTokenId = args.getString(ARG_DST_TOKEN_ID),
             )
         }
 

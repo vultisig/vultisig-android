@@ -97,7 +97,6 @@ internal class utxoHelper(
                 CoinType.BITCOIN, CoinType.LITECOIN -> {
                     val keyHash = lockScript.matchPayToWitnessPublicKeyHash()
                     val redeemScript = BitcoinScript.buildPayToWitnessPubkeyHash(keyHash)
-                    utxoItem.setSpendingScript(ByteString.copyFrom(redeemScript.data()))
                     signingInput.putScripts(
                         keyHash.toHexString(),
                         ByteString.copyFrom(redeemScript.data())
@@ -107,7 +106,6 @@ internal class utxoHelper(
                 CoinType.DOGECOIN, CoinType.BITCOINCASH, CoinType.DASH -> {
                     val keyHash = lockScript.matchPayToPubkeyHash()
                     val redeemScript = BitcoinScript.buildPayToPublicKeyHash(keyHash)
-                    utxoItem.setSpendingScript(ByteString.copyFrom(redeemScript.data()))
                     signingInput.putScripts(
                         keyHash.toHexString(),
                         ByteString.copyFrom(redeemScript.data())

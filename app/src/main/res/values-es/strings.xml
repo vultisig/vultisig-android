@@ -203,7 +203,7 @@
     <string name="chains">Cadenas</string>
     <string name="vault_settings_backup_subtitle">Realice una copia de seguridad de su recurso compartido de bóveda</string>
     <string name="send_amount_currency">Cantidad (en %s)</string>
-    <string name="chain_account_buy_vtx">COMPRAR $VULT</string>
+    <string name="chain_account_buy_wewe">COMPRAR $VULT</string>
     <string name="vault_settings_error_backup_file">ocurrió un error</string>
     <string name="send_error_no_address">La dirección no es válida</string>
     <string name="verify_transaction_fiat_amount_title">Cantidad en (%s)</string>

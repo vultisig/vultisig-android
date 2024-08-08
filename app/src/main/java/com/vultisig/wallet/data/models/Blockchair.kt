@@ -10,7 +10,9 @@ internal data class BlockchairAddress(
 )
 
 internal data class BlockchairUtxoInfo(
-    @SerializedName("transaction_hash") val transactionHash: String,
+    @SerializedName("transaction_hash")
+    val transactionHash: String,
+    @SerializedName("index")
     val index: Int,
     @SerializedName("value")
     val value: Long,

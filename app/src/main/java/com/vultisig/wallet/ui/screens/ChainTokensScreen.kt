@@ -2,13 +2,13 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -47,6 +46,8 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
@@ -85,6 +86,7 @@ internal fun ChainTokensScreen(
         onDeposit = viewModel::deposit,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
+        onBuyWeweClick = viewModel::buyWewe,
     )
 }
 
@@ -98,34 +100,34 @@ private fun ChainTokensScreen(
     onDeposit: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
+    onBuyWeweClick: () -> Unit = {},
 ) {
     val appColor = Theme.colors
-    val buyVltiButtonVisible = false
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember {
         SnackbarHostState()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(appColor.oxfordBlue800)
+    BoxWithSwipeRefresh(
+        onSwipe = onRefresh,
+        isRefreshing = uiModel.isRefreshing,
+        modifier = Modifier.fillMaxSize()
     ) {
-        Scaffold(snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
+        Scaffold(
+            contentColor = Theme.colors.oxfordBlue800,
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            },
             topBar = {
                 TopBar(
                     navController = navController,
                     centerText = uiModel.chainName,
                     startIcon = R.drawable.caret_left,
-                    endIcon = R.drawable.clockwise,
-                    onEndIconClick = onRefresh
                 )
             },
             bottomBar = {
-                if (buyVltiButtonVisible) {
+                if (uiModel.isBuyWeweVisible) {
                     MultiColorButton(
                         minHeight = 44.dp,
                         backgroundColor = appColor.turquoise800,
@@ -144,22 +146,20 @@ private fun ChainTokensScreen(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.logo_button),
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_wewe),
                                     contentDescription = null,
-                                    modifier = Modifier.width(16.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    modifier = Modifier.size(40.dp),
                                 )
+                                Spacer(modifier = Modifier.width(16.dp))
                                 Text(
-                                    text = stringResource(id = R.string.chain_account_buy_vtx),
+                                    text = stringResource(id = R.string.chain_account_buy_wewe),
                                     color = MaterialTheme.colorScheme.onPrimary,
                                     style = Theme.montserrat.subtitle1
                                 )
                             }
                         },
-                        onClick = {
-                            // TODO what to do here?
-                        }
+                        onClick = onBuyWeweClick
                     )
                 }
             }
@@ -414,9 +414,9 @@ internal fun CoinItem(
 
             UiSpacer(size = 8.dp)
 
-            if (balance != null) {
+            if (fiatBalance != null) {
                 ToggleVisibilityText(
-                    text = balance,
+                    text = fiatBalance,
                     isVisible = isBalanceVisible,
                     style = Theme.menlo.subtitle1,
                     color = appColor.neutral100,
@@ -433,9 +433,9 @@ internal fun CoinItem(
 
         UiSpacer(size = 12.dp)
 
-        if (fiatBalance != null) {
+        if (balance != null) {
             ToggleVisibilityText(
-                text = fiatBalance,
+                text = balance,
                 isVisible = isBalanceVisible,
                 style = Theme.menlo.subtitle1,
                 color = appColor.neutral100,

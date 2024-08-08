@@ -16,12 +16,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.common.KeepScreenOn
+import com.vultisig.wallet.presenter.keysign.JoinKeysignError
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoverService
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoveryingSessionID
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Error
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.FailedToStart
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.JoinKeysign
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Keysign
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.WaitingForKeysignStart
@@ -125,10 +126,10 @@ internal fun JoinKeysignView(
                 )
             }
 
-            FailedToStart, Error -> {
+            is Error -> {
                 KeysignErrorView(
-                    navController = navController,
-                    errorMessage = viewModel.errorMessage.value,
+                    errorMessage = state.errorType.message.asString(),
+                    onTryAgain = viewModel::tryAgain,
                 )
             }
         }
@@ -154,7 +155,7 @@ private fun JoinKeysignScreen(
             JoinKeysign -> 0.5f
             WaitingForKeysignStart -> 0.625f
             Keysign -> 0.75f
-            FailedToStart, Error -> 0.0f
+            is Error -> 0.0f
         },
         content = { content(state) }
     )
@@ -165,7 +166,7 @@ private fun JoinKeysignScreen(
 private fun JoinKeysignViewPreview() {
     JoinKeysignScreen(
         navController = rememberNavController(),
-        state = Error,
+        state = Error(errorType = JoinKeysignError.WrongVault),
         keysignState = KeysignState.CreatingInstance,
     )
 }

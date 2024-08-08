@@ -12,6 +12,7 @@ internal sealed class SwapException(message: String): Exception(message){
                 when  {
                     contains("amount cannot be zero") -> throw AmountCannotBeZero(error)
                     contains("swap is not supported") -> throw SwapIsNotSupported(error)
+                    contains("/fromamount must pass") -> throw AmountCannotBeZero(error)
                     else -> {}
                 }
             }

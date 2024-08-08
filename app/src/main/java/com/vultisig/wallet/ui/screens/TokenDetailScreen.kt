@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultActionButton
@@ -70,12 +70,13 @@ private fun TokenDetailScreen(
         SnackbarHostState()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(appColor.oxfordBlue800)
+    BoxWithSwipeRefresh(
+        onSwipe = onRefresh,
+        isRefreshing = uiModel.isRefreshing,
+        modifier = Modifier.fillMaxSize(),
     ) {
         Scaffold(
+            contentColor = Theme.colors.oxfordBlue800,
             snackbarHost = {
                 SnackbarHost(hostState = snackbarHostState)
             },
@@ -84,8 +85,6 @@ private fun TokenDetailScreen(
                     navController = navController,
                     centerText = uiModel.token.name,
                     startIcon = R.drawable.caret_left,
-                    endIcon = R.drawable.clockwise,
-                    onEndIconClick = onRefresh
                 )
             },
         ) {

@@ -20,7 +20,7 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = 26
         targetSdk = 34
-        versionCode = 12
+        versionCode = 13
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -147,6 +147,7 @@ dependencies {
     implementation(libs.wallet.core)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
+    implementation(libs.rive)
 
     // test
     testImplementation(libs.junit)
