@@ -29,7 +29,7 @@ internal interface TokenRepository {
 
     suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
 
-    val allTokens: Flow<List<Coin>>
+    val builtInTokens: Flow<List<Coin>>
 
     val nativeTokens: Flow<List<Coin>>
 
@@ -40,13 +40,13 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
-        allTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
+        builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 
     override fun getChainTokens(chain: Chain): Flow<List<Coin>> =
         if (chain.standard == TokenStandard.EVM) {
             flow {
                 val tokens = oneInchApi.getTokens(chain)
-                val allTokens = allTokens.first().filter { it.chain == chain }
+                val allTokens = builtInTokens.first().filter { it.chain == chain }
                 emit(
                     allTokens +
                             tokens.tokens.toCoins(chain)
@@ -59,7 +59,7 @@ internal class TokenRepositoryImpl @Inject constructor(
                 )
             }
         } else {
-            allTokens.map { allTokens ->
+            builtInTokens.map { allTokens ->
                 allTokens.filter { it.chain.id == chain.id }
             }
         }
@@ -110,9 +110,9 @@ internal class TokenRepositoryImpl @Inject constructor(
         return oneInchTokensWithBalance.toCoins(chain)
     }
 
-    override val allTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
+    override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
 
-    override val nativeTokens: Flow<List<Coin>> = allTokens
+    override val nativeTokens: Flow<List<Coin>> = builtInTokens
         .map { it.filterNatives() }
 
     private fun Iterable<Coin>.filterNatives() =
