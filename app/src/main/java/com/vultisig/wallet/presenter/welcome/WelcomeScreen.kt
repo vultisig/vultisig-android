@@ -59,7 +59,7 @@ internal fun WelcomeScreen(
                 }
 
                 is ScrollToNextPage -> {
-                    if (pagerState.currentPage < 2)
+                    if (pagerState.currentPage < 3)
                         pagerState.scrollToPage(pagerState.currentPage + 1)
                     else {
                         navController.popBackStack()
