@@ -84,7 +84,8 @@ internal fun SendScreen(
                 val qrBitmap = generateQrBitmap(it)
                 context.share(qrBitmap)
             }
-        } ?: {}
+        } ?: {},
+        onStartIconClick =viewModel::navigateToHome,
     ) {
         NavHost(
             navController = sendNav,
@@ -125,6 +126,9 @@ internal fun SendScreen(
                     navController = navController,
                     onComplete = {
                         navController.navigate(Screen.Home.route)
+                    },
+                    onKeysignFinished = {
+                        viewModel.enableNavigationToHome()
                     }
                 )
             }

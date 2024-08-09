@@ -38,6 +38,9 @@ import com.vultisig.wallet.tss.LocalStateAccessor
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
+import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -77,7 +80,9 @@ internal class KeysignViewModel(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
-) : ViewModel() {
+    private val navigator: Navigator<Destination>,
+
+    ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
@@ -97,6 +102,7 @@ internal class KeysignViewModel(
         SharingStarted.WhileSubscribed(),
         ""
     )
+    private var isNavigateToHome: Boolean = false
 
     fun startKeysign() {
         viewModelScope.launch {
@@ -127,6 +133,7 @@ internal class KeysignViewModel(
             }
             broadcastTransaction()
             currentState.value = KeysignState.KeysignFinished
+            isNavigateToHome = true
             this._messagePuller?.stop()
         } catch (e: Exception) {
             Timber.e(e)
@@ -336,5 +343,20 @@ internal class KeysignViewModel(
         context.stopService(intent)
         Timber.d("stop MediatorService: Mediator service stopped")
 
+    }
+
+    fun navigateToHome() {
+        viewModelScope.launch {
+            if (isNavigateToHome) {
+                navigator.navigate(
+                    Destination.Home(),
+                    NavigationOptions(
+                        clearBackStack = true
+                    )
+                )
+            } else {
+                navigator.navigate(Destination.Back)
+            }
+        }
     }
 }

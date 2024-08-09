@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,9 +54,11 @@ internal fun TransactionDoneView(
     transactionLink: String,
     onComplete: () -> Unit,
     isThorChainSwap : Boolean = false,
+    onBack: () -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
     val context= LocalContext.current
+    BackHandler(onBack = onBack)
     Column(
         modifier = Modifier
             .fillMaxSize()

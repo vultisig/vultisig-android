@@ -22,6 +22,7 @@ internal fun ProgressScreen(
     title: String,
     @DrawableRes endIcon: Int? = null,
     onEndIconClick: () -> Unit = {},
+    onStartIconClick: (() -> Unit)? = null,
     progress: Float,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -29,6 +30,7 @@ internal fun ProgressScreen(
         navController = navController,
         endIcon = endIcon,
         onEndIconClick = onEndIconClick,
+        onStartIconClick = onStartIconClick,
         title = title
     ) {
         Column(

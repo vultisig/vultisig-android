@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import android.content.Context
 import android.net.nsd.NsdManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -46,11 +47,15 @@ internal fun JoinKeysignView(
     val context = LocalContext.current
     var keysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
 
+    if (keysignState == KeysignState.KeysignFinished) {
+        viewModel.enableNavigationToHome()
+    }
     JoinKeysignScreen(
         navController = navController,
         state = viewModel.currentState.value,
         keysignState = keysignState,
-    ) { state ->
+        onBack = viewModel::navigateToHome
+        ) { state ->
         when (state) {
             DiscoveryingSessionID,
             WaitingForKeysignStart,
@@ -122,7 +127,8 @@ internal fun JoinKeysignView(
                     isThorChainSwap = keysignViewModel.isThorChainSwap,
                     onComplete = {
                         navController.navigate(Screen.Home.route)
-                    }
+                    },
+                    onBack = keysignViewModel::navigateToHome
                 )
             }
 
@@ -141,14 +147,18 @@ private fun JoinKeysignScreen(
     navController: NavHostController,
     state: JoinKeysignState,
     keysignState: KeysignState,
+    onBack: () -> Unit = {},
     content: @Composable BoxScope.(JoinKeysignState) -> Unit = {},
-) {
+
+    ) {
+    BackHandler(onBack = onBack)
     ProgressScreen(
         navController = navController,
         title = stringResource(
             id = if (keysignState != KeysignState.KeysignFinished) R.string.keysign
             else R.string.transaction_done_title
         ),
+        onStartIconClick = onBack,
         progress = when (state) {
             DiscoveryingSessionID -> 0.1f
             DiscoverService -> 0.25f

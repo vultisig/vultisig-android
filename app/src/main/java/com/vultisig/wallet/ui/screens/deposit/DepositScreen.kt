@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.deposit
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,7 +23,6 @@ import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
-import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -75,6 +75,8 @@ internal fun DepositScreen(
         chainId = chainId,
         title = title,
         progress = progress,
+        onKeysignFinished = viewModel::navigateToHome,
+        enableNavigationToHome = viewModel::enableNavigationToHome,
     )
 }
 
@@ -87,13 +89,15 @@ private fun DepositScreen(
     progress: Float,
     vaultId: String,
     chainId: String,
+    onKeysignFinished: () -> Unit = {},
+    enableNavigationToHome:() -> Unit = {},
 ) {
     val context = LocalContext.current
-
     ProgressScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
+        onStartIconClick = onKeysignFinished,
     ) {
         NavHost(
             navController = navHostController,
@@ -132,7 +136,8 @@ private fun DepositScreen(
                     navController = mainNavController,
                     onComplete = {
                         mainNavController.navigate(Screen.Home.route)
-                    }
+                    },
+                    onKeysignFinished = enableNavigationToHome,
                 )
             }
         }

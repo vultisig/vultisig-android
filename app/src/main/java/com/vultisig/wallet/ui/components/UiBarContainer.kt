@@ -17,6 +17,7 @@ internal fun UiBarContainer(
     title: String,
     @DrawableRes endIcon: Int? = null,
     onEndIconClick: () -> Unit = {},
+    onStartIconClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -29,6 +30,7 @@ internal fun UiBarContainer(
             startIcon = R.drawable.caret_left,
             endIcon = endIcon,
             onEndIconClick = onEndIconClick,
+            onStartIconClick = onStartIconClick,
             navController = navController
         )
 

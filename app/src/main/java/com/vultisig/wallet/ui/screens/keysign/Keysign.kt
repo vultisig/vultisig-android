@@ -1,9 +1,11 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +29,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun Keysign(
     viewModel: KeysignViewModel,
     onComplete: () -> Unit,
+    onKeysignFinished: () -> Unit = {},
 ) {
 
     val wrapperViewModel = hiltViewModel(
@@ -37,13 +40,22 @@ internal fun Keysign(
 
     val keysignViewModel = wrapperViewModel.viewModel
 
+    val state: KeysignState = keysignViewModel.currentState.collectAsState().value
+    LaunchedEffect(state) {
+        if (state == KeysignState.KeysignFinished) {
+            onKeysignFinished()
+        }
+    }
     KeysignScreen(
-        state = keysignViewModel.currentState.collectAsState().value,
+        state = state,
         errorMessage = keysignViewModel.errorMessage.value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
         onComplete = onComplete,
         isThorChainSwap = viewModel.isThorChainSwap,
+        onBack = {
+            viewModel.navigateToHome()
+        }
     )
 }
 
@@ -54,6 +66,7 @@ internal fun KeysignScreen(
     transactionLink: String,
     errorMessage: String,
     onComplete: () -> Unit,
+    onBack:() -> Unit = {},
     isThorChainSwap: Boolean = false,
 ) {
     KeepScreenOn()
@@ -78,6 +91,7 @@ internal fun KeysignScreen(
                 transactionLink = transactionLink,
                 onComplete = onComplete,
                 isThorChainSwap = isThorChainSwap,
+                onBack = onBack
             )
         } else {
             UiSpacer(weight = 1f)
