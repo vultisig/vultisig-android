@@ -70,4 +70,9 @@ internal interface ApiModule {
         impl: LiFiChainApiImpl
     ): LiFiChainApi
 
+    @Binds
+    @Singleton
+    fun bindBlowfishApi(
+        impl: BlowfishApiImpl
+    ): BlowfishApi
 }

@@ -6,8 +6,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.data.api.BlowfishApi
+import com.vultisig.wallet.data.api.models.BlowfishMetadata
+import com.vultisig.wallet.data.api.models.BlowfishRequest
+import com.vultisig.wallet.data.api.models.BlowfishTxObject
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.ChainType
+import com.vultisig.wallet.models.blowfishChainName
+import com.vultisig.wallet.models.blowfishNetwork
+import com.vultisig.wallet.models.chainType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -50,6 +59,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     private val transactionRepository: TransactionRepository,
+    private val blowfishApi: BlowfishApi,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
@@ -65,6 +75,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     init {
         loadTransaction()
+        blowfishTransactionScan()
     }
 
     fun checkConsentAddress(checked: Boolean) {
@@ -127,4 +138,46 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun blowfishTransactionScan() {
+        viewModelScope.launch {
+            val transaction = transaction.filterNotNull().first()
+            val chain = Chain.fromRaw(transaction.chainId)
+            val chainType = chain.chainType
+
+            when (chainType){
+                ChainType.EVM -> {
+                    val supportedChain = chain.blowfishChainName!!
+                    val supportedNetwork = chain.blowfishNetwork!!
+
+                    val amountHex = "0x" + transaction.tokenValue.value.toByteArray().toHexString()
+                    val memoHex = "0x" //+ transaction.memo?.toBigInteger()?.toByteArray()?.toHexString()
+
+                    val blowfishRequest = BlowfishRequest(
+                        userAccount = transaction.srcAddress,
+                        metadata = BlowfishMetadata("https://api.vultisig.com"),
+                        txObjects = listOf(
+                            BlowfishTxObject(
+                                from = transaction.srcAddress,
+                                to = transaction.dstAddress,
+                                value = amountHex,
+                                data = memoHex,
+                            )
+                        ),
+                        simulatorConfig = null,
+                    )
+
+                    blowfishApi.fetchBlowfishTransactions(supportedChain, supportedNetwork, blowfishRequest)
+                }
+                ChainType.Solana -> {
+
+                }
+                else -> {
+
+                }
+            }
+        }
+    }
 }
+
+

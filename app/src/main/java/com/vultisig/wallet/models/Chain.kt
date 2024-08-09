@@ -182,3 +182,40 @@ internal fun Chain.oneInchChainId(): Int =
         else -> error("Chain $this is not supported by 1inch API")
     }
 
+internal val Chain.chainType: ChainType
+    get() = when (this) {
+        Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.arbitrum, Chain.base,
+        Chain.optimism, Chain.polygon, Chain.blast, Chain.cronosChain -> ChainType.EVM
+        Chain.thorChain, Chain.mayaChain -> ChainType.THORChain
+        Chain.solana -> ChainType.Solana
+        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> ChainType.UTXO
+        Chain.gaiaChain, Chain.kujira, Chain.dydx -> ChainType.Cosmos
+        Chain.polkadot -> ChainType.Polkadot
+    }
+
+internal val Chain.blowfishChainName: String?
+    get() = when (this) {
+        Chain.ethereum -> "ethereum"
+        Chain.polygon -> "polygon"
+        Chain.avalanche -> "avalanche"
+        Chain.arbitrum -> "arbitrum"
+        Chain.optimism -> "optimism"
+        Chain.base -> "base"
+        Chain.blast -> "blast"
+        Chain.bscChain -> "bnb"
+        Chain.solana -> "solana"
+        else -> null
+    }
+
+
+internal val Chain.blowfishNetwork: String?
+    get() = when (this) {
+        Chain.ethereum, Chain.polygon, Chain.avalanche, Chain.optimism, Chain.base, Chain.blast,
+        Chain.bscChain, Chain.solana -> "mainnet"
+
+        Chain.arbitrum -> "one"
+        else -> null
+    }
+
+
+
