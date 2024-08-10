@@ -146,6 +146,7 @@ internal class SendFormViewModel @Inject constructor(
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
+    private val maxAmountFlow = MutableStateFlow<BigDecimal>(BigDecimal.ZERO)
 
     private var isSelectedStartingToken = false
     private var lastToken = ""
@@ -166,6 +167,7 @@ internal class SendFormViewModel @Inject constructor(
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
+        calculateMaxAmount()
     }
 
     fun loadData(
@@ -239,32 +241,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun chooseMaxTokenAmount() {
-        val selectedAccount = selectedAccount ?: return
-        val selectedTokenValue = selectedAccount.tokenValue ?: return
-        val gasFee = gasFee.value ?: return
-        val chain = selectedAccount.token.chain
-        val specific = specific.value?.blockChainSpecific
-
-        viewModelScope.launch {
-            val max = if (selectedAccount.token.isNativeToken) {
-                val gasLimit = if (chain.standard == TokenStandard.EVM && specific != null) {
-                    (specific as BlockChainSpecific.Ethereum).gasLimit
-                } else {
-                    BigInteger.valueOf(1)
-                }
-                TokenValue(
-                    value = maxOf(
-                        BigInteger.ZERO,
-                        selectedTokenValue.value - gasFee.value.multiply(gasLimit)
-                    ),
-                    unit = selectedTokenValue.unit,
-                    decimals = selectedTokenValue.decimals,
-                )
-            } else {
-                selectedTokenValue
-            }.decimal.toPlainString()
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max)
-        }
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(maxAmountFlow.value.toPlainString())
     }
 
     fun choosePercentageAmount(percentage: Float) {
@@ -361,9 +338,17 @@ internal class SendFormViewModel @Inject constructor(
                 }
 
                 val srcAddress = selectedToken.address
+                val isMaxAmount = tokenAmount == maxAmountFlow.value
 
                 val specific = blockChainSpecificRepository
-                    .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+                    .getSpecific(
+                        chain,
+                        srcAddress,
+                        selectedToken,
+                        gasFee,
+                        isSwap = false,
+                        isMaxAmountEnabled = isMaxAmount
+                    )
 
                 val transaction = Transaction(
                     id = UUID.randomUUID().toString(),
@@ -466,12 +451,48 @@ internal class SendFormViewModel @Inject constructor(
                 val selectedToken = selectedAccount.token
                 val srcAddress = selectedAccount.token.address
                 try {
-                    specific.value = blockChainSpecificRepository
-                        .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+                    specific.value = blockChainSpecificRepository.getSpecific(
+                        chain,
+                        srcAddress,
+                        selectedToken,
+                        gasFee,
+                        isSwap = false,
+                        isMaxAmountEnabled = false
+                    )
                 } catch (e: Exception) {
                     // todo handle errors
                     Timber.e(e)
                 }
+            }.collect()
+        }
+    }
+
+    private fun calculateMaxAmount() {
+        viewModelScope.launch {
+            combine(selectedSrc.filterNotNull(), gasFee.filterNotNull(), specific)
+            { selectedSrc, gasFee, specific ->
+                val selectedAccount = selectedSrc.account
+                val selectedTokenValue = selectedAccount.tokenValue ?: return@combine null
+                val chain = selectedAccount.token.chain
+                val blockChainSpecific = specific?.blockChainSpecific
+                maxAmountFlow.value = if (selectedAccount.token.isNativeToken) {
+                    val gasLimit =
+                        if (chain.standard == TokenStandard.EVM && blockChainSpecific != null) {
+                            (blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                        } else {
+                            BigInteger.valueOf(1)
+                        }
+                    TokenValue(
+                        value = maxOf(
+                            BigInteger.ZERO,
+                            selectedTokenValue.value - gasFee.value.multiply(gasLimit)
+                        ),
+                        unit = selectedTokenValue.unit,
+                        decimals = selectedTokenValue.decimals,
+                    )
+                } else {
+                    selectedTokenValue
+                }.decimal
             }.collect()
         }
     }

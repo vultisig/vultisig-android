@@ -269,7 +269,14 @@ internal class DepositFormViewModel @Inject constructor(
         )
 
         val specific = blockChainSpecificRepository
-            .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+            )
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
@@ -342,7 +349,14 @@ internal class DepositFormViewModel @Inject constructor(
         )
 
         val specific = blockChainSpecificRepository
-            .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+            )
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
@@ -392,7 +406,14 @@ internal class DepositFormViewModel @Inject constructor(
         )
 
         val specific = blockChainSpecificRepository
-            .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+            )
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
@@ -445,7 +466,14 @@ internal class DepositFormViewModel @Inject constructor(
         val memo = DepositMemo.DepositPool
 
         val specific = blockChainSpecificRepository
-            .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+            )
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
@@ -492,7 +520,14 @@ internal class DepositFormViewModel @Inject constructor(
         )
 
         val specific = blockChainSpecificRepository
-            .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+            )
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
@@ -532,7 +567,14 @@ internal class DepositFormViewModel @Inject constructor(
         )
 
         val specific = blockChainSpecificRepository
-            .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+            )
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),

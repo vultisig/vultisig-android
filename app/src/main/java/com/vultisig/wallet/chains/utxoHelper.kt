@@ -78,7 +78,7 @@ internal class utxoHelper(
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         signingInput
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
-            .setUseMaxAmount(false)
+            .setUseMaxAmount(keysignPayload.blockChainSpecific.sendMaxAmount)
             .setByteFee(utxo.byteFee.toLong())
         for (item in keysignPayload.utxos) {
             val lockScript =
@@ -130,7 +130,7 @@ internal class utxoHelper(
         val input = Bitcoin.SigningInput.newBuilder()
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setAmount(keysignPayload.toAmount.toLong())
-            .setUseMaxAmount(false)
+            .setUseMaxAmount(keysignPayload.blockChainSpecific.sendMaxAmount)
             .setToAddress(keysignPayload.toAddress)
             .setChangeAddress(keysignPayload.coin.address)
             .setByteFee(utxo.byteFee.toLong())
