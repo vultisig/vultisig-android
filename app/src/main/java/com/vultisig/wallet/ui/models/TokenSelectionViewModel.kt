@@ -165,7 +165,6 @@ internal class TokenSelectionViewModel @Inject constructor(
                 coin = token,
             )
         }
-        .sortedWith(compareBy { it.coin.ticker })
         .toList()
 
     private fun enableSearchedToken(coin: Coin) {
