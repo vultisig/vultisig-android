@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 internal data class Colors(
     val transparent: Color = Color(0x00000000),
+    val transparentWhite: Color = Color(0x00FFFFFF),
 
     val neutral0: Color = Color(0xffFFFFFF),
     val neutral100: Color = Color(0xffF3F4F5),

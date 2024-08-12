@@ -85,7 +85,7 @@ private fun AddVaultScreen(
                             bottom = 16.dp,
                         )
                 ) {
-                    navController.navigate(route = Screen.Setup.createRoute(Destination.KeygenFlow.DEFAULT_NEW_VAULT))
+                    navController.navigate(route = Destination.KeygenRole.route)
                 }
                 UiSpacer(size = 4.dp)
                 MultiColorButton(

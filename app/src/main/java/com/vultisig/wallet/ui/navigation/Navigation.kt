@@ -245,6 +245,17 @@ internal sealed class Destination(
         }
     }
 
+    data object KeygenRole : Destination(route = "keygen/role")
+
+    data class Setup(
+        val vaultId: String? = null,
+    ) : Destination(route = buildRoute(vaultId)) {
+        companion object {
+            val staticRoute = buildRoute("{$ARG_VAULT_ID}")
+            private fun buildRoute(vaultId: String?) = "setup/$vaultId"
+        }
+    }
+
     data class KeygenFlow(val vaultName: String, val vaultSetupType: VaultSetupType) :
         Destination(route = "keygen_flow/$vaultName/${vaultSetupType.raw}") {
         companion object {

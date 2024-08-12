@@ -6,14 +6,6 @@ sealed class Screen(val route: String) {
 
     data object CreateNewVault : Screen(route = "create_new_vault")
     data object ImportFile : Screen(route = "import_file")
-    data object Setup : Screen(route = "setup/{vault_id}") {
-        const val ARG_VAULT_ID = "vault_id"
-        fun createRoute(vaultId: String): String {
-            return "setup/$vaultId"
-        }
-    }
-
-
 
     data object SigningError : Screen(route = "signing_error")
 
