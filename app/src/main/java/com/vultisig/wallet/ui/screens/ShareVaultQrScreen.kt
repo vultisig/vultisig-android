@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Picture
 import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.Image
@@ -25,10 +26,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.draw
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -56,6 +62,7 @@ internal fun ShareVaultQrScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val qrBitmapPainter by viewModel.qrBitmapPainter.collectAsState()
+    val picture = remember { Picture() }
 
     val context = LocalContext.current
     val mainColor = Theme.colors.neutral0
@@ -85,6 +92,7 @@ internal fun ShareVaultQrScreen(
 
     ShareVaultQrScreen(
         navController = navController,
+        picture = picture,
         ecdsa = state.shareVaultQrModel.publicKeyEcdsa,
         eddsa = state.shareVaultQrModel.publicKeyEddsa,
         name = state.shareVaultQrModel.name,
@@ -92,7 +100,7 @@ internal fun ShareVaultQrScreen(
         shareVaultQrString = state.shareVaultQrString,
         onButtonClicked = {
             if (state.fileUri == null) {
-                viewModel.onSaveClicked()
+                viewModel.onSaveClicked(picture)
             } else {
                 shareQr(requireNotNull(state.fileUri), context)
             }
@@ -106,6 +114,7 @@ internal fun ShareVaultQrScreen(
     ecdsa: String,
     eddsa: String,
     name: String,
+    picture: Picture,
     qrBitmapPainter: BitmapPainter?,
     shareVaultQrString: String?,
     onButtonClicked: () -> Unit,
@@ -132,6 +141,33 @@ internal fun ShareVaultQrScreen(
             )
         },
     ) {
+
+        val modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 32.dp,
+                vertical = 4.dp
+            )
+            .drawWithCache {
+                val width = this.size.width.toInt()
+                val height = this.size.height.toInt()
+                onDrawWithContent {
+                    val pictureCanvas =
+                        androidx.compose.ui.graphics.Canvas(
+                            picture.beginRecording(
+                                width,
+                                height
+                            )
+                        )
+                    draw(this, this.layoutDirection, pictureCanvas, this.size) {
+                        this@onDrawWithContent.drawContent()
+                    }
+                    picture.endRecording()
+
+                    drawIntoCanvas { canvas -> canvas.nativeCanvas.drawPicture(picture) }
+                }
+            }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -141,10 +177,9 @@ internal fun ShareVaultQrScreen(
             val configuration = LocalConfiguration.current
             when (configuration.orientation) {
                 Configuration.ORIENTATION_LANDSCAPE ->
-                    HorizontalView(shareVaultQrString, qrBitmapPainter, name, ecdsa, eddsa)
-
+                    HorizontalView(shareVaultQrString, qrBitmapPainter, name, ecdsa, eddsa, modifier)
                 else ->
-                    VerticalView(shareVaultQrString, qrBitmapPainter, name, ecdsa, eddsa)
+                    VerticalView(shareVaultQrString, qrBitmapPainter, name, ecdsa, eddsa, modifier)
             }
         }
     }
@@ -156,12 +191,11 @@ private fun VerticalView(
     qrBitmapPainter: BitmapPainter?,
     name: String,
     ecdsa: String,
-    eddsa: String
+    eddsa: String,
+    modifier: Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+        modifier = modifier,
         shape = RoundedCornerShape(25.dp),
     ) {
         Column(
@@ -221,15 +255,11 @@ private fun HorizontalView(
     qrBitmapPainter: BitmapPainter?,
     name: String,
     ecdsa: String,
-    eddsa: String
+    eddsa: String,
+    modifier: Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                horizontal = 32.dp,
-                vertical = 4.dp
-            ),
+        modifier = modifier,
         shape = RoundedCornerShape(25.dp),
     ) {
         Row(
@@ -307,6 +337,7 @@ private fun shareQr(
 internal fun ShareVaultQrScreenPreview() {
     ShareVaultQrScreen(
         navController = rememberNavController(),
+        picture = Picture(),
         ecdsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
         eddsa = "placeholderdjhfkajsdhflkajshflkasdjflkajsdflk",
         name = "Main Vault",

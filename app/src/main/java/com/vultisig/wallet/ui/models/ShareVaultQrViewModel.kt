@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Picture
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +57,6 @@ internal class ShareVaultQrViewModel @Inject constructor(
 
     val state = MutableStateFlow(ShareVaultQrState())
 
-    private val toShareBitmap = MutableStateFlow<Bitmap?>(null)
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
 
 
@@ -112,9 +112,6 @@ internal class ShareVaultQrViewModel @Inject constructor(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
                 )
                 qrBitmapPainter.value = bitmapPainter
-                toShareBitmap.value = generateBitmap(
-                    logo = logo, mainColor = mainColor, backgroundColor = shareBackgroundColor
-                )
                 logo?.recycle()
             }
         }
@@ -147,18 +144,32 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
-    internal fun onSaveClicked() {
+    internal fun onSaveClicked(picture: Picture) {
         viewModelScope.launch(Dispatchers.IO) {
+            val bitmap = createBitmapFromPicture(picture)
             val uri = context.saveBitmapToDownloads(
-                requireNotNull(toShareBitmap.value),
+                bitmap,
                 requireNotNull(state.value.fileName)
             )
-            toShareBitmap.value?.recycle()
+            bitmap.recycle()
             state.update {
                 it.copy(
                     fileUri = uri
                 )
             }
         }
+    }
+
+    private fun createBitmapFromPicture(picture: Picture): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            picture.width,
+            picture.height,
+            Bitmap.Config.ARGB_8888
+        )
+
+        val canvas = android.graphics.Canvas(bitmap)
+        canvas.drawColor(android.graphics.Color.WHITE)
+        canvas.drawPicture(picture)
+        return bitmap
     }
 }
