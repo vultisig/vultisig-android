@@ -146,7 +146,7 @@ internal class SendFormViewModel @Inject constructor(
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
-    private val maxAmountFlow = MutableStateFlow<BigDecimal>(BigDecimal.ZERO)
+    private var maxAmount = BigDecimal.ZERO
 
     private var isSelectedStartingToken = false
     private var lastToken = ""
@@ -167,7 +167,6 @@ internal class SendFormViewModel @Inject constructor(
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
-        calculateMaxAmount()
     }
 
     fun loadData(
@@ -241,7 +240,33 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun chooseMaxTokenAmount() {
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(maxAmountFlow.value.toPlainString())
+        val selectedAccount = selectedAccount ?: return
+        val selectedTokenValue = selectedAccount.tokenValue ?: return
+        val gasFee = gasFee.value ?: return
+        val chain = selectedAccount.token.chain
+        val specific = specific.value?.blockChainSpecific
+
+        viewModelScope.launch {
+            val max = if (selectedAccount.token.isNativeToken) {
+                val gasLimit = if (chain.standard == TokenStandard.EVM && specific != null) {
+                    (specific as BlockChainSpecific.Ethereum).gasLimit
+                } else {
+                    BigInteger.valueOf(1)
+                }
+                TokenValue(
+                    value = maxOf(
+                        BigInteger.ZERO,
+                        selectedTokenValue.value - gasFee.value.multiply(gasLimit)
+                    ),
+                    unit = selectedTokenValue.unit,
+                    decimals = selectedTokenValue.decimals,
+                )
+            } else {
+                selectedTokenValue
+            }.decimal
+            maxAmount = max
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max.toPlainString())
+        }
     }
 
     fun choosePercentageAmount(percentage: Float) {
@@ -338,7 +363,7 @@ internal class SendFormViewModel @Inject constructor(
                 }
 
                 val srcAddress = selectedToken.address
-                val isMaxAmount = tokenAmount == maxAmountFlow.value
+                val isMaxAmount = tokenAmount == maxAmount
 
                 val specific = blockChainSpecificRepository
                     .getSpecific(
@@ -463,36 +488,6 @@ internal class SendFormViewModel @Inject constructor(
                     // todo handle errors
                     Timber.e(e)
                 }
-            }.collect()
-        }
-    }
-
-    private fun calculateMaxAmount() {
-        viewModelScope.launch {
-            combine(selectedSrc.filterNotNull(), gasFee.filterNotNull(), specific)
-            { selectedSrc, gasFee, specific ->
-                val selectedAccount = selectedSrc.account
-                val selectedTokenValue = selectedAccount.tokenValue ?: return@combine null
-                val chain = selectedAccount.token.chain
-                val blockChainSpecific = specific?.blockChainSpecific
-                maxAmountFlow.value = if (selectedAccount.token.isNativeToken) {
-                    val gasLimit =
-                        if (chain.standard == TokenStandard.EVM && blockChainSpecific != null) {
-                            (blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                        } else {
-                            BigInteger.valueOf(1)
-                        }
-                    TokenValue(
-                        value = maxOf(
-                            BigInteger.ZERO,
-                            selectedTokenValue.value - gasFee.value.multiply(gasLimit)
-                        ),
-                        unit = selectedTokenValue.unit,
-                        decimals = selectedTokenValue.decimals,
-                    )
-                } else {
-                    selectedTokenValue
-                }.decimal
             }.collect()
         }
     }
