@@ -30,6 +30,7 @@ internal interface BlockChainSpecificRepository {
         token: Coin,
         gasFee: TokenValue,
         isSwap: Boolean,
+        isMaxAmountEnabled: Boolean,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -50,6 +51,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         token: Coin,
         gasFee: TokenValue,
         isSwap: Boolean,
+        isMaxAmountEnabled: Boolean,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.mayaChain) {
@@ -117,7 +119,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             BlockChainSpecificAndUtxo(
                 blockChainSpecific = BlockChainSpecific.UTXO(
                     byteFee = gasFee.value,
-                    sendMaxAmount = false,
+                    sendMaxAmount = isMaxAmountEnabled,
                 ),
                 utxos = utxos?.utxos?.sortedBy { it.value }?.toList()?.map {
                     UtxoInfo(
