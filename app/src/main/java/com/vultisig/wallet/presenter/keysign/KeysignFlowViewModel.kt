@@ -136,6 +136,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             solanaApi = solanaApi,
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
+            navigator = navigator,
         )
 
     init {
