@@ -59,6 +59,7 @@ internal fun TokenSelectionScreen(
         searchTextFieldState = viewModel.searchTextFieldState,
         state = state,
         hasTokenSwitch = true,
+        hasCustomToken = true,
         onEnableToken = viewModel::enableToken,
         onDisableToken = viewModel::disableToken,
         onAddCustomToken = viewModel::navigateToCustomTokenScreen,
@@ -72,6 +73,7 @@ internal fun TokenSelectionScreen(
     searchTextFieldState: TextFieldState,
     state: TokenSelectionUiModel,
     hasTokenSwitch: Boolean,
+    hasCustomToken: Boolean,
     onEnableToken: (Coin) -> Unit = {},
     onDisableToken: (Coin) -> Unit = {},
     onAddCustomToken: () -> Unit = {},
@@ -97,11 +99,13 @@ internal fun TokenSelectionScreen(
                 )
         )
 
-        UiPlusButton(
-            modifier = Modifier.padding(16.dp),
-            title = stringResource(id = R.string.token_selection_screen_custom_token),
-            onClick = onAddCustomToken
-        )
+        if (hasCustomToken) {
+            UiPlusButton(
+                modifier = Modifier.padding(16.dp),
+                title = stringResource(id = R.string.token_selection_screen_custom_token),
+                onClick = onAddCustomToken
+            )
+        }
 
         LazyColumn(
             contentPadding = PaddingValues(all = 16.dp),
@@ -176,5 +180,6 @@ fun TokenSelectionPreview() {
         searchTextFieldState = TextFieldState(),
         state = TokenSelectionUiModel(),
         hasTokenSwitch = true,
+        hasCustomToken = true,
     )
 }
