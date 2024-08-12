@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -36,6 +37,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private val balanceRepository: BalanceRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val chainAndTokensToAddressMapper: ChainAndTokensToAddressMapper,
+    private val splTokenRepository: SplTokenRepository,
 ) : AccountsRepository {
 
     private suspend fun getVault(vaultId: String): Vault =
@@ -48,7 +50,6 @@ internal class AccountsRepositoryImpl @Inject constructor(
             val vault = getVault(vaultId)
             val vaultCoins = vault.coins
             val coins = vaultCoins.groupBy { it.chain }
-
             val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
                 chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
             }
@@ -108,6 +109,24 @@ internal class AccountsRepositoryImpl @Inject constructor(
         awaitClose()
     }
 
+    private suspend fun getSPLCoins(
+        solanaCoins: List<Coin>,
+        vault: Vault
+    ): List<Coin> {
+        val solanaAddress = solanaCoins.firstOrNull()?.address
+        val newSPLTokens = mutableListOf<Coin>()
+        solanaAddress?.let {
+            val splTokens = splTokenRepository.getTokens(solanaAddress, vault)
+            splTokens.forEach { spl ->
+                if (!solanaCoins.any { it.id == spl.id }) {
+                    vaultRepository.addTokenToVault(vault.id, spl)
+                    newSPLTokens += spl
+                }
+            }
+        }
+        return newSPLTokens
+    }
+
     override fun loadAddress(
         vaultId: String,
         chain: Chain,
@@ -115,13 +134,22 @@ internal class AccountsRepositoryImpl @Inject constructor(
         val vault = getVault(vaultId)
         val coins = vault.coins.filter { it.chain == chain }
 
-        val account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+        var account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+            ?: return@flow
+
+        emit(account)
+
+        val updatedCoins = if (chain == Chain.solana)
+            coins + getSPLCoins(coins, vault)
+        else coins
+
+        account = chainAndTokensToAddressMapper.map(ChainAndTokens(chain, updatedCoins))
             ?: return@flow
 
         emit(account)
 
         val loadPrices = supervisorScope {
-            async { tokenPriceRepository.refresh(coins) }
+            async { tokenPriceRepository.refresh(updatedCoins) }
         }
 
         val address = account.address
