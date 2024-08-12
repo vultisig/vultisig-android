@@ -99,12 +99,13 @@ internal fun TokenSelectionScreen(
                 )
         )
 
-        if (hasCustomToken)
+        if (hasCustomToken) {
             UiPlusButton(
                 modifier = Modifier.padding(16.dp),
                 title = stringResource(id = R.string.token_selection_screen_custom_token),
                 onClick = onAddCustomToken
             )
+        }
 
         LazyColumn(
             contentPadding = PaddingValues(all = 16.dp),
