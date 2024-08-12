@@ -141,25 +141,6 @@ internal fun Setup(
                     )
                 }
             }
-
-            MultiColorButton(
-                text = stringResource(R.string.setup_pair),
-                backgroundColor = Theme.colors.oxfordBlue600Main,
-                textColor = Theme.colors.turquoise600Main,
-                iconColor = Theme.colors.oxfordBlue600Main,
-                borderSize = 1.dp,
-                minHeight = 44.dp,
-                textStyle = Theme.montserrat.subtitle1,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp,
-                    )
-            ) {
-                navController.navigate(Destination.JoinThroughQr(vaultId = null).route)
-            }
         }
     }
 }

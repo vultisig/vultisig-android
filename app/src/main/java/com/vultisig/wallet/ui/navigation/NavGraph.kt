@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
+import com.vultisig.wallet.ui.screens.keygen.KeygenRoleScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.send.SendScreen
@@ -101,15 +102,24 @@ internal fun SetupNavGraph(
             )
         }
 
-        composable(route = Screen.Setup.route,
+        composable(
+            route = Destination.KeygenRole.route,
+        ) {
+            KeygenRoleScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.Setup.staticRoute,
             arguments = listOf(
-                navArgument(Screen.Setup.ARG_VAULT_ID) {
+                navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
+                    nullable = true
                     defaultValue = Destination.KeygenFlow.DEFAULT_NEW_VAULT
                 }
-            )) { navBackStackEntry ->
+            ),
+        ) { navBackStackEntry ->
             val vaultId =
-                navBackStackEntry.arguments?.getString(Screen.Setup.ARG_VAULT_ID) ?: ""
+                navBackStackEntry.arguments?.getString(ARG_VAULT_ID) ?: ""
             Setup(navController, vaultId)
         }
 
