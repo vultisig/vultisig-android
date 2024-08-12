@@ -24,6 +24,10 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
             vaultRepository.upsert(vault)
             return
         }
+        vaultRepository.getByEcdsa(vault.pubKeyECDSA)?.let {
+            Timber.d("saveVault: vault already exists, updating")
+            throw IllegalArgumentException("Vault already exists")
+        }
         vaultRepository.add(vault)
 
         // if vault has no coins, then add default coins
