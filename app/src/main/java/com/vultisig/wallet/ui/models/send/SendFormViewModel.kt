@@ -426,6 +426,8 @@ internal class SendFormViewModel @Inject constructor(
             ) { addresses, selectedTokenId, chain ->
                 try {
                     selectedSrc.updateSrc(selectedTokenId, addresses, chain)
+                    this@SendFormViewModel.selectedTokenId.value =
+                        selectedSrc.value?.account?.token?.id
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
