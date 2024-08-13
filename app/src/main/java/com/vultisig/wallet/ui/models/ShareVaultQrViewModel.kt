@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Picture
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,7 +19,6 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.BACKUPS_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.common.saveBitmapToDownloads
 import com.vultisig.wallet.common.sha256
