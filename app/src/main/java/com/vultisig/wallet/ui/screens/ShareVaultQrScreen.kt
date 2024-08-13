@@ -67,7 +67,6 @@ internal fun ShareVaultQrScreen(
     val context = LocalContext.current
     val mainColor = Theme.colors.neutral0
     val backgroundColor = Theme.colors.transparent
-    val shareBackgroundColor = Theme.colors.tallShips
 
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) WriteFilePermissionHandler(
         viewModel.permissionFlow, viewModel::onPermissionResult
@@ -77,7 +76,6 @@ internal fun ShareVaultQrScreen(
         viewModel.loadQrCode(
             mainColor = mainColor,
             backgroundColor = backgroundColor,
-            shareBackgroundColor = shareBackgroundColor,
             logo = BitmapFactory.decodeResource(
                 context.resources, R.drawable.ic_qr_vultisig
             )

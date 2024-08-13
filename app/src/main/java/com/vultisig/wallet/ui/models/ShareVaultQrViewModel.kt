@@ -20,6 +20,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.BACKUPS_DIRECTORY_NAME_FULL
+import com.vultisig.wallet.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.common.saveBitmapToDownloads
 import com.vultisig.wallet.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -99,7 +101,6 @@ internal class ShareVaultQrViewModel @Inject constructor(
     internal fun loadQrCode(
         mainColor: Color,
         backgroundColor: Color,
-        shareBackgroundColor: Color,
         logo: Bitmap? = null,
     ) {
         viewModelScope.launch {
@@ -155,6 +156,14 @@ internal class ShareVaultQrViewModel @Inject constructor(
             state.update {
                 it.copy(
                     fileUri = uri
+                )
+            }
+            if (uri != null) {
+                snackbarFlow.showMessage(
+                    context.getString(
+                        R.string.vault_settings_success_backup_file,
+                        "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}"
+                    )
                 )
             }
         }
