@@ -168,7 +168,6 @@
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
     <string name="token_settings_burnt">Burnt: %1$s</string>
     <string name="token_settings_supply">Supply: %1$s</string>
-    <string name="setup_device_of_vault">You need at least %s Devices.\n1. START from a device\n2. PAIR from the second/third</string>
     <string name="setup_any_total_devices">(Any %1$s Devices)</string>
     <string name="setup_devices_to_sign_a_transaction">%1$s devices to sign a transaction.</string>
     <string name="setup_devices_to_create_a_vault">"%1$s Devices to create a vault; "</string>
@@ -351,4 +350,9 @@
     <string name="keygen_role_pair_action" translatable="false">Scan QR / Pair device</string>
     <string name="keygen_role_option_caption" translatable="false">This device is the</string>
     <string name="keygen_role_or" translatable="false">OR</string>
+    <string name="setup_1_device_of_vault" translatable="false">You need 1 more device to pair</string>
+    <string name="setup_2_device_of_vault" translatable="false">You need 2 more devices to pair</string>
+    <string name="setup_m_device_of_vault" translatable="false">You can pair as many devices you want</string>
+    <string name="s_of_s" translatable="false">%1$s of %2$s</string>
+    <string name="setup_select_your_vault_type" translatable="false">Select your vault type</string>
 </resources>
