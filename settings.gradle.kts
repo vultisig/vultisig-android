@@ -10,10 +10,6 @@ pluginManagement {
 
         mavenCentral()
         gradlePluginPortal()
-        // for protobuf generator
-        maven {
-            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-        }
     }
 }
 dependencyResolutionManagement {
@@ -30,10 +26,6 @@ dependencyResolutionManagement {
             content {
                 includeGroup("com.trustwallet")
             }
-        }
-        // for protobuf generator
-        maven {
-            url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
         }
     }
 }
