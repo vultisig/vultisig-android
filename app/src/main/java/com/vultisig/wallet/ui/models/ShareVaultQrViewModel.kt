@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.common.saveBitmapToDownloads
 import com.vultisig.wallet.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -56,8 +57,8 @@ internal class ShareVaultQrViewModel @Inject constructor(
 
     val state = MutableStateFlow(ShareVaultQrState())
 
-    private val toShareBitmap = MutableStateFlow<Bitmap?>(null)
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
+    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
 
     private var hasWritePermission by mutableStateOf(
@@ -99,7 +100,6 @@ internal class ShareVaultQrViewModel @Inject constructor(
     internal fun loadQrCode(
         mainColor: Color,
         backgroundColor: Color,
-        shareBackgroundColor: Color,
         logo: Bitmap? = null,
     ) {
         viewModelScope.launch {
@@ -112,9 +112,6 @@ internal class ShareVaultQrViewModel @Inject constructor(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
                 )
                 qrBitmapPainter.value = bitmapPainter
-                toShareBitmap.value = generateBitmap(
-                    logo = logo, mainColor = mainColor, backgroundColor = shareBackgroundColor
-                )
                 logo?.recycle()
             }
         }
@@ -147,16 +144,29 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
+    internal fun saveShareQrBitmap(bitmap: Bitmap) {
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = bitmap
+    }
+
     internal fun onSaveClicked() {
         viewModelScope.launch(Dispatchers.IO) {
             val uri = context.saveBitmapToDownloads(
-                requireNotNull(toShareBitmap.value),
+                requireNotNull(shareQrBitmap.value),
                 requireNotNull(state.value.fileName)
             )
-            toShareBitmap.value?.recycle()
+            shareQrBitmap.value?.recycle()
             state.update {
                 it.copy(
                     fileUri = uri
+                )
+            }
+            if (uri != null) {
+                snackbarFlow.showMessage(
+                    context.getString(
+                        R.string.vault_settings_success_backup_file,
+                        "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}"
+                    )
                 )
             }
         }
