@@ -60,6 +60,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
     val state = MutableStateFlow(ShareVaultQrState())
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
+    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
 
     private var hasWritePermission by mutableStateOf(
@@ -145,14 +146,18 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
-    internal fun onSaveClicked(picture: Picture) {
+    internal fun saveShareQrBitmap(bitmap: Bitmap) {
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = bitmap
+    }
+
+    internal fun onSaveClicked() {
         viewModelScope.launch(Dispatchers.IO) {
-            val bitmap = createBitmapFromPicture(picture)
             val uri = context.saveBitmapToDownloads(
-                bitmap,
+                requireNotNull(shareQrBitmap.value),
                 requireNotNull(state.value.fileName)
             )
-            bitmap.recycle()
+            shareQrBitmap.value?.recycle()
             state.update {
                 it.copy(
                     fileUri = uri
@@ -167,18 +172,5 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 )
             }
         }
-    }
-
-    private fun createBitmapFromPicture(picture: Picture): Bitmap {
-        val bitmap = Bitmap.createBitmap(
-            picture.width,
-            picture.height,
-            Bitmap.Config.ARGB_8888
-        )
-
-        val canvas = android.graphics.Canvas(bitmap)
-        canvas.drawColor(android.graphics.Color.WHITE)
-        canvas.drawPicture(picture)
-        return bitmap
     }
 }
