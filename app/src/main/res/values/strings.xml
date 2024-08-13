@@ -344,4 +344,11 @@
     <string name="join_keysign_invalid_qr" translatable="false">Invalid QR code content</string>
     <string name="join_keysign_failed_to_start" translatable="false">Failed to join keysign</string>
     <string name="deposit_form_percentage_to_remove_title" translatable="false">Percentage to remove</string>
+    <string name="keygen_role_title" translatable="false">Setup</string>
+    <string name="keygen_role_initiate_action" translatable="false">Create QR</string>
+    <string name="keygen_role_initiate_title" translatable="false">Initiating device</string>
+    <string name="keygen_role_pair_title" translatable="false">Pairing device</string>
+    <string name="keygen_role_pair_action" translatable="false">Scan QR / Pair device</string>
+    <string name="keygen_role_option_caption" translatable="false">This device is the</string>
+    <string name="keygen_role_or" translatable="false">OR</string>
 </resources>

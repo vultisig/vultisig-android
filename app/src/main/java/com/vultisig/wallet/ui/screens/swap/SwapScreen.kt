@@ -79,7 +79,9 @@ internal fun SwapScreen(
         dstTokenId = dstTokenId,
         title = title,
         progress = progress,
-        qrCodeResult = viewModel.addressProvider.address.collectAsState().value
+        qrCodeResult = viewModel.addressProvider.address.collectAsState().value,
+        onKeysignFinished = viewModel::navigateToHome,
+        enableNavigationToHome = viewModel::enableNavigationToHome,
     )
 }
 
@@ -94,6 +96,8 @@ private fun SwapScreen(
     chainId: String?,
     dstTokenId: String?,
     qrCodeResult: String?,
+    onKeysignFinished: () -> Unit = {},
+    enableNavigationToHome:() -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -102,6 +106,7 @@ private fun SwapScreen(
         title = title,
         progress = progress,
         endIcon = qrCodeResult?.takeIf { it.isNotEmpty() }?.let { R.drawable.qr_share },
+        onStartIconClick =onKeysignFinished,
         onEndIconClick = qrCodeResult?.let {
             {
                 val qrBitmap = generateQrBitmap(it)
@@ -147,7 +152,8 @@ private fun SwapScreen(
                     navController = mainNavController,
                     onComplete = {
                         mainNavController.navigate(Screen.Home.route)
-                    }
+                    },
+                    onKeysignFinished = enableNavigationToHome,
                 )
             }
         }

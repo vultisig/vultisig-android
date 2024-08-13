@@ -20,7 +20,7 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = 26
         targetSdk = 34
-        versionCode = 13
+        versionCode = 15
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -70,7 +70,7 @@ protobuf {
 
     plugins {
         id("kotlinx-protobuf-gen") {
-            artifact = "io.github.dogacel:kotlinx-protobuf-gen:alpha-SNAPSHOT:jvm8@jar"
+            artifact = "io.github.dogacel:kotlinx-protobuf-gen:0.0.1:jvm8@jar"
         }
     }
 

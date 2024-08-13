@@ -90,6 +90,8 @@ internal class ImportFileViewModel @Inject constructor(
             insertVaultToDb(parseVaultFromString(fileContent, password))
         } catch (e: SQLiteConstraintException) {
             snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
+        } catch (e: IllegalArgumentException) {
+            snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
         }
     }
 

@@ -203,6 +203,7 @@ internal class SwapFormViewModel @Inject constructor(
                     srcToken,
                     gasFee,
                     isSwap = true,
+                    isMaxAmountEnabled = false,
                 )
 
                 val transaction = when (quote) {

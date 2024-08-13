@@ -25,7 +25,13 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run debug unit tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
+          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew :app:assembleDebugUnitTest
 
       - name: Run debug Android test
+        env:
+          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
+          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew :app:assembleDebugAndroidTest

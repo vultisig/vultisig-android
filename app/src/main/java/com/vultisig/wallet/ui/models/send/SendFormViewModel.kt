@@ -146,6 +146,7 @@ internal class SendFormViewModel @Inject constructor(
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
+    private var maxAmount = BigDecimal.ZERO
 
     private var isSelectedStartingToken = false
     private var lastToken = ""
@@ -262,8 +263,9 @@ internal class SendFormViewModel @Inject constructor(
                 )
             } else {
                 selectedTokenValue
-            }.decimal.toPlainString()
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max)
+            }.decimal
+            maxAmount = max
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max.toPlainString())
         }
     }
 
@@ -361,9 +363,17 @@ internal class SendFormViewModel @Inject constructor(
                 }
 
                 val srcAddress = selectedToken.address
+                val isMaxAmount = tokenAmount == maxAmount
 
                 val specific = blockChainSpecificRepository
-                    .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+                    .getSpecific(
+                        chain,
+                        srcAddress,
+                        selectedToken,
+                        gasFee,
+                        isSwap = false,
+                        isMaxAmountEnabled = isMaxAmount
+                    )
 
                 val transaction = Transaction(
                     id = UUID.randomUUID().toString(),
@@ -426,6 +436,8 @@ internal class SendFormViewModel @Inject constructor(
             ) { addresses, selectedTokenId, chain ->
                 try {
                     selectedSrc.updateSrc(selectedTokenId, addresses, chain)
+                    this@SendFormViewModel.selectedTokenId.value =
+                        selectedSrc.value?.account?.token?.id
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -466,8 +478,14 @@ internal class SendFormViewModel @Inject constructor(
                 val selectedToken = selectedAccount.token
                 val srcAddress = selectedAccount.token.address
                 try {
-                    specific.value = blockChainSpecificRepository
-                        .getSpecific(chain, srcAddress, selectedToken, gasFee, isSwap = false)
+                    specific.value = blockChainSpecificRepository.getSpecific(
+                        chain,
+                        srcAddress,
+                        selectedToken,
+                        gasFee,
+                        isSwap = false,
+                        isMaxAmountEnabled = false
+                    )
                 } catch (e: Exception) {
                     // todo handle errors
                     Timber.e(e)

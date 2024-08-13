@@ -39,32 +39,6 @@ internal data class VultisigTypography(
     val overline: TextStyle,
     val overline2: TextStyle,
 ) {
-    // TODO: aliases for old typography use, should be removed once not used
-    @Deprecated("Use heading3 instead", ReplaceWith("heading3"))
-    val headlineLarge: TextStyle
-        get() = heading3
-    @Deprecated("Use heading5 instead", ReplaceWith("heading5"))
-    val headlineSmall: TextStyle
-        get() = heading5
-    @Deprecated("Use subtitle3 instead", ReplaceWith("subtitle3"))
-    val titleSmall: TextStyle
-        get() = subtitle3
-    @Deprecated("Use subtitle1 instead", ReplaceWith("subtitle1"))
-    val titleLarge: TextStyle
-        get() = subtitle1
-    @Deprecated("Use subtitle2 instead", ReplaceWith("subtitle2"))
-    val titleMedium: TextStyle
-        get() = subtitle2
-    @Deprecated("Use body1 instead", ReplaceWith("body1"))
-    val bodyLarge: TextStyle
-        get() = body1
-    @Deprecated("Use body2 instead", ReplaceWith("body2"))
-    val bodyMedium: TextStyle
-        get() = body2
-    @Deprecated("Use overline instead", ReplaceWith("overline"))
-    val labelMedium: TextStyle
-        get() = overline
-
     companion object {
         fun createFrom(fontFamily: FontFamily): VultisigTypography =
             VultisigTypography(
@@ -91,6 +65,7 @@ internal data class VultisigTypography(
                 heading5 = TextStyle(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 20.sp,
+                    lineHeight = 30.sp,
                     fontFamily = fontFamily,
                 ),
                 subtitle1 = TextStyle(

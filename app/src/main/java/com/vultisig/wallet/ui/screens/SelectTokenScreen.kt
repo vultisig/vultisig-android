@@ -23,6 +23,7 @@ internal fun SelectTokenScreen(
         searchTextFieldState = viewModel.searchTextFieldState,
         state = state,
         hasTokenSwitch = false,
+        hasCustomToken = false,
         onEnableToken = viewModel::enableToken,
         onDisableToken = {}
     )
