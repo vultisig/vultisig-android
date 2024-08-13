@@ -14,7 +14,7 @@ import javax.inject.Inject
 internal interface BlowfishApi {
     suspend fun fetchBlowfishTransactions(chain: String, network: String, blowfishRequest: BlowfishRequest) : String
 
-    suspend fun fetchBlowfishSolanaTransactions() : String
+    suspend fun fetchBlowfishSolanaTransactions(blowfishRequest: BlowfishRequest) : String
 }
 
 internal class BlowfishApiImpl @Inject constructor(
@@ -31,9 +31,14 @@ internal class BlowfishApiImpl @Inject constructor(
         return ""
     }
 
-    override suspend fun fetchBlowfishSolanaTransactions() : String {
+    override suspend fun fetchBlowfishSolanaTransactions(blowfishRequest: BlowfishRequest) : String {
         val response = httpClient
-            .get("https://api.vultisig.com//blowfish/solana/v0/mainnet/scan/transactions?language=en")
+            .post("https://api.vultisig.com/blowfish/solana/v0/mainnet/scan/transactions?language=en"){
+                contentType(ContentType.Application.Json)
+                header("X-Api-Version", "2023-06-05")
+                setBody(gson.toJson(blowfishRequest))
+            }
+
         return ""
     }
 }

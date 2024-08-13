@@ -8,6 +8,7 @@ internal sealed class SendDst(route: String) : Dst(route) {
 
     companion object {
         const val ARG_TRANSACTION_ID = "transaction_id"
+        const val ARG_VAULT_ID = "vault_id"
 
         val transactionArgs = listOf(
             navArgument(ARG_TRANSACTION_ID) { type = NavType.StringType }
@@ -20,18 +21,21 @@ internal sealed class SendDst(route: String) : Dst(route) {
 
     data class VerifyTransaction(
         val transactionId: TransactionId,
+        val vaultId: String? = null,
     ) : SendDst(
-        route = buildRoute(transactionId)
+        route = buildRoute(transactionId, vaultId)
     ) {
         companion object {
 
             val staticRoute = buildRoute(
                 "{$ARG_TRANSACTION_ID}",
+                "{$ARG_VAULT_ID}"
             )
 
             private fun buildRoute(
                 transactionId: TransactionId,
-            ) = "transaction/${transactionId}/verify"
+                vaultId: String?,
+            ) = "transaction/${transactionId}/verify?vault=${vaultId ?: ""}"
         }
     }
 

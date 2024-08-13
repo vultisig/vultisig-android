@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.api.BlowfishApi
 import com.vultisig.wallet.data.api.models.BlowfishMetadata
@@ -12,11 +13,14 @@ import com.vultisig.wallet.data.api.models.BlowfishRequest
 import com.vultisig.wallet.data.api.models.BlowfishTxObject
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.ChainType
+import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.blowfishChainName
 import com.vultisig.wallet.models.blowfishNetwork
 import com.vultisig.wallet.models.chainType
+import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -59,10 +63,12 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     private val transactionRepository: TransactionRepository,
+    private val vaultRepository: VaultRepository,
     private val blowfishApi: BlowfishApi,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
+    private val vaultId: String? = savedStateHandle["vault_id"]
 
     private val transaction = transactionRepository.getTransaction(transactionId)
         .stateIn(
@@ -151,7 +157,8 @@ internal class VerifyTransactionViewModel @Inject constructor(
                     val supportedNetwork = chain.blowfishNetwork!!
 
                     val amountHex = "0x" + transaction.tokenValue.value.toByteArray().toHexString()
-                    val memoHex = "0x" //+ transaction.memo?.toBigInteger()?.toByteArray()?.toHexString()
+                    val memoDataHex = transaction.memo?.toBigInteger()?.toByteArray()?.toHexString()?: ""
+                    val memoHex = "0x$memoDataHex"
 
                     val blowfishRequest = BlowfishRequest(
                         userAccount = transaction.srcAddress,
@@ -165,12 +172,38 @@ internal class VerifyTransactionViewModel @Inject constructor(
                             )
                         ),
                         simulatorConfig = null,
+                        transactions = null
                     )
 
                     blowfishApi.fetchBlowfishTransactions(supportedChain, supportedNetwork, blowfishRequest)
                 }
                 ChainType.Solana -> {
+                    if (vaultId == null) return@launch
+                    val vault = requireNotNull(vaultRepository.get(vaultId))
 
+                    val keysignPayload = KeysignPayload(
+                        coin = Coins.solana,
+                        toAddress = transaction.dstAddress,
+                        toAmount = transaction.tokenValue.value,
+                        blockChainSpecific = transaction.blockChainSpecific,
+                        memo = transaction.memo,
+                        swapPayload = null,
+                        approvePayload = null,
+                        vaultPublicKeyECDSA = vault.pubKeyECDSA,
+                        utxos = transaction.utxos,
+                        vaultLocalPartyID = vault.localPartyID,
+                    )
+
+                    val zeroSignedTransaction = SolanaHelper(vault.pubKeyEDDSA).getZeroSignedTransaction(keysignPayload) //TODO find out returns error, check join keysign
+
+                    val blowfishRequest = BlowfishRequest(
+                        userAccount = transaction.srcAddress,
+                        metadata = BlowfishMetadata("https://api.vultisig.com"),
+                        txObjects = null,
+                        simulatorConfig = null,
+                        transactions = listOf(zeroSignedTransaction),
+                    )
+                    blowfishApi.fetchBlowfishSolanaTransactions(blowfishRequest)
                 }
                 else -> {
 

@@ -8,19 +8,13 @@ internal data class BlowfishRequest(
     @SerializedName("metadata")
     val metadata: BlowfishMetadata,
     @SerializedName("txObjects")
-    val txObjects: List<BlowfishTxObject>,
+    val txObjects: List<BlowfishTxObject>?,
     @SerializedName("simulatorConfig")
     val simulatorConfig: BlowfishSimulatorConfig?,
+    @SerializedName("transactions")
+    val transactions: List<String>?
 )
 
-internal data class BlowfishSolanaRequest(
-    @SerializedName("userAccount")
-    val userAccount: String,
-    @SerializedName("metadata")
-    val metadata: BlowfishMetadata,
-    @SerializedName("transactions")
-    val transactions: List<String>
-)
 
 internal data class BlowfishTxObject(
     @SerializedName("from")

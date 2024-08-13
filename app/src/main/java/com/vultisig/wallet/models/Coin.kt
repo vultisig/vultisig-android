@@ -50,7 +50,17 @@ internal object Coins {
         contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
         isNativeToken = false,
     )
-
+    val solana =  Coin(
+        chain = Chain.solana,
+        ticker = "SOL",
+        logo = "sol",
+        address = "",
+        decimal = 9,
+        hexPublicKey = "",
+        priceProviderID = "solana",
+        contractAddress = "",
+        isNativeToken = true,
+    )
     val SupportedCoins = listOf(
         wewe,
         Coin(
@@ -515,17 +525,7 @@ internal object Coins {
             contractAddress = "0x420FcA0121DC28039145009570975747295f2329",
             isNativeToken = false,
         ),
-        Coin(
-            chain = Chain.solana,
-            ticker = "SOL",
-            logo = "sol",
-            address = "",
-            decimal = 9,
-            hexPublicKey = "",
-            priceProviderID = "solana",
-            contractAddress = "",
-            isNativeToken = true,
-        ),
+        solana,
         Coin(
             chain = Chain.bscChain,
             ticker = "BNB",
