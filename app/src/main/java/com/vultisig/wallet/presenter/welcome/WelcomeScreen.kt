@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -35,6 +36,7 @@ import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.presenter.common.UiEvent.NavigateTo
 import com.vultisig.wallet.presenter.common.UiEvent.ScrollToNextPage
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.dimens
 
@@ -77,6 +79,8 @@ internal fun WelcomeScreen(
             .background(Theme.colors.oxfordBlue800),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        UiSpacer(size = 30.dp)
+
         Image(
             painter = painterResource(R.drawable.vultisig_icon_text),
             contentDescription = "Pager Image"
@@ -131,24 +135,31 @@ internal fun WelcomeScreen(
             modifier = Modifier
                 .weight(0.3f)
         )
-        if (pagerState.currentPage < pages.size - 1) {
-            MultiColorButton(
-                text = stringResource(R.string.welcome_screen_skip),
-                backgroundColor = Theme.colors.oxfordBlue800,
-                textColor = Theme.colors.turquoise800,
-                iconColor = Theme.colors.oxfordBlue800,
-                minHeight = MaterialTheme.dimens.minHeightButton,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                viewModel.skip()
-            }
-        }
+
+        val isSkipVisible = pagerState.currentPage < pages.size - 1
+
+        MultiColorButton(
+            text = stringResource(R.string.welcome_screen_skip),
+            backgroundColor = Theme.colors.oxfordBlue800,
+            textColor = Theme.colors.turquoise800,
+            iconColor = Theme.colors.oxfordBlue800,
+            minHeight = MaterialTheme.dimens.minHeightButton,
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(if (isSkipVisible) 1f else 0f),
+            onClick = if (isSkipVisible) {
+                { viewModel.skip() }
+            } else {
+                { /* do nothing if invisible */ }
+            },
+        )
+
+        UiSpacer(size = 24.dp)
     }
 }
 
 @Composable
-fun PagerScreen(onBoardingPage: OnBoardPage) {
+private fun PagerScreen(onBoardingPage: OnBoardPage) {
     Column(
         modifier = Modifier
             .fillMaxWidth(),
@@ -160,6 +171,7 @@ fun PagerScreen(onBoardingPage: OnBoardPage) {
             painter = painterResource(id = onBoardingPage.image),
             contentDescription = "Pager Image"
         )
+        UiSpacer(size = 48.dp)
         Text(
             modifier = Modifier
                 .fillMaxWidth()
