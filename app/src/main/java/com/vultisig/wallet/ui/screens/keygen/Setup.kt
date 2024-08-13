@@ -28,7 +28,6 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.R.drawable
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -61,6 +60,16 @@ internal fun Setup(
         Column(
             horizontalAlignment = CenterHorizontally,
         ) {
+            Text(
+                text = stringResource(R.string.setup_select_your_vault_type),
+                color = textColor,
+                style = Theme.montserrat.body2,
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp,
+            )
+
+            UiSpacer(size = 24.dp)
+
             TabRow(
                 selectedTabIndex = state.tabIndex,
                 contentColor = Theme.colors.neutral0,
@@ -107,10 +116,6 @@ internal fun Setup(
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(32.dp)
-            )
-
-            DevicesOnSameNetworkHint(
-                title = stringResource(R.string.setup_keep_devices_on_the_same_wifi_network_with_vultisig_open)
             )
 
             UiSpacer(size = 24.dp)

@@ -14,18 +14,18 @@ internal data class KeygenSetupUiModel(
     val tabIndex: Int = 0,
     val tabs: List<KeygenSetupTabUiModel> = listOf(
         KeygenSetupTabUiModel(
-            title = R.string.s_of_s_vault.asUiText("2", "2"),
-            content = R.string.setup_device_of_vault.asUiText("2"),
+            title = R.string.s_of_s.asUiText("2", "2"),
+            content = R.string.setup_1_device_of_vault.asUiText(),
             drawableResId = R.drawable.devices_2_2,
         ),
         KeygenSetupTabUiModel(
-            title = R.string.s_of_s_vault.asUiText("2", "3"),
-            content = R.string.setup_device_of_vault.asUiText("3"),
+            title = R.string.s_of_s.asUiText("2", "3"),
+            content = R.string.setup_2_device_of_vault.asUiText(),
             drawableResId = R.drawable.devices_2_3,
         ),
         KeygenSetupTabUiModel(
-            title = R.string.s_of_s_vault.asUiText("M", "N"),
-            content = R.string.setup_device_of_vault.asUiText("N"),
+            title = R.string.s_of_s.asUiText("M", "N"),
+            content = R.string.setup_m_device_of_vault.asUiText(),
             drawableResId = R.drawable.devices_m_n,
         ),
     ),
