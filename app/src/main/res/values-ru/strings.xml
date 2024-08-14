@@ -167,7 +167,6 @@
     <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>
     <string name="token_settings_burnt">Сожжено: %1$s</string>
     <string name="token_settings_supply">Предложение: %1$s</string>
-    <string name="setup_device_of_vault">Вам нужно как минимум %s устройства.\n1. НАЧНИТЕ с одного устройства\n2. СОПРЯЖИТЕ со вторым/третьим</string>
     <string name="setup_any_total_devices">(Любые %1$s устройства)</string>
     <string name="setup_devices_to_sign_a_transaction">%1$s устройств для подписания транзакции.</string>
     <string name="setup_devices_to_create_a_vault">"%1$s устройств для создания хранилища;</string>

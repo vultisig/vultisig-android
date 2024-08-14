@@ -129,7 +129,6 @@
     <string name="faq_settings_q1">Devo registrarmi?</string>
     <string name="home_screen_title">Cassaforti</string>
     <string name="setup_any_total_devices">(Qualsiasi dispositivo %1$s)</string>
-    <string name="setup_device_of_vault">Sono necessari almeno %s dispositivi. 1. AVVIA da un dispositivo 2. ABBINA dal secondo/terzo</string>
     <string name="device_list_desc1">Puoi inviare transazioni solo se sono presenti questi dispositivi %1$s.</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">In attesa che altri dispositivi si connettano…</string>
     <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">In attesa che altri dispositivi si connettano…</string>

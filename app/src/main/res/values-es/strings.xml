@@ -199,7 +199,6 @@
     <string name="token_logo">Logotipo de token</string>
     <string name="tokens">Tokens</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Esperando que otros dispositivos se conecten…</string>
-    <string name="setup_device_of_vault">You need at least %s Devices. 1. START from a device 2. PAIR from the second/third</string>
     <string name="chains">Cadenas</string>
     <string name="vault_settings_backup_subtitle">Realice una copia de seguridad de su recurso compartido de bóveda</string>
     <string name="send_amount_currency">Cantidad (en %s)</string>

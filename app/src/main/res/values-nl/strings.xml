@@ -166,7 +166,6 @@
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
     <string name="token_settings_burnt">Verbrand: %1$s</string>
     <string name="token_settings_supply">Voorraad: %1$s</string>
-    <string name="setup_device_of_vault">U heeft ten minste %s apparaten nodig.\n1. START vanaf een apparaat\n2. KOPPEL vanaf het tweede/derde</string>
     <string name="setup_any_total_devices">(Elk %1$s apparaat)</string>
     <string name="setup_devices_to_sign_a_transaction">%1$s apparaten om een transactie te ondertekenen.</string>
     <string name="setup_devices_to_create_a_vault">%1$s apparaten om een kluis te maken</string>

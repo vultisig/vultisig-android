@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -91,7 +90,7 @@ internal class GeneratingKeyViewModel(
             this.tssInstance?.let {
                 keygenWithRetry(it, 1)
             }
-            vault.signers = keygenCommittee
+            this.vault.signers = keygenCommittee
             currentState.value = KeygenState.Success
             this._messagePuller?.stop()
         } catch (e: Exception) {
@@ -135,14 +134,14 @@ internal class GeneratingKeyViewModel(
                         vault.resharePrefix.ifEmpty { oldResharePrefix }
                     reshareRequest.chainCodeHex = vault.hexChainCode
                     val ecdsaResp = tssReshare(service, reshareRequest, TssKeyType.ECDSA)
-                    vault.pubKeyECDSA = ecdsaResp.pubKey
-                    vault.resharePrefix = ecdsaResp.resharePrefix
                     currentState.value = KeygenState.ReshareEdDSA
                     delay(1.seconds) // backoff for 1 second
                     reshareRequest.pubKey = vault.pubKeyEDDSA
-                    reshareRequest.newResharePrefix = vault.resharePrefix
+                    reshareRequest.newResharePrefix = ecdsaResp.resharePrefix
                     val eddsaResp = tssReshare(service, reshareRequest, TssKeyType.EDDSA)
                     vault.pubKeyEDDSA = eddsaResp.pubKey
+                    vault.pubKeyECDSA = ecdsaResp.pubKey
+                    vault.resharePrefix = ecdsaResp.resharePrefix
                 }
             }
             // here is the keygen process is done
@@ -212,6 +211,7 @@ internal class GeneratingKeyViewModel(
     }
 
     suspend fun saveVault(context: Context) {
+
         saveVault(
             this@GeneratingKeyViewModel.vault,
             this@GeneratingKeyViewModel.action == TssAction.ReShare
