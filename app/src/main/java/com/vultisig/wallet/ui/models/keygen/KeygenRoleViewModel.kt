@@ -21,7 +21,7 @@ internal class KeygenRoleViewModel @Inject constructor(
 
     fun pair() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ScanQr)
+            navigator.navigate(Destination.JoinThroughQr(null))
         }
     }
 
