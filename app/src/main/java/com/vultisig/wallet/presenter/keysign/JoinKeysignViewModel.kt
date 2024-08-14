@@ -18,6 +18,7 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.BlowfishApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -30,6 +31,7 @@ import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -38,8 +40,11 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.models.ChainType
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.models.chainType
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -57,7 +62,9 @@ import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -126,6 +133,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
+    private val blowfishRepository: BlowfishRepository,
 
     private val vaultRepository: VaultRepository,
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
@@ -419,6 +427,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             transaction = mapTransactionToUiModel(transaction),
                         )
                     )
+                    blowfishTransactionScan(transaction)
                 }
             }
         }
@@ -559,5 +568,50 @@ internal class JoinKeysignViewModel @Inject constructor(
     override fun onCleared() {
         cleanUp()
         super.onCleared()
+    }
+
+    private fun blowfishTransactionScan(transaction: Transaction) {
+        viewModelScope.launch {
+            val chain = Chain.fromRaw(transaction.chainId)
+            val chainType = chain.chainType
+
+            try {
+                when (chainType) {
+                    ChainType.EVM -> {
+                        val result = blowfishRepository.scanBlowfishTransaction(chain, transaction)
+                        verifyUiModel.update { state ->
+                            (state as VerifyUiModel.Send).copy(
+                                model = state.model.copy(
+                                    blowfishShow = true,
+                                    blowfishWarnings =
+                                    result.warnings?.mapNotNull { it.message } ?: emptyList()
+                                )
+                            )
+                        }
+                    }
+
+                    ChainType.Solana -> {
+                        val vault = requireNotNull(vaultRepository.get(vaultId))
+
+                        val result = blowfishRepository.scanBlowfishSolanaTransaction(vault, transaction)
+
+                        verifyUiModel.update { state ->
+                            (state as VerifyUiModel.Send).copy(
+                                model = state.model.copy(
+                                    blowfishShow = true,
+                                    blowfishWarnings =
+                                    result.aggregated?.warnings?.mapNotNull { it.message }
+                                        ?: emptyList()
+                                )
+                            )
+                        }
+                    }
+
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
+        }
     }
 }
