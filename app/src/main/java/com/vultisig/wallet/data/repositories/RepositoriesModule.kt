@@ -168,4 +168,9 @@ internal interface RepositoriesModule {
         impl: SplTokenRepositoryImpl
     ): SplTokenRepository
 
+    @Binds
+    @Singleton
+    fun bindBlowfishRepository(
+        impl: BlowfishRepositoryImpl
+    ): BlowfishRepository
 }

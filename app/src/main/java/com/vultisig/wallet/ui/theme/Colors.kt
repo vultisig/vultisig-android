@@ -46,6 +46,8 @@ internal data class Colors(
     val alert: Color = Color(0xffDA2E2E),
     val miamiMarmalade: Color = Color(0xffF7961B),
     val miamiMarmaladeFaded: Color = Color(0x59F7961B),
+    val approval: Color = Color(0xff31CF59),
+    val approvalFaded: Color = Color(0x5931CF59),
 ) {
     companion object {
         val Default = Colors()
