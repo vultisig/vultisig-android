@@ -129,7 +129,6 @@
     <string name="faq_settings_q1">Moram li se registrirati?</string>
     <string name="home_screen_title">Sefovi</string>
     <string name="setup_any_total_devices">(Bilo koji %1$s uređaj)</string>
-    <string name="setup_device_of_vault">Trebate najmanje %s uređaja. 1. POKRENI s uređaja 2. UPARI s drugog/trećeg</string>
     <string name="device_list_desc1">Transakcije možete slati samo s ovim %1$s uređajima.</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Čeka se povezivanje drugih uređaja…</string>
     <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Čeka se povezivanje drugih uređaja…</string>

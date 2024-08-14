@@ -129,7 +129,6 @@
     <string name="verify_swap_sign_button">Sign</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
     <string name="setup_any_total_devices">(Qualquer dispositivo %1$s)</string>
-    <string name="setup_device_of_vault">Você precisa de pelo menos %s dispositivos. 1. INICIAR a partir de um dispositivo 2. EMPARELHAR a partir do segundo/terceiro</string>
     <string name="device_list_desc1">Você só pode enviar transações com estes %1$s dispositivos presentes.</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Aguardando a conexão de outros dispositivos…</string>
     <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Aguardando a conexão de outros dispositivos…</string>

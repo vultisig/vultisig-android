@@ -129,7 +129,6 @@
     <string name="tokens">Tokens</string>
     <string name="home_screen_title">Tresore</string>
     <string name="setup_any_total_devices">(Alle %1$s Geräte)</string>
-    <string name="setup_device_of_vault">Sie benötigen mindestens %s Geräte. 1. STARTEN Sie von einem Gerät aus 2. PAIREN Sie vom zweiten/dritten</string>
     <string name="device_list_desc1">Sie können nur Transaktionen senden, wenn diese %1$s Geräte vorhanden sind.</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Warten auf die Verbindung anderer Geräte …</string>
     <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Warten auf die Verbindung anderer Geräte …</string>
