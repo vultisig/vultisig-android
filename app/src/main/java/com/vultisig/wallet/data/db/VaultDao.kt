@@ -67,6 +67,9 @@ internal interface VaultDao {
         upsertVault(vault.vault)
         upsertCoins(vault.coins)
         upsertKeyshares(vault.keyShares)
+        // it is upsert, so we need to delete all signers and insert them again
+        // otherwise we need to figure who get removed , and remove them
+        deleteSigners(vault.vault.id)
         upsertSigners(vault.signers)
     }
 
@@ -79,6 +82,8 @@ internal interface VaultDao {
     @Query("UPDATE vault SET name = :name WHERE id = :vaultId")
     suspend fun setVaultName(vaultId: String, name: String)
 
+    @Query("DELETE FROM signer WHERE vaultId = :vaultId")
+    suspend fun deleteSigners(vaultId: String)
     @Query("DELETE FROM vault WHERE id = :vaultId")
     suspend fun delete(vaultId: String)
 
