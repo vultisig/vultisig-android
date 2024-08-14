@@ -441,7 +441,7 @@ internal object Coins {
         Coin(
             chain = Chain.avalanche,
             ticker = "sAVAX",
-            logo = "sAVAX",
+            logo = "savax",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -452,7 +452,7 @@ internal object Coins {
         Coin(
             chain = Chain.avalanche,
             ticker = "JOE",
-            logo = "JOE",
+            logo = "joe",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -463,7 +463,7 @@ internal object Coins {
         Coin(
             chain = Chain.avalanche,
             ticker = "PNG",
-            logo = "PNG",
+            logo = "png",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -474,7 +474,7 @@ internal object Coins {
         Coin(
             chain = Chain.avalanche,
             ticker = "WAVAX",
-            logo = "WAVAX",
+            logo = "wavax",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -496,7 +496,7 @@ internal object Coins {
         Coin(
             chain = Chain.avalanche,
             ticker = "BLS",
-            logo = "BLS",
+            logo = "bls",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -507,7 +507,7 @@ internal object Coins {
         Coin(
             chain = Chain.avalanche,
             ticker = "COQ",
-            logo = "COQ",
+            logo = "coq",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -683,7 +683,7 @@ internal object Coins {
         Coin(
             chain = Chain.base,
             ticker = "ezETH",
-            logo = "ezETH",
+            logo = "ezeth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -727,7 +727,7 @@ internal object Coins {
         Coin(
             chain = Chain.base,
             ticker = "cbETH",
-            logo = "cbETH",
+            logo = "cbeth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -738,7 +738,7 @@ internal object Coins {
         Coin(
             chain = Chain.base,
             ticker = "SNX",
-            logo = "SNX",
+            logo = "snx",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -749,7 +749,7 @@ internal object Coins {
         Coin(
             chain = Chain.base,
             ticker = "AERO",
-            logo = "AERO",
+            logo = "aero",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -804,7 +804,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "USDT",
-            logo = "USDT",
+            logo = "usdt",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -815,7 +815,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "USDC.e",
-            logo = "USDC.e",
+            logo = "usdc.e",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -826,7 +826,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "USDC",
-            logo = "USDC",
+            logo = "usdc",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -837,7 +837,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "WBTC",
-            logo = "WBTC",
+            logo = "wbtc",
             address = "",
             decimal = 8,
             hexPublicKey = "",
@@ -848,7 +848,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "LINK",
-            logo = "LINK",
+            logo = "link",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -859,7 +859,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "DAI",
-            logo = "DAI",
+            logo = "dai",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -870,7 +870,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "UNI",
-            logo = "UNI",
+            logo = "uni",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -881,7 +881,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "PEPE",
-            logo = "PEPE",
+            logo = "pepe",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -892,7 +892,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "GRT",
-            logo = "GRT",
+            logo = "grt",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -903,7 +903,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "ezETH",
-            logo = "ezETH",
+            logo = "ezeth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -914,7 +914,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "PYTH",
-            logo = "PYTH",
+            logo = "pyth",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -925,7 +925,7 @@ internal object Coins {
         Coin(
             chain = Chain.arbitrum,
             ticker = "LDO",
-            logo = "LDO",
+            logo = "ldo",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -969,7 +969,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "USDT",
-            logo = "USDT",
+            logo = "usdt",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -980,7 +980,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "USDC",
-            logo = "USDC",
+            logo = "usdc",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -1002,7 +1002,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "WBTC",
-            logo = "WBTC",
+            logo = "wbtc",
             address = "",
             decimal = 8,
             hexPublicKey = "",
@@ -1013,7 +1013,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "LINK",
-            logo = "LINK",
+            logo = "link",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1024,7 +1024,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "DAI",
-            logo = "DAI",
+            logo = "dai",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1035,7 +1035,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "ezETH",
-            logo = "ezETH",
+            logo = "ezeth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1046,7 +1046,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "PYTH",
-            logo = "PYTH",
+            logo = "pyth",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -1057,7 +1057,7 @@ internal object Coins {
         Coin(
             chain = Chain.optimism,
             ticker = "LDO",
-            logo = "LDO",
+            logo = "ldo",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1079,7 +1079,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "WETH",
-            logo = "wETH",
+            logo = "weth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1101,7 +1101,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "USDT",
-            logo = "USDT",
+            logo = "usdt",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -1112,7 +1112,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "BNB",
-            logo = "BNB",
+            logo = "bnb",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1123,7 +1123,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "SOL",
-            logo = "SOL",
+            logo = "sol",
             address = "",
             decimal = 9,
             hexPublicKey = "",
@@ -1134,7 +1134,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "USDC",
-            logo = "USDC",
+            logo = "usdc",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -1156,7 +1156,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "BUSD",
-            logo = "BUSD",
+            logo = "busd",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1167,7 +1167,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "WBTC",
-            logo = "WBTC",
+            logo = "wbtc",
             address = "",
             decimal = 8,
             hexPublicKey = "",
@@ -1178,7 +1178,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "AVAX",
-            logo = "AVAX",
+            logo = "avax",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1189,7 +1189,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "SHIB",
-            logo = "SHIB",
+            logo = "shib",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1200,7 +1200,7 @@ internal object Coins {
         Coin(
             chain = Chain.polygon,
             ticker = "LINK",
-            logo = "LINK",
+            logo = "link",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1222,7 +1222,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "WETH",
-            logo = "wETH",
+            logo = "weth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1233,7 +1233,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "WBTC",
-            logo = "WBTC",
+            logo = "wbtc",
             address = "",
             decimal = 8,
             hexPublicKey = "",
@@ -1244,7 +1244,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "USDB",
-            logo = "USDB",
+            logo = "usdb",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1255,7 +1255,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "BLAST",
-            logo = "BLAST",
+            logo = "blast",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1266,7 +1266,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "MIM",
-            logo = "MIM",
+            logo = "mim",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1277,7 +1277,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "bLOOKS",
-            logo = "bLOOKS",
+            logo = "blooks",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1288,7 +1288,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "BAG",
-            logo = "BAG",
+            logo = "bag",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1299,7 +1299,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "ZERO",
-            logo = "ZERO",
+            logo = "zero",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1310,7 +1310,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "AI",
-            logo = "AI",
+            logo = "ai",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1321,7 +1321,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "JUICE",
-            logo = "JUICE",
+            logo = "juice",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1332,7 +1332,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "OMNI",
-            logo = "OMNI",
+            logo = "omni",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1343,7 +1343,7 @@ internal object Coins {
         Coin(
             chain = Chain.blast,
             ticker = "DACKIE",
-            logo = "DACKIE",
+            logo = "dackie",
             address = "",
             decimal = 18,
             hexPublicKey = "",
@@ -1454,6 +1454,43 @@ internal object Coins {
             "dot" -> R.drawable.dot
             "wETH"->R.drawable.weth
             "wewe" -> R.drawable.wewe
+            "omni" -> R.drawable.omni
+            "pyth" -> R.drawable.pyth
+            "snx" -> R.drawable.snx
+            "sushi" -> R.drawable.sushi
+            "yfi" -> R.drawable.yfi
+            "mkr" -> R.drawable.mkr
+            "pepe" -> R.drawable.pepe
+            "reth" -> R.drawable.reth
+            "shib" -> R.drawable.shib
+            "w" -> R.drawable.w
+            "aave" -> R.drawable.aave
+            "bal" -> R.drawable.bal
+            "bat" -> R.drawable.bat
+            "bnb" -> R.drawable.bnb
+            "busd" -> R.drawable.busd
+            "comp" -> R.drawable.comp
+            "grt" -> R.drawable.grt
+            "mim" -> R.drawable.mim
+            "ldo" -> R.drawable.ldo
+            "dai" -> R.drawable.dai
+            "knc" -> R.drawable.knc
+            "aero" -> R.drawable.aero
+            "bag" -> R.drawable.bag
+            "blooks" -> R.drawable.blooks
+            "cbeth" -> R.drawable.cbeth
+            "coq" -> R.drawable.coq
+            "dackie"->R.drawable.dackie
+            "ezeth" -> R.drawable.ezeth
+            "joe"->R.drawable.joe
+            "juice"->R.drawable.juice
+            "om"->R.drawable.om
+            "png"->R.drawable.png
+            "savax"->R.drawable.savax
+            "usdb"->R.drawable.usdb
+            "weth"->R.drawable.weth
+            "zero"->R.drawable.zero
+
             else -> logoName
         }
     }
