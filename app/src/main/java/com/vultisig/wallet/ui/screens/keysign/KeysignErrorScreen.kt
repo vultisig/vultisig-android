@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import ErrorView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -26,68 +27,22 @@ internal fun KeysignErrorScreen(
     errorMessage: String = "",
     tryAgain: () -> Unit,
 ) {
-    KeysignErrorView(
-        onTryAgain = tryAgain,
+    ErrorView(
+        errorLabel = stringResource(R.string.signing_error_please_try_again_s, errorMessage),
+        buttonText = stringResource(R.string.try_again),
+        infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
+        onButtonClick = tryAgain,
     )
 }
 
-@Composable
-internal fun KeysignErrorView(
-    errorMessage: String = "",
-    onTryAgain: () -> Unit,
-) {
-    Column(Modifier.background(Theme.colors.oxfordBlue800)) {
-        UiSpacer(weight = 1f)
-
-        Column(
-            Modifier
-                .padding(
-                    start = 81.dp,
-                    end = 81.dp,
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.danger),
-                contentDescription = stringResource(R.string.danger_icon),
-                alignment = Alignment.Center
-            )
-            Text(
-                modifier = Modifier.padding(top = 9.dp),
-                text = stringResource(R.string.signing_error_please_try_again_s, errorMessage),
-                style = Theme.menlo.subtitle1,
-                color = Theme.colors.neutral0,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        UiSpacer(weight = 1f)
-
-        Column {
-            InformationNote(
-                modifier = Modifier.padding(horizontal = 8.dp),
-                text = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
-            )
-
-            MultiColorButton(
-                text = stringResource(R.string.try_again),
-                minHeight = 44.dp,
-                backgroundColor = Theme.colors.turquoise800,
-                textColor = Theme.colors.oxfordBlue800,
-                iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.subtitle1,
-                onClick = onTryAgain,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true, name = "KeysignErrorScreen Preview")
 @Composable
 private fun PreviewKeysignError() {
-
-    KeysignErrorView(onTryAgain = {})
+    ErrorView(
+        errorLabel = stringResource(R.string.signing_error_please_try_again_s, ""),
+        buttonText = stringResource(R.string.try_again),
+        infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
+        onButtonClick = {},
+    )
 }

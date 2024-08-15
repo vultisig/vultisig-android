@@ -30,14 +30,14 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
-import com.vultisig.wallet.ui.screens.ARG_QR_CODE
+import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
-import com.vultisig.wallet.ui.screens.ScanQrAndJoin
-import com.vultisig.wallet.ui.screens.ScanQrScreen
+import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
+import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
 import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenRoleScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
@@ -298,6 +299,18 @@ internal fun SetupNavGraph(
             )
         ) {
             ScanQrAndJoin(navController = navController)
+        }
+
+        composable(
+            route = Destination.ScanError.staticRoute,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
+        ) {
+            ScanQrErrorScreen()
         }
 
         composable(

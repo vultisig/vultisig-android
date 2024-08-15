@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import ErrorView
 import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.activity.compose.BackHandler
@@ -133,9 +134,14 @@ internal fun JoinKeysignView(
             }
 
             is Error -> {
-                KeysignErrorView(
-                    errorMessage = state.errorType.message.asString(),
-                    onTryAgain = viewModel::tryAgain,
+                ErrorView(
+                    errorLabel = stringResource(
+                        R.string.signing_error_please_try_again_s,
+                        state.errorType.message.asString()
+                    ),
+                    buttonText = stringResource(R.string.try_again),
+                    infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
+                    onButtonClick = viewModel::tryAgain,
                 )
             }
         }

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalPermissionsApi::class)
 
-package com.vultisig.wallet.ui.screens
+package com.vultisig.wallet.ui.screens.scan
 
 import android.content.Context
 import android.util.Size
