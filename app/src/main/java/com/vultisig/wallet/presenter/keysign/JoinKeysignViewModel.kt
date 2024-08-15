@@ -18,7 +18,6 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.api.BlockChairApi
-import com.vultisig.wallet.data.api.BlowfishApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -28,6 +27,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.SwapPayload
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -41,7 +41,6 @@ import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.ChainType
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.models.chainType
@@ -414,12 +413,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         gasFee = gasFee,
                         memo = payload.memo,
 
-                        // TODO that's mock data
-                        blockChainSpecific = BlockChainSpecific.THORChain(
-                            BigInteger.ZERO,
-                            BigInteger.ZERO,
-                            BigInteger.ZERO
-                        ),
+                        blockChainSpecific = payload.blockChainSpecific,
                     )
 
                     verifyUiModel.value = VerifyUiModel.Send(
@@ -572,42 +566,17 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private fun blowfishTransactionScan(transaction: Transaction) {
         viewModelScope.launch {
-            val chain = Chain.fromRaw(transaction.chainId)
-            val chainType = chain.chainType
+            val vault = requireNotNull(vaultRepository.get(vaultId))
 
             try {
-                when (chainType) {
-                    ChainType.EVM -> {
-                        val result = blowfishRepository.scanBlowfishTransaction(chain, transaction)
-                        verifyUiModel.update { state ->
-                            (state as VerifyUiModel.Send).copy(
-                                model = state.model.copy(
-                                    blowfishShow = true,
-                                    blowfishWarnings =
-                                    result.warnings?.mapNotNull { it.message } ?: emptyList()
-                                )
-                            )
-                        }
-                    }
-
-                    ChainType.Solana -> {
-                        val vault = requireNotNull(vaultRepository.get(vaultId))
-
-                        val result = blowfishRepository.scanBlowfishSolanaTransaction(vault, transaction)
-
-                        verifyUiModel.update { state ->
-                            (state as VerifyUiModel.Send).copy(
-                                model = state.model.copy(
-                                    blowfishShow = true,
-                                    blowfishWarnings =
-                                    result.aggregated?.warnings?.mapNotNull { it.message }
-                                        ?: emptyList()
-                                )
-                            )
-                        }
-                    }
-
-                    else -> {}
+                val result = blowfishRepository.scanBlowfishTransaction(vault, transaction)
+                verifyUiModel.update { state ->
+                    (state as VerifyUiModel.Send).copy(
+                        model = state.model.copy(
+                            blowfishShow = result.first,
+                            blowfishWarnings = result.second
+                        )
+                    )
                 }
             } catch (e: Exception) {
                 Timber.e(e)

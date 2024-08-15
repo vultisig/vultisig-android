@@ -77,7 +77,10 @@ internal fun VerifyTransactionScreen(
             .fillMaxSize(),
         bottomBar = {
             Column (horizontalAlignment = Alignment.CenterHorizontally) {
-                BlowfishMessage(isShow = state.blowfishShow, warnings = state.blowfishWarnings)
+                BlowfishMessage(
+                    isShow = state.blowfishShow,
+                    warnings = state.blowfishWarnings,
+                )
                 MultiColorButton(
                     text = confirmTitle,
                     textColor = Theme.colors.oxfordBlue800,

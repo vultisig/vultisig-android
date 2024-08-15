@@ -35,7 +35,7 @@ internal sealed class SendDst(route: String) : Dst(route) {
             private fun buildRoute(
                 transactionId: TransactionId,
                 vaultId: String?,
-            ) = "transaction/${transactionId}/verify?vault=${vaultId ?: ""}"
+            ) = "transaction/${transactionId}/verify?vault=$vaultId"
         }
     }
 

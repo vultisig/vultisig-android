@@ -47,13 +47,18 @@ internal data class BlowfishStateOverrides(
 )
 
 internal data class BlowfishNativeBalance(
+    @SerializedName("address")
     val address: String,
+    @SerializedName("value")
     val value: String,
 )
 
 internal data class BlowfishStorage(
+    @SerializedName("address")
     val address: String,
+    @SerializedName("slot")
     val slot: String,
+    @SerializedName("value")
     val value: String,
 )
 

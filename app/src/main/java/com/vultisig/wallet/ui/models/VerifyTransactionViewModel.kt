@@ -5,25 +5,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.data.api.BlowfishApi
-import com.vultisig.wallet.data.api.models.BlowfishMetadata
-import com.vultisig.wallet.data.api.models.BlowfishRequest
-import com.vultisig.wallet.data.api.models.BlowfishResponse
-import com.vultisig.wallet.data.api.models.BlowfishTxObject
-import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.ChainType
-import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.blowfishChainName
-import com.vultisig.wallet.models.blowfishNetwork
 import com.vultisig.wallet.models.chainType
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -153,39 +142,15 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private fun blowfishTransactionScan() {
         viewModelScope.launch {
             val transaction = transaction.filterNotNull().first()
-            val chain = Chain.fromRaw(transaction.chainId)
-            val chainType = chain.chainType
-
+            if (vaultId == null) return@launch
+            val vault = requireNotNull(vaultRepository.get(vaultId))
             try {
-                when (chainType) {
-                    ChainType.EVM -> {
-                        val result = blowfishRepository.scanBlowfishTransaction(chain, transaction)
-                        uiState.update { state ->
-                            state.copy(
-                                blowfishShow = true,
-                                blowfishWarnings =
-                                result.warnings?.mapNotNull { it.message } ?: emptyList()
-                            )
-                        }
-                    }
-
-                    ChainType.Solana -> {
-                        if (vaultId == null) return@launch
-                        val vault = requireNotNull(vaultRepository.get(vaultId))
-
-                        val result = blowfishRepository.scanBlowfishSolanaTransaction(vault, transaction)
-
-                        uiState.update { state ->
-                            state.copy(
-                                blowfishShow = true,
-                                blowfishWarnings =
-                                result.aggregated?.warnings?.mapNotNull { it.message }
-                                    ?: emptyList()
-                            )
-                        }
-                    }
-
-                    else -> {}
+                val result = blowfishRepository.scanBlowfishTransaction(vault, transaction)
+                uiState.update { state ->
+                    state.copy(
+                        blowfishShow = result.first,
+                        blowfishWarnings = result.second
+                    )
                 }
             } catch (e: Exception) {
                 Timber.e(e)

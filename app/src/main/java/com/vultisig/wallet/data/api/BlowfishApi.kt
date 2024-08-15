@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api
 import com.google.gson.Gson
 import com.vultisig.wallet.data.api.models.BlowfishRequest
 import com.vultisig.wallet.data.api.models.BlowfishResponse
+import com.vultisig.wallet.models.Chain
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -50,3 +51,27 @@ internal class BlowfishApiImpl @Inject constructor(
         return gson.fromJson(response.bodyAsText(), BlowfishResponse::class.java)
     }
 }
+
+internal val Chain.blowfishChainName: String?
+    get() = when (this) {
+        Chain.ethereum -> "ethereum"
+        Chain.polygon -> "polygon"
+        Chain.avalanche -> "avalanche"
+        Chain.arbitrum -> "arbitrum"
+        Chain.optimism -> "optimism"
+        Chain.base -> "base"
+        Chain.blast -> "blast"
+        Chain.bscChain -> "bnb"
+        Chain.solana -> "solana"
+        else -> null
+    }
+
+
+internal val Chain.blowfishNetwork: String?
+    get() = when (this) {
+        Chain.ethereum, Chain.polygon, Chain.avalanche, Chain.optimism, Chain.base, Chain.blast,
+        Chain.bscChain, Chain.solana -> "mainnet"
+
+        Chain.arbitrum -> "one"
+        else -> null
+    }

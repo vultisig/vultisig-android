@@ -2,34 +2,59 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.data.api.BlowfishApi
+import com.vultisig.wallet.data.api.blowfishChainName
+import com.vultisig.wallet.data.api.blowfishNetwork
 import com.vultisig.wallet.data.api.models.BlowfishMetadata
 import com.vultisig.wallet.data.api.models.BlowfishRequest
 import com.vultisig.wallet.data.api.models.BlowfishResponse
 import com.vultisig.wallet.data.api.models.BlowfishTxObject
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.blowfishChainName
-import com.vultisig.wallet.models.blowfishNetwork
+import com.vultisig.wallet.models.chainType
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import javax.inject.Inject
 
 internal interface BlowfishRepository {
-    suspend fun scanBlowfishSolanaTransaction(
-        vault: Vault,
-        transaction: Transaction
-    ): BlowfishResponse
 
     suspend fun scanBlowfishTransaction(
-        chain: Chain,
+        vault: Vault,
         transaction: Transaction
-    ): BlowfishResponse
+    ): Pair<Boolean, List<String>>
 }
 
 internal class BlowfishRepositoryImpl @Inject constructor(
     private val blowfishApi: BlowfishApi
 ) : BlowfishRepository {
-    override suspend fun scanBlowfishSolanaTransaction(
+
+    override suspend fun scanBlowfishTransaction(
+        vault: Vault,
+        transaction: Transaction
+    ): Pair<Boolean, List<String>> {
+        val chain = Chain.fromRaw(transaction.chainId)
+        val chainType = chain.chainType
+        when (chainType) {
+            TokenStandard.EVM -> {
+                val result = scanEVMBlowfishTransaction(chain, transaction)
+                return Pair(
+                    true,
+                    result.warnings?.mapNotNull { it.message } ?: emptyList(),
+                )
+            }
+
+            TokenStandard.SOL -> {
+                val result = scanBlowfishSolanaTransaction(vault, transaction)
+                return Pair(
+                    true,
+                    result.aggregated?.warnings?.mapNotNull { it.message } ?: emptyList(),
+                )
+            }
+
+            else -> { return Pair(false, emptyList()) }
+        }
+    }
+    private suspend fun scanBlowfishSolanaTransaction(
         vault: Vault,
         transaction: Transaction
     ): BlowfishResponse {
@@ -51,8 +76,6 @@ internal class BlowfishRepositoryImpl @Inject constructor(
 
         val zeroSignedTransaction =
             SolanaHelper(vault.pubKeyEDDSA).getZeroSignedTransaction(keysignPayload)
-        //8VLG45tdZg11XiVBQqHGpT4e4A5P5M8TFd47FqBdWtyL
-        //scam - G6AhgwTL7gRoSTTPqUyx4koJVJZNfnNp4zZ43kWdmRr6
         val blowfishRequest = BlowfishRequest(
             userAccount = transaction.srcAddress,
             metadata = BlowfishMetadata("https://api.vultisig.com"),
@@ -65,7 +88,7 @@ internal class BlowfishRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    override suspend fun scanBlowfishTransaction(
+    private suspend fun scanEVMBlowfishTransaction(
         chain: Chain,
         transaction: Transaction
     ): BlowfishResponse {
