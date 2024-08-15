@@ -175,7 +175,9 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 error("Unsupported chain: $chain")
             }
         }
-
+        else -> {
+            error("Unsupported chain: $chain")
+        }
     }
 
     private fun ensureOneGweiPriorityFee(priorityFee: BigInteger): BigInteger {

@@ -95,4 +95,19 @@ internal class SolanaHelper(
             transactionHash = output.encoded.take(64).encodeBase64()
         )
     }
+
+    fun getZeroSignedTransaction(
+        keysignPayload: KeysignPayload,
+    ): String {
+        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+        val input = getPreSignedInputData(keysignPayload)
+        val allSignatures = DataVector()
+        val publicKeys = DataVector()
+        allSignatures.add("0".repeat(128).toHexByteArray())
+        publicKeys.add(publicKey.data())
+        val compiledWithSignature =
+            TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
+        val output = wallet.core.jni.proto.Solana.SigningOutput.parseFrom(compiledWithSignature)
+        return output.encoded
+    }
 }

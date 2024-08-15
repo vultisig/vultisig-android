@@ -182,3 +182,13 @@ internal fun Chain.oneInchChainId(): Int =
         else -> error("Chain $this is not supported by 1inch API")
     }
 
+internal val Chain.chainType: TokenStandard
+    get() = when (this) {
+        Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.arbitrum, Chain.base,
+        Chain.optimism, Chain.polygon, Chain.blast, Chain.cronosChain -> TokenStandard.EVM
+        Chain.thorChain, Chain.mayaChain -> TokenStandard.THORCHAIN
+        Chain.solana -> TokenStandard.SOL
+        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> TokenStandard.UTXO
+        Chain.gaiaChain, Chain.kujira, Chain.dydx -> TokenStandard.COSMOS
+        Chain.polkadot -> TokenStandard.POLKADOT
+    }

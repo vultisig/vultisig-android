@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
+import com.vultisig.wallet.ui.components.BlowfishMessage
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -75,15 +76,21 @@ internal fun VerifyTransactionScreen(
             .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
         bottomBar = {
-            MultiColorButton(
-                text = confirmTitle,
-                textColor = Theme.colors.oxfordBlue800,
-                minHeight = 44.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
-                onClick = onConfirm,
-            )
+            Column (horizontalAlignment = Alignment.CenterHorizontally) {
+                BlowfishMessage(
+                    isShow = state.blowfishShow,
+                    warnings = state.blowfishWarnings,
+                )
+                MultiColorButton(
+                    text = confirmTitle,
+                    textColor = Theme.colors.oxfordBlue800,
+                    minHeight = 44.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(all = 16.dp),
+                    onClick = onConfirm,
+                )
+            }
         }
     ) {
         Column(

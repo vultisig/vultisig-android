@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -38,8 +39,10 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.models.chainType
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -58,6 +61,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -69,7 +73,6 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import vultisig.keysign.v1.KeysignMessage
-import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
@@ -126,6 +129,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
+    private val blowfishRepository: BlowfishRepository,
 
     private val vaultRepository: VaultRepository,
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
@@ -406,12 +410,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         gasFee = gasFee,
                         memo = payload.memo,
 
-                        // TODO that's mock data
-                        blockChainSpecific = BlockChainSpecific.THORChain(
-                            BigInteger.ZERO,
-                            BigInteger.ZERO,
-                            BigInteger.ZERO
-                        ),
+                        blockChainSpecific = payload.blockChainSpecific,
                     )
 
                     verifyUiModel.value = VerifyUiModel.Send(
@@ -419,6 +418,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             transaction = mapTransactionToUiModel(transaction),
                         )
                     )
+                    blowfishTransactionScan(transaction)
                 }
             }
         }
@@ -559,5 +559,25 @@ internal class JoinKeysignViewModel @Inject constructor(
     override fun onCleared() {
         cleanUp()
         super.onCleared()
+    }
+
+    private fun blowfishTransactionScan(transaction: Transaction) {
+        viewModelScope.launch {
+            val vault = requireNotNull(vaultRepository.get(vaultId))
+
+            try {
+                val result = blowfishRepository.scanBlowfishTransaction(vault, transaction)
+                verifyUiModel.update { state ->
+                    (state as VerifyUiModel.Send).copy(
+                        model = state.model.copy(
+                            blowfishShow = result.first,
+                            blowfishWarnings = result.second
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
+        }
     }
 }

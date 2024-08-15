@@ -340,6 +340,7 @@
     <string name="deposit_form_screen_affiliate_fee_optional" translatable="false">Affiliate Fee (Optional)</string>
     <string name="deposit_form_remove_from_pool" translatable="false">Remove from pool</string>
     <string name="deposit_form_add_to_pool" translatable="false">Add to pool</string>
+    <string name="blowfish_approve" translatable="false">Transaction verified by Blowfish.</string>
     <string name="join_keysign_invalid_qr" translatable="false">Invalid QR code content</string>
     <string name="join_keysign_failed_to_start" translatable="false">Failed to join keysign</string>
     <string name="deposit_form_percentage_to_remove_title" translatable="false">Percentage to remove</string>

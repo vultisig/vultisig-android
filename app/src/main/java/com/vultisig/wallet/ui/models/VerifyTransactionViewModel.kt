@@ -7,7 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -41,6 +44,8 @@ data class VerifyTransactionUiModel(
     val consentAmount: Boolean = false,
     val consentDst: Boolean = false,
     val errorText: UiText? = null,
+    val blowfishShow: Boolean = false,
+    val blowfishWarnings: List<String> = emptyList(),
 )
 
 @HiltViewModel
@@ -50,9 +55,12 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     private val transactionRepository: TransactionRepository,
+    private val vaultRepository: VaultRepository,
+    private val blowfishRepository: BlowfishRepository,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
+    private val vaultId: String? = savedStateHandle["vault_id"]
 
     private val transaction = transactionRepository.getTransaction(transactionId)
         .stateIn(
@@ -65,6 +73,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     init {
         loadTransaction()
+        blowfishTransactionScan()
     }
 
     fun checkConsentAddress(checked: Boolean) {
@@ -127,4 +136,24 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
+    private fun blowfishTransactionScan() {
+        viewModelScope.launch {
+            val transaction = transaction.filterNotNull().first()
+            if (vaultId == null) return@launch
+            val vault = requireNotNull(vaultRepository.get(vaultId))
+            try {
+                val result = blowfishRepository.scanBlowfishTransaction(vault, transaction)
+                uiState.update { state ->
+                    state.copy(
+                        blowfishShow = result.first,
+                        blowfishWarnings = result.second
+                    )
+                }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
+        }
+    }
 }
+
+
