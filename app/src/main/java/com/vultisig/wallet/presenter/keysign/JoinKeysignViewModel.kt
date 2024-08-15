@@ -27,7 +27,6 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.AppCurrency
 import com.vultisig.wallet.data.models.SwapPayload
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -61,7 +60,6 @@ import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -75,7 +73,6 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import vultisig.keysign.v1.KeysignMessage
-import java.math.BigInteger
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.UUID
