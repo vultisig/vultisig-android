@@ -140,6 +140,14 @@ internal sealed class Destination(
         }
     }
 
+    data class ScanError(
+        val vaultId: String?,
+    ) : Destination(route = "scan_error?vault_id=$vaultId") {
+        companion object {
+            const val staticRoute = "scan_error?vault_id={$ARG_VAULT_ID}"
+        }
+    }
+
     data class AddressBook(
         val chain: Chain? = null,
         val requestId: String? = null,
@@ -314,6 +322,13 @@ internal sealed class Destination(
     data object CreateNewVault : Destination(
         route = "create_new_vault"
     )
+
+    data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account") {
+        companion object {
+            const val staticRoute = "vault_detail/{$ARG_VAULT_ID}/add_account"
+        }
+    }
+
     internal data class CustomToken(val chainId: String) :
         Destination(route = "custom_token/$chainId") {
         companion object {

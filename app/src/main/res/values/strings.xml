@@ -353,6 +353,8 @@
     <string name="setup_1_device_of_vault" translatable="false">You need 1 more device to pair</string>
     <string name="setup_2_device_of_vault" translatable="false">You need 2 more devices to pair</string>
     <string name="setup_m_device_of_vault" translatable="false">You can pair as many devices you want</string>
+    <string name="enable_chain_button" translatable="false">Enable Chain</string>
+    <string name="enable_chain_warning" translatable="false">Chain is not selected.\nPlease enable it in chain selection.</string>
     <string name="s_of_s" translatable="false">%1$s of %2$s</string>
     <string name="setup_select_your_vault_type" translatable="false">Select your vault type</string>
 </resources>

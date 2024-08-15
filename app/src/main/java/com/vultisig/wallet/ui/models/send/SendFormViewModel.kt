@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -438,7 +439,13 @@ internal class SendFormViewModel @Inject constructor(
                     selectedSrc.updateSrc(selectedTokenId, addresses, chain)
                     this@SendFormViewModel.selectedTokenId.value =
                         selectedSrc.value?.account?.token?.id
-                } catch (e: Exception) {
+                } catch (e: NoSuchElementException) {
+                    navigator.navigate(
+                        Destination.ScanError(vaultId),
+                        opts = NavigationOptions(popUpTo = Destination.Home.staticRoute),
+                    )
+                }
+                catch (e: Exception) {
                     Timber.e(e)
                 }
             }.collect()
