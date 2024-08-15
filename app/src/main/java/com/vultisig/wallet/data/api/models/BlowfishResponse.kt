@@ -16,6 +16,6 @@ internal data class BlowfishAggregated (
 )
 
 internal data class BlowfishWarning(
-    @SerializedName("origin")
+    @SerializedName("message")
     val message: String?,
 )

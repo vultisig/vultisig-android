@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -59,9 +61,10 @@ internal fun BlowfishMessage(isShow: Boolean, warnings: List<String>) {
                 )
                 if (isWarning) {
                     Column {
+                        Spacer(modifier = Modifier.height(16.dp))
                         warnings.forEach {
                             Text(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(horizontal = 16.dp),
                                 text = it,
                                 style = Theme.montserrat.body2.copy(
                                     fontSize = 12.sp,
@@ -69,6 +72,7 @@ internal fun BlowfishMessage(isShow: Boolean, warnings: List<String>) {
                                 color = Theme.colors.neutral100,
                             )
                         }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 } else {
                     Text(

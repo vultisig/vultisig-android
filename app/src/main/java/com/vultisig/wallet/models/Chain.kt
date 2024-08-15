@@ -192,8 +192,3 @@ internal val Chain.chainType: TokenStandard
         Chain.gaiaChain, Chain.kujira, Chain.dydx -> TokenStandard.COSMOS
         Chain.polkadot -> TokenStandard.POLKADOT
     }
-
-
-
-
-

@@ -51,7 +51,7 @@ internal class BlowfishRepositoryImpl @Inject constructor(
                 )
             }
 
-            else -> { return Pair(false, emptyList()) }
+            else -> { error("Chain is not supported by Blowfish") }
         }
     }
     private suspend fun scanBlowfishSolanaTransaction(

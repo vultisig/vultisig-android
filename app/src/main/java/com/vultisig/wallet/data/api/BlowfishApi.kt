@@ -13,6 +13,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import javax.inject.Inject
 
+private const val HEADER_API_TITLE = "X-Api-Version"
+private const val BLOWFISH_API_VERSION = "2023-06-05"
 internal interface BlowfishApi {
     suspend fun fetchBlowfishTransactions(chain: String, network: String, blowfishRequest: BlowfishRequest) : BlowfishResponse
 
@@ -31,7 +33,7 @@ internal class BlowfishApiImpl @Inject constructor(
         val response = httpClient
             .post("https://api.vultisig.com/blowfish/$chain/v0/$network/scan/transactions?language=en&method=eth_sendTransaction") {
                 contentType(ContentType.Application.Json)
-                header("X-Api-Version", "2023-06-05")
+                header(HEADER_API_TITLE, BLOWFISH_API_VERSION)
                 setBody(gson.toJson(blowfishRequest))
             }
 
@@ -44,7 +46,7 @@ internal class BlowfishApiImpl @Inject constructor(
         val response = httpClient
             .post("https://api.vultisig.com/blowfish/solana/v0/mainnet/scan/transactions?language=en"){
                 contentType(ContentType.Application.Json)
-                header("X-Api-Version", "2023-06-05")
+                header(HEADER_API_TITLE, BLOWFISH_API_VERSION)
                 setBody(gson.toJson(blowfishRequest))
             }
 
