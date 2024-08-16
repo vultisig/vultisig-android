@@ -39,6 +39,9 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.digitStringToWords
 import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun DeviceList(
@@ -53,8 +56,10 @@ internal fun DeviceList(
         localPartyId = viewModel.localPartyID,
         items = items,
         onContinueClick = {
-            viewModel.startKeygen()
-            viewModel.moveToState(KeygenFlowState.KEYGEN)
+            CoroutineScope(Dispatchers.IO).launch {
+                viewModel.startKeygen()
+                viewModel.moveToState(KeygenFlowState.KEYGEN)
+            }
         }
     )
 }
