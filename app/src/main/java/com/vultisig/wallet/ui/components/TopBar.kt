@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.ClickOnce
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.closestActivityOrNull
 
@@ -50,7 +50,7 @@ internal fun TopBar(
         navigationIcon = {
             startIcon?.let {
                 IconButton(
-                    onClick = ClickOnce {
+                    onClick = clickOnce {
                         onStartIconClick?.invoke() ?: run {
                             if (!navController.popBackStack())
                                 activity?.finish()
@@ -68,7 +68,7 @@ internal fun TopBar(
         actions = {
             endIcon?.let {
                 IconButton(
-                    onClick = ClickOnce { onEndIconClick() }
+                    onClick = clickOnce { onEndIconClick() }
                 ) {
                     Icon(
                         painter = painterResource(id = endIcon),

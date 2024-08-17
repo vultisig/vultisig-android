@@ -34,7 +34,7 @@ fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit) = this.comp
 }
 
 @Composable
-fun ClickOnce(onClick: () -> Unit): () -> Unit {
+fun clickOnce(onClick: () -> Unit): () -> Unit {
     return {
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastClickTime >= COOL_DOWN_PERIOD) {

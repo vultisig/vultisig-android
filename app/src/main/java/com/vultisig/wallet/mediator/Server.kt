@@ -10,6 +10,7 @@ import com.google.gson.reflect.TypeToken
 import spark.Request
 import spark.Response
 import spark.Service
+import timber.log.Timber
 
 class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
     private val port = 18080
@@ -24,9 +25,9 @@ class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
             this.service.internalServerError("Internal Server Error")
             setupRouting(this.service)
             registerService(name)
-            Log.d("Server", "Server started on port $port")
+            Timber.tag("Server").d("Server started on port %s", port)
         } catch (e: Exception) {
-            Log.e("Server", "Server start failed: ${e.message}")
+            Timber.tag("Server").e("Server start failed: %s", e.message)
         }
     }
 
@@ -43,10 +44,10 @@ class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
                 this
             )
         } catch (e: IllegalArgumentException) {
-            Log.e("Server", "Service registration failed: ${e.message}")
+            Timber.tag("Server").e("Service registration failed: %s", e.message)
             this.nsdManager.unregisterService(this)
         } catch(e: Exception) {
-            Log.e("Server", "Service registration failed: ${e.message}")
+            Timber.tag("Server").e("Service registration failed: %s", e.message)
         }
     }
 
@@ -258,7 +259,7 @@ class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
             } ?: run {
                 "$sessionID-$recipient-${message.hash}"
             }
-            Log.d("server", "put message $key")
+            Timber.tag("server").d("put message %s", key)
             cache.put(key, message)
         }
         response.status(HttpStatus.ACCEPTED)
@@ -281,7 +282,7 @@ class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
         } else {
             "session-$cleanSessionID"
         }
-        Log.d("server", "body: ${request.body()}")
+        Timber.tag("server").d("body: %s", request.body())
         val gson = Gson()
         val decodeType = object : TypeToken<List<String>>() {}.type
         val participants: List<String> = gson.fromJson(request.body(), decodeType)
@@ -319,7 +320,7 @@ class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
         } else {
             "session-$cleanSessionID"
         }
-        Log.d("server", "get session $key")
+        Timber.tag("server").d("get session %s", key)
         cache.getIfPresent(key)?.let {
             val session = it as? Session
             session?.let {
@@ -351,24 +352,24 @@ class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
             cache.invalidateAll()
             nsdManager.unregisterService(this)
         }catch (e: Exception) {
-            Log.e("Server", "Server stop failed: ${e.message}")
+            Timber.tag("Server").e("Server stop failed: %s", e.message)
         }
     }
 
     override fun onRegistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-        Log.e("Server", "Service registration failed: $errorCode")
+        Timber.tag("Server").e("Service registration failed: %s", errorCode)
     }
 
     override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo?, errorCode: Int) {
-        Log.e("Server", "Service unregistration failed: $errorCode")
+        Timber.tag("Server").e("Service unregistration failed: %s", errorCode)
     }
 
     override fun onServiceRegistered(serviceInfo: NsdServiceInfo?) {
         val serviceName = serviceInfo?.serviceName ?: ""
-        Log.d("Server", "Service registered: $serviceName")
+        Timber.tag("Server").d("Service registered: %s", serviceName)
     }
 
     override fun onServiceUnregistered(serviceInfo: NsdServiceInfo?) {
-        Log.d("Server", "Service unregistered: ${serviceInfo?.serviceName ?: ""}")
+        Timber.tag("Server").d("Service unregistered: %s", serviceInfo?.serviceName)
     }
 }
