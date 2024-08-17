@@ -198,7 +198,7 @@ internal object Coins {
         Coin(
             chain = Chain.ethereum,
             ticker = "MATIC",
-            logo = "polygon",
+            logo = "matic",
             address = "",
             decimal = 6,
             hexPublicKey = "",
@@ -1430,7 +1430,7 @@ internal object Coins {
             "usdt" -> R.drawable.usdt
             "link" -> R.drawable.link
             "uni" -> R.drawable.uni
-            "matic" -> R.drawable.matic
+            "matic" -> R.drawable.polygon
             "wbtc" -> R.drawable.wbtc
             "flip" -> R.drawable.chainflip
             "avax" -> R.drawable.avax
