@@ -158,6 +158,31 @@ fun SettingsScreen(navController: NavHostController) {
                 context.startActivity(shareIntent)
             }
 
+            Text(
+                text = stringResource(R.string.settings_screen_lagal),
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+                style = Theme.montserrat.body2,
+                textAlign = TextAlign.Start
+            )
+
+
+            AppSettingItem(
+                R.drawable.shield_check,
+                stringResource(R.string.settings_screen_privacy_policy)
+            ) {
+                uriHandler.openUri("https://vultisig.com/privacy")
+            }
+
+
+            AppSettingItem(
+                R.drawable.note,
+                stringResource(R.string.settings_screen_tos)
+            ) {
+                uriHandler.openUri("https://vultisig.com/termofservice")
+            }
+
             UiSpacer(weight = 1f)
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {

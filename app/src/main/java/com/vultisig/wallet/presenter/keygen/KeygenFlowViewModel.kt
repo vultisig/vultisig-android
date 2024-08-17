@@ -2,10 +2,12 @@
 
 package com.vultisig.wallet.presenter.keygen
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -272,10 +274,16 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun startMediatorService(context: Context) {
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)
-        context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
+        }else{
+            //Todo Handle older Android versions if needed
+            context.registerReceiver(serviceStartedReceiver, filter)
+        }
 
         // start mediator service
         val intent = Intent(context, MediatorService::class.java)
