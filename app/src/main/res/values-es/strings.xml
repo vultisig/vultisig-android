@@ -19,14 +19,9 @@
     <string name="vault_settings_reshare_subtitle">Recompartir caja fuerte con un nuevo comité</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de caja fuerte de forma permanente</string>
-    <string name="joinkeysign_wrongvault">Caja Fuerte o Dispositivo Emparejado Incorrecto.</string>
+    <string name="join_keysign_wrong_vault">Caja Fuerte o Dispositivo Emparejado Incorrecto.</string>
     <string name="joinkeysign_discovery_service">Descubriendo el servicio</string>
     <string name="joinkeysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>
-    <string name="joinkeysign_fail_to_start">Error al iniciar, error:</string>
-    <string name="joinkeysign_from">De:</string>
-    <string name="joinkeysign_to">A:</string>
-    <string name="joinkeysign_amount">Cantidad:</string>
-    <string name="joinkeysign">Unirse a la firma de clave</string>
     <string name="naming_vault_screen_invalid_name">Nombre inválido</string>
     <string name="rename_vault_invalid_name">Nombre inválido</string>
     <string name="swap_form_invalid_amount">Monto invalido</string>
@@ -44,7 +39,6 @@
     <string name="chain_account_view_send">ENVIAR</string>
     <string name="chain_account_view_swap">INTERCAMBIAR</string>
     <string name="chain_account_view_deposit">Depósito</string>
-    <string name="save">Guardar</string>
     <string name="vault_settings_success_backup_file">archivo guardado en Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">Este nombre ya existe</string>
     <string name="send_screen_max">MÁXIMA</string>
@@ -69,7 +63,6 @@
     <string name="faq_setting_screen_title">Preguntas Frecuentes</string>
     <string name="vultisig_token_setting_screen_title">Token Vultisig</string>
     <string name="scan_qr_default_title">Escanear</string>
-    <string name="verify_transaction_title">Verificar</string>
     <string name="verify_transaction_screen_title">Verificar</string>
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">A</string>
@@ -81,7 +74,6 @@
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
     <string name="verify_transaction_consent_correct_dst">No estoy enviando a una estafa ni a un hacker</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
-    <string name="no_camera_permission">Sin permiso de cámara</string>
     <string name="join_keysign_discovering_session_id">Descubriendo el ID de sesión</string>
     <string name="qr_address_screen_title">Dirección</string>
     <string name="transaction_done_title">Hecho</string>
@@ -92,7 +84,6 @@
     <string name="import_file_screen_title">Importar</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Ingresa tu caja fuerte creada anteriormente</string>
     <string name="import_file_screen_upload_file_text_or_image">Subir archivo, texto o imagen</string>
-    <string name="import_file_screen_continue">Continuar</string>
     <string name="import_file_screen_duplicate_vault">La caja fuerte es una bóveda duplicadat</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">CAJA FUERTE DE CRIPTO</string>
@@ -127,7 +118,6 @@
     <string name="setup_pair">Emparejar</string>
     <string name="keysign_peer_discovery_start">Iniciar</string>
     <string name="keysign_peer_discovery_pair_with_other_devices">Emparejar con otros dispositivos:</string>
-    <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Esperando que otros dispositivos se conecten…</string>
     <string name="keysign_peer_discovery_desc1">Mantenga todos los dispositivos en la misma red con la aplicación Vultisig abierta. (Puede que no funcione en la red WiFi de hoteles o aeropuertos)</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Los tokens VULT se queman a partir de las tarifas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Los tokens VULT se envían vía airdrop a los usuarios.</string>

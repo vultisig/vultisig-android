@@ -12,11 +12,7 @@
     <string name="vault_settings_reshare_title">Ricondividi</string>
     <string name="vault_settings_reshare_subtitle">Ricondividi la cassaforte con un nuovo comitato</string>
     <string name="vault_settings_delete_title">Elimina</string>
-    <string name="joinkeysign_wrongvault">Cassaforte o Dispositivo Accoppiato Errato.</string>
-    <string name="joinkeysign_from">Da:</string>
-    <string name="joinkeysign_to">A:</string>
-    <string name="joinkeysign_amount">Quantità:</string>
-    <string name="joinkeysign">Unisciti alla firma chiave</string>
+    <string name="join_keysign_wrong_vault">Cassaforte o Dispositivo Accoppiato Errato.</string>
     <string name="choose_tokens">Scegli Token</string>
     <string name="send_screen_title">Invia</string>
     <string name="send_from_address">Da</string>
@@ -29,7 +25,6 @@
     <string name="send_continue_button">Continua</string>
     <string name="chain_account_view_send">INVIA</string>
     <string name="chain_account_view_deposit">Deposito</string>
-    <string name="save">Salva</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Errore</string>
     <string name="send_error_no_amount">a quantità deve essere un numero positivo.</string>
@@ -41,7 +36,6 @@
     <string name="language_setting_screen_title">Lingua</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="scan_qr_default_title">Scansiona</string>
-    <string name="verify_transaction_title">Verifica</string>
     <string name="verify_transaction_screen_title">Verifica</string>
     <string name="verify_transaction_from_title">Da</string>
     <string name="verify_transaction_to_title">A</string>
@@ -59,7 +53,6 @@
     <string name="import_file_screen_title">Importa</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Inserisci la tua cassaforte creata in precedenza</string>
     <string name="import_file_screen_upload_file_text_or_image">Carica file, testo o immagine</string>
-    <string name="import_file_screen_continue">Continua</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">CASSETTA DI SICUREZZA CRYPTO</string>
     <string name="create_new_vault_screen_create_a_new_vault">Crea una Nuova Cassaforte</string>
@@ -131,7 +124,6 @@
     <string name="setup_any_total_devices">(Qualsiasi dispositivo %1$s)</string>
     <string name="device_list_desc1">Puoi inviare transazioni solo se sono presenti questi dispositivi %1$s.</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">In attesa che altri dispositivi si connettano…</string>
-    <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">In attesa che altri dispositivi si connettano…</string>
     <string name="joinkeysign_waiting_keysign_start">In attesa dell\'avvio di Keysign.</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">In attesa dell\'avvio di Keygen</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">I token VULT vengono bruciati a causa delle commissioni.</string>
@@ -154,7 +146,6 @@
     <string name="settings_screen_others">Altre</string>
     <string name="send_error_no_token">Nessun token selezionato</string>
     <string name="send_error_no_gas_fee">Nessuna commissione per il gas</string>
-    <string name="no_camera_permission">Nessuna autorizzazione per la telecamera</string>
     <string name="join_keygen_view_new_vault">Nuovo caveau %1$s</string>
     <string name="send_screen_max">Massimo</string>
     <string name="biometry_auth_login_button">Accedi con la biometria</string>
@@ -185,7 +176,6 @@
     <string name="verify_swap_agree_receive_amount">Accetto l\'importo che riceverò dopo lo scambio</string>
     <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="failed_to_start_error">Impossibile avviare, errore: %1$s</string>
-    <string name="joinkeysign_fail_to_start">Impossibile avviare, errore:</string>
     <string name="swap_form_estimated_fees_title">Tariffe stimate</string>
     <string name="verify_swap_screen_estimated_fees">Tariffe stimate</string>
     <string name="keysign_screen_error_please_try_again">Errore! Riprova. %1$s</string>

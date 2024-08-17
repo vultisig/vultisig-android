@@ -23,14 +23,9 @@
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>
-    <string name="joinkeysign_wrongvault">Неправильное хранилище или устройство для пары.</string>
+    <string name="join_keysign_wrong_vault">Неправильное хранилище или устройство для пары.</string>
     <string name="joinkeysign_discovery_service">Обнаружение службы</string>
     <string name="joinkeysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
-    <string name="joinkeysign_fail_to_start">Не удалось запустить, ошибка: </string>
-    <string name="joinkeysign_from">От:</string>
-    <string name="joinkeysign_to">Кому:</string>
-    <string name="joinkeysign_amount">Сумма:</string>
-    <string name="joinkeysign">Присоединиться к ключевой подписи</string>
     <string name="choose_tokens">Выберите токены</string>
     <string name="send_screen_title">Отправить</string>
     <string name="send_from_address">От</string>
@@ -47,7 +42,6 @@
     <string name="chain_account_view_swap">ОБМЕН</string>
     <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
     <string name="chain_account_buy_wewe">КУПИТЬ $VULT</string>
-    <string name="save">Сохранить</string>
     <string name="vault_settings_error_backup_file">произошла ошибка</string>
     <string name="vault_settings_success_backup_file">файл сохранен в Загрузках/%1$s</string>
     <string name="vault_edit_this_name_already_exist">это имя уже существует</string>
@@ -74,7 +68,6 @@
     <string name="faq_setting_screen_title">ЧАВО</string>
     <string name="vultisig_token_setting_screen_title">Токен VULTISIG</string>
     <string name="scan_qr_default_title">Сканировать</string>
-    <string name="verify_transaction_title">Проверить</string>
     <string name="verify_transaction_screen_title">Проверить</string>
     <string name="verify_transaction_from_title">От</string>
     <string name="verify_transaction_to_title">Кому</string>
@@ -88,7 +81,6 @@
     <string name="verify_transaction_consent_correct_dst">Я не отправляю мошеннику или хакеру</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
-    <string name="no_camera_permission">Нет разрешения на камеру</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
     <string name="qr_address_screen_title">Адрес</string>
     <string name="transaction_done_title">Готово</string>
@@ -99,7 +91,6 @@
     <string name="import_file_screen_title">Импорт</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Введите созданную ранее долю хранилища</string>
     <string name="import_file_screen_upload_file_text_or_image">Загрузить файл, текст или изображение</string>
-    <string name="import_file_screen_continue">Продолжить</string>
     <string name="import_file_screen_duplicate_vault">Хранилище дублируется</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">БЕЗОПАСНОЕ КРИПТОХРАНИЛИЩЕ</string>
@@ -137,7 +128,6 @@
     <string name="setup_pair">Сопрячь</string>
     <string name="keysign_peer_discovery_start">Начать</string>
     <string name="keysign_peer_discovery_pair_with_other_devices">Сопряжение с другими устройствами:</string>
-    <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Ожидание подключения других устройств...</string>
     <string name="keysign_peer_discovery_desc1">Держите все устройства в одной сети с открытым приложением Vultisig. (Может не работать в гостиницах/аэропортах)</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Токены VULT сжигаются из комиссий.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Токены VULT раздаются пользователям.</string>

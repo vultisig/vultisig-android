@@ -13,11 +13,7 @@
     <string name="vault_settings_reshare_title">Erneut teilen</string>
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
     <string name="vault_settings_delete_title">Löschen</string>
-    <string name="joinkeysign_wrongvault">Falscher Tresor oder gekoppeltes Gerät.</string>
-    <string name="joinkeysign_from">Von:</string>
-    <string name="joinkeysign_to">Zu:</string>
-    <string name="joinkeysign_amount">Menge:</string>
-    <string name="joinkeysign">Dem Schlüsselunterschriftsprozess beitreten</string>
+    <string name="join_keysign_wrong_vault">Falscher Tresor oder gekoppeltes Gerät.</string>
     <string name="choose_tokens">Tokens wählen</string>
     <string name="send_screen_title">Senden</string>
     <string name="send_from_address">Von</string>
@@ -31,7 +27,6 @@
     <string name="chain_account_view_send">SENDEN</string>
     <string name="chain_account_view_swap">TAUSCHEN</string>
     <string name="chain_account_view_deposit">Einzahlung</string>
-    <string name="save">Speichern</string>
     <string name="ok">OK</string>
     <string name="dialog_default_error_title">Fehler</string>
     <string name="send_error_no_amount">Die Menge muss eine positive Zahl sein</string>
@@ -43,7 +38,6 @@
     <string name="language_setting_screen_title">Sprache</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="scan_qr_default_title">Scannen</string>
-    <string name="verify_transaction_title">Verifizieren</string>
     <string name="verify_transaction_screen_title">Verifizieren</string>
     <string name="verify_transaction_from_title">Von</string>
     <string name="verify_transaction_to_title">Zu</string>
@@ -61,7 +55,6 @@
     <string name="import_file_screen_title">Importieren</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Geben Sie Ihren zuvor erstellten Tresor ein</string>
     <string name="import_file_screen_upload_file_text_or_image">Datei, Text oder Bild hochladen</string>
-    <string name="import_file_screen_continue">Fortfahren</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SICHERER KRYPTO-TRESOR</string>
     <string name="create_new_vault_screen_create_a_new_vault">Einen neuen Tresor erstellen</string>
@@ -131,7 +124,6 @@
     <string name="setup_any_total_devices">(Alle %1$s Geräte)</string>
     <string name="device_list_desc1">Sie können nur Transaktionen senden, wenn diese %1$s Geräte vorhanden sind.</string>
     <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Warten auf die Verbindung anderer Geräte …</string>
-    <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Warten auf die Verbindung anderer Geräte …</string>
     <string name="joinkeysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Warten auf den Start von Keygen</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-Token werden durch Gebühren verbrannt.</string>
@@ -154,7 +146,6 @@
     <string name="settings_screen_others">Andere</string>
     <string name="send_error_no_token">Kein Token ausgewählt</string>
     <string name="send_error_no_gas_fee">Keine Gasgebühren</string>
-    <string name="no_camera_permission">Keine Kamera-Erlaubnis</string>
     <string name="join_keygen_view_new_vault">Neuer Tresor %1$s</string>
     <string name="send_screen_max">MAX</string>
     <string name="biometry_auth_login_button">Login mit Biometrie</string>
@@ -185,7 +176,6 @@
     <string name="verify_swap_agree_receive_amount">Ich bin mit dem Betrag einverstanden, den ich nach dem Tausch erhalte</string>
     <string name="vault_settings_success_backup_file">Datei gespeichert in Downloads/%1$s</string>
     <string name="failed_to_start_error">Start fehlgeschlagen, Fehler: %1$s</string>
-    <string name="joinkeysign_fail_to_start">Start fehlgeschlagen, Fehler:</string>
     <string name="swap_form_estimated_fees_title">Geschätzte Gebühren</string>
     <string name="verify_swap_screen_estimated_fees">Geschätzte Gebühren</string>
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
