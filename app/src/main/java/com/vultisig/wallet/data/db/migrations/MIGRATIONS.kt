@@ -204,3 +204,15 @@ internal val MIGRATION_10_11 = object : Migration(10, 11) {
         db.updateChainNameValue("Gaia", "Cosmos")
     }
 }
+
+internal val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            UPDATE coin 
+            SET logo = 'polygon' 
+            WHERE logo = 'matic'
+            """.trimIndent()
+        )
+    }
+}
