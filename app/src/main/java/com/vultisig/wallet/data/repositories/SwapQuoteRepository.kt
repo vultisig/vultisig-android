@@ -162,11 +162,19 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
     ): OneInchSwapQuoteJson {
 
+        val fromToken =
+            if(srcToken.contractAddress.isEmpty()) srcToken.ticker
+            else srcToken.contractAddress
+
+        val toToken =
+            if(dstToken.contractAddress.isEmpty()) dstToken.ticker
+            else dstToken.contractAddress
+
         val liFiQuote = liFiChainApi.getSwapQuote(
             fromChain = srcToken.chain.oneInchChainId().toString(),
             toChain = dstToken.chain.oneInchChainId().toString(),
-            fromToken = srcToken.ticker,
-            toToken = dstToken.ticker,
+            fromToken = fromToken,
+            toToken = toToken,
             fromAmount = tokenValue.value.toString(),
             fromAddress = srcAddress,
             toAddress = dstAddress,

@@ -81,7 +81,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         val currencies = listOf(currency)
 
         val tokensByPriceProviderIds = tokens.associateBy { it.priceProviderID }
-        val tokensByContractAddress = tokens.associateBy { it.contractAddress }
+        val tokensByContractAddress = tokens.associateBy { it.contractAddress.lowercase() }
 
         val priceProviderIds = mutableListOf<String>()
         val chainContractAddresses = mutableMapOf<Chain, List<Coin>>()
@@ -117,7 +117,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                     currencies = currencies,
                 ).asSequence()
                     .mapNotNull { (contractAddress, value) ->
-                        val tokenId = tokensByContractAddress[contractAddress]?.id
+                        val tokenId = tokensByContractAddress[contractAddress.lowercase()]?.id
                         if (tokenId != null) {
                             tokenId to value
                         } else null
