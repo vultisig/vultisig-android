@@ -71,9 +71,7 @@
     <string name="network_prompts_local">Lokal</string>
     <string name="setup_title">Einrichten</string>
     <string name="setup_start">Starten</string>
-    <string name="setup_pair">Koppeln</string>
     <string name="keysign_peer_discovery_start">Starten</string>
-    <string name="keysign_peer_discovery_pair_with_other_devices">Mit anderen Geräten koppeln:</string>
     <string name="signing_error_signing_error_please_try_again">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut.</string>
     <string name="signing_error_try_again">Erneut versuchen</string>
     <string name="vault_detail_screen_vault_name">Tresorname</string>
@@ -83,7 +81,6 @@
     <string name="welcome_screen_skip">Überspringen</string>
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN...</string>
     <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN...</string>
-    <string name="keysign_screen_signing_with_eddsa">MIT EdDSA-SCHLÜSSEL UNTERSCHREIBEN...</string>
     <string name="device_list_desc2">Du hast kein drittes Backup-Gerät - daher solltest du später einen Tresoranteil sicher sichern.</string>
     <string name="device_list_desc3">Dein Backup-Gerät wird nicht benötigt, es sei denn, du verlierst eines deiner Hauptgeräte.</string>
     <string name="this_device">(Dieses Gerät)</string>
@@ -121,9 +118,7 @@
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="home_screen_title">Tresore</string>
-    <string name="setup_any_total_devices">(Alle %1$s Geräte)</string>
     <string name="device_list_desc1">Sie können nur Transaktionen senden, wenn diese %1$s Geräte vorhanden sind.</string>
-    <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Warten auf die Verbindung anderer Geräte …</string>
     <string name="joinkeysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Warten auf den Start von Keygen</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-Token werden durch Gebühren verbrannt.</string>
@@ -146,7 +141,6 @@
     <string name="settings_screen_others">Andere</string>
     <string name="send_error_no_token">Kein Token ausgewählt</string>
     <string name="send_error_no_gas_fee">Keine Gasgebühren</string>
-    <string name="join_keygen_view_new_vault">Neuer Tresor %1$s</string>
     <string name="send_screen_max">MAX</string>
     <string name="biometry_auth_login_button">Login mit Biometrie</string>
     <string name="feature_item_learn_more">Erfahren Sie mehr</string>
@@ -159,13 +153,10 @@
     <string name="join_key_gen_screen_keygen">Keygen</string>
     <string name="keygen_peer_discovery_keygen">Keygen</string>
     <string name="signing_error_keygen">Keygen</string>
-    <string name="setup_keep_devices_on_the_same_wifi_network_with_vultisig_open">Behalten Sie Geräte im selben WLAN-Netzwerk mit geöffnetem Vultisig.</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Behalten Sie Geräte im selben WLAN-Netzwerk mit geöffnetem Vultisig.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Behalten Sie die Geräte im selben WLAN-Netzwerk, korrigieren Sie den Tresor und koppeln Sie die Geräte.\nStellen Sie sicher, dass Vultisig auf keinem anderen Gerät ausgeführt wird.</string>
     <string name="keep_devices_on_the_same_wifi_network">Behalten Sie die Geräte im selben WLAN-Netzwerk, korrigieren Sie den Tresor und koppeln Sie die Geräte.\nStellen Sie sicher, dass Vultisig auf keinem anderen Gerät ausgeführt wird.</string>
     <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Behalten Sie Geräte im selben Netzwerk, während Vultisig geöffnet ist.</string>
-    <string name="keygen_peer_discovery_desc1">Lassen Sie alle Geräte im selben WLAN und öffnen Sie die Vultisig-App. (Funktioniert möglicherweise nicht im WLAN von Hotels/Flughäfen)</string>
-    <string name="keysign_peer_discovery_desc1">Lassen Sie alle Geräte im selben WLAN und öffnen Sie die Vultisig-App. (Funktioniert möglicherweise nicht im WLAN von Hotels/Flughäfen)</string>
     <string name="join_key_gen_screen_joining_keygen">Keygen beitreten</string>
     <string name="verify_transaction_consent_correct_dst">Ich sende nicht an einen Betrüger oder Hacker</string>
     <string name="naming_vault_screen_invalid_name">Ungültiger Name</string>
@@ -194,14 +185,10 @@
     <string name="vault_accounts_account_assets">%1$s Vermögenswerte</string>
     <string name="chain_token_screen_address_copied">%1$s in die Zwischenablage kopiert</string>
     <string name="chain_account_item_address_copied">%1$s in die Zwischenablage kopiert</string>
-    <string name="setup_devices_to_create_a_vault">%1$s Geräte zum Erstellen eines Tresors;</string>
-    <string name="setup_devices_to_sign_a_transaction">%1$s Geräte, um eine Transaktion zu unterzeichnen.</string>
-    <string name="keygen_peer_descovery_of_vault">%1$s von %2$s Tresor</string>
     <string name="device_list_of_vault">%1$s von %2$s Tresor</string>
     <string name="s_of_s_vault">%1$s von %2$s Tresor</string>
     <string name="token_settings_burnt">Verbrannt: %1$s</string>
     <string name="camera_bind_error">Kamerabindungsfehler %1$s</string>
-    <string name="setup_automatically_backed_up">Automatisch gesichert</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="camera_permission_denied">Kameraberechtigung nicht erteilt. Bitte aktivieren Sie sie in den Einstellungen.</string>
     <string name="verify_transaction_fiat_amount_title">Betrag in (%s)</string>
@@ -219,7 +206,6 @@
     <string name="vault_settings_delete_vault_name">Tresorname:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Schlüssel:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Schlüssel:</string>
-    <string name="vault_settings_delete_vault_of_vault">%1$s von %2$s Tresor</string>
     <string name="vault_settings_delete_vault_type">Tresortyp:</string>
     <string name="circular_progress_indicator_done">Fertig</string>
     <string name="verify_transaction_memo_title">Memo</string>

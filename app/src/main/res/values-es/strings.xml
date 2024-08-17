@@ -109,16 +109,11 @@
     <string name="keygen_flow_views_success">Éxito</string>
     <string name="keygen_peer_discovery_keygen">Generador de claves</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Emparejar con otros dispositivos:</string>
-    <string name="keygen_peer_discovery_desc1">Mantenga todos los dispositivos conectados a la misma red WiFi con la aplicación Vultisig abierta. (Puede que no funcione en la red WiFi de hoteles o aeropuertos)</string>
     <string name="keygen_peer_discovery_continue">Continuar</string>
     <string name="network_prompts_local">Local</string>
     <string name="setup_title">Configurar</string>
-    <string name="setup_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenga los dispositivos en la misma red WiFi con Vultisig abierto.</string>
     <string name="setup_start">Iniciar</string>
-    <string name="setup_pair">Emparejar</string>
     <string name="keysign_peer_discovery_start">Iniciar</string>
-    <string name="keysign_peer_discovery_pair_with_other_devices">Emparejar con otros dispositivos:</string>
-    <string name="keysign_peer_discovery_desc1">Mantenga todos los dispositivos en la misma red con la aplicación Vultisig abierta. (Puede que no funcione en la red WiFi de hoteles o aeropuertos)</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Los tokens VULT se queman a partir de las tarifas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Los tokens VULT se envían vía airdrop a los usuarios.</string>
     <string name="feature_item_learn_more">Aprende más</string>
@@ -132,7 +127,6 @@
     <string name="welcome_screen_skip">Saltar</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO CAJA FUERTE..</string>
     <string name="keysign_screen_signing_with_ecdsa">"FIRMANDO USANDO CLAVE ECDSA… "</string>
-    <string name="keysign_screen_signing_with_eddsa">"FIRMANDO USANDO CLAVE EdDSA… "</string>
     <string name="keysign_screen_keysign_finished">¡Keysign terminado!</string>
     <string name="keysign_screen_error_please_try_again">Error! Por favor, inténtalo de nuevo. %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenga los dispositivos en la misma red WiFi con Vultisig abierto.</string>
@@ -141,10 +135,8 @@
     <string name="device_list_desc3">Tu dispositivo de respaldo no es necesario a menos que pierdas uno de tus dispositivos principales.</string>
     <string name="failed_to_start_error">Error al iniciar, error: %1$s</string>
     <string name="keep_devices_on_the_same_wifi_network">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
-    <string name="join_keygen_view_new_vault">Nueva CAJA FUERTE %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
     <string name="token_settings_supply">Oferta: %1$s</string>
-    <string name="setup_any_total_devices">(Cualquier dispositivo %1$s)</string>
     <string name="this_device">(Este Dispositivo)</string>
     <string name="vault_settings_delete_vault_caution1">Soy consciente de que el almacén será eliminado permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Soy consciente de que puedo perder fondos.</string>
@@ -188,7 +180,6 @@
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Logotipo de token</string>
     <string name="tokens">Tokens</string>
-    <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Esperando que otros dispositivos se conecten…</string>
     <string name="chains">Cadenas</string>
     <string name="vault_settings_backup_subtitle">Realice una copia de seguridad de su recurso compartido de bóveda</string>
     <string name="send_amount_currency">Cantidad (en %s)</string>
@@ -198,12 +189,8 @@
     <string name="verify_transaction_fiat_amount_title">Cantidad en (%s)</string>
     <string name="camera_permission_denied">No se ha concedido el permiso para la cámara. Habilítelo en la configuración.</string>
     <string name="network_prompts_internet">Internet</string>
-    <string name="setup_automatically_backed_up">Copia de seguridad automática</string>
-    <string name="keygen_peer_descovery_of_vault">%1$s de la bóveda de %2$s</string>
     <string name="camera_bind_error">Error de vinculación de cámara %1$s</string>
     <string name="token_settings_burnt">Quemado: %1$s</string>
-    <string name="setup_devices_to_sign_a_transaction">%1$s dispositivos para firmar una transacción.</string>
-    <string name="setup_devices_to_create_a_vault">%1$s Dispositivos para crear una bóveda;</string>
     <string name="backup_device">(Dispositivo de respaldo)</string>
     <string name="pair_device">(Dispositivo de emparejamiento)</string>
     <string name="device_list_of_vault">%1$s de la bóveda de %2$s</string>
@@ -219,7 +206,6 @@
     <string name="vault_settings_delete_vault_name">Nombre de la Caja Fuerte:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Clave ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Clave EdDSA:</string>
-    <string name="vault_settings_delete_vault_of_vault">%1$s de %2$s caja fuerte</string>
     <string name="vault_settings_delete_vault_type">Tipo De Cajas Fuerte:</string>
     <string name="circular_progress_indicator_done">Hecho</string>
     <string name="verify_transaction_memo_title">Memorándum</string>
