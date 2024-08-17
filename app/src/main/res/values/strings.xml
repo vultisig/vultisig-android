@@ -358,6 +358,9 @@
     <string name="enable_chain_warning" translatable="false">Chain is not selected.\nPlease enable it in chain selection.</string>
     <string name="s_of_s" translatable="false">%1$s of %2$s</string>
     <string name="setup_select_your_vault_type" translatable="false">Select your vault type</string>
+    <string name="settings_screen_lagal" translatable="false">Legal</string>
+    <string name="settings_screen_privacy_policy" translatable="false">Privacy Policy</string>
+    <string name="settings_screen_tos" translatable="false">Terms of Service</string>
 
     <string-array name="keygen_tip_title" translatable="false">
         <item>Did You Know?</item>
