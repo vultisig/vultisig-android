@@ -1,11 +1,14 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.vultisig.wallet.ui.screens.keygen
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -13,16 +16,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,13 +40,12 @@ import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
 import com.vultisig.wallet.presenter.keygen.KeygenState
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
+import com.vultisig.wallet.ui.components.PagerCircleIndicator
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.UiCircularProgressIndicator
 import com.vultisig.wallet.ui.models.GeneratingKeyWrapperViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import kotlin.math.min
 
 @Composable
 internal fun GeneratingKey(
@@ -71,12 +75,7 @@ internal fun GeneratingKey(
 ) {
     val textColor = Theme.colors.neutral0
     Scaffold(
-        modifier = Modifier
-            .background(Theme.colors.oxfordBlue800)
-            .padding(
-                vertical = 16.dp,
-                horizontal = 12.dp
-            ),
+        containerColor = Theme.colors.oxfordBlue800,
         topBar = {
             TopBar(
                 centerText = stringResource(R.string.generating_key_title),
@@ -86,7 +85,9 @@ internal fun GeneratingKey(
         },
         bottomBar = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
                 horizontalAlignment = CenterHorizontally
             ) {
                 DevicesOnSameNetworkHint(
@@ -98,7 +99,8 @@ internal fun GeneratingKey(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it),
+                .padding(it)
+                .padding(all = 16.dp),
             contentAlignment = Alignment.Center
         ) {
             when (keygenState) {
@@ -128,11 +130,48 @@ internal fun GeneratingKey(
                         else -> 0F
                     }
 
-                    KeygenIndicator(
-                        statusText = title,
-                        progress = progress,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    val isDone = keygenState == KeygenState.Success
+
+                    AnimatedContent(
+                        targetState = isDone,
+                        label = "Done Checkmark animated content"
+                    ) { isDone ->
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = CenterHorizontally,
+                        ) {
+                            KeygenIndicator(
+                                progress = progress,
+                            )
+
+                            if (!isDone) {
+                                UiSpacer(size = 48.dp)
+
+                                val keygenTipTitles =
+                                    stringArrayResource(id = R.array.keygen_tip_title)
+                                val keygenTipBodys =
+                                    stringArrayResource(id = R.array.keygen_tip_body)
+
+                                val pagerState = rememberPagerState {
+                                    keygenTipTitles.size
+                                }
+
+                                HorizontalPager(state = pagerState) { index ->
+                                    TipsPage(
+                                        title = keygenTipTitles[index],
+                                        text = keygenTipBodys[index],
+                                    )
+                                }
+
+                                UiSpacer(size = 48.dp)
+
+                                PagerCircleIndicator(
+                                    currentIndex = pagerState.currentPage,
+                                    size = pagerState.pageCount,
+                                )
+                            }
+                        }
+                    }
                 }
 
                 KeygenState.ERROR -> {
@@ -160,10 +199,39 @@ internal fun GeneratingKey(
 }
 
 @Composable
+private fun TipsPage(
+    title: String,
+    text: String,
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = CenterHorizontally,
+    ) {
+        Text(
+            text = title,
+            color = Theme.colors.neutral0,
+            style = Theme.montserrat.subtitle1,
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(size = 22.dp)
+
+        Text(
+            text = text,
+            color = Theme.colors.neutral0,
+            style = Theme.montserrat.subtitle3,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .padding(
+                    horizontal = 36.dp,
+                )
+        )
+    }
+}
+
+@Composable
 private fun KeygenIndicator(
-    statusText: String,
     progress: Float,
-    modifier: Modifier
 ) {
     val progressAnimated by animateFloatAsState(
         targetValue = progress,
@@ -171,42 +239,24 @@ private fun KeygenIndicator(
         label = "KeygenIndicatorProgress"
     )
 
-    BoxWithConstraints(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .padding(16.dp),
+    Column(
+        horizontalAlignment = CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
     ) {
-        Column(
-            horizontalAlignment = CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-        ) {
-            Text(
-                text = statusText,
-                color = Theme.colors.neutral0,
-                style = Theme.menlo.body2,
-                textAlign = TextAlign.Center,
-            )
-
-            UiSpacer(size = 16.dp)
-
-            UiCirclesLoader()
-        }
-
-        val minDimen = remember {
-            min(
-                maxWidth.value,
-                maxHeight.value
-            )
-        }
-
         UiCircularProgressIndicator(
             progress = { progressAnimated },
-            strokeWidth = 16.dp,
+            strokeWidth = 6.dp,
             modifier = Modifier
-                .width(minDimen.dp)
-                .aspectRatio(1f)
+                .animateContentSize()
+                .then(
+                    if (progress > 0.75f) {
+                        Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                    } else Modifier.size(74.dp)
+                ),
         )
     }
 }
@@ -216,7 +266,7 @@ private fun KeygenIndicator(
 private fun GeneratingKeyPreview() {
     GeneratingKey(
         navController = rememberNavController(),
-        keygenState = KeygenState.CreatingInstance,
+        keygenState = KeygenState.Success,
         errorMessage = ""
     )
 }

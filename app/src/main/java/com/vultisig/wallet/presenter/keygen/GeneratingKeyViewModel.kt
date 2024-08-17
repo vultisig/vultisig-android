@@ -210,7 +210,7 @@ internal class GeneratingKeyViewModel(
         }
     }
 
-    suspend fun saveVault(context: Context) {
+    private suspend fun saveVault(context: Context) {
 
         saveVault(
             this@GeneratingKeyViewModel.vault,
