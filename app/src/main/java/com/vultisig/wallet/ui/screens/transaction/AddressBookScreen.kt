@@ -40,7 +40,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
@@ -103,7 +102,7 @@ internal fun AddressBookScreen(
                     titleContentColor = Theme.colors.neutral0,
                 ),
                 navigationIcon = {
-                    IconButton(onClick = ClickOnce { navController.popBackStack() }) {
+                    IconButton(onClick = clickOnce { navController.popBackStack() }) {
                         Icon(
                             painter = painterResource(id = R.drawable.caret_left),
                             contentDescription = null,

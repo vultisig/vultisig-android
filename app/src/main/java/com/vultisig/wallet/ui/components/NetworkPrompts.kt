@@ -16,7 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.ClickOnce
+import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -70,7 +70,7 @@ private fun NetworkChip(
             containerColor = Theme.colors.oxfordBlue400,
             selectedContainerColor = Theme.colors.oxfordBlue200,
         ),
-        onClick = ClickOnce(onClick),
+        onClick = clickOnce(onClick),
         modifier = modifier,
         label = {
             Row(

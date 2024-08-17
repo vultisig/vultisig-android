@@ -51,7 +51,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.presenter.common.ClickOnce
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
@@ -269,7 +268,7 @@ private fun ImportFileScreen(
                                     .weight(1f)
                                     .padding(end = 8.dp)
                             )
-                            IconButton(onClick = ClickOnce(onRemoveSelectedFile)) {
+                            IconButton(onClick = clickOnce(onRemoveSelectedFile)) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.x),
                                     contentDescription = "X",
