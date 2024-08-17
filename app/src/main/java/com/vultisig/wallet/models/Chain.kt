@@ -192,3 +192,6 @@ internal val Chain.chainType: TokenStandard
         Chain.gaiaChain, Chain.kujira, Chain.dydx -> TokenStandard.COSMOS
         Chain.polkadot -> TokenStandard.POLKADOT
     }
+
+internal val Chain.hasCustomToken: Boolean
+    get() = this != Chain.cronosChain
