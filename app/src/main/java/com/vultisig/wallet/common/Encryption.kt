@@ -42,7 +42,7 @@ fun String.Decrypt(key: String): String {
 
 fun String.md5(): String {
     val bytes = this.toByteArray()
-    val md = java.security.MessageDigest.getInstance("MD5")
+    val md = MessageDigest.getInstance("MD5")
     val digest = md.digest(bytes)
     return digest.joinToString("") { "%02x".format(it) }
 }

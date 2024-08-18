@@ -295,7 +295,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             toAmountDecimal = from.toAmountDecimal.toPlainString(),
                             quote = from.quote.let {
                                 OneInchQuote(
-                                    dstAmount = it.dstAmount.toString(),
+                                    dstAmount = it.dstAmount,
                                     tx = it.tx.let {
                                         vultisig.keysign.v1.OneInchTransaction(
                                             from = it.from,

@@ -37,7 +37,7 @@ internal class BlockChairApiImp @Inject constructor(
         Chain.litecoin -> "litecoin"
         Chain.dogecoin -> "dogecoin"
         Chain.dash -> "dash"
-        else -> throw IllegalArgumentException("Unsupported chain ${chain}")
+        else -> throw IllegalArgumentException("Unsupported chain $chain")
     }
 
     private fun getChainName(coin: Coin): String = getChainName(coin.chain)

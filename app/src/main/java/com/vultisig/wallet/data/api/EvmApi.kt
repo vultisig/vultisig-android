@@ -87,7 +87,7 @@ internal class EvmApiFactoryImp @Inject constructor(
             Chain.blast -> EvmApiImp(gson, httpClient, "https://rpc.ankr.com/blast")
             Chain.base -> EvmApiImp(gson, httpClient, "https://base-rpc.publicnode.com")
             Chain.arbitrum -> EvmApiImp(gson, httpClient, "https://arbitrum-one-rpc.publicnode.com")
-            else -> throw IllegalArgumentException("Unsupported chain ${chain}")
+            else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
     }
 }

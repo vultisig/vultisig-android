@@ -7,7 +7,7 @@ import com.vultisig.wallet.R
 
 @Composable
 internal fun digitStringToWords(@StringRes id: Int, vararg formatArgs: Any): String {
-    val resources = LocalContext.current.resources;
+    val resources = LocalContext.current.resources
     val formattedString = resources.getString(id, *formatArgs)
     val digitWords = resources.getStringArray(R.array.digit_words)
 
