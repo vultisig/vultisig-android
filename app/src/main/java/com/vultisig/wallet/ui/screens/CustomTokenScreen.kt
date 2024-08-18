@@ -2,9 +2,11 @@
 
 package com.vultisig.wallet.ui.screens
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -42,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.presenter.common.clickOnce
@@ -54,7 +57,6 @@ import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.CustomTokenUiModel
 import com.vultisig.wallet.ui.models.CustomTokenViewModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -122,6 +124,7 @@ private fun CustomTokenScreen(
                     SearchTokenResult(
                         token = state.token,
                         price = state.price,
+                        chainLogo = state.chainLogo,
                         onAddTokenClick = onAddTokenClick
                     )
                 }
@@ -169,6 +172,7 @@ private fun ColumnScope.TokenNotFoundError() {
 private fun SearchTokenResult(
     onAddTokenClick: () -> Unit,
     token: Coin,
+    @DrawableRes chainLogo: Int,
     price: String,
 ) {
     Card(
@@ -184,19 +188,47 @@ private fun SearchTokenResult(
             modifier = Modifier
                 .padding(all = 12.dp),
         ) {
-            AsyncImage(
-                model = token.logo,
-                modifier = Modifier
-                    .padding(
-                        end = 12.dp,
-                    )
+            Box(
+                Modifier
+                    .padding(end = 12.dp)
+            ) {
+                val tokenLogoModifier = Modifier
                     .size(32.dp)
-                    .clip(CircleShape),
-                contentDescription = stringResource(R.string.token_logo),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(CircleShape)
+                SubcomposeAsyncImage(
+                    model = token.logo,
+                    modifier = tokenLogoModifier,
+                    contentDescription = stringResource(R.string.token_logo),
+                    contentScale = ContentScale.Crop,
+                    error = {
+                        Box(
+                            modifier = tokenLogoModifier
+                                .background(Theme.colors.neutral100),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = token.ticker.first().toString(),
+                                color = Theme.colors.oxfordBlue600Main,
+                                style = Theme.montserrat.subtitle1
+                            )
+                        }
+                    })
+                Image(
+                    painter = painterResource(id = chainLogo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(14.dp)
+                        .offset(6.dp)
+                        .border(
+                            width = 1.dp,
+                            color = Theme.colors.oxfordBlue600Main,
+                            shape = CircleShape
+                        )
+                        .align(Alignment.BottomEnd)
+                )
+            }
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
@@ -293,7 +325,7 @@ private fun SearchTokenTextField(
 private fun CustomTokenScreenPreview() {
     CustomTokenScreen(
         navController = rememberNavController(),
-        state = CustomTokenUiModel(),
+        state = CustomTokenUiModel(chainLogo = R.drawable.chainflip),
         searchFieldState = rememberTextFieldState(),
         onPasteClick = {},
         onSearchClick = {},
