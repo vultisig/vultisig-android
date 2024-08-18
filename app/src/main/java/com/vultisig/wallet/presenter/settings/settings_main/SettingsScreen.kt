@@ -185,6 +185,8 @@ fun SettingsScreen(navController: NavHostController) {
 
             UiSpacer(weight = 1f)
 
+            UiSpacer(size = 26.dp)
+
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Image(
                     painter = painterResource(id = R.drawable.settings_github),
@@ -209,7 +211,7 @@ fun SettingsScreen(navController: NavHostController) {
                 )
             }
 
-            UiSpacer(size = 48.dp)
+            UiSpacer(size = 12.dp)
 
             Text(
                 text = stringResource(
