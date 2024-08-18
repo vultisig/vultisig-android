@@ -148,7 +148,7 @@
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenga los dispositivos en la misma red WiFi con Vultisig abierto.</string>
     <string name="device_list_desc1">Sólo puedes enviar transacciones con estos %1$s dispositivos presentes.</string>
     <string name="device_list_desc2">No tienes un tercer dispositivo de respaldo, así que debes hacer una copia de seguridad de una parte del cofre de forma segura más tarde.</string>
-    <string name="device_list_desc3">Tu dispositivo de respaldo no es necesario a menos que pierdas uno de tus dispositivos principales.</string>
+    <string name="device_list_desc3">Debes realizar una copia de seguridad de todos los recursos compartidos de bóveda en ubicaciones separadas.</string>
     <string name="failed_to_start_error">Error al iniciar, error: %1$s</string>
     <string name="keep_devices_on_the_same_wifi_network">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="join_keygen_view_new_vault">Nueva CAJA FUERTE %1$s</string>

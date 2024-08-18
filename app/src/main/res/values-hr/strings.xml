@@ -87,7 +87,7 @@
     <string name="welcome_screen_next">Sljedeći</string>
     <string name="welcome_screen_skip">Preskoči</string>
     <string name="keysign_screen_preparing_vault">PRIPREMA SEFA...</string>
-    <string name="device_list_desc2">Nemate treći rezervni uređaj, pa biste trebali sigurno sačuvati jedan dio trezora kasnije.</string>
+    <string name="device_list_desc2">Trebali biste sigurnosno kopirati sva dijeljenja trezora na odvojenim lokacijama.</string>
     <string name="device_list_desc3">Vaš rezervni uređaj nije potreban osim ako ne izgubite jedan od svojih glavnih uređaja.</string>
     <string name="this_device">(Ovaj uređaj)</string>
     <string name="vault_settings_delete_vault_caution1">Ovaj sef će biti trajno uklonjen</string>

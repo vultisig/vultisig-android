@@ -91,7 +91,7 @@
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN...</string>
     <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN...</string>
     <string name="keysign_screen_signing_with_eddsa">MIT EdDSA-SCHLÜSSEL UNTERSCHREIBEN...</string>
-    <string name="device_list_desc2">Du hast kein drittes Backup-Gerät - daher solltest du später einen Tresoranteil sicher sichern.</string>
+    <string name="device_list_desc2">Sie sollten alle Tresorfreigaben an separaten Speicherorten sichern.</string>
     <string name="device_list_desc3">Dein Backup-Gerät wird nicht benötigt, es sei denn, du verlierst eines deiner Hauptgeräte.</string>
     <string name="this_device">(Dieses Gerät)</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>

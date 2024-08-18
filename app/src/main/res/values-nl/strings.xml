@@ -156,7 +156,7 @@
     <string name="keysign_screen_error_please_try_again">Fout! Probeer het opnieuw. %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Houd apparaten op hetzelfde WiFi-netwerk met Vultisig open.</string>
     <string name="device_list_desc1">U kunt alleen transacties verzenden met deze %1$s aanwezige apparaten.</string>
-    <string name="device_list_desc2">U heeft geen derde reserveapparaat - dus u moet later een reservekopie van één kluis delen.</string>
+    <string name="device_list_desc2">U moet een back-up maken van alle kluisshares op afzonderlijke locaties.</string>
     <string name="device_list_desc3">Uw reserveapparaat is niet nodig tenzij u een van uw hoofdapparaten verliest.</string>
     <string name="failed_to_start_error">Niet gelukt om te starten, fout: %1$s</string>
     <string name="keygen_peer_descovery_of_vault">%1$s van %2$s kluis</string>
