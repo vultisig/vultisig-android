@@ -27,3 +27,11 @@ internal sealed class SwapQuote {
     ) : SwapQuote()
 
 }
+
+
+internal val SwapQuote.decimalsForRecommendedMinAmount: Int
+    get() = when(this){
+        is SwapQuote.MayaChain -> 8
+        is SwapQuote.ThorChain -> 8
+        is SwapQuote.OneInch -> 0
+    }

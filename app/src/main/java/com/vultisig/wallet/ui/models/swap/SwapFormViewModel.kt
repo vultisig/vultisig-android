@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.decimalsForRecommendedMinAmount
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -584,7 +585,12 @@ internal class SwapFormViewModel @Inject constructor(
                                     }
                                 }
                                 val recommendedMinAmountTokenString =
-                                    mapTokenValueToDecimalUiString(tokenValue.copy(value = recommendedMinAmountIn))
+                                    mapTokenValueToDecimalUiString(
+                                        tokenValue.copy(
+                                            value = recommendedMinAmountIn,
+                                            decimals = quote.decimalsForRecommendedMinAmount
+                                        )
+                                    )
                                 amount?.let {
                                     uiState.update {
                                         if (amount < recommendedMinAmountTokenString.toBigDecimal()) {
