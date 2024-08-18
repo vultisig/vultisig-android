@@ -59,8 +59,8 @@ internal data class THORChainSwapPayload(
             Chain.ethereum -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.ETH)
             Chain.gaiaChain -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.ATOM)
             Chain.litecoin -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.LTC)
-            Chain.mayaChain -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.THOR)
-            Chain.thorChain -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.THOR)
+            Chain.MayaChain -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.THOR)
+            Chain.ThorChain -> asset.setChain(wallet.core.jni.proto.THORChainSwap.Chain.THOR)
             else -> throw Exception("Unsupported chain")
         }
         if (!coin.isNativeToken) {

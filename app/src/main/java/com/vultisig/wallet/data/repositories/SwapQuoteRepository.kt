@@ -202,7 +202,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): TokenValue {
         // convert maya token values with 10 decimal places to token values
         // with the correct number of decimal places
-        if (token.chain == Chain.mayaChain) {
+        if (token.chain == Chain.MayaChain) {
             return TokenValue(
                 value = this.toBigInteger(),
                 token = token,
@@ -265,7 +265,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
     private val Coin.swapProviders: Set<SwapProvider>
         get() = when (chain) {
-            Chain.mayaChain, Chain.dash, Chain.kujira -> setOf(SwapProvider.MAYA)
+            Chain.MayaChain, Chain.dash, Chain.kujira -> setOf(SwapProvider.MAYA)
             Chain.ethereum -> if (ticker in thorEthTokens) setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
@@ -290,7 +290,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.ONEINCH, SwapProvider.LIFI
             )
 
-            Chain.thorChain -> setOf(
+            Chain.ThorChain -> setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.MAYA,
             )
@@ -305,7 +305,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.THORCHAIN
             )
 
-            Chain.arbitrum, Chain.blast -> setOf(SwapProvider.LIFI)
+            Chain.Arbitrum, Chain.blast -> setOf(SwapProvider.LIFI)
 
             Chain.solana, Chain.polkadot, Chain.dydx,
             Chain.cronosChain, /* TODO later Chain.sui, Chain.zksync*/
@@ -323,7 +323,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 private fun Chain.swapAssetName(): String {
     // TODO that seems to differ just for thorChain
     return when (this) {
-        Chain.thorChain -> "THOR"
+        Chain.ThorChain -> "THOR"
         Chain.ethereum -> "ETH"
         Chain.avalanche -> "AVAX"
         Chain.bscChain -> "BSC"
@@ -335,8 +335,8 @@ private fun Chain.swapAssetName(): String {
         Chain.kujira -> "KUJI"
         Chain.solana -> "SOL"
         Chain.dash -> "DASH"
-        Chain.mayaChain -> "MAYA"
-        Chain.arbitrum -> "ARB"
+        Chain.MayaChain -> "MAYA"
+        Chain.Arbitrum -> "ARB"
         Chain.base -> "BASE"
         Chain.optimism -> "OP"
         Chain.polygon -> "MATIC"

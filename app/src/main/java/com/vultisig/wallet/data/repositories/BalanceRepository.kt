@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.Chain.arbitrum
+import com.vultisig.wallet.models.Chain.Arbitrum
 import com.vultisig.wallet.models.Chain.avalanche
 import com.vultisig.wallet.models.Chain.base
 import com.vultisig.wallet.models.Chain.bitcoin
@@ -27,12 +27,12 @@ import com.vultisig.wallet.models.Chain.ethereum
 import com.vultisig.wallet.models.Chain.gaiaChain
 import com.vultisig.wallet.models.Chain.kujira
 import com.vultisig.wallet.models.Chain.litecoin
-import com.vultisig.wallet.models.Chain.mayaChain
+import com.vultisig.wallet.models.Chain.MayaChain
 import com.vultisig.wallet.models.Chain.optimism
 import com.vultisig.wallet.models.Chain.polkadot
 import com.vultisig.wallet.models.Chain.polygon
 import com.vultisig.wallet.models.Chain.solana
-import com.vultisig.wallet.models.Chain.thorChain
+import com.vultisig.wallet.models.Chain.ThorChain
 import com.vultisig.wallet.models.Coin
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -194,14 +194,14 @@ internal class BalanceRepositoryImpl @Inject constructor(
         coin: Coin,
     ): Flow<TokenValue> = flow {
         emit(TokenValue(when (coin.chain) {
-            thorChain -> {
+            ThorChain -> {
                 val listCosmosBalance = thorChainApi.getBalance(address)
                 val balance = listCosmosBalance
                     .find { it.denom.equals(coin.ticker, ignoreCase = true) }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            mayaChain -> {
+            MayaChain -> {
                 val listCosmosBalance = mayaChainApi.getBalance(address)
                 val balance = listCosmosBalance
                     .find { it.denom.equals(coin.ticker, ignoreCase = true) }
@@ -213,7 +213,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 balance?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            ethereum, bscChain, avalanche, base, arbitrum, polygon, optimism, Chain.blast, Chain.cronosChain -> {
+            ethereum, bscChain, avalanche, base, Arbitrum, polygon, optimism, Chain.blast, Chain.cronosChain -> {
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 

@@ -119,7 +119,7 @@ internal object Coins {
             isNativeToken = true,
         ),
         Coin(
-            chain = Chain.thorChain,
+            chain = Chain.ThorChain,
             ticker = "RUNE",
             logo = "rune",
             address = "",
@@ -130,7 +130,7 @@ internal object Coins {
             isNativeToken = true,
         ),
         Coin(
-            chain = Chain.mayaChain,
+            chain = Chain.MayaChain,
             ticker = "CACAO",
             logo = "cacao",
             address = "",
@@ -141,7 +141,7 @@ internal object Coins {
             isNativeToken = true,
         ),
         Coin(
-            chain = Chain.mayaChain,
+            chain = Chain.MayaChain,
             ticker = "MAYA",
             logo = "maya",
             address = "",
@@ -758,7 +758,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "ETH",
             logo = "eth",
             address = "",
@@ -769,7 +769,7 @@ internal object Coins {
             isNativeToken = true,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "ARB",
             logo = "arbitrum",
             address = "",
@@ -780,7 +780,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "TGT",
             logo = "tgt",
             address = "",
@@ -791,7 +791,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "FOX",
             logo = "fox",
             address = "",
@@ -802,7 +802,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "USDT",
             logo = "usdt",
             address = "",
@@ -813,7 +813,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "USDC.e",
             logo = "usdc.e",
             address = "",
@@ -824,7 +824,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "USDC",
             logo = "usdc",
             address = "",
@@ -835,7 +835,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "WBTC",
             logo = "wbtc",
             address = "",
@@ -846,7 +846,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "LINK",
             logo = "link",
             address = "",
@@ -857,7 +857,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "DAI",
             logo = "dai",
             address = "",
@@ -868,7 +868,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "UNI",
             logo = "uni",
             address = "",
@@ -879,7 +879,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "PEPE",
             logo = "pepe",
             address = "",
@@ -890,7 +890,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "GRT",
             logo = "grt",
             address = "",
@@ -901,7 +901,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "ezETH",
             logo = "ezeth",
             address = "",
@@ -912,7 +912,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "PYTH",
             logo = "pyth",
             address = "",
@@ -923,7 +923,7 @@ internal object Coins {
             isNativeToken = false,
         ),
         Coin(
-            chain = Chain.arbitrum,
+            chain = Chain.Arbitrum,
             ticker = "LDO",
             logo = "ldo",
             address = "",

@@ -14,11 +14,11 @@ internal enum class Chain(
     val standard: TokenStandard,
     val feeUnit: String,
 ) {
-    thorChain("THORChain", TokenStandard.THORCHAIN, "Rune"),
-    mayaChain("MayaChain", TokenStandard.THORCHAIN, "cacao"),
+    ThorChain("THORChain", TokenStandard.THORCHAIN, "Rune"),
+    MayaChain("MayaChain", TokenStandard.THORCHAIN, "cacao"),
 
     // ERC20
-    arbitrum("Arbitrum", EVM, "Gwei"),
+    Arbitrum("Arbitrum", EVM, "Gwei"),
     avalanche("Avalanche", EVM, "Gwei"),
     base("Base", EVM, "Gwei"),
     cronosChain("CronosChain", EVM, "Gwei"),
@@ -57,14 +57,14 @@ internal val Chain.coinType: CoinType
         Chain.litecoin -> CoinType.LITECOIN
         Chain.dogecoin -> CoinType.DOGECOIN
         Chain.dash -> CoinType.DASH
-        Chain.thorChain -> CoinType.THORCHAIN
-        Chain.mayaChain -> CoinType.THORCHAIN
+        Chain.ThorChain -> CoinType.THORCHAIN
+        Chain.MayaChain -> CoinType.THORCHAIN
         Chain.ethereum -> CoinType.ETHEREUM
         Chain.solana -> CoinType.SOLANA
         Chain.avalanche -> CoinType.AVALANCHECCHAIN
         Chain.base -> CoinType.BASE
         Chain.blast -> CoinType.BLAST
-        Chain.arbitrum -> CoinType.ARBITRUM
+        Chain.Arbitrum -> CoinType.ARBITRUM
         Chain.polygon -> CoinType.POLYGON
         Chain.optimism -> CoinType.OPTIMISM
         Chain.bscChain -> CoinType.SMARTCHAIN
@@ -76,18 +76,18 @@ internal val Chain.coinType: CoinType
     }
 internal val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
-        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash, Chain.thorChain, Chain.mayaChain, Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.gaiaChain, Chain.kujira, Chain.cronosChain, Chain.dydx -> TssKeyType.ECDSA
+        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash, Chain.ThorChain, Chain.MayaChain, Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.Arbitrum, Chain.polygon, Chain.optimism, Chain.bscChain, Chain.gaiaChain, Chain.kujira, Chain.cronosChain, Chain.dydx -> TssKeyType.ECDSA
         Chain.solana, Chain.polkadot -> TssKeyType.EDDSA
     }
 internal val Chain.Ticker: String
     get() = when (this) {
-        Chain.thorChain -> "RUNE"
+        Chain.ThorChain -> "RUNE"
         Chain.solana -> "SOL"
         Chain.ethereum -> "ETH"
         Chain.avalanche -> "AVAX"
         Chain.base -> "BASE"
         Chain.blast -> "BLAST"
-        Chain.arbitrum -> "ARB"
+        Chain.Arbitrum -> "ARB"
         Chain.polygon -> "MATIC"
         Chain.optimism -> "OP"
         Chain.bscChain -> "BNB"
@@ -98,7 +98,7 @@ internal val Chain.Ticker: String
         Chain.dash -> "DASH"
         Chain.gaiaChain -> "UATOM"
         Chain.kujira -> "KUJI"
-        Chain.mayaChain -> "CACAO"
+        Chain.MayaChain -> "CACAO"
         Chain.cronosChain -> "CRO"
         Chain.polkadot -> "DOT"
         Chain.dydx -> "DYDX"
@@ -106,13 +106,13 @@ internal val Chain.Ticker: String
 
 internal val Chain.logo: Int
     get() = when (this) {
-        Chain.thorChain -> R.drawable.rune
+        Chain.ThorChain -> R.drawable.rune
         Chain.solana -> R.drawable.solana
         Chain.ethereum -> R.drawable.ethereum
         Chain.avalanche -> R.drawable.avax
         Chain.base -> R.drawable.base
         Chain.blast -> R.drawable.blast
-        Chain.arbitrum -> R.drawable.arbitrum
+        Chain.Arbitrum -> R.drawable.arbitrum
         Chain.polygon -> R.drawable.polygon
         Chain.optimism -> R.drawable.optimism
         Chain.bscChain -> R.drawable.bsc
@@ -123,7 +123,7 @@ internal val Chain.logo: Int
         Chain.dash -> R.drawable.dash
         Chain.gaiaChain -> R.drawable.atom
         Chain.kujira -> R.drawable.kuji
-        Chain.mayaChain -> R.drawable.cacao
+        Chain.MayaChain -> R.drawable.cacao
         Chain.cronosChain -> R.drawable.cro
         Chain.polkadot -> R.drawable.dot
         Chain.dydx -> R.drawable.dydx
@@ -144,24 +144,24 @@ internal val Chain.canSelectTokens: Boolean
 
 internal val Chain.IsSwapSupported: Boolean
     get() = this in arrayOf(
-        Chain.thorChain, Chain.mayaChain, Chain.gaiaChain, Chain.kujira,
+        Chain.ThorChain, Chain.MayaChain, Chain.gaiaChain, Chain.kujira,
 
         Chain.bitcoin, Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin, Chain.dash,
 
         Chain.avalanche, Chain.base, Chain.bscChain, Chain.ethereum, Chain.optimism, Chain.polygon,
 
-        Chain.arbitrum, Chain.blast,
+        Chain.Arbitrum, Chain.blast,
     )
 
 internal val Chain.isDepositSupported: Boolean
     get() = when (this) {
-        Chain.thorChain, Chain.mayaChain -> true
+        Chain.ThorChain, Chain.MayaChain -> true
         else -> false
     }
 
 internal val Chain.isLayer2: Boolean
     get() = when (this) {
-        Chain.arbitrum, Chain.avalanche, Chain.cronosChain, Chain.base, Chain.blast, Chain.optimism, Chain.polygon, Chain.bscChain -> true
+        Chain.Arbitrum, Chain.avalanche, Chain.cronosChain, Chain.base, Chain.blast, Chain.optimism, Chain.polygon, Chain.bscChain -> true
         else -> false
     }
 
@@ -171,7 +171,7 @@ internal fun Chain.oneInchChainId(): Int =
         Chain.avalanche -> 43114
         Chain.base -> 8453
         Chain.blast -> 81457
-        Chain.arbitrum -> 42161
+        Chain.Arbitrum -> 42161
         Chain.polygon -> 137
         Chain.optimism -> 10
         Chain.bscChain -> 56
@@ -184,9 +184,9 @@ internal fun Chain.oneInchChainId(): Int =
 
 internal val Chain.chainType: TokenStandard
     get() = when (this) {
-        Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.arbitrum, Chain.base,
+        Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.Arbitrum, Chain.base,
         Chain.optimism, Chain.polygon, Chain.blast, Chain.cronosChain -> EVM
-        Chain.thorChain, Chain.mayaChain -> TokenStandard.THORCHAIN
+        Chain.ThorChain, Chain.MayaChain -> TokenStandard.THORCHAIN
         Chain.solana -> SOL
         Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> UTXO
         Chain.gaiaChain, Chain.kujira, Chain.dydx -> COSMOS

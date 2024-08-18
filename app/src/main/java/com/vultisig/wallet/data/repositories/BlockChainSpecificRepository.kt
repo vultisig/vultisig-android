@@ -54,14 +54,14 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         isMaxAmountEnabled: Boolean,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
-            val account = if (chain == Chain.mayaChain) {
+            val account = if (chain == Chain.MayaChain) {
                 mayaChainApi.getAccountNumber(address)
             } else {
                 thorChainApi.getAccountNumber(address)
             }
 
             BlockChainSpecificAndUtxo(
-                if (chain == Chain.mayaChain) {
+                if (chain == Chain.MayaChain) {
                     BlockChainSpecific.MayaChain(
                         accountNumber = BigInteger(
                             account.accountNumber
@@ -88,7 +88,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 when {
                     isSwap -> "600000"
                     token.isNativeToken -> {
-                        if (chain == Chain.arbitrum)
+                        if (chain == Chain.Arbitrum)
                             "120000" // arbitrum has higher gas limit
                         else
                             "23000"
