@@ -15,7 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.common.VultisigRelay
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -84,7 +84,7 @@ internal data class KeygenFlowUiModel(
 internal class KeygenFlowViewModel @Inject constructor(
     navBackStackEntry: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val vultisigRelay: vultisigRelay,
+    private val vultisigRelay: VultisigRelay,
     private val gson: Gson,
     private val vaultRepository: VaultRepository,
     private val saveVault: SaveVaultUseCase,

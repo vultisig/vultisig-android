@@ -19,16 +19,16 @@ import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin
 
-internal class utxoHelper(
+internal class UtxoHelper(
     val coinType: CoinType,
     val vaultHexPublicKey: String,
     val vaultHexChainCode: String,
 ) {
     companion object {
-        fun getHelper(vault: Vault, coinType: CoinType): utxoHelper {
+        fun getHelper(vault: Vault, coinType: CoinType): UtxoHelper {
             when (coinType) {
                 CoinType.BITCOIN, CoinType.BITCOINCASH, CoinType.LITECOIN, CoinType.DOGECOIN, CoinType.DASH -> {
-                    return utxoHelper(
+                    return UtxoHelper(
                         coinType = coinType,
                         vaultHexPublicKey = vault.pubKeyECDSA,
                         vaultHexChainCode = vault.hexChainCode

@@ -19,7 +19,7 @@ import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.chains.UtxoInfo
-import com.vultisig.wallet.chains.utxoHelper
+import com.vultisig.wallet.chains.UtxoHelper
 import com.vultisig.wallet.common.toJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
@@ -108,7 +108,7 @@ internal data class KeysignPayload(
 
                 Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> {
                     val utxo =
-                        utxoHelper(this.coin.coinType, vault.pubKeyECDSA, vault.hexChainCode)
+                        UtxoHelper(this.coin.coinType, vault.pubKeyECDSA, vault.hexChainCode)
                     utxo.getPreSignedImageHash(this)
                 }
 
