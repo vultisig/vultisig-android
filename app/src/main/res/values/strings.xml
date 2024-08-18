@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Vultisig</string>
-    <string name="title_activity_main" translatable="false">MainActivity</string>
     <string name="token_logo">Token logo</string>
     <string name="tokens">Tokens</string>
     <string name="chains">Chains</string>
@@ -24,14 +23,9 @@
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
-    <string name="joinkeysign_wrongvault">Wrong Vault or Pair Device.</string>
+    <string name="join_keysign_wrong_vault">Wrong Vault or Pair Device.</string>
     <string name="joinkeysign_discovery_service">Discovering Service</string>
     <string name="joinkeysign_waiting_keysign_start">Waiting for Keysign to start.</string>
-    <string name="joinkeysign_fail_to_start">Failed to start,error: </string>
-    <string name="joinkeysign_from">From:</string>
-    <string name="joinkeysign_to">To:</string>
-    <string name="joinkeysign_amount">Amount:</string>
-    <string name="joinkeysign">Join Keysign</string>
     <string name="choose_tokens">Choose Tokens</string>
     <string name="send_screen_title">Send</string>
     <string name="send_from_address">From</string>
@@ -48,7 +42,6 @@
     <string name="chain_account_view_swap">SWAP</string>
     <string name="chain_account_view_deposit">DEPOSIT</string>
     <string name="chain_account_buy_wewe">BUY $WEWE</string>
-    <string name="save">Save</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
     <string name="vault_edit_this_name_already_exist">this name already exist</string>
@@ -75,7 +68,6 @@
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG TOKEN</string>
     <string name="scan_qr_default_title">Scan</string>
-    <string name="verify_transaction_title">Verify</string>
     <string name="verify_transaction_screen_title">Verify</string>
     <string name="verify_transaction_from_title">From</string>
     <string name="verify_transaction_to_title">To</string>
@@ -89,7 +81,6 @@
     <string name="verify_transaction_consent_correct_dst">I’m not sending to a scam or hacker</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_denied">Camera permission not granted. Please, enable it in the settings.</string>
-    <string name="no_camera_permission">No Camera Permission</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="qr_address_screen_title">Address</string>
     <string name="transaction_done_title">Done</string>
@@ -100,7 +91,6 @@
     <string name="import_file_screen_title">Import</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Enter your previously created vault share</string>
     <string name="import_file_screen_upload_file_text_or_image">Upload file, text or image</string>
-    <string name="import_file_screen_continue">Continue</string>
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
@@ -126,20 +116,12 @@
     <string name="keygen_flow_views_success">Success</string>
     <string name="keygen_peer_discovery_keygen">Keygen for %1$s vault</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
-    <string name="keygen_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect…</string>
-    <string name="keygen_peer_discovery_desc1">Keep all devices on same WiFi with Vultisig App open. (May not work on hotel/airport WiFi)</string>
     <string name="keygen_peer_discovery_continue">Continue</string>
     <string name="network_prompts_local">Local</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="setup_title">Setup</string>
-    <string name="setup_automatically_backed_up">Automatically backed-up</string>
-    <string name="setup_keep_devices_on_the_same_wifi_network_with_vultisig_open">Keep devices on the same WiFi Network with Vultisig open.</string>
     <string name="setup_start">Start</string>
-    <string name="setup_pair">Pair</string>
     <string name="keysign_peer_discovery_start">Start</string>
-    <string name="keysign_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
-    <string name="keysign_peer_discovery_waiting_for_other_devices_to_connect">Waiting for other devices to connect...</string>
-    <string name="keysign_peer_discovery_desc1">Keep all devices on same network with Vultisig App open. (May not work on hotel/airport WiFi)</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT tokens are burnt from fees.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokens are airdropped to users.</string>
     <string name="feature_item_learn_more">Learn more</string>
@@ -153,7 +135,6 @@
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
     <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
-    <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
     <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Keep devices on the same WiFi Network with Vultisig open.</string>
@@ -161,16 +142,11 @@
     <string name="device_list_desc2">You do not have a 3rd backup device - so you should backup one vault share securely later.</string>
     <string name="device_list_desc3">Your backup device is not needed unless you lose one of your main devices.</string>
     <string name="failed_to_start_error">Failed to start,error: %1$s</string>
-    <string name="keygen_peer_descovery_of_vault">%1$s of %2$s Vault</string>
     <string name="keep_devices_on_the_same_wifi_network">Keep devices on the same WiFi Network, correct vault and pair devices.\nMake sure no other devices are running vultisig.</string>
-    <string name="join_keygen_view_new_vault">New Vault %1$s</string>
     <string name="camera_bind_error">Camera bind error %1$s</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
     <string name="token_settings_burnt">Burnt: %1$s</string>
     <string name="token_settings_supply">Supply: %1$s</string>
-    <string name="setup_any_total_devices">(Any %1$s Devices)</string>
-    <string name="setup_devices_to_sign_a_transaction">%1$s devices to sign a transaction.</string>
-    <string name="setup_devices_to_create_a_vault">"%1$s Devices to create a vault; "</string>
     <string name="backup_device">(Backup Device)</string>
     <string name="pair_device">(Pair Device)</string>
     <string name="this_device">(This Device)</string>
@@ -184,7 +160,6 @@
     <string name="vault_settings_delete_vault_type">Vault Type:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Key:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Key:</string>
-    <string name="vault_settings_delete_vault_of_vault">%1$s of %2$s vault</string>
 
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
@@ -254,7 +229,6 @@
 
 
     <!-- TODO needs translation-->
-    <string name="join_keysign_wrong_vault" translatable="false">Wrong vault</string>
     <string name="join_keygen_wrong_reshare" translatable="false">Wrong ReShare</string>
     <string name="join_keysign_wrong_reshare" translatable="false">Wrong ReShare</string>
     <string name="swap_screen_provider_title" translatable="false">Provider</string>
@@ -265,10 +239,6 @@
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="verify_approve_amount_title" translatable="false">Amount to approve</string>
     <string name="verify_approve_amount_unlimited" translatable="false">UNLIMITED</string>
-    <string name="verify_approve_spender_title" translatable="false">Spender</string>
-    <string name="verify_approve_consent_allowance" translatable="false">I agree to provide unlimited allowance to the given spender address</string>
-    <string name="verify_approve_sign_button" translatable="false">Sign</string>
-    <string name="verify_swap_provider_title" translatable="false">Provider</string>
     <string name="backup_password_screen_title" translatable="false">Backup</string>
     <string name="backup_password_screen_confirm_password_error_message" translatable="false">Please make sure your passwords match</string>
     <string name="import_file_screen_password_error" translatable="false">Password is not correct.</string>
@@ -278,7 +248,6 @@
     <string name="backup_password_screen_enter_password" translatable="false">Enter Password</string>
     <string name="import_file_screen_enter_password" translatable="false">Enter Password</string>
     <string name="backup_password_screen_verify_password" translatable="false">Verify password</string>
-    <string name="backup_password_screen_password_is_empty" translatable="false">Password is empty.</string>
     <string name="import_file_screen_hint_password" translatable="false">Password</string>
     <string name="import_file_screen_ok" translatable="false">OK</string>
     <string name="import_file_screen_cancel" translatable="false">Cancel</string>
@@ -312,7 +281,6 @@
     <string name="deposit_form_amount_title" translatable="false">Amount</string>
     <string name="share_vault_qr_title" translatable="false">Share Vault QR</string>
     <string name="share_vault_qr_save_or_share" translatable="false">Save and Share</string>
-    <string name="share_vault_qr_card_title" translatable="false">Main Vault</string>
     <string name="share_vault_qr_card_keys" translatable="false">ECDSA Key: %s\nEdDSA Key: %s</string>
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
     <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>
@@ -335,9 +303,6 @@
     <string name="add_address_title_title" translatable="false">Title</string>
     <string name="add_address_address_title" translatable="false">Address</string>
     <string name="add_address_type_hint" translatable="false">Type here</string>
-    <string name="deposit_form_basis_points_title" translatable="false">Basis points</string>
-    <string name="deposit_form_screen_affiliate_address" translatable="false">Affiliate (Optional)</string>
-    <string name="deposit_form_screen_affiliate_fee_optional" translatable="false">Affiliate Fee (Optional)</string>
     <string name="deposit_form_remove_from_pool" translatable="false">Remove from pool</string>
     <string name="deposit_form_add_to_pool" translatable="false">Add to pool</string>
     <string name="blowfish_approve" translatable="false">Transaction verified by Blowfish.</string>
