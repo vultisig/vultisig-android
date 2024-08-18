@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.theme
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+@Deprecated("Use Dimens instead", ReplaceWith("Dimens"))
 data class Dimens(
     val extraSmall: Dp = 0.dp,
     val small1: Dp = 0.dp,

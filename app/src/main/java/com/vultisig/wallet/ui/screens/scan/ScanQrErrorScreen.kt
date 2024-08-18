@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.screens.scan
 
-import ErrorView
+import com.vultisig.wallet.ui.components.ErrorView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -12,12 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun ScanQrErrorScreen(
@@ -29,7 +29,7 @@ internal fun ScanQrErrorScreen(
             .background(Theme.colors.oxfordBlue800)
     ) {
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
+        Spacer(modifier = Modifier.height(13.dp))
 
         TopBar(
             modifier = Modifier.align(Alignment.TopCenter),

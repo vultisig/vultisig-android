@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 fun MultiColorButton(
@@ -69,7 +68,7 @@ fun MultiColorButton(
                     ?: appColor.turquoise600Main
             )
             .defaultMinSize(
-                minWidth = minWidth ?: MaterialTheme.dimens.minWidth,
+                minWidth = minWidth ?: 170.dp,
                 minHeight = minHeight ?: 44.dp
             )
             .clickOnce(
@@ -85,7 +84,7 @@ fun MultiColorButton(
                     ?: appColor.turquoise600Main,
                 modifier = Modifier.size(iconSize ?: 15.dp)
             )
-        else UiSpacer(iconSize ?: MaterialTheme.dimens.medium1)
+        else UiSpacer(iconSize ?: 25.dp)
         centerContent?.invoke() ?: Text(
             text = text,
             color = if (disabled == true) appColor.neutral800 else textColor
@@ -98,8 +97,8 @@ fun MultiColorButton(
                 contentDescription = null,
                 tint = if (disabled == true) appColor.neutral800 else iconColor
                     ?: appColor.turquoise600Main,
-                modifier = Modifier.size(iconSize ?: MaterialTheme.dimens.medium1)
+                modifier = Modifier.size(iconSize ?: 25.dp)
             )
-        else UiSpacer(iconSize ?: MaterialTheme.dimens.medium1)
+        else UiSpacer(iconSize ?: 25.dp)
     }
 }

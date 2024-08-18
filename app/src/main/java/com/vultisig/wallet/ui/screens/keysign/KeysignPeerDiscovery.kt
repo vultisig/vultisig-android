@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
@@ -29,7 +30,6 @@ import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 import timber.log.Timber
 
 @Composable
@@ -102,15 +102,15 @@ internal fun KeysignPeerDiscovery(
             text = stringResource(R.string.keysign_peer_discovery_start),
             backgroundColor = Theme.colors.turquoise600Main,
             textColor = Theme.colors.oxfordBlue600Main,
-            minHeight = MaterialTheme.dimens.minHeightButton,
+            minHeight = 45.dp,
             textStyle = Theme.montserrat.subtitle1,
             disabled = selectionState.size < 2,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.dimens.marginMedium,
-                    end = MaterialTheme.dimens.marginMedium,
-                    bottom = MaterialTheme.dimens.buttonMargin,
+                    start = 12.dp,
+                    end = 12.dp,
+                    bottom = 35.dp,
                 ),
             onClick = onStopParticipantDiscovery,
         )

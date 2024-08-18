@@ -23,7 +23,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.keygen.BackupSuggestionViewModel
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun BackupSuggestionScreen(
@@ -87,12 +86,12 @@ internal fun BackupSuggestion(
             MultiColorButton(
                 text = stringResource(R.string.vault_settings_backup_title),
                 textColor = Theme.colors.oxfordBlue800,
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 45.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = MaterialTheme.dimens.buttonMargin,
-                        end = MaterialTheme.dimens.buttonMargin
+                        start = 35.dp,
+                        end = 35.dp
                     ),
                 onClick = navigateToBackupPasswordScreen
             )
@@ -102,7 +101,7 @@ internal fun BackupSuggestion(
                 backgroundColor = Theme.colors.oxfordBlue800,
                 textColor = Theme.colors.turquoise800,
                 iconColor = Theme.colors.oxfordBlue800,
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 45.dp,
                 modifier = Modifier
                     .padding(10.dp)
                     .fillMaxWidth(),
