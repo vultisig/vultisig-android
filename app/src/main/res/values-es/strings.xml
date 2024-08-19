@@ -82,8 +82,8 @@
     <string name="home_screen_title">Cajas Fuertes</string>
     <string name="home_screen_add_new_vault">+ Agregar Nueva Caja Fuerte</string>
     <string name="import_file_screen_title">Importar</string>
-    <string name="import_file_screen_enter_your_previously_created_vault_share">Ingresa tu caja fuerte creada anteriormente</string>
-    <string name="import_file_screen_upload_file_text_or_image">Subir archivo, texto o imagen</string>
+    <string name="import_file_screen_enter_your_previously_created_vault_share">Cargue tu caja fuerte creada anteriormente</string>
+    <string name="import_file_screen_upload_file_text_or_image">Seleccione un archivo de copia de seguridad .bak o .dat</string>
     <string name="import_file_screen_duplicate_vault">La caja fuerte es una bóveda duplicadat</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">CAJA FUERTE DE CRIPTO</string>

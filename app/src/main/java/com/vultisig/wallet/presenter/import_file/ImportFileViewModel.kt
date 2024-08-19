@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+private val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat")
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
@@ -35,6 +37,7 @@ internal class ImportFileViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
+    private val snackbarFlow: SnackbarFlow,
 ) : ViewModel() {
     val uiModel = MutableStateFlow(ImportFileState())
 
@@ -122,14 +125,18 @@ internal class ImportFileViewModel @Inject constructor(
     }
 
     fun fetchFileName(uri: Uri?) {
-        uiModel.update {
-            it.copy(fileUri = uri, fileName = null, fileContent = null)
-        }
-        if (uri == null)
-            return
-        val fileName = uri.fileName(context)
-        uiModel.update {
-            it.copy(fileName = fileName)
+        viewModelScope.launch {
+            if (uri == null)
+                return@launch
+            val fileName = uri.fileName(context)
+            val ext = fileName.substringAfterLast(".").lowercase()
+            if (!FILE_ALLOWED_EXTENSIONS.contains(ext)) {
+                snackbarFlow.showMessage(context.getString(R.string.import_file_not_supported))
+            } else {
+                uiModel.update {
+                    it.copy(fileUri = uri, fileName = fileName)
+                }
+            }
         }
     }
 
