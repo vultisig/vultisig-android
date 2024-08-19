@@ -139,7 +139,6 @@
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Держите устройства в одной WiFi сети с открытым приложением Vultisig.</string>
     <string name="device_list_desc1">Вы можете отправлять транзакции только с этими %1$s устройствами.</string>
     <string name="device_list_desc2">Вам следует создать резервные копии всех общих ресурсов хранилища в отдельных местах.</string>
-    <string name="device_list_desc3">Ваше резервное устройство не требуется, если вы не потеряете одно из основных устройств.</string>
     <string name="failed_to_start_error">Ошибка запуска, ошибка: %1$s</string>
     <string name="keep_devices_on_the_same_wifi_network">Держите устройства в одной WiFi сети, правильное хранилище и сопряжённые устройства.\nУбедитесь, что ни одно другое устройство не использует Vultisig.</string>
     <string name="camera_bind_error">Ошибка привязки камеры %1$s</string>

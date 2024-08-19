@@ -85,7 +85,6 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO COFRE…</string>
     <string name="keysign_screen_signing_with_ecdsa">ASSINANDO USANDO CHAVE ECDSA…</string>
     <string name="device_list_desc2">Deve fazer backup de todas as partilhas do cofre em locais separados.</string>
-    <string name="device_list_desc3">Seu dispositivo de backup não é necessário a menos que você perca um dos seus dispositivos principais.</string>
     <string name="this_device">(Este Dispositivo)</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>

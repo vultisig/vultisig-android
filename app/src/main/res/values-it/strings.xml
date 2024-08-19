@@ -79,7 +79,6 @@
     <string name="welcome_screen_skip">Salta</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE...</string>
     <string name="device_list_desc2">Dovresti eseguire il backup di tutte le condivisioni del vault in posizioni separate.</string>
-    <string name="device_list_desc3">Il tuo dispositivo di backup non è necessario a meno che non perdi uno dei tuoi dispositivi principali.</string>
     <string name="this_device">(Questo Dispositivo)</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il caveau sarà eliminato permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Sono consapevole che posso perdere fondi</string>
