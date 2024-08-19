@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -55,15 +56,27 @@ internal fun TokenSelectionItem(
                 .clickable { onCheckedChange?.invoke(!isChecked) },
         ) {
             Box {
-                AsyncImage(
+                val tokenLogoModifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                SubcomposeAsyncImage(
                     model = logo,
-                    modifier = Modifier
-                        .padding(4.dp)
-                        .size(32.dp)
-                        .clip(CircleShape),
+                    modifier = tokenLogoModifier,
                     contentDescription = stringResource(R.string.token_logo),
-                    contentScale = ContentScale.Crop
-                )
+                    contentScale = ContentScale.Crop,
+                    error = {
+                        Box(
+                            modifier = tokenLogoModifier
+                                .background(Theme.colors.neutral100),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = title.first().toString(),
+                                color = Theme.colors.oxfordBlue600Main,
+                                style = Theme.montserrat.subtitle1
+                            )
+                        }
+                    })
                 if (chainLogo != null)
                     Image(
                         painter = painterResource(id = chainLogo),
