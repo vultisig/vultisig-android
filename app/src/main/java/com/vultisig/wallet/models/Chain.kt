@@ -138,7 +138,7 @@ internal val Chain.tokenStandard: String?
 
 internal val Chain.canSelectTokens: Boolean
     get() = when {
-        standard == EVM -> true
+        standard == EVM && this != Chain.cronosChain -> true
         this == Chain.mayaChain -> true
         else -> false
     }
@@ -193,6 +193,3 @@ internal val Chain.chainType: TokenStandard
         Chain.gaiaChain, Chain.kujira, Chain.dydx -> TokenStandard.COSMOS
         Chain.polkadot -> TokenStandard.POLKADOT
     }
-
-internal val Chain.hasCustomToken: Boolean
-    get() = this != Chain.cronosChain

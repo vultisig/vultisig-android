@@ -59,7 +59,7 @@ internal fun TokenSelectionScreen(
         searchTextFieldState = viewModel.searchTextFieldState,
         state = state,
         hasTokenSwitch = true,
-        hasCustomToken = state.hasCustomToken,
+        hasCustomToken = true,
         onEnableToken = viewModel::enableToken,
         onDisableToken = viewModel::disableToken,
         onAddCustomToken = viewModel::navigateToCustomTokenScreen,

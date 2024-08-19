@@ -15,7 +15,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.hasCustomToken
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -33,7 +32,6 @@ import javax.inject.Inject
 
 @Immutable
 internal data class TokenSelectionUiModel(
-    val hasCustomToken: Boolean = false,
     val selectedTokens: List<TokenUiModel> = emptyList(),
     val otherTokens: List<TokenUiModel> = emptyList(),
 )
@@ -72,11 +70,9 @@ internal class TokenSelectionViewModel @Inject constructor(
     val searchTextFieldState = TextFieldState()
 
     init {
-        checkHasCustomToken()
         loadTokens()
         collectTokens()
     }
-
 
     fun checkCustomToken() {
         viewModelScope.launch {
@@ -102,13 +98,6 @@ internal class TokenSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.navigate(Destination.CustomToken(chainId))
         }
-    }
-
-    private fun checkHasCustomToken() {
-        val uiModel = uiState.value.copy(
-            hasCustomToken = Chain.fromRaw(chainId).hasCustomToken
-        )
-        uiState.value = uiModel
     }
 
     private fun loadTokens() {
