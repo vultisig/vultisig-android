@@ -52,7 +52,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
                     vault.pubKeyECDSA, vault.hexChainCode, chain.coinType.derivationPath()
                 )
-                if (chain == Chain.MayaChain) {
+                if (chain == Chain.mayaChain) {
                     return Pair(
                         MayaChainHelper(
                             vault.pubKeyECDSA,
@@ -95,7 +95,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     override fun isValid(
         chain: Chain,
         address: String,
-    ): Boolean = if (chain == Chain.MayaChain) {
+    ): Boolean = if (chain == Chain.mayaChain) {
         AnyAddress.isValidBech32(address, chain.coinType, "maya")
     } else {
         chain.coinType.validate(address)

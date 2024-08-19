@@ -22,7 +22,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
     override fun getTransactionLink(
         chain: Chain,
         transactionHash: String,
-    ): String = if (chain == Chain.ThorChain) {
+    ): String = if (chain == Chain.thorChain) {
         "${chain.transactionExplorerUrl}${transactionHash.removePrefix("0x")}"
     } else {
         "${chain.transactionExplorerUrl}$transactionHash"
@@ -33,9 +33,9 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {
-            Chain.avalanche, Chain.Arbitrum, Chain.base, Chain.blast, Chain.bscChain,
-            Chain.cronosChain, Chain.dogecoin, Chain.ethereum, Chain.gaiaChain, Chain.MayaChain,
-            Chain.optimism, Chain.polygon, Chain.solana, Chain.ThorChain,
+            Chain.avalanche, Chain.arbitrum, Chain.base, Chain.blast, Chain.bscChain,
+            Chain.cronosChain, Chain.dogecoin, Chain.ethereum, Chain.gaiaChain, Chain.mayaChain,
+            Chain.optimism, Chain.polygon, Chain.solana, Chain.thorChain,
             ->
                 "${explorerUrl}tx/"
 
@@ -58,7 +58,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.explorerUrl: String
         get() = when (this) {
-            Chain.Arbitrum -> "https://arbiscan.io/"
+            Chain.arbitrum -> "https://arbiscan.io/"
             Chain.avalanche -> "https://snowtrace.io/"
             Chain.base -> "https://basescan.org/"
             Chain.bitcoin -> "https://blockchair.com/bitcoin/"
@@ -73,11 +73,11 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.dydx -> "https://www.mintscan.io/dydx/"
             Chain.kujira -> "https://finder.kujira.network/"
             Chain.litecoin -> "https://blockchair.com/litecoin/"
-            Chain.MayaChain -> "https://www.mayascan.org/"
+            Chain.mayaChain -> "https://www.mayascan.org/"
             Chain.optimism -> "https://optimistic.etherscan.io/"
             Chain.polygon -> "https://polygonscan.com/"
             Chain.solana -> "https://explorer.solana.com/"
-            Chain.ThorChain -> "https://runescan.io/"
+            Chain.thorChain -> "https://runescan.io/"
             Chain.polkadot -> "https://polkadot.subscan.io/account/"
         }
 

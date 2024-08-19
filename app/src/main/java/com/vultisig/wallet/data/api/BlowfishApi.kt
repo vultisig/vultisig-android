@@ -59,7 +59,7 @@ internal val Chain.blowfishChainName: String?
         Chain.ethereum -> "ethereum"
         Chain.polygon -> "polygon"
         Chain.avalanche -> "avalanche"
-        Chain.Arbitrum -> "arbitrum"
+        Chain.arbitrum -> "arbitrum"
         Chain.optimism -> "optimism"
         Chain.base -> "base"
         Chain.blast -> "blast"
@@ -74,6 +74,6 @@ internal val Chain.blowfishNetwork: String?
         Chain.ethereum, Chain.polygon, Chain.avalanche, Chain.optimism, Chain.base, Chain.blast,
         Chain.bscChain, Chain.solana -> "mainnet"
 
-        Chain.Arbitrum -> "one"
+        Chain.arbitrum -> "one"
         else -> null
     }

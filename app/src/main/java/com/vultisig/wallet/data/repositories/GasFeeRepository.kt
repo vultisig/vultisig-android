@@ -54,7 +54,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
 
         else -> when (chain) {
-            Chain.ThorChain -> {
+            Chain.thorChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = thorChainApi.getTHORChainNativeTransactionFee(),
@@ -63,7 +63,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 )
             }
 
-            Chain.MayaChain -> {
+            Chain.mayaChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = MayaChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger(),

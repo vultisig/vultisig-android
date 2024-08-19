@@ -89,7 +89,7 @@ internal class CoinGeckoApiImpl @Inject constructor(
             Chain.avalanche -> "avalanche"
             Chain.base -> "base"
             Chain.blast -> "blast"
-            Chain.Arbitrum -> "arbitrum-one"
+            Chain.arbitrum -> "arbitrum-one"
             Chain.polygon -> "polygon-pos"
             Chain.optimism -> "optimistic-ethereum"
             Chain.bscChain -> "binance-smart-chain"

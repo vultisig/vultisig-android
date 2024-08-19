@@ -79,7 +79,7 @@ internal data class KeysignPayload(
             }
         } else {
             messages += when (coin.chain) {
-                Chain.ThorChain -> {
+                Chain.thorChain -> {
                     val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                     thorHelper.getPreSignedImageHash(this)
                 }
@@ -89,7 +89,7 @@ internal data class KeysignPayload(
                     solanaHelper.getPreSignedImageHash(this)
                 }
 
-                Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.Arbitrum,
+                Chain.ethereum, Chain.avalanche, Chain.base, Chain.blast, Chain.arbitrum,
                 Chain.polygon, Chain.optimism, Chain.bscChain, Chain.cronosChain -> {
                     if (coin.isNativeToken) {
                         EvmHelper(
@@ -127,7 +127,7 @@ internal data class KeysignPayload(
                     kujiraHelper.getPreSignedImageHash(this)
                 }
 
-                Chain.MayaChain -> {
+                Chain.mayaChain -> {
                     val mayachainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                     mayachainHelper.getPreSignedImageHash(this)
                 }
