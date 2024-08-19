@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.components.InformationNote
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 fun SigningError(navController: NavHostController) {
@@ -34,8 +35,8 @@ fun SigningError(navController: NavHostController) {
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .padding(
-                vertical = 12.dp,
-                horizontal = 8.dp
+                vertical = MaterialTheme.dimens.marginMedium,
+                horizontal = MaterialTheme.dimens.marginSmall
             )
     ) {
         TopBar(
@@ -48,14 +49,14 @@ fun SigningError(navController: NavHostController) {
             painterResource(id = R.drawable.danger),
             contentDescription = null,
         )
-        Spacer(modifier = Modifier.height(25.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium1))
         Text(
             text = stringResource(R.string.signing_error_signing_error_please_try_again),
             color = textColor,
             style = Theme.menlo.body2.copy(
                 textAlign = TextAlign.Center, lineHeight = 25.sp
             ),
-            modifier = Modifier.padding(horizontal = 65.dp),
+            modifier = Modifier.padding(horizontal = MaterialTheme.dimens.large),
 
             )
 
@@ -66,18 +67,18 @@ fun SigningError(navController: NavHostController) {
             text = stringResource(R.string.keep_devices_on_the_same_wifi_network),
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
         MultiColorButton(
             text = stringResource(R.string.signing_error_try_again),
             backgroundColor = Theme.colors.turquoise600Main,
             textColor = Theme.colors.oxfordBlue600Main,
-            minHeight = 45.dp,
+            minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = 12.dp,
-                    end = 12.dp,
-                    bottom = 35.dp,
+                    start = MaterialTheme.dimens.marginMedium,
+                    end = MaterialTheme.dimens.marginMedium,
+                    bottom = MaterialTheme.dimens.buttonMargin,
                 )
         ) {
 

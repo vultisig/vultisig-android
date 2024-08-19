@@ -27,6 +27,7 @@ import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun VaultListScreen(
@@ -81,7 +82,7 @@ private fun VaultListScreen(
 
         MultiColorButton(
             text = stringResource(R.string.home_screen_add_new_vault),
-            minHeight = 45.dp,
+            minHeight = MaterialTheme.dimens.minHeightButton,
             backgroundColor = Theme.colors.turquoise800,
             textColor = Theme.colors.oxfordBlue800,
             iconColor = Theme.colors.turquoise800,

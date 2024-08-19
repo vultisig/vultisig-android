@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.dimens
 
 
 @Composable
@@ -43,14 +44,14 @@ fun DeviceInfo(
         modifier = Modifier
             .width(122.dp)
             .height(165.dp)
-            .clip(shape = RoundedCornerShape(size = 8.dp))
+            .clip(shape = RoundedCornerShape(size = MaterialTheme.dimens.small1))
             .background(Theme.colors.oxfordBlue600Main)
             .clickable {
                 onItemSelected(!isSelected)
             },
         horizontalAlignment = CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
 
         Row(
             modifier = Modifier
@@ -61,8 +62,8 @@ fun DeviceInfo(
             Box(
                 modifier = Modifier
                     .clip(shape = CircleShape)
-                    .height(25.dp)
-                    .width(25.dp)
+                    .height(MaterialTheme.dimens.medium1)
+                    .width(MaterialTheme.dimens.medium1)
             ) {
                 Checkbox(
                     modifier = Modifier.clip(shape = CircleShape),
@@ -85,10 +86,10 @@ fun DeviceInfo(
             modifier = Modifier
                 .height(50.dp)
                 .width(50.dp)
-                .padding(top = 13.dp)
+                .padding(top = MaterialTheme.dimens.small2)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
 
         Text(
             modifier = Modifier.align(CenterHorizontally),

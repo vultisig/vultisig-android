@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.screens.keysign
 
-import com.vultisig.wallet.ui.components.ErrorView
+import ErrorView
 import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.activity.compose.BackHandler

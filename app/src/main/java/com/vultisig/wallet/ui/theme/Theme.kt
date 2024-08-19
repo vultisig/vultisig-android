@@ -23,11 +23,32 @@ import com.vultisig.wallet.app.activity.MainActivity
 @Composable
 fun OnBoardingComposeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    activity: Activity = LocalContext.current as MainActivity,
     content: @Composable () -> Unit,
 ) {
     val appColors = Colors.Default
+    val window = calculateWindowSizeClass(activity = activity)
+    val config = LocalConfiguration.current
+    val appDimens: Dimens
+    when (window.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            appDimens = if (config.screenWidthDp <= 360) {
+                CompactSmallDimens
+            } else if (config.screenWidthDp <= 599) {
+                CompactMediumDimens
+            } else {
+                CompactDimens
+            }
+        }
+
+        else -> {
+            appDimens = ExpandedDimens
+        }
+
+    }
 
     AppUtils(
+        appDimens = appDimens,
         appColor = appColors,
         menloTypography = menloTypography,
         montserratTypography = montserratTypography,
@@ -54,6 +75,16 @@ fun OnBoardingComposeTheme(
     }
 
 }
+
+// create an extension value for LocalAppDimens.current
+//for example you want get data of MaterialTheme.dimens
+//you have to call MaterialTheme.LocalAppDimens.current.dimens
+//to get dimens
+//instead of that you can use extension method to get data in easy way
+@Deprecated("Just specify the value directly", ReplaceWith("X.dp"))
+val MaterialTheme.dimens
+    @Composable
+    get() = LocalAppDimens.current
 
 internal object Theme {
     val colors: Colors
