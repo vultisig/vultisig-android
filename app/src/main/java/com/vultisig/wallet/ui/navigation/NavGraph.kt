@@ -187,7 +187,7 @@ internal fun SetupNavGraph(
 
 
         composable(
-            route = Destination.JoinKeysign.staticRoute,
+            route = Destination.JoinKeysign.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_QR) { type = NavType.StringType }
@@ -314,7 +314,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.AddressBook.staticRoute,
+            route = Destination.AddressBook.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_REQUEST_ID) {
                     type = NavType.StringType
@@ -437,7 +437,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.BackupSuggestion.staticRoute,
+            route = Destination.BackupSuggestion.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
