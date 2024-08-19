@@ -35,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,12 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
@@ -195,24 +194,13 @@ private fun SearchTokenResult(
                 val tokenLogoModifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                SubcomposeAsyncImage(
-                    model = token.logo,
-                    modifier = tokenLogoModifier,
-                    contentDescription = stringResource(R.string.token_logo),
-                    contentScale = ContentScale.Crop,
-                    error = {
-                        Box(
-                            modifier = tokenLogoModifier
-                                .background(Theme.colors.neutral100),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = token.ticker.first().toString(),
-                                color = Theme.colors.oxfordBlue600Main,
-                                style = Theme.montserrat.subtitle1
-                            )
-                        }
-                    })
+                TokenLogo(
+                    errorLogoModifier = tokenLogoModifier
+                        .background(Theme.colors.neutral100),
+                    logo = token.logo,
+                    title = token.ticker,
+                    modifier = tokenLogoModifier
+                )
                 Image(
                     painter = painterResource(id = chainLogo),
                     contentDescription = null,

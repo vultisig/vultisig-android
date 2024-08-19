@@ -22,12 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -59,24 +56,13 @@ internal fun TokenSelectionItem(
                 val tokenLogoModifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                SubcomposeAsyncImage(
-                    model = logo,
-                    modifier = tokenLogoModifier,
-                    contentDescription = stringResource(R.string.token_logo),
-                    contentScale = ContentScale.Crop,
-                    error = {
-                        Box(
-                            modifier = tokenLogoModifier
-                                .background(Theme.colors.neutral100),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = title.first().toString(),
-                                color = Theme.colors.oxfordBlue600Main,
-                                style = Theme.montserrat.subtitle1
-                            )
-                        }
-                    })
+                TokenLogo(
+                    errorLogoModifier = tokenLogoModifier
+                        .background(Theme.colors.neutral100),
+                    logo = logo,
+                    title = title,
+                    modifier = tokenLogoModifier
+                )
                 if (chainLogo != null)
                     Image(
                         painter = painterResource(id = chainLogo),
