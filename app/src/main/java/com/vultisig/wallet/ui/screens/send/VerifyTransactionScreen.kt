@@ -84,7 +84,6 @@ internal fun VerifyTransactionScreen(
                 MultiColorButton(
                     text = confirmTitle,
                     textColor = Theme.colors.oxfordBlue800,
-                    minHeight = 44.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(all = 16.dp),

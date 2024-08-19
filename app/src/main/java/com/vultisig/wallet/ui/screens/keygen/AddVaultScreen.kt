@@ -72,7 +72,6 @@ private fun AddVaultScreen(
             ) {
                 MultiColorButton(
                     text = stringResource(R.string.create_new_vault_screen_create_a_new_vault),
-                    minHeight = 44.dp,
                     backgroundColor = Theme.colors.turquoise800,
                     textColor = Theme.colors.oxfordBlue800,
                     iconColor = Theme.colors.turquoise800,
@@ -95,7 +94,6 @@ private fun AddVaultScreen(
                     iconColor = Theme.colors.oxfordBlue800,
                     borderSize = 1.dp,
                     textStyle = Theme.montserrat.subtitle1,
-                    minHeight = 44.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(

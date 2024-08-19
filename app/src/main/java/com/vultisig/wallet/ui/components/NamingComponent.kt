@@ -50,7 +50,6 @@ internal fun NamingComponent(
         bottomBar = {
             Box(Modifier.imePadding()) {
                 MultiColorButton(
-                    minHeight = 44.dp,
                     backgroundColor = Theme.colors.turquoise800,
                     textColor = Theme.colors.oxfordBlue800,
                     iconColor = Theme.colors.turquoise800,
