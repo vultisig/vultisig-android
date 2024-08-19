@@ -68,16 +68,6 @@ internal fun BackupSuggestion(
             color = Theme.colors.neutral0,
             textAlign = TextAlign.Center
         )
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 40.dp)
-                .padding(top = 20.dp),
-            text = stringResource(id = R.string.backup_suggestion_note),
-            style = Theme.montserrat.body1,
-            color = Theme.colors.neutral0,
-            textAlign = TextAlign.Center
-        )
         Spacer(Modifier)
         Column(
             modifier = Modifier
