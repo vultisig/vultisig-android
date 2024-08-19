@@ -167,7 +167,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         else
             TssAction.ReShare
 
-        if (vultisigRelay.IsRelayEnabled) {
+        if (vultisigRelay.isRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY
             uiState.update { it.copy(networkOption = NetworkPromptOption.INTERNET) }
         }
@@ -212,7 +212,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     hexChainCode = vault.hexChainCode,
                                     serviceName = serviceName,
                                     encryptionKeyHex = this._encryptionKeyHex,
-                                    useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                                    useVultisigRelay = vultisigRelay.isRelayEnabled,
                                     vaultName = this.vault.name,
                                 )
                             )
@@ -230,7 +230,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     publicKeyEcdsa = vault.pubKeyECDSA,
                                     oldParties = vault.signers,
                                     encryptionKeyHex = this._encryptionKeyHex,
-                                    useVultisigRelay = vultisigRelay.IsRelayEnabled,
+                                    useVultisigRelay = vultisigRelay.isRelayEnabled,
                                     oldResharePrefix = vault.resharePrefix,
                                     vaultName = vault.name
                                 )
@@ -240,7 +240,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
         uiState.update { it.copy(keygenPayload = keygenPayload) }
 
-        if (!vultisigRelay.IsRelayEnabled)
+        if (!vultisigRelay.isRelayEnabled)
         // when relay is disabled, start the mediator service
             startMediatorService(context)
         else {
@@ -360,13 +360,13 @@ internal class KeygenFlowViewModel @Inject constructor(
         if (uiState.value.networkOption == option) return
         when (option) {
             NetworkPromptOption.LOCAL -> {
-                vultisigRelay.IsRelayEnabled = false
+                vultisigRelay.isRelayEnabled = false
                 serverAddress = "http://127.0.0.1:18080"
                 uiState.update { it.copy(networkOption = option) }
             }
 
             NetworkPromptOption.INTERNET -> {
-                vultisigRelay.IsRelayEnabled = true
+                vultisigRelay.isRelayEnabled = true
                 serverAddress = Endpoints.VULTISIG_RELAY
                 uiState.update { it.copy(networkOption = option) }
             }

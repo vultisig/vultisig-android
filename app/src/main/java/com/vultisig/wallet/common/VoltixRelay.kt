@@ -7,7 +7,7 @@ import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 internal class VultisigRelay @Inject constructor(private val appDataStore: AppDataStore) {
-    var IsRelayEnabled: Boolean
+    var isRelayEnabled: Boolean
         get() = runBlocking { appDataStore.readData(relayKey, true).first() }
         set(value) = runBlocking {
             appDataStore.editData { preferences ->
