@@ -27,7 +27,6 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 fun KeyGenErrorScreen(
@@ -39,7 +38,7 @@ fun KeyGenErrorScreen(
             .background(Theme.colors.oxfordBlue800)
     ) {
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small2))
+        Spacer(modifier = Modifier.height(15.dp))
 
         TopBar(
             modifier = Modifier.align(Alignment.TopCenter),
@@ -63,7 +62,7 @@ fun KeyGenErrorScreen(
                 alignment = Alignment.Center
             )
             Text(
-                modifier = Modifier.padding(top = MaterialTheme.dimens.medium1),
+                modifier = Modifier.padding(top = 30.dp),
                 text = stringResource(R.string.signing_error_please_try_again),
                 style = Theme.menlo.subtitle1,
                 color = Theme.colors.neutral0,
@@ -82,7 +81,7 @@ fun KeyGenErrorScreen(
 
             MultiColorButton(
                 text = stringResource(R.string.try_again),
-                minHeight = MaterialTheme.dimens.minHeightButton,
+                minHeight = 45.dp,
                 backgroundColor = Theme.colors.turquoise800,
                 textColor = Theme.colors.oxfordBlue800,
                 iconColor = Theme.colors.turquoise800,
@@ -90,11 +89,9 @@ fun KeyGenErrorScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        top = MaterialTheme.dimens.small3,
-                        start = MaterialTheme.dimens.small2,
-                        end = MaterialTheme.dimens.small2,
-                        bottom = MaterialTheme.dimens.small2
-                    )
+                        vertical = 16.dp,
+                        horizontal = 16.dp,
+                    ),
             ) {
                 navController.navigate(Screen.CreateNewVault.route)
             }

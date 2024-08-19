@@ -90,7 +90,7 @@ internal fun SetupNavGraph(
             HomeScreen(navController)
         }
         composable(
-            route = Destination.JoinKeygen.staticRoute,
+            route = Destination.JoinKeygen.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_QR) { type = NavType.StringType }
             )
@@ -210,7 +210,7 @@ internal fun SetupNavGraph(
             AddVaultScreen(navController)
         }
         composable(
-            route = Destination.ChainTokens.staticRoute,
+            route = Destination.ChainTokens.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) { type = NavType.StringType }
@@ -219,7 +219,7 @@ internal fun SetupNavGraph(
             ChainTokensScreen(navController)
         }
         composable(
-            route = Destination.TokenDetail.staticRoute,
+            route = Destination.TokenDetail.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) { type = NavType.StringType },
@@ -229,7 +229,7 @@ internal fun SetupNavGraph(
             TokenDetailScreen(navController)
         }
         composable(
-            route = Destination.SelectTokens.staticRoute,
+            route = Destination.SelectTokens.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) { type = NavType.StringType }
@@ -241,7 +241,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.SelectToken.staticRoute,
+            route = Destination.SelectToken.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_TARGET_ARG) { type = NavType.StringType },
@@ -253,7 +253,7 @@ internal fun SetupNavGraph(
             )
         }
         composable(
-            route = Destination.Send.staticRoute,
+            route = Destination.Send.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
                 navArgument(ARG_CHAIN_ID) {
@@ -290,7 +290,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.JoinThroughQr.staticRoute,
+            route = Destination.JoinThroughQr.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
@@ -302,7 +302,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.ScanError.staticRoute,
+            route = Destination.ScanError.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
@@ -330,7 +330,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.AddAddressEntry.staticRoute,
+            route = Destination.AddAddressEntry.STATIC_ROUTE,
         ) {
             AddAddressEntryScreen(navController = navController)
         }
@@ -447,7 +447,7 @@ internal fun SetupNavGraph(
             BackupSuggestionScreen()
         }
         composable(
-            route = Destination.ShareVaultQr.staticRoute,
+            route = Destination.ShareVaultQr.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
             )

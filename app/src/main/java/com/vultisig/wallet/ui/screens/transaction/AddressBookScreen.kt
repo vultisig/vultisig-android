@@ -162,7 +162,6 @@ internal fun AddressBookScreen(
                 MultiColorButton(
                     text = stringResource(R.string.address_book_add_address_button),
                     textColor = Theme.colors.oxfordBlue800,
-                    minHeight = 44.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(

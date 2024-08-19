@@ -31,7 +31,7 @@ internal sealed class Destination(
         route = "vault_detail/${vaultId}/account/${chainId}"
     ) {
         companion object {
-            const val staticRoute =
+            const val STATIC_ROUTE =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}"
         }
     }
@@ -44,7 +44,7 @@ internal sealed class Destination(
         route = "vault_detail/${vaultId}/account/${chainId}/${tokenId}"
     ) {
         companion object {
-            const val staticRoute =
+            const val STATIC_ROUTE =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/{$ARG_TOKEN_ID}"
         }
     }
@@ -58,7 +58,7 @@ internal sealed class Destination(
         route = "vault_detail/${vaultId}/account/${chainId}/send?qr=${address}&$ARG_TOKEN_ID=${tokenId}"
     ) {
         companion object {
-            const val staticRoute =
+            const val STATIC_ROUTE =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send?qr={$ARG_QR}&$ARG_TOKEN_ID={$ARG_TOKEN_ID}"
         }
     }
@@ -106,7 +106,7 @@ internal sealed class Destination(
         route = "vault_detail/${vaultId}/account/${chainId}/select_tokens"
     ) {
         companion object {
-            const val staticRoute =
+            const val STATIC_ROUTE =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/select_tokens"
         }
     }
@@ -124,7 +124,7 @@ internal sealed class Destination(
             const val ARG_TARGET_ARG = "target_arg"
             const val ARG_SWAP_SELECT = "swap_select"
 
-            const val staticRoute =
+            const val STATIC_ROUTE =
                 "select_token?$ARG_VAULT_ID={$ARG_VAULT_ID}&$ARG_TARGET_ARG={$ARG_TARGET_ARG}" +
                         "&$ARG_SWAP_SELECT={$ARG_SWAP_SELECT}"
         }
@@ -136,7 +136,7 @@ internal sealed class Destination(
         val vaultId: String?,
     ) : Destination(route = "join/qr?vault_id=$vaultId") {
         companion object {
-            const val staticRoute = "join/qr?vault_id={$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "join/qr?vault_id={$ARG_VAULT_ID}"
         }
     }
 
@@ -144,7 +144,7 @@ internal sealed class Destination(
         val vaultId: String?,
     ) : Destination(route = "scan_error?vault_id=$vaultId") {
         companion object {
-            const val staticRoute = "scan_error?vault_id={$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "scan_error?vault_id={$ARG_VAULT_ID}"
         }
     }
 
@@ -162,7 +162,7 @@ internal sealed class Destination(
     data object AddAddressEntry : Destination(
         route = "address_book/add"
     ) {
-        const val staticRoute = "address_book/add"
+        const val STATIC_ROUTE = "address_book/add"
     }
 
 
@@ -290,7 +290,7 @@ internal sealed class Destination(
     ) : Destination(route = "join_keygen?qr=$qr") {
 
         companion object {
-            const val staticRoute = "join_keygen?qr={$ARG_QR}"
+            const val STATIC_ROUTE = "join_keygen?qr={$ARG_QR}"
         }
 
     }
@@ -315,7 +315,7 @@ internal sealed class Destination(
         Destination(route = "share_vault_qr/$vaultId") {
         companion object {
             const val ARG_VAULT_ID = "vault_id"
-            const val staticRoute = "share_vault_qr/{$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "share_vault_qr/{$ARG_VAULT_ID}"
         }
     }
 

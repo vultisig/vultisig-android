@@ -66,7 +66,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             Chain.mayaChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
-                    value = MayaChainHelper.MayaChainGasUnit.toBigInteger(),
+                    value = MayaChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger(),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

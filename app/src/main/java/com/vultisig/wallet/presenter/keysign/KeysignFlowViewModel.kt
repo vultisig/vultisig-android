@@ -16,7 +16,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.common.VultisigRelay
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -80,7 +80,7 @@ enum class KeysignFlowState {
 
 @HiltViewModel
 internal class KeysignFlowViewModel @Inject constructor(
-    private val vultisigRelay: vultisigRelay,
+    private val vultisigRelay: VultisigRelay,
     private val gson: Gson,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
@@ -295,7 +295,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             toAmountDecimal = from.toAmountDecimal.toPlainString(),
                             quote = from.quote.let {
                                 OneInchQuote(
-                                    dstAmount = it.dstAmount.toString(),
+                                    dstAmount = it.dstAmount,
                                     tx = it.tx.let {
                                         vultisig.keysign.v1.OneInchTransaction(
                                             from = it.from,

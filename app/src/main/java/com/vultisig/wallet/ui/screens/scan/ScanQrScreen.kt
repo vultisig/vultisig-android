@@ -142,7 +142,6 @@ internal fun ScanQrScreen(
         bottomBar = {
             if (cameraPermissionState.status.isGranted.not())
                 MultiColorButton(
-                    minHeight = 44.dp,
                     backgroundColor = appColor.turquoise800,
                     textColor = appColor.oxfordBlue800,
                     iconColor = appColor.turquoise800,

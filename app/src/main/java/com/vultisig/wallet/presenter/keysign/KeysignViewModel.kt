@@ -17,7 +17,7 @@ import com.vultisig.wallet.chains.PolkadotHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.THORChainSwaps
-import com.vultisig.wallet.chains.utxoHelper
+import com.vultisig.wallet.chains.UtxoHelper
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.common.toHexBytes
 import com.vultisig.wallet.data.api.BlockChairApi
@@ -277,7 +277,7 @@ internal class KeysignViewModel(
         // we could define an interface to make the following more simpler,but I will leave it for later
         when (keysignPayload.coin.chain) {
             Chain.bitcoin, Chain.dash, Chain.bitcoinCash, Chain.dogecoin, Chain.litecoin -> {
-                val utxo = utxoHelper.getHelper(vault, keysignPayload.coin.coinType)
+                val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
                 return utxo.getSignedTransaction(keysignPayload, signatures)
             }
 

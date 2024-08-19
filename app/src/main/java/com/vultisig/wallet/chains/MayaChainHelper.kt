@@ -32,7 +32,7 @@ internal class MayaChainHelper(
     private val coinType: CoinType = CoinType.THORCHAIN
 
     companion object {
-        const val MayaChainGasUnit: Long = 2000000000
+        const val MAYA_CHAIN_GAS_UNIT: Long = 2000000000
 
         val DEPOSIT_PREFIXES = listOf(
             "SWAP:",
@@ -101,7 +101,7 @@ internal class MayaChainHelper(
             this.sequence = thorchainData.sequence.toLong()
             this.mode = Cosmos.BroadcastMode.SYNC
             this.fee = Cosmos.Fee.newBuilder().apply {
-                this.gas = MayaChainGasUnit
+                this.gas = MAYA_CHAIN_GAS_UNIT
             }.build()
         }.build()
         return inputData.toByteArray()
@@ -173,7 +173,7 @@ internal class MayaChainHelper(
             this.addAllMessages(listOf(msgSend))
 
             this.fee = Cosmos.Fee.newBuilder().apply {
-                this.gas = MayaChainGasUnit
+                this.gas = MAYA_CHAIN_GAS_UNIT
             }.build()
         }.build()
         return input.toByteArray()

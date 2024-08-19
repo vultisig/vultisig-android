@@ -7,7 +7,7 @@ import android.net.nsd.NsdManager
 import android.os.IBinder
 import timber.log.Timber
 
-class MediatorService() : Service() {
+class MediatorService : Service() {
     private lateinit var nsdManager: NsdManager
     private var server: Server? = null
     private var isRunning: Boolean = false

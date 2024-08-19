@@ -51,7 +51,6 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
         bottomBar = {
             Column(Modifier.imePadding()) {
                 MultiColorButton(
-                    minHeight = 44.dp,
                     backgroundColor = Theme.colors.turquoise800,
                     textColor = Theme.colors.oxfordBlue800,
                     iconColor = Theme.colors.turquoise800,
@@ -76,7 +75,6 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     iconColor = Theme.colors.oxfordBlue800,
                     borderSize = 1.dp,
                     textStyle = Theme.montserrat.subtitle1,
-                    minHeight = 44.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(

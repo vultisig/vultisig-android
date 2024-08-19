@@ -7,15 +7,12 @@ import androidx.compose.runtime.remember
 
 @Composable
 internal fun AppUtils(
-    appDimens: Dimens,
     appColor: Colors,
     menloTypography: VultisigTypography,
     montserratTypography: VultisigTypography,
     content: @Composable () -> Unit,
 ) {
-    val appDimens = remember {
-        appDimens
-    }
+
     val appColor = remember {
         appColor
     }
@@ -26,7 +23,6 @@ internal fun AppUtils(
         montserratTypography
     }
     CompositionLocalProvider(
-        LocalAppDimens provides appDimens,
         LocalAppColors provides appColor,
         LocalMenloFamilyTypography provides menloFamilyTypography,
         LocalMontserratFamilyTypography provides montserratFamilyTypography
@@ -36,9 +32,7 @@ internal fun AppUtils(
 
 }
 
-val LocalAppDimens = compositionLocalOf {
-    CompactDimens
-}
+
 internal val LocalAppColors = compositionLocalOf {
     Colors.Default
 }
