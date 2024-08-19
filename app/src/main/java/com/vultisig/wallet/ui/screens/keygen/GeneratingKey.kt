@@ -145,6 +145,14 @@ internal fun GeneratingKey(
                             )
 
                             if (!isDone) {
+                                UiSpacer(size = 12.dp)
+
+                                Text(
+                                    text = title,
+                                    color = Theme.colors.neutral0,
+                                    style = Theme.menlo.body2,
+                                )
+
                                 UiSpacer(size = 48.dp)
 
                                 val keygenTipTitles =
@@ -242,8 +250,7 @@ private fun KeygenIndicator(
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
+            .fillMaxWidth(),
     ) {
         UiCircularProgressIndicator(
             progress = { progressAnimated },
@@ -266,7 +273,7 @@ private fun KeygenIndicator(
 private fun GeneratingKeyPreview() {
     GeneratingKey(
         navController = rememberNavController(),
-        keygenState = KeygenState.Success,
+        keygenState = KeygenState.CreatingInstance,
         errorMessage = ""
     )
 }

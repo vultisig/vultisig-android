@@ -92,11 +92,7 @@ private fun DeviceList(
                 )
 
                 Hint(
-                    text = if (items.count() < 3)
-                        stringResource(R.string.device_list_desc2)
-                    else stringResource(
-                        R.string.device_list_desc3
-                    )
+                    text = stringResource(R.string.device_list_desc2),
                 )
 
                 MultiColorButton(
