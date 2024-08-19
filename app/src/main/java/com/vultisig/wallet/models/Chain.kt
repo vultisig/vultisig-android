@@ -139,6 +139,7 @@ internal val Chain.tokenStandard: String?
 internal val Chain.canSelectTokens: Boolean
     get() = when {
         standard == EVM -> true
+        this == Chain.mayaChain -> true
         else -> false
     }
 
