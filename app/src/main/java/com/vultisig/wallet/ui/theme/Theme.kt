@@ -65,13 +65,11 @@ fun OnBoardingComposeTheme(
             content = content
         )
     }
-    if (Build.VERSION.SDK_INT >= 21) {
-        val localWindow = (LocalContext.current as Activity).window
-        if (darkTheme) {
-            localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
-        } else {
-            localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
-        }
+    val localWindow = (LocalContext.current as Activity).window
+    if (darkTheme) {
+        localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
+    } else {
+        localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
     }
 
 }
