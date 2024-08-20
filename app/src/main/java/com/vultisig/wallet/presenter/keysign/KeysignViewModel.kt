@@ -127,7 +127,7 @@ internal class KeysignViewModel(
                 localPartyKey = vault.localPartyID,
                 sessionID = sessionId
             )
-            this.messagesToSign.forEach() { message ->
+            this.messagesToSign.forEach { message ->
                 Timber.d("signing message: $message")
                 signMessageWithRetry(this.tssInstance!!, message, 1)
             }
