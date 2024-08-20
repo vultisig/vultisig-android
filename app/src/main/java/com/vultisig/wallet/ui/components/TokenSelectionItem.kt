@@ -120,7 +120,6 @@ fun TokenSelectionItemPreview() {
         title = "ETH",
         subtitle = "Ethereum",
         logo = R.drawable.ethereum,
-        isChecked = false,
         chainLogo = R.drawable.base,
     )
 }

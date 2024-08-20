@@ -34,7 +34,6 @@ internal fun ScanQrErrorScreen(
         TopBar(
             modifier = Modifier.align(Alignment.TopCenter),
             centerText = stringResource(R.string.scan_qr_default_title),
-            startIcon = null,
             navController = rememberNavController()
         )
         ErrorView(

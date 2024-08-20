@@ -43,7 +43,6 @@ fun KeyGenErrorScreen(
         TopBar(
             modifier = Modifier.align(Alignment.TopCenter),
             centerText = stringResource(R.string.keygen),
-            startIcon = null,
             navController = rememberNavController()
         )
 

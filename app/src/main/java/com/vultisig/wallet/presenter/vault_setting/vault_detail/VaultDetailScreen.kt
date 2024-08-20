@@ -120,6 +120,6 @@ private fun VaultDetailScreenItem(propName: String, propValue: String? = null) {
 private fun VaultDetailSettingItemPreview() {
     Column {
         VaultDetailScreenItem("prop", "value")
-        VaultDetailScreenItem("prop", null)
+        VaultDetailScreenItem("prop")
     }
 }

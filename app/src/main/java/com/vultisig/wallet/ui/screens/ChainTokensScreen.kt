@@ -459,7 +459,6 @@ private fun ChainCoinScreenPreview() {
             chainAddress = "0x1234567890",
             totalBalance = "0.000000",
             explorerURL = "https://etherscan.io/",
-            isBalanceVisible = true,
             tokens = listOf(
                 ChainTokenUiModel(
                     name = "USDT",

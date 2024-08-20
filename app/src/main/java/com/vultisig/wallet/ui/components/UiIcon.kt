@@ -28,7 +28,7 @@ internal fun UiIcon(
         .size(size)
         .then(
             if (onClick != null)
-                Modifier.clickOnce(enabled = true, onClick = onClick)
+                Modifier.clickOnce(onClick = onClick)
             else Modifier
         ),
 )

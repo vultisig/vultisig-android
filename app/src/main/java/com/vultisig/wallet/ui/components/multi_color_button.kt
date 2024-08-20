@@ -72,7 +72,6 @@ fun MultiColorButton(
                 minHeight = minHeight ?: 44.dp
             )
             .clickOnce(
-                enabled = true,
                 onClick = if (disabled == false) onClick else emptyClickAction
             )
     ) {
