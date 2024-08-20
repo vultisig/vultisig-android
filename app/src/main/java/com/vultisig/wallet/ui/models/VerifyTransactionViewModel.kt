@@ -54,7 +54,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val navigator: Navigator<SendDst>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
-    private val transactionRepository: TransactionRepository,
+    transactionRepository: TransactionRepository,
     private val vaultRepository: VaultRepository,
     private val blowfishRepository: BlowfishRepository,
 ) : ViewModel() {

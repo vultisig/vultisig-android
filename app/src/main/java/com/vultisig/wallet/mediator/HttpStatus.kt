@@ -1,12 +1,12 @@
 package com.vultisig.wallet.mediator
 
 object HttpStatus {
-    const val OK = 200
-    const val CREATED = 201
-    const val ACCEPTED = 202
-    const val BAD_REQUEST = 400
-    const val UNAUTHORIZED = 401
-    const val FORBIDDEN = 403
-    const val NOT_FOUND = 404
-    const val INTERNAL_SERVER_ERROR = 500
+    const val OK: Int = 200
+    const val CREATED: Int = 201
+    const val ACCEPTED: Int = 202
+    const val BAD_REQUEST: Int = 400
+    const val UNAUTHORIZED: Int = 401
+    const val FORBIDDEN: Int = 403
+    const val NOT_FOUND: Int = 404
+    const val INTERNAL_SERVER_ERROR: Int = 500
 }

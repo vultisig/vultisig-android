@@ -23,7 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class MainViewModel @Inject constructor(
     private val repository: OnBoardRepository,
-    private val navigator: Navigator<Destination>,
+    navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
 ) : ViewModel() {

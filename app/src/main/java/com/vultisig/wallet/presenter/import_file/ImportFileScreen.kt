@@ -2,7 +2,6 @@ package com.vultisig.wallet.presenter.import_file
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,6 +57,7 @@ import com.vultisig.wallet.ui.components.UiCustomContentAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTypes
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -78,7 +78,9 @@ internal fun ImportFileScreen(
     }
 
     val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        rememberLauncherForActivityResult(
+            ActivityResultContractsGetContentWithMimeTypes(FILE_ALLOWED_MIME_TYPES)
+        ) { uri: Uri? ->
             viewModel.fetchFileName(uri)
         }
 

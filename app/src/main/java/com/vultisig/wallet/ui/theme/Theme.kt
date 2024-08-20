@@ -1,25 +1,17 @@
 package com.vultisig.wallet.ui.theme
 
 import android.app.Activity
-import android.os.Build
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.toColorInt
-import com.vultisig.wallet.app.activity.MainActivity
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun OnBoardingComposeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -72,4 +64,4 @@ internal object Theme {
 
 internal val Theme.cursorBrush: Brush
     @Composable
-    get() = SolidColor(Theme.colors.neutral100)
+    get() = SolidColor(colors.neutral100)

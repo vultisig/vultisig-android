@@ -11,7 +11,7 @@ import javax.inject.Inject
 @HiltViewModel
 class FAQSettingViewModel @Inject constructor(@ApplicationContext context: Context) : ViewModel() {
 
-    val state = MutableStateFlow(
+    val state: MutableStateFlow<FAQSettingUiModel> = MutableStateFlow(
         FAQSettingUiModel(
             listOf(
                 Faq(

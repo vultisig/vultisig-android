@@ -7,11 +7,11 @@ import com.google.gson.annotations.SerializedName
 
 internal data class KeygenWrapper(
     @SerializedName("_0")
-    val _0: KeygenMessage
+    val keygenMessage: KeygenMessage
 )
 internal data class ReshareWrapper(
     @SerializedName("_0")
-    val _0: ReshareMessage
+    val reshareMessage: ReshareMessage
 )
 internal sealed class PeerDiscoveryPayload {
     data class Keygen(val keygenMessage: KeygenMessage) : PeerDiscoveryPayload()

@@ -37,7 +37,7 @@ internal fun SettingsItem(
 ) {
     Card(
         modifier = Modifier
-            .clickOnce(enabled = true, onClick = onClick)
+            .clickOnce(onClick = onClick)
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(

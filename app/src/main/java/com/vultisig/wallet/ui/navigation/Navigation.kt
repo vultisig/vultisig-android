@@ -155,7 +155,7 @@ internal sealed class Destination(
         route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
     ) {
         companion object {
-            const val staticRoute = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+            const val STATIC_ROUTE = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
         }
     }
 
@@ -280,7 +280,7 @@ internal sealed class Destination(
     ) : Destination(route = "join_keysign/$vaultId?qr=$qr") {
 
         companion object {
-            const val staticRoute = "join_keysign/{$ARG_VAULT_ID}?qr={$ARG_QR}"
+            const val STATIC_ROUTE = "join_keysign/{$ARG_VAULT_ID}?qr={$ARG_QR}"
         }
 
     }
@@ -307,7 +307,7 @@ internal sealed class Destination(
     data class BackupSuggestion(val vaultId: String) :
         Destination(route = "backup_suggestion/$vaultId") {
         companion object {
-            const val staticRoute = "backup_suggestion/{$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "backup_suggestion/{$ARG_VAULT_ID}"
         }
     }
 
@@ -325,7 +325,7 @@ internal sealed class Destination(
 
     data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account") {
         companion object {
-            const val staticRoute = "vault_detail/{$ARG_VAULT_ID}/add_account"
+            const val STATIC_ROUTE = "vault_detail/{$ARG_VAULT_ID}/add_account"
         }
     }
 

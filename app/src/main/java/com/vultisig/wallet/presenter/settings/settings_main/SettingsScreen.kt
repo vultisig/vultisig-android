@@ -238,7 +238,6 @@ private fun AppSettingItem(
     Card(
         modifier = Modifier
             .clickOnce(
-                enabled = true,
                 onClick = onClick
             )
             .padding(
