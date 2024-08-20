@@ -2,7 +2,7 @@ package com.vultisig.wallet.common
 
 import com.vultisig.wallet.models.TssAction
 
-class DeepLinkHelper(private val input: String) {
+class DeepLinkHelper(input: String) {
     private val scheme: String
     private val parameters: Map<String, String>
 
