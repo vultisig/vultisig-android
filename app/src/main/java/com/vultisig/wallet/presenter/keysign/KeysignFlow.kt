@@ -1,6 +1,5 @@
 package com.vultisig.wallet.presenter.keysign
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
