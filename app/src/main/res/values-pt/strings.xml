@@ -219,6 +219,7 @@
     <string name="verify_approve_amount_title">Valor a aprovar</string>
     <string name="verify_approve_amount_unlimited">ILIMITADO</string>
     <string name="backup_password_screen_title">Backup</string>
+    <string name="import_file_not_supported">O tipo de ficheiro não é compatível</string>
     <string name="backup_password_screen_confirm_password_error_message">Certifique-se de que as suas palavras-passe correspondem</string>
     <string name="import_file_screen_password_error">A palavra-passe não está correta.</string>
     <string name="backup_password_optional_password_protection">Proteção opcional por palavra-passe do seu Vault</string>
@@ -258,6 +259,8 @@
     <string name="deposit_form_amount_title">Montante</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save_or_share">Guardar e compartilhar</string>
+    <string name="share_vault_qr_card_title">O tipo de ficheiro não é compatível</string>
+    <string name="share_vault_qr_card_keys">Chave ECDSA: %s Chave EdDSA: %s</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
     <string name="deposit_form_provider_hint">Provedor</string>

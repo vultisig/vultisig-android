@@ -301,4 +301,7 @@
     <string name="settings_screen_lagal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
     <string name="settings_screen_tos">Servicebedingungen</string>
+    <string name="share_vault_qr_card_title">Haupttresor</string>
+    <string name="share_vault_qr_card_keys">ECDSA-Schlüssel: %s EdDSA-Schlüssel: %s</string>
+    <string name="import_file_not_supported">Der Dateityp wird nicht unterstützt</string>
 </resources>

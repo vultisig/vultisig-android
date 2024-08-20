@@ -230,6 +230,7 @@
     <string name="verify_approve_amount_title">Сумма для утверждения</string>
     <string name="verify_approve_amount_unlimited">НЕОГРАНИЧЕННЫЙ</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
+    <string name="import_file_not_supported">Тип файла не поддерживается.</string>
     <string name="backup_password_screen_confirm_password_error_message">Пожалуйста, убедитесь, что ваши пароли совпадают.</string>
     <string name="import_file_screen_password_error">Пароль неверный.</string>
     <string name="backup_password_optional_password_protection">Дополнительная защита вашего хранилища паролем</string>
@@ -262,6 +263,8 @@
     <string name="deposit_form_amount_title">Количество</string>
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save_or_share">Сохранить и поделиться</string>
+    <string name="share_vault_qr_card_title">Главное хранилище</string>
+    <string name="share_vault_qr_card_keys">Ключ ECDSA: %s Ключ EdDSA: %s</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
     <string name="deposit_form_provider_hint">Провайдер</string>
@@ -270,6 +273,7 @@
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
     <string name="naming_vault_screen_vault_placeholder">Главное хранилище</string>
+    <string name="transaction_done_swap_progress">Прогресс обмена</string>
     <string name="swap_screen_same_asset_error_message">Исходные и целевые активы не могут быть одинаковыми.</string>
     <string name="address_book_toolbar_title">Адресная книга</string>
     <string name="address_book_settings_title">Адресная книга</string>
@@ -298,6 +302,7 @@
     <string name="setup_2_device_of_vault">Для сопряжения вам понадобятся еще 2 устройства.</string>
     <string name="setup_m_device_of_vault">Вы можете подключить столько устройств, сколько захотите.</string>
     <string name="enable_chain_button">Включить цепочку</string>
+    <string name="enable_chain_warning">Цепь не выбрана. Включите ее в выборе цепи.</string>
     <string name="s_of_s">%1$s из %2$s</string>
     <string name="setup_select_your_vault_type">Выберите тип хранилища</string>
     <string name="settings_screen_lagal">Юридический</string>

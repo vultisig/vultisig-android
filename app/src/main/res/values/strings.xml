@@ -278,7 +278,7 @@
     <string name="share_vault_qr_title" >Share Vault QR</string>
     <string name="share_vault_qr_save_or_share" >Save and Share</string>
     <string name="share_vault_qr_card_title" >Main Vault</string>
-    <string name="share_vault_qr_card_keys" translatable="false">ECDSA Key: %s\nEdDSA Key: %s</string>
+    <string name="share_vault_qr_card_keys">ECDSA Key: %s EdDSA Key: %s</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>

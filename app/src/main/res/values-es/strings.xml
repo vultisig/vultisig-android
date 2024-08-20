@@ -219,6 +219,7 @@
     <string name="verify_approve_amount_title">Monto a aprobar</string>
     <string name="verify_approve_amount_unlimited">ILIMITADA</string>
     <string name="backup_password_screen_title">Respaldo</string>
+    <string name="import_file_not_supported">El tipo de archivo no es compatible</string>
     <string name="backup_password_screen_confirm_password_error_message">Asegúrese de que sus contraseñas coincidan</string>
     <string name="import_file_screen_password_error">La contraseña no es correcta.</string>
     <string name="backup_password_optional_password_protection">Protección con contraseña opcional de su bóveda</string>
@@ -257,6 +258,8 @@
     <string name="deposit_form_amount_title">Cantidad</string>
     <string name="share_vault_qr_title">Compartir Bóveda QR</string>
     <string name="share_vault_qr_save_or_share">Guardar y compartir</string>
+    <string name="share_vault_qr_card_title">Bóveda principal</string>
+    <string name="share_vault_qr_card_keys">Clave ECDSA: %s Clave EdDSA: %s</string>
     <string name="deposit_form_node_address_title">Dirección del nodo</string>
     <string name="deposit_form_provider_title">Proveedor (opcional)</string>
     <string name="deposit_form_provider_hint">Proveedora</string>
@@ -290,6 +293,7 @@
     <string name="keygen_role_pair_action">Escanear código QR / Emparejar dispositivo</string>
     <string name="keygen_role_option_caption">Este dispositivo es el</string>
     <string name="keygen_role_or">O</string>
+    <string name="setup_1_device_of_vault">Necesita 1 dispositivo más para emparejar</string>
     <string name="setup_2_device_of_vault">Necesitas 2 dispositivos más para emparejar</string>
     <string name="setup_m_device_of_vault">Puedes emparejar tantos dispositivos como quieras</string>
     <string name="enable_chain_button">Habilitar cadena</string>

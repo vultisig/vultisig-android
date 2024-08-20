@@ -312,4 +312,7 @@
     <string name="settings_screen_lagal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
+    <string name="share_vault_qr_card_title">Hoofdkluis</string>
+    <string name="share_vault_qr_card_keys">ECDSA-sleutel: %s EdDSA-sleutel: %s</string>
+    <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
 </resources>
