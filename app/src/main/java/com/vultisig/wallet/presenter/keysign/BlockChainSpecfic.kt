@@ -60,7 +60,11 @@ internal sealed class BlockChainSpecific {
         @SerializedName("recentBlockHash")
         val recentBlockHash: String,
         @SerializedName("priorityFee")
-        val priorityFee: BigInteger
+        val priorityFee: BigInteger,
+        @SerializedName("fromAddressPubKey")
+        val fromAddressPubKey: String? = null,
+        @SerializedName("toAddressPubKey")
+        val toAddressPubKey: String? = null,
     ) : BlockChainSpecific()
 
     data class Sui(
@@ -220,7 +224,9 @@ internal class BlockChainSpecificDeserializer : JsonDeserializer<BlockChainSpeci
                 val obj = jsonObject.get("Solana").asJsonObject
                 return BlockChainSpecific.Solana(
                     recentBlockHash = obj.get("recentBlockHash").asString,
-                    priorityFee = obj.get("priorityFee").asJsonArray[1].asBigInteger
+                    priorityFee = obj.get("priorityFee").asJsonArray[1].asBigInteger,
+                    fromAddressPubKey = obj.get("fromTokenAssociatedAddress")?.asString,
+                    toAddressPubKey = obj.get("toTokenAssociatedAddress")?.asString
                 )
             }
 

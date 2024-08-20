@@ -5,6 +5,7 @@ import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.SignedTransactionResult
+import com.vultisig.wallet.models.Ticker
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignature
@@ -15,6 +16,7 @@ import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
+import wallet.core.jni.SolanaAddress
 import wallet.core.jni.TransactionCompiler
 import java.math.BigInteger
 
@@ -35,26 +37,82 @@ internal class SolanaHelper(
     }
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+
         val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
-        val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
-        val transfer = wallet.core.jni.proto.Solana.Transfer.newBuilder()
-            .setRecipient(toAddress.description())
-            .setValue(keysignPayload.toAmount.toLong())
-        keysignPayload.memo?.let {
-            transfer.setMemo(it)
+        if (keysignPayload.coin.chain.Ticker != "SOL") {
+            throw IllegalArgumentException("coin is not SOL")
         }
-        val input = wallet.core.jni.proto.Solana.SigningInput.newBuilder()
-            .setRecentBlockhash(solanaSpecific.recentBlockHash)
-            .setSender(keysignPayload.coin.address)
-            .setTransferTransaction(transfer.build())
-            .setPriorityFeePrice(
-                wallet.core.jni.proto.Solana.PriorityFeePrice.newBuilder()
-                    .setPrice(solanaSpecific.priorityFee.toLong())
+        val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
+
+        if (keysignPayload.coin.isNativeToken) {
+            val transfer = wallet.core.jni.proto.Solana.Transfer.newBuilder()
+                .setRecipient(toAddress.description())
+                .setValue(keysignPayload.toAmount.toLong())
+            keysignPayload.memo?.let {
+                transfer.setMemo(it)
+            }
+            val input = wallet.core.jni.proto.Solana.SigningInput.newBuilder()
+                .setRecentBlockhash(solanaSpecific.recentBlockHash)
+                .setSender(keysignPayload.coin.address)
+                .setTransferTransaction(transfer.build())
+                .setPriorityFeePrice(
+                    wallet.core.jni.proto.Solana.PriorityFeePrice.newBuilder()
+                        .setPrice(solanaSpecific.priorityFee.toLong())
+                        .build()
+                )
+                .build()
+
+            return input.toByteArray()
+        } else {
+            if (solanaSpecific.fromAddressPubKey != null && solanaSpecific.toAddressPubKey!= null) {
+                val transfer = wallet.core.jni.proto.Solana.TokenTransfer.newBuilder()
+                    .setTokenMintAddress(keysignPayload.coin.contractAddress)
+                    .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
+                    .setRecipientTokenAddress(solanaSpecific.toAddressPubKey)
+                    .setAmount(keysignPayload.toAmount.toLong())
+                    .setDecimals(keysignPayload.coin.decimal)
+
+                val input = wallet.core.jni.proto.Solana.SigningInput.newBuilder()
+                    .setRecentBlockhash(solanaSpecific.recentBlockHash)
+                    .setSender(keysignPayload.coin.address)
+                    .setTokenTransferTransaction(transfer.build())
+                    .setPriorityFeePrice(
+                        wallet.core.jni.proto.Solana.PriorityFeePrice.newBuilder()
+                            .setPrice(solanaSpecific.priorityFee.toLong())
+                            .build()
+                    )
                     .build()
-            )
-            .build()
-        return input.toByteArray()
+
+                return input.toByteArray()
+            } else {
+                val receiverAddress = SolanaAddress(toAddress.description())
+                val generatedAssociatedAddress = receiverAddress.defaultTokenAddress(
+                    keysignPayload.coin.contractAddress
+                )
+                val createAndTransferTokenMessage =
+                    wallet.core.jni.proto.Solana.CreateAndTransferToken.newBuilder()
+                        .setRecipientMainAddress(toAddress.description())
+                        .setTokenMintAddress(keysignPayload.coin.contractAddress)
+                        .setRecipientTokenAddress(generatedAssociatedAddress)
+                        .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
+                        .setAmount(keysignPayload.toAmount.toLong())
+                        .setDecimals(keysignPayload.coin.decimal)
+
+                val input = wallet.core.jni.proto.Solana.SigningInput.newBuilder()
+                    .setCreateAndTransferTokenTransaction(createAndTransferTokenMessage.build())
+                    .setRecentBlockhash(solanaSpecific.recentBlockHash)
+                    .setSender(keysignPayload.coin.address)
+                    .setPriorityFeePrice(
+                        wallet.core.jni.proto.Solana.PriorityFeePrice.newBuilder()
+                            .setPrice(solanaSpecific.priorityFee.toLong())
+                            .build()
+                    )
+                    .build()
+                return input.toByteArray()
+            }
+        }
+
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
