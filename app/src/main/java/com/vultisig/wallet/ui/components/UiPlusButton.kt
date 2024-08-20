@@ -33,7 +33,7 @@ internal fun UiPlusButton(
 ) {
     Row(
         modifier = modifier
-            .clickOnce(enabled = true, onClick = onClick)
+            .clickOnce(onClick = onClick)
     ) {
         Image(
             painter = painterResource(R.drawable.plus),

@@ -9,11 +9,11 @@ data class CosmoSignature(
     @SerializedName("mode")
     val mode: String,
     @SerializedName("tx_bytes")
-    val tx_bytes: String
+    val txBytes: String
 )
 
 fun CosmoSignature.transactionHash(): String {
-    val decodedBytes = tx_bytes.decodeBase64()?.toByteArray() ?: run { return "" }
+    val decodedBytes = txBytes.decodeBase64()?.toByteArray() ?: run { return "" }
     val digest = MessageDigest.getInstance("SHA-256").digest(decodedBytes)
     return Numeric.toHexStringNoPrefix(digest)
 }

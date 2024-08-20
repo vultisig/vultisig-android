@@ -46,7 +46,6 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
@@ -459,7 +458,6 @@ private fun ChainCoinScreenPreview() {
             chainAddress = "0x1234567890",
             totalBalance = "0.000000",
             explorerURL = "https://etherscan.io/",
-            isBalanceVisible = true,
             tokens = listOf(
                 ChainTokenUiModel(
                     name = "USDT",

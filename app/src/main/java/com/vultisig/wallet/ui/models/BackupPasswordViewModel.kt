@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalSerializationApi::class)
-
 package com.vultisig.wallet.ui.models
 
 import android.Manifest
@@ -38,7 +36,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.serialization.ExperimentalSerializationApi
 import java.text.SimpleDateFormat
 import java.util.Date
 import javax.inject.Inject

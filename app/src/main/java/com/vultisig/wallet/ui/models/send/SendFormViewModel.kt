@@ -102,7 +102,7 @@ internal class SendFormViewModel @Inject constructor(
     private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
 
     private val accountsRepository: AccountsRepository,
-    private val appCurrencyRepository: AppCurrencyRepository,
+    appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val gasFeeRepository: GasFeeRepository,

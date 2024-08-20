@@ -54,7 +54,6 @@ import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.CustomTokenUiModel
 import com.vultisig.wallet.ui.models.CustomTokenViewModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
 

@@ -21,7 +21,6 @@ import com.vultisig.wallet.tss.TssMessenger
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

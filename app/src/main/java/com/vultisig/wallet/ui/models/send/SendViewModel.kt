@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions

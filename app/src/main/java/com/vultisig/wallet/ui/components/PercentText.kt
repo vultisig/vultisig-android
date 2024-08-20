@@ -32,7 +32,7 @@ internal fun PercentText(
             R.string.send_percent,
             percent
         ),
-        color = Theme.colors.neutral100,
+        color = colors.neutral100,
         style = Theme.menlo.overline2,
     )
 }

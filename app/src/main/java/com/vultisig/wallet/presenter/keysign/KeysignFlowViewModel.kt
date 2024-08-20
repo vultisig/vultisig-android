@@ -155,7 +155,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         _currentVault = vault
         _keysignPayload = keysignPayload
         this.selection.value = listOf(vault.localPartyID)
-        if (vultisigRelay.IsRelayEnabled) {
+        if (vultisigRelay.isRelayEnabled) {
             _serverAddress = Endpoints.VULTISIG_RELAY
             networkOption.value = NetworkPromptOption.INTERNET
         }
@@ -318,7 +318,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     } else null,
                 ),
                 encryptionKeyHex = _encryptionKeyHex,
-                useVultisigRelay = vultisigRelay.IsRelayEnabled
+                useVultisigRelay = vultisigRelay.isRelayEnabled
             )
         )
 
@@ -331,7 +331,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
 
         addressProvider.update(_keysignMessage.value)
-        if (!vultisigRelay.IsRelayEnabled) {
+        if (!vultisigRelay.isRelayEnabled) {
             startMediatorService(context)
         } else {
             _serverAddress = Endpoints.VULTISIG_RELAY
@@ -453,13 +453,13 @@ internal class KeysignFlowViewModel @Inject constructor(
         if (networkOption.value == option) return
         when (option) {
             NetworkPromptOption.LOCAL -> {
-                vultisigRelay.IsRelayEnabled = false
+                vultisigRelay.isRelayEnabled = false
                 _serverAddress = "http://127.0.0.1:18080"
                 networkOption.value = option
             }
 
             NetworkPromptOption.INTERNET -> {
-                vultisigRelay.IsRelayEnabled = true
+                vultisigRelay.isRelayEnabled = true
                 _serverAddress = Endpoints.VULTISIG_RELAY
                 networkOption.value = option
             }

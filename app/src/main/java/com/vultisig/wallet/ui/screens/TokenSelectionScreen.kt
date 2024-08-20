@@ -39,7 +39,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.TokenSelectionUiModel
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel
 import com.vultisig.wallet.ui.models.TokenUiModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
 @OptIn(ExperimentalFoundationApi::class)

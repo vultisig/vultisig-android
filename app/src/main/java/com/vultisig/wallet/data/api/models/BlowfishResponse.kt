@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.api.models
 
 import com.google.gson.annotations.SerializedName
-import com.vultisig.wallet.mediator.Message
 
 internal data class BlowfishResponse (
     @SerializedName("warnings")
