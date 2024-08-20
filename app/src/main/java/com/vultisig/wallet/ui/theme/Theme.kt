@@ -72,4 +72,4 @@ internal object Theme {
 
 internal val Theme.cursorBrush: Brush
     @Composable
-    get() = SolidColor(Theme.colors.neutral100)
+    get() = SolidColor(colors.neutral100)
