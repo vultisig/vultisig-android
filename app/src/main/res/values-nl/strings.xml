@@ -253,7 +253,6 @@
     <string name="deposit_screen_amount_title">Hoeveelheid</string>
     <string name="verify_deposit_memo_title">Notitie</string>
     <string name="verify_deposit_node_address_title">Knooppuntadres</string>
-    <string name="verify_deposit_gas_title">Gas</string>
     <string name="onboard_intro1_title">Ontmoeting</string>
     <string name="onboard_intro1_desc">Vultisig is een veilige, multi-device crypto kluis, compatibel met 30+ chains en 10.000+ tokens. Vultisig is volledig self-custodial.</string>
     <string name="onboard_intro2_title">Coördinatie</string>
