@@ -51,8 +51,8 @@
     <string name="transation_done_form_title">Transakcija</string>
     <string name="home_screen_add_new_vault">+ Dodaj novi sef</string>
     <string name="import_file_screen_title">Uvoz</string>
-    <string name="import_file_screen_enter_your_previously_created_vault_share">Unesite prethodno stvoreni udio sefa</string>
-    <string name="import_file_screen_upload_file_text_or_image">Prenesite datoteku, tekst ili sliku</string>
+    <string name="import_file_screen_enter_your_previously_created_vault_share">Prenesite prethodno stvoreni udio sefa</string>
+    <string name="import_file_screen_upload_file_text_or_image">Odaberite .bak ili .dat datoteku sigurnosne kopije</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SIGURNO KRIPTO SEF</string>
     <string name="create_new_vault_screen_create_a_new_vault">Stvorite novi sef</string>
