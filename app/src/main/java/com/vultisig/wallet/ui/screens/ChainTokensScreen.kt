@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +33,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -43,13 +46,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.ToggleVisibilityText
+import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
@@ -376,13 +379,17 @@ internal fun CoinItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box {
-                AsyncImage(
-                    model = tokenLogo,
-                    contentDescription = null,
+                TokenLogo(
+                    logo = tokenLogo,
+                    title = title,
                     modifier = Modifier
                         .size(36.dp)
                         .padding(4.dp)
-                        .align(Alignment.Center)
+                        .align(Alignment.Center),
+                    errorLogoModifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Theme.colors.neutral100),
                 )
                 chainLogo.takeIf { it != tokenLogo }?.let {
                     Image(
