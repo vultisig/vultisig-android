@@ -323,6 +323,7 @@
     <string name="settings_screen_lagal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
+    <string name="import_file_not_supported" >File type is not supported</string>
 
     <string-array name="keygen_tip_title" translatable="false">
         <item>Did You Know?</item>
