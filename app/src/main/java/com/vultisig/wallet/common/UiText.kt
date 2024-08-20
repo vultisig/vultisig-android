@@ -17,7 +17,7 @@ sealed class UiText {
     ) : UiText()
 
     companion object {
-        val Empty = DynamicString("")
+        val Empty: DynamicString = DynamicString("")
     }
 
 }

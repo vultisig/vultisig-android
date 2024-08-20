@@ -14,7 +14,7 @@ class MediatorService : Service() {
     private var serverName: String = ""
 
     companion object {
-        const val SERVICE_ACTION = "com.vultisig.wallet.mediator.MediatorService.STARTED"
+        const val SERVICE_ACTION: String = "com.vultisig.wallet.mediator.MediatorService.STARTED"
     }
 
     override fun onCreate() {
