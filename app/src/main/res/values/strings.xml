@@ -239,7 +239,6 @@
     <string name="verify_approve_amount_title" translatable="false">Amount to approve</string>
     <string name="verify_approve_amount_unlimited" translatable="false">UNLIMITED</string>
     <string name="backup_password_screen_title" translatable="false">Backup</string>
-    <string name="backup_password_screen_confirm_password_error_message" translatable="false">Please make sure your passwords match</string>
     <string name="import_file_screen_password_error" translatable="false">Password is not correct.</string>
     <string name="backup_password_optional_password_protection" translatable="false">Optional password protection of your Vault</string>
     <string name="backup_password_screen_save" translatable="false">Save</string>
@@ -252,11 +251,10 @@
     <string name="import_file_screen_cancel" translatable="false">Cancel</string>
     <string name="backup_password_screen_permission_required" translatable="false">File permission is required for backup operations.</string>
     <string name="share_qr_screen_permission_required" translatable="false">File permission is required for share operations.</string>
-    <string name="token_selection_selected_tokens_title" translatable="false">Selected</string>
     <string name="token_selection_tokens_title" translatable="false">Tokens</string>
     <string name="token_selection_search_hint" translatable="false">Search...</string>
     <string name="verify_swap_agree_allowance" translatable="false">I agree with providing unlimited ERC20 allowance</string>
-    <string name="backup_suggestion_text" translatable="false">Each device has its own unique share.\n\nPlease Backup all of your Vault Shares now.</string>
+    <string name="backup_suggestion_text" translatable="false">Each device has its own unique share.  Please Backup all of your Vault Shares now.</string>
     <string name="backup_now" translatable="false">Backup your vault now!</string>
     <string name="deposit_screen_title" translatable="false">Deposit</string>
     <string name="deposit_screen_amount_title" translatable="false">Amount</string>
@@ -268,7 +266,6 @@
     <string name="onboard_intro2_title" translatable="false">Coordination</string>
     <string name="onboard_intro2_desc" translatable="false">Vultisig does not track your activities or require any registrations. Vultisig is fully open-source, ensuring transparency and trust.</string>
     <string name="onboard_intro3_title" translatable="false">Dialogue</string>
-    <string name="onboard_intro3_desc" translatable="false">Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets.</string>
     <string name="onboard_intro4_title" translatable="false">Collaboration</string>
     <string name="onboard_intro4_desc" translatable="false">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
     <string name="token_selection_screen_custom_token" translatable="false">Custom Token</string>
@@ -283,7 +280,7 @@
     <string name="deposit_form_node_address_title" translatable="false">Node Address</string>
     <string name="deposit_form_provider_title" translatable="false">Provider (optional)</string>
     <string name="deposit_form_provider_hint" translatable="false">Provider</string>
-    <string name="keygen_info_note" translatable="false">Having trouble connecting on WiFi?\nUse a personal hotspot connection instead. Or try a different network.</string>
+    <string name="keygen_info_note" translatable="false">Having trouble connecting on WiFi? Use a personal hotspot connection instead. Or try a different network.</string>
     <string name="deposit_form_operator_fee_title" translatable="false">Operator\'s Fee (optional)</string>
     <string name="deposit_message_deposit_title" translatable="false">%s message deposit</string>
     <string name="deposit_form_custom_memo_title" translatable="false">Custom memo</string>
@@ -343,4 +340,7 @@
         <item>Join Thousands. Thousands of users trust Vultisig with their digital assets. Become a part of our secure and growing community.</item>
         <item>Multi-Device Compatibility. Access your Vultisig vault from multiple devices, enhancing flexibility without compromising security.</item>
     </string-array>
+    <string name="backup_password_screen_confirm_password_error_message" translatable="false">Please make sure your passwords match</string>
+    <string name="token_selection_selected_tokens_title" translatable="false">Selected</string>
+    <string name="onboard_intro4_title" translatable="false">Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets.</string>
 </resources>
