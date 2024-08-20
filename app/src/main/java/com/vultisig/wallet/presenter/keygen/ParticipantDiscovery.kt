@@ -21,7 +21,7 @@ class ParticipantDiscovery(
     private val gson: Gson,
 ) {
     private var job: Job? = null
-    private val _participants: MutableLiveData<List<String>> = MutableLiveData(listOf<String>())
+    private val _participants: MutableLiveData<List<String>> = MutableLiveData(listOf())
 
     val participants: MutableLiveData<List<String>>
         get() = _participants
