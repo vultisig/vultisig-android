@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalSerializationApi::class)
-
 package com.vultisig.wallet.ui.models
 
 import android.Manifest

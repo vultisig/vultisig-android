@@ -19,7 +19,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.toColorInt
 import com.vultisig.wallet.app.activity.MainActivity
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun OnBoardingComposeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
