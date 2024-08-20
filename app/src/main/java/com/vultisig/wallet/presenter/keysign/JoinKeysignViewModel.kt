@@ -380,13 +380,12 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } else {
                     val payloadToken = payload.coin
                     val address = payloadToken.address
-                    val token = payloadToken
-                    val chain = token.chain
+                    val chain = payloadToken.chain
 
                     val tokenValue = TokenValue(
                         value = payload.toAmount,
-                        unit = token.ticker,
-                        decimals = token.decimal,
+                        unit = payloadToken.ticker,
+                        decimals = payloadToken.decimal,
                     )
 
                     val gasFee = gasFeeRepository.getGasFee(chain, address)
@@ -396,12 +395,12 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         vaultId = payload.vaultPublicKeyECDSA,
                         chainId = chain.id,
-                        tokenId = token.id,
+                        tokenId = payloadToken.id,
                         srcAddress = address,
                         dstAddress = payload.toAddress,
                         tokenValue = tokenValue,
                         fiatValue = convertTokenValueToFiat(
-                            token,
+                            payloadToken,
                             tokenValue,
                             currency,
                         ),
