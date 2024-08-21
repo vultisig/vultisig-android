@@ -337,14 +337,6 @@ internal class KeysignViewModel(
         }
     }
 
-    fun stopService(context: Context) {
-        // start mediator service
-        val intent = Intent(context, MediatorService::class.java)
-        context.stopService(intent)
-        Timber.d("stop MediatorService: Mediator service stopped")
-
-    }
-
     fun navigateToHome() {
         viewModelScope.launch {
             if (isNavigateToHome) {

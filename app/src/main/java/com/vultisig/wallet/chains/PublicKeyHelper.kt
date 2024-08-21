@@ -14,17 +14,4 @@ object PublicKeyHelper {
         return Tss.getDerivedPubKey(hexPublicKey, hexChainCode, derivePath, false)
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
-    fun getPublicKey(
-        hexPublicKey: String,
-        hexChainCode: String,
-        coinType: CoinType,
-    ): PublicKey = PublicKey(
-        getDerivedPublicKey(
-            hexPublicKey,
-            hexChainCode,
-            coinType.derivationPath()
-        ).hexToByteArray(), PublicKeyType.SECP256K1
-    )
-
 }

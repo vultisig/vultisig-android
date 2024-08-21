@@ -186,11 +186,6 @@ internal class UtxoHelper(
         return signingInput.build().toByteArray()
     }
 
-    fun getBitcoinTransactionPlan(keysignPayload: KeysignPayload): Bitcoin.TransactionPlan {
-        val signingInput = getBitcoinSigningInput(keysignPayload)
-        return AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
-    }
-
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
         signatures: Map<String, KeysignResponse>,

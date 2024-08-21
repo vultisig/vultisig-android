@@ -39,36 +39,6 @@ internal class DydxHelper(
         return Coins.getCoin("DYDX", address, derivedPublicKey, coinType)
     }
 
-    fun getSwapPreSignedInputData(
-        keysignPayload: KeysignPayload,
-        input: Cosmos.SigningInput.Builder,
-    ): ByteArray {
-        val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
-            ?: throw Exception("Invalid blockChainSpecific")
-
-        val publicKey =
-            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val inputData = input
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .setAccountNumber(atomData.accountNumber.toLong())
-            .setSequence(atomData.sequence.toLong())
-            .setMode(Cosmos.BroadcastMode.SYNC)
-            .setFee(
-                Cosmos.Fee.newBuilder()
-                    .setGas(200000)
-                    .addAllAmounts(
-                        listOf(
-                            Cosmos.Amount.newBuilder()
-                                .setDenom("adydx")
-                                .setAmount(atomData.gas.toString())
-                                .build()
-                        )
-                    )
-
-            ).build()
-        return inputData.toByteArray()
-    }
-
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val dydxData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")

@@ -203,10 +203,6 @@ internal class BreakIterator {
         return instance.next()
     }
 
-    fun makeCharacterInstance(): BreakIterator {
-        return this
-    }
-
     fun setText(text: String?) {
         instance.setText(text)
     }

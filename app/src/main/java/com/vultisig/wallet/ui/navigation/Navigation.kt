@@ -324,9 +324,6 @@ internal sealed class Destination(
     )
 
     data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account") {
-        companion object {
-            const val STATIC_ROUTE = "vault_detail/{$ARG_VAULT_ID}/add_account"
-        }
     }
 
     internal data class CustomToken(val chainId: String) :

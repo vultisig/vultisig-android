@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
-import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -42,9 +41,8 @@ internal class VerifySwapViewModel @Inject constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val mapDurationToUiString: DurationToUiStringMapper,
-
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
+
     private val swapTransactionRepository: SwapTransactionRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
 ) : ViewModel() {
