@@ -23,7 +23,9 @@ internal class KujiraHelper(
     private val vaultHexChainCode: String,
 ) {
     val coinType = CoinType.KUJIRA
-    private val KujiGasLimit = 200000
+    companion object {
+        const val KUJI_GAS_LIMIT = 200000
+    }
     fun getCoin(): Coin? {
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,
@@ -69,7 +71,7 @@ internal class KujiraHelper(
             )
             .setFee(
                 Cosmos.Fee.newBuilder()
-                    .setGas(KujiGasLimit.toLong())
+                    .setGas(KUJI_GAS_LIMIT.toLong())
                     .addAllAmounts(
                         listOf(
                             Cosmos.Amount.newBuilder()

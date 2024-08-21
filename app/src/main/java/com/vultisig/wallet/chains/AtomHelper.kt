@@ -24,7 +24,9 @@ internal class AtomHelper(
     private val vaultHexChainCode: String,
 ) {
     val coinType = CoinType.COSMOS
-    private val ATOMGasLimit = 200000
+    companion object {
+        const val ATOM_GAS_LIMIT = 200000
+    }
     fun getCoin(): Coin? {
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,
@@ -52,7 +54,7 @@ internal class AtomHelper(
             .setMode(Cosmos.BroadcastMode.SYNC)
             .setFee(
                 Cosmos.Fee.newBuilder()
-                    .setGas(ATOMGasLimit.toLong())
+                    .setGas(ATOM_GAS_LIMIT.toLong())
                     .addAllAmounts(
                         listOf(
                             Cosmos.Amount.newBuilder()
@@ -100,7 +102,7 @@ internal class AtomHelper(
             )
             .setFee(
                 Cosmos.Fee.newBuilder()
-                    .setGas(ATOMGasLimit.toLong())
+                    .setGas(ATOM_GAS_LIMIT.toLong())
                     .addAllAmounts(
                         listOf(
                             Cosmos.Amount.newBuilder()
