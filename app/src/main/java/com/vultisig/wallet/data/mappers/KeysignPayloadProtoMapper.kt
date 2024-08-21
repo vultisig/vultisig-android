@@ -49,14 +49,14 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 )
             },
             swapPayload = when {
-                from.oneinchSwapPayload != null -> from.oneinchSwapPayload.let {
+                from.oneinchSwapPayload != null -> from.oneinchSwapPayload.let { it ->
                     SwapPayload.OneInch(
                         OneInchSwapPayloadJson(
                             fromCoin = requireNotNull(it.fromCoin).toCoin(),
                             toCoin = requireNotNull(it.toCoin).toCoin(),
                             fromAmount = BigInteger(it.fromAmount),
                             toAmountDecimal = BigDecimal(it.toAmountDecimal),
-                            quote = requireNotNull(it.quote).let {
+                            quote = requireNotNull(it.quote).let { it ->
                                 OneInchSwapQuoteJson(
                                     dstAmount = it.dstAmount,
                                     tx = requireNotNull(it.tx).let {

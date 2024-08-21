@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 
+@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 fun MiddleEllipsisText(
     text: String,
@@ -59,7 +60,7 @@ fun MiddleEllipsisText(
 
         breakIterator.setText(text)
         val charSplitIndexList = mutableListOf<Int>()
-        while (breakIterator.next() != BreakIterator.Done) {
+        while (breakIterator.next() != BreakIterator.DONE) {
             val index = breakIterator.current()
             charSplitIndexList.add(index)
         }
@@ -212,7 +213,7 @@ internal class BreakIterator {
     }
 
     companion object {
-        const val Done = -1
+        const val DONE = -1
     }
 }
 

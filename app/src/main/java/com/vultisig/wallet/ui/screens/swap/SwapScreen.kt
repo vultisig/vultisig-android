@@ -85,6 +85,7 @@ internal fun SwapScreen(
     )
 }
 
+@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 private fun SwapScreen(
     topBarNavController: NavController,

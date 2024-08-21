@@ -269,7 +269,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         val estimatedTokenFees = TokenValue(
                             value = swapPayload.data.quote.tx.gasPrice.toBigInteger() *
                                     (swapPayload.data.quote.tx.gas.takeIf { it != 0L }
-                                        ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger(),
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
                             token = nativeToken
                         )
 
@@ -495,6 +495,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private fun checkKeygenStarted(): Boolean {
         try {
             val serverURL = "$_serverAddress/start/$_sessionID"

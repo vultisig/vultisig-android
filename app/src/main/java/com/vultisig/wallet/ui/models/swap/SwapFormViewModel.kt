@@ -644,7 +644,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 val tokenFees = TokenValue(
                                     value = quote.tx.gasPrice.toBigInteger() *
                                             (quote.tx.gas.takeIf { it != 0L }
-                                                ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger(),
+                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
                                     token = srcNativeToken
                                 )
 
@@ -698,7 +698,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 val tokenFees = TokenValue(
                                     value = quote.tx.gasPrice.toBigInteger()
                                             * (quote.tx.gas.takeIf { it != 0L }
-                                        ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger(),
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
                                     token = srcNativeToken
                                 )
 
@@ -818,7 +818,7 @@ internal fun List<Address>.firstSendSrc(
     filterByChain: Chain?,
 ): SendSrc {
     val address = when {
-        selectedTokenId != null -> first { it.accounts.any { it.token.id == selectedTokenId } }
+        selectedTokenId != null -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
         filterByChain != null -> first { it.chain == filterByChain }
         else -> first()
     }

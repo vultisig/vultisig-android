@@ -74,7 +74,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
             }
             accountsRepository
                 .loadAddresses(vaultId)
-                .map {
+                .map { it ->
                     it.sortedBy {
                         it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
                     }

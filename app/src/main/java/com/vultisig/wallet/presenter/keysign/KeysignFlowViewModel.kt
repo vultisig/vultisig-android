@@ -162,6 +162,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         updateKeysignPayload(context)
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun updateKeysignPayload(context: Context) {
         stopParticipantDiscovery()
         _currentVault ?: run {
@@ -293,7 +294,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             toCoin = from.toCoin.toCoinProto(),
                             fromAmount = from.fromAmount.toString(),
                             toAmountDecimal = from.toAmountDecimal.toPlainString(),
-                            quote = from.quote.let {
+                            quote = from.quote.let { it ->
                                 OneInchQuote(
                                     dstAmount = it.dstAmount,
                                     tx = it.tx.let {
@@ -342,6 +343,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -427,6 +429,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         selection.value = selection.value?.minus(participant)
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun moveToState(nextState: KeysignFlowState) {
         try {
             if (nextState == KeysignFlowState.KEYSIGN) {

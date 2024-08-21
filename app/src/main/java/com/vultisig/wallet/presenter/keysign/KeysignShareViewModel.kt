@@ -27,6 +27,7 @@ internal class KeysignShareViewModel @Inject constructor(
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun loadTransaction(transactionId: TransactionId) {
         runBlocking {
             val transaction = transactionRepository.getTransaction(transactionId)
@@ -52,6 +53,7 @@ internal class KeysignShareViewModel @Inject constructor(
         }
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun loadSwapTransaction(transactionId: TransactionId) {
         runBlocking {
             val transaction = swapTransactionRepository.getTransaction(transactionId)
@@ -97,6 +99,7 @@ internal class KeysignShareViewModel @Inject constructor(
         )
     )
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun loadDepositTransaction(transactionId: TransactionId) {
         runBlocking {
             val transaction = depositTransaction.getTransaction(transactionId)

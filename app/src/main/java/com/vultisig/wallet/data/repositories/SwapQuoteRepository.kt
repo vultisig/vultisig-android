@@ -173,12 +173,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): OneInchSwapQuoteJson {
 
         val fromToken =
-            if (srcToken.contractAddress.isEmpty()) srcToken.ticker
-            else srcToken.contractAddress
+            srcToken.contractAddress.ifEmpty { srcToken.ticker }
 
         val toToken =
-            if (dstToken.contractAddress.isEmpty()) dstToken.ticker
-            else dstToken.contractAddress
+            dstToken.contractAddress.ifEmpty { dstToken.ticker }
 
         val liFiQuote = liFiChainApi.getSwapQuote(
             fromChain = srcToken.chain.oneInchChainId().toString(),

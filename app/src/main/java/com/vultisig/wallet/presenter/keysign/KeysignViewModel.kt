@@ -109,6 +109,7 @@ internal class KeysignViewModel(
         }
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
@@ -266,8 +267,7 @@ internal class KeysignViewModel(
                         .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
                 }
 
-                // Mayachain swap is done through send
-                is SwapPayload.MayaChain -> Unit
+                else -> {}
             }
         }
 

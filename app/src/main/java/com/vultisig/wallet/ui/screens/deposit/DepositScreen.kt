@@ -79,6 +79,7 @@ internal fun DepositScreen(
     )
 }
 
+@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 private fun DepositScreen(
     topBarNavController: NavController,
