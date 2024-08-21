@@ -28,7 +28,7 @@ internal class VaultDetailViewmodel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             vaultRepository.get(vaultId)?.let { vault ->
-                uiModel.update {
+                uiModel.update { it ->
                     it.copy(
                         name = vault.name,
                         pubKeyECDSA = vault.pubKeyECDSA,

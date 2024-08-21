@@ -53,7 +53,7 @@ class TssMessagePuller(
 
             client.newCall(request).execute().use { response ->
                 if (response.code == 200) {
-                    response.body?.let {
+                    response.body?.let { it ->
                         val messages = Gson().fromJson(it.string(), Array<Message>::class.java)
                         for (msg in messages.sortedBy { it.sequenceNo }) {
                             val key = messageID?.let { "$sessionID-$localPartyKey-${msg.hash}" }

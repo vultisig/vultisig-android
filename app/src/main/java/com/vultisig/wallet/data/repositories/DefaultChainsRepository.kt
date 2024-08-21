@@ -23,7 +23,7 @@ internal class DefaultChainsRepositoryImpl @Inject constructor(
 
     override val selectedDefaultChains: Flow<List<Chain>>
         get() = dataStore.readData(stringPreferencesKey(SELECTED_DEFAULT_CHAINS_KEY), "")
-            .map {
+            .map { it ->
                 try {
                     gson.fromJson<List<String>>(it, object : TypeToken<List<String>>() {}.type)
                         .map { Chain.fromRaw(it) }

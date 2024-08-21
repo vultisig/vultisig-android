@@ -829,7 +829,7 @@ internal fun List<Address>.firstSendSrc(
     filterByChain: Chain?,
 ): SendSrc {
     val address = when {
-        selectedTokenId != null -> first { it.accounts.any { it.token.id == selectedTokenId } }
+        selectedTokenId != null -> first { it -> it.accounts.any { it.token.id == selectedTokenId } }
         filterByChain != null -> first { it.chain == filterByChain }
         else -> first()
     }

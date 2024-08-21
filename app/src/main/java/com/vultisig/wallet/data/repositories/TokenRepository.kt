@@ -65,7 +65,7 @@ internal class TokenRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getNativeToken(chainId: String): Coin =
-        nativeTokens.map { it.first { it.chain.id == chainId } }.first()
+        nativeTokens.map { it -> it.first { it.chain.id == chainId } }.first()
 
     override suspend fun getTokenByContract(chainId: String, contractAddress: String): Coin? {
         val chain = Chain.fromRaw(chainId)

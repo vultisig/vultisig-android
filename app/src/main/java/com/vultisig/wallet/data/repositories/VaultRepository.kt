@@ -120,7 +120,7 @@ internal class VaultRepositoryImpl @Inject constructor(
                     it.keyShare,
                 )
             },
-            coins = vault.coins.map {
+            coins = vault.coins.map { it ->
                 Coin(
                     chain = Chain.fromRaw(it.chain),
                     ticker = it.ticker,

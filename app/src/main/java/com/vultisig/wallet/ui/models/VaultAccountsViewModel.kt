@@ -145,7 +145,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId)
-                .map {
+                .map { it ->
                     it.sortedBy {
                         it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
                     }

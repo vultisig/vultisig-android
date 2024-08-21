@@ -293,7 +293,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             toCoin = from.toCoin.toCoinProto(),
                             fromAmount = from.fromAmount.toString(),
                             toAmountDecimal = from.toAmountDecimal.toPlainString(),
-                            quote = from.quote.let {
+                            quote = from.quote.let { it ->
                                 OneInchQuote(
                                     dstAmount = it.dstAmount,
                                     tx = it.tx.let {
