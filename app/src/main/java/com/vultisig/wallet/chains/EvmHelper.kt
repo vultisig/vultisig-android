@@ -25,7 +25,7 @@ internal class EvmHelper(
     private val vaultHexChainCode: String,
 ) {
     companion object{
-        const val DefaultEthSwapGasUnit: Long = 600000L
+        const val DEFAULTETHSWAPGASUNIT: Long = 600000L
     }
 
     fun getCoin(): Coin? {

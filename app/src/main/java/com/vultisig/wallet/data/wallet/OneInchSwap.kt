@@ -64,7 +64,7 @@ internal class OneInchSwap(
 
         val gasPrice = quote.tx.gasPrice.toBigInteger()
         val gas = (quote.tx.gas.takeIf { it != 0L }
-            ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger()
+            ?: EvmHelper.DEFAULTETHSWAPGASUNIT).toBigInteger()
         return EvmHelper(
             keysignPayload.coin.coinType,
             vaultHexPublicKey,

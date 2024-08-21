@@ -59,7 +59,7 @@ fun MiddleEllipsisText(
 
         breakIterator.setText(text)
         val charSplitIndexList = mutableListOf<Int>()
-        while (breakIterator.next() != BreakIterator.Done) {
+        while (breakIterator.next() != BreakIterator.DONE) {
             val index = breakIterator.current()
             charSplitIndexList.add(index)
         }
@@ -212,7 +212,7 @@ internal class BreakIterator {
     }
 
     companion object {
-        const val Done = -1
+        const val DONE = -1
     }
 }
 

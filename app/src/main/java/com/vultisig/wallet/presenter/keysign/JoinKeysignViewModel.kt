@@ -269,7 +269,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         val estimatedTokenFees = TokenValue(
                             value = swapPayload.data.quote.tx.gasPrice.toBigInteger() *
                                     (swapPayload.data.quote.tx.gas.takeIf { it != 0L }
-                                        ?: EvmHelper.DefaultEthSwapGasUnit).toBigInteger(),
+                                        ?: EvmHelper.DEFAULTETHSWAPGASUNIT).toBigInteger(),
                             token = nativeToken
                         )
 
