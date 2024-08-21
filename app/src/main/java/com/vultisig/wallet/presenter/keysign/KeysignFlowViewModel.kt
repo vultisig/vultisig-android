@@ -240,6 +240,8 @@ internal class KeysignFlowViewModel @Inject constructor(
                         SolanaSpecific(
                             recentBlockHash = specific.recentBlockHash,
                             priorityFee = specific.priorityFee.toString(),
+                            toTokenAssociatedAddress = specific.toAddressPubKey,
+                            fromTokenAssociatedAddress = specific.fromAddressPubKey,
                         )
                     } else null,
                     polkadotSpecific = if (specific is BlockChainSpecific.Polkadot) {
