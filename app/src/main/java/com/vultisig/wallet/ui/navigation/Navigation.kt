@@ -323,8 +323,7 @@ internal sealed class Destination(
         route = "create_new_vault"
     )
 
-    data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account") {
-    }
+    data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account")
 
     internal data class CustomToken(val chainId: String) :
         Destination(route = "custom_token/$chainId") {

@@ -1,9 +1,6 @@
 package com.vultisig.wallet.chains
 
 import tss.Tss
-import wallet.core.jni.CoinType
-import wallet.core.jni.PublicKey
-import wallet.core.jni.PublicKeyType
 
 object PublicKeyHelper {
     fun getDerivedPublicKey(
