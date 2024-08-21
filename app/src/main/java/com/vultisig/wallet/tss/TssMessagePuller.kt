@@ -3,7 +3,7 @@ package com.vultisig.wallet.tss
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
-import com.vultisig.wallet.common.Decrypt
+import com.vultisig.wallet.common.decrypt
 import com.vultisig.wallet.mediator.Message
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -65,7 +65,7 @@ class TssMessagePuller(
                                 continue
                             }
                             cache.put(key, msg)
-                            val decryptedBody = msg.body.Decrypt(hexEncryptionKey)
+                            val decryptedBody = msg.body.decrypt(hexEncryptionKey)
                             Timber.d("apply message to TSS: hash: " + msg.hash + ", messageID: " + key)
                             this.service.applyData(decryptedBody)
                             deleteMessageFromServer(msg.hash, messageID)

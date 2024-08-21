@@ -35,7 +35,6 @@ import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
-import com.vultisig.wallet.ui.models.mappers.DurationToUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -91,9 +90,8 @@ internal class SwapFormViewModel @Inject constructor(
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
     private val zeroValueCurrencyToString: ZeroValueCurrencyToStringMapper,
-    private val mapDurationToUiString: DurationToUiStringMapper,
-
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
+
     private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,

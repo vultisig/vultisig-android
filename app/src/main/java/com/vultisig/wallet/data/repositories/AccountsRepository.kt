@@ -139,7 +139,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
         emit(account)
 
-        val updatedCoins = if (chain == Chain.solana)
+        val updatedCoins = if (chain == Chain.Solana)
             coins + getSPLCoins(coins, vault)
         else coins
 

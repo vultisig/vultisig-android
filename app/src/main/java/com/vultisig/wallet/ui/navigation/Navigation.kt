@@ -180,7 +180,7 @@ internal sealed class Destination(
         )
     ) {
         companion object {
-            const val ARG_SHOW_VAULT_LIST = "=show_vault_list"
+            private const val ARG_SHOW_VAULT_LIST = "=show_vault_list"
             val staticRoute = buildRoute(
                 "{$ARG_VAULT_ID}",
                 "{$ARG_SHOW_VAULT_LIST}"
@@ -323,11 +323,7 @@ internal sealed class Destination(
         route = "create_new_vault"
     )
 
-    data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account") {
-        companion object {
-            const val STATIC_ROUTE = "vault_detail/{$ARG_VAULT_ID}/add_account"
-        }
-    }
+    data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account")
 
     internal data class CustomToken(val chainId: String) :
         Destination(route = "custom_token/$chainId") {

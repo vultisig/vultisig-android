@@ -32,11 +32,11 @@ internal class BlockChairApiImp @Inject constructor(
 ) : BlockChairApi {
 
     private fun getChainName(chain: Chain): String = when (chain) {
-        Chain.bitcoin -> "bitcoin"
-        Chain.bitcoinCash -> "bitcoin-cash"
-        Chain.litecoin -> "litecoin"
-        Chain.dogecoin -> "dogecoin"
-        Chain.dash -> "dash"
+        Chain.Bitcoin -> "bitcoin"
+        Chain.BitcoinCash -> "bitcoin-cash"
+        Chain.Litecoin -> "litecoin"
+        Chain.Dogecoin -> "dogecoin"
+        Chain.Dash -> "dash"
         else -> throw IllegalArgumentException("Unsupported chain $chain")
     }
 

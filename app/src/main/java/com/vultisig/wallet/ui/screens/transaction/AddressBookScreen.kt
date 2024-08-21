@@ -265,7 +265,7 @@ private fun AddressBookScreenPreview() {
             entries = listOf(
                 AddressBookEntryUiModel(
                     model = AddressBookEntry(
-                        chain = Chain.ethereum,
+                        chain = Chain.Ethereum,
                         address = "123456abcdef",
                         title = "",
                     ),

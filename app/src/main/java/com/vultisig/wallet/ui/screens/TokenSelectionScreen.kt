@@ -110,14 +110,14 @@ internal fun TokenSelectionScreen(
             contentPadding = PaddingValues(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            TokensSection(
+            tokensSection(
                 title = R.string.token_selection_selected_tokens_title,
                 tokens = state.selectedTokens,
                 hasTokenSwitch = hasTokenSwitch,
                 onEnableToken = onEnableToken,
                 onDisableToken = onDisableToken,
             )
-            TokensSection(
+            tokensSection(
                 title = R.string.token_selection_tokens_title,
                 tokens = state.otherTokens,
                 hasTokenSwitch = hasTokenSwitch,
@@ -128,7 +128,7 @@ internal fun TokenSelectionScreen(
     }
 }
 
-private fun LazyListScope.TokensSection(
+private fun LazyListScope.tokensSection(
     @StringRes title: Int,
     tokens: List<TokenUiModel>,
     hasTokenSwitch: Boolean,

@@ -44,7 +44,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
             val coin = createCoin(result.first { key.mint == it.mint }, key.mint, vault)
             tokenValueDao.insertTokenValue(
                 TokenValueEntity(
-                    Chain.solana.id,
+                    Chain.Solana.id,
                     coin.address,
                     coin.ticker,
                     key.amount.toString()
@@ -65,7 +65,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
     override suspend fun getCachedBalance(coin: Coin): BigInteger {
         return try {
             tokenValueDao.getTokenValue(
-                Chain.solana.id,
+                Chain.Solana.id,
                 coin.address,
                 coin.ticker,
             )!!.toBigInteger()
@@ -81,7 +81,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
         vault: Vault
     ): Coin {
         val coin = Coin(
-            chain = Chain.solana,
+            chain = Chain.Solana,
             ticker = tokenResponse.tokenList.ticker,
             logo = tokenResponse.tokenList.logo,
             decimal = tokenResponse.decimals,

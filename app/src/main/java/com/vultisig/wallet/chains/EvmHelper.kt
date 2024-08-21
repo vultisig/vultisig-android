@@ -25,10 +25,7 @@ internal class EvmHelper(
     private val vaultHexChainCode: String,
 ) {
     companion object{
-        val DefaultETHTransferGasUnits: ULong =
-            23000UL // Increased to 23000 to support swaps and transfers with memo
-        val DefaultERC20TransferGasUnits: ULong = 120000UL
-        val DefaultEthSwapGasUnit: Long = 600000L
+        const val DefaultEthSwapGasUnit: Long = 600000L
     }
 
     fun getCoin(): Coin? {
@@ -91,7 +88,7 @@ internal class EvmHelper(
         spec as? BlockChainSpecific.Ethereum
             ?: error("BlockChainSpecific is not Ethereum for EVM chain")
 
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw Exception("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()

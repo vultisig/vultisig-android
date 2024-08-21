@@ -67,7 +67,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
             var swapPayload: SwapPayload = transaction.payload
             var dstToken = swapPayload.dstToken
-            if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.bitcoinCash) {
+            if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.BitcoinCash) {
                 dstToken = dstToken.adjustBitcoinCashAddressFormat()
                 swapPayload = swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
             }

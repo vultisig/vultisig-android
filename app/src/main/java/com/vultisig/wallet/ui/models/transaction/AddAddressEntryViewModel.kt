@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class AddAddressEntryUiModel(
-    val selectedChain: Chain = Chain.ethereum,
+    val selectedChain: Chain = Chain.Ethereum,
     val chains: List<Chain> = Chain.entries,
     val addressError: UiText? = null,
 )

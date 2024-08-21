@@ -87,27 +87,7 @@ internal class MayaChainHelper(
         return Coins.getCoin("MAYA", address.description(), derivedPublicKey, coinType)
     }
 
-    fun getSwapPreSignedInputData(
-        keysignPayload: KeysignPayload,
-        input: Cosmos.SigningInput.Builder,
-    ): ByteArray {
-        val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.MayaChain
-            ?: throw Exception("Invalid blockChainSpecific")
-        val publicKey =
-            PublicKey(keysignPayload.vaultPublicKeyECDSA.hexToByteArray(), PublicKeyType.SECP256K1)
-        val inputData = input.apply {
-            this.publicKey = ByteString.copyFrom(publicKey.data())
-            this.accountNumber = thorchainData.accountNumber.toLong()
-            this.sequence = thorchainData.sequence.toLong()
-            this.mode = Cosmos.BroadcastMode.SYNC
-            this.fee = Cosmos.Fee.newBuilder().apply {
-                this.gas = MAYA_CHAIN_GAS_UNIT
-            }.build()
-        }.build()
-        return inputData.toByteArray()
-    }
-
-    fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val fromAddress = AnyAddress(keysignPayload.coin.address, coinType, "maya").data()
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.MayaChain
             ?: throw Exception("Invalid blockChainSpecific")

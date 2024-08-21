@@ -202,7 +202,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): TokenValue {
         // convert maya token values with 10 decimal places to token values
         // with the correct number of decimal places
-        if (token.chain == Chain.mayaChain) {
+        if (token.chain == Chain.MayaChain) {
             return TokenValue(
                 value = this.toBigInteger(),
                 token = token,
@@ -225,7 +225,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
     private fun Coin.swapAssetName(): String = if (isNativeToken) {
-        if (chain == Chain.gaiaChain) {
+        if (chain == Chain.GaiaChain) {
             "${chain.swapAssetName()}.ATOM"
         } else {
             // todo it should be chain.ticker (and it seems that they somehow different with Coin::ticker)
@@ -265,50 +265,50 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
     private val Coin.swapProviders: Set<SwapProvider>
         get() = when (chain) {
-            Chain.mayaChain, Chain.dash, Chain.kujira -> setOf(SwapProvider.MAYA)
-            Chain.ethereum -> if (ticker in thorEthTokens) setOf(
+            Chain.MayaChain, Chain.Dash, Chain.Kujira -> setOf(SwapProvider.MAYA)
+            Chain.Ethereum -> if (ticker in thorEthTokens) setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
             ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
-            Chain.bscChain -> if (ticker in thorBscTokens) setOf(
+            Chain.BscChain -> if (ticker in thorBscTokens) setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
             ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
-            Chain.avalanche -> if (ticker in thorAvaxTokens) setOf(
+            Chain.Avalanche -> if (ticker in thorAvaxTokens) setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
             ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
-            Chain.base -> setOf(SwapProvider.LIFI)
+            Chain.Base -> setOf(SwapProvider.LIFI)
 
-            Chain.optimism, Chain.polygon -> setOf(
+            Chain.Optimism, Chain.Polygon -> setOf(
                 SwapProvider.ONEINCH, SwapProvider.LIFI
             )
 
-            Chain.thorChain -> setOf(
+            Chain.ThorChain -> setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.MAYA,
             )
 
-            Chain.bitcoin -> setOf(
+            Chain.Bitcoin -> setOf(
                 SwapProvider.THORCHAIN,
                 SwapProvider.MAYA,
             )
 
-            Chain.dogecoin, Chain.bitcoinCash, Chain.litecoin,
-            Chain.gaiaChain -> setOf(
+            Chain.Dogecoin, Chain.BitcoinCash, Chain.Litecoin,
+            Chain.GaiaChain -> setOf(
                 SwapProvider.THORCHAIN
             )
 
-            Chain.arbitrum, Chain.blast -> setOf(SwapProvider.LIFI)
+            Chain.Arbitrum, Chain.Blast -> setOf(SwapProvider.LIFI)
 
-            Chain.solana, Chain.polkadot, Chain.dydx,
-            Chain.cronosChain, /* TODO later Chain.sui, Chain.zksync*/
+            Chain.Solana, Chain.Polkadot, Chain.Dydx,
+            Chain.CronosChain, /* TODO later Chain.sui, Chain.zksync*/
             -> emptySet()
         }
 
@@ -323,27 +323,27 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 private fun Chain.swapAssetName(): String {
     // TODO that seems to differ just for thorChain
     return when (this) {
-        Chain.thorChain -> "THOR"
-        Chain.ethereum -> "ETH"
-        Chain.avalanche -> "AVAX"
-        Chain.bscChain -> "BSC"
-        Chain.bitcoin -> "BTC"
-        Chain.bitcoinCash -> "BCH"
-        Chain.litecoin -> "LTC"
-        Chain.dogecoin -> "DOGE"
-        Chain.gaiaChain -> "GAIA"
-        Chain.kujira -> "KUJI"
-        Chain.solana -> "SOL"
-        Chain.dash -> "DASH"
-        Chain.mayaChain -> "MAYA"
-        Chain.arbitrum -> "ARB"
-        Chain.base -> "BASE"
-        Chain.optimism -> "OP"
-        Chain.polygon -> "MATIC"
-        Chain.blast -> "BLAST"
-        Chain.cronosChain -> "CRO"
-        Chain.polkadot -> "DOT"
-        Chain.dydx -> "DYDX"
+        Chain.ThorChain -> "THOR"
+        Chain.Ethereum -> "ETH"
+        Chain.Avalanche -> "AVAX"
+        Chain.BscChain -> "BSC"
+        Chain.Bitcoin -> "BTC"
+        Chain.BitcoinCash -> "BCH"
+        Chain.Litecoin -> "LTC"
+        Chain.Dogecoin -> "DOGE"
+        Chain.GaiaChain -> "GAIA"
+        Chain.Kujira -> "KUJI"
+        Chain.Solana -> "SOL"
+        Chain.Dash -> "DASH"
+        Chain.MayaChain -> "MAYA"
+        Chain.Arbitrum -> "ARB"
+        Chain.Base -> "BASE"
+        Chain.Optimism -> "OP"
+        Chain.Polygon -> "MATIC"
+        Chain.Blast -> "BLAST"
+        Chain.CronosChain -> "CRO"
+        Chain.Polkadot -> "DOT"
+        Chain.Dydx -> "DYDX"
 //        Chain.sui -> "SUI"
 //        Chain.zksync -> "ZK"
     }
