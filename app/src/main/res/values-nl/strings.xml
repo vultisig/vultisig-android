@@ -132,8 +132,9 @@
     <string name="vault_detail_screen_eddsa">EDDSA</string>
     <string name="welcome_screen_next">Volgende</string>
     <string name="welcome_screen_skip">Overslaan</string>
-    <string name="keysign_screen_preparing_vault">Kluis voorbereiden...</string>
-    <string name="keysign_screen_signing_with_ecdsa">Ondertekenen met ECDSA...</string>
+    <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
+    <string name="keysign_screen_signing_with_ecdsa">Ondertekenen met ECDSA…</string>
+    <string name="keysign_screen_signing_with_eddsa">Ondertekenen met EdDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign voltooid!</string>
     <string name="keysign_screen_error_please_try_again">Fout! Probeer het opnieuw. %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Houd apparaten op hetzelfde WiFi-netwerk met Vultisig open.</string>

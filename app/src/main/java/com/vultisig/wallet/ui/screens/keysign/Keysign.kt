@@ -72,7 +72,7 @@ internal fun KeysignScreen(
     val text = when (state) {
         KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
         KeysignState.KeysignECDSA -> stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
-        KeysignState.KeysignEdDSA -> stringResource(id = R.string.vault_detail_screen_eddsa)
+        KeysignState.KeysignEdDSA -> stringResource(id = R.string.keysign_screen_signing_with_eddsa)
         KeysignState.KeysignFinished -> stringResource(id = R.string.keysign_screen_keysign_finished)
         KeysignState.ERROR -> stringResource(
             id = R.string.keysign_screen_error_please_try_again,

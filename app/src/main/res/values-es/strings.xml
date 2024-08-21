@@ -126,7 +126,8 @@
     <string name="welcome_screen_next">Siguiente</string>
     <string name="welcome_screen_skip">Saltar</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO CAJA FUERTE..</string>
-    <string name="keysign_screen_signing_with_ecdsa">"FIRMANDO USANDO CLAVE ECDSA… "</string>
+    <string name="keysign_screen_signing_with_ecdsa">"FIRMANDO USANDO CLAVE ECDSA…</string>
+    <string name="keysign_screen_signing_with_eddsa">"FIRMANDO USANDO CLAVE EdDSA…</string>
     <string name="keysign_screen_keysign_finished">¡Keysign terminado!</string>
     <string name="keysign_screen_error_please_try_again">Error! Por favor, inténtalo de nuevo. %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenga los dispositivos en la misma red WiFi con Vultisig abierto.</string>

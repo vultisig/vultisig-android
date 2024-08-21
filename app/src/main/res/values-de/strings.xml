@@ -79,8 +79,9 @@
     <string name="vault_detail_screen_eddsa">EDDSA</string>
     <string name="welcome_screen_next">Nächster</string>
     <string name="welcome_screen_skip">Überspringen</string>
-    <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN...</string>
-    <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN...</string>
+    <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN…</string>
+    <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
+    <string name="keysign_screen_signing_with_eddsa">MIT EdDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="device_list_desc2">Sie sollten alle Tresorfreigaben an separaten Speicherorten sichern.</string>
     <string name="this_device">(Dieses Gerät)</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>

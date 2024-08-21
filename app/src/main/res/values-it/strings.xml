@@ -113,7 +113,8 @@
     <string name="tokens">Tokens</string>
     <string name="swap_screen_title">Scambia</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
-    <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA...</string>
+    <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
+    <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
     <string name="faq_settings_q1">Devo registrarmi?</string>
     <string name="home_screen_title">Cassaforti</string>
