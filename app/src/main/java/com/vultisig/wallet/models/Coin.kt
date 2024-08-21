@@ -33,7 +33,7 @@ internal data class Coin(
 
 }
 
-internal fun Coin.AllowZeroGas(): Boolean {
+internal fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot
 }
 

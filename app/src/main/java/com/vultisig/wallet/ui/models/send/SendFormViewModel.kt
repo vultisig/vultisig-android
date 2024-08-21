@@ -28,7 +28,7 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
-import com.vultisig.wallet.models.AllowZeroGas
+import com.vultisig.wallet.models.allowZeroGas
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.presenter.common.TextFieldUtils
@@ -303,7 +303,7 @@ internal class SendFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
 
-                if (!selectedAccount.token.AllowZeroGas() && gasFee.value <= BigInteger.ZERO) {
+                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
@@ -519,7 +519,7 @@ internal class SendFormViewModel @Inject constructor(
                 .map { src ->
                     val address = src.address.address
                     val uiModel = accountToTokenBalanceUiModelMapper.map(src)
-                    val showGasFee = (selectedAccount?.token?.AllowZeroGas() == false)
+                    val showGasFee = (selectedAccount?.token?.allowZeroGas() == false)
                     val hasMemo = src.account.token.isNativeToken
                     uiState.update {
                         it.copy(

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.tss
 
-import com.vultisig.wallet.common.Encrypt
+import com.vultisig.wallet.common.encrypt
 import com.vultisig.wallet.common.md5
 import com.vultisig.wallet.mediator.Message
 import okhttp3.MediaType.Companion.toMediaType
@@ -22,7 +22,7 @@ class TssMessenger(
     }
 
     override fun send(from: String, to: String, body: String) {
-        val encryptedBody = body.Encrypt(encryptionHex)
+        val encryptedBody = body.encrypt(encryptionHex)
         val message = Message(
             sessionID, from, listOf(to), encryptedBody, body.md5(), counter++
         )
