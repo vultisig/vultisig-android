@@ -94,10 +94,6 @@ internal class DepositFormViewModel @Inject constructor(
 
     val state = MutableStateFlow(DepositFormUiModel())
 
-    init {
-
-    }
-
     fun loadData(
         vaultId: String,
         chainId: String,
