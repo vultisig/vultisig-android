@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
@@ -12,7 +13,9 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.models.logo
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -29,6 +32,7 @@ internal data class CustomTokenUiModel(
     val hasError: Boolean = false,
     val token: Coin? = null,
     val price: String = "",
+    @DrawableRes val chainLogo: Int,
 )
 
 
@@ -42,11 +46,12 @@ internal class CustomTokenViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    val uiModel = MutableStateFlow(CustomTokenUiModel())
     val searchFieldState: TextFieldState = TextFieldState()
     private val chainId =
         requireNotNull(savedStateHandle.get<String>(Destination.CustomToken.ARG_CHAIN_ID))
-
+    val uiModel = MutableStateFlow(
+        CustomTokenUiModel(chainLogo = Chain.fromRaw(chainId).logo)
+    )
     fun searchCustomToken() {
         viewModelScope.launch {
             showLoading()

@@ -29,7 +29,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.ChangeCurrencyUnit
 import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingEvent.InitScreen
-import com.vultisig.wallet.presenter.settings.default_chains_setting.TokenSelection
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
@@ -85,7 +84,7 @@ private fun CurrencyUnitSettingItem(
         modifier = Modifier
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .fillMaxWidth()
-            .clickOnce(enabled = true, onClick = onClick),
+            .clickOnce(onClick = onClick),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
             containerColor = colors.oxfordBlue600Main

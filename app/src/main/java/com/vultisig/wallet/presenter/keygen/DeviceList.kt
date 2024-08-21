@@ -92,18 +92,13 @@ private fun DeviceList(
                 )
 
                 Hint(
-                    text = if (items.count() < 3)
-                        stringResource(R.string.device_list_desc2)
-                    else stringResource(
-                        R.string.device_list_desc3
-                    )
+                    text = stringResource(R.string.device_list_desc2),
                 )
 
                 MultiColorButton(
                     text = stringResource(R.string.device_list_screen_continue),
                     backgroundColor = Theme.colors.turquoise600Main,
                     textColor = Theme.colors.oxfordBlue600Main,
-                    minHeight = 44.dp,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
                         .fillMaxWidth(),

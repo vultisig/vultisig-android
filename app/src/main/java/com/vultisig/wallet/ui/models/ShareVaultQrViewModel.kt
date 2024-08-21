@@ -47,7 +47,7 @@ internal data class ShareVaultQrState(
 
 @HiltViewModel
 internal class ShareVaultQrViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val snackbarFlow: SnackbarFlow,
     @ApplicationContext private val context: Context,

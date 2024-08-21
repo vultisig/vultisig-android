@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,7 +32,6 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.PagerCircleIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -98,13 +96,12 @@ internal fun WelcomeScreen(
         MultiColorButton(
             text = stringResource(R.string.welcome_screen_next),
             textColor = Theme.colors.oxfordBlue800,
-            minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = MaterialTheme.dimens.buttonMargin,
-                    end = MaterialTheme.dimens.buttonMargin
-                )
+                    vertical = 16.dp,
+                    horizontal = 16.dp,
+                ),
         ) {
             viewModel.scrollToNextPage()
         }
@@ -120,7 +117,6 @@ internal fun WelcomeScreen(
             backgroundColor = Theme.colors.oxfordBlue800,
             textColor = Theme.colors.turquoise800,
             iconColor = Theme.colors.oxfordBlue800,
-            minHeight = MaterialTheme.dimens.minHeightButton,
             modifier = Modifier
                 .fillMaxWidth()
                 .alpha(if (isSkipVisible) 1f else 0f),

@@ -64,7 +64,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
                 mapIndexed { index, account ->
                     val newAccounts = account.accounts.map { acc ->
-                        val balance = balances.firstOrNull() {
+                        val balance = balances.firstOrNull {
                             it.address == account.address && it.coinId == acc.token.id
                         }
                         if (balance != null) {

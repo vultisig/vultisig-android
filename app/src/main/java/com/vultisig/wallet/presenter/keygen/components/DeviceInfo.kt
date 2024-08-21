@@ -3,108 +3,105 @@ package com.vultisig.wallet.presenter.keygen.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 
 @Composable
-fun DeviceInfo(
+internal fun DeviceInfo(
     @DrawableRes icon: Int,
     name: String,
     isSelected: Boolean,
     onItemSelected: (Boolean) -> Unit,
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .width(122.dp)
-            .height(165.dp)
-            .clip(shape = RoundedCornerShape(size = MaterialTheme.dimens.small1))
-            .background(Theme.colors.oxfordBlue600Main)
+            .then(
+                if (isSelected) {
+                    Modifier.border(
+                        width = 1.dp,
+                        color = Theme.colors.neutral0,
+                        shape = RoundedCornerShape(size = 8.dp)
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .background(
+                color = Theme.colors.oxfordBlue600Main,
+                shape = RoundedCornerShape(size = 8.dp)
+            )
+            .width(92.dp)
+            .height(122.dp)
             .clickable {
                 onItemSelected(!isSelected)
             },
-        horizontalAlignment = CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(end = 10.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
+        if (isSelected) {
             Box(
                 modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .height(MaterialTheme.dimens.medium1)
-                    .width(MaterialTheme.dimens.medium1)
-            ) {
-                Checkbox(
-                    modifier = Modifier.clip(shape = CircleShape),
-                    checked = isSelected,
-                    onCheckedChange = { isChecked ->
-                        onItemSelected(isChecked)
-                    },
-                    colors = CheckboxDefaults.colors(
-                        uncheckedColor = Theme.colors.oxfordBlue600Main,
-                        checkedColor = Theme.colors.neutral0,
-                        checkmarkColor = Theme.colors.oxfordBlue600Main
+                    .padding(all = 4.dp)
+                    .size(12.dp)
+                    .background(
+                        color = Theme.colors.neutral0,
+                        shape = CircleShape
                     )
-                )
-            }
+                    .align(Alignment.TopEnd)
+            )
         }
 
-        Image(
-            painter = painterResource(id = icon),
-            contentDescription = null,
+
+        Column(
             modifier = Modifier
-                .height(50.dp)
-                .width(50.dp)
-                .padding(top = MaterialTheme.dimens.small2)
-        )
+                .padding(
+                    vertical = 10.dp,
+                    horizontal = 16.dp,
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Image(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                modifier = Modifier.height(56.dp)
+            )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.small1))
+            UiSpacer(size = 6.dp)
 
-        Text(
-            modifier = Modifier.align(CenterHorizontally),
-            text = name,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 2,
-            color = Theme.colors.neutral0,
-            style = Theme.montserrat.subtitle2,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = name,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 2,
+                color = Theme.colors.neutral0,
+                style = Theme.montserrat.subtitle1,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun DeviceInfoPreview() {
+private fun DeviceInfoPreview() {
     DeviceInfo(R.drawable.ipad, "iPad", true, onItemSelected = { })
 }

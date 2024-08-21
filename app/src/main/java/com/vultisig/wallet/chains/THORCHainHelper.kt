@@ -29,7 +29,7 @@ internal class THORCHainHelper(
 ) {
     companion object{
         private val coinType: CoinType = CoinType.THORCHAIN
-        const val THORChainGasUnit: Long = 20000000
+        const val THOR_CHAIN_GAS_UNIT: Long = 20000000
     }
 
 
@@ -58,7 +58,7 @@ internal class THORCHainHelper(
             this.sequence = thorchainData.sequence.toLong()
             this.mode = Cosmos.BroadcastMode.SYNC
             this.fee = Cosmos.Fee.newBuilder().apply {
-                this.gas = THORChainGasUnit
+                this.gas = THOR_CHAIN_GAS_UNIT
             }.build()
         }.build()
         return inputData.toByteArray()
@@ -133,7 +133,7 @@ internal class THORCHainHelper(
             this.addAllMessages(listOf(msgSend))
 
             this.fee = Cosmos.Fee.newBuilder().apply {
-                this.gas = THORChainGasUnit
+                this.gas = THOR_CHAIN_GAS_UNIT
             }.build()
         }.build()
         return input.toByteArray()

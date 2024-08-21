@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -33,7 +33,6 @@ import com.vultisig.wallet.ui.components.InformationNoteSnackBar
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.dimens
 
 @Composable
 internal fun JoinKeygenView(
@@ -116,15 +115,15 @@ fun DiscoveryingSessionID(navController: NavHostController) {
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
+                vertical = 12.dp,
+                horizontal = 8.dp
             )
     ) {
         TopBar(
             centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
@@ -137,7 +136,7 @@ fun DiscoveryingSessionID(navController: NavHostController) {
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
-                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                modifier = Modifier.padding(12.dp)
             )
         }
     }
@@ -157,15 +156,15 @@ fun DiscoverService(navController: NavHostController) {
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
+                vertical = 12.dp,
+                horizontal = 8.dp
             )
     ) {
         TopBar(
             centerText = stringResource(R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
@@ -178,7 +177,7 @@ fun DiscoverService(navController: NavHostController) {
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
-                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                modifier = Modifier.padding(12.dp)
             )
         }
     }
@@ -191,15 +190,15 @@ fun JoiningKeygen(navController: NavHostController) {
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
+                vertical = 12.dp,
+                horizontal = 8.dp
             )
     ) {
         TopBar(
             centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
@@ -212,7 +211,7 @@ fun JoiningKeygen(navController: NavHostController) {
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
-                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                modifier = Modifier.padding(12.dp)
             )
         }
     }
@@ -225,15 +224,15 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
+                vertical = 12.dp,
+                horizontal = 8.dp
             )
     ) {
         TopBar(
             centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
@@ -246,7 +245,7 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
             )
             CircularProgressIndicator(
                 color = Theme.colors.neutral0,
-                modifier = Modifier.padding(MaterialTheme.dimens.marginMedium)
+                modifier = Modifier.padding(12.dp)
             )
         }
     }
@@ -259,15 +258,15 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
             .padding(
-                vertical = MaterialTheme.dimens.marginMedium,
-                horizontal = MaterialTheme.dimens.marginSmall
+                vertical = 12.dp,
+                horizontal = 8.dp
             )
     ) {
         TopBar(
             centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
             navController = navController
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.dimens.medium2))
+        Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,

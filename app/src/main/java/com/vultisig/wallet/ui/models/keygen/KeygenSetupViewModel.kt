@@ -43,7 +43,7 @@ enum class VaultSetupType(val raw: Int) {
     M_OF_N(2);
 
     companion object {
-        fun fromInt(value: Int) = entries.first { it.raw == value }
+        fun fromInt(value: Int): VaultSetupType = entries.first { it.raw == value }
         fun VaultSetupType.asString(): String =
             when (this) {
                 TWO_OF_TWO -> "2/2"

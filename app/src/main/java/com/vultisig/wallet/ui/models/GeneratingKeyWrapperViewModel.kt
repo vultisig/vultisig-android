@@ -1,11 +1,9 @@
 package com.vultisig.wallet.ui.models
 
 import android.content.Context
-import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
-import com.vultisig.wallet.presenter.keygen.KeygenState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

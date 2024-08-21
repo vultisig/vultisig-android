@@ -216,3 +216,22 @@ internal val MIGRATION_11_12 = object : Migration(11, 12) {
         )
     }
 }
+
+internal val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.updateCoinDecimals("UNI", 18)
+        db.updateCoinDecimals("MATIC", 18)
+        db.updateCoinDecimals("WBTC", 8)
+        db.updateCoinDecimals("LINK", 18)
+        db.updateCoinDecimals("FLIP", 18)
+    }
+}
+
+private fun SupportSQLiteDatabase.updateCoinDecimals(ticker: String, decimal: Int) {
+    execSQL(
+        """
+        UPDATE coin SET decimals = $decimal
+        WHERE ticker = "$ticker"
+    """.trimIndent()
+    )
+}

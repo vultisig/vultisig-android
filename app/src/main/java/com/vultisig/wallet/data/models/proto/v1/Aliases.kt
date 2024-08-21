@@ -9,6 +9,6 @@ typealias UtxoInfoProto = vultisig.keysign.v1.UtxoInfo
 typealias ThorChainSwapPayloadProto = vultisig.keysign.v1.THORChainSwapPayload
 typealias KeygenMessageProto = vultisig.keygen.v1.KeygenMessage
 typealias ReshareMessageProto = vultisig.keygen.v1.ReshareMessage
-typealias VaultProto = vultisig.vault.v1.Vault
+typealias VaultProto = Vault
 typealias VaultContainerProto = vultisig.vault.v1.VaultContainer
 typealias KeyShareProto = Vault.KeyShare

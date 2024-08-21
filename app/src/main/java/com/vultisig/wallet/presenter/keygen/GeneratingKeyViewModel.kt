@@ -1,5 +1,6 @@
 package com.vultisig.wallet.presenter.keygen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.MutableState
@@ -44,7 +45,7 @@ internal class GeneratingKeyViewModel(
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
     private val gson: Gson,
-    private val context: Context,
+    @SuppressLint("StaticFieldLeak") private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,

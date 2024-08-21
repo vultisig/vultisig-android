@@ -39,10 +39,8 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.chainType
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -353,7 +351,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 if (isDeposit) {
                     val fee = when (val specific = payload.blockChainSpecific) {
-                        is BlockChainSpecific.MayaChain -> MayaChainHelper.MayaChainGasUnit.toBigInteger()
+                        is BlockChainSpecific.MayaChain -> MayaChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger()
                         is BlockChainSpecific.THORChain -> specific.fee
                         else -> error("BlockChainSpecific $specific is not supported")
                     }
@@ -382,13 +380,12 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } else {
                     val payloadToken = payload.coin
                     val address = payloadToken.address
-                    val token = payloadToken
-                    val chain = token.chain
+                    val chain = payloadToken.chain
 
                     val tokenValue = TokenValue(
                         value = payload.toAmount,
-                        unit = token.ticker,
-                        decimals = token.decimal,
+                        unit = payloadToken.ticker,
+                        decimals = payloadToken.decimal,
                     )
 
                     val gasFee = gasFeeRepository.getGasFee(chain, address)
@@ -398,12 +395,12 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         vaultId = payload.vaultPublicKeyECDSA,
                         chainId = chain.id,
-                        tokenId = token.id,
+                        tokenId = payloadToken.id,
                         srcAddress = address,
                         dstAddress = payload.toAddress,
                         tokenValue = tokenValue,
                         fiatValue = convertTokenValueToFiat(
-                            token,
+                            payloadToken,
                             tokenValue,
                             currency,
                         ),

@@ -70,7 +70,7 @@ internal class THORChainSwaps(
 
             THORChainSwap.Chain.BTC, THORChainSwap.Chain.LTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH -> {
                 val helper =
-                    utxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+                    UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSigningInputData(
                     keysignPayload,
                     output.bitcoin.toBuilder()
@@ -181,7 +181,7 @@ internal class THORChainSwaps(
 
             THORChainSwap.Chain.BTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH, THORChainSwap.Chain.LTC -> {
                 val helper =
-                    utxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
+                    UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSignedTransaction(inputData, signatures)
             }
 

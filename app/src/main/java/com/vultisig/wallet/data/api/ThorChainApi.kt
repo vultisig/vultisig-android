@@ -116,7 +116,7 @@ internal class ThorChainApiImpl @Inject constructor(
 
     override suspend fun broadcastTransaction(tx: String): String? {
         try {
-            val response = httpClient.post(Endpoints.THORCHAINBroadcastTx) {
+            val response = httpClient.post(Endpoints.THORCHAIN_BROADCAST_TX) {
                 contentType(ContentType.Application.Json)
                 header(xClientID, xClientIDValue)
                 setBody(tx)

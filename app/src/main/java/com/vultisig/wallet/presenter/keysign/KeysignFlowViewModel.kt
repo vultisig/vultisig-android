@@ -16,7 +16,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.vultisigRelay
+import com.vultisig.wallet.common.VultisigRelay
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -80,7 +80,7 @@ enum class KeysignFlowState {
 
 @HiltViewModel
 internal class KeysignFlowViewModel @Inject constructor(
-    private val vultisigRelay: vultisigRelay,
+    private val vultisigRelay: VultisigRelay,
     private val gson: Gson,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
@@ -155,7 +155,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         _currentVault = vault
         _keysignPayload = keysignPayload
         this.selection.value = listOf(vault.localPartyID)
-        if (vultisigRelay.IsRelayEnabled) {
+        if (vultisigRelay.isRelayEnabled) {
             _serverAddress = Endpoints.VULTISIG_RELAY
             networkOption.value = NetworkPromptOption.INTERNET
         }
@@ -295,7 +295,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             toAmountDecimal = from.toAmountDecimal.toPlainString(),
                             quote = from.quote.let {
                                 OneInchQuote(
-                                    dstAmount = it.dstAmount.toString(),
+                                    dstAmount = it.dstAmount,
                                     tx = it.tx.let {
                                         vultisig.keysign.v1.OneInchTransaction(
                                             from = it.from,
@@ -318,7 +318,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     } else null,
                 ),
                 encryptionKeyHex = _encryptionKeyHex,
-                useVultisigRelay = vultisigRelay.IsRelayEnabled
+                useVultisigRelay = vultisigRelay.isRelayEnabled
             )
         )
 
@@ -331,7 +331,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
 
         addressProvider.update(_keysignMessage.value)
-        if (!vultisigRelay.IsRelayEnabled) {
+        if (!vultisigRelay.isRelayEnabled) {
             startMediatorService(context)
         } else {
             _serverAddress = Endpoints.VULTISIG_RELAY
@@ -453,13 +453,13 @@ internal class KeysignFlowViewModel @Inject constructor(
         if (networkOption.value == option) return
         when (option) {
             NetworkPromptOption.LOCAL -> {
-                vultisigRelay.IsRelayEnabled = false
+                vultisigRelay.isRelayEnabled = false
                 _serverAddress = "http://127.0.0.1:18080"
                 networkOption.value = option
             }
 
             NetworkPromptOption.INTERNET -> {
-                vultisigRelay.IsRelayEnabled = true
+                vultisigRelay.isRelayEnabled = true
                 _serverAddress = Endpoints.VULTISIG_RELAY
                 networkOption.value = option
             }

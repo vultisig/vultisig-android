@@ -138,7 +138,8 @@ internal val Chain.tokenStandard: String?
 
 internal val Chain.canSelectTokens: Boolean
     get() = when {
-        standard == EVM -> true
+        standard == EVM && this != Chain.cronosChain -> true
+        this == Chain.mayaChain -> true
         else -> false
     }
 
@@ -185,10 +186,10 @@ internal fun Chain.oneInchChainId(): Int =
 internal val Chain.chainType: TokenStandard
     get() = when (this) {
         Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.arbitrum, Chain.base,
-        Chain.optimism, Chain.polygon, Chain.blast, Chain.cronosChain -> TokenStandard.EVM
+        Chain.optimism, Chain.polygon, Chain.blast, Chain.cronosChain -> EVM
         Chain.thorChain, Chain.mayaChain -> TokenStandard.THORCHAIN
-        Chain.solana -> TokenStandard.SOL
-        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> TokenStandard.UTXO
-        Chain.gaiaChain, Chain.kujira, Chain.dydx -> TokenStandard.COSMOS
+        Chain.solana -> SOL
+        Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> UTXO
+        Chain.gaiaChain, Chain.kujira, Chain.dydx -> COSMOS
         Chain.polkadot -> TokenStandard.POLKADOT
     }

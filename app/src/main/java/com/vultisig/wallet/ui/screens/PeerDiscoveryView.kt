@@ -61,6 +61,7 @@ internal fun PeerDiscoveryView(
                 onRemoveParticipant
             )
         }
+
         else -> {
             VerticalView(
                 modifier,
@@ -197,21 +198,13 @@ private fun VerticalView(
         modifier.verticalScroll(rememberScrollState()),
         horizontalAlignment = CenterHorizontally
     ) {
-        Text(
-            text = stringResource(R.string.keygen_peer_discovery_pair_with_other_devices),
-            color = textColor,
-            style = Theme.montserrat.subtitle1
-        )
-
         if (keygenPayloadState.isNotEmpty()) {
             QRCodeKeyGenImage(
                 keygenPayloadState,
                 modifier = Modifier
                     .padding(
-                        top = 32.dp,
-                        start = 32.dp,
-                        end = 32.dp,
-                        bottom = 20.dp
+                        vertical = 24.dp,
+                        horizontal = 16.dp,
                     )
                     .fillMaxWidth(),
             )
@@ -220,7 +213,7 @@ private fun VerticalView(
         NetworkPrompts(
             networkPromptOption = networkPromptOption,
             onChange = onChangeNetwork,
-            modifier = Modifier.padding(horizontal = 32.dp),
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
 
 

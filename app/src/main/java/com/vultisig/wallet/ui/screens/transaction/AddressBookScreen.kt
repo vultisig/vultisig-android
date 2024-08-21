@@ -158,20 +158,17 @@ internal fun AddressBookScreen(
             }
         },
         bottomBar = {
-            if (isEditModeEnabled || state.entries.isEmpty()) {
-                MultiColorButton(
-                    text = stringResource(R.string.address_book_add_address_button),
-                    textColor = Theme.colors.oxfordBlue800,
-                    minHeight = 44.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            vertical = 16.dp,
-                            horizontal = 16.dp,
-                        ),
-                    onClick = onAddAddressClick,
-                )
-            }
+            MultiColorButton(
+                text = stringResource(R.string.address_book_add_address_button),
+                textColor = Theme.colors.oxfordBlue800,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = 16.dp,
+                        horizontal = 16.dp,
+                    ),
+                onClick = onAddAddressClick,
+            )
         }
     )
 }
