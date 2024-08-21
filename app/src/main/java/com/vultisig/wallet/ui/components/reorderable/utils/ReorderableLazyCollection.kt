@@ -43,7 +43,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 
 object ReorderableLazyCollectionDefaults {
-    val ScrollThreshold = 48.dp
+    val ScrollThreshold: Dp = 48.dp
 }
 
 internal const val ScrollAmountMultiplier = 0.05f
@@ -219,7 +219,7 @@ open class ReorderableLazyCollectionState<out T> internal constructor(
         get() = draggingItemLayoutInfo?.index
 
 
-    override val isAnyItemDragging by derivedStateOf {
+    override val isAnyItemDragging: Boolean by derivedStateOf {
         draggingItemKey != null
     }
 
@@ -573,7 +573,7 @@ class ReorderableCollectionItemScope(
         interactionSource: MutableInteractionSource? = null,
         onDragStarted: (startedPosition: Offset) -> Unit = {},
         onDragStopped: () -> Unit = {},
-    ) = composed {
+    ): Modifier = composed {
         var handleOffset by remember { mutableStateOf(Offset.Zero) }
         var handleSize by remember { mutableStateOf(IntSize.Zero) }
 
