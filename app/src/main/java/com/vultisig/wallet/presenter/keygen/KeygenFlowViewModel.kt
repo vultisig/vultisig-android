@@ -143,7 +143,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    suspend fun setData(vaultId: String, context: Context) {
+    private suspend fun setData(vaultId: String, context: Context) {
         // start mediator server
         val allVaults = vaultRepository.getAll()
 

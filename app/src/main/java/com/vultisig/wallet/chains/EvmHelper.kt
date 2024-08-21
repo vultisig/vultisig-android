@@ -88,7 +88,7 @@ internal class EvmHelper(
         spec as? BlockChainSpecific.Ethereum
             ?: error("BlockChainSpecific is not Ethereum for EVM chain")
 
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val ethSpecifc = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw Exception("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()

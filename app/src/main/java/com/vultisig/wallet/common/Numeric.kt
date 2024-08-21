@@ -4,11 +4,11 @@ import kotlin.experimental.and
 
 object Numeric {
 
-    fun containsHexPrefix(input: String): Boolean {
+    private fun containsHexPrefix(input: String): Boolean {
         return input.length > 1 && input[0] == '0' && input[1] == 'x'
     }
 
-    fun cleanHexPrefix(input: String): String {
+    private fun cleanHexPrefix(input: String): String {
         return if (containsHexPrefix(input)) {
             input.substring(2)
         } else {
@@ -48,7 +48,7 @@ object Numeric {
         return data
     }
 
-    fun toHexString(input: ByteArray?, offset: Int, length: Int, withPrefix: Boolean): String {
+    private fun toHexString(input: ByteArray?, offset: Int, length: Int, withPrefix: Boolean): String {
         val stringBuilder = StringBuilder()
         if (withPrefix) {
             stringBuilder.append("0x")

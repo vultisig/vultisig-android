@@ -39,7 +39,7 @@ internal class DydxHelper(
         return Coins.getCoin("DYDX", address, derivedPublicKey, coinType)
     }
 
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val dydxData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =

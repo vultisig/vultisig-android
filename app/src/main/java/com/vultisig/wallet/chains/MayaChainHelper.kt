@@ -87,7 +87,7 @@ internal class MayaChainHelper(
         return Coins.getCoin("MAYA", address.description(), derivedPublicKey, coinType)
     }
 
-    fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignInputData(keysignPayload: KeysignPayload): ByteArray {
         val fromAddress = AnyAddress(keysignPayload.coin.address, coinType, "maya").data()
         val thorchainData = keysignPayload.blockChainSpecific as? BlockChainSpecific.MayaChain
             ?: throw Exception("Invalid blockChainSpecific")

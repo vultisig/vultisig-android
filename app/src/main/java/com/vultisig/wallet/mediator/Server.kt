@@ -11,7 +11,7 @@ import spark.Response
 import spark.Service
 import timber.log.Timber
 
-class Server(val nsdManager: NsdManager) : NsdManager.RegistrationListener {
+class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListener {
     private val port = 18080
     private val cache: Cache<String, Any> = CacheBuilder.newBuilder()
         .maximumSize(1000)

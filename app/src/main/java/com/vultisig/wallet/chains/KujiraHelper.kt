@@ -23,7 +23,7 @@ internal class KujiraHelper(
     private val vaultHexChainCode: String,
 ) {
     val coinType = CoinType.KUJIRA
-    val KujiGasLimit = 200000
+    private val KujiGasLimit = 200000
     fun getCoin(): Coin? {
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,
@@ -35,7 +35,7 @@ internal class KujiraHelper(
         return Coins.getCoin("KUJI", address, derivedPublicKey, coinType)
     }
 
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =
