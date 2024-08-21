@@ -549,40 +549,29 @@ internal class SwapFormViewModel @Inject constructor(
                                 val isAffiliate =
                                     srcUsdFiatValue.value >= AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                                val quote = if (provider == SwapProvider.MAYA) {
-                                    swapQuoteRepository.getMayaSwapQuote(
+                                val (quote, recommendedMinAmountToken) = if (provider == SwapProvider.MAYA) {
+                                    val mayaSwapQuote = swapQuoteRepository.getMayaSwapQuote(
                                         dstAddress = dst.address.address,
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
                                     )
+                                    mayaSwapQuote as SwapQuote.MayaChain to mayaSwapQuote.recommendedMinTokenValue
                                 } else {
-                                    swapQuoteRepository.getSwapQuote(
+                                    val thorSwapQuote = swapQuoteRepository.getSwapQuote(
                                         dstAddress = dst.address.address,
                                         srcToken = srcToken,
                                         dstToken = dstToken,
                                         tokenValue = tokenValue,
                                         isAffiliate = isAffiliate,
                                     )
+                                    thorSwapQuote as SwapQuote.ThorChain to thorSwapQuote.recommendedMinTokenValue
                                 }
                                 this@SwapFormViewModel.quote = quote
 
-                                val recommendedMinAmountIn: BigInteger = when (quote) {
-                                    is SwapQuote.ThorChain -> {
-                                        quote.data.recommendedMinAmountIn
-                                    }
-
-                                    is SwapQuote.MayaChain -> {
-                                        quote.data.recommendedMinAmountIn
-                                    }
-
-                                    is SwapQuote.OneInch -> {
-                                        BigInteger.ZERO
-                                    }
-                                }
                                 val recommendedMinAmountTokenString =
-                                    mapTokenValueToDecimalUiString(tokenValue.copy(value = recommendedMinAmountIn))
+                                    mapTokenValueToDecimalUiString(recommendedMinAmountToken)
                                 amount?.let {
                                     uiState.update {
                                         if (amount < recommendedMinAmountTokenString.toBigDecimal()) {
