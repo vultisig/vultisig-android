@@ -29,7 +29,10 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -87,7 +90,7 @@ internal fun GeneratingKey(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(all = 16.dp),
+                    .padding(all = 32.dp),
                 horizontalAlignment = CenterHorizontally
             ) {
                 DevicesOnSameNetworkHint(
@@ -159,6 +162,8 @@ internal fun GeneratingKey(
                                     stringArrayResource(id = R.array.keygen_tip_title)
                                 val keygenTipBodys =
                                     stringArrayResource(id = R.array.keygen_tip_body)
+                                val keygenTipBodyEmphasis =
+                                    stringArrayResource(id = R.array.keygen_tip_body_emphasis)
 
                                 val pagerState = rememberPagerState {
                                     keygenTipTitles.size
@@ -168,6 +173,7 @@ internal fun GeneratingKey(
                                     TipsPage(
                                         title = keygenTipTitles[index],
                                         text = keygenTipBodys[index],
+                                        emphasis = keygenTipBodyEmphasis[index]
                                     )
                                 }
 
@@ -210,6 +216,7 @@ internal fun GeneratingKey(
 private fun TipsPage(
     title: String,
     text: String,
+    emphasis: String,
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
@@ -224,8 +231,24 @@ private fun TipsPage(
 
         UiSpacer(size = 22.dp)
 
+        val resultText = String.format(text, emphasis)
+        val before = resultText.substringBefore(emphasis)
+        val after = resultText.substringAfter(emphasis)
+
+        val annotatedText = buildAnnotatedString {
+            append(before)
+            withStyle(
+                style = SpanStyle(
+                    color = Theme.colors.turquoise400
+                )
+            ) {
+                append(emphasis)
+            }
+            append(after)
+        }
+
         Text(
-            text = text,
+            text = annotatedText,
             color = Theme.colors.neutral0,
             style = Theme.montserrat.subtitle3,
             textAlign = TextAlign.Center,
