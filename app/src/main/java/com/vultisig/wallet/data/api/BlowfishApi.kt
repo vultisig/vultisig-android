@@ -56,24 +56,24 @@ internal class BlowfishApiImpl @Inject constructor(
 
 internal val Chain.blowfishChainName: String?
     get() = when (this) {
-        Chain.ethereum -> "ethereum"
-        Chain.polygon -> "polygon"
-        Chain.avalanche -> "avalanche"
-        Chain.arbitrum -> "arbitrum"
-        Chain.optimism -> "optimism"
-        Chain.base -> "base"
-        Chain.blast -> "blast"
-        Chain.bscChain -> "bnb"
-        Chain.solana -> "solana"
+        Chain.Ethereum -> "ethereum"
+        Chain.Polygon -> "polygon"
+        Chain.Avalanche -> "avalanche"
+        Chain.Arbitrum -> "arbitrum"
+        Chain.Optimism -> "optimism"
+        Chain.Base -> "base"
+        Chain.Blast -> "blast"
+        Chain.BscChain -> "bnb"
+        Chain.Solana -> "solana"
         else -> null
     }
 
 
 internal val Chain.blowfishNetwork: String?
     get() = when (this) {
-        Chain.ethereum, Chain.polygon, Chain.avalanche, Chain.optimism, Chain.base, Chain.blast,
-        Chain.bscChain, Chain.solana -> "mainnet"
+        Chain.Ethereum, Chain.Polygon, Chain.Avalanche, Chain.Optimism, Chain.Base, Chain.Blast,
+        Chain.BscChain, Chain.Solana -> "mainnet"
 
-        Chain.arbitrum -> "one"
+        Chain.Arbitrum -> "one"
         else -> null
     }

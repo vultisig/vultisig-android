@@ -51,11 +51,11 @@ internal class DefaultChainsRepositoryImpl @Inject constructor(
 
         private val DEFAULT_CHAINS_LIST: List<Chain>
             get() = listOf(
-                Chain.thorChain,
-                Chain.bitcoin,
-                Chain.bscChain,
-                Chain.ethereum,
-                Chain.solana
+                Chain.ThorChain,
+                Chain.Bitcoin,
+                Chain.BscChain,
+                Chain.Ethereum,
+                Chain.Solana
             )
 
     }

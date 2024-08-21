@@ -20,7 +20,7 @@ internal class ERC20Helper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val ethSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ethereum
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val input = Ethereum.SigningInput.newBuilder()

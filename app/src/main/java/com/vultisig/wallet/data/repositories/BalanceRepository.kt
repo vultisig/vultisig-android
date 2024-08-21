@@ -14,25 +14,25 @@ import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.Chain.arbitrum
-import com.vultisig.wallet.models.Chain.avalanche
-import com.vultisig.wallet.models.Chain.base
-import com.vultisig.wallet.models.Chain.bitcoin
-import com.vultisig.wallet.models.Chain.bitcoinCash
-import com.vultisig.wallet.models.Chain.bscChain
-import com.vultisig.wallet.models.Chain.dash
-import com.vultisig.wallet.models.Chain.dogecoin
-import com.vultisig.wallet.models.Chain.dydx
-import com.vultisig.wallet.models.Chain.ethereum
-import com.vultisig.wallet.models.Chain.gaiaChain
-import com.vultisig.wallet.models.Chain.kujira
-import com.vultisig.wallet.models.Chain.litecoin
-import com.vultisig.wallet.models.Chain.mayaChain
-import com.vultisig.wallet.models.Chain.optimism
-import com.vultisig.wallet.models.Chain.polkadot
-import com.vultisig.wallet.models.Chain.polygon
-import com.vultisig.wallet.models.Chain.solana
-import com.vultisig.wallet.models.Chain.thorChain
+import com.vultisig.wallet.models.Chain.Arbitrum
+import com.vultisig.wallet.models.Chain.Avalanche
+import com.vultisig.wallet.models.Chain.Base
+import com.vultisig.wallet.models.Chain.Bitcoin
+import com.vultisig.wallet.models.Chain.BitcoinCash
+import com.vultisig.wallet.models.Chain.BscChain
+import com.vultisig.wallet.models.Chain.Dash
+import com.vultisig.wallet.models.Chain.Dogecoin
+import com.vultisig.wallet.models.Chain.Dydx
+import com.vultisig.wallet.models.Chain.Ethereum
+import com.vultisig.wallet.models.Chain.GaiaChain
+import com.vultisig.wallet.models.Chain.Kujira
+import com.vultisig.wallet.models.Chain.Litecoin
+import com.vultisig.wallet.models.Chain.MayaChain
+import com.vultisig.wallet.models.Chain.Optimism
+import com.vultisig.wallet.models.Chain.Polkadot
+import com.vultisig.wallet.models.Chain.Polygon
+import com.vultisig.wallet.models.Chain.Solana
+import com.vultisig.wallet.models.Chain.ThorChain
 import com.vultisig.wallet.models.Coin
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -194,30 +194,30 @@ internal class BalanceRepositoryImpl @Inject constructor(
         coin: Coin,
     ): Flow<TokenValue> = flow {
         emit(TokenValue(when (coin.chain) {
-            thorChain -> {
+            ThorChain -> {
                 val listCosmosBalance = thorChainApi.getBalance(address)
                 val balance = listCosmosBalance
                     .find { it.denom.equals(coin.ticker, ignoreCase = true) }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            mayaChain -> {
+            MayaChain -> {
                 val listCosmosBalance = mayaChainApi.getBalance(address)
                 val balance = listCosmosBalance
                     .find { it.denom.equals(coin.ticker, ignoreCase = true) }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            bitcoin, bitcoinCash, litecoin, dogecoin, dash -> {
+            Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash -> {
                 val balance = blockchairApi.getAddressInfo(coin.chain, address)?.address?.balance
                 balance?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            ethereum, bscChain, avalanche, base, arbitrum, polygon, optimism, Chain.blast, Chain.cronosChain -> {
+            Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism, Chain.Blast, Chain.CronosChain -> {
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
-            gaiaChain, kujira, dydx -> {
+            GaiaChain, Kujira, Dydx -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
                 val listCosmosBalance = cosmosApi.getBalance(address)
                 val balance = listCosmosBalance
@@ -233,7 +233,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            solana -> {
+            Solana -> {
                 if (coin.isNativeToken) {
                     solanaApi.getBalance(address).toBigInteger()
                 } else {
@@ -241,7 +241,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                         ?: splTokenRepository.getCachedBalance(coin)
                 }
             }
-            polkadot -> polkadotApi.getBalanace(address)
+            Polkadot -> polkadotApi.getBalanace(address)
 
         }, coin.ticker, coin.decimal))
     }.onEach { tokenValue ->

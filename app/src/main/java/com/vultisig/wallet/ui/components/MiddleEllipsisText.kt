@@ -203,10 +203,6 @@ internal class BreakIterator {
         return instance.next()
     }
 
-    fun makeCharacterInstance(): BreakIterator {
-        return this
-    }
-
     fun setText(text: String?) {
         instance.setText(text)
     }
@@ -216,7 +212,7 @@ internal class BreakIterator {
     }
 
     companion object {
-        val Done = -1
+        const val Done = -1
     }
 }
 

@@ -32,7 +32,7 @@ internal class VaultIOSToAndroidMapperImpl @Inject constructor(private val gson:
     }
 
     private fun adjustAddressPrefix(coin: Coin) =
-        if (coin.chain == Chain.bitcoinCash) {
+        if (coin.chain == Chain.BitcoinCash) {
             coin.address.replace("bitcoincash:", "")
         } else coin.address
 

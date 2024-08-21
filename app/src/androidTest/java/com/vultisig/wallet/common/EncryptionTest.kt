@@ -8,15 +8,15 @@ class EncryptionTest{
     fun testEncryption(){
         val encryptionKey = Utils.encryptionKeyHex
         Log.d("EncryptionTest", "encryptionKey: $encryptionKey")
-        val encrypted ="helloworld".Encrypt(encryptionKey)
-        val decrypted = encrypted.Decrypt(encryptionKey)
+        val encrypted ="helloworld".encrypt(encryptionKey)
+        val decrypted = encrypted.decrypt(encryptionKey)
         assert(decrypted == "helloworld")
     }
     @Test
     fun testEnsureDecryptIOS(){
         val encryptionKey = "2c457ded43eb6b15611c9452a7671b02c11405f810924ae6373663e2ad96ebd4"
         val encrypted = "dnHGOuIZ89i5UKanha9vUzCdUBNVony3wqJnf0SYLBA="
-        val decrypted = encrypted.Decrypt(encryptionKey)
+        val decrypted = encrypted.decrypt(encryptionKey)
         assert(decrypted == "helloworld")
     }
     @Test

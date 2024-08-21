@@ -74,17 +74,6 @@ internal class DepositFormViewModel @Inject constructor(
     private lateinit var vaultId: String
     private var chain: Chain? = null
 
-    fun setAddressFromQrCode(vaultId: String, qrCode: String?) {
-        if (qrCode != null) {
-            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
-            Chain.entries.find { chain ->
-                chainAccountAddressRepository.isValid(chain, qrCode)
-            }?.let { chain ->
-                loadData(vaultId, chain.id)
-            }
-        }
-    }
-
     val tokenAmountFieldState = TextFieldState()
     val nodeAddressFieldState = TextFieldState()
     val providerFieldState = TextFieldState()
@@ -93,10 +82,6 @@ internal class DepositFormViewModel @Inject constructor(
     val basisPointsFieldState = TextFieldState()
 
     val state = MutableStateFlow(DepositFormUiModel())
-
-    init {
-
-    }
 
     fun loadData(
         vaultId: String,

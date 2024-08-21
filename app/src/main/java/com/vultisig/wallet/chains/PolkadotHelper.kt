@@ -29,7 +29,7 @@ internal class PolkadotHelper(
         return Coins.getCoin("DOT", address, vaultHexPublicKey, coinType)
     }
 
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val polkadotSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)

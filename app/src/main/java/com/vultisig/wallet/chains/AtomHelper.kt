@@ -24,7 +24,7 @@ internal class AtomHelper(
     private val vaultHexChainCode: String,
 ) {
     val coinType = CoinType.COSMOS
-    val ATOMGasLimit = 200000
+    private val ATOMGasLimit = 200000
     fun getCoin(): Coin? {
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
             vaultHexPublicKey,
@@ -66,7 +66,7 @@ internal class AtomHelper(
         return inputData.toByteArray()
     }
 
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")
         val publicKey =

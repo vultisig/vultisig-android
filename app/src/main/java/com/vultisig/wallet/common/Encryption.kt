@@ -12,7 +12,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 
 
 @OptIn(ExperimentalEncodingApi::class)
-fun String.Encrypt(key: String): String {
+fun String.encrypt(key: String): String {
     val decodeKey = key.decodeHex()
     val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
     val secureRandom = SecureRandom()
@@ -24,7 +24,7 @@ fun String.Encrypt(key: String): String {
     return Base64.encode(iv + encrypted)
 }
 
-fun String.Decrypt(key: String): String {
+fun String.decrypt(key: String): String {
     val decodeKey = key.decodeHex()
     val decodedRaw = this.decodeBase64()
     decodedRaw?.let {

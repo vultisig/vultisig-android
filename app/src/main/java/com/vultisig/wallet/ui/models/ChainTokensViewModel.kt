@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
@@ -67,7 +66,6 @@ internal class ChainTokensViewModel @Inject constructor(
 
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
-    private val tokensRepository: TokenRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
 ) : ViewModel() {
@@ -224,7 +222,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
                         canSelectTokens = chain.canSelectTokens,
-                        isBuyWeweVisible = chain == Chain.base
+                        isBuyWeweVisible = chain == Chain.Base
                     )
                 }
             }

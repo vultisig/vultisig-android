@@ -54,7 +54,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
 
         else -> when (chain) {
-            Chain.thorChain -> {
+            Chain.ThorChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = thorChainApi.getTHORChainNativeTransactionFee(),
@@ -63,7 +63,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 )
             }
 
-            Chain.mayaChain -> {
+            Chain.MayaChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = MayaChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger(),
@@ -72,7 +72,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 )
             }
 
-            Chain.gaiaChain, Chain.kujira -> {
+            Chain.GaiaChain, Chain.Kujira -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = 7500.toBigInteger(),
@@ -80,7 +80,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
-            Chain.dydx -> {
+            Chain.Dydx -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = DydxHelper.DydxGasLimit.toBigInteger(),
@@ -88,7 +88,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                     decimals = nativeToken.decimal,
                 )
             }
-            Chain.solana -> {
+            Chain.Solana -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 val fee = maxOf(
                     BigInteger(solanaApi.getHighPriorityFee(address)),
@@ -101,7 +101,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 )
             }
 
-            Chain.polkadot -> {
+            Chain.Polkadot -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = 0.toBigInteger(),

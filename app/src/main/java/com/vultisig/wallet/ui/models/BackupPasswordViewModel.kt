@@ -157,7 +157,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     private fun generateFileName(vault: Vault): String {
-        val thresholds = Utils.getThreshold(vault.signers.count())
+        val thresholds = Utils.getThreshold(vault.signers.size)
         val date = Date()
         val format = SimpleDateFormat(
             "yyyy-MM",
@@ -165,7 +165,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         )
         val formattedDate = format.format(date)
         val fileName =
-            "vultisig-${vault.name}-$formattedDate-${thresholds}of${vault.signers.count()}-${
+            "vultisig-${vault.name}-$formattedDate-${thresholds}of${vault.signers.size}-${
                 vault.pubKeyECDSA.takeLast(4)
             }-${vault.localPartyID}.bak"
         return fileName

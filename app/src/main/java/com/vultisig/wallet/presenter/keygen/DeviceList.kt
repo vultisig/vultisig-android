@@ -87,7 +87,7 @@ private fun DeviceList(
                 Hint(
                     text = digitStringToWords(
                         R.string.device_list_desc1,
-                        Utils.getThreshold(items.count())
+                        Utils.getThreshold(items.size)
                     )
                 )
 
@@ -131,8 +131,8 @@ private fun DeviceList(
                     Text(
                         text = stringResource(
                             R.string.device_list_of_vault,
-                            Utils.getThreshold(items.count()),
-                            items.count()
+                            Utils.getThreshold(items.size),
+                            items.size
                         ),
                         color = textColor,
                         style = Theme.montserrat.subtitle2
@@ -150,7 +150,7 @@ private fun DeviceList(
                 }
             }
 
-            val thresholds = Utils.getThreshold(items.count())
+            val thresholds = Utils.getThreshold(items.size)
             itemsIndexed(items) { index, item ->
                 if (item == localPartyId) {
                     DeviceInfoItem("${index + 1}. $item ${stringResource(R.string.this_device)}")

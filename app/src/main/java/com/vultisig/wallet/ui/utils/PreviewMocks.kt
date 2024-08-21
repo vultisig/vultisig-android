@@ -10,7 +10,7 @@ import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 
 internal val coin
     get() = Coin(
-        chain = Chain.thorChain,
+        chain = Chain.ThorChain,
         ticker = "RUNE",
         logo = "rune",
         address = "",
@@ -30,7 +30,7 @@ internal val account
 
 internal val address
     get() = Address(
-        chain = Chain.thorChain,
+        chain = Chain.ThorChain,
         address = "",
         accounts = emptyList()
     )

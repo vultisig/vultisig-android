@@ -212,7 +212,7 @@ private fun PreviewChainAccountItem() {
             fiatAmount = "1000$",
             assetsSize = 4,
             model = Address(
-                chain = Chain.bitcoin,
+                chain = Chain.Bitcoin,
                 address = "123abc456bca123abc456bca123abc456bca",
                 accounts = emptyList()
             )

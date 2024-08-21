@@ -365,7 +365,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
-    fun stopService(context: Context) {
+    private fun stopService(context: Context) {
         // start mediator service
         val intent = Intent(context, MediatorService::class.java)
         context.stopService(intent)

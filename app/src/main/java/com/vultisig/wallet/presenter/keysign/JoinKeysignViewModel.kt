@@ -36,7 +36,6 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.models.TssKeysignType
@@ -120,7 +119,6 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
-    private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -128,8 +126,8 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val blowfishRepository: BlowfishRepository,
-
     private val vaultRepository: VaultRepository,
+
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
     private val gson: Gson,
     private val protoBuf: ProtoBuf,

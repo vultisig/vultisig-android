@@ -22,7 +22,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
     override fun getTransactionLink(
         chain: Chain,
         transactionHash: String,
-    ): String = if (chain == Chain.thorChain) {
+    ): String = if (chain == Chain.ThorChain) {
         "${chain.transactionExplorerUrl}${transactionHash.removePrefix("0x")}"
     } else {
         "${chain.transactionExplorerUrl}$transactionHash"
@@ -33,24 +33,24 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {
-            Chain.avalanche, Chain.arbitrum, Chain.base, Chain.blast, Chain.bscChain,
-            Chain.cronosChain, Chain.dogecoin, Chain.ethereum, Chain.gaiaChain, Chain.mayaChain,
-            Chain.optimism, Chain.polygon, Chain.solana, Chain.thorChain,
+            Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
+            Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
+            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain,
             ->
                 "${explorerUrl}tx/"
 
-            Chain.bitcoin, Chain.bitcoinCash, Chain.dash, Chain.litecoin ->
+            Chain.Bitcoin, Chain.BitcoinCash, Chain.Dash, Chain.Litecoin ->
                 "${explorerUrl}transaction/"
 
-            Chain.kujira ->
+            Chain.Kujira ->
                 "https://finder.kujira.network/kaiyo-1/tx/"
 
-            Chain.dydx ->
+            Chain.Dydx ->
                 "https://www.mintscan.io/dydx/tx/"
 
             // TODO: Add support for these later
             // Chain.sui -> "https://suiscan.xyz/mainnet/tx/"
-            Chain.polkadot -> "https://polkadot.subscan.io/extrinsic/"
+            Chain.Polkadot -> "https://polkadot.subscan.io/extrinsic/"
         }
 
     private val Chain.blockExplorerUrl: String
@@ -58,27 +58,27 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.explorerUrl: String
         get() = when (this) {
-            Chain.arbitrum -> "https://arbiscan.io/"
-            Chain.avalanche -> "https://snowtrace.io/"
-            Chain.base -> "https://basescan.org/"
-            Chain.bitcoin -> "https://blockchair.com/bitcoin/"
-            Chain.bitcoinCash -> "https://blockchair.com/bitcoin-cash/"
-            Chain.blast -> "https://blastscan.io/"
-            Chain.bscChain -> "https://bscscan.com/"
-            Chain.cronosChain -> "https://cronoscan.com/"
-            Chain.dash -> "https://blockchair.com/dash/"
-            Chain.dogecoin -> "https://blockchair.com/dogecoin/"
-            Chain.ethereum -> "https://etherscan.io/"
-            Chain.gaiaChain -> "https://www.mintscan.io/cosmos/"
-            Chain.dydx -> "https://www.mintscan.io/dydx/"
-            Chain.kujira -> "https://finder.kujira.network/"
-            Chain.litecoin -> "https://blockchair.com/litecoin/"
-            Chain.mayaChain -> "https://www.mayascan.org/"
-            Chain.optimism -> "https://optimistic.etherscan.io/"
-            Chain.polygon -> "https://polygonscan.com/"
-            Chain.solana -> "https://explorer.solana.com/"
-            Chain.thorChain -> "https://runescan.io/"
-            Chain.polkadot -> "https://polkadot.subscan.io/account/"
+            Chain.Arbitrum -> "https://arbiscan.io/"
+            Chain.Avalanche -> "https://snowtrace.io/"
+            Chain.Base -> "https://basescan.org/"
+            Chain.Bitcoin -> "https://blockchair.com/bitcoin/"
+            Chain.BitcoinCash -> "https://blockchair.com/bitcoin-cash/"
+            Chain.Blast -> "https://blastscan.io/"
+            Chain.BscChain -> "https://bscscan.com/"
+            Chain.CronosChain -> "https://cronoscan.com/"
+            Chain.Dash -> "https://blockchair.com/dash/"
+            Chain.Dogecoin -> "https://blockchair.com/dogecoin/"
+            Chain.Ethereum -> "https://etherscan.io/"
+            Chain.GaiaChain -> "https://www.mintscan.io/cosmos/"
+            Chain.Dydx -> "https://www.mintscan.io/dydx/"
+            Chain.Kujira -> "https://finder.kujira.network/"
+            Chain.Litecoin -> "https://blockchair.com/litecoin/"
+            Chain.MayaChain -> "https://www.mayascan.org/"
+            Chain.Optimism -> "https://optimistic.etherscan.io/"
+            Chain.Polygon -> "https://polygonscan.com/"
+            Chain.Solana -> "https://explorer.solana.com/"
+            Chain.ThorChain -> "https://runescan.io/"
+            Chain.Polkadot -> "https://polkadot.subscan.io/account/"
         }
 
 }

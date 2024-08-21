@@ -36,7 +36,7 @@ internal class SolanaHelper(
         return Coins.getCoin("SOL", address, vaultHexPublicKey, coinType)
     }
 
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
 
         val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
