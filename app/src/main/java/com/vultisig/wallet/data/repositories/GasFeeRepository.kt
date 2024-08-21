@@ -83,7 +83,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             Chain.Dydx -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
-                    value = DydxHelper.DYDXGASLIMIT.toBigInteger(),
+                    value = DydxHelper.DYDX_CHAIN_GAS_LIMIT.toBigInteger(),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

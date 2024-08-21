@@ -26,7 +26,7 @@ internal class DydxHelper(
     val coinType = CoinType.DYDX
 
     companion object {
-        const val DYDXGASLIMIT = 2500000000000000
+        const val DYDX_CHAIN_GAS_LIMIT = 2500000000000000
     }
     fun getCoin(): Coin? {
         val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(

@@ -655,7 +655,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 val tokenFees = TokenValue(
                                     value = quote.tx.gasPrice.toBigInteger() *
                                             (quote.tx.gas.takeIf { it != 0L }
-                                                ?: EvmHelper.DEFAULTETHSWAPGASUNIT).toBigInteger(),
+                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
                                     token = srcNativeToken
                                 )
 
@@ -709,7 +709,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 val tokenFees = TokenValue(
                                     value = quote.tx.gasPrice.toBigInteger()
                                             * (quote.tx.gas.takeIf { it != 0L }
-                                        ?: EvmHelper.DEFAULTETHSWAPGASUNIT).toBigInteger(),
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
                                     token = srcNativeToken
                                 )
 
