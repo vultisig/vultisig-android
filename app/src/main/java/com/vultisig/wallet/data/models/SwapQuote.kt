@@ -17,12 +17,14 @@ internal sealed class SwapQuote {
     data class ThorChain(
         override val expectedDstValue: TokenValue,
         override val fees: TokenValue,
+        val recommendedMinTokenValue: TokenValue,
         val data: THORChainSwapQuote,
     ) : SwapQuote()
 
     data class MayaChain(
         override val expectedDstValue: TokenValue,
         override val fees: TokenValue,
+        val recommendedMinTokenValue: TokenValue,
         val data: THORChainSwapQuote,
     ) : SwapQuote()
 

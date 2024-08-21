@@ -106,15 +106,20 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         SwapException.handleSwapException(mayaQuote.error)
 
         val tokenFees = mayaQuote.fees.total
-            .thorTokenValueToTokenValue(dstToken, 8)
+            .thorTokenValueToTokenValue(dstToken, FIXED_MAYA_SWAP_DECIMALS)
 
         val expectedDstTokenValue = mayaQuote.expectedAmountOut
-            .thorTokenValueToTokenValue(dstToken, 8)
+            .thorTokenValueToTokenValue(dstToken, FIXED_MAYA_SWAP_DECIMALS)
+
+        val recommendedMinTokenValue = tokenValue.copy(
+            value = mayaQuote.recommendedMinAmountIn, decimals = FIXED_MAYA_SWAP_DECIMALS
+        )
 
         return SwapQuote.MayaChain(
             expectedDstValue = expectedDstTokenValue,
             fees = tokenFees,
             data = mayaQuote,
+            recommendedMinTokenValue = recommendedMinTokenValue,
         )
     }
 
@@ -126,7 +131,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         isAffiliate: Boolean,
     ): SwapQuote {
         val thorTokenValue = tokenValue.decimal
-            .movePointRight(FIXED_THORSWAP_DECIMALS)
+            .movePointRight(FIXED_THOR_SWAP_DECIMALS)
             .toBigInteger()
 
         val thorQuote = thorChainApi.getSwapQuotes(
@@ -141,13 +146,18 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         SwapException.handleSwapException(thorQuote.error)
 
         val tokenFees = thorQuote.fees.total
-            .thorTokenValueToTokenValue(dstToken, FIXED_THORSWAP_DECIMALS)
+            .thorTokenValueToTokenValue(dstToken, FIXED_THOR_SWAP_DECIMALS)
 
         val expectedDstTokenValue = thorQuote.expectedAmountOut
-            .thorTokenValueToTokenValue(dstToken, FIXED_THORSWAP_DECIMALS)
+            .thorTokenValueToTokenValue(dstToken, FIXED_THOR_SWAP_DECIMALS)
+
+        val recommendedMinTokenValue = tokenValue.copy(
+            value = thorQuote.recommendedMinAmountIn, decimals = FIXED_THOR_SWAP_DECIMALS
+        )
 
         return SwapQuote.ThorChain(
             expectedDstValue = expectedDstTokenValue,
+            recommendedMinTokenValue = recommendedMinTokenValue,
             fees = tokenFees,
             data = thorQuote,
         )
@@ -312,8 +322,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
 
     companion object {
-
-        private const val FIXED_THORSWAP_DECIMALS = 8
+        private const val FIXED_THOR_SWAP_DECIMALS = 8
+        private const val FIXED_MAYA_SWAP_DECIMALS = 8
     }
 
 }
