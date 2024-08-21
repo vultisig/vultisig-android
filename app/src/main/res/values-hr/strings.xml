@@ -113,7 +113,8 @@
     <string name="tokens">Tokeni</string>
     <string name="swap_screen_title">Zamijeni</string>
     <string name="chain_account_view_swap">ZAMIJENI</string>
-    <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ...</string>
+    <string name="keysign_screen_signing_with_ecdsa">POTPISIVANJE KORISTEĆI ECDSA KLJUČ…</string>
+    <string name="keysign_screen_signing_with_eddsa">POTPISIVANJE KORISTEĆI EdDSA KLJUČ…</string>
     <string name="signing_error_please_try_again_s">Greška pri prijavi. Molimo pokušajte ponovno. %s</string>
     <string name="faq_settings_q1">Moram li se registrirati?</string>
     <string name="home_screen_title">Sefovi</string>

@@ -84,6 +84,7 @@
     <string name="welcome_screen_skip">Pular</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO COFRE…</string>
     <string name="keysign_screen_signing_with_ecdsa">ASSINANDO USANDO CHAVE ECDSA…</string>
+    <string name="keysign_screen_signing_with_eddsa">ASSINANDO USANDO CHAVE EdDSA…</string>
     <string name="device_list_desc2">Deve fazer backup de todas as partilhas do cofre em locais separados.</string>
     <string name="this_device">(Este Dispositivo)</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
