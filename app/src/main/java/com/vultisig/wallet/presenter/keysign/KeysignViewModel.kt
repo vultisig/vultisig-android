@@ -266,8 +266,7 @@ internal class KeysignViewModel(
                         .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
                 }
 
-                // Mayachain swap is done through send
-                is SwapPayload.MayaChain -> Unit
+                else -> {}
             }
         }
 
