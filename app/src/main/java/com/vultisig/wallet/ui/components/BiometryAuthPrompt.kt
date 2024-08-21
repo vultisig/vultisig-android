@@ -133,7 +133,7 @@ private fun Context.launchBiometricPrompt(
 ) {
     Timber.d("launchBiometricPrompt")
 
-    val activity = (closestActivityOrNull as? FragmentActivity)
+    val activity = (closestActivityOrNull() as? FragmentActivity)
         ?: error("Context is not a FragmentActivity. Can't launch biometric prompt")
 
     activity.launchBiometricPrompt(

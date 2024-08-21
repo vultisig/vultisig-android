@@ -32,7 +32,7 @@ internal fun TopBar(
     onStartIconClick: (() -> Unit)? = null,
     onEndIconClick: () -> Unit = {},
 ) {
-    val activity = LocalContext.current.closestActivityOrNull
+    val activity = LocalContext.current.closestActivityOrNull()
     CenterAlignedTopAppBar(
         title = {
             Text(
