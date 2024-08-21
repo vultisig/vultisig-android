@@ -16,7 +16,7 @@ class KeysignMessageTest {
             sessionID = UUID.randomUUID().toString(),
             serviceName = "serviceName",
             payload = KeysignPayload(
-                coin = Coins.SupportedCoins.filter { it.ticker == "RUNE" }.first(),
+                coin = Coins.SupportedCoins.first { it.ticker == "RUNE" },
                 toAddress = "thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2",
                 toAmount = BigInteger("10000000"), // 0.1 RUNE
                 blockChainSpecific = BlockChainSpecific.THORChain(
