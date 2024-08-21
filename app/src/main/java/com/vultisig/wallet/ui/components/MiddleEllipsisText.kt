@@ -212,7 +212,7 @@ internal class BreakIterator {
     }
 
     companion object {
-        val Done = -1
+        const val Done = -1
     }
 }
 
