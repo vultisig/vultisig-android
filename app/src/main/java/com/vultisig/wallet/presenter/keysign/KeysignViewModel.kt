@@ -192,37 +192,37 @@ internal class KeysignViewModel(
         try {
             val signedTransaction = getSignedTransaction()
             val txHash = when (keysignPayload.coin.chain) {
-                Chain.thorChain -> {
+                Chain.ThorChain -> {
                     thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
                 }
 
-                Chain.bitcoin, Chain.bitcoinCash, Chain.litecoin, Chain.dogecoin, Chain.dash -> {
+                Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash -> {
                     blockChairApi.broadcastTransaction(
                         keysignPayload.coin,
                         signedTransaction.rawTransaction
                     )
                 }
 
-                Chain.ethereum, Chain.cronosChain, Chain.blast, Chain.bscChain, Chain.avalanche,
-                Chain.base, Chain.polygon, Chain.optimism, Chain.arbitrum -> {
+                Chain.Ethereum, Chain.CronosChain, Chain.Blast, Chain.BscChain, Chain.Avalanche,
+                Chain.Base, Chain.Polygon, Chain.Optimism, Chain.Arbitrum -> {
                     val evmApi = evmApiFactory.createEvmApi(keysignPayload.coin.chain)
                     evmApi.sendTransaction(signedTransaction.rawTransaction)
                 }
 
-                Chain.solana -> {
+                Chain.Solana -> {
                     solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
                 }
 
-                Chain.gaiaChain, Chain.kujira, Chain.dydx -> {
+                Chain.GaiaChain, Chain.Kujira, Chain.Dydx -> {
                     val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
                     cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
                 }
 
-                Chain.mayaChain -> {
+                Chain.MayaChain -> {
                     mayaChainApi.broadcastTransaction(signedTransaction.rawTransaction)
                 }
 
-                Chain.polkadot -> {
+                Chain.Polkadot -> {
                     polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
                         ?: signedTransaction.transactionHash
                 }
@@ -276,37 +276,37 @@ internal class KeysignViewModel(
 
         // we could define an interface to make the following more simpler,but I will leave it for later
         when (keysignPayload.coin.chain) {
-            Chain.bitcoin, Chain.dash, Chain.bitcoinCash, Chain.dogecoin, Chain.litecoin -> {
+            Chain.Bitcoin, Chain.Dash, Chain.BitcoinCash, Chain.Dogecoin, Chain.Litecoin -> {
                 val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
                 return utxo.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.thorChain -> {
+            Chain.ThorChain -> {
                 val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.gaiaChain -> {
+            Chain.GaiaChain -> {
                 val atomHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return atomHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.kujira -> {
+            Chain.Kujira -> {
                 val kujiraHelper = KujiraHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return kujiraHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.dydx -> {
+            Chain.Dydx -> {
                 val dydxHelper = DydxHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return dydxHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.solana -> {
+            Chain.Solana -> {
                 val solanaHelper = SolanaHelper(vault.pubKeyEDDSA)
                 return solanaHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.ethereum, Chain.avalanche, Chain.bscChain, Chain.cronosChain, Chain.blast, Chain.arbitrum, Chain.optimism, Chain.polygon, Chain.base -> {
+            Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast, Chain.Arbitrum, Chain.Optimism, Chain.Polygon, Chain.Base -> {
                 if (keysignPayload.coin.isNativeToken) {
                     val evmHelper = EvmHelper(
                         keysignPayload.coin.coinType,
@@ -325,12 +325,12 @@ internal class KeysignViewModel(
 
             }
 
-            Chain.mayaChain -> {
+            Chain.MayaChain -> {
                 val mayaHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
                 return mayaHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.polkadot -> {
+            Chain.Polkadot -> {
                 val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
                 return dotHelper.getSignedTransaction(keysignPayload, signatures)
             }

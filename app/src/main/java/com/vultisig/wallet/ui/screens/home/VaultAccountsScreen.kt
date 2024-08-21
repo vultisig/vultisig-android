@@ -262,7 +262,7 @@ private fun VaultAccountsScreenPreview() {
                     fiatAmount = "$1000",
                     assetsSize = 4,
                     model = Address(
-                        chain = Chain.ethereum,
+                        chain = Chain.Ethereum,
                         address = "0x123456",
                         accounts = emptyList()
                     )
@@ -274,7 +274,7 @@ private fun VaultAccountsScreenPreview() {
                     nativeTokenAmount = "1.0",
                     fiatAmount = "$1000",
                     model = Address(
-                        chain = Chain.bitcoin,
+                        chain = Chain.Bitcoin,
                         address = "0x123456",
                         accounts = emptyList()
                     )

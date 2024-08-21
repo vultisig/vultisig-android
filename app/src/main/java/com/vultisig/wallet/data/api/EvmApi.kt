@@ -68,25 +68,25 @@ internal class EvmApiFactoryImp @Inject constructor(
 ) : EvmApiFactory {
     override fun createEvmApi(chain: Chain): EvmApi {
         return when (chain) {
-            Chain.ethereum -> EvmApiImp(gson, httpClient, "https://ethereum-rpc.publicnode.com")
-            Chain.bscChain -> EvmApiImp(gson, httpClient, "https://bsc-rpc.publicnode.com")
-            Chain.avalanche -> EvmApiImp(
+            Chain.Ethereum -> EvmApiImp(gson, httpClient, "https://ethereum-rpc.publicnode.com")
+            Chain.BscChain -> EvmApiImp(gson, httpClient, "https://bsc-rpc.publicnode.com")
+            Chain.Avalanche -> EvmApiImp(
                 gson,
                 httpClient,
                 "https://avalanche-c-chain-rpc.publicnode.com"
             )
 
-            Chain.polygon -> EvmApiImp(gson, httpClient, "https://polygon-bor-rpc.publicnode.com")
-            Chain.optimism -> EvmApiImp(gson, httpClient, "https://optimism-rpc.publicnode.com")
-            Chain.cronosChain -> EvmApiImp(
+            Chain.Polygon -> EvmApiImp(gson, httpClient, "https://polygon-bor-rpc.publicnode.com")
+            Chain.Optimism -> EvmApiImp(gson, httpClient, "https://optimism-rpc.publicnode.com")
+            Chain.CronosChain -> EvmApiImp(
                 gson,
                 httpClient,
                 "https://cronos-evm-rpc.publicnode.com"
             )
 
-            Chain.blast -> EvmApiImp(gson, httpClient, "https://rpc.ankr.com/blast")
-            Chain.base -> EvmApiImp(gson, httpClient, "https://base-rpc.publicnode.com")
-            Chain.arbitrum -> EvmApiImp(gson, httpClient, "https://arbitrum-one-rpc.publicnode.com")
+            Chain.Blast -> EvmApiImp(gson, httpClient, "https://rpc.ankr.com/blast")
+            Chain.Base -> EvmApiImp(gson, httpClient, "https://base-rpc.publicnode.com")
+            Chain.Arbitrum -> EvmApiImp(gson, httpClient, "https://arbitrum-one-rpc.publicnode.com")
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
     }

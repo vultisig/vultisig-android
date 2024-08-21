@@ -85,14 +85,14 @@ internal class CoinGeckoApiImpl @Inject constructor(
 
     private val Chain.coinGeckoAssetId: String
         get() = when (this) {
-            Chain.ethereum -> "ethereum"
-            Chain.avalanche -> "avalanche"
-            Chain.base -> "base"
-            Chain.blast -> "blast"
-            Chain.arbitrum -> "arbitrum-one"
-            Chain.polygon -> "polygon-pos"
-            Chain.optimism -> "optimistic-ethereum"
-            Chain.bscChain -> "binance-smart-chain"
+            Chain.Ethereum -> "ethereum"
+            Chain.Avalanche -> "avalanche"
+            Chain.Base -> "base"
+            Chain.Blast -> "blast"
+            Chain.Arbitrum -> "arbitrum-one"
+            Chain.Polygon -> "polygon-pos"
+            Chain.Optimism -> "optimistic-ethereum"
+            Chain.BscChain -> "binance-smart-chain"
 
             else -> error("No CoinGecko asset id for chain $this")
 

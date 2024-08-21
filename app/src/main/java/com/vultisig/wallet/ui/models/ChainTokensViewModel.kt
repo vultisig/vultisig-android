@@ -224,7 +224,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
                         canSelectTokens = chain.canSelectTokens,
-                        isBuyWeweVisible = chain == Chain.base
+                        isBuyWeweVisible = chain == Chain.Base
                     )
                 }
             }
