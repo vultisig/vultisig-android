@@ -245,7 +245,7 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val providerText = providerFieldState.text.toString()
-        val provider = if (providerText.isNotBlank()) providerText else null
+        val provider = providerText.ifBlank { null }
 
         val memo = DepositMemo.Bond(
             nodeAddress = nodeAddress,
@@ -322,7 +322,7 @@ internal class DepositFormViewModel @Inject constructor(
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
         val providerText = providerFieldState.text.toString()
-        val provider = if (providerText.isNotBlank()) providerText else null
+        val provider = providerText.ifBlank { null }
 
         val memo = DepositMemo.Unbond(
             nodeAddress = nodeAddress,
