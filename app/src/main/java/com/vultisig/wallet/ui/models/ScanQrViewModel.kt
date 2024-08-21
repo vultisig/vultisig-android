@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,35 +27,41 @@ internal class ScanQrViewModel @Inject constructor(
         Timber.d("joinOrSend(qr = $qr)")
         viewModelScope.launch {
             val flowType = try {
-                DeepLinkHelper(qr).getFlowType()
+                DeepLinkHelper(qr).getFlowType()?: JOIN_SEND_ON_ADDRESS_FLOW
             } catch (e: Exception) {
                 Timber.e(e, "Failed to parse QR-code via DeepLinkHelper")
                 JOIN_SEND_ON_ADDRESS_FLOW
             }
             val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
-            navigator.navigate(
-                when (flowType) {
-                    JOIN_KEYSIGN_FLOW -> {
-                        Destination.JoinKeysign(
-                            vaultId = requireNotNull(vaultId),
-                            qr = qrBase64,
+            try {
+                navigator.navigate(
+                    when (flowType) {
+                        JOIN_KEYSIGN_FLOW -> {
+                            Destination.JoinKeysign(
+                                vaultId = requireNotNull(vaultId),
+                                qr = qrBase64,
+                            )
+                        }
+
+                        JOIN_KEYGEN_FLOW -> {
+                            Destination.JoinKeygen(
+                                qr = qrBase64,
+                            )
+                        }
+
+                        JOIN_SEND_ON_ADDRESS_FLOW -> {
+                            val address = qr.getAddressFromQrCode()
+                            Destination.Send(vaultId = requireNotNull(vaultId), address = address)
+                        }
+
+                        else -> throw IllegalArgumentException(
+                            "Unsupported QR-code flowType: $flowType"
                         )
                     }
-
-                    JOIN_KEYGEN_FLOW -> {
-                        Destination.JoinKeygen(
-                            qr = qrBase64,
-                        )
-                    }
-                    JOIN_SEND_ON_ADDRESS_FLOW -> {
-                        Destination.Send(vaultId = requireNotNull(vaultId), address = qr)
-                    }
-
-                    else -> throw IllegalArgumentException(
-                        "Unsupported QR-code flowType: $flowType"
-                    )
-                }
-            )
+                )
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to navigate to destination")
+            }
         }
     }
 
