@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 
+@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 fun MiddleEllipsisText(
     text: String,

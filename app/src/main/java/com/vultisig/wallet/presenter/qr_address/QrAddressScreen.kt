@@ -28,6 +28,7 @@ import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 
+@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 internal fun QrAddressScreen(navController: NavHostController) {
     val viewmodel = hiltViewModel<QrAddressViewModel>()

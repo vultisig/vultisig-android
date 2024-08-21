@@ -61,6 +61,7 @@ import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
 import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
 
+@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @ExperimentalAnimationApi
 @Composable
 internal fun SetupNavGraph(

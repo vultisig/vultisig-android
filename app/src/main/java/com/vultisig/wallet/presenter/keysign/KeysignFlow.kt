@@ -12,6 +12,7 @@ import com.vultisig.wallet.ui.screens.keysign.Keysign
 import com.vultisig.wallet.ui.screens.keysign.KeysignErrorScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignPeerDiscovery
 
+@Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 fun KeysignFlowView(
     navController: NavController,

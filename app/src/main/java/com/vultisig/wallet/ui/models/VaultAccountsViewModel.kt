@@ -175,6 +175,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         uiState.update { it.copy(isRefreshing = isRefreshing) }
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun toggleBalanceVisibility() {
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
         viewModelScope.launch {
@@ -185,6 +186,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun backupVault() {
         viewModelScope.launch {
             navigator.navigate(Destination.BackupPassword(vaultId!!))

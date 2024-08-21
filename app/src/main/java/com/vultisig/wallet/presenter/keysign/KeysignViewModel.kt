@@ -109,6 +109,7 @@ internal class KeysignViewModel(
         }
     }
 
+    @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
