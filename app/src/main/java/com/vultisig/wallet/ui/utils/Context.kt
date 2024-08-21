@@ -5,8 +5,13 @@ import android.content.Context
 import android.content.ContextWrapper
 
 internal val Context.closestActivityOrNull: Activity?
-    get() = when (this) {
-        is Activity -> this
-        is ContextWrapper -> baseContext.closestActivityOrNull
-        else -> null
+    get() {
+        var context: Context? = this
+        while (context != null) {
+            when (context) {
+                is Activity -> return context
+                is ContextWrapper -> context = context.baseContext
+            }
+        }
+        return null
     }
