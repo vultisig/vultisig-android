@@ -1,5 +1,9 @@
 package com.vultisig.wallet
 
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert
+import org.hamcrest.MatcherAssert.*
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -11,6 +15,9 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        assertThat(
+            2 + 2,
+            `is`(4)
+        )
     }
 }

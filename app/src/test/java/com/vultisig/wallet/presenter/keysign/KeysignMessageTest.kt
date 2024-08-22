@@ -4,6 +4,10 @@ package com.vultisig.wallet.presenter.keysign
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.DataModule
 import com.vultisig.wallet.models.Coins
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.*
+import org.hamcrest.MatcherAssert
+import org.hamcrest.MatcherAssert.*
 import org.junit.Assert
 import org.junit.Test
 import java.math.BigInteger
@@ -36,19 +40,34 @@ class KeysignMessageTest {
         )
         val gson = DataModule.provideGson()
         val json = gson.toJson(keysignMessage)
-        Assert.assertEquals(true, gson.toJson(t).contains("THORChain"))
+        assertThat(
+            gson.toJson(t).contains("THORChain"),
+            `is`(true)
+        )
         val result = gson.fromJson(json, KeysignMessage::class.java)
-        Assert.assertEquals(keysignMessage.sessionID, result.sessionID)
-        Assert.assertEquals(keysignMessage.serviceName, result.serviceName)
-        Assert.assertEquals(
-            true,
-            (result.payload.blockChainSpecific as? BlockChainSpecific.THORChain) != null
+        assertThat(
+            result.sessionID,
+            `is`(keysignMessage.sessionID)
+        )
+        assertThat(
+            result.serviceName,
+            `is`(keysignMessage.serviceName)
+        )
+        assertThat(
+            (result.payload.blockChainSpecific as? BlockChainSpecific.THORChain) != null,
+            `is`(true)
         )
         val input = """
             {"toAddress":"thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2","utxos":[],"toAmount":["+",10000000],"vaultPubKeyECDSA":"asdfasdf","vaultLocalPartyID":"asdfasdf","chainSpecific":{"THORChain":{"sequence":0,"accountNumber":1024,"fee":"2000000"}},"coin":{"isNativeToken":true,"priceRate":0,"feeUnit":"Rune","chainType":{"THORChain":{}},"ticker":"RUNE","decimals":"8","logo":"rune","address":"","hexPublicKey":"","rawBalance":"0","feeDefault":"0.02","priceProviderId":"thorchain","contractAddress":"","chain":"thorChain"}}"""
         val result1 = gson.fromJson(input, KeysignPayload::class.java)
-        Assert.assertEquals(result1.toAddress, "thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2")
-        Assert.assertEquals(result1.toAmount, BigInteger("10000000"))
+        assertThat(
+            "thor1x6f63myfwktevd6mkspdeus9rea5a72w6ynax2",
+            `is`(result1.toAddress)
+        )
+        assertThat(
+            BigInteger("10000000"),
+            `is`(result1.toAmount)
+        )
         print(gson.toJson(result1))
     }
 
