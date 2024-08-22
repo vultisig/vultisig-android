@@ -229,7 +229,7 @@ internal class GeneratingKeyViewModel(
             Destination.BackupSuggestion(
                 vaultId = vault.id
             ),
-            opts = NavigationOptions(popUpTo = Destination.Home.staticRoute)
+            opts = NavigationOptions(popUpTo = Destination.Home().route)
         )
     }
 
