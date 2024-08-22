@@ -56,8 +56,8 @@ class TssMessagePuller(
                     response.body?.let { it ->
                         val messages = Gson().fromJson(it.string(), Array<Message>::class.java)
                         for (msg in messages.sortedBy { it.sequenceNo }) {
-                            val key = messageID?.let { "$sessionID-$localPartyKey-${msg.hash}" }
-                                ?: run { "$sessionID-$localPartyKey-$messageID-${msg.hash}" }
+                            val key = messageID?.let { "$sessionID-$localPartyKey-$messageID-${msg.hash}" }
+                                ?: run { "$sessionID-$localPartyKey-${msg.hash}" }
                             // when the message is already in the cache, skip it
                             if (cache.getIfPresent(key) != null) {
                                 Timber.tag("TssMessagePuller")

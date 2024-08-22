@@ -4,9 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 
-internal val Context.closestActivityOrNull: Activity?
-    get() = when (this) {
+internal fun Context.closestActivityOrNull(): Activity? {
+    return when (this) {
         is Activity -> this
-        is ContextWrapper -> baseContext.closestActivityOrNull
+        is ContextWrapper -> baseContext.closestActivityOrNull()
         else -> null
     }
+}
