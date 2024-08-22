@@ -49,7 +49,7 @@ internal enum class DepositOption {
 internal data class DepositFormUiModel(
     val depositMessage: UiText = UiText.Empty,
     val depositOption: DepositOption = DepositOption.Bond,
-    val depositOptions: List<DepositOption> = DepositOption.entries,
+    val depositOptions: List<DepositOption> = emptyList(),
     val errorText: UiText? = null,
     val tokenAmountError: UiText? = null,
     val nodeAddressError: UiText? = null,
@@ -91,9 +91,17 @@ internal class DepositFormViewModel @Inject constructor(
         val chain = chainId.let(Chain::fromRaw)
         this.chain = chain
 
+        val depositOptions = if (chain != Chain.MayaChain)
+            DepositOption.entries
+        else
+            DepositOption.entries.filter {
+                it != DepositOption.DepositPool && it != DepositOption.WithdrawPool
+            }
+
         state.update {
             it.copy(
-                depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw)
+                depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw),
+                depositOptions = depositOptions,
             )
         }
     }
