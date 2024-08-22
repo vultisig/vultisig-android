@@ -15,7 +15,7 @@
     <string name="vault_settings_reshare_title">Recompartilhar</string>
     <string name="vault_settings_reshare_subtitle">Recompartilhar cofre com um novo comitê</string>
     <string name="vault_settings_delete_title">Delete</string>
-    <string name="join_keysign_wrong_vault">Cofre ou Dispositivo Emparelhado Incorreto.</string>
+    <string name="join_keysign_wrong_vault">Alterar cofre</string>
     <string name="choose_tokens">Escolha os Tokens</string>
     <string name="send_screen_title">Enviar</string>
     <string name="send_from_address">De</string>

@@ -180,7 +180,7 @@ internal sealed class Destination(
         )
     ) {
         companion object {
-            private const val ARG_SHOW_VAULT_LIST = "=show_vault_list"
+            const val ARG_SHOW_VAULT_LIST = "=show_vault_list"
             val staticRoute = buildRoute(
                 "{$ARG_VAULT_ID}",
                 "{$ARG_SHOW_VAULT_LIST}"

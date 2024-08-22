@@ -23,7 +23,7 @@
     <string name="vault_settings_reshare_subtitle">Повторное совместное использование хранилища с новым комитетом</string>
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>
-    <string name="join_keysign_wrong_vault">Неправильное хранилище или устройство для пары.</string>
+    <string name="join_keysign_wrong_vault">Изменить хранилище</string>
     <string name="joinkeysign_discovery_service">Обнаружение службы</string>
     <string name="joinkeysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
     <string name="choose_tokens">Выберите токены</string>
