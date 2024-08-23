@@ -1,12 +1,12 @@
 package com.vultisig.wallet.common
 
-import org.junit.Assert.*
-import org.junit.Test
-
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.*
+import org.junit.jupiter.api.Test
 class UtilsTest {
     @Test
     fun testDeviceName() {
         val deviceName = Utils.deviceName
-        assertTrue(deviceName.isNotEmpty())
+        assertThat(deviceName, not(isEmptyString()))
     }
 }
