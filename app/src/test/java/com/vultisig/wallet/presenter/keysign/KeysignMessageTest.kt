@@ -4,12 +4,10 @@ package com.vultisig.wallet.presenter.keysign
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.DataModule
 import com.vultisig.wallet.models.Coins
-import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.*
-import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.*
 import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.math.BigInteger
 import java.util.UUID
 

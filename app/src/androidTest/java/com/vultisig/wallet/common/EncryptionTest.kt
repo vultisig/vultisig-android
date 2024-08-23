@@ -1,7 +1,7 @@
 package com.vultisig.wallet.common
 
 import android.util.Log
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class EncryptionTest{
     @Test
