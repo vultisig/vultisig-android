@@ -344,8 +344,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                 }
             }
             else -> {
-                val memo = payload.memo
-                val isDeposit = !memo.isNullOrEmpty() && MayaChainHelper.DEPOSIT_PREFIXES.any { memo.startsWith(it) }
+                val isDeposit = when (val specific = payload.blockChainSpecific) {
+                    is BlockChainSpecific.MayaChain -> specific.isDeposit
+                    is BlockChainSpecific.THORChain -> specific.isDeposit
+                    else -> false
+                }
 
                 if (isDeposit) {
                     val fee = when (val specific = payload.blockChainSpecific) {
@@ -372,7 +375,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     token = payload.coin,
                                 )
                             ),
-                            memo = memo ?: "",
+                            memo = payload.memo ?: "",
                         )
                     )
                 } else {

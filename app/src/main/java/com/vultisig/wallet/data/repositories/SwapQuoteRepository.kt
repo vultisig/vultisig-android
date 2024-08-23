@@ -15,7 +15,6 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.oneInchChainId
 import java.math.BigDecimal
 import javax.inject.Inject
-import kotlin.math.abs
 
 internal interface SwapQuoteRepository {
 
@@ -90,30 +89,30 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): SwapQuote {
-        val thorTokenValue = tokenValue.value.toString()
-            .thorTokenValueToTokenValue(srcToken, 8)
-            .value
+        val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val mayaQuote = mayaChainApi.getSwapQuotes(
             address = dstAddress,
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
             amount = thorTokenValue.toString(),
-            interval = "3",
+            interval = srcToken.streamingInterval,
             isAffiliate = isAffiliate,
         )
 
         SwapException.handleSwapException(mayaQuote.error)
 
         val tokenFees = mayaQuote.fees.total
-            .thorTokenValueToTokenValue(dstToken, FIXED_MAYA_SWAP_DECIMALS)
+            .convertToTokenValue(dstToken)
 
         val expectedDstTokenValue = mayaQuote.expectedAmountOut
-            .thorTokenValueToTokenValue(dstToken, FIXED_MAYA_SWAP_DECIMALS)
+            .convertToTokenValue(dstToken)
 
-        val recommendedMinTokenValue = tokenValue.copy(
-            value = mayaQuote.recommendedMinAmountIn, decimals = FIXED_MAYA_SWAP_DECIMALS
-        )
+        val recommendedMinTokenValue = if (srcToken.chain != Chain.MayaChain) {
+            tokenValue.copy(
+                value = mayaQuote.recommendedMinAmountIn, decimals = FIXED_MAYA_SWAP_DECIMALS
+            )
+        } else tokenValue
 
         return SwapQuote.MayaChain(
             expectedDstValue = expectedDstTokenValue,
@@ -130,9 +129,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         tokenValue: TokenValue,
         isAffiliate: Boolean,
     ): SwapQuote {
-        val thorTokenValue = tokenValue.decimal
-            .movePointRight(FIXED_THOR_SWAP_DECIMALS)
-            .toBigInteger()
+        val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val thorQuote = thorChainApi.getSwapQuotes(
             address = dstAddress,
@@ -146,10 +143,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         SwapException.handleSwapException(thorQuote.error)
 
         val tokenFees = thorQuote.fees.total
-            .thorTokenValueToTokenValue(dstToken, FIXED_THOR_SWAP_DECIMALS)
+            .convertToTokenValue(dstToken)
 
         val expectedDstTokenValue = thorQuote.expectedAmountOut
-            .thorTokenValueToTokenValue(dstToken, FIXED_THOR_SWAP_DECIMALS)
+            .convertToTokenValue(dstToken)
 
         val recommendedMinTokenValue = tokenValue.copy(
             value = thorQuote.recommendedMinAmountIn, decimals = FIXED_THOR_SWAP_DECIMALS
@@ -204,33 +201,28 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun String.thorTokenValueToTokenValue(
-        token: Coin,
-        decimals: Int,
-    ): TokenValue {
-        // convert maya token values with 10 decimal places to token values
-        // with the correct number of decimal places
-        if (token.chain == Chain.MayaChain) {
-            return TokenValue(
-                value = this.toBigInteger(),
-                token = token,
-            )
+    private val Coin.streamingInterval: String
+        get() = when (chain) {
+            Chain.MayaChain -> "3"
+            Chain.ThorChain -> "1"
+            else -> "0"
         }
 
-        val exponent = token.decimal - decimals
-        val multiplier = if (exponent >= 0) {
-            BigDecimal.TEN
-        } else {
-            BigDecimal(0.1)
-        }.pow(abs(exponent))
+    private fun String.convertToTokenValue(token: Coin): TokenValue =
+        BigDecimal(this)
+            .divide(token.thorswapMultiplier)
+            .let {
+                TokenValue(
+                    value = (it.movePointRight(token.decimal)).toBigInteger(),
+                    token = token,
+                )
+            }
 
-        return TokenValue(
-            value = this.toBigDecimal()
-                .multiply(multiplier)
-                .toBigInteger(),
-            token = token,
-        )
-    }
+    private val Coin.thorswapMultiplier: BigDecimal
+        get() = when (chain) {
+            Chain.MayaChain -> BigDecimal(1e10)
+            else -> BigDecimal(1e8)
+        }
 
     private fun Coin.swapAssetName(): String = if (isNativeToken) {
         if (chain == Chain.GaiaChain) {

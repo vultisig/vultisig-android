@@ -77,6 +77,9 @@ internal fun TokenSelectionItem(
                             .align(Alignment.BottomEnd)
                     )
             }
+
+            UiSpacer(size = 10.dp)
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier

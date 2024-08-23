@@ -14,6 +14,7 @@ internal data class SwapTransaction(
     val expectedDstTokenValue: TokenValue,
     val blockChainSpecific: BlockChainSpecificAndUtxo,
     val estimatedFees: TokenValue,
+    val memo: String?,
     val payload: SwapPayload,
     val isApprovalRequired: Boolean,
 ) {

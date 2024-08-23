@@ -21,7 +21,7 @@ internal data class THORChainSwapQuote(
     @SerializedName("max_streaming_quantity")
     val maxStreamingQuantity: Int,
     @SerializedName("memo")
-    val memo: String,
+    val memo: String?,
     @SerializedName("notes")
     val notes: String,
     @SerializedName("outbound_delay_blocks")

@@ -13,12 +13,6 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.ERC20ApprovePayloadDeserializer
 import com.vultisig.wallet.models.ERC20ApprovePayloadSerializer
-import com.vultisig.wallet.models.THORChainSwapPayload
-import com.vultisig.wallet.models.THORChainSwapPayloadDeserializer
-import com.vultisig.wallet.models.THORChainSwapPayloadSerializer
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecificDeserializer
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecificSerializer
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignPayloadDeserializer
 import com.vultisig.wallet.presenter.keysign.KeysignPayloadSerializer
@@ -55,46 +49,8 @@ internal interface DataModule {
             return GsonBuilder()
                 .registerTypeAdapter(KeysignPayload::class.java, KeysignPayloadSerializer())
                 .registerTypeAdapter(
-                    BlockChainSpecific.UTXO::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific.Cosmos::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific.THORChain::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific.MayaChain::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific.Sui::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific.Polkadot::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific.Solana::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific.Ethereum::class.java,
-                    BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific::class.java, BlockChainSpecificSerializer()
-                ).registerTypeAdapter(
-                    BlockChainSpecific::class.java,
-                    BlockChainSpecificDeserializer()
-                )
-                .registerTypeAdapter(
                     KeysignPayload::class.java,
                     KeysignPayloadDeserializer()
-                )
-                .registerTypeAdapter(
-                    THORChainSwapPayload::class.java,
-                    THORChainSwapPayloadSerializer(),
-                )
-                .registerTypeAdapter(
-                    THORChainSwapPayload::class.java,
-                    THORChainSwapPayloadDeserializer(),
                 )
                 .registerTypeAdapter(
                     OneInchSwapPayloadJson::class.java,

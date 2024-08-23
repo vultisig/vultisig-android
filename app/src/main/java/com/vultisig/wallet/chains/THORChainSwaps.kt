@@ -41,7 +41,7 @@ internal class THORChainSwaps(
             .setExpirationTime(swapPayload.expirationTime.toLong())
             .setStreamParams(
                 THORChainSwap.StreamParams.newBuilder()
-                    .setInterval(swapPayload.steamingInterval)
+                    .setInterval(swapPayload.streamingInterval)
                     .setQuantity(swapPayload.streamingQuantity)
             ).let {
                 if (swapPayload.isAffiliate) {

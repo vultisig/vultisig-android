@@ -28,9 +28,9 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
-import com.vultisig.wallet.models.allowZeroGas
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.models.allowZeroGas
 import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -373,7 +373,8 @@ internal class SendFormViewModel @Inject constructor(
                         selectedToken,
                         gasFee,
                         isSwap = false,
-                        isMaxAmountEnabled = isMaxAmount
+                        isMaxAmountEnabled = isMaxAmount,
+                        isDeposit = false,
                     )
 
                 val transaction = Transaction(
@@ -492,7 +493,8 @@ internal class SendFormViewModel @Inject constructor(
                         selectedToken,
                         gasFee,
                         isSwap = false,
-                        isMaxAmountEnabled = false
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
                     )
                 } catch (e: Exception) {
                     // todo handle errors
