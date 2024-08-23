@@ -2,8 +2,7 @@ package com.vultisig.wallet.common
 
 import android.util.Base64
 import io.ktor.util.encodeBase64
-import org.junit.Test
-
+import org.junit.jupiter.api.Test
 internal class CryptoManagerTest {
 
     private val cryptoManager = AESCryptoManager()
