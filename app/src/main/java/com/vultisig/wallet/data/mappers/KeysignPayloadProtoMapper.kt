@@ -105,6 +105,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         accountNumber = BigInteger(it.accountNumber.toString()),
                         sequence = BigInteger(it.sequence.toString()),
                         fee = BigInteger(it.fee.toString()),
+                        isDeposit = it.isDeposit,
                     )
                 }
 
@@ -119,6 +120,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     BlockChainSpecific.MayaChain(
                         accountNumber = BigInteger(it.accountNumber.toString()),
                         sequence = BigInteger(it.sequence.toString()),
+                        isDeposit = it.isDeposit,
                     )
                 }
 
@@ -184,7 +186,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             fromAmount = BigInteger(fromAmount),
             toAmountDecimal = BigDecimal(toAmountDecimal),
             toAmountLimit = toAmountLimit,
-            steamingInterval = streamingInterval,
+            streamingInterval = streamingInterval,
             streamingQuantity = streamingQuantity,
             expirationTime = expirationTime,
             isAffiliate = isAffiliate,

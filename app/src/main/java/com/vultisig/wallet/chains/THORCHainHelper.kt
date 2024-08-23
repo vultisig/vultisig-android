@@ -76,7 +76,7 @@ internal class THORCHainHelper(
 
 
         val memo = keysignPayload.memo
-        val isDeposit = !memo.isNullOrEmpty() && MayaChainHelper.DEPOSIT_PREFIXES.any { memo.startsWith(it) }
+        val isDeposit = thorchainData.isDeposit
 
         val msgSend = if (isDeposit) {
             val coin = Cosmos.THORChainCoin.newBuilder()

@@ -31,6 +31,7 @@ internal interface BlockChainSpecificRepository {
         gasFee: TokenValue,
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
+        isDeposit: Boolean,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -52,6 +53,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         gasFee: TokenValue,
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
+        isDeposit: Boolean,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {
@@ -68,6 +70,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                                 ?: "0"
                         ),
                         sequence = BigInteger(account.sequence ?: "0"),
+                        isDeposit = isDeposit,
                     )
                 } else {
                     BlockChainSpecific.THORChain(
@@ -77,6 +80,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         ),
                         sequence = BigInteger(account.sequence ?: "0"),
                         fee = gasFee.value,
+                        isDeposit = isDeposit,
                     )
                 }
             )

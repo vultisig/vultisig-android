@@ -202,6 +202,7 @@ internal class SwapFormViewModel @Inject constructor(
                     gasFee,
                     isSwap = true,
                     isMaxAmountEnabled = false,
+                    isDeposit = srcToken.chain == Chain.MayaChain,
                 )
 
                 val transaction = when (quote) {
@@ -235,6 +236,7 @@ internal class SwapFormViewModel @Inject constructor(
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
                             isApprovalRequired = isApprovalRequired,
+                            memo = null,
                             payload = SwapPayload.ThorChain(
                                 THORChainSwapPayload(
                                     fromAddress = srcAddress,
@@ -245,7 +247,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
                                     toAmountLimit = "0",
-                                    steamingInterval = "1",
+                                    streamingInterval = "1",
                                     streamingQuantity = "0",
                                     expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
                                         .inWholeSeconds.toULong(),
@@ -284,6 +286,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            memo = quote.data.memo,
                             isApprovalRequired = isApprovalRequired,
                             payload = SwapPayload.MayaChain(
                                 THORChainSwapPayload(
@@ -295,7 +298,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     fromAmount = srcTokenValue.value,
                                     toAmountDecimal = dstTokenValue.decimal,
                                     toAmountLimit = "0",
-                                    steamingInterval = "3",
+                                    streamingInterval = "3",
                                     streamingQuantity = "0",
                                     expirationTime = (System.currentTimeMillis().milliseconds + 15.minutes)
                                         .inWholeSeconds.toULong(),
@@ -327,6 +330,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
+                            memo = null,
                             isApprovalRequired = isApprovalRequired,
                             payload = SwapPayload.OneInch(
                                 OneInchSwapPayloadJson(

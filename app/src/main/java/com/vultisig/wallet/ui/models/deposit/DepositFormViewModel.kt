@@ -269,6 +269,7 @@ internal class DepositFormViewModel @Inject constructor(
                 gasFee,
                 isSwap = false,
                 isMaxAmountEnabled = false,
+                isDeposit = true,
             )
 
         return DepositTransaction(
@@ -349,6 +350,7 @@ internal class DepositFormViewModel @Inject constructor(
                 gasFee,
                 isSwap = false,
                 isMaxAmountEnabled = false,
+                isDeposit = true,
             )
 
         return DepositTransaction(
@@ -406,6 +408,7 @@ internal class DepositFormViewModel @Inject constructor(
                 gasFee,
                 isSwap = false,
                 isMaxAmountEnabled = false,
+                isDeposit = true,
             )
 
         return DepositTransaction(
@@ -466,6 +469,7 @@ internal class DepositFormViewModel @Inject constructor(
                 gasFee,
                 isSwap = false,
                 isMaxAmountEnabled = false,
+                isDeposit = true,
             )
 
         return DepositTransaction(
@@ -520,6 +524,7 @@ internal class DepositFormViewModel @Inject constructor(
                 gasFee,
                 isSwap = false,
                 isMaxAmountEnabled = false,
+                isDeposit = true,
             )
 
         return DepositTransaction(
@@ -567,6 +572,7 @@ internal class DepositFormViewModel @Inject constructor(
                 gasFee,
                 isSwap = false,
                 isMaxAmountEnabled = false,
+                isDeposit = true,
             )
 
         return DepositTransaction(

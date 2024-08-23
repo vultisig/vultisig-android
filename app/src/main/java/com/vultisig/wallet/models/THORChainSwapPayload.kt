@@ -1,15 +1,7 @@
 package com.vultisig.wallet.models
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
 import com.google.gson.annotations.SerializedName
-import com.vultisig.wallet.common.toJson
 import wallet.core.jni.proto.THORChainSwap.Asset
-import java.lang.reflect.Type
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -31,7 +23,7 @@ internal data class THORChainSwapPayload(
     @SerializedName("toAmountLimit")
     val toAmountLimit: String,
     @SerializedName("steamingInterval")
-    val steamingInterval: String,
+    val streamingInterval: String,
     @SerializedName("streamingQuantity")
     val streamingQuantity: String,
     @SerializedName("expirationTime")
@@ -74,67 +66,4 @@ internal data class THORChainSwapPayload(
         }
         return asset.build()
     }
-}
-
-internal class THORChainSwapPayloadSerializer : JsonSerializer<THORChainSwapPayload> {
-    override fun serialize(
-        src: THORChainSwapPayload?,
-        typeOfSrc: Type?,
-        context: JsonSerializationContext?,
-    ): JsonElement {
-        val jsonObject = src?.let {
-            val jsonObject = JsonObject()
-            jsonObject.addProperty("fromAddress", it.fromAddress)
-            jsonObject.add("fromCoin", context?.serialize(it.fromCoin))
-            jsonObject.add("toCoin", context?.serialize(it.toCoin))
-            jsonObject.addProperty("vaultAddress", it.vaultAddress)
-            jsonObject.addProperty("routerAddress", it.routerAddress)
-            jsonObject.add("fromAmount", it.fromAmount.toJson())
-            jsonObject.addProperty("toAmountDecimal", it.toAmountDecimal)
-            jsonObject.addProperty("toAmountLimit", it.toAmountLimit)
-            jsonObject.addProperty("streamingInterval", it.steamingInterval)
-            jsonObject.addProperty("streamingQuantity", it.streamingQuantity)
-            jsonObject.addProperty("expirationTime", it.expirationTime.toLong())
-            jsonObject.addProperty("isAffiliate", it.isAffiliate)
-            return jsonObject
-        }
-        return jsonObject ?: JsonObject()
-    }
-}
-
-internal class THORChainSwapPayloadDeserializer : JsonDeserializer<THORChainSwapPayload> {
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext,
-    ): THORChainSwapPayload {
-        val jsonObject = json.asJsonObject
-        val fromAddress = jsonObject.get("fromAddress")?.asString ?: ""
-        val fromCoin = context.deserialize<Coin>(jsonObject.get("fromCoin"), Coin::class.java)
-        val toCoin = context.deserialize<Coin>(jsonObject.get("toCoin"), Coin::class.java)
-        val vaultAddress = jsonObject.get("vaultAddress")?.asString ?: ""
-        val routerAddress = jsonObject.get("routerAddress")?.asString ?: ""
-        val fromAmount =
-            jsonObject.get("fromAmount")?.asJsonArray?.get(1)?.asBigInteger ?: BigInteger.ZERO
-        val toAmountDecimal = jsonObject.get("toAmountDecimal")?.asBigDecimal ?: BigDecimal.ZERO
-        val toAmountLimit = jsonObject.get("toAmountLimit")?.asString ?: ""
-        val steamingInterval = jsonObject.get("steamingInterval")?.asString ?: ""
-        val streamingQuantity = jsonObject.get("streamingQuantity")?.asString ?: ""
-        val expirationTime = jsonObject.get("expirationTime")?.asLong?.toULong() ?: 0u
-        return THORChainSwapPayload(
-            fromAddress,
-            fromCoin,
-            toCoin,
-            vaultAddress,
-            routerAddress,
-            fromAmount,
-            toAmountDecimal,
-            toAmountLimit,
-            steamingInterval,
-            streamingQuantity,
-            expirationTime,
-            jsonObject.get("isAffiliate")?.asBoolean ?: false
-        )
-    }
-
 }

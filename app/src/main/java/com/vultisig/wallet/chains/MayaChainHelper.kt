@@ -33,47 +33,6 @@ internal class MayaChainHelper(
 
     companion object {
         const val MAYA_CHAIN_GAS_UNIT: Long = 2000000000
-
-        val DEPOSIT_PREFIXES = listOf(
-            "SWAP:",
-            "s:",
-            "=",
-            "ADD:",
-            "+:",
-            "a:",
-            "WITHDRAW:",
-            "-",
-            "wd:",
-            "LOAN+:",
-            "$+",
-            "LOAN-:",
-            "$-",
-            "TRADE+:",
-            "TRADE-:",
-            "DONATE:",
-            "d:",
-            "RESERVE:",
-            "BOND:",
-            "UNBOND:",
-            "LEAVE:",
-            "MIGRATE:",
-            "NOOP:",
-            "consolidate",
-            "limito",
-            "lo",
-            "name",
-            "n",
-            "~",
-            "out",
-            "ragnarok",
-            "switch",
-            "yggdrasil+",
-            "yggdrasil-",
-            "DYDX_VOTE:",
-            "POOL+",
-            "POOL-",
-        )
-
     }
 
     fun getCoin(): Coin? {
@@ -95,7 +54,7 @@ internal class MayaChainHelper(
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
 
         val memo = keysignPayload.memo
-        val isDeposit = !memo.isNullOrEmpty() && DEPOSIT_PREFIXES.any { memo.startsWith(it) }
+        val isDeposit = thorchainData.isDeposit
 
         val msgSend = if (isDeposit) {
             val coin = THORChainCoin.newBuilder()
