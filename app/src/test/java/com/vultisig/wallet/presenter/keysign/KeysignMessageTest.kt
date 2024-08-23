@@ -22,7 +22,8 @@ class KeysignMessageTest {
                 blockChainSpecific = BlockChainSpecific.THORChain(
                     accountNumber = BigInteger("1024"),
                     sequence = BigInteger("0"),
-                    fee = BigInteger("2000000")
+                    fee = BigInteger("2000000"),
+                    isDeposit = false,
                 ),
                 vaultPublicKeyECDSA = "asdfasdf",
                 vaultLocalPartyID = "asdfasdf"
@@ -32,7 +33,8 @@ class KeysignMessageTest {
         val t = BlockChainSpecific.THORChain(
             accountNumber = BigInteger("1024"),
             sequence = BigInteger("0"),
-            fee = BigInteger("2000000")
+            fee = BigInteger("2000000"),
+            isDeposit = false,
         )
         val gson = DataModule.provideGson()
         val json = gson.toJson(keysignMessage)
