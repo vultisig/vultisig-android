@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -169,10 +170,7 @@ internal class KeysignViewModel(
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
             this._messagePuller?.stop()
-            withContext(Dispatchers.IO) {
-                Thread.sleep(1000)
-                // backoff for 1 second
-            }
+            delay(1000) // backoff for 1 second
         } catch (e: Exception) {
             this._messagePuller?.stop()
             Timber.tag("KeysignViewModel")
