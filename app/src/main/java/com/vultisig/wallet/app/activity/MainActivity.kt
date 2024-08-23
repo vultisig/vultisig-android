@@ -33,7 +33,7 @@ internal class MainActivity : AppCompatActivity() {
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 
     @Inject
-    private lateinit var appUpdateManager: AppUpdateManager
+    lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
