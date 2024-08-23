@@ -1,11 +1,19 @@
 package com.vultisig.wallet.app.activity
 
+import android.app.Activity
+import android.content.Context
+import android.os.Bundle
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -14,9 +22,11 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -26,6 +36,8 @@ internal class MainViewModel @Inject constructor(
     navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
+    @ApplicationContext private val context: Context,
+    private val appUpdateManager: AppUpdateManager
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -62,4 +74,31 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
+    fun checkUpdates(savedInstanceState: Bundle?){
+        viewModelScope.launch {
+            try {
+                if (savedInstanceState != null) {
+                    return@launch
+                } else {
+                    appUpdateManager.appUpdateInfo.addOnSuccessListener{
+                            appUpdateInfo ->
+                        when (appUpdateInfo.updateAvailability()) {
+                            UpdateAvailability.UPDATE_AVAILABLE -> {
+                                appUpdateManager.startUpdateFlowForResult(
+                                    appUpdateInfo,
+                                    context as Activity,
+                                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
+                                        .setAllowAssetPackDeletion(true)
+                                        .build(), 0
+                                )
+                            }
+                            else -> Unit
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
+        }
+    }
 }

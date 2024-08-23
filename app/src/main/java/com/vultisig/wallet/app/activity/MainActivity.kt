@@ -27,15 +27,9 @@ import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import timber.log.Timber
-import javax.inject.Inject
 
 @AndroidEntryPoint
 internal class MainActivity : AppCompatActivity() {
-
-    @Inject
-    internal lateinit var appUpdateManager: AppUpdateManager
 
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 
@@ -48,32 +42,8 @@ internal class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        lifecycleScope.launch {
-            runCatching {
-                when (savedInstanceState != null) {
-                    true -> return@launch
-                    else -> {
-                        appUpdateManager.appUpdateInfo.addOnSuccessListener{
-                            appUpdateInfo ->
-                            when (appUpdateInfo.updateAvailability()) {
-                                UpdateAvailability.UPDATE_AVAILABLE -> {
-                                    appUpdateManager.startUpdateFlowForResult(
-                                        appUpdateInfo,
-                                        this@MainActivity,
-                                        AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
-                                            .setAllowAssetPackDeletion(true)
-                                            .build(), 0
-                                    )
-                                }
-                                else -> Unit
-                            }
-                        }
-                    }
-                }
-            }.onFailure {
-                Timber.e(it)
-            }.getOrNull()
-        }
+
+        mainViewModel.checkUpdates(savedInstanceState)
 
         setContent {
             OnBoardingComposeTheme {
