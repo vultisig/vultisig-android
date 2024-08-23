@@ -253,7 +253,7 @@
     <string name="backup_password_screen_permission_required">File permission is required for backup operations.</string>
     <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_tokens_title">Tokens</string>
-    <string name="token_selection_search_hint">Search...</string>
+    <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing unlimited ERC20 allowance</string>
     <string name="backup_suggestion_text">Each device has its own unique share.\n\nPlease Backup all of your Vault Shares now.</string>
     <string name="backup_now">Backup your vault now!</string>

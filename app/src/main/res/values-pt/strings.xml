@@ -236,7 +236,7 @@
     <string name="share_qr_screen_permission_required">A permissão de ficheiro é necessária para operações de partilha.</string>
     <string name="token_selection_selected_tokens_title">Selecionado</string>
     <string name="token_selection_tokens_title">Fichas</string>
-    <string name="token_selection_search_hint">Pesquisa...</string>
+    <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
     <string name="backup_suggestion_text">Cada dispositivo tem a sua própria partilha exclusiva.</string>
     <string name="backup_now">Faça já o backup do seu cofre!</string>

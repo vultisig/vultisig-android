@@ -59,7 +59,7 @@
     <string name="create_new_vault_screen_import_an_existing_vault">Importa una Cassaforte Esistente</string>
     <string name="device_list_screen_with_these_devices">Con questi dispositivi</string>
     <string name="device_list_screen_continue">Continua</string>
-    <string name="generating_key_preparing_vault">PREPARANDO LA CASSAFORTE...</string>
+    <string name="generating_key_preparing_vault">PREPARANDO LA CASSAFORTE…</string>
     <string name="generating_key_screen_generating_ecdsa_key">GENERANDO CHIAVE ECDSA</string>
     <string name="generating_key_screen_generating_eddsa_key">GENERANDO CHIAVE EdDSA</string>
     <string name="generating_key_screen_resharing_ecdsa_key">RICONDIVIDENDO CHIAVE ECDSA</string>
@@ -77,7 +77,7 @@
     <string name="vault_detail_screen_eddsa">EDDSA</string>
     <string name="welcome_screen_next">Prossimo</string>
     <string name="welcome_screen_skip">Salta</string>
-    <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE...</string>
+    <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE…</string>
     <string name="device_list_desc2">Dovresti eseguire il backup di tutte le condivisioni del vault in posizioni separate.</string>
     <string name="this_device">(Questo Dispositivo)</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il caveau sarà eliminato permanentemente</string>
@@ -235,7 +235,7 @@
     <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_selected_tokens_title">Selezionata</string>
     <string name="token_selection_tokens_title">Gettoni</string>
-    <string name="token_selection_search_hint">Ricerca...</string>
+    <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\'accordo con la fornitura di un\'indennità ERC20 illimitata</string>
     <string name="backup_suggestion_text">Ogni dispositivo ha la sua condivisione univoca.</string>
     <string name="backup_now">Esegui subito il backup del tuo caveau!</string>

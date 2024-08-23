@@ -247,7 +247,7 @@
     <string name="share_qr_screen_permission_required">Для операций обмена требуется разрешение на доступ к файлу.</string>
     <string name="token_selection_selected_tokens_title">Выбрано</string>
     <string name="token_selection_tokens_title">Жетоны</string>
-    <string name="token_selection_search_hint">Поиск...</string>
+    <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я согласен с предоставлением неограниченного лимита ERC20</string>
     <string name="backup_suggestion_text">У каждого устройства есть свой уникальный ресурс.</string>
     <string name="backup_now">Сделайте резервную копию своего хранилища прямо сейчас!</string>
