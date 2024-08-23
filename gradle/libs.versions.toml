@@ -100,7 +100,6 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 
 rive = { module = "app.rive:rive-android", version.ref = "rive" }
 play-update = { module = "com.google.android.play:app-update", version.ref = "update" }
-play-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "update" }
 
 
 [plugins]

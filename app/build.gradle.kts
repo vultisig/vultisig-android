@@ -149,7 +149,6 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.rive)
     implementation(libs.play.update)
-    implementation(libs.play.update.ktx)
 
     // test
     testImplementation(libs.junit)
