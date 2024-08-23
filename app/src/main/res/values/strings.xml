@@ -284,7 +284,7 @@
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
     <string name="keygen_info_note">Having trouble connecting on WiFi? Use a personal hotspot connection instead. Or try a different network.</string>
-    <string name="deposit_form_operator_fee_title">Operator\'s Fee (optional)</string>
+    <string name="deposit_form_operator_fee_title">Operator\’s Fee (optional)</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="naming_vault_screen_vault_placeholder">Main Vault</string>
