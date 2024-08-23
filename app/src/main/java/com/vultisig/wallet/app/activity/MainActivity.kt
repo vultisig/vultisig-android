@@ -33,7 +33,7 @@ internal class MainActivity : AppCompatActivity() {
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 
     @Inject
-    internal lateinit var appUpdateManager: AppUpdateManager
+    private lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -45,14 +45,16 @@ internal class MainActivity : AppCompatActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        mainViewModel.checkUpdates { appUpdateInfo ->
-            appUpdateManager.startUpdateFlowForResult(
-                appUpdateInfo,
-                this@MainActivity,
-                AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
-                    .setAllowAssetPackDeletion(true)
-                    .build(), 0
-            )
+        if (savedInstanceState == null) {
+            mainViewModel.checkUpdates { appUpdateInfo ->
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateInfo,
+                    this@MainActivity,
+                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
+                        .setAllowAssetPackDeletion(true)
+                        .build(), 0
+                )
+            }
         }
 
         setContent {
