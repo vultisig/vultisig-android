@@ -177,7 +177,7 @@ internal sealed class Destination(
         route = "home?vault_id=$openVaultId&show_vault_list=$showVaultList"
     ) {
         companion object {
-            const val ARG_SHOW_VAULT_LIST = "=show_vault_list"
+            const val ARG_SHOW_VAULT_LIST = "show_vault_list"
             const val STATIC_ROUTE =
                 "home?vault_id={$ARG_VAULT_ID}&show_vault_list={$ARG_SHOW_VAULT_LIST}"
         }
