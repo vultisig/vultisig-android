@@ -17,16 +17,23 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 internal class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
+
+    @Inject
+    lateinit var appUpdateManager: AppUpdateManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -37,6 +44,18 @@ internal class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        if (savedInstanceState == null) {
+            mainViewModel.checkUpdates { appUpdateInfo ->
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateInfo,
+                    this@MainActivity,
+                    AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE)
+                        .setAllowAssetPackDeletion(true)
+                        .build(), 0
+                )
+            }
+        }
 
         setContent {
             OnBoardingComposeTheme {

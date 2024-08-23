@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data
 
 import android.content.Context
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
@@ -102,6 +103,12 @@ internal interface DataModule {
         @Singleton
         fun provideCompressorStreamProvider(): CompressorStreamProvider =
             CompressorStreamFactory()
+
+        @Singleton
+        @Provides
+        fun provideAppUpdateManager(
+            @ApplicationContext context: Context
+        ) = AppUpdateManagerFactory.create(context)
 
     }
 

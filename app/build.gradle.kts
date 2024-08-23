@@ -148,6 +148,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
     implementation(libs.rive)
+    implementation(libs.play.update)
 
     // test
     testImplementation(libs.junit)
