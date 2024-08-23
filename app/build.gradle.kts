@@ -148,6 +148,8 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.coil)
     implementation(libs.rive)
+    implementation(libs.app.update)
+    implementation(libs.app.update.ktx)
 
     // test
     testImplementation(libs.junit)
