@@ -169,7 +169,10 @@ internal class KeysignViewModel(
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
             this._messagePuller?.stop()
-            Thread.sleep(1000) // backoff for 1 second
+            withContext(Dispatchers.IO) {
+                Thread.sleep(1000)
+                // backoff for 1 second
+            }
         } catch (e: Exception) {
             this._messagePuller?.stop()
             Timber.tag("KeysignViewModel")
