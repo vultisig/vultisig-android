@@ -99,8 +99,8 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 rive = { module = "app.rive:rive-android", version.ref = "rive" }
-app-update = { module = "com.google.android.play:app-update", version.ref = "update" }
-app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "update" }
+play-update = { module = "com.google.android.play:app-update", version.ref = "update" }
+play-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "update" }
 
 
 [plugins]
