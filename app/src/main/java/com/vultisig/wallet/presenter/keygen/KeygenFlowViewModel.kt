@@ -180,7 +180,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             this.vault.hexChainCode = randomBytes.joinToString("") { "%02x".format(it) }
         }
         if (this.vault.localPartyID.isEmpty()) {
-            this.vault.localPartyID = Utils.deviceName
+            this.vault.localPartyID = Utils.deviceName(context)
         }
         uiState.update { it.copy(selection = listOf(this.vault.localPartyID)) }
         _oldResharePrefix = this.vault.resharePrefix
