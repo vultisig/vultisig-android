@@ -29,8 +29,3 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
         GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
       run: ./gradlew build
-    - name: Archive code analysis reports
-      uses: actions/upload-artifact@v2
-      with:
-        name: Lint-Reports
-        path: app/build/reports/lint-results-debug.html
