@@ -107,7 +107,7 @@
     <string name="join_key_gen_screen_joining_keygen">Unirse a Keygen</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Esperando que se inicie Keygen.</string>
     <string name="keygen_flow_views_success">Éxito</string>
-    <string name="keygen_peer_discovery_keygen">Generador de claves</string>
+    <string name="keygen_peer_discovery_keygen">Keygen para la bóveda de %1$s</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Emparejar con otros dispositivos:</string>
     <string name="keygen_peer_discovery_continue">Continuar</string>
     <string name="network_prompts_local">Local</string>

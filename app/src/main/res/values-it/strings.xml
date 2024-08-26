@@ -127,7 +127,7 @@
     <string name="vultisig_app_version">APPLICAZIONE VULTISIG V%1$s</string>
     <string name="settings_screen_vault_settings">Impostazioni del caveau</string>
     <string name="token_logo">Logo del gettone</string>
-    <string name="vault_edit_this_name_already_exist">file salvato in Download/%1$s</string>
+    <string name="vault_edit_this_name_already_exist">questo nome esiste già</string>
     <string name="import_file_screen_duplicate_vault">Il caveau è duplicato</string>
     <string name="verify_swap_consent_amount">L\'importo dello swap è corretto</string>
     <string name="settings_screen_vtx_token">Il token $VAULT</string>
@@ -151,7 +151,7 @@
     <string name="device_list_screen_keygen">Generazione di chiavi</string>
     <string name="generating_key_title">Generazione di chiavi</string>
     <string name="join_key_gen_screen_keygen">Generazione di chiavi</string>
-    <string name="keygen_peer_discovery_keygen">Generazione di chiavi</string>
+    <string name="keygen_peer_discovery_keygen">Keygen per il caveau %1$s</string>
     <string name="signing_error_keygen">Generazione di chiavi</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantieni i dispositivi sulla stessa rete WiFi con Vultisig aperto.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantieni i dispositivi sulla stessa rete WiFi, correggi il vault e associa i dispositivi.\nAssicurati che nessun altro dispositivo stia eseguendo Vultisig.</string>

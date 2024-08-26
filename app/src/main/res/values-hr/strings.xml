@@ -127,7 +127,7 @@
     <string name="vultisig_app_version">VULTISIG APLIKACIJA V%1$s</string>
     <string name="settings_screen_vault_settings">Postavke trezora</string>
     <string name="token_logo">Logo tokena</string>
-    <string name="vault_edit_this_name_already_exist">datoteka spremljena u Downloads/%1$s</string>
+    <string name="vault_edit_this_name_already_exist">ovo ime već postoji</string>
     <string name="import_file_screen_duplicate_vault">Trezor je duplikat</string>
     <string name="verify_swap_consent_amount">Iznos zamjene je točan</string>
     <string name="settings_screen_vtx_token">Token $VAULT</string>
@@ -151,7 +151,7 @@
     <string name="device_list_screen_keygen">Keygen</string>
     <string name="generating_key_title">Keygen</string>
     <string name="join_key_gen_screen_keygen">Keygen</string>
-    <string name="keygen_peer_discovery_keygen">Keygen</string>
+    <string name="keygen_peer_discovery_keygen">Keygen za %1$s trezor</string>
     <string name="signing_error_keygen">Keygen</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Držite uređaje na istoj WiFi mreži s otvorenim Vultisig-om.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje.\nUvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
