@@ -7,3 +7,8 @@ fun ByteArray.toKeccak256(): String {
     val hash = digest.digest(this)
     return Numeric.toHexString(hash)
 }
+
+fun ByteArray.toKeccak256ByteArray(): ByteArray {
+    val digest = Keccak.Digest256()
+    return digest.digest(this)
+}

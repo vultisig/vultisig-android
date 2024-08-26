@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.common.stripHexPrefix
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.data.models.CustomTokenResponse
 import com.vultisig.wallet.models.Chain
@@ -56,6 +57,7 @@ internal interface EvmApi {
     suspend fun getNonce(address: String): BigInteger
     suspend fun getGasPrice(): BigInteger
     suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse>
+    suspend fun resolveENS(namehash: String): String
 }
 
 internal interface EvmApiFactory {
@@ -320,6 +322,11 @@ internal class EvmApiImp(
         }
     }
 
+    override suspend fun resolveENS(namehash: String): String {
+        val resolverAddress = fetchResolver(namehash)
+        return fetchAddressFromResolver(namehash, resolverAddress)
+    }
+
     private fun generateCustomTokenPayload(
         contractAddress: String
     ): Pair<RpcPayload, RpcPayload> {
@@ -352,11 +359,46 @@ internal class EvmApiImp(
             payload2
         )
     }
+
+    private suspend fun fetchResolver(node: String): String {
+        val payload = RpcPayload(
+            jsonrpc = "2.0",
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to ENS_REGISTRY_ADDRESS,
+                    "data" to "$FETCH_RESOLVER_PREFIX${node.stripHexPrefix()}"
+                ),
+                "latest"
+            ),
+            id = 1,
+        )
+       return "" // todo
+    }
+
+    private suspend fun fetchAddressFromResolver(node: String, resolverAddress: String): String {
+        val payload = RpcPayload(
+            jsonrpc = "2.0",
+            method = "eth_call",
+            params = listOf(
+                mapOf(
+                    "to" to resolverAddress,
+                    "data" to "$FETCH_ADDRESS_PREFIX${node.stripHexPrefix()}"
+                ),
+                "latest"
+            ),
+            id = 1,
+        )
+        return "" // todo
+    }
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
         private const val CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_= 3
         private const val CUSTOM_TOKEN_REQUEST_TICKER_DATA = "0x95d89b41"
         private const val CUSTOM_TOKEN_REQUEST_DECIMAL_DATA = "0x313ce567"
+        private const val FETCH_RESOLVER_PREFIX = "0x0178b8bf"
+        private const val FETCH_ADDRESS_PREFIX = "0x3b3b57de"
+        private const val ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
     }
 }
 

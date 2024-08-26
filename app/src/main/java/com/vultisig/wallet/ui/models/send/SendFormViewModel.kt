@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -109,6 +110,7 @@ internal class SendFormViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val addressParserRepository: AddressParserRepository
 ) : ViewModel() {
 
     private var vaultId: String? = null
@@ -308,7 +310,10 @@ internal class SendFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-                val dstAddress = addressFieldState.text.toString()
+                val dstAddress = addressParserRepository.resolveInput(
+                    addressFieldState.text.toString(),
+                    chain,
+                )
 
                 if (dstAddress.isBlank() ||
                     !chainAccountAddressRepository.isValid(chain, dstAddress)

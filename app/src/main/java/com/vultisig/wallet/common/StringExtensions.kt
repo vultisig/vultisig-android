@@ -25,3 +25,11 @@ fun String.toByteString(): ByteString {
 fun String.toHexBytesInByteString(): ByteString {
     return ByteString.copyFrom(this.toHexBytes())
 }
+
+fun String.stripHexPrefix(): String {
+    return if (startsWith("0x")) {
+        substring(2)
+    } else {
+        this
+    }
+}
