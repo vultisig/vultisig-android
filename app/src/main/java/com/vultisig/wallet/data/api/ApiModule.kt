@@ -75,4 +75,10 @@ internal interface ApiModule {
     fun bindBlowfishApi(
         impl: BlowfishApiImpl
     ): BlowfishApi
+
+    @Binds
+    @Singleton
+    fun bindCmcApi(
+        impl: CmcApiImpl
+    ): CmcApi
 }
