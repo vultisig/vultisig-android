@@ -27,6 +27,7 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
@@ -80,11 +81,15 @@ internal fun SetupNavGraph(
             WelcomeScreen(navController = navController)
         }
         composable(
-            route = Destination.Home.staticRoute,
+            route = Destination.Home.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
                     nullable = true
+                },
+                navArgument(ARG_SHOW_VAULT_LIST) {
+                    type = NavType.BoolType
+                    defaultValue = false
                 }
             )
         ) {

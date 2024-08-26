@@ -174,22 +174,12 @@ internal sealed class Destination(
         val openVaultId: String? = null,
         val showVaultList: Boolean = false,
     ) : Destination(
-        route = buildRoute(
-            openVaultId,
-            showVaultList.toString()
-        )
+        route = "home?vault_id=$openVaultId&show_vault_list=$showVaultList"
     ) {
         companion object {
-            private const val ARG_SHOW_VAULT_LIST = "=show_vault_list"
-            val staticRoute = buildRoute(
-                "{$ARG_VAULT_ID}",
-                "{$ARG_SHOW_VAULT_LIST}"
-            )
-
-            private fun buildRoute(
-                vaultId: String?,
-                showVaultList: String,
-            ) = "home?vault_id=$vaultId&show_vault_list=$showVaultList"
+            const val ARG_SHOW_VAULT_LIST = "show_vault_list"
+            const val STATIC_ROUTE =
+                "home?vault_id={$ARG_VAULT_ID}&show_vault_list={$ARG_SHOW_VAULT_LIST}"
         }
     }
 

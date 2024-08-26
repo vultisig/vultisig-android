@@ -25,7 +25,7 @@ internal class ScanQrErrorViewModel @Inject constructor(
                 Destination.AddChainAccount(
                     vaultId = vaultId
                 ),
-                opts = NavigationOptions(popUpTo = Destination.Home.staticRoute)
+                opts = NavigationOptions(popUpTo = Destination.Home().route)
             )
         }
     }

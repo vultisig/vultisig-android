@@ -23,7 +23,7 @@
     <string name="vault_settings_reshare_subtitle">Reshare vault with a new committee</string>
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
-    <string name="join_keysign_wrong_vault">Wrong Vault or Pair Device.</string>
+    <string name="join_keysign_wrong_vault">Change vault</string>
     <string name="joinkeysign_discovery_service">Discovering Service</string>
     <string name="joinkeysign_waiting_keysign_start">Waiting for Keysign to start.</string>
     <string name="choose_tokens">Choose Tokens</string>

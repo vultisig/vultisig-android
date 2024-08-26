@@ -444,7 +444,7 @@ internal class SendFormViewModel @Inject constructor(
                 } catch (e: NoSuchElementException) {
                     navigator.navigate(
                         Destination.ScanError(vaultId),
-                        opts = NavigationOptions(popUpTo = Destination.Home.staticRoute),
+                        opts = NavigationOptions(popUpTo = Destination.Home().route),
                     )
                 }
                 catch (e: Exception) {
