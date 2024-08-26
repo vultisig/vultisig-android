@@ -133,7 +133,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             }
 
             if (_vault.localPartyID.isEmpty()) {
-                _vault.localPartyID = Utils.deviceName
+                _vault.localPartyID = Utils.deviceName(context)
             }
             _localPartyID = _vault.localPartyID
 

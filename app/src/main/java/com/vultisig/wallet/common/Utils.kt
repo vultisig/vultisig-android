@@ -1,14 +1,20 @@
 package com.vultisig.wallet.common
 
+import android.content.Context
+import android.provider.Settings
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import java.security.SecureRandom
 import kotlin.math.ceil
 
 object Utils {
-    val deviceName: String
-        get() {
-            return "${android.os.Build.MODEL}-${(100..999).random()}"
-        }
+    fun deviceName(context: Context): String {
+        val identifierForVendor: String? = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ANDROID_ID
+        )
+        return "${android.os.Build.MODEL}-${identifierForVendor?.takeLast(3) ?: "N/A"}"
+    }
+
     val encryptionKeyHex: String
         get() {
             val secureRandom = SecureRandom()
