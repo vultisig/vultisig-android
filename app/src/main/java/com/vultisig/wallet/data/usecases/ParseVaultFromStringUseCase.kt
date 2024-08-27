@@ -67,10 +67,10 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
             localPartyID = proto.localPartyId,
             signers = proto.signers,
             resharePrefix = proto.resharePrefix,
-            keyshares = proto.keyShares.filterNotNull().map { keyshare ->
+            keyshares = proto.keyShares.filterNotNull().map { keyShare ->
                 KeyShare(
-                    pubKey = keyshare.publicKey,
-                    keyshare = keyshare.keyshare
+                    pubKey = keyShare.publicKey,
+                    keyShare = keyShare.keyshare
                 )
             },
             coins = emptyList(),

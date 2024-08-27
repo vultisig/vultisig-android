@@ -49,7 +49,7 @@ internal interface UseCasesModule {
     @Binds
     @Singleton
     fun bindDecompressQrUseCase(
-        impl: DecomressQrUseCaseImpl
+        impl: DecompressQrUseCaseImpl
     ): DecompressQrUseCase
 
     @Binds

@@ -22,7 +22,7 @@ internal class VaultAndroidToIOSMapperImpl @Inject constructor() : VaultAndroidT
             name = from.name,
             signers = from.signers,
             createdAt = 0f,
-            keyshares = from.keyshares.map { IOSKeyShare(it.pubKey,it.keyshare) }
+            keyShares = from.keyshares.map { IOSKeyShare(it.pubKey,it.keyShare) }
         )
     )
 

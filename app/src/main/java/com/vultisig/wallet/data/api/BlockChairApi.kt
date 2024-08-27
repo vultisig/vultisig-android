@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.vultisig.wallet.data.models.BlockchairInfo
+import com.vultisig.wallet.data.models.BlockChairInfo
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
@@ -20,9 +20,9 @@ internal interface BlockChairApi {
     suspend fun getAddressInfo(
         chain: Chain,
         address: String,
-    ): BlockchairInfo?
+    ): BlockChairInfo?
 
-    suspend fun getBlockchairStats(chain: Chain): BigInteger
+    suspend fun getBlockChairStats(chain: Chain): BigInteger
     suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String
 }
 
@@ -45,7 +45,7 @@ internal class BlockChairApiImp @Inject constructor(
     override suspend fun getAddressInfo(
         chain: Chain,
         address: String,
-    ): BlockchairInfo? {
+    ): BlockChairInfo? {
         try {
             val response =
                 httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
@@ -55,15 +55,15 @@ internal class BlockChairApiImp @Inject constructor(
             Timber.d("response data: $responseData")
             val rootObject = gson.fromJson(responseData, JsonObject::class.java)
             val data = rootObject.getAsJsonObject("data").getAsJsonObject().get(address)
-            val blockchairInfo = gson.fromJson(data, BlockchairInfo::class.java)
-            return blockchairInfo
+            val blockChairInfo = gson.fromJson(data, BlockChairInfo::class.java)
+            return blockChairInfo
         } catch (e: Exception) {
             Timber.e("fail to get address info from blockchair: ${e.message}")
         }
         return null
     }
 
-    override suspend fun getBlockchairStats(chain: Chain): BigInteger {
+    override suspend fun getBlockChairStats(chain: Chain): BigInteger {
         val response =
             httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/stats") {
                 header("Content-Type", "application/json")

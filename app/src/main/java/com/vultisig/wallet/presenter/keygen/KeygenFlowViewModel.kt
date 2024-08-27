@@ -293,14 +293,14 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     private fun startSession(
-        serverAddr: String,
+        serverAddress: String,
         sessionID: String,
         localPartyID: String,
     ) {
         // start the session
         try {
             val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url("$serverAddr/$sessionID").post(
+            val request = okhttp3.Request.Builder().url("$serverAddress/$sessionID").post(
                 gson.toJson(listOf(localPartyID))
                     .toRequestBody("application/json".toMediaType())
             ).build()

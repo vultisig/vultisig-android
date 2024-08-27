@@ -57,8 +57,8 @@ internal fun JoinKeygenView(
         modifier = Modifier.fillMaxSize()
     ) {
         when (viewModel.currentState.value) {
-            JoinKeygenState.DiscoveryingSessionID -> {
-                DiscoveryingSessionID(navController = navController)
+            JoinKeygenState.DiscoveringSessionID -> {
+                DiscoveringSessionID(navController = navController)
             }
 
             JoinKeygenState.DiscoverService -> {
@@ -109,7 +109,7 @@ internal fun JoinKeygenView(
 }
 
 @Composable
-fun DiscoveryingSessionID(navController: NavHostController) {
+fun DiscoveringSessionID(navController: NavHostController) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -144,9 +144,9 @@ fun DiscoveryingSessionID(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewDiscoveryingSessionID() {
+fun PreviewDiscoveringSessionID() {
     val navController = rememberNavController()
-    DiscoveryingSessionID(navController = navController)
+    DiscoveringSessionID(navController = navController)
 }
 
 @Composable

@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 
 internal interface PolkadotApi {
-    suspend fun getBalanace(address: String): BigInteger
+    suspend fun getBalance(address: String): BigInteger
     suspend fun getNonce(address: String): BigInteger
     suspend fun getBlockHash(isGenesis: Boolean = false): String
     suspend fun getGenesisBlockHash(): String
@@ -31,7 +31,7 @@ internal class PolkadotApiImp @Inject constructor(
     private val polkadotBalanceApiUrl = "https://polkadot.api.subscan.io/api/v2/scan/search"
 
 
-    override suspend fun getBalanace(address: String): BigInteger {
+    override suspend fun getBalance(address: String): BigInteger {
         val bodyMap = mapOf(
             "key" to address
         )

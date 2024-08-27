@@ -24,8 +24,8 @@
     <string name="vault_settings_delete_title">Delete</string>
     <string name="vault_settings_delete_subtitle">Delete your vault share permanently</string>
     <string name="join_keysign_wrong_vault">Change vault</string>
-    <string name="joinkeysign_discovery_service">Discovering Service</string>
-    <string name="joinkeysign_waiting_keysign_start">Waiting for Keysign to start.</string>
+    <string name="join_keysign_discovery_service">Discovering Service</string>
+    <string name="join_keysign_waiting_keysign_start">Waiting for Keysign to start.</string>
     <string name="choose_tokens">Choose Tokens</string>
     <string name="send_screen_title">Send</string>
     <string name="send_from_address">From</string>
@@ -85,7 +85,7 @@
     <string name="qr_address_screen_title">Address</string>
     <string name="transaction_done_title">Done</string>
     <string name="transaction_done_complete">Complete</string>
-    <string name="transation_done_form_title">Transaction</string>
+    <string name="transaction_done_form_title">Transaction</string>
     <string name="home_screen_title">Vaults</string>
     <string name="home_screen_add_new_vault">+ Add New Vault</string>
     <string name="import_file_screen_title">Import</string>
@@ -321,7 +321,7 @@
     <string name="enable_chain_warning">Chain is not selected.\nPlease enable it in chain selection.</string>
     <string name="s_of_s">%1$s of %2$s</string>
     <string name="setup_select_your_vault_type">Select your vault type</string>
-    <string name="settings_screen_lagal">Legal</string>
+    <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
     <string name="import_file_not_supported" >File type is not supported</string>

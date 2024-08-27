@@ -22,7 +22,7 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
         keyShares = from.keyshares.map {
             KeyShareProto(
                 publicKey = it.pubKey,
-                keyshare = it.keyshare
+                keyshare = it.keyShare
             )
         },
         createdAt = Timestamp(Clock.System.now().epochSeconds),

@@ -500,11 +500,11 @@ internal class SwapFormViewModel @Inject constructor(
                 selectedDst.filterNotNull(),
             ) { src, dst -> src to dst }
                 .distinctUntilChanged()
-                .combine(srcAmountState.textAsFlow()) { addrs, amount ->
-                    addrs to srcAmount
+                .combine(srcAmountState.textAsFlow()) { address, amount ->
+                    address to srcAmount
                 }
-                .collect { (addrs, amount) ->
-                    val (src, dst) = addrs
+                .collect { (address, amount) ->
+                    val (src, dst) = address
 
                     val srcToken = src.account.token
                     val dstToken = dst.account.token

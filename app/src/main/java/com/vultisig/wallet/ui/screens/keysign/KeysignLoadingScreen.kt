@@ -39,7 +39,7 @@ internal fun KeysignLoadingScreen(
 
 @Preview
 @Composable
-private fun KeysingLoadingScreenPreview() {
+private fun KeysignLoadingScreenPreview() {
     KeysignLoadingScreen(
         text = stringResource(R.string.join_keysign_discovering_session_id),
     )

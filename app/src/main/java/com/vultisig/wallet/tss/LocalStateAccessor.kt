@@ -7,7 +7,7 @@ internal class LocalStateAccessor(private val vault: Vault) : tss.LocalStateAcce
     override fun getLocalState(pubKey: String): String {
         for (share in vault.keyshares) {
             if (share.pubKey == pubKey) {
-                return share.keyshare
+                return share.keyShare
             }
         }
         return ""

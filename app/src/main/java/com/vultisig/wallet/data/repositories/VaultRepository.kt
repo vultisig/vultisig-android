@@ -154,7 +154,7 @@ internal class VaultRepositoryImpl @Inject constructor(
                 KeyShareEntity(
                     vaultId = vaultId,
                     pubKey = it.pubKey,
-                    keyShare = it.keyshare,
+                    keyShare = it.keyShare,
                 )
             },
             signers = vault.signers.map {

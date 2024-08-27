@@ -159,7 +159,7 @@ fun SettingsScreen(navController: NavHostController) {
             }
 
             Text(
-                text = stringResource(R.string.settings_screen_lagal),
+                text = stringResource(R.string.settings_screen_legal),
                 modifier = Modifier
                     .padding(12.dp)
                     .fillMaxWidth(),

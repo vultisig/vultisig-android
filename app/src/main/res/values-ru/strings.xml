@@ -24,8 +24,8 @@
     <string name="vault_settings_delete_title">Удалить</string>
     <string name="vault_settings_delete_subtitle">Удалить ваше хранилище навсегда</string>
     <string name="join_keysign_wrong_vault">Изменить хранилище</string>
-    <string name="joinkeysign_discovery_service">Обнаружение службы</string>
-    <string name="joinkeysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
+    <string name="join_keysign_discovery_service">Обнаружение службы</string>
+    <string name="join_keysign_waiting_keysign_start">Ожидание начала ключевой подписи.</string>
     <string name="choose_tokens">Выберите токены</string>
     <string name="send_screen_title">Отправить</string>
     <string name="send_from_address">От</string>
@@ -84,7 +84,7 @@
     <string name="qr_address_screen_title">Адрес</string>
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_complete">Завершено</string>
-    <string name="transation_done_form_title">Транзакция</string>
+    <string name="transaction_done_form_title">Транзакция</string>
     <string name="home_screen_title">Хранилища</string>
     <string name="home_screen_add_new_vault">+ Добавить новое хранилище</string>
     <string name="import_file_screen_title">Импорт</string>
@@ -306,7 +306,7 @@
     <string name="enable_chain_warning">Цепь не выбрана. Включите ее в выборе цепи.</string>
     <string name="s_of_s">%1$s из %2$s</string>
     <string name="setup_select_your_vault_type">Выберите тип хранилища</string>
-    <string name="settings_screen_lagal">Юридический</string>
+    <string name="settings_screen_legal">Юридический</string>
     <string name="settings_screen_privacy_policy">политика конфиденциальности</string>
     <string name="settings_screen_tos">Условия обслуживания</string>
     <string name="verify_deposit_memo_title">Памятка</string>

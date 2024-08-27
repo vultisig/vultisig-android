@@ -6,5 +6,5 @@ internal data class KeyShare(
     @SerializedName("pubKey")
     val pubKey: String,
     @SerializedName("keyshare")
-    val keyshare: String,
+    val keyShare: String,
 )

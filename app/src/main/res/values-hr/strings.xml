@@ -48,7 +48,7 @@
     <string name="qr_address_screen_title">Adresa</string>
     <string name="transaction_done_title">Gotovo</string>
     <string name="transaction_done_complete">Complete</string>
-    <string name="transation_done_form_title">Transakcija</string>
+    <string name="transaction_done_form_title">Transakcija</string>
     <string name="home_screen_add_new_vault">+ Dodaj novi sef</string>
     <string name="import_file_screen_title">Uvoz</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Prenesite prethodno stvoreni udio sefa</string>
@@ -119,7 +119,7 @@
     <string name="faq_settings_q1">Moram li se registrirati?</string>
     <string name="home_screen_title">Sefovi</string>
     <string name="device_list_desc1">Transakcije možete slati samo s ovim %1$s uređajima.</string>
-    <string name="joinkeysign_waiting_keysign_start">Čeka se da se Keysign pokrene.</string>
+    <string name="join_keysign_waiting_keysign_start">Čeka se da se Keysign pokrene.</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Čeka se da se Keysign pokrene.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT tokeni troše se od naknada.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokeni se ispuštaju korisnicima.</string>
@@ -172,7 +172,7 @@
     <string name="keysign_screen_error_please_try_again">Greška! Molim te pokušaj ponovno. %1$s</string>
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_key_gen_screen_discovering_session_id">Otkrivanje ID-a sesije</string>
-    <string name="joinkeysign_discovery_service">Usluga otkrivanja</string>
+    <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
     <string name="join_key_gen_screen_discovering_service">Usluga otkrivanja</string>
     <string name="vault_settings_delete_subtitle">Trajno izbrišite svoj udio u trezoru</string>
     <string name="settings_screen_default_chains">Zadani lanci</string>
@@ -299,7 +299,7 @@
     <string name="enable_chain_warning">Lanac nije odabran. Omogućite ga u odabiru lanca.</string>
     <string name="s_of_s">%1$s od %2$s</string>
     <string name="setup_select_your_vault_type">Odaberite svoju vrstu trezora</string>
-    <string name="settings_screen_lagal">Pravno</string>
+    <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
     <string name="settings_screen_tos">Uvjeti usluge</string>
     <string name="share_vault_qr_card_title">Glavni trezor</string>

@@ -58,7 +58,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 private const val WARNING_TIMEOUT = 10000L
 
 enum class JoinKeygenState {
-    DiscoveryingSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart, ERROR
+    DiscoveringSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart, ERROR
 }
 
 @HiltViewModel
@@ -93,7 +93,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _isDiscoveryListenerRegistered = false
 
     var currentState: MutableState<JoinKeygenState> =
-        mutableStateOf(JoinKeygenState.DiscoveryingSessionID)
+        mutableStateOf(JoinKeygenState.DiscoveringSessionID)
     var errorMessage: MutableState<String> = mutableStateOf("")
     val warningHostState = SnackbarHostState()
 
@@ -236,8 +236,8 @@ internal class JoinKeygenViewModel @Inject constructor(
         }
     }
 
-    private fun onServerAddressDiscovered(addr: String) {
-        _serverAddress = addr
+    private fun onServerAddressDiscovered(address: String) {
+        _serverAddress = address
         currentState.value = JoinKeygenState.JoinKeygen
         // discovery finished
         _discoveryListener?.let {
@@ -387,14 +387,14 @@ class MediatorServiceDiscoveryListener(
         Timber.tag("JoinKeygenViewModel")
             .d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.host?.address.toString()} , port: ${serviceInfo?.port}")
         serviceInfo?.let { it ->
-            val addr = it.host
-            if (addr !is Inet4Address) {
+            val address = it.host
+            if (address !is Inet4Address) {
                 return
             }
-            if (addr.isLoopbackAddress) {
+            if (address.isLoopbackAddress) {
                 return
             }
-            addr.hostAddress?.let {
+            address.hostAddress?.let {
                 // This is a workaround for the emulator
                 if (it == "10.0.2.16") {
                     onServerAddressDiscovered("http://192.168.1.35:18080")

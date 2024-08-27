@@ -241,7 +241,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                         ?: splTokenRepository.getCachedBalance(coin)
                 }
             }
-            Polkadot -> polkadotApi.getBalanace(address)
+            Polkadot -> polkadotApi.getBalance(address)
 
         }, coin.ticker, coin.decimal))
     }.onEach { tokenValue ->

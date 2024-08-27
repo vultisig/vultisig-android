@@ -8,7 +8,7 @@ internal data class CosmosTransactionBroadcastResponse(
 
 internal data class CosmosTransactionBroadcastTx(
     @SerializedName("txhash")
-    val txhash: String?,
+    val txHash: String?,
     @SerializedName("code")
     val code: Int?,
 )
