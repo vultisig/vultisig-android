@@ -390,7 +390,7 @@ internal class SendFormViewModel @Inject constructor(
                         decimals = selectedToken.decimal,
                     ),
                     fiatValue = FiatValue(
-                        value = fiatAmountFieldState.text.toString().toBigDecimal(),
+                        value = fiatAmountFieldState.text.toString().toBigDecimalOrNull()?: BigDecimal.ZERO,
                         currency = appCurrency.value.ticker,
                     ),
                     gasFee = gasFee,
