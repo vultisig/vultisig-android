@@ -87,7 +87,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun refreshData() {
         val vaultId = vaultId ?: return
         updateRefreshing(true)
-        loadAccounts(vaultId)
+        refreshAccounts(vaultId)
     }
 
     fun send() {
@@ -156,7 +156,6 @@ internal class VaultAccountsViewModel @Inject constructor(
                     // TODO handle error
                     Timber.e(it)
                 }.collect { accounts ->
-                    updateRefreshing(false)
 
                     val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
                         ?.let(fiatValueToStringMapper::map)
@@ -167,6 +166,38 @@ internal class VaultAccountsViewModel @Inject constructor(
                             totalFiatValue = totalFiatValue, accounts = accountsUiModel
                         )
                     }
+                    updateRefreshing(false)
+                }
+        }
+    }
+
+    private fun refreshAccounts(vaultId: String) {
+        loadAccountsJob?.cancel()
+        loadAccountsJob = viewModelScope.launch {
+            accountsRepository
+                .refreshAddresses(vaultId)
+                .map { it ->
+                    it.sortedBy {
+                        it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
+                    }
+                }
+                .catch {
+                    updateRefreshing(false)
+
+                    // TODO handle error
+                    Timber.e(it)
+                }.collect { accounts ->
+
+                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
+                        ?.let(fiatValueToStringMapper::map)
+                    val accountsUiModel = accounts.map(addressToUiModelMapper::map)
+
+                    uiState.update {
+                        it.copy(
+                            totalFiatValue = totalFiatValue, accounts = accountsUiModel
+                        )
+                    }
+                    updateRefreshing(false)
                 }
         }
     }

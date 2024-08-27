@@ -25,6 +25,10 @@ internal interface AccountsRepository {
         vaultId: String,
     ): Flow<List<Address>>
 
+    fun refreshAddresses(
+        vaultId: String,
+    ): Flow<List<Address>>
+
     fun loadAddress(
         vaultId: String,
         chain: Chain,
@@ -77,6 +81,49 @@ internal class AccountsRepositoryImpl @Inject constructor(
                 }
             }
             send(addresses)
+
+            addresses.mapIndexed { index, account ->
+                async {
+                    try {
+                        val address = account.address
+                        loadPrices.await()
+
+                        val newAccounts = supervisorScope {
+                            account.accounts.map {
+                                async {
+                                    val balance =
+                                        balanceRepository.getTokenBalance(address, it.token)
+                                            .first()
+
+                                    it.applyBalance(balance)
+                                }
+                            }.awaitAll()
+                        }
+
+                        addresses[index] = account.copy(accounts = newAccounts)
+
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        // ignore
+                    }
+                }
+            }.awaitAll()
+            send(addresses)
+        }
+        awaitClose()
+    }
+
+    override fun refreshAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
+        supervisorScope {
+            val vault = getVault(vaultId)
+            val vaultCoins = vault.coins
+            val coins = vaultCoins.groupBy { it.chain }
+            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
+                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
+            }
+
+            val loadPrices =
+                async { tokenPriceRepository.refresh(vaultCoins) }
 
             addresses.mapIndexed { index, account ->
                 async {
