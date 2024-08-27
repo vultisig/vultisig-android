@@ -82,7 +82,7 @@ internal class CosmosApiImp @Inject constructor(
             )
             result?.let {
                 if (it.txResponse?.code == 0 || it.txResponse?.code == 19) {
-                    return it.txResponse.txhash
+                    return it.txResponse.txHash
                 }
                 throw Exception("Error broadcasting transaction: $responseRawString")
             }

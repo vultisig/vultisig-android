@@ -128,8 +128,8 @@ internal data class KeysignPayload(
                 }
 
                 Chain.MayaChain -> {
-                    val mayachainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                    mayachainHelper.getPreSignedImageHash(this)
+                    val mayaChainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                    mayaChainHelper.getPreSignedImageHash(this)
                 }
 
                 Chain.Polkadot -> {

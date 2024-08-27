@@ -23,8 +23,8 @@ internal class VaultIOSToAndroidMapperImpl @Inject constructor(private val gson:
             hexChainCode = vault.hexChainCode,
             localPartyID = vault.localPartyID,
             signers = vault.signers,
-            resharePrefix = vault.keyshares[0].keyshare.extractResharePrefix(),
-            keyshares = vault.keyshares.map { KeyShare(it.pubkey,it.keyshare) },
+            resharePrefix = vault.keyShares[0].keyShare.extractResharePrefix(),
+            keyshares = vault.keyShares.map { KeyShare(it.pubKey,it.keyShare) },
             coins = vault.coins?.map { coin ->
                 coin.copy(address = adjustAddressPrefix(coin))
             } ?: emptyList()

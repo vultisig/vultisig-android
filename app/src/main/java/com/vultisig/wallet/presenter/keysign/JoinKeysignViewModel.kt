@@ -88,7 +88,7 @@ sealed class JoinKeysignError(val message: UiText) {
 }
 
 sealed interface JoinKeysignState {
-    data object DiscoveryingSessionID : JoinKeysignState
+    data object DiscoveringSessionID : JoinKeysignState
     data object DiscoverService : JoinKeysignState
     data object JoinKeysign : JoinKeysignState
     data object WaitingForKeysignStart : JoinKeysignState
@@ -145,7 +145,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     var currentState: MutableState<JoinKeysignState> =
-        mutableStateOf(JoinKeysignState.DiscoveryingSessionID)
+        mutableStateOf(JoinKeysignState.DiscoveringSessionID)
     private var _localPartyID: String = ""
     private var _sessionID: String = ""
     private var _serviceName: String = ""
@@ -422,8 +422,8 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
     }
 
-    private fun onServerAddressDiscovered(addr: String) {
-        _serverAddress = addr
+    private fun onServerAddressDiscovered(address: String) {
+        _serverAddress = address
         currentState.value = JoinKeysignState.JoinKeysign
         // discovery finished
         _discoveryListener?.let { _nsdManager?.stopServiceDiscovery(it) }

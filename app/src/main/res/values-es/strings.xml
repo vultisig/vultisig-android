@@ -20,8 +20,8 @@
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de caja fuerte de forma permanente</string>
     <string name="join_keysign_wrong_vault">Cambiar bóveda</string>
-    <string name="joinkeysign_discovery_service">Descubriendo el servicio</string>
-    <string name="joinkeysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>
+    <string name="join_keysign_discovery_service">Descubriendo el servicio</string>
+    <string name="join_keysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>
     <string name="naming_vault_screen_invalid_name">Nombre inválido</string>
     <string name="rename_vault_invalid_name">Nombre inválido</string>
     <string name="swap_form_invalid_amount">Monto invalido</string>
@@ -78,7 +78,7 @@
     <string name="qr_address_screen_title">Dirección</string>
     <string name="transaction_done_title">Hecho</string>
     <string name="transaction_done_complete">Completo</string>
-    <string name="transation_done_form_title">Transacción</string>
+    <string name="transaction_done_form_title">Transacción</string>
     <string name="home_screen_title">Cajas Fuertes</string>
     <string name="home_screen_add_new_vault">+ Agregar Nueva Caja Fuerte</string>
     <string name="import_file_screen_title">Importar</string>
@@ -301,7 +301,7 @@
     <string name="enable_chain_warning">La cadena no está seleccionada. Habilítela en la selección de cadena.</string>
     <string name="s_of_s">%1$s de %2$s</string>
     <string name="setup_select_your_vault_type">Seleccione su tipo de bóveda</string>
-    <string name="settings_screen_lagal">Legal</string>
+    <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de privacidad</string>
     <string name="settings_screen_tos">Condiciones de servicio</string>
     <string name="verify_deposit_memo_title">Memorándum</string>

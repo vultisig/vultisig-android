@@ -136,11 +136,11 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.SOL -> {
-            val blockhash = solanaApi.getRecentBlockHash()
-            Timber.d("solana blockhash: $blockhash")
+            val blockHash = solanaApi.getRecentBlockHash()
+            Timber.d("solana blockhash: $blockHash")
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Solana(
-                    recentBlockHash = blockhash,
+                    recentBlockHash = blockHash,
                     priorityFee = gasFee.value
                 )
             )

@@ -50,7 +50,7 @@
     <string name="qr_address_screen_title">Adresse</string>
     <string name="transaction_done_title">Fertig</string>
     <string name="transaction_done_complete">Fortfahren</string>
-    <string name="transation_done_form_title">Transaktion</string>
+    <string name="transaction_done_form_title">Transaktion</string>
     <string name="home_screen_add_new_vault">+ Neuen Tresor hinzufügen</string>
     <string name="import_file_screen_title">Importieren</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share"> Laden Ihren zuvor erstellten Tresor ein :</string>
@@ -119,7 +119,7 @@
     <string name="tokens">Tokens</string>
     <string name="home_screen_title">Tresore</string>
     <string name="device_list_desc1">Sie können nur Transaktionen senden, wenn diese %1$s Geräte vorhanden sind.</string>
-    <string name="joinkeysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
+    <string name="join_keysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Warten auf den Start von Keygen</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-Token werden durch Gebühren verbrannt.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT-Token werden den Benutzern per Airdrop zugeschickt.</string>
@@ -172,7 +172,7 @@
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_key_gen_screen_discovering_session_id">Sitzungs-ID ermitteln</string>
-    <string name="joinkeysign_discovery_service">Service entdecken</string>
+    <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="join_key_gen_screen_discovering_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihre Tresorfreigabe dauerhaft</string>
     <string name="settings_screen_default_chains">Standardketten</string>
@@ -299,7 +299,7 @@
     <string name="enable_chain_warning">Kette ist nicht ausgewählt. Bitte aktivieren Sie sie in der Kettenauswahl.</string>
     <string name="s_of_s">%1$s von %2$s</string>
     <string name="setup_select_your_vault_type">Wählen Sie Ihren Tresortyp</string>
-    <string name="settings_screen_lagal">Rechtliches</string>
+    <string name="settings_screen_legal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
     <string name="settings_screen_tos">Servicebedingungen</string>
     <string name="share_vault_qr_card_title">Haupttresor</string>

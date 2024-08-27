@@ -23,7 +23,7 @@ import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.JoinKeysignError
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoverService
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoveryingSessionID
+import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoveringSessionID
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Error
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.JoinKeysign
 import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Keysign
@@ -58,12 +58,12 @@ internal fun JoinKeysignView(
         onBack = viewModel::navigateToHome
         ) { state ->
         when (state) {
-            DiscoveryingSessionID,
+            DiscoveringSessionID,
             WaitingForKeysignStart,
             -> {
                 val text = when (state) {
-                    DiscoveryingSessionID -> stringResource(R.string.join_keysign_discovering_session_id)
-                    WaitingForKeysignStart -> stringResource(R.string.joinkeysign_waiting_keysign_start)
+                    DiscoveringSessionID -> stringResource(R.string.join_keysign_discovering_session_id)
+                    WaitingForKeysignStart -> stringResource(R.string.join_keysign_waiting_keysign_start)
                     else -> ""
                 }
                 KeysignLoadingScreen(
@@ -75,7 +75,7 @@ internal fun JoinKeysignView(
                 val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
                 viewModel.discoveryMediator(nsdManager)
                 KeysignLoadingScreen(
-                    text = stringResource(R.string.joinkeysign_discovery_service),
+                    text = stringResource(R.string.join_keysign_discovery_service),
                 )
             }
 
@@ -166,7 +166,7 @@ private fun JoinKeysignScreen(
         ),
         onStartIconClick = onBack,
         progress = when (state) {
-            DiscoveryingSessionID -> 0.1f
+            DiscoveringSessionID -> 0.1f
             DiscoverService -> 0.25f
             JoinKeysign -> 0.5f
             WaitingForKeysignStart -> 0.625f

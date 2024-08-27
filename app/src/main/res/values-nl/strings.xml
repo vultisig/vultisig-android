@@ -24,8 +24,8 @@
     <string name="vault_settings_delete_title">Verwijderen</string>
     <string name="vault_settings_delete_subtitle">Verwijder uw kluis permanent</string>
     <string name="join_keysign_wrong_vault">Kluis wijzigen</string>
-    <string name="joinkeysign_discovery_service">Service ontdekken</string>
-    <string name="joinkeysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
+    <string name="join_keysign_discovery_service">Service ontdekken</string>
+    <string name="join_keysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
     <string name="choose_tokens">Kies Tokens</string>
     <string name="send_screen_title">Sturen</string>
     <string name="send_from_address">Van</string>
@@ -84,7 +84,7 @@
     <string name="qr_address_screen_title">Adres</string>
     <string name="transaction_done_title">Gedaan</string>
     <string name="transaction_done_complete">Voltooid</string>
-    <string name="transation_done_form_title">Transactie</string>
+    <string name="transaction_done_form_title">Transactie</string>
     <string name="home_screen_title">Kluisen</string>
     <string name="home_screen_add_new_vault">+ Nieuwe kluis toevoegen</string>
     <string name="import_file_screen_title">Importeren</string>
@@ -310,7 +310,7 @@
     <string name="enable_chain_warning">Chain is niet geselecteerd. Schakel het in bij chain selection.</string>
     <string name="s_of_s">%1$s van %2$s</string>
     <string name="setup_select_your_vault_type">Selecteer uw kluistype</string>
-    <string name="settings_screen_lagal">Juridisch</string>
+    <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
     <string name="share_vault_qr_card_title">Hoofdkluis</string>
