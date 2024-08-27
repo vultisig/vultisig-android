@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.CustomTokenResponse
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -396,7 +397,7 @@ internal class EvmApiImp(
             ),
             id = 1,
         )
-        val response = httpClient.post(getRPCEndpoint()) {
+        val response = http.post(rpcUrl) {
             header("Content-Type", "application/json")
             setBody(gson.toJson(payload))
         }
