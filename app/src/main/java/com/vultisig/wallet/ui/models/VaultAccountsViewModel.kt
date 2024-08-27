@@ -18,6 +18,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -145,29 +146,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId)
-                .map { it ->
-                    it.sortedBy {
-                        it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
-                    }
-                }
-                .catch {
-                    updateRefreshing(false)
-
-                    // TODO handle error
-                    Timber.e(it)
-                }.collect { accounts ->
-
-                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
-                        ?.let(fiatValueToStringMapper::map)
-                    val accountsUiModel = accounts.map(addressToUiModelMapper::map)
-
-                    uiState.update {
-                        it.copy(
-                            totalFiatValue = totalFiatValue, accounts = accountsUiModel
-                        )
-                    }
-                    updateRefreshing(false)
-                }
+                .updateUiState()
         }
     }
 
@@ -176,31 +155,34 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .refreshAddresses(vaultId)
-                .map { it ->
-                    it.sortedBy {
-                        it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
-                    }
-                }
-                .catch {
-                    updateRefreshing(false)
-
-                    // TODO handle error
-                    Timber.e(it)
-                }.collect { accounts ->
-
-                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
-                        ?.let(fiatValueToStringMapper::map)
-                    val accountsUiModel = accounts.map(addressToUiModelMapper::map)
-
-                    uiState.update {
-                        it.copy(
-                            totalFiatValue = totalFiatValue, accounts = accountsUiModel
-                        )
-                    }
-                    updateRefreshing(false)
-                }
+                .updateUiState()
         }
     }
+
+    private suspend fun Flow<List<Address>>.updateUiState() =
+        this.map { it ->
+            it.sortedBy {
+                it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
+            }
+        }
+            .catch {
+                updateRefreshing(false)
+
+                // TODO handle error
+                Timber.e(it)
+            }.collect { accounts ->
+
+                val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
+                    ?.let(fiatValueToStringMapper::map)
+                val accountsUiModel = accounts.map(addressToUiModelMapper::map)
+
+                uiState.update {
+                    it.copy(
+                        totalFiatValue = totalFiatValue, accounts = accountsUiModel
+                    )
+                }
+                updateRefreshing(false)
+            }
 
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
