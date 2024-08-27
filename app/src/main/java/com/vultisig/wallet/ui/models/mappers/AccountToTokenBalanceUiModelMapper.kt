@@ -1,10 +1,10 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.Mapper
+import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.isLayer2
 import com.vultisig.wallet.models.logo
-import com.vultisig.wallet.models.tokenStandard
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import javax.inject.Inject
@@ -30,5 +30,12 @@ internal class AccountToTokenBalanceUiModelMapperImpl @Inject constructor(
             model = from,
         )
     }
+
+    private val Chain.tokenStandard: String?
+        get() = when (this) {
+            Chain.Ethereum -> "ERC20"
+            Chain.BscChain -> "BEP20"
+            else -> null
+        }
 
 }

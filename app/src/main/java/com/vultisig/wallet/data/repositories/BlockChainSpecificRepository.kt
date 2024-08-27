@@ -88,33 +88,56 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
         TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
-            val gasLimit = BigInteger(
-                when {
-                    isSwap -> "600000"
-                    token.isNativeToken -> {
-                        if (chain == Chain.Arbitrum)
-                            "120000" // arbitrum has higher gas limit
-                        else
-                            "23000"
-                    }
+            if (chain == Chain.ZkSync) {
+                val memoDataHex = "0xffffffff".toByteArray()
+                    .joinToString(separator = "") { byte -> String.format("%02x", byte) }
 
-                    else -> "120000"
-                }
-            )
+                val data = "0x$memoDataHex"
+                val nonce = evmApi.getNonce(address)
 
-            var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
-            if (chain in listOf(Chain.Ethereum, Chain.Avalanche)) {
-                maxPriorityFee = ensureOneGweiPriorityFee(maxPriorityFee)
-            }
-            val nonce = evmApi.getNonce(address)
-            BlockChainSpecificAndUtxo(
-                BlockChainSpecific.Ethereum(
-                    maxFeePerGasWei = gasFee.value,
-                    priorityFeeWei = maxPriorityFee,
-                    nonce = nonce,
-                    gasLimit = gasLimit,
+                val feeEstimate = evmApi.zkEstimateFee(
+                    srcAddress = token.address,
+                    dstAddress = address,
+                    data = data
                 )
-            )
+
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = feeEstimate.maxFeePerGas,
+                        priorityFeeWei = feeEstimate.maxPriorityFeePerGas,
+                        nonce = nonce,
+                        gasLimit = feeEstimate.gasLimit,
+                    )
+                )
+            } else {
+                val gasLimit = BigInteger(
+                    when {
+                        isSwap -> "600000"
+                        token.isNativeToken -> {
+                            if (chain == Chain.Arbitrum)
+                                "120000" // arbitrum has higher gas limit
+                            else
+                                "23000"
+                        }
+
+                        else -> "120000"
+                    }
+                )
+
+                var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
+                if (chain in listOf(Chain.Ethereum, Chain.Avalanche)) {
+                    maxPriorityFee = ensureOneGweiPriorityFee(maxPriorityFee)
+                }
+                val nonce = evmApi.getNonce(address)
+                BlockChainSpecificAndUtxo(
+                    BlockChainSpecific.Ethereum(
+                        maxFeePerGasWei = gasFee.value,
+                        priorityFeeWei = maxPriorityFee,
+                        nonce = nonce,
+                        gasLimit = gasLimit,
+                    )
+                )
+            }
         }
 
         TokenStandard.UTXO -> {

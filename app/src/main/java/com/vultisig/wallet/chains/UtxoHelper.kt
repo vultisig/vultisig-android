@@ -2,8 +2,6 @@ package com.vultisig.wallet.chains
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
@@ -38,26 +36,6 @@ internal class UtxoHelper(
                 else -> throw Exception("Unsupported chain")
             }
         }
-    }
-
-    @OptIn(ExperimentalStdlibApi::class)
-    fun getCoin(): Coin? {
-        val ticker = when (coinType) {
-            CoinType.BITCOIN -> "BTC"
-            CoinType.BITCOINCASH -> "BCH"
-            CoinType.LITECOIN -> "LTC"
-            CoinType.DOGECOIN -> "DOGE"
-            CoinType.DASH -> "DASH"
-            else -> throw Exception("Unsupported coin ${coinType.name}")
-        }
-        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            vaultHexPublicKey,
-            vaultHexChainCode,
-            coinType.derivationPath()
-        )
-        val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val address = coinType.deriveAddressFromPublicKey(publicKey)
-        return Coins.getCoin(ticker, address, derivedPublicKey, coinType)
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {

@@ -203,7 +203,7 @@ internal class KeysignViewModel(
                 }
 
                 Chain.Ethereum, Chain.CronosChain, Chain.Blast, Chain.BscChain, Chain.Avalanche,
-                Chain.Base, Chain.Polygon, Chain.Optimism, Chain.Arbitrum -> {
+                Chain.Base, Chain.Polygon, Chain.Optimism, Chain.Arbitrum, Chain.ZkSync -> {
                     val evmApi = evmApiFactory.createEvmApi(keysignPayload.coin.chain)
                     evmApi.sendTransaction(signedTransaction.rawTransaction)
                 }
@@ -304,7 +304,8 @@ internal class KeysignViewModel(
                 return solanaHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast, Chain.Arbitrum, Chain.Optimism, Chain.Polygon, Chain.Base -> {
+            Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.CronosChain, Chain.Blast,
+            Chain.Arbitrum, Chain.Optimism, Chain.Polygon, Chain.Base, Chain.ZkSync -> {
                 if (keysignPayload.coin.isNativeToken) {
                     val evmHelper = EvmHelper(
                         keysignPayload.coin.coinType,

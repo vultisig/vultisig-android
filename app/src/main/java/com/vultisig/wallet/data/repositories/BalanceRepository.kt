@@ -13,13 +13,14 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Chain.Arbitrum
 import com.vultisig.wallet.models.Chain.Avalanche
 import com.vultisig.wallet.models.Chain.Base
 import com.vultisig.wallet.models.Chain.Bitcoin
 import com.vultisig.wallet.models.Chain.BitcoinCash
+import com.vultisig.wallet.models.Chain.Blast
 import com.vultisig.wallet.models.Chain.BscChain
+import com.vultisig.wallet.models.Chain.CronosChain
 import com.vultisig.wallet.models.Chain.Dash
 import com.vultisig.wallet.models.Chain.Dogecoin
 import com.vultisig.wallet.models.Chain.Dydx
@@ -33,6 +34,7 @@ import com.vultisig.wallet.models.Chain.Polkadot
 import com.vultisig.wallet.models.Chain.Polygon
 import com.vultisig.wallet.models.Chain.Solana
 import com.vultisig.wallet.models.Chain.ThorChain
+import com.vultisig.wallet.models.Chain.ZkSync
 import com.vultisig.wallet.models.Coin
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -213,7 +215,8 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 balance?.toBigInteger() ?: 0.toBigInteger()
             }
 
-            Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism, Chain.Blast, Chain.CronosChain -> {
+            Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism,
+            Blast, CronosChain, ZkSync -> {
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
