@@ -283,14 +283,13 @@ internal class EvmApiImp(
 
     override suspend fun resolveENS(namehash: String): String {
 
-        val resolverAddress = fetchENS(
+        val resolverAddress = fetchEns(
             mapOf(
-            "to" to ENS_REGISTRY_ADDRESS,
-            "data" to "$FETCH_RESOLVER_PREFIX${namehash.stripHexPrefix()}"
-
+                "to" to ENS_REGISTRY_ADDRESS,
+                "data" to "$FETCH_RESOLVER_PREFIX${namehash.stripHexPrefix()}"
+            )
         )
-        )
-        return fetchENS(
+        return fetchEns(
             mapOf(
                 "to" to resolverAddress,
                 "data" to "$FETCH_ADDRESS_PREFIX${namehash.stripHexPrefix()}"
@@ -387,18 +386,15 @@ internal class EvmApiImp(
         )
     }
 
-    private suspend fun fetchENS(params: Map<String,String>): String {
+    private suspend fun fetchEns(params: Map<String,String>): String {
         val payload = RpcPayload(
-            jsonrpc = "2.0",
             method = "eth_call",
             params = listOf(
                 params,
                 "latest"
             ),
-            id = 1,
         )
         val response = http.post(rpcUrl) {
-            header("Content-Type", "application/json")
             setBody(gson.toJson(payload))
         }
         val responseContent = response.bodyAsText()

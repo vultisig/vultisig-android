@@ -11,7 +11,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.isENSNameService
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -193,10 +192,13 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun validateDstAddress() = viewModelScope.launch {
-        val errorText = if (addressFieldState.text.toString().isENSNameService()) {
+        val address = addressFieldState.text.toString()
+        val errorText = if (
+            addressParserRepository.isEnsNameService(address)
+            ) {
             try {
-                val resolvedAddress = addressParserRepository.resolveInput(
-                    addressFieldState.text.toString(),
+                val resolvedAddress = addressParserRepository.resolveName(
+                    address,
                     chain.value ?: return@launch
                 )
                 addressFieldState.setTextAndPlaceCursorAtEnd(resolvedAddress)
@@ -206,7 +208,7 @@ internal class SendFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_address)
             }
         } else {
-            validateDstAddress(addressFieldState.text.toString())
+            validateDstAddress(address)
         }
         uiState.update {
             it.copy(dstAddressError = errorText)
@@ -326,7 +328,7 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 }
                 val dstAddress = try {
-                    addressParserRepository.resolveInput(
+                    addressParserRepository.resolveName(
                         addressFieldState.text.toString(),
                         chain,
                     )
