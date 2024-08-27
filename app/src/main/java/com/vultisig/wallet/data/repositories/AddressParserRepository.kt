@@ -1,10 +1,13 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.common.isENSNameService
 import com.vultisig.wallet.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.models.Chain
 import javax.inject.Inject
+
+val supportedENS = listOf(".eth", ".sol")
 
 internal interface AddressParserRepository {
     suspend fun resolveInput(input: String, chain: Chain): String
@@ -34,11 +37,6 @@ private fun String.namehash(): String {
         node = (node + labelHash).toKeccak256ByteArray()
     }
 
-    return "0x" + Numeric.toHexString(node)
-}
-
-private fun String.isENSNameService(): Boolean {
-    val domains = listOf(".eth", ".sol")
-    return domains.any { this.endsWith(it) }
+    return Numeric.toHexString(node)
 }
 

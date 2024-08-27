@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.common.isENSNameService
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -191,8 +192,22 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun validateDstAddress() {
-        val errorText = validateDstAddress(addressFieldState.text.toString())
+    fun validateDstAddress() = viewModelScope.launch {
+        val errorText = if (addressFieldState.text.toString().isENSNameService()) {
+            try {
+                val resolvedAddress = addressParserRepository.resolveInput(
+                    addressFieldState.text.toString(),
+                    chain.value ?: return@launch
+                )
+                addressFieldState.setTextAndPlaceCursorAtEnd(resolvedAddress)
+                null
+            } catch (e: Exception) {
+                Timber.e(e)
+                UiText.StringResource(R.string.send_error_no_address)
+            }
+        } else {
+            validateDstAddress(addressFieldState.text.toString())
+        }
         uiState.update {
             it.copy(dstAddressError = errorText)
         }
@@ -310,10 +325,15 @@ internal class SendFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-                val dstAddress = addressParserRepository.resolveInput(
-                    addressFieldState.text.toString(),
-                    chain,
-                )
+                val dstAddress = try {
+                    addressParserRepository.resolveInput(
+                        addressFieldState.text.toString(),
+                        chain,
+                    )
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    addressFieldState.text.toString()
+                }
 
                 if (dstAddress.isBlank() ||
                     !chainAccountAddressRepository.isValid(chain, dstAddress)

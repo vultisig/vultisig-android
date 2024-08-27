@@ -1,6 +1,7 @@
 package com.vultisig.wallet.common
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.repositories.supportedENS
 
 fun String.decodeFromHex(): String {
     require(length % 2 == 0) { "Must have an even length" }
@@ -32,4 +33,8 @@ fun String.stripHexPrefix(): String {
     } else {
         this
     }
+}
+
+internal fun String.isENSNameService(): Boolean {
+    return supportedENS.any { this.endsWith(it) }
 }

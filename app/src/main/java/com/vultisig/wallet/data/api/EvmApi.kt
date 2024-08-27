@@ -323,8 +323,20 @@ internal class EvmApiImp(
     }
 
     override suspend fun resolveENS(namehash: String): String {
-        val resolverAddress = fetchResolver(namehash)
-        return fetchAddressFromResolver(namehash, resolverAddress)
+
+        val resolverAddress = fetchENS(
+            mapOf(
+            "to" to ENS_REGISTRY_ADDRESS,
+            "data" to "$FETCH_RESOLVER_PREFIX${namehash.stripHexPrefix()}"
+
+        )
+        )
+        return fetchENS(
+            mapOf(
+                "to" to resolverAddress,
+                "data" to "$FETCH_ADDRESS_PREFIX${namehash.stripHexPrefix()}"
+            )
+        )
     }
 
     private fun generateCustomTokenPayload(
@@ -360,37 +372,27 @@ internal class EvmApiImp(
         )
     }
 
-    private suspend fun fetchResolver(node: String): String {
+    private suspend fun fetchENS(params: Map<String,String>): String {
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "eth_call",
             params = listOf(
-                mapOf(
-                    "to" to ENS_REGISTRY_ADDRESS,
-                    "data" to "$FETCH_RESOLVER_PREFIX${node.stripHexPrefix()}"
-                ),
+                params,
                 "latest"
             ),
             id = 1,
         )
-       return "" // todo
+        val response = httpClient.post(getRPCEndpoint()) {
+            header("Content-Type", "application/json")
+            setBody(gson.toJson(payload))
+        }
+        val responseContent = response.bodyAsText()
+        Timber.d(responseContent)
+        val rpcResp = gson.fromJson(responseContent, RpcResponse::class.java)
+        val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
+        return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
     }
 
-    private suspend fun fetchAddressFromResolver(node: String, resolverAddress: String): String {
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "eth_call",
-            params = listOf(
-                mapOf(
-                    "to" to resolverAddress,
-                    "data" to "$FETCH_ADDRESS_PREFIX${node.stripHexPrefix()}"
-                ),
-                "latest"
-            ),
-            id = 1,
-        )
-        return "" // todo
-    }
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
         private const val CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_= 3
