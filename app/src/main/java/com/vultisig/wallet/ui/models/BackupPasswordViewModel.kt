@@ -136,13 +136,14 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     fun backupEncryptedVault() {
-        val password = if (shouldEnableEncryption()) {
+        if (shouldEnableEncryption()) {
             if (validateConfirmPassword()) {
-                passwordTextFieldState.text.toString()
-            } else null
-        } else null
-
-        backupVault(password)
+                val password = passwordTextFieldState.text.toString()
+                backupVault(password)
+            }
+        } else {
+            backupVault(null)
+        }
     }
 
     fun backupUnencryptedVault() {
