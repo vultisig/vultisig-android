@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.chainType
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import javax.inject.Inject
 
@@ -33,7 +32,7 @@ internal class BlowfishRepositoryImpl @Inject constructor(
         transaction: Transaction
     ): Pair<Boolean, List<String>> {
         val chain = Chain.fromRaw(transaction.chainId)
-        val chainType = chain.chainType
+        val chainType = chain.standard
         when (chainType) {
             TokenStandard.EVM -> {
                 val result = scanEVMBlowfishTransaction(chain, transaction)

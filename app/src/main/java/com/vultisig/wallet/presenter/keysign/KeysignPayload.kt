@@ -18,8 +18,8 @@ import com.vultisig.wallet.chains.PolkadotHelper
 import com.vultisig.wallet.chains.SolanaHelper
 import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.THORChainSwaps
-import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.chains.UtxoHelper
+import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.common.toJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
@@ -90,7 +90,7 @@ internal data class KeysignPayload(
                 }
 
                 Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum,
-                Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.CronosChain -> {
+                Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.CronosChain, Chain.ZkSync -> {
                     if (coin.isNativeToken) {
                         EvmHelper(
                             coin.coinType,
@@ -128,8 +128,8 @@ internal data class KeysignPayload(
                 }
 
                 Chain.MayaChain -> {
-                    val mayachainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                    mayachainHelper.getPreSignedImageHash(this)
+                    val mayaChainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                    mayaChainHelper.getPreSignedImageHash(this)
                 }
 
                 Chain.Polkadot -> {

@@ -35,7 +35,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         get() = when (this) {
             Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
             Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
-            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain,
+            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync,
             ->
                 "${explorerUrl}tx/"
 
@@ -79,6 +79,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Solana -> "https://explorer.solana.com/"
             Chain.ThorChain -> "https://runescan.io/"
             Chain.Polkadot -> "https://polkadot.subscan.io/account/"
+            Chain.ZkSync -> "https://explorer.zksync.io/"
         }
 
 }

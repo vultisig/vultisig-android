@@ -9,11 +9,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 
 class KeysignVerify(
-    serverAddr: String,
+    serverAddress: String,
     sessionId: String,
     private val gson: Gson,
 ) {
-    private val serverURL = "$serverAddr/complete/$sessionId/keysign"
+    private val serverURL = "$serverAddress/complete/$sessionId/keysign"
     suspend fun markLocalPartyKeysignComplete(message: String, sig: tss.KeysignResponse) {
         withContext(Dispatchers.IO) {
             try {

@@ -3,8 +3,6 @@ package com.vultisig.wallet.chains
 import com.google.gson.Gson
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.CosmoSignature
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.transactionHash
@@ -27,16 +25,6 @@ internal class DydxHelper(
 
     companion object {
         const val DYDX_CHAIN_GAS_LIMIT = 2500000000000000
-    }
-    fun getCoin(): Coin? {
-        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            vaultHexPublicKey,
-            vaultHexChainCode,
-            coinType.derivationPath()
-        )
-        val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val address = coinType.deriveAddressFromPublicKey(publicKey)
-        return Coins.getCoin("DYDX", address, derivedPublicKey, coinType)
     }
 
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {

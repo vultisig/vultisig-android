@@ -28,7 +28,7 @@ internal class CompressQrUseCaseImpl @Inject constructor(
 
 internal interface DecompressQrUseCase : (ByteArray) -> ByteArray
 
-internal class DecomressQrUseCaseImpl @Inject constructor(
+internal class DecompressQrUseCaseImpl @Inject constructor(
     private val compressorStreamProvider: CompressorStreamProvider
 ) : DecompressQrUseCase {
 

@@ -45,7 +45,7 @@ internal fun FormSearchBar(
                 hint = stringResource(R.string.token_selection_search_hint),
                 keyboardType = KeyboardType.Text,
                 onLostFocus = {
-                    // todo no validation neeeded
+                    // todo no validation needed
                 },
                 modifier = Modifier
                     .padding(16.dp)

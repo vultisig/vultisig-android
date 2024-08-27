@@ -31,7 +31,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.HttpHeaders
-import io.ktor.util.appendIfNameAndValueAbsent
+import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.apache.commons.compress.compressors.CompressorStreamFactory
@@ -87,7 +87,7 @@ internal interface DataModule {
             }
             install(HttpCache)
             install(DefaultRequest) {
-                headers.appendIfNameAndValueAbsent(
+                headers.appendIfNameAbsent(
                     HttpHeaders.ContentType, "application/json"
                 )
             }

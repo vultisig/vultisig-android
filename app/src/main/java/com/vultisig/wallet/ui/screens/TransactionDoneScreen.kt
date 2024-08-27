@@ -74,7 +74,7 @@ internal fun TransactionDoneView(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.transation_done_form_title),
+                        text = stringResource(R.string.transaction_done_form_title),
                         color = Theme.colors.neutral0,
                         style = Theme.montserrat.heading5,
                     )

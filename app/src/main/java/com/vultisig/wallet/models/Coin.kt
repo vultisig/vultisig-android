@@ -1406,6 +1406,17 @@ internal object Coins {
             contractAddress = "",
             isNativeToken = true,
         ),
+        Coin(
+            chain = Chain.ZkSync,
+            ticker = "ETH",
+            logo = "zksync",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
+        )
     )
 
     fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
@@ -1447,7 +1458,7 @@ internal object Coins {
             "tgt" -> R.drawable.tgt
             "fox" -> R.drawable.fox
             "dot" -> R.drawable.dot
-            "wETH"->R.drawable.weth
+            "wETH" -> R.drawable.weth
             "wewe" -> R.drawable.wewe
             "omni" -> R.drawable.omni
             "pyth" -> R.drawable.pyth
@@ -1475,16 +1486,17 @@ internal object Coins {
             "blooks" -> R.drawable.blooks
             "cbeth" -> R.drawable.cbeth
             "coq" -> R.drawable.coq
-            "dackie"->R.drawable.dackie
+            "dackie" -> R.drawable.dackie
             "ezeth" -> R.drawable.ezeth
-            "joe"->R.drawable.joe
-            "juice"->R.drawable.juice
-            "om"->R.drawable.om
-            "png"->R.drawable.png
-            "savax"->R.drawable.savax
-            "usdb"->R.drawable.usdb
-            "weth"->R.drawable.weth
-            "zero"->R.drawable.zero
+            "joe" -> R.drawable.joe
+            "juice" -> R.drawable.juice
+            "om" -> R.drawable.om
+            "png" -> R.drawable.png
+            "savax" -> R.drawable.savax
+            "usdb" -> R.drawable.usdb
+            "weth" -> R.drawable.weth
+            "zero" -> R.drawable.zero
+            "zksync" -> R.drawable.zksync
 
             else -> logoName
         }

@@ -52,7 +52,7 @@
     <string name="qr_address_screen_title">Endereço</string>
     <string name="transaction_done_title">Concluído</string>
     <string name="transaction_done_complete">Continuar</string>
-    <string name="transation_done_form_title">Transação</string>
+    <string name="transaction_done_form_title">Transação</string>
     <string name="home_screen_title">Cofres</string>
     <string name="home_screen_add_new_vault">+ Adicionar Novo Cofre</string>
     <string name="import_file_screen_title">Importar</string>
@@ -119,7 +119,7 @@
     <string name="verify_swap_sign_button">Sign</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
     <string name="device_list_desc1">Você só pode enviar transações com estes %1$s dispositivos presentes.</string>
-    <string name="joinkeysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
+    <string name="join_keysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
     <string name="join_key_gen_screen_waiting_for_keygen_to_start">Aguardando o início do Keygen.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Os tokens VULT são queimados com taxas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Os tokens VULT são distribuídos aos usuários.</string>
@@ -172,7 +172,7 @@
     <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
     <string name="join_key_gen_screen_discovering_session_id">Descobrindo o ID da sessão</string>
-    <string name="joinkeysign_discovery_service">Descobrindo o Serviço</string>
+    <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
     <string name="join_key_gen_screen_discovering_service">Descobrindo o Serviço</string>
     <string name="vault_settings_delete_subtitle">Exclua seu compartilhamento de cofre permanentemente</string>
     <string name="settings_screen_default_chains">Cadeias Padrão</string>
@@ -236,7 +236,7 @@
     <string name="share_qr_screen_permission_required">A permissão de ficheiro é necessária para operações de partilha.</string>
     <string name="token_selection_selected_tokens_title">Selecionado</string>
     <string name="token_selection_tokens_title">Fichas</string>
-    <string name="token_selection_search_hint">Pesquisa...</string>
+    <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
     <string name="backup_suggestion_text">Cada dispositivo tem a sua própria partilha exclusiva.</string>
     <string name="backup_now">Faça já o backup do seu cofre!</string>
@@ -302,7 +302,7 @@
     <string name="enable_chain_warning">A cadeia não está selecionada. Por favor, ative-o na seleção da cadeia.</string>
     <string name="s_of_s">%1$s de %2$s</string>
     <string name="setup_select_your_vault_type">Selecione o tipo do seu cofre</string>
-    <string name="settings_screen_lagal">Legal</string>
+    <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de Privacidade</string>
     <string name="settings_screen_tos">Termos de Serviço</string>
 </resources>

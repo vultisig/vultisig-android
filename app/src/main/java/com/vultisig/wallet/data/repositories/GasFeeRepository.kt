@@ -44,7 +44,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.UTXO -> {
-            val gas = blockChairApi.getBlockchairStats(chain)
+            val gas = blockChairApi.getBlockChairStats(chain)
             val nativeToken = tokenRepository.getNativeToken(chain.id)
             TokenValue(
                 gas.multiply(BigInteger("3")).divide(BigInteger("2")),

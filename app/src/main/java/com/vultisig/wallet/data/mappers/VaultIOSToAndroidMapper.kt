@@ -6,6 +6,7 @@ import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.models.KeyShare
 import com.vultisig.wallet.models.Vault
+import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 
@@ -23,11 +24,17 @@ internal class VaultIOSToAndroidMapperImpl @Inject constructor(private val gson:
             hexChainCode = vault.hexChainCode,
             localPartyID = vault.localPartyID,
             signers = vault.signers,
-            resharePrefix = vault.keyshares[0].keyshare.extractResharePrefix(),
-            keyshares = vault.keyshares.map { KeyShare(it.pubkey,it.keyshare) },
-            coins = vault.coins?.map { coin ->
-                coin.copy(address = adjustAddressPrefix(coin))
-            } ?: emptyList()
+            resharePrefix = vault.keyShares[0].keyShare.extractResharePrefix(),
+            keyshares = vault.keyShares.map { KeyShare(it.pubKey,it.keyShare) },
+            coins = try {
+                vault.coins?.map { coin ->
+                    coin.copy(address = adjustAddressPrefix(coin))
+                } ?: emptyList()
+            } catch (e: Exception) {
+                // if there's a problem with coins, just ignore them
+                Timber.e(e)
+                emptyList()
+            },
         )
     }
 

@@ -29,12 +29,12 @@ internal data class IOSVault(
     @SerializedName("createdAt")
     val createdAt: Float,
     @SerializedName("keyshares")
-    val keyshares: List<IOSKeyShare>,
+    val keyShares: List<IOSKeyShare>,
 )
 
 internal data class IOSKeyShare(
     @SerializedName("pubkey")
-    val pubkey: String,
+    val pubKey: String,
     @SerializedName("keyshare")
-    val keyshare: String,
+    val keyShare: String,
 )

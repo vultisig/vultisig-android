@@ -15,7 +15,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class ParticipantDiscovery(
-    private val serverAddr: String,
+    private val serverAddress: String,
     private val sessionID: String,
     private val localPartyID: String,
     private val gson: Gson,
@@ -45,7 +45,7 @@ class ParticipantDiscovery(
 
     private fun getParticipants(): List<String> {
         try {
-            val url = "$serverAddr/$sessionID"
+            val url = "$serverAddress/$sessionID"
             val requestURL = URL(url)
             val conn = requestURL.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"

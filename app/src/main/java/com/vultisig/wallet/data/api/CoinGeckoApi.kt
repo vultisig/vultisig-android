@@ -93,11 +93,9 @@ internal class CoinGeckoApiImpl @Inject constructor(
             Chain.Polygon -> "polygon-pos"
             Chain.Optimism -> "optimistic-ethereum"
             Chain.BscChain -> "binance-smart-chain"
+            Chain.ZkSync -> "zksync"
 
             else -> error("No CoinGecko asset id for chain $this")
-
-            // TODO add later
-            // Chain.zksync -> "zksync"
         }
 
 }
