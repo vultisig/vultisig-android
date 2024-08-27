@@ -192,24 +192,7 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun validateDstAddress() = viewModelScope.launch {
-        val address = addressFieldState.text.toString()
-        val errorText = if (
-            addressParserRepository.isEnsNameService(address)
-            ) {
-            try {
-                val resolvedAddress = addressParserRepository.resolveName(
-                    address,
-                    chain.value ?: return@launch
-                )
-                addressFieldState.setTextAndPlaceCursorAtEnd(resolvedAddress)
-                null
-            } catch (e: Exception) {
-                Timber.e(e)
-                UiText.StringResource(R.string.send_error_no_address)
-            }
-        } else {
-            validateDstAddress(address)
-        }
+        val errorText = validateDstAddress(addressFieldState.text.toString())
         uiState.update {
             it.copy(dstAddressError = errorText)
         }
@@ -627,11 +610,15 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private fun validateDstAddress(dstAddress: String): UiText? {
+    private suspend fun validateDstAddress(dstAddress: String): UiText? {
         val selectedAccount = selectedAccount
             ?: return UiText.StringResource(R.string.send_error_no_token)
         val chain = selectedAccount.token.chain
-        if (dstAddress.isBlank() || !chainAccountAddressRepository.isValid(chain, dstAddress))
+        if (
+            dstAddress.isBlank() ||
+            !(chainAccountAddressRepository.isValid(chain, dstAddress) ||
+                    addressParserRepository.isEnsNameService(dstAddress))
+            )
             return UiText.StringResource(R.string.send_error_no_address)
         return null
     }
