@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -60,52 +61,12 @@ internal class AccountsRepositoryImpl @Inject constructor(
             val loadPrices =
                 async { tokenPriceRepository.refresh(vaultCoins) }
 
-            addresses.apply {
-                val balances = balanceRepository.getCachedTokenBalances(
-                    addresses.map { adr -> adr.address },
-                    addresses.map { adr -> adr.accounts.map { it.token } }.flatten()
-                )
-
-                mapIndexed { index, account ->
-                    val newAccounts = account.accounts.map { acc ->
-                        val balance = balances.firstOrNull {
-                            it.address == account.address && it.coinId == acc.token.id
-                        }
-                        if (balance != null) {
-                            acc.applyBalance(balance.tokenBalance)
-                        } else {
-                            acc
-                        }
-                    }
-                    addresses[index] = account.copy(accounts = newAccounts)
-                }
-            }
+            addresses.fetchAccountFromDb()
             send(addresses)
 
             addresses.mapIndexed { index, account ->
                 async {
-                    try {
-                        val address = account.address
-                        loadPrices.await()
-
-                        val newAccounts = supervisorScope {
-                            account.accounts.map {
-                                async {
-                                    val balance =
-                                        balanceRepository.getTokenBalance(address, it.token)
-                                            .first()
-
-                                    it.applyBalance(balance)
-                                }
-                            }.awaitAll()
-                        }
-
-                        addresses[index] = account.copy(accounts = newAccounts)
-
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        // ignore
-                    }
+                    fetchAccountFromApi(account, index, addresses, loadPrices)
                 }
             }.awaitAll()
             send(addresses)
@@ -127,28 +88,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
 
             addresses.mapIndexed { index, account ->
                 async {
-                    try {
-                        val address = account.address
-                        loadPrices.await()
-
-                        val newAccounts = supervisorScope {
-                            account.accounts.map {
-                                async {
-                                    val balance =
-                                        balanceRepository.getTokenBalance(address, it.token)
-                                            .first()
-
-                                    it.applyBalance(balance)
-                                }
-                            }.awaitAll()
-                        }
-
-                        addresses[index] = account.copy(accounts = newAccounts)
-
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        // ignore
-                    }
+                    fetchAccountFromApi(account, index, addresses, loadPrices)
                 }
             }.awaitAll()
             send(addresses)
@@ -156,6 +96,58 @@ internal class AccountsRepositoryImpl @Inject constructor(
         awaitClose()
     }
 
+    private suspend fun fetchAccountFromApi(
+        account: Address,
+        index: Int,
+        addresses: MutableList<Address>,
+        loadPrices: Deferred<Unit>
+    ){
+        try {
+            val address = account.address
+            loadPrices.await()
+
+            val newAccounts = supervisorScope {
+                account.accounts.map {
+                    async {
+                        val balance =
+                            balanceRepository.getTokenBalance(address, it.token)
+                                .first()
+
+                        it.applyBalance(balance)
+                    }
+                }.awaitAll()
+            }
+
+            addresses[index] = account.copy(accounts = newAccounts)
+
+        } catch (e: Exception) {
+            Timber.e(e)
+            // ignore
+        }
+    }
+
+    private suspend fun MutableList<Address>.fetchAccountFromDb(){
+
+            val balances = balanceRepository.getCachedTokenBalances(
+                this.map { adr -> adr.address },
+                this.map { adr -> adr.accounts.map { it.token } }.flatten()
+            )
+
+            mapIndexed { index, account ->
+                val newAccounts = account.accounts.map { acc ->
+                    val balance = balances.firstOrNull {
+                        it.address == account.address && it.coinId == acc.token.id
+                    }
+                    if (balance != null) {
+                        acc.applyBalance(balance.tokenBalance)
+                    } else {
+                        acc
+                    }
+                }
+                this@fetchAccountFromDb[index] = account.copy(accounts = newAccounts)
+            }
+
+    }
     private suspend fun getSPLCoins(
         solanaCoins: List<Coin>,
         vault: Vault
