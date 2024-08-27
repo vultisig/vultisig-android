@@ -215,7 +215,7 @@
     <string name="rename_vault_invalid_name">Ongeldige naam</string>
     <string name="swap_form_invalid_amount">Ongeldig bedrag</string>
     <string name="send_from_invalid_amount">Ongeldig bedrag</string>
-    <string name="keygen_peer_discovery_looking_for_devices">Apparaten zoeken...</string>
+    <string name="keygen_peer_discovery_looking_for_devices">Apparaten zoeken…</string>
     <string name="keygen_peer_discovery_select_the_pairing_devices">Selecteer de koppelingsapparaten</string>
     <string name="peer_discovery_hint_connect_to_internet">Verbind alle apparaten met hetzelfde netwerk met Vultisig open</string>
     <string name="peer_discovery_hint_connect_to_same_wifi">Verbind alle apparaten met het internet met Vultisig open</string>
@@ -246,7 +246,7 @@
     <string name="share_qr_screen_permission_required">Voor het delen van bewerkingen is bestandsmachtiging vereist.</string>
     <string name="token_selection_selected_tokens_title">Gekozen</string>
     <string name="token_selection_tokens_title">Tokens</string>
-    <string name="token_selection_search_hint">Zoekopdracht...</string>
+    <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
     <string name="backup_suggestion_text">Elk apparaat heeft zijn eigen unieke share.  Maak nu een backup van al uw Vault Shares.</string>
     <string name="backup_now">Maak nu een back-up van uw kluis!</string>

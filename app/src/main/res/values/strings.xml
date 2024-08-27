@@ -253,7 +253,7 @@
     <string name="backup_password_screen_permission_required">File permission is required for backup operations.</string>
     <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_tokens_title">Tokens</string>
-    <string name="token_selection_search_hint">Search...</string>
+    <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing unlimited ERC20 allowance</string>
     <string name="backup_suggestion_text">Each device has its own unique share.\n\nPlease Backup all of your Vault Shares now.</string>
     <string name="backup_now">Backup your vault now!</string>
@@ -284,7 +284,7 @@
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
     <string name="keygen_info_note">Having trouble connecting on WiFi? Use a personal hotspot connection instead. Or try a different network.</string>
-    <string name="deposit_form_operator_fee_title">Operator\'s Fee (optional)</string>
+    <string name="deposit_form_operator_fee_title">Operator\’s Fee (optional)</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="naming_vault_screen_vault_placeholder">Main Vault</string>

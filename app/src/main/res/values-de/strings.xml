@@ -61,7 +61,7 @@
     <string name="create_new_vault_screen_import_an_existing_vault">Einen bestehenden Tresor importieren</string>
     <string name="device_list_screen_with_these_devices">Mit diesen Geräten</string>
     <string name="device_list_screen_continue">Fortfahren</string>
-    <string name="generating_key_preparing_vault">TRESOR VORBEREITEN...</string>
+    <string name="generating_key_preparing_vault">TRESOR VORBEREITEN…</string>
     <string name="generating_key_screen_generating_ecdsa_key">ECDSA-SCHLÜSSEL GENERIEREN</string>
     <string name="generating_key_screen_generating_eddsa_key">EdDSA-SCHLÜSSEL GENERIEREN</string>
     <string name="generating_key_screen_resharing_ecdsa_key">ECDSA-SCHLÜSSEL ERNEUT TEILEN</string>
@@ -235,7 +235,7 @@
     <string name="share_qr_screen_permission_required">Für Freigabevorgänge sind Dateiberechtigungen erforderlich.</string>
     <string name="token_selection_selected_tokens_title">Ausgewählt</string>
     <string name="token_selection_tokens_title">Token</string>
-    <string name="token_selection_search_hint">Suchen...</string>
+    <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
     <string name="backup_suggestion_text">Jedes Gerät hat seine eigene, eindeutige Freigabe.</string>
     <string name="backup_now">Sichern Sie jetzt Ihren Tresor!</string>

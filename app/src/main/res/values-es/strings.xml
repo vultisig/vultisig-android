@@ -236,7 +236,7 @@
     <string name="share_qr_screen_permission_required">Se requiere permiso de archivo para realizar operaciones de compartir.</string>
     <string name="token_selection_selected_tokens_title">Seleccionada</string>
     <string name="token_selection_tokens_title">Fichas</string>
-    <string name="token_selection_search_hint">Buscar...</string>
+    <string name="token_selection_search_hint">Buscar…</string>
     <string name="verify_swap_agree_allowance">Estoy de acuerdo con proporcionar una asignación ilimitada de ERC20</string>
     <string name="backup_suggestion_text">Cada dispositivo tiene su propio recurso compartido exclusivo. Realice una copia de seguridad de todos sus recursos compartidos de Vault ahora.</string>
     <string name="backup_now">¡Haga una copia de seguridad de su bóveda ahora!</string>
