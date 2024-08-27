@@ -4,8 +4,6 @@ import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toByteString
 import com.vultisig.wallet.common.toKeccak256
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
@@ -26,25 +24,6 @@ internal class EvmHelper(
 ) {
     companion object{
         const val DEFAULT_ETH_SWAP_GAS_UNIT: Long = 600000L
-    }
-
-    fun getCoin(): Coin? {
-        val ticker = when (coinType) {
-            CoinType.ETHEREUM -> "ETH"
-            CoinType.CRONOSCHAIN -> "CRO"
-            CoinType.POLYGON -> "MATIC"
-            CoinType.AVALANCHECCHAIN -> "AVAX"
-            CoinType.SMARTCHAIN -> "BNB"
-            else -> throw Exception("Unsupported coin ${coinType.name}")
-        }
-        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            vaultHexPublicKey,
-            vaultHexChainCode,
-            coinType.derivationPath()
-        )
-        val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val address = coinType.deriveAddressFromPublicKey(publicKey)
-        return Coins.getCoin(ticker, address, derivedPublicKey, coinType)
     }
 
     fun getPreSignedInputData(

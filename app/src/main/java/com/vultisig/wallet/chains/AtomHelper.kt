@@ -3,8 +3,6 @@ package com.vultisig.wallet.chains
 import com.google.gson.Gson
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Numeric
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.CosmoSignature
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.transactionHash
@@ -26,16 +24,6 @@ internal class AtomHelper(
     val coinType = CoinType.COSMOS
     companion object {
         const val ATOM_GAS_LIMIT = 200000
-    }
-    fun getCoin(): Coin? {
-        val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
-            vaultHexPublicKey,
-            vaultHexChainCode,
-            coinType.derivationPath()
-        )
-        val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val address = coinType.deriveAddressFromPublicKey(publicKey)
-        return Coins.getCoin("ATOM", address, derivedPublicKey, coinType)
     }
 
     fun getSwapPreSignedInputData(

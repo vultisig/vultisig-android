@@ -27,6 +27,7 @@ internal enum class Chain(
     Ethereum("Ethereum", EVM, "Gwei"),
     Optimism("Optimism", EVM, "Gwei"),
     Polygon("Polygon", EVM, "Gwei"),
+    ZkSync("Zksync", EVM, "Gwei"),
 
     // BITCOIN
     Bitcoin("Bitcoin", UTXO, "BTC/vbyte"),
@@ -73,36 +74,14 @@ internal val Chain.coinType: CoinType
         Chain.CronosChain -> CoinType.CRONOSCHAIN
         Chain.Polkadot -> CoinType.POLKADOT
         Chain.Dydx -> CoinType.DYDX
+        Chain.ZkSync -> CoinType.ZKSYNC
     }
 internal val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
-        Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash, Chain.ThorChain, Chain.MayaChain, Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum, Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.GaiaChain, Chain.Kujira, Chain.CronosChain, Chain.Dydx -> TssKeyType.ECDSA
         Chain.Solana, Chain.Polkadot -> TssKeyType.EDDSA
+        else -> TssKeyType.ECDSA
     }
-internal val Chain.Ticker: String
-    get() = when (this) {
-        Chain.ThorChain -> "RUNE"
-        Chain.Solana -> "SOL"
-        Chain.Ethereum -> "ETH"
-        Chain.Avalanche -> "AVAX"
-        Chain.Base -> "BASE"
-        Chain.Blast -> "BLAST"
-        Chain.Arbitrum -> "ARB"
-        Chain.Polygon -> "MATIC"
-        Chain.Optimism -> "OP"
-        Chain.BscChain -> "BNB"
-        Chain.Bitcoin -> "BTC"
-        Chain.BitcoinCash -> "BCH"
-        Chain.Litecoin -> "LTC"
-        Chain.Dogecoin -> "DOGE"
-        Chain.Dash -> "DASH"
-        Chain.GaiaChain -> "UATOM"
-        Chain.Kujira -> "KUJI"
-        Chain.MayaChain -> "CACAO"
-        Chain.CronosChain -> "CRO"
-        Chain.Polkadot -> "DOT"
-        Chain.Dydx -> "DYDX"
-    }
+
 
 internal val Chain.logo: Int
     get() = when (this) {
@@ -127,18 +106,13 @@ internal val Chain.logo: Int
         Chain.CronosChain -> R.drawable.cro
         Chain.Polkadot -> R.drawable.dot
         Chain.Dydx -> R.drawable.dydx
-    }
-
-internal val Chain.tokenStandard: String?
-    get() = when (this) {
-        Chain.Ethereum -> "ERC20"
-        Chain.BscChain -> "BEP20"
-        else -> null
+        Chain.ZkSync -> R.drawable.zksync
     }
 
 internal val Chain.canSelectTokens: Boolean
     get() = when {
-        standard == EVM && this != Chain.CronosChain -> true
+        this == Chain.CronosChain || this == Chain.ZkSync -> false
+        standard == EVM -> true
         this == Chain.MayaChain -> true
         else -> false
     }
@@ -162,7 +136,8 @@ internal val Chain.isDepositSupported: Boolean
 
 internal val Chain.isLayer2: Boolean
     get() = when (this) {
-        Chain.Arbitrum, Chain.Avalanche, Chain.CronosChain, Chain.Base, Chain.Blast, Chain.Optimism, Chain.Polygon, Chain.BscChain -> true
+        Chain.Arbitrum, Chain.Avalanche, Chain.CronosChain, Chain.Base, Chain.Blast,
+        Chain.Optimism, Chain.Polygon, Chain.BscChain, Chain.ZkSync -> true
         else -> false
     }
 
@@ -177,19 +152,6 @@ internal fun Chain.oneInchChainId(): Int =
         Chain.Optimism -> 10
         Chain.BscChain -> 56
         Chain.CronosChain -> 25
-
-        // TODO add later
-        // Chain.zksync -> 324
+        Chain.ZkSync -> 324
         else -> error("Chain $this is not supported by 1inch API")
-    }
-
-internal val Chain.chainType: TokenStandard
-    get() = when (this) {
-        Chain.Ethereum, Chain.Avalanche, Chain.BscChain, Chain.Arbitrum, Chain.Base,
-        Chain.Optimism, Chain.Polygon, Chain.Blast, Chain.CronosChain -> EVM
-        Chain.ThorChain, Chain.MayaChain -> TokenStandard.THORCHAIN
-        Chain.Solana -> SOL
-        Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash -> UTXO
-        Chain.GaiaChain, Chain.Kujira, Chain.Dydx -> COSMOS
-        Chain.Polkadot -> TokenStandard.POLKADOT
     }

@@ -78,6 +78,7 @@ internal class ImportFileViewModel @Inject constructor(
             try {
                 saveToDb(fileContent, null)
             } catch (e: Exception) {
+                Timber.e(e)
                 uiModel.update {
                     it.copy(
                         showPasswordPrompt = true,
@@ -93,8 +94,7 @@ internal class ImportFileViewModel @Inject constructor(
         try {
             insertVaultToDb(parseVaultFromString(fileContent, password))
         } catch (e: SQLiteConstraintException) {
-            snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
-        } catch (e: IllegalArgumentException) {
+            Timber.e(e)
             snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
         }
     }

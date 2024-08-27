@@ -5,8 +5,6 @@ import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.common.toHexBytesInByteString
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
@@ -22,12 +20,6 @@ internal class PolkadotHelper(
     private val vaultHexPublicKey: String,
 ) {
     private val coinType = CoinType.POLKADOT
-
-    fun getCoin(): Coin? {
-        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
-        val address = coinType.deriveAddressFromPublicKey(publicKey)
-        return Coins.getCoin("DOT", address, vaultHexPublicKey, coinType)
-    }
 
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val polkadotSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Polkadot

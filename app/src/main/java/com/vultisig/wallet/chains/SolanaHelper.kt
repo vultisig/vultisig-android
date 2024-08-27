@@ -3,10 +3,7 @@ package com.vultisig.wallet.chains
 import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import com.vultisig.wallet.models.SignedTransactionResult
-import com.vultisig.wallet.models.Ticker
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignature
@@ -30,12 +27,6 @@ internal class SolanaHelper(
 
     companion object {
         internal val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
-    }
-
-    fun getCoin(): Coin? {
-        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
-        val address = coinType.deriveAddressFromPublicKey(publicKey)
-        return Coins.getCoin("SOL", address, vaultHexPublicKey, coinType)
     }
 
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
