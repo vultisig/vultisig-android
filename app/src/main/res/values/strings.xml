@@ -359,4 +359,6 @@
     <string name="backup_password_screen_confirm_password_error_message">Please make sure your passwords match</string>
     <string name="token_selection_selected_tokens_title">Selected</string>
     <string name="failed_to_resolve_address">Failed to resolve address</string>
+    <string name="vault_settings_success_backup_message" translatable="false">File saved successfully</string>
+    <string name="vault_settings_error_extension_backup_file" translatable="false">Supported file extensions are: %s</string>
 </resources>

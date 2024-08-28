@@ -1,11 +1,11 @@
 package com.vultisig.wallet.common
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
-import org.junit.jupiter.api.Test
+import org.hamcrest.Matchers.isEmptyString
+import org.hamcrest.Matchers.not
+import org.junit.Test
+
 class UtilsTest {
     @Test
     fun testDeviceName() {
