@@ -378,7 +378,11 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        stopParticipantDiscovery()
+        try {
+            stopParticipantDiscovery()
+        } catch (e: Exception) {
+            Timber.e("onCleared: ${e.stackTraceToString()}")
+        }
         super.onCleared()
     }
 }
