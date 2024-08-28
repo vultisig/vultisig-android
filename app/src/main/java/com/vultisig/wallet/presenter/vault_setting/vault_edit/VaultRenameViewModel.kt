@@ -15,6 +15,7 @@ import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultEditUiEvent.ShowSnackBar
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.VaultSettings.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -70,7 +71,10 @@ internal class VaultRenameViewModel @Inject constructor(
                     return@launch
                 }
                 vaultRepository.setVaultName(vault.id, newName)
-                navigator.navigate(Destination.Home())
+                navigator.navigate(
+                    Destination.Home(),
+                    NavigationOptions(clearBackStack = true)
+                )
             }
         }
     }
