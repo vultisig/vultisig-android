@@ -317,12 +317,12 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 } catch (e: Exception) {
                     Timber.e(e)
-                    ""
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.failed_to_resolve_address)
+                    )
                 }
 
-                if (dstAddress.isBlank() ||
-                    !chainAccountAddressRepository.isValid(chain, dstAddress)
-                ) {
+                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
                     )

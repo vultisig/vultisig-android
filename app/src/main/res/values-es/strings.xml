@@ -305,5 +305,6 @@
     <string name="settings_screen_privacy_policy">política de privacidad</string>
     <string name="settings_screen_tos">Condiciones de servicio</string>
     <string name="verify_deposit_memo_title">Memorándum</string>
+    <string name="failed_to_resolve_address">Error al resolver la dirección</string>
 
 </resources>

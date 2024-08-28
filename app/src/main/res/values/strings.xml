@@ -358,4 +358,5 @@
 
     <string name="backup_password_screen_confirm_password_error_message">Please make sure your passwords match</string>
     <string name="token_selection_selected_tokens_title">Selected</string>
+    <string name="failed_to_resolve_address">Failed to resolve address</string>
 </resources>

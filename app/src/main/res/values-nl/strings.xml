@@ -316,4 +316,5 @@
     <string name="share_vault_qr_card_title">Hoofdkluis</string>
     <string name="share_vault_qr_card_keys">ECDSA-sleutel: %s EdDSA-sleutel: %s</string>
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
+    <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>
 </resources>

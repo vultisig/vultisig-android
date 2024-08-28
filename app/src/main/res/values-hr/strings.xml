@@ -305,5 +305,6 @@
     <string name="share_vault_qr_card_title">Glavni trezor</string>
     <string name="share_vault_qr_card_keys">ECDSA ključ: %s EdDSA ključ: %s</string>
     <string name="import_file_not_supported">Vrsta datoteke nije podržana</string>
+    <string name="failed_to_resolve_address">Neuspjelo rješavanje adrese</string>
 
 </resources>
