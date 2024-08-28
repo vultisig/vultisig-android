@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models.mappers
 import com.vultisig.wallet.data.mappers.Mapper
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
-import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.models.AccountUiModel
 import javax.inject.Inject
 

@@ -5,9 +5,9 @@ import com.google.gson.JsonArray
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SplResponseJson
 import com.vultisig.wallet.data.models.SplTokenJson
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
 import timber.log.Timber

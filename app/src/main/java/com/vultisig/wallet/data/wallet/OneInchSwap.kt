@@ -5,7 +5,7 @@ import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.common.toHexBytesInByteString
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
-import com.vultisig.wallet.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import tss.KeysignResponse
 import wallet.core.jni.proto.Ethereum.SigningInput

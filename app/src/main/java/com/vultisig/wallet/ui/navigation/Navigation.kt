@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 
 internal open class Dst(

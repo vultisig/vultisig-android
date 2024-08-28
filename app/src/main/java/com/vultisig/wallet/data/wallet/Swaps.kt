@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.wallet
 
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.utils.Numeric
-import com.vultisig.wallet.models.Chain
 import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin

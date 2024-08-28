@@ -1,8 +1,8 @@
-package com.vultisig.wallet.models.cosmos
+package com.vultisig.wallet.data.api.models.cosmos
 
 import com.google.gson.annotations.SerializedName
 
-internal data class THORChainAccountValue(
+data class THORChainAccountValue(
     @SerializedName("address")
     val address: String?,
     @SerializedName("account_number")

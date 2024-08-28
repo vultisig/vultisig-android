@@ -12,10 +12,10 @@ import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.chains.UtxoHelper
 import com.vultisig.wallet.chains.UtxoInfo
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.wallet.OneInchSwap
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Vault
 import java.math.BigInteger

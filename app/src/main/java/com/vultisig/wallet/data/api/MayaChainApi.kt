@@ -3,11 +3,11 @@ package com.vultisig.wallet.data.api
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.vultisig.wallet.chains.THORChainSwaps
+import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
-import com.vultisig.wallet.models.cosmos.THORChainAccountValue
-import com.vultisig.wallet.models.swap.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header

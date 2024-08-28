@@ -1,9 +1,9 @@
-package com.vultisig.wallet.models.swap
+package com.vultisig.wallet.data.api.models
 
 import com.google.gson.annotations.SerializedName
 import java.math.BigInteger
 
-internal data class THORChainSwapQuote(
+data class THORChainSwapQuote(
     @SerializedName("dust_threshold")
     val dustThreshold: String?,
     @SerializedName("expected_amount_out")
@@ -44,7 +44,7 @@ internal data class THORChainSwapQuote(
     val error: String?,
 )
 
-internal data class Fees(
+data class Fees(
     @SerializedName("affiliate")
     val affiliate: String,
     @SerializedName("asset")

@@ -2,8 +2,8 @@ package com.vultisig.wallet.presenter.settings.default_chains_setting
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainsSettingEvent.ChangeChaneState
 import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainsSettingEvent.Initialize
 import dagger.hilt.android.lifecycle.HiltViewModel

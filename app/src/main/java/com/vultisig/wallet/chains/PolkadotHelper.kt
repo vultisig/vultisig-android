@@ -4,8 +4,8 @@ import com.google.protobuf.ByteString
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.common.toHexBytesInByteString
+import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.utils.Numeric
-import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignature

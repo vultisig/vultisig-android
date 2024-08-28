@@ -1,15 +1,12 @@
-package com.vultisig.wallet.models
+package com.vultisig.wallet.data.models
 
-import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
-import com.vultisig.wallet.data.models.TssKeyType
 import wallet.core.jni.CoinType
 
-internal enum class Chain(
+enum class Chain(
     val raw: String,
     val standard: TokenStandard,
     val feeUnit: String,
@@ -51,7 +48,7 @@ internal enum class Chain(
     }
 }
 
-internal val Chain.coinType: CoinType
+val Chain.coinType: CoinType
     get() = when (this) {
         Chain.Bitcoin -> CoinType.BITCOIN
         Chain.BitcoinCash -> CoinType.BITCOINCASH
@@ -76,40 +73,14 @@ internal val Chain.coinType: CoinType
         Chain.Dydx -> CoinType.DYDX
         Chain.ZkSync -> CoinType.ZKSYNC
     }
-internal val Chain.TssKeysignType: TssKeyType
+
+val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
         Chain.Solana, Chain.Polkadot -> TssKeyType.EDDSA
         else -> TssKeyType.ECDSA
     }
 
-
-internal val Chain.logo: Int
-    get() = when (this) {
-        Chain.ThorChain -> R.drawable.rune
-        Chain.Solana -> R.drawable.solana
-        Chain.Ethereum -> R.drawable.ethereum
-        Chain.Avalanche -> R.drawable.avax
-        Chain.Base -> R.drawable.base
-        Chain.Blast -> R.drawable.blast
-        Chain.Arbitrum -> R.drawable.arbitrum
-        Chain.Polygon -> R.drawable.polygon
-        Chain.Optimism -> R.drawable.optimism
-        Chain.BscChain -> R.drawable.bsc
-        Chain.Bitcoin -> R.drawable.bitcoin
-        Chain.BitcoinCash -> R.drawable.bitcoincash
-        Chain.Litecoin -> R.drawable.litecoin
-        Chain.Dogecoin -> R.drawable.doge
-        Chain.Dash -> R.drawable.dash
-        Chain.GaiaChain -> R.drawable.atom
-        Chain.Kujira -> R.drawable.kuji
-        Chain.MayaChain -> R.drawable.cacao
-        Chain.CronosChain -> R.drawable.cro
-        Chain.Polkadot -> R.drawable.dot
-        Chain.Dydx -> R.drawable.dydx
-        Chain.ZkSync -> R.drawable.zksync
-    }
-
-internal val Chain.canSelectTokens: Boolean
+val Chain.canSelectTokens: Boolean
     get() = when {
         this == Chain.CronosChain || this == Chain.ZkSync -> false
         standard == EVM -> true
@@ -117,7 +88,7 @@ internal val Chain.canSelectTokens: Boolean
         else -> false
     }
 
-internal val Chain.IsSwapSupported: Boolean
+val Chain.IsSwapSupported: Boolean
     get() = this in arrayOf(
         Chain.ThorChain, Chain.MayaChain, Chain.GaiaChain, Chain.Kujira,
 
@@ -128,20 +99,21 @@ internal val Chain.IsSwapSupported: Boolean
         Chain.Arbitrum, Chain.Blast,
     )
 
-internal val Chain.isDepositSupported: Boolean
+val Chain.isDepositSupported: Boolean
     get() = when (this) {
         Chain.ThorChain, Chain.MayaChain -> true
         else -> false
     }
 
-internal val Chain.isLayer2: Boolean
+val Chain.isLayer2: Boolean
     get() = when (this) {
         Chain.Arbitrum, Chain.Avalanche, Chain.CronosChain, Chain.Base, Chain.Blast,
         Chain.Optimism, Chain.Polygon, Chain.BscChain, Chain.ZkSync -> true
+
         else -> false
     }
 
-internal fun Chain.oneInchChainId(): Int =
+fun Chain.oneInchChainId(): Int =
     when (this) {
         Chain.Ethereum -> 1
         Chain.Avalanche -> 43114

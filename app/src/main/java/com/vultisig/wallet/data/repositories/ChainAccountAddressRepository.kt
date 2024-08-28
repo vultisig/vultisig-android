@@ -4,12 +4,12 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.chains.MayaChainHelper
 import com.vultisig.wallet.chains.PublicKeyHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TssKeyType
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.models.TssKeysignType
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.TssKeysignType
 import com.vultisig.wallet.models.Vault
-import com.vultisig.wallet.models.coinType
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey

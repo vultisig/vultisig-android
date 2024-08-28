@@ -3,12 +3,12 @@ package com.vultisig.wallet.chains
 import com.google.gson.Gson
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.CosmoSignature
+import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.wallet.Swaps
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
-import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignatureWithRecoveryID
