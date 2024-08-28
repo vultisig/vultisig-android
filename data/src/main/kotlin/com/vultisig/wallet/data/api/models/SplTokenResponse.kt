@@ -1,40 +1,40 @@
-package com.vultisig.wallet.data.models
+package com.vultisig.wallet.data.api.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class SplTokenAmountJson(
+data class SplTokenAmountJson(
     @SerializedName("amount")
     val amount: String
 )
 
-internal data class SplInfoJson(
+data class SplInfoJson(
     @SerializedName("mint")
     val mint: String,
     @SerializedName("tokenAmount")
     val tokenAmount: SplTokenAmountJson
 )
 
-internal data class SplParsedJson(
+data class SplParsedJson(
     @SerializedName("info")
     val info: SplInfoJson
 )
 
-internal data class SplDataJson(
+data class SplDataJson(
     @SerializedName("parsed")
     val parsed: SplParsedJson
 )
 
-internal data class SplAccountJson(
+data class SplAccountJson(
     @SerializedName("data")
     val data: SplDataJson
 )
 
-internal data class SplResponseJson(
+data class SplResponseJson(
     @SerializedName("account")
     val account: SplAccountJson
 )
 
-internal data class SplTokenJson(
+data class SplTokenJson(
     @SerializedName("decimals")
     val decimals: Int,
     @SerializedName("tokenList")
@@ -43,7 +43,7 @@ internal data class SplTokenJson(
     val mint: String,
 )
 
-internal data class SplTokenListJson(
+data class SplTokenListJson(
     @SerializedName("symbol")
     val ticker: String,
     @SerializedName("image")
@@ -52,43 +52,43 @@ internal data class SplTokenListJson(
     val extensions: SplExtensionsJson
 )
 
-internal data class SplExtensionsJson(
+data class SplExtensionsJson(
     @SerializedName("coingeckoId")
     val coingeckoId: String
 )
 
 
-internal data class SplAmountTokenAmountJson(
+data class SplAmountTokenAmountJson(
     @SerializedName("amount")
     val amount: String
 )
 
-internal data class SplAmountInfoJson(
+data class SplAmountInfoJson(
     @SerializedName("tokenAmount")
     val tokenAmount: SplAmountTokenAmountJson
 )
 
-internal data class SplAmountParsedJson(
+data class SplAmountParsedJson(
     @SerializedName("info")
     val info: SplAmountInfoJson
 )
 
-internal data class SplAmountDataJson(
+data class SplAmountDataJson(
     @SerializedName("parsed")
     val parsed: SplAmountParsedJson
 )
 
-internal data class SplAmountAccountJson(
+data class SplAmountAccountJson(
     @SerializedName("data")
     val data: SplAmountDataJson
 )
 
-internal data class SplAmountValueJson(
+data class SplAmountValueJson(
     @SerializedName("account")
     val account: SplAmountAccountJson
 )
 
-internal data class SplAmountRpcResponseJson(
+data class SplAmountRpcResponseJson(
     @SerializedName("value")
     val value: List<SplAmountValueJson>
 )

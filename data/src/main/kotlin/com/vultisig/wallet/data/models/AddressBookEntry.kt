@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.models
 
-internal data class AddressBookEntry(
+data class AddressBookEntry(
     val chain: Chain,
     val address: String,
     val title: String,
