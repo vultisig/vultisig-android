@@ -1,5 +1,6 @@
 package com.vultisig.wallet.common
 
+import com.vultisig.wallet.data.utils.Numeric
 import org.bouncycastle.jcajce.provider.digest.Keccak
 
 internal fun ByteArray.toKeccak256(): String {

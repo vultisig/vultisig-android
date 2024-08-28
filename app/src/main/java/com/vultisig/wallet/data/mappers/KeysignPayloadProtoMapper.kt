@@ -5,12 +5,12 @@ import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
+import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.proto.v1.ThorChainSwapPayloadProto
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload

@@ -1,13 +1,5 @@
 package com.vultisig.wallet.presenter.keysign
 
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.chains.AtomHelper
 import com.vultisig.wallet.chains.DydxHelper
 import com.vultisig.wallet.chains.ERC20Helper
@@ -20,36 +12,25 @@ import com.vultisig.wallet.chains.THORCHainHelper
 import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.chains.UtxoHelper
 import com.vultisig.wallet.chains.UtxoInfo
-import com.vultisig.wallet.common.toJson
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapPayload
+import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.ERC20ApprovePayload
-import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.models.Vault
-import java.lang.reflect.Type
 import java.math.BigInteger
 
 
 internal data class KeysignPayload(
-    @SerializedName("coin")
     val coin: Coin,
-    @SerializedName("toAddress")
     val toAddress: String,
-    @SerializedName("toAmount")
     val toAmount: BigInteger,
-    @SerializedName("chainSpecific") val blockChainSpecific: BlockChainSpecific,
+    val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
-    @SerializedName("memo")
     val memo: String? = null,
     val swapPayload: SwapPayload? = null,
-    @SerializedName("approvePayload")
     val approvePayload: ERC20ApprovePayload? = null,
-    @SerializedName("vaultPubKeyECDSA")
     val vaultPublicKeyECDSA: String,
-    @SerializedName("vaultLocalPartyID")
     val vaultLocalPartyID: String,
 ) {
     fun getKeysignMessages(vault: Vault): List<String> {
@@ -140,140 +121,5 @@ internal data class KeysignPayload(
         }
 
         return messages.sorted()
-    }
-}
-
-internal class KeysignPayloadSerializer : JsonSerializer<KeysignPayload> {
-    override fun serialize(
-        src: KeysignPayload,
-        typeOfSrc: Type?,
-        context: JsonSerializationContext?,
-    ): JsonElement {
-        val jsonObject = JsonObject()
-        jsonObject.addProperty("toAddress", src.toAddress)
-        jsonObject.add("toAmount", src.toAmount.toJson())
-        jsonObject.addProperty("vaultPubKeyECDSA", src.vaultPublicKeyECDSA)
-        jsonObject.add("chainSpecific", context?.serialize(src.blockChainSpecific))
-        jsonObject.add("coin", context?.serialize(src.coin))
-        jsonObject.add("utxos", context?.serialize(src.utxos))
-        jsonObject.addProperty("memo", src.memo ?: "")
-        jsonObject.addProperty("vaultLocalPartyID", src.vaultLocalPartyID)
-        val swapPayload = src.swapPayload
-        if (swapPayload != null) {
-            jsonObject.add("swapPayload", context?.serialize(swapPayload))
-            val spObject = JsonObject()
-            val wrapperObject = JsonObject()
-            when (swapPayload) {
-                is SwapPayload.ThorChain -> {
-                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
-                    spObject.add(
-                        "thorchain",
-                        wrapperObject
-                    )
-                }
-
-                is SwapPayload.MayaChain -> {
-                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
-                    spObject.add(
-                        "mayachain",
-                        wrapperObject
-                    )
-                }
-
-                is SwapPayload.OneInch -> {
-                    wrapperObject.add("_0", context?.serialize(swapPayload.data))
-                    spObject.add(
-                        "oneInch",
-                        wrapperObject
-                    )
-                }
-            }
-
-            jsonObject.add("swapPayload", spObject)
-        }
-        if (src.approvePayload != null) {
-            jsonObject.add("approvePayload", context?.serialize(src.approvePayload))
-        }
-        return jsonObject
-    }
-}
-
-internal class KeysignPayloadDeserializer : JsonDeserializer<KeysignPayload> {
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type?,
-        context: JsonDeserializationContext?,
-    ): KeysignPayload {
-        val jsonObject = json.asJsonObject
-        val toAddress = jsonObject.get("toAddress").asString
-        val toAmount = jsonObject.get("toAmount").asJsonArray[1].asBigInteger
-        val vaultPubKeyECDSA = jsonObject.get("vaultPubKeyECDSA").asString
-        val vaultLocalPartyID = jsonObject.get("vaultLocalPartyID").asString
-        val chainSpecific = context?.deserialize<BlockChainSpecific>(
-            jsonObject.get("chainSpecific"), BlockChainSpecific::class.java
-        )!!
-        val coin = context.deserialize<Coin>(jsonObject.get("coin"), Coin::class.java)
-        val utxosType = object : TypeToken<List<UtxoInfo>>() {}.type
-        val utxos = context.deserialize<List<UtxoInfo>>(
-            jsonObject.get("utxos"), utxosType
-        )
-        val memo = jsonObject.get("memo")?.asString
-        val swapPayloadJsonObject = jsonObject.get("swapPayload")
-        val swapPayload: SwapPayload? = if (swapPayloadJsonObject != null) {
-            val spo = swapPayloadJsonObject.asJsonObject
-            when {
-                spo.has("thorchain") -> {
-                    SwapPayload.ThorChain(
-                        context.deserialize(
-                            spo.get("thorchain")
-                                .asJsonObject.get("_0"),
-                            THORChainSwapPayload::class.java
-                        )
-                    )
-                }
-
-                spo.has("mayachain") -> {
-                    SwapPayload.MayaChain(
-                        context.deserialize(
-                            spo.get("mayachain")
-                                .asJsonObject.get("_0"),
-                            THORChainSwapPayload::class.java
-                        )
-                    )
-                }
-
-                spo.has("oneInch") -> {
-                    SwapPayload.OneInch(
-                        context.deserialize(
-                            spo.get("oneInch")
-                                .asJsonObject.get("_0"),
-                            OneInchSwapPayloadJson::class.java
-                        )
-                    )
-                }
-
-                else -> error("KeysignPayload doesn't have a known swapPayload")
-            }
-        } else null
-
-        var approvePayload: ERC20ApprovePayload? = null
-        val approvePayloadJsonObject = jsonObject.get("approvePayload")
-        if (approvePayloadJsonObject != null) {
-            approvePayload = context.deserialize<ERC20ApprovePayload>(
-                jsonObject.get("approvePayload"), ERC20ApprovePayload::class.java
-            )
-        }
-        return KeysignPayload(
-            coin = coin,
-            toAddress = toAddress,
-            toAmount = toAmount,
-            blockChainSpecific = chainSpecific,
-            utxos = utxos,
-            memo = memo,
-            swapPayload = swapPayload,
-            approvePayload = approvePayload,
-            vaultPublicKeyECDSA = vaultPubKeyECDSA,
-            vaultLocalPartyID = vaultLocalPartyID
-        )
     }
 }

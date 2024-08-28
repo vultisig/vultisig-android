@@ -1,7 +1,7 @@
 package com.vultisig.wallet.chains
 
-import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.toHexByteArray
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.presenter.keysign.BlockChainSpecific

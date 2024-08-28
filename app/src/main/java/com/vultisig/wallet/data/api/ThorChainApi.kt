@@ -4,9 +4,9 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.data.api.models.CosmosBalance
-import com.vultisig.wallet.data.api.models.CosmosBalanceResponse
-import com.vultisig.wallet.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
+import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.models.swap.THORChainSwapQuote
 import io.ktor.client.HttpClient
@@ -127,8 +127,9 @@ internal class ThorChainApiImpl @Inject constructor(
                 CosmosTransactionBroadcastResponse::class.java
             )
             result?.let {
-                if (it.txResponse?.code == 0 || it.txResponse?.code == 19) {
-                    return it.txResponse.txHash
+                val response = it.txResponse
+                if (response?.code == 0 || response?.code == 19) {
+                    return response.txHash
                 }
                 throw Exception("Error broadcasting transaction: $responseRawString")
             }

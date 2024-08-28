@@ -26,13 +26,13 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.SwapPayload
+import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.SignedTransactionResult
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.tss.LocalStateAccessor
-import com.vultisig.wallet.tss.TssKeyType
 import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger
 import com.vultisig.wallet.ui.navigation.Destination

@@ -6,7 +6,7 @@ import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
-import com.vultisig.wallet.tss.TssKeyType
+import com.vultisig.wallet.data.models.TssKeyType
 import wallet.core.jni.CoinType
 
 internal enum class Chain(

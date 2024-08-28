@@ -8,9 +8,6 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.sources.AppDataStore
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
-import com.vultisig.wallet.presenter.keysign.KeysignPayloadDeserializer
-import com.vultisig.wallet.presenter.keysign.KeysignPayloadSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,11 +39,6 @@ internal interface DataModule {
         @Singleton
         fun provideGson(): Gson {
             return GsonBuilder()
-                .registerTypeAdapter(KeysignPayload::class.java, KeysignPayloadSerializer())
-                .registerTypeAdapter(
-                    KeysignPayload::class.java,
-                    KeysignPayloadDeserializer()
-                )
                 .create()
         }
 

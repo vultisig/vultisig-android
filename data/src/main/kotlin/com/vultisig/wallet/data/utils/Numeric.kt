@@ -1,4 +1,4 @@
-package com.vultisig.wallet.common
+package com.vultisig.wallet.data.utils
 
 import kotlin.experimental.and
 

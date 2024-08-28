@@ -1,8 +1,8 @@
-package com.vultisig.wallet.models
+package com.vultisig.wallet.data.models
 
 import com.google.gson.annotations.SerializedName
-import com.vultisig.wallet.common.Numeric
-import okio.ByteString.Companion.decodeBase64
+import com.vultisig.wallet.data.utils.Numeric
+import io.ktor.util.decodeBase64Bytes
 import java.security.MessageDigest
 
 data class CosmoSignature(
@@ -13,7 +13,7 @@ data class CosmoSignature(
 )
 
 fun CosmoSignature.transactionHash(): String {
-    val decodedBytes = txBytes.decodeBase64()?.toByteArray() ?: run { return "" }
+    val decodedBytes = txBytes.decodeBase64Bytes()
     val digest = MessageDigest.getInstance("SHA-256").digest(decodedBytes)
     return Numeric.toHexStringNoPrefix(digest)
 }
