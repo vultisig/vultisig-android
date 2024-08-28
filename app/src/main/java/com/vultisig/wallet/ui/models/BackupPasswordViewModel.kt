@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.models
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -84,7 +83,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     private val permissionChannel = Channel<Boolean>()
     val permissionFlow = permissionChannel.receiveAsFlow()
 
-    val saveFileChannel = Channel<Intent>()
+    val saveFileChannel = Channel<String>()
 
     init {
         viewModelScope.launch {
@@ -95,19 +94,6 @@ internal class BackupPasswordViewModel @Inject constructor(
             }
         }
     }
-
-    private fun openFilePicker(backupFileName: String) {
-        viewModelScope.launch {
-            saveFileChannel.send(createRequiredIntent(backupFileName))
-        }
-
-    }
-    private fun createRequiredIntent(backupFileName: String) =
-        Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "application/octet-stream"
-            putExtra(Intent.EXTRA_TITLE, backupFileName)
-        }
 
     private suspend fun generateVaultData(
         password: String?,
@@ -145,7 +131,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         viewModelScope.launch {
             val backupData = generateVaultData(password) ?: return@launch
             uiState.value = uiState.value.copy(backupContent = backupData.data)
-            openFilePicker(backupData.fileName)
+            saveFileChannel.send(backupData.fileName)
         }
     }
 

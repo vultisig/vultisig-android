@@ -57,7 +57,10 @@ internal fun Context.saveContentToUri(uri: Uri, content: String): Boolean {
         contentResolver.openOutputStream(uri).use { output ->
             content.byteInputStream()
                 .use {
-                    it.copyTo(output!!, DEFAULT_BUFFER_SIZE)
+                    it.copyTo(
+                        output ?: error("FileHelper::saveContentToUri output is null"),
+                        DEFAULT_BUFFER_SIZE
+                    )
                 }
             return true
         }

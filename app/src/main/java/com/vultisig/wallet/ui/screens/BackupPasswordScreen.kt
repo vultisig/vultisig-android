@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
+import com.vultisig.wallet.ui.utils.createBackupFileIntent
 import kotlinx.coroutines.flow.receiveAsFlow
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -58,8 +59,10 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
     }
 
     LaunchedEffect(Unit) {
-        viewModel.saveFileChannel.receiveAsFlow().collect { intent ->
-            filePickerLauncher.launch(intent)
+        viewModel.saveFileChannel.receiveAsFlow().collect { fileName ->
+            filePickerLauncher.launch(
+                createBackupFileIntent(fileName)
+            )
         }
     }
 
