@@ -26,9 +26,9 @@ internal interface AccountsRepository {
         vaultId: String,
     ): Flow<List<Address>>
 
-    fun refreshAddresses(
+    suspend fun refreshAddresses(
         vaultId: String,
-    ): Flow<List<Address>>
+    ): List<Address>
 
     fun loadAddress(
         vaultId: String,
@@ -74,7 +74,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         awaitClose()
     }
 
-    override fun refreshAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
+    override suspend fun refreshAddresses(vaultId: String): List<Address> =
         supervisorScope {
             val vault = getVault(vaultId)
             val vaultCoins = vault.coins
@@ -91,10 +91,8 @@ internal class AccountsRepositoryImpl @Inject constructor(
                     fetchAccountFromApi(account, index, addresses, loadPrices)
                 }
             }.awaitAll()
-            send(addresses)
+            return@supervisorScope addresses
         }
-        awaitClose()
-    }
 
     private suspend fun fetchAccountFromApi(
         account: Address,

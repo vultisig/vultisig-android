@@ -146,24 +146,28 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId)
-                .updateUiState()
+                .updateUiStateFromFlow()
         }
     }
 
     private fun refreshAccounts(vaultId: String) {
         loadAccountsJob?.cancel()
         loadAccountsJob = viewModelScope.launch {
-            accountsRepository
-                .refreshAddresses(vaultId)
-                .updateUiState()
+            try {
+                accountsRepository
+                    .refreshAddresses(vaultId)
+                    .sortByAccountsTotalFiatValue()
+                    .updateUiStateFromList()
+            } catch (e: Exception) {
+                Timber.e(e)
+                updateRefreshing(false)
+            }
         }
     }
 
-    private suspend fun Flow<List<Address>>.updateUiState() =
+    private suspend fun Flow<List<Address>>.updateUiStateFromFlow() =
         this.map { it ->
-            it.sortedBy {
-                it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
-            }
+            it.sortByAccountsTotalFiatValue()
         }
             .catch {
                 updateRefreshing(false)
@@ -171,18 +175,26 @@ internal class VaultAccountsViewModel @Inject constructor(
                 // TODO handle error
                 Timber.e(it)
             }.collect { accounts ->
-
-                val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
-                    ?.let(fiatValueToStringMapper::map)
-                val accountsUiModel = accounts.map(addressToUiModelMapper::map)
-
-                uiState.update {
-                    it.copy(
-                        totalFiatValue = totalFiatValue, accounts = accountsUiModel
-                    )
-                }
-                updateRefreshing(false)
+                accounts.updateUiStateFromList()
             }
+
+    private fun List<Address>.sortByAccountsTotalFiatValue() =
+        sortedBy {
+            it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
+        }
+
+    private fun List<Address>.updateUiStateFromList() {
+        val totalFiatValue = this.calculateAddressesTotalFiatValue()
+            ?.let(fiatValueToStringMapper::map)
+        val accountsUiModel = this.map(addressToUiModelMapper::map)
+
+        uiState.update {
+            it.copy(
+                totalFiatValue = totalFiatValue, accounts = accountsUiModel
+            )
+        }
+        updateRefreshing(false)
+    }
 
     private fun updateRefreshing(isRefreshing: Boolean) {
         uiState.update { it.copy(isRefreshing = isRefreshing) }
