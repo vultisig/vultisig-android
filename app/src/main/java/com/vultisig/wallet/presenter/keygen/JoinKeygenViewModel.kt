@@ -18,6 +18,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
@@ -202,20 +203,20 @@ internal class JoinKeygenViewModel @Inject constructor(
                             _vault.name = payload.reshareMessage.vaultName
                             allVaults.find { it.name == _vault.name }?.let {
                                 errorMessage.value =
-                                    R.string.vault_already_exist.asUiText(_vault.name).toString()
+                                    R.string.vault_already_exist.asUiText(_vault.name).asString(context)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                                 errorMessage.value =
-                                    R.string.join_keysign_wrong_vault.asUiText().toString()
+                                    R.string.join_keysign_wrong_vault.asUiText().asString(context)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
                             if (_vault.resharePrefix != payload.reshareMessage.oldResharePrefix) {
                                 errorMessage.value =
-                                    R.string.join_keygen_wrong_reshare.asUiText().toString()
+                                    R.string.join_keygen_wrong_reshare.asUiText().asString(context)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
