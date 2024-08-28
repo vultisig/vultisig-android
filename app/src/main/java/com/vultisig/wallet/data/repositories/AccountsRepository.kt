@@ -101,7 +101,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         index: Int,
         addresses: MutableList<Address>,
         loadPrices: Deferred<Unit>
-    ){
+    ) {
         try {
             val address = account.address
             loadPrices.await()
