@@ -1,7 +1,7 @@
-package com.vultisig.wallet.data.models
+package com.vultisig.wallet.data.models.settings
 
 
-internal enum class AppCurrency(
+enum class AppCurrency(
     val ticker: String,
 ) {
     USD(ticker = "USD"),

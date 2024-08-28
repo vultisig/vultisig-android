@@ -2,12 +2,12 @@ package com.vultisig.wallet.data.api.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class OneInchTokensJson(
+data class OneInchTokensJson(
     @SerializedName("tokens")
     val tokens: Map<String, OneInchTokenJson>
 )
 
-internal data class OneInchTokenJson(
+data class OneInchTokenJson(
     @SerializedName("address")
     val address: String,
     @SerializedName("symbol")

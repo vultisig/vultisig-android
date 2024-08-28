@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class OneInchSwapQuoteJson(
+data class OneInchSwapQuoteJson(
     @SerializedName("dstAmount")
     val dstAmount: String,
     @SerializedName("tx")
@@ -11,7 +11,7 @@ internal data class OneInchSwapQuoteJson(
     val error: String? = null,
 )
 
-internal data class OneInchSwapTxJson(
+data class OneInchSwapTxJson(
     @SerializedName("from")
     val from: String,
     @SerializedName("to")

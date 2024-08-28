@@ -4,8 +4,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.vultisig.wallet.chains.THORChainSwaps
 import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.data.models.CosmosBalance
-import com.vultisig.wallet.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.CosmosBalance
+import com.vultisig.wallet.data.api.models.CosmosBalanceResponse
 import com.vultisig.wallet.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.models.swap.THORChainSwapQuote

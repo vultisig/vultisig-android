@@ -7,9 +7,6 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonDeserializer
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonSerializer
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignPayloadDeserializer
@@ -49,14 +46,6 @@ internal interface DataModule {
                 .registerTypeAdapter(
                     KeysignPayload::class.java,
                     KeysignPayloadDeserializer()
-                )
-                .registerTypeAdapter(
-                    OneInchSwapPayloadJson::class.java,
-                    OneInchSwapPayloadJsonDeserializer(),
-                )
-                .registerTypeAdapter(
-                    OneInchSwapPayloadJson::class.java,
-                    OneInchSwapPayloadJsonSerializer(),
                 )
                 .create()
         }

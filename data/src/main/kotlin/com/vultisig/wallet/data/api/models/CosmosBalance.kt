@@ -1,8 +1,8 @@
-package com.vultisig.wallet.data.models
+package com.vultisig.wallet.data.api.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class CosmosBalance(
+data class CosmosBalance(
     @SerializedName("denom")
     val denom: String,
     @SerializedName("amount")

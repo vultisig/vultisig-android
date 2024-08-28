@@ -1,6 +1,6 @@
-package com.vultisig.wallet.data.models
+package com.vultisig.wallet.data.models.settings
 
-internal enum class AppLanguage(val mainName: String, val engName: String?) {
+enum class AppLanguage(val mainName: String, val engName: String?) {
     EN("English UK", null),
     DE("Deutsch", "German"),
     ES("Espanol", "Spanish"),

@@ -1,15 +1,15 @@
-package com.vultisig.wallet.data.models
+package com.vultisig.wallet.data.api.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class BlockChairAddress(
+data class BlockChairAddress(
     @SerializedName("balance")
     val balance: String,
     @SerializedName("unspent_output_count")
     val unspentOutputCount: Int,
 )
 
-internal data class BlockChairUtxoInfo(
+data class BlockChairUtxoInfo(
     @SerializedName("transaction_hash")
     val transactionHash: String,
     @SerializedName("index")
@@ -18,7 +18,7 @@ internal data class BlockChairUtxoInfo(
     val value: Long,
 )
 
-internal data class BlockChairInfo(
+data class BlockChairInfo(
     @SerializedName("address")
     val address: BlockChairAddress,
     @SerializedName("utxo")

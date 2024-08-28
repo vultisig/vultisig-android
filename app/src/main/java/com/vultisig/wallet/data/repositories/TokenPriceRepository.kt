@@ -4,7 +4,7 @@ import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.CurrencyToPrice
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
-import com.vultisig.wallet.data.models.AppCurrency
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import kotlinx.coroutines.ExperimentalCoroutinesApi
