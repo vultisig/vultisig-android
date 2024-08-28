@@ -11,9 +11,6 @@ import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonDeserializer
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonSerializer
 import com.vultisig.wallet.data.sources.AppDataStore
-import com.vultisig.wallet.models.ERC20ApprovePayload
-import com.vultisig.wallet.models.ERC20ApprovePayloadDeserializer
-import com.vultisig.wallet.models.ERC20ApprovePayloadSerializer
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.presenter.keysign.KeysignPayloadDeserializer
 import com.vultisig.wallet.presenter.keysign.KeysignPayloadSerializer
@@ -60,14 +57,6 @@ internal interface DataModule {
                 .registerTypeAdapter(
                     OneInchSwapPayloadJson::class.java,
                     OneInchSwapPayloadJsonSerializer(),
-                )
-                .registerTypeAdapter(
-                    ERC20ApprovePayload::class.java,
-                    ERC20ApprovePayloadDeserializer(),
-                )
-                .registerTypeAdapter(
-                    ERC20ApprovePayload::class.java,
-                    ERC20ApprovePayloadSerializer(),
                 )
                 .create()
         }

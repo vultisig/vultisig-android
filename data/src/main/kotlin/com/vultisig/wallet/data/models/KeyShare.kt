@@ -1,8 +1,8 @@
-package com.vultisig.wallet.models
+package com.vultisig.wallet.data.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class KeyShare(
+data class KeyShare(
     @SerializedName("pubKey")
     val pubKey: String,
     @SerializedName("keyshare")
