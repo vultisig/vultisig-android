@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.runtime.getValue
@@ -14,16 +14,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.BACKUPS_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.backupVaultToDownloadsDir
-import com.vultisig.wallet.common.backupVaultToDownloadsDirAtLeastQ
+import com.vultisig.wallet.common.fileName
+import com.vultisig.wallet.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.presenter.import_file.FILE_ALLOWED_EXTENSIONS
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import javax.inject.Inject
@@ -46,6 +47,7 @@ internal data class BackupPasswordState(
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val disableEncryption: Boolean = false,
+    val backupContent: String = ""
 )
 
 @HiltViewModel
@@ -81,39 +83,14 @@ internal class BackupPasswordViewModel @Inject constructor(
     private val permissionChannel = Channel<Boolean>()
     val permissionFlow = permissionChannel.receiveAsFlow()
 
+    val saveFileChannel = Channel<String>()
+
     init {
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
             this@BackupPasswordViewModel.vault.value = vault
             if (!hasWritePermission) {
                 permissionChannel.send(true)
-            }
-        }
-    }
-
-    private fun saveBackupToDownloads(dataToBackup: String, backupFileName: String) {
-        val isSuccess = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            context.backupVaultToDownloadsDirAtLeastQ(dataToBackup, backupFileName)
-        } else {
-            backupVaultToDownloadsDir(dataToBackup, backupFileName)
-        }
-        viewModelScope.launch {
-            if (isSuccess) {
-                vaultDataStoreRepository.setBackupStatus(vaultId, true)
-                snackbarFlow.showMessage(
-                    context.getString(
-                        R.string.vault_settings_success_backup_file,
-                        "$BACKUPS_DIRECTORY_NAME_FULL/$backupFileName"
-                    )
-                )
-                navigator.navigate(
-                    Destination.Home(vaultId),
-                    NavigationOptions(clearBackStack = true)
-                )
-            } else {
-                snackbarFlow.showMessage(
-                    context.getString(R.string.vault_settings_error_backup_file)
-                )
             }
         }
     }
@@ -153,7 +130,8 @@ internal class BackupPasswordViewModel @Inject constructor(
     private fun backupVault(password: String?) {
         viewModelScope.launch {
             val backupData = generateVaultData(password) ?: return@launch
-            saveBackupToDownloads(backupData.data, backupData.fileName)
+            uiState.value = uiState.value.copy(backupContent = backupData.data)
+            saveFileChannel.send(backupData.fileName)
         }
     }
 
@@ -161,7 +139,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         val thresholds = Utils.getThreshold(vault.signers.size)
         val date = Date()
         val format = SimpleDateFormat(
-            "yyyy-MM",
+            "yyyy-MM-dd-HH-mm-ss",
             java.util.Locale.getDefault()
         )
         val formattedDate = format.format(date)
@@ -218,6 +196,47 @@ internal class BackupPasswordViewModel @Inject constructor(
         }
     }
 
+    fun saveContentToUriResult(uri: Uri, content: String) {
+        if (!isFileExtensionValid(uri)) {
+            viewModelScope.launch {
+                snackbarFlow.showMessage(
+                    context.getString(
+                        R.string.vault_settings_error_extension_backup_file,
+                        FILE_ALLOWED_EXTENSIONS.joinToString(",")
+                    )
+                )
+            }
+            return
+        }
+        val isSuccess = context.saveContentToUri(uri, content)
+        completeBackupVault(isSuccess)
+    }
+
+    private fun isFileExtensionValid(uri: Uri) =
+        FILE_ALLOWED_EXTENSIONS.any {
+            it == File(uri.fileName(context)).extension
+        }
+
+    private fun completeBackupVault(backupSuccess: Boolean) {
+        viewModelScope.launch {
+            if (backupSuccess) {
+                vaultDataStoreRepository.setBackupStatus(vaultId, true)
+                snackbarFlow.showMessage(
+                    context.getString(
+                        R.string.vault_settings_success_backup_message
+                    )
+                )
+                navigator.navigate(
+                    Destination.Home(vaultId),
+                    NavigationOptions(clearBackStack = true)
+                )
+            } else {
+                snackbarFlow.showMessage(
+                    context.getString(R.string.vault_settings_error_backup_file)
+                )
+            }
+        }
+    }
 }
 
 private data class VaultBackupData(
