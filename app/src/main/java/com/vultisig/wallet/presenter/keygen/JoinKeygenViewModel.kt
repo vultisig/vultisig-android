@@ -17,9 +17,9 @@ import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
@@ -95,14 +95,15 @@ internal class JoinKeygenViewModel @Inject constructor(
 
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveringSessionID)
-    var errorMessage: MutableState<String> = mutableStateOf("")
+    var errorMessage: MutableState<UiText> =
+        mutableStateOf(UiText.StringResource(R.string.default_error))
     val warningHostState = SnackbarHostState()
 
     private val warningLauncher =
         viewModelScope.launch {
             delay(WARNING_TIMEOUT)
             warningHostState.showSnackbar(
-                errorMessage.value,
+                errorMessage.value.asString(context),
                 duration = SnackbarDuration.Indefinite
             )
         }
@@ -202,21 +203,23 @@ internal class JoinKeygenViewModel @Inject constructor(
                             _vault.hexChainCode = payload.reshareMessage.hexChainCode
                             _vault.name = payload.reshareMessage.vaultName
                             allVaults.find { it.name == _vault.name }?.let {
-                                errorMessage.value =
-                                    R.string.vault_already_exist.asUiText(_vault.name).asString(context)
+                                errorMessage.value = UiText.FormattedText(
+                                    R.string.vault_already_exist,
+                                    listOf(_vault.name)
+                                )
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                                 errorMessage.value =
-                                    R.string.join_keysign_wrong_vault.asUiText().asString(context)
+                                    UiText.StringResource(R.string.join_keysign_wrong_vault)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
                             if (_vault.resharePrefix != payload.reshareMessage.oldResharePrefix) {
                                 errorMessage.value =
-                                    R.string.join_keygen_wrong_reshare.asUiText().asString(context)
+                                    UiText.StringResource(R.string.join_keygen_wrong_reshare)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }
@@ -231,7 +234,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Timber.d("Failed to parse QR code, error: $e")
-                errorMessage.value = "Failed to parse QR code"
+                errorMessage.value = UiText.StringResource(R.string.join_keygen_invalid_qr_code)
                 currentState.value = JoinKeygenState.FailedToStart
             }
         }
@@ -278,7 +281,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
                 Timber.e("Failed to join keygen: ${e.stackTraceToString()}")
-                errorMessage.value = "Failed to join keygen"
+                errorMessage.value = UiText.StringResource(R.string.join_keygen_failed)
                 currentState.value = JoinKeygenState.FailedToStart
             }
         }

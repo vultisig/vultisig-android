@@ -358,4 +358,7 @@
 
     <string name="backup_password_screen_confirm_password_error_message">Please make sure your passwords match</string>
     <string name="token_selection_selected_tokens_title">Selected</string>
+    <string name="default_error"  translatable="false">Default error</string>
+    <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
+    <string name="join_keygen_failed">Failed to join keygen</string>
 </resources>

@@ -305,4 +305,6 @@
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de Privacidade</string>
     <string name="settings_screen_tos">Termos de Serviço</string>
+    <string name="join_keygen_invalid_qr_code">Falha ao analisar o código QR</string>
+    <string name="join_keygen_failed">Falha ao aderir ao keygen</string>
 </resources>

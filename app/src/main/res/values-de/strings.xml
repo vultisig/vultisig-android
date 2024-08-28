@@ -305,4 +305,6 @@
     <string name="share_vault_qr_card_title">Haupttresor</string>
     <string name="share_vault_qr_card_keys">ECDSA-Schlüssel: %s EdDSA-Schlüssel: %s</string>
     <string name="import_file_not_supported">Der Dateityp wird nicht unterstützt</string>
+    <string name="join_keygen_invalid_qr_code">QR-Code konnte nicht analysiert werden</string>
+    <string name="join_keygen_failed">Beitritt zum Keygen fehlgeschlagen</string>
 </resources>
