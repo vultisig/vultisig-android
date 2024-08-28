@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,10 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.GradientInfoCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
+import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
@@ -68,7 +71,15 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
 
     Scaffold(
         bottomBar = {
-            Column(Modifier.imePadding()) {
+            Column(
+                Modifier
+                    .imePadding()
+                    .padding(horizontal = 16.dp)
+            ) {
+                GradientInfoCard(
+                    stringResource(id = R.string.backup_password_screen_warning),
+                    Brush.vultiGradient()
+                )
                 MultiColorButton(
                     backgroundColor = Theme.colors.turquoise800,
                     textColor = Theme.colors.oxfordBlue800,
