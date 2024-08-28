@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.CustomTokenResponse
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
