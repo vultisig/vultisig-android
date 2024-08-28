@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -33,7 +34,6 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.allowZeroGas
 import com.vultisig.wallet.presenter.common.TextFieldUtils
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc

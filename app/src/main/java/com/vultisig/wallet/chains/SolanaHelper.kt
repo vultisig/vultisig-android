@@ -3,8 +3,8 @@ package com.vultisig.wallet.chains
 import com.vultisig.wallet.common.toHexByteArray
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.utils.Numeric
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignature
 import io.ktor.util.encodeBase64
