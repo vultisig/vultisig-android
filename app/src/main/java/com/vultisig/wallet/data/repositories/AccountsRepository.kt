@@ -24,11 +24,8 @@ internal interface AccountsRepository {
 
     fun loadAddresses(
         vaultId: String,
+        isRefresh: Boolean = false,
     ): Flow<List<Address>>
-
-    suspend fun refreshAddresses(
-        vaultId: String,
-    ): List<Address>
 
     fun loadAddress(
         vaultId: String,
@@ -50,7 +47,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
             "No vault with id $vaultId"
         }
 
-    override fun loadAddresses(vaultId: String): Flow<List<Address>> = channelFlow {
+    override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> = channelFlow {
         supervisorScope {
             val vault = getVault(vaultId)
             val vaultCoins = vault.coins
@@ -61,67 +58,40 @@ internal class AccountsRepositoryImpl @Inject constructor(
             val loadPrices =
                 async { tokenPriceRepository.refresh(vaultCoins) }
 
-            addresses.fetchAccountFromDb()
-            send(addresses)
+            if (!isRefresh) {
+                addresses.fetchAccountFromDb()
+                send(addresses)
+            }
 
             addresses.mapIndexed { index, account ->
                 async {
-                    fetchAccountFromApi(account, index, addresses, loadPrices)
+                    try {
+                        val address = account.address
+                        loadPrices.await()
+
+                        val newAccounts = supervisorScope {
+                            account.accounts.map {
+                                async {
+                                    val balance =
+                                        balanceRepository.getTokenBalance(address, it.token)
+                                            .first()
+
+                                    it.applyBalance(balance)
+                                }
+                            }.awaitAll()
+                        }
+
+                        addresses[index] = account.copy(accounts = newAccounts)
+
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        // ignore
+                    }
                 }
             }.awaitAll()
             send(addresses)
         }
         awaitClose()
-    }
-
-    override suspend fun refreshAddresses(vaultId: String): List<Address> =
-        supervisorScope {
-            val vault = getVault(vaultId)
-            val vaultCoins = vault.coins
-            val coins = vaultCoins.groupBy { it.chain }
-            val addresses = coins.mapNotNullTo(mutableListOf()) { (chain, coins) ->
-                chainAndTokensToAddressMapper.map(ChainAndTokens(chain, coins))
-            }
-
-            val loadPrices =
-                async { tokenPriceRepository.refresh(vaultCoins) }
-
-            addresses.mapIndexed { index, account ->
-                async {
-                    fetchAccountFromApi(account, index, addresses, loadPrices)
-                }
-            }.awaitAll()
-            return@supervisorScope addresses
-        }
-
-    private suspend fun fetchAccountFromApi(
-        account: Address,
-        index: Int,
-        addresses: MutableList<Address>,
-        loadPrices: Deferred<Unit>
-    ) {
-        try {
-            val address = account.address
-            loadPrices.await()
-
-            val newAccounts = supervisorScope {
-                account.accounts.map {
-                    async {
-                        val balance =
-                            balanceRepository.getTokenBalance(address, it.token)
-                                .first()
-
-                        it.applyBalance(balance)
-                    }
-                }.awaitAll()
-            }
-
-            addresses[index] = account.copy(accounts = newAccounts)
-
-        } catch (e: Exception) {
-            Timber.e(e)
-            // ignore
-        }
     }
 
     private suspend fun MutableList<Address>.fetchAccountFromDb(){

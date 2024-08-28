@@ -88,7 +88,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun refreshData() {
         val vaultId = vaultId ?: return
         updateRefreshing(true)
-        refreshAccounts(vaultId)
+        loadAccounts(vaultId, true)
     }
 
     fun send() {
@@ -141,27 +141,12 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob?.cancel()
     }
 
-    private fun loadAccounts(vaultId: String) {
+    private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
         loadAccountsJob?.cancel()
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
-                .loadAddresses(vaultId)
+                .loadAddresses(vaultId, isRefresh)
                 .updateUiStateFromFlow()
-        }
-    }
-
-    private fun refreshAccounts(vaultId: String) {
-        loadAccountsJob?.cancel()
-        loadAccountsJob = viewModelScope.launch {
-            try {
-                accountsRepository
-                    .refreshAddresses(vaultId)
-                    .sortByAccountsTotalFiatValue()
-                    .updateUiStateFromList()
-            } catch (e: Exception) {
-                Timber.e(e)
-                updateRefreshing(false)
-            }
         }
     }
 
