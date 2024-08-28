@@ -317,7 +317,7 @@ internal class SendFormViewModel @Inject constructor(
                     )
                 } catch (e: Exception) {
                     Timber.e(e)
-                    addressFieldState.text.toString()
+                    ""
                 }
 
                 if (dstAddress.isBlank() ||

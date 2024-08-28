@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.models.Chain
 import javax.inject.Inject
 
-private val supportedEns = listOf(".eth", ".sol")
 
 internal interface AddressParserRepository {
     suspend fun resolveName(input: String, chain: Chain): String
@@ -17,8 +16,10 @@ internal interface AddressParserRepository {
 internal class AddressParserRepositoryImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
 ) : AddressParserRepository {
+
+    private val supportedEns = listOf(".eth", ".sol")
     override suspend fun resolveName(input: String, chain: Chain): String {
-        return if (input.isEnsNameService()) {
+        return if (isEnsNameService(input)) {
             val namehash = input.namehash()
             val factory = evmApiFactory.createEvmApi(chain)
             factory.resolveENS(namehash)
@@ -27,9 +28,8 @@ internal class AddressParserRepositoryImpl @Inject constructor(
         }
     }
     override suspend fun isEnsNameService(input: String): Boolean {
-        return input.isEnsNameService()
+        return supportedEns.any { input.endsWith(it) }
     }
-
 }
 
 private fun String.namehash(): String {
@@ -43,9 +43,5 @@ private fun String.namehash(): String {
     }
 
     return Numeric.toHexString(node)
-}
-
-private fun String.isEnsNameService(): Boolean {
-    return supportedEns.any { this.endsWith(it) }
 }
 

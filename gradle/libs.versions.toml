@@ -1,6 +1,6 @@
 [versions]
 accompanistPermissions = "0.34.0"
-agp = "8.5.2"
+agp = "8.4.2"
 apache-compress="1.26.2"
 apache-compress-xz="1.9"
 barcodeScanning = "17.3.0"

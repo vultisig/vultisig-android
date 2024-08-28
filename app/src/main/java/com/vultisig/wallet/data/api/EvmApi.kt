@@ -387,19 +387,13 @@ internal class EvmApiImp(
     }
 
     private suspend fun fetchEns(params: Map<String,String>): String {
-        val payload = RpcPayload(
+        val rpcResp = fetch<RpcResponse>(
             method = "eth_call",
             params = listOf(
                 params,
                 "latest"
-            ),
+            )
         )
-        val response = http.post(rpcUrl) {
-            setBody(gson.toJson(payload))
-        }
-        val responseContent = response.bodyAsText()
-        Timber.d(responseContent)
-        val rpcResp = gson.fromJson(responseContent, RpcResponse::class.java)
         val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
     }
