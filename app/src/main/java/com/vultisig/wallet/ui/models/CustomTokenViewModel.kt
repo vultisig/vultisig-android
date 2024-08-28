@@ -64,7 +64,7 @@ internal class CustomTokenViewModel @Inject constructor(
             if (searchedToken == null) {
                 showError()
             } else {
-                val rawPrice = tokenPriceRepository.getPrice(searchedToken)
+                val rawPrice = tokenPriceRepository.getCustomTokenPrice(searchedToken)
                 val currency = appCurrencyRepository.currency.first()
                 val tokenFiatValue = FiatValue(
                     rawPrice,

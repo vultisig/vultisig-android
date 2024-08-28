@@ -46,4 +46,7 @@ internal data class CoinEntity(
     val address: String,
     @ColumnInfo("hexPublicKey")
     val hexPublicKey: String,
+
+    @ColumnInfo("cmcId")
+    val cmcId: Int?,
 )

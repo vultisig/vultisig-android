@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.CmcApi
-import com.vultisig.wallet.data.api.CurrencyToPrice
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.models.Chain
@@ -30,14 +29,13 @@ internal interface TokenPriceRepository {
 
     fun getPrice(
         token: Coin,
-        appCurrency: AppCurrency,
     ): Flow<BigDecimal>
 
     suspend fun refresh(
         tokens: List<Coin>,
     )
 
-    suspend fun getPrice(
+    suspend fun getCustomTokenPrice(
         token: Coin
     ): BigDecimal
 }
@@ -49,7 +47,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     private val tokenPriceDao: TokenPriceDao,
 ) : TokenPriceRepository {
 
-    private val tokenIdToPrice = MutableStateFlow(mapOf<String, CurrencyToPrice>())
+    private val tokenIdToPrice = MutableStateFlow(mapOf<String, BigDecimal>())
 
     override suspend fun getCachedPrice(
         tokenId: String,
@@ -68,20 +66,17 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     @ExperimentalCoroutinesApi
     override fun getPrice(
         token: Coin,
-        appCurrency: AppCurrency,
     ): Flow<BigDecimal> = tokenIdToPrice.map {
-        it[token.id]
-            ?.get(appCurrency.ticker.lowercase())
-            ?: BigDecimal.ZERO
+        it[token.id] ?: BigDecimal.ZERO
     }
 
     override suspend fun refresh(tokens: List<Coin>) {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
-        val refreshedPrices = cmcApi.fetchPrices(tokens,currency)
+        val refreshedPrices = cmcApi.fetchPrices(tokens, currency)
         savePrices(refreshedPrices, currency)
     }
 
-    override suspend fun getPrice(token: Coin): BigDecimal {
+    override suspend fun getCustomTokenPrice(token: Coin): BigDecimal {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val currencyAndPrice = cmcApi.fetchPrice(token, currency)
         currencyAndPrice.let {
@@ -89,22 +84,21 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 mapOf(token.id to it),
                 currency
             )
-            val price = it.values.first()
-            return price
+            return it
         }
     }
 
     private suspend fun savePrices(
-        tokenIdToPrices: Map<String, CurrencyToPrice>,
+        tokenIdToPrices: Map<String, BigDecimal>,
         currency: String,
     ) {
-        tokenIdToPrices.forEach { (tokenId, currencyToPrice) ->
-            currencyToPrice[currency]?.toPlainString()?.let { price ->
+        tokenIdToPrices.forEach { (tokenId, price) ->
+            price.toPlainString()?.let {
                 tokenPriceDao.insertTokenPrice(
                     TokenPriceEntity(
                         tokenId = tokenId,
                         currency = currency,
-                        price = price,
+                        price = it,
                     )
                 )
             }
