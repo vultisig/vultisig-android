@@ -316,5 +316,6 @@
     <string name="onboard_intro2_title">Координация</string>
     <string name="onboard_intro2_desc">Vultisig не отслеживает ваши действия и не требует никаких регистраций. Vultisig имеет полностью открытый исходный код, что обеспечивает прозрачность и доверие.</string>
     <string name="onboard_intro3_title">Диалог</string>
+    <string name="failed_to_resolve_address">Не удалось определить адрес</string>
 
 </resources>

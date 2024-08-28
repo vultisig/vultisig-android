@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -109,6 +110,7 @@ internal class SendFormViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val addressParserRepository: AddressParserRepository
 ) : ViewModel() {
 
     private var vaultId: String? = null
@@ -189,7 +191,7 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun validateDstAddress() {
+    fun validateDstAddress() = viewModelScope.launch {
         val errorText = validateDstAddress(addressFieldState.text.toString())
         uiState.update {
             it.copy(dstAddressError = errorText)
@@ -308,11 +310,19 @@ internal class SendFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-                val dstAddress = addressFieldState.text.toString()
+                val dstAddress = try {
+                    addressParserRepository.resolveName(
+                        addressFieldState.text.toString(),
+                        chain,
+                    )
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.failed_to_resolve_address)
+                    )
+                }
 
-                if (dstAddress.isBlank() ||
-                    !chainAccountAddressRepository.isValid(chain, dstAddress)
-                ) {
+                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
                     )
@@ -600,11 +610,15 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private fun validateDstAddress(dstAddress: String): UiText? {
+    private suspend fun validateDstAddress(dstAddress: String): UiText? {
         val selectedAccount = selectedAccount
             ?: return UiText.StringResource(R.string.send_error_no_token)
         val chain = selectedAccount.token.chain
-        if (dstAddress.isBlank() || !chainAccountAddressRepository.isValid(chain, dstAddress))
+        if (
+            dstAddress.isBlank() ||
+            !(chainAccountAddressRepository.isValid(chain, dstAddress) ||
+                    addressParserRepository.isEnsNameService(dstAddress))
+            )
             return UiText.StringResource(R.string.send_error_no_address)
         return null
     }
