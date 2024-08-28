@@ -25,8 +25,32 @@ internal const val BACKUPS_DIRECTORY_NAME_FULL = "$DIRECTORY_NAME/$BACKUPS_DIREC
 
 @RequiresApi(Build.VERSION_CODES.Q)
 internal fun Context.backupVaultToDownloadsDirAtLeastQ(json: String, backupFileName: String): Boolean {
+    val resolver = contentResolver
+    var uniqueFileName = backupFileName
+    var fileIndex = 1
+
+    // Check for existing file and generate a unique file name
+    while (true) {
+        val existingFileUri = resolver.query(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
+            "${MediaStore.MediaColumns.DISPLAY_NAME} = ?",
+            arrayOf(uniqueFileName),
+            null
+        )
+        if (existingFileUri?.moveToFirst() == true) {
+            val fileExtension = backupFileName.substringAfterLast('.', "")
+            val fileNameWithoutExtension = backupFileName.substringBeforeLast('.', backupFileName)
+            uniqueFileName = "$fileNameWithoutExtension($fileIndex).$fileExtension"
+            fileIndex++
+        } else {
+            break
+        }
+        existingFileUri?.close()
+    }
+
     val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, backupFileName)
+        put(MediaStore.MediaColumns.DISPLAY_NAME, uniqueFileName)
         put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
         put(
             MediaStore.MediaColumns.RELATIVE_PATH,
@@ -34,7 +58,6 @@ internal fun Context.backupVaultToDownloadsDirAtLeastQ(json: String, backupFileN
         )
     }
 
-    val resolver = contentResolver
 
     val downloadUri: Uri =
         resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
