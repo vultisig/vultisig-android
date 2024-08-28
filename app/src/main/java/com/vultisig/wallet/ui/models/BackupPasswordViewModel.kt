@@ -161,7 +161,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         val thresholds = Utils.getThreshold(vault.signers.size)
         val date = Date()
         val format = SimpleDateFormat(
-            "yyyy-MM",
+            "yyyy-MM-dd-HH-mm-ss",
             java.util.Locale.getDefault()
         )
         val formattedDate = format.format(date)
