@@ -1,19 +1,17 @@
-package com.vultisig.wallet.models
+package com.vultisig.wallet.data.models
 
 import com.google.gson.annotations.SerializedName
 
-internal data class IOSVaultRoot(
+data class OldJsonVaultRoot(
     @SerializedName("vault")
-    val vault: IOSVault,
+    val vault: OldJsonVault,
     @SerializedName("version")
     val version: String,
 )
 
-internal data class IOSVault(
+data class OldJsonVault(
     @SerializedName("id")
     val id: String?,
-    @SerializedName("coins")
-    val coins: List<Coin>?,
     @SerializedName("localPartyID")
     val localPartyID: String,
     @SerializedName("pubKeyECDSA")
@@ -29,10 +27,10 @@ internal data class IOSVault(
     @SerializedName("createdAt")
     val createdAt: Float,
     @SerializedName("keyshares")
-    val keyShares: List<IOSKeyShare>,
+    val keyShares: List<OldJsonVaultKeyShare>,
 )
 
-internal data class IOSKeyShare(
+data class OldJsonVaultKeyShare(
     @SerializedName("pubkey")
     val pubKey: String,
     @SerializedName("keyshare")

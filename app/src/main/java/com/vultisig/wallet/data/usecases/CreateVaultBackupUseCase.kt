@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.common.CryptoManager
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
 import io.ktor.util.encodeBase64
@@ -14,7 +13,7 @@ import javax.inject.Inject
 internal interface CreateVaultBackupUseCase : (VaultProto, String?) -> String?
 
 internal class CreateVaultBackupUseCaseImpl @Inject constructor(
-    private val cryptoManager: CryptoManager,
+    private val encryption: Encryption,
     private val protoBuf: ProtoBuf,
 ) : CreateVaultBackupUseCase {
 
@@ -25,7 +24,11 @@ internal class CreateVaultBackupUseCaseImpl @Inject constructor(
         val vaultBytes = protoBuf.encodeToByteArray(vault)
 
         val contentBytes = if (password != null) {
-            cryptoManager.encrypt(vaultBytes, password) ?: return null
+            try {
+                encryption.encrypt(vaultBytes, password)
+            } catch (e: Exception) {
+                return null
+            }
         } else {
             vaultBytes
         }.encodeBase64()

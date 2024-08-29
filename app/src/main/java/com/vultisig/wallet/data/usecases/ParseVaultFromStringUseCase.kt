@@ -4,13 +4,12 @@ package com.vultisig.wallet.data.usecases
 
 import android.util.Base64
 import com.google.gson.Gson
-import com.vultisig.wallet.common.CryptoManager
-import com.vultisig.wallet.common.decodeFromHex
-import com.vultisig.wallet.data.mappers.VaultIOSToAndroidMapper
+import com.vultisig.wallet.data.mappers.VaultFromOldJsonMapper
+import com.vultisig.wallet.data.mappers.utils.MapHexToPlainString
 import com.vultisig.wallet.data.models.KeyShare
+import com.vultisig.wallet.data.models.OldJsonVaultRoot
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
-import com.vultisig.wallet.models.IOSVaultRoot
 import com.vultisig.wallet.models.Vault
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -22,10 +21,11 @@ import javax.inject.Inject
 internal interface ParseVaultFromStringUseCase : (String, String?) -> Vault
 
 internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
+    private val vaultFromOldJsonMapper: VaultFromOldJsonMapper,
+    private val mapHexToPlainString: MapHexToPlainString,
+    private val encryption: Encryption,
     private val protoBuf: ProtoBuf,
-    private val vaultIOSToAndroidMapper: VaultIOSToAndroidMapper,
     private val gson: Gson,
-    private val cryptoManager: CryptoManager,
 ) : ParseVaultFromStringUseCase {
 
     override fun invoke(input: String, password: String?): Vault =
@@ -47,7 +47,7 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
 
         val vaultBytes = if (containerProto.isEncrypted) {
             if (password != null) {
-                cryptoManager.decrypt(possiblyEncryptedVaultBytes, password)
+                encryption.decrypt(possiblyEncryptedVaultBytes, password)
                     ?: error("Failed to decrypt the vault")
             } else {
                 error("Vault is encrypted, but no password provided")
@@ -81,16 +81,18 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
         input: String,
         password: String?
     ): Result<Vault> = runCatching {
-        val decrypted = if (password != null) {
-            cryptoManager.decrypt(Base64.decode(input, Base64.DEFAULT), password)
-                ?.decodeToString()
-                ?: error("Failed to decrypt the old vault")
-        } else {
-            input
-        }.decodeFromHex()
+        val decrypted = mapHexToPlainString(
+            if (password != null) {
+                encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password)
+                    ?.decodeToString()
+                    ?: error("Failed to decrypt the old vault")
+            } else {
+                input
+            }
+        )
 
-        val fromJson = gson.fromJson(decrypted, IOSVaultRoot::class.java)
-        vaultIOSToAndroidMapper(fromJson)
+        val fromJson = gson.fromJson(decrypted, OldJsonVaultRoot::class.java)
+        vaultFromOldJsonMapper(fromJson)
     }
 
 }
