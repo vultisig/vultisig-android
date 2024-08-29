@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.daggerHiltAndroid)
+    kotlin("kapt")
 }
 
 android {
@@ -35,6 +37,12 @@ android {
 dependencies {
     // core
     implementation(libs.androidx.core.ktx)
+    implementation(libs.timber)
+
+    // hilt di
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
+    kapt(libs.hilt.android.compiler)
 
     // ktor
     implementation(libs.ktor.client.core)
@@ -45,7 +53,14 @@ dependencies {
     // crypto
     implementation(libs.wallet.core)
 
+    // encryption
+    implementation(libs.bcprov.jdk15on)
+
     // test
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
+    androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(kotlin("test"))
+
 }

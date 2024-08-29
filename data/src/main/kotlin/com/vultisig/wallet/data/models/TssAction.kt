@@ -1,4 +1,4 @@
-package com.vultisig.wallet.models
+package com.vultisig.wallet.data.models
 
 enum class TssAction {
     KEYGEN, ReShare,

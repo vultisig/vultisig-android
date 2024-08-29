@@ -1,6 +1,6 @@
 package com.vultisig.wallet.common
 
-import com.vultisig.wallet.models.TssAction
+import com.vultisig.wallet.data.models.TssAction
 
 class DeepLinkHelper(input: String) {
     private val scheme: String

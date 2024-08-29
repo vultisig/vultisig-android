@@ -1,6 +1,6 @@
 package com.vultisig.wallet.common
 
-import com.vultisig.wallet.models.TssAction
+import com.vultisig.wallet.data.models.TssAction
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 

@@ -17,13 +17,8 @@ internal interface MappersModule {
 
     @Binds
     fun bindVaultIOSToAndroidMapper(
-        impl: VaultIOSToAndroidMapperImpl
-    ): VaultIOSToAndroidMapper
-
-    @Binds
-    fun bindVaultAndroidToIOSMapper(
-        impl: VaultAndroidToIOSMapperImpl
-    ): VaultAndroidToIOSMapper
+        impl: VaultFromOldJsonMapperImpl
+    ): VaultFromOldJsonMapper
 
     @Binds
     @Singleton

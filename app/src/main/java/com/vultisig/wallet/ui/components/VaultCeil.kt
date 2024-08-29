@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.theme.Theme

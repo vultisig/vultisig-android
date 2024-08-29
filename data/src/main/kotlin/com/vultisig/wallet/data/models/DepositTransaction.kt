@@ -1,9 +1,8 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.models.Coin
 
-internal data class DepositTransaction(
+data class DepositTransaction(
     val id: TransactionId,
     val vaultId: String,
 

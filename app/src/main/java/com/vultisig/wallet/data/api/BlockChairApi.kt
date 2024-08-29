@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.vultisig.wallet.data.api.models.BlockChairInfo
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.data.models.Coin
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header

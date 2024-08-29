@@ -1,126 +1,107 @@
-package com.vultisig.wallet.presenter.keysign
+package com.vultisig.wallet.chains
 
-import com.vultisig.wallet.chains.AtomHelper
-import com.vultisig.wallet.chains.DydxHelper
-import com.vultisig.wallet.chains.ERC20Helper
-import com.vultisig.wallet.chains.EvmHelper
-import com.vultisig.wallet.chains.KujiraHelper
-import com.vultisig.wallet.chains.MayaChainHelper
-import com.vultisig.wallet.chains.PolkadotHelper
-import com.vultisig.wallet.chains.SolanaHelper
-import com.vultisig.wallet.chains.THORCHainHelper
-import com.vultisig.wallet.chains.THORChainSwaps
-import com.vultisig.wallet.chains.UtxoHelper
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.SwapPayload
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
-import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.wallet.OneInchSwap
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Vault
 import java.math.BigInteger
 
+internal object SigningHelper {
 
-internal data class KeysignPayload(
-    val coin: Coin,
-    val toAddress: String,
-    val toAmount: BigInteger,
-    val blockChainSpecific: BlockChainSpecific,
-    val utxos: List<UtxoInfo> = emptyList(),
-    val memo: String? = null,
-    val swapPayload: SwapPayload? = null,
-    val approvePayload: ERC20ApprovePayload? = null,
-    val vaultPublicKeyECDSA: String,
-    val vaultLocalPartyID: String,
-) {
-    fun getKeysignMessages(vault: Vault): List<String> {
+    fun getKeysignMessages(
+        payload: KeysignPayload,
+        vault: Vault
+    ): List<String> {
         val messages = mutableListOf<String>()
 
         var nonceAcc = BigInteger.ZERO
 
+        val approvePayload = payload.approvePayload
         if (approvePayload != null) {
             messages += THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
-                .getPreSignedApproveImageHash(approvePayload, this)
+                .getPreSignedApproveImageHash(approvePayload, payload)
             nonceAcc++
         }
 
+        val swapPayload = payload.swapPayload
         if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
             when (swapPayload) {
                 is SwapPayload.ThorChain -> {
                     messages += THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getPreSignedImageHash(swapPayload.data, this, nonceAcc)
+                        .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
 
                 is SwapPayload.OneInch -> {
                     messages += OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getPreSignedImageHash(swapPayload.data, this, nonceAcc)
+                        .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
                 }
                 // mayachain is implemented through send transaction
                 else -> Unit
             }
         } else {
-            messages += when (coin.chain) {
+            messages += when (payload.coin.chain) {
                 Chain.ThorChain -> {
                     val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                    thorHelper.getPreSignedImageHash(this)
+                    thorHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.Solana -> {
                     val solanaHelper = SolanaHelper(vault.pubKeyEDDSA)
-                    solanaHelper.getPreSignedImageHash(this)
+                    solanaHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.Ethereum, Chain.Avalanche, Chain.Base, Chain.Blast, Chain.Arbitrum,
                 Chain.Polygon, Chain.Optimism, Chain.BscChain, Chain.CronosChain, Chain.ZkSync -> {
-                    if (coin.isNativeToken) {
+                    if (payload.coin.isNativeToken) {
                         EvmHelper(
-                            coin.coinType,
+                            payload.coin.coinType,
                             vault.pubKeyECDSA,
                             vault.hexChainCode
-                        ).getPreSignedImageHash(this)
+                        ).getPreSignedImageHash(payload)
                     } else {
                         ERC20Helper(
-                            coin.coinType,
+                            payload.coin.coinType,
                             vault.pubKeyECDSA,
                             vault.hexChainCode
-                        ).getPreSignedImageHash(this)
+                        ).getPreSignedImageHash(payload)
                     }
                 }
 
                 Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash -> {
                     val utxo =
-                        UtxoHelper(this.coin.coinType, vault.pubKeyECDSA, vault.hexChainCode)
-                    utxo.getPreSignedImageHash(this)
+                        UtxoHelper(payload.coin.coinType, vault.pubKeyECDSA, vault.hexChainCode)
+                    utxo.getPreSignedImageHash(payload)
                 }
 
                 Chain.GaiaChain -> {
                     val atomHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                    atomHelper.getPreSignedImageHash(this)
+                    atomHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.Dydx -> {
                     val dydxHelper = DydxHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                    dydxHelper.getPreSignedImageHash(this)
+                    dydxHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.Kujira -> {
                     val kujiraHelper = KujiraHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                    kujiraHelper.getPreSignedImageHash(this)
+                    kujiraHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.MayaChain -> {
                     val mayaChainHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
-                    mayaChainHelper.getPreSignedImageHash(this)
+                    mayaChainHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.Polkadot -> {
                     val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
-                    dotHelper.getPreSignedImageHash(this)
+                    dotHelper.getPreSignedImageHash(payload)
                 }
             }
         }
 
         return messages.sorted()
     }
+
 }

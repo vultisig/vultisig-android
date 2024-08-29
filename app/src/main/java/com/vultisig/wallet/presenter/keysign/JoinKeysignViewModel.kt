@@ -13,6 +13,7 @@ import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
 import com.vultisig.wallet.chains.EvmHelper
 import com.vultisig.wallet.chains.MayaChainHelper
+import com.vultisig.wallet.chains.SigningHelper
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.UiText
@@ -25,12 +26,14 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
-import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlowfishRepository
@@ -41,7 +44,6 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -517,8 +519,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                             Timber.d("Keysign committee: $_keysignCommittee")
                             Timber.d("local party: $_localPartyID")
                             if (this._keysignCommittee.contains(_localPartyID)) {
-                                this.messagesToSign = keysignPayload!!
-                                    .getKeysignMessages(_currentVault)
+                                this.messagesToSign = SigningHelper.getKeysignMessages(
+                                    payload = keysignPayload!!,
+                                    vault = _currentVault,
+                                )
                                 return true
                             }
                         }

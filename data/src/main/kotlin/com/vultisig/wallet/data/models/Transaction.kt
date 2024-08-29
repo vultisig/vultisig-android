@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 
 typealias TransactionId = String
 
-internal data class Transaction(
+data class Transaction(
     val id: TransactionId,
     val vaultId: String,
     val chainId: String,

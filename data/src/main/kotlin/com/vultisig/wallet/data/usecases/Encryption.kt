@@ -1,4 +1,4 @@
-package com.vultisig.wallet.common
+package com.vultisig.wallet.data.usecases
 
 import timber.log.Timber
 import java.security.MessageDigest
@@ -12,49 +12,39 @@ import javax.inject.Inject
 import kotlin.text.Charsets.UTF_8
 
 
-internal interface CryptoManager {
-    fun encrypt(data: ByteArray, password: String): ByteArray?
+interface Encryption {
+    fun encrypt(data: ByteArray, password: String): ByteArray
     fun decrypt(data: ByteArray, password: String): ByteArray?
 }
 
-
-internal class AESCryptoManager @Inject constructor() : CryptoManager {
+internal class AesEncryption @Inject constructor() : Encryption {
 
     private val cipher = Cipher.getInstance("AES/GCM/NoPadding")
     private val messageDigest = MessageDigest.getInstance("SHA-256")
     private val algorithm = "AES"
+    private val random = SecureRandom()
 
-
-    override fun encrypt(data: ByteArray, password: String): ByteArray? {
-        try {
-            val keyBytes = messageDigest.digest(password.toByteArray(UTF_8))
-            val keySpec = SecretKeySpec(
-                keyBytes,
-                algorithm
-            )
-            val iv = ByteArray(12)
-            SecureRandom().nextBytes(iv)
-            val parameterSpec = GCMParameterSpec(
-                128,
-                iv
-            )
-            cipher.init(
-                Cipher.ENCRYPT_MODE,
-                keySpec,
-                parameterSpec
-            )
-            val encryptedData = cipher.doFinal(data)
-            val combined = iv + encryptedData
-            return combined
-        } catch (e: Exception) {
-            Timber.e(
-                e,
-                "Error encrypting data: ${e.localizedMessage}"
-            )
-            return null
-        }
+    override fun encrypt(data: ByteArray, password: String): ByteArray {
+        val keyBytes = messageDigest.digest(password.toByteArray(UTF_8))
+        val keySpec = SecretKeySpec(
+            keyBytes,
+            algorithm
+        )
+        val iv = ByteArray(12)
+        random.nextBytes(iv)
+        val parameterSpec = GCMParameterSpec(
+            128,
+            iv
+        )
+        cipher.init(
+            Cipher.ENCRYPT_MODE,
+            keySpec,
+            parameterSpec
+        )
+        val encryptedData = cipher.doFinal(data)
+        val combined = iv + encryptedData
+        return combined
     }
-
 
     override fun decrypt(data: ByteArray, password: String): ByteArray? {
         try {

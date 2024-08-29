@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.models.Coin
 import java.math.BigInteger
 import javax.inject.Inject
 

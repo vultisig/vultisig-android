@@ -4,9 +4,9 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Coins
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull

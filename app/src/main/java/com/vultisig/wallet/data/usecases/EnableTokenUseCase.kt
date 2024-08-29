@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.usecases
 
 import android.database.sqlite.SQLiteConstraintException
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.Coin
 import timber.log.Timber
 import javax.inject.Inject
 

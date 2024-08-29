@@ -1,9 +1,11 @@
-package com.vultisig.wallet.data.models
+package com.vultisig.wallet.data.models.payload
 
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.THORChainSwapPayload
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
+import com.vultisig.wallet.data.models.THORChainSwapPayload
+import com.vultisig.wallet.data.models.TokenValue
 
-internal sealed class SwapPayload {
+sealed class SwapPayload {
 
     abstract val srcToken: Coin
     abstract val dstToken: Coin

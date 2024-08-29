@@ -5,8 +5,8 @@ import com.vultisig.wallet.common.toByteString
 import com.vultisig.wallet.common.toKeccak256
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.utils.Numeric
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignatureWithRecoveryID
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector

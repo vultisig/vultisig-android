@@ -1,21 +1,20 @@
 package com.vultisig.wallet.data.models
 
-import com.vultisig.wallet.models.Coin
 import java.math.BigDecimal
 import java.math.BigInteger
 
-internal data class TokenBalance(
+data class TokenBalance(
     val tokenValue: TokenValue?,
     val fiatValue: FiatValue?,
 )
 
-internal data class TokenBalanceWrapped(
+data class TokenBalanceWrapped(
     val tokenBalance: TokenBalance,
     val address: String,
     val coinId: String,
 )
 
-internal data class TokenValue(
+data class TokenValue(
     val value: BigInteger,
     val unit: String,
     val decimals: Int,
@@ -35,7 +34,7 @@ internal data class TokenValue(
 
 }
 
-internal data class FiatValue(
+data class FiatValue(
     val value: BigDecimal,
     val currency: String,
 )
