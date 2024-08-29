@@ -453,7 +453,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
-    fun stopParticipantDiscovery() = viewModelScope.launch {
+    fun stopParticipantDiscovery() {
         _participantDiscovery?.stop()
     }
 
