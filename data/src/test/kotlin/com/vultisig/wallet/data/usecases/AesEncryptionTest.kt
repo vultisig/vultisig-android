@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import io.ktor.util.decodeBase64Bytes
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.test.assertFailsWith
 
 class AesEncryptionTest {
 
@@ -30,5 +31,13 @@ class AesEncryptionTest {
         )
     }
 
+    @Test
+    fun `decryption fails if password isn't correct`() {
+        val encrypted = aes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password)
+
+        assertFailsWith<Exception> {
+            aes.decrypt(encrypted, "321drowssap")!!.toString(Charsets.UTF_8)
+        }
+    }
 
 }

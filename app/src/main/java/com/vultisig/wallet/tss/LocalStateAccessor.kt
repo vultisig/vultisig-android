@@ -1,7 +1,7 @@
 package com.vultisig.wallet.tss
 
 import com.vultisig.wallet.data.models.KeyShare
-import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.data.models.Vault
 
 internal class LocalStateAccessor(private val vault: Vault) : tss.LocalStateAccessor {
     override fun getLocalState(pubKey: String): String {

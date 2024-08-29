@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.settings.AppCurrency
-import com.vultisig.wallet.models.Coin
 import java.math.BigDecimal
 
 internal data class Address(

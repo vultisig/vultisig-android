@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
-import com.vultisig.wallet.models.Coin
 import kotlinx.coroutines.flow.first
 import java.math.BigDecimal
 import javax.inject.Inject

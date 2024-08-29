@@ -19,10 +19,10 @@ import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.fileName
 import com.vultisig.wallet.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.import_file.FILE_ALLOWED_EXTENSIONS
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions

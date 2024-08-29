@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.mappers
 
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.KeyShareProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
-import com.vultisig.wallet.models.Vault
 import google.protobuf.Timestamp
 import kotlinx.datetime.Clock
 import javax.inject.Inject

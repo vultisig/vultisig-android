@@ -53,8 +53,14 @@ dependencies {
     // crypto
     implementation(libs.wallet.core)
 
+    // encryption
+    implementation(libs.bcprov.jdk15on)
+
     // test
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
+    androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(kotlin("test"))
+
 }

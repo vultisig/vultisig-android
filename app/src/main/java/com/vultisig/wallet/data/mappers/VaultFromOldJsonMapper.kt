@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.mappers
 import com.google.gson.Gson
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.OldJsonVaultRoot
-import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.data.models.Vault
 import java.util.UUID
 import javax.inject.Inject
 

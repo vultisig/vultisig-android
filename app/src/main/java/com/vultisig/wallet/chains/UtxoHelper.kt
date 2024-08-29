@@ -2,9 +2,9 @@ package com.vultisig.wallet.chains
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.utils.Numeric
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import timber.log.Timber
 import tss.KeysignResponse

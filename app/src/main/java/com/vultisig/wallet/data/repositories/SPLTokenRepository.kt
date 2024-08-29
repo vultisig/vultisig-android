@@ -8,8 +8,8 @@ import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.Vault
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Vault
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject

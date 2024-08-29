@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.Vault
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import javax.inject.Inject

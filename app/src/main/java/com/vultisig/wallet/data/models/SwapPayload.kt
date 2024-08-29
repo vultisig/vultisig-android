@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.models
 
-import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.THORChainSwapPayload
 
 internal sealed class SwapPayload {

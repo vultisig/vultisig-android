@@ -2,6 +2,7 @@ package com.vultisig.wallet.models
 
 import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import wallet.core.jni.proto.THORChainSwap.Asset
 import java.math.BigDecimal
 import java.math.BigInteger

@@ -8,9 +8,9 @@ import com.vultisig.wallet.data.mappers.VaultFromOldJsonMapper
 import com.vultisig.wallet.data.mappers.utils.MapHexToPlainString
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.OldJsonVaultRoot
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
-import com.vultisig.wallet.models.Vault
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray

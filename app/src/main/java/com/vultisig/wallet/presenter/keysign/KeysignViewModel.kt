@@ -29,9 +29,9 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.wallet.OneInchSwap
-import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.tss.LocalStateAccessor
 import com.vultisig.wallet.tss.TssMessagePuller
 import com.vultisig.wallet.tss.TssMessenger

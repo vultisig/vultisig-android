@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.mappers
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.models.Coin
+import com.vultisig.wallet.data.models.Coin
 import javax.inject.Inject
 
 internal data class ChainAndTokens(
