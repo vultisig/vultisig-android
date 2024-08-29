@@ -5,8 +5,8 @@ import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import tss.KeysignResponse
 import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionCompiler

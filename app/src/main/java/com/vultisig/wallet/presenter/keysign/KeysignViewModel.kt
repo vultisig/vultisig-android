@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.wallet.OneInchSwap
@@ -242,10 +243,11 @@ internal class KeysignViewModel(
 
         var nonceAcc = BigInteger.ZERO
 
-        if (keysignPayload.approvePayload != null) {
+        val approvePayload = keysignPayload.approvePayload
+        if (approvePayload != null) {
             val signedTransaction = THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                 .getSignedApproveTransaction(
-                    keysignPayload.approvePayload,
+                    approvePayload,
                     keysignPayload,
                     signatures
                 )

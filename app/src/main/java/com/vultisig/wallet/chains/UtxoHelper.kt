@@ -4,8 +4,8 @@ import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.utils.Numeric
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import timber.log.Timber
 import tss.KeysignResponse
 import wallet.core.java.AnySigner
@@ -56,7 +56,7 @@ internal class UtxoHelper(
         val utxo = keysignPayload.blockChainSpecific as BlockChainSpecific.UTXO
         signingInput
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
-            .setUseMaxAmount(keysignPayload.blockChainSpecific.sendMaxAmount)
+            .setUseMaxAmount(utxo.sendMaxAmount)
             .setByteFee(utxo.byteFee.toLong())
         for (item in keysignPayload.utxos) {
             val lockScript =
@@ -108,7 +108,7 @@ internal class UtxoHelper(
         val input = Bitcoin.SigningInput.newBuilder()
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setAmount(keysignPayload.toAmount.toLong())
-            .setUseMaxAmount(keysignPayload.blockChainSpecific.sendMaxAmount)
+            .setUseMaxAmount(utxo.sendMaxAmount)
             .setToAddress(keysignPayload.toAddress)
             .setChangeAddress(keysignPayload.coin.address)
             .setByteFee(utxo.byteFee.toLong())

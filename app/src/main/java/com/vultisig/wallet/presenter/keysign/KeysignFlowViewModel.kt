@@ -14,6 +14,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.vultisig.wallet.chains.SigningHelper
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.VultisigRelay
@@ -30,6 +31,7 @@ import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
@@ -436,7 +438,10 @@ internal class KeysignFlowViewModel @Inject constructor(
     fun moveToState(nextState: KeysignFlowState) {
         try {
             if (nextState == KeysignFlowState.KEYSIGN) {
-                messagesToSign = _keysignPayload!!.getKeysignMessages(_currentVault!!)
+                messagesToSign = SigningHelper.getKeysignMessages(
+                    payload = _keysignPayload!!,
+                    vault = _currentVault!!,
+                )
                 cleanQrAddress()
             }
             currentState.update { nextState }

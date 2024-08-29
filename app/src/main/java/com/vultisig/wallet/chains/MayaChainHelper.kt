@@ -7,10 +7,10 @@ import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.wallet.Swaps
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.tss.getSignatureWithRecoveryID
 import tss.KeysignResponse
 import wallet.core.jni.AnyAddress

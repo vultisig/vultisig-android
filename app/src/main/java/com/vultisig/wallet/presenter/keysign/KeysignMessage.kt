@@ -1,6 +1,7 @@
 package com.vultisig.wallet.presenter.keysign
 
 import com.google.gson.annotations.SerializedName
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 
 
 internal data class KeysignMessage(

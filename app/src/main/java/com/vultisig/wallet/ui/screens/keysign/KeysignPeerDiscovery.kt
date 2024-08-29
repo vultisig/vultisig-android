@@ -20,10 +20,10 @@ import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
 import com.vultisig.wallet.presenter.keysign.KeysignFlowState
 import com.vultisig.wallet.presenter.keysign.KeysignFlowViewModel
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme

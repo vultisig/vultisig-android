@@ -12,7 +12,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import javax.inject.Inject
 
 internal interface BlowfishRepository {
