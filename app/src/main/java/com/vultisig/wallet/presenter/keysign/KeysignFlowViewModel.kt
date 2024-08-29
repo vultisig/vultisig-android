@@ -445,7 +445,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
-    fun stopParticipantDiscovery() {
+    suspend fun stopParticipantDiscovery() {
         _participantDiscovery?.stop()
     }
 
