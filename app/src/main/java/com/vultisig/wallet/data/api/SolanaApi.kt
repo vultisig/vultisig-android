@@ -5,8 +5,8 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
-import com.vultisig.wallet.data.models.SplAmountRpcResponseJson
-import com.vultisig.wallet.data.models.SplTokenJson
+import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
+import com.vultisig.wallet.data.api.models.SplTokenJson
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post

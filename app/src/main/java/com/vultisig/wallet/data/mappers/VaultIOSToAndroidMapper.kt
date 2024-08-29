@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.mappers
 
 import com.google.gson.Gson
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.IOSVaultRoot
-import com.vultisig.wallet.models.KeyShare
 import com.vultisig.wallet.models.Vault
 import timber.log.Timber
 import java.util.UUID

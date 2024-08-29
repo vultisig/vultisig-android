@@ -5,19 +5,20 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.IsSwapSupported
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -87,7 +88,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun refreshData() {
         val vaultId = vaultId ?: return
         updateRefreshing(true)
-        loadAccounts(vaultId)
+        loadAccounts(vaultId, true)
     }
 
     fun send() {
@@ -140,35 +141,44 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob?.cancel()
     }
 
-    private fun loadAccounts(vaultId: String) {
+    private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
         loadAccountsJob?.cancel()
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
-                .loadAddresses(vaultId)
-                .map { it ->
-                    it.sortedBy {
-                        it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
-                    }
-                }
-                .catch {
-                    updateRefreshing(false)
-
-                    // TODO handle error
-                    Timber.e(it)
-                }.collect { accounts ->
-                    updateRefreshing(false)
-
-                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
-                        ?.let(fiatValueToStringMapper::map)
-                    val accountsUiModel = accounts.map(addressToUiModelMapper::map)
-
-                    uiState.update {
-                        it.copy(
-                            totalFiatValue = totalFiatValue, accounts = accountsUiModel
-                        )
-                    }
-                }
+                .loadAddresses(vaultId, isRefresh)
+                .updateUiStateFromFlow()
         }
+    }
+
+    private suspend fun Flow<List<Address>>.updateUiStateFromFlow() =
+        this.map { it ->
+            it.sortByAccountsTotalFiatValue()
+        }
+            .catch {
+                updateRefreshing(false)
+
+                // TODO handle error
+                Timber.e(it)
+            }.collect { accounts ->
+                accounts.updateUiStateFromList()
+            }
+
+    private fun List<Address>.sortByAccountsTotalFiatValue() =
+        sortedBy {
+            it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
+        }
+
+    private fun List<Address>.updateUiStateFromList() {
+        val totalFiatValue = this.calculateAddressesTotalFiatValue()
+            ?.let(fiatValueToStringMapper::map)
+        val accountsUiModel = this.map(addressToUiModelMapper::map)
+
+        uiState.update {
+            it.copy(
+                totalFiatValue = totalFiatValue, accounts = accountsUiModel
+            )
+        }
+        updateRefreshing(false)
     }
 
     private fun updateRefreshing(isRefreshing: Boolean) {

@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.mappers
 
+import com.vultisig.wallet.data.models.ReshareMessage
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
-import com.vultisig.wallet.models.ReshareMessage
 import javax.inject.Inject
 
 internal interface ReshareMessageFromProtoMapper : MapperFunc<ReshareMessageProto, ReshareMessage>

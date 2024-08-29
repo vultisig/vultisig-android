@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.models
 
-import com.vultisig.wallet.chains.UtxoInfo
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 
 typealias TransactionId = String
 

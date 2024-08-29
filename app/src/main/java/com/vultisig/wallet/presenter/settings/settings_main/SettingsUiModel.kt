@@ -1,7 +1,7 @@
 package com.vultisig.wallet.presenter.settings.settings_main
 
-import com.vultisig.wallet.data.models.AppCurrency
-import com.vultisig.wallet.data.models.AppLanguage
+import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.models.settings.AppLanguage
 
 data class SettingsUiModel(
     val selectedCurrency: CurrencyUnit = CurrencyUnit(),

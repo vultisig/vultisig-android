@@ -7,16 +7,7 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonDeserializer
-import com.vultisig.wallet.data.models.OneInchSwapPayloadJsonSerializer
 import com.vultisig.wallet.data.sources.AppDataStore
-import com.vultisig.wallet.models.ERC20ApprovePayload
-import com.vultisig.wallet.models.ERC20ApprovePayloadDeserializer
-import com.vultisig.wallet.models.ERC20ApprovePayloadSerializer
-import com.vultisig.wallet.presenter.keysign.KeysignPayload
-import com.vultisig.wallet.presenter.keysign.KeysignPayloadDeserializer
-import com.vultisig.wallet.presenter.keysign.KeysignPayloadSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,27 +39,6 @@ internal interface DataModule {
         @Singleton
         fun provideGson(): Gson {
             return GsonBuilder()
-                .registerTypeAdapter(KeysignPayload::class.java, KeysignPayloadSerializer())
-                .registerTypeAdapter(
-                    KeysignPayload::class.java,
-                    KeysignPayloadDeserializer()
-                )
-                .registerTypeAdapter(
-                    OneInchSwapPayloadJson::class.java,
-                    OneInchSwapPayloadJsonDeserializer(),
-                )
-                .registerTypeAdapter(
-                    OneInchSwapPayloadJson::class.java,
-                    OneInchSwapPayloadJsonSerializer(),
-                )
-                .registerTypeAdapter(
-                    ERC20ApprovePayload::class.java,
-                    ERC20ApprovePayloadDeserializer(),
-                )
-                .registerTypeAdapter(
-                    ERC20ApprovePayload::class.java,
-                    ERC20ApprovePayloadSerializer(),
-                )
                 .create()
         }
 

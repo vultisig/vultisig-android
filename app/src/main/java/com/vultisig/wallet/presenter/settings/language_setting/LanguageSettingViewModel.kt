@@ -8,8 +8,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.AppLanguage
-import com.vultisig.wallet.data.models.AppLanguage.Companion.fromName
+import com.vultisig.wallet.data.models.settings.AppLanguage
+import com.vultisig.wallet.data.models.settings.AppLanguage.Companion.fromName
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.presenter.settings.settings_main.Language
 import com.vultisig.wallet.presenter.settings.settings_main.toUiModel

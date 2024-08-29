@@ -4,14 +4,13 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
-import com.vultisig.wallet.common.Numeric
 import com.vultisig.wallet.common.stripHexPrefix
 import com.vultisig.wallet.common.toKeccak256
-import com.vultisig.wallet.data.models.CustomTokenResponse
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.api.models.CustomTokenResponse
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText

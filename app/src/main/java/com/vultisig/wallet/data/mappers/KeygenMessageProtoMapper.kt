@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.mappers
 
+import com.vultisig.wallet.data.models.KeygenMessage
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
-import com.vultisig.wallet.models.KeygenMessage
 import javax.inject.Inject
 
 internal interface KeygenMessageFromProtoMapper : MapperFunc<KeygenMessageProto, KeygenMessage>

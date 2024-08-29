@@ -2,8 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.vultisig.wallet.data.models.BlockChairInfo
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.api.models.BlockChairInfo
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get

@@ -1,7 +1,7 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.Mapper
-import com.vultisig.wallet.data.models.AppCurrency
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale

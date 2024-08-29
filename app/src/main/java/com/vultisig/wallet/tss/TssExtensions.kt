@@ -1,6 +1,6 @@
 package com.vultisig.wallet.tss
 
-import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.data.utils.Numeric
 import tss.KeysignResponse
 
 fun KeysignResponse.getSignatureWithRecoveryID(): ByteArray {
