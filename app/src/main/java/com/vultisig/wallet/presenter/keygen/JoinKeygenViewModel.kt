@@ -385,9 +385,9 @@ class MediatorServiceDiscoveryListener(
 
     override fun onServiceResolved(serviceInfo: NsdServiceInfo?) {
         Timber.tag("JoinKeygenViewModel")
-            .d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.host?.address.toString()} , port: ${serviceInfo?.port}")
+            .d("Service resolved: ${serviceInfo?.serviceName} ,address: ${serviceInfo?.hostAddresses?.firstOrNull().toString()} , port: ${serviceInfo?.port}")
         serviceInfo?.let { it ->
-            val address = it.host
+            val address = it.hostAddresses.firstOrNull()
             if (address !is Inet4Address) {
                 return
             }
