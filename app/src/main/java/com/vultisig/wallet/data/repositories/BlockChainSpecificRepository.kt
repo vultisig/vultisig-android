@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.chains.UtxoInfo
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -8,11 +7,12 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.presenter.keysign.BlockChainSpecific
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject

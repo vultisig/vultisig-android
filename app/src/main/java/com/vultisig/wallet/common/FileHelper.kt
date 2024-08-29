@@ -52,6 +52,23 @@ internal fun Context.backupVaultToDownloadsDirAtLeastQ(json: String, backupFileN
     }
 }
 
+internal fun Context.saveContentToUri(uri: Uri, content: String): Boolean {
+    try {
+        contentResolver.openOutputStream(uri).use { output ->
+            content.byteInputStream()
+                .use {
+                    it.copyTo(
+                        output ?: error("FileHelper::saveContentToUri output is null"),
+                        DEFAULT_BUFFER_SIZE
+                    )
+                }
+            return true
+        }
+    } catch (e: Exception) {
+        return false
+    }
+}
+
 internal fun backupVaultToDownloadsDir(json: String, backupFileName: String): Boolean {
     if (Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED) {
         val downloadsDirectory = File(

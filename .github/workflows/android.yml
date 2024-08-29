@@ -22,15 +22,24 @@ jobs:
 
       - name: git submodule update
         run: git submodule update --init --recursive
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
       - name: Build with Gradle
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew build
+
       - name: Archive code analysis reports
         uses: actions/upload-artifact@v4
         with:
           name: Lint-Reports
           path: app/build/reports/lint-results-debug.html
+
+      - name: Run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
+          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
+        run: ./gradlew test

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.tss
 
-import com.vultisig.wallet.models.KeyShare
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.models.Vault
 
 internal class LocalStateAccessor(private val vault: Vault) : tss.LocalStateAccessor {

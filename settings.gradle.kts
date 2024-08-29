@@ -32,4 +32,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "vultisig"
 include(":app")
- 
+include(":data")

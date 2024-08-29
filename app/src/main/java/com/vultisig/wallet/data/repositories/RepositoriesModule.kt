@@ -173,4 +173,10 @@ internal interface RepositoriesModule {
     fun bindBlowfishRepository(
         impl: BlowfishRepositoryImpl
     ): BlowfishRepository
+
+    @Binds
+    @Singleton
+    fun bindAddressParserRepository(
+        impl: AddressParserRepositoryImpl
+    ): AddressParserRepository
 }

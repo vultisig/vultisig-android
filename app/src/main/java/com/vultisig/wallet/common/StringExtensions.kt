@@ -1,6 +1,7 @@
 package com.vultisig.wallet.common
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.utils.Numeric
 
 fun String.decodeFromHex(): String {
     require(length % 2 == 0) { "Must have an even length" }
@@ -24,4 +25,12 @@ fun String.toByteString(): ByteString {
 
 fun String.toHexBytesInByteString(): ByteString {
     return ByteString.copyFrom(this.toHexBytes())
+}
+
+internal fun String.stripHexPrefix(): String {
+    return if (startsWith("0x")) {
+        substring(2)
+    } else {
+        this
+    }
 }

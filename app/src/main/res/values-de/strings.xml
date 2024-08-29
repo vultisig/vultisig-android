@@ -307,4 +307,5 @@
     <string name="import_file_not_supported">Der Dateityp wird nicht unterstützt</string>
     <string name="join_keygen_invalid_qr_code">QR-Code konnte nicht analysiert werden</string>
     <string name="join_keygen_failed">Beitritt zum Keygen fehlgeschlagen</string>
+    <string name="failed_to_resolve_address">Fehler beim Auflösen der Adresse</string>
 </resources>

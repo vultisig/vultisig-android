@@ -8,9 +8,9 @@ import com.vultisig.wallet.data.api.models.BlowfishMetadata
 import com.vultisig.wallet.data.api.models.BlowfishRequest
 import com.vultisig.wallet.data.api.models.BlowfishResponse
 import com.vultisig.wallet.data.api.models.BlowfishTxObject
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Vault
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import javax.inject.Inject

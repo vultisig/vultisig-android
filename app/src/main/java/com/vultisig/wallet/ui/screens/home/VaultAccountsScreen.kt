@@ -35,7 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.BackupWarning
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ChainAccountItem

@@ -4,10 +4,11 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
-import com.vultisig.wallet.common.Numeric
+import com.vultisig.wallet.common.stripHexPrefix
 import com.vultisig.wallet.common.toKeccak256
-import com.vultisig.wallet.data.models.CustomTokenResponse
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.api.models.CustomTokenResponse
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
@@ -70,6 +71,7 @@ internal interface EvmApi {
     suspend fun getNonce(address: String): BigInteger
     suspend fun getGasPrice(): BigInteger
     suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse>
+    suspend fun resolveENS(namehash: String): String
     suspend fun zkEstimateFee(srcAddress: String, dstAddress: String, data: String): ZkGasFee
 }
 
@@ -278,6 +280,22 @@ internal class EvmApiImp(
         }
     }
 
+    override suspend fun resolveENS(namehash: String): String {
+
+        val resolverAddress = fetchEns(
+            mapOf(
+                "to" to ENS_REGISTRY_ADDRESS,
+                "data" to "$FETCH_RESOLVER_PREFIX${namehash.stripHexPrefix()}"
+            )
+        )
+        return fetchEns(
+            mapOf(
+                "to" to resolverAddress,
+                "data" to "$FETCH_ADDRESS_PREFIX${namehash.stripHexPrefix()}"
+            )
+        )
+    }
+
     override suspend fun zkEstimateFee(
         srcAddress: String,
         dstAddress: String,
@@ -367,6 +385,19 @@ internal class EvmApiImp(
         )
     }
 
+    private suspend fun fetchEns(params: Map<String,String>): String {
+        val rpcResp = fetch<RpcResponse>(
+            method = "eth_call",
+            params = listOf(
+                params,
+                "latest"
+            )
+        )
+        val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
+        return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
+    }
+
+
     private fun String?.convertToBigIntegerOrZero(): BigInteger =
         BigInteger(this?.removePrefix("0x") ?: "0", 16)
 
@@ -375,6 +406,9 @@ internal class EvmApiImp(
         private const val CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_ = 3
         private const val CUSTOM_TOKEN_REQUEST_TICKER_DATA = "0x95d89b41"
         private const val CUSTOM_TOKEN_REQUEST_DECIMAL_DATA = "0x313ce567"
+        private const val FETCH_RESOLVER_PREFIX = "0x0178b8bf"
+        private const val FETCH_ADDRESS_PREFIX = "0x3b3b57de"
+        private const val ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e"
     }
 }
 

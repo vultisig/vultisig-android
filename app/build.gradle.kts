@@ -14,14 +14,14 @@ plugins {
 }
 android {
     namespace = "com.vultisig.wallet"
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.vultisig.wallet"
-        minSdk = 26
+        minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 34
-        versionCode = 17
-        versionName = "1.0.17"
+        versionCode = 18
+        versionName = "1.0.18"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -84,6 +84,8 @@ protobuf {
 }
 
 dependencies {
+    implementation(project(":data"))
+
     implementation(files("libs/mobile-tss-lib.aar"))
     implementation(libs.bcprov.jdk15on)
 

@@ -3,8 +3,8 @@ package com.vultisig.wallet.data.repositories
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.sources.AppDataStore
-import com.vultisig.wallet.models.Chain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber

@@ -1,16 +1,16 @@
 package com.vultisig.wallet.presenter.keysign
 
 import androidx.lifecycle.ViewModel
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapPayload
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
-import com.vultisig.wallet.models.ERC20ApprovePayload
 import com.vultisig.wallet.models.Vault
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first

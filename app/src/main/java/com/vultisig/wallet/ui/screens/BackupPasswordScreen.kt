@@ -1,6 +1,9 @@
 package com.vultisig.wallet.ui.screens
 
+import android.app.Activity
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,9 +17,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -24,13 +29,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.GradientInfoCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
+import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
+import com.vultisig.wallet.ui.utils.createBackupFileIntent
+import kotlinx.coroutines.flow.receiveAsFlow
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -42,9 +51,35 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
         WriteFilePermissionHandler(viewModel.permissionFlow, viewModel::onPermissionResult)
 
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                viewModel.saveContentToUriResult(uri, uiState.backupContent)
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.saveFileChannel.receiveAsFlow().collect { fileName ->
+            filePickerLauncher.launch(
+                createBackupFileIntent(fileName)
+            )
+        }
+    }
+
     Scaffold(
         bottomBar = {
-            Column(Modifier.imePadding()) {
+            Column(
+                Modifier
+                    .imePadding()
+                    .padding(horizontal = 16.dp)
+            ) {
+                GradientInfoCard(
+                    stringResource(id = R.string.backup_password_screen_warning),
+                    Brush.vultiGradient()
+                )
                 MultiColorButton(
                     backgroundColor = Theme.colors.turquoise800,
                     textColor = Theme.colors.oxfordBlue800,

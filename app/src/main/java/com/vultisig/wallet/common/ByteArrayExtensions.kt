@@ -1,9 +1,13 @@
 package com.vultisig.wallet.common
 
+import com.vultisig.wallet.data.utils.Numeric
 import org.bouncycastle.jcajce.provider.digest.Keccak
 
-fun ByteArray.toKeccak256(): String {
+internal fun ByteArray.toKeccak256(): String {
+    return Numeric.toHexString(this.toKeccak256ByteArray())
+}
+
+internal fun ByteArray.toKeccak256ByteArray(): ByteArray {
     val digest = Keccak.Digest256()
-    val hash = digest.digest(this)
-    return Numeric.toHexString(hash)
+    return digest.digest(this)
 }

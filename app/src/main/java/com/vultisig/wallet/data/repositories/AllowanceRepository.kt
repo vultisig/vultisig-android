@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.models.Chain
 import java.math.BigInteger
 import javax.inject.Inject
 

@@ -29,7 +29,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*")
-private val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat")
+internal val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat")
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
