@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

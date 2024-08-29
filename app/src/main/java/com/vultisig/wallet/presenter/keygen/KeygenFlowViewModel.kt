@@ -254,7 +254,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    fun stopParticipantDiscovery() = viewModelScope.launch {
+    fun stopParticipantDiscovery() {
         participantDiscovery?.stop()
     }
 
