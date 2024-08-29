@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal data class CustomTokenUiModel(
@@ -64,7 +65,7 @@ internal class CustomTokenViewModel @Inject constructor(
             if (searchedToken == null) {
                 showError()
             } else {
-                val rawPrice = tokenPriceRepository.getCustomTokenPrice(searchedToken)
+                val rawPrice = calculatePrice(searchedToken)
                 val currency = appCurrencyRepository.currency.first()
                 val tokenFiatValue = FiatValue(
                     rawPrice,
@@ -82,6 +83,12 @@ internal class CustomTokenViewModel @Inject constructor(
             }
         }
     }
+
+    private suspend fun calculatePrice(result: Coin): BigDecimal =
+        tokenPriceRepository.getPriceByContactAddress(
+            chainId,
+            result.contractAddress
+        )
 
     private fun showError() {
         uiModel.update {

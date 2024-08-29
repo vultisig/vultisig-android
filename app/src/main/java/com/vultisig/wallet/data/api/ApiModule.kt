@@ -12,6 +12,12 @@ internal interface ApiModule {
 
     @Binds
     @Singleton
+    fun bindCoinGeckoApi(
+        impl: CoinGeckoApiImpl,
+    ): CoinGeckoApi
+
+    @Binds
+    @Singleton
     fun bindThorChainApi(
         impl: ThorChainApiImpl,
     ): ThorChainApi
@@ -69,10 +75,4 @@ internal interface ApiModule {
     fun bindBlowfishApi(
         impl: BlowfishApiImpl
     ): BlowfishApi
-
-    @Binds
-    @Singleton
-    fun bindCmcApi(
-        impl: CmcApiImpl
-    ): CmcApi
 }

@@ -162,7 +162,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
             .currency
             .flatMapConcat { currency ->
                 tokenPriceRepository
-                    .getPrice(coin)
+                    .getPrice(coin, currency)
                     .zip(getTokenValue(address, coin)) { price, balance ->
                         TokenBalance(
                             tokenValue = balance,

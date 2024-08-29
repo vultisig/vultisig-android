@@ -21,11 +21,17 @@ internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
         tokenValue: TokenValue,
         appCurrency: AppCurrency,
     ): FiatValue {
-        val priceDraft = tokenPriceRepository.getPrice(token).first()
+        val priceDraft = tokenPriceRepository.getPrice(
+            token,
+            appCurrency,
+        ).first()
 
         val price = if (priceDraft == BigDecimal.ZERO) {
             tokenPriceRepository.refresh(listOf(token))
-            tokenPriceRepository.getPrice(token).first()
+            tokenPriceRepository.getPrice(
+                token,
+                appCurrency,
+            ).first()
         } else {
             priceDraft
         }

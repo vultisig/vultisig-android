@@ -22,7 +22,6 @@ data class Coin(
     val contractAddress: String,
     @SerializedName("isNativeToken")
     val isNativeToken: Boolean,
-    val cmcId: Int? = null
 ) {
     val id: String
         get() = "${ticker}-${chain.id}"
