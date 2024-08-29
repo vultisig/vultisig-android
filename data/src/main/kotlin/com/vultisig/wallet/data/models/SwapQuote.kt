@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 
-internal sealed class SwapQuote {
+sealed class SwapQuote {
 
     abstract val expectedDstValue: TokenValue
     abstract val fees: TokenValue

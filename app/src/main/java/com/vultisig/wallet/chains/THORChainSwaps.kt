@@ -3,9 +3,9 @@ package com.vultisig.wallet.chains
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.wallet.Swaps
-import com.vultisig.wallet.models.THORChainSwapPayload
 import com.vultisig.wallet.presenter.keysign.KeysignPayload
 import tss.KeysignResponse
 import wallet.core.jni.CoinType
