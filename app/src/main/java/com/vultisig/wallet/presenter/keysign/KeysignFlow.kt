@@ -17,7 +17,7 @@ import com.vultisig.wallet.ui.screens.keysign.KeysignPeerDiscovery
 fun KeysignFlowView(
     navController: NavController,
     onComplete: () -> Unit,
-    onKeysignFinished: () -> Unit = {},
+    onKeysignFinished: (() -> Unit)? = null,
 ) {
     KeepScreenOn()
 

@@ -24,18 +24,16 @@ internal class SwapViewModel @Inject constructor(
         isNavigateToHome = true
     }
 
+    fun isNavigateToHome() = isNavigateToHome
+
     fun navigateToHome() {
         viewModelScope.launch {
-            if (isNavigateToHome) {
-                mainNavigator.navigate(
-                    Destination.Home(),
-                    NavigationOptions(
-                        clearBackStack = true
-                    )
+            mainNavigator.navigate(
+                Destination.Home(),
+                NavigationOptions(
+                    clearBackStack = true
                 )
-            } else {
-                mainNavigator.navigate(Destination.Back)
-            }
+            )
         }
     }
 }
