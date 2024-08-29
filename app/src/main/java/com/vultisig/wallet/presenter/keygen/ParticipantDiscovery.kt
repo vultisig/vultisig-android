@@ -77,10 +77,10 @@ class ParticipantDiscovery(
         }
     }
 
-    fun stop() {
-        runBlocking {
+    suspend fun stop() {
+
             job?.cancel()
             job?.join()
-        }
+
     }
 }

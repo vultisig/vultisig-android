@@ -254,7 +254,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    fun stopParticipantDiscovery() {
+    fun stopParticipantDiscovery() = viewModelScope.launch {
         participantDiscovery?.stop()
     }
 
@@ -378,11 +378,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        try {
-            stopParticipantDiscovery()
-        } catch (e: Exception) {
-            Timber.e("onCleared: ${e.stackTraceToString()}")
-        }
+        stopParticipantDiscovery()
         super.onCleared()
     }
 }
