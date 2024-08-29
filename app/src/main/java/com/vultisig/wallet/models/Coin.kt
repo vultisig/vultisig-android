@@ -2,7 +2,9 @@ package com.vultisig.wallet.models
 
 import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.coinType
 import wallet.core.jni.CoinType
 
 internal data class Coin(

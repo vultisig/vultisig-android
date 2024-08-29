@@ -1,6 +1,7 @@
 package com.vultisig.wallet.common
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.utils.Numeric
 
 fun String.decodeFromHex(): String {
     require(length % 2 == 0) { "Must have an even length" }

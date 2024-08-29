@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.vultisig.wallet.data.models.AppCurrency
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

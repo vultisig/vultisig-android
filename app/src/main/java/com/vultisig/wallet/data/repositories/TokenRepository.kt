@@ -3,8 +3,8 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.models.Chain
 import com.vultisig.wallet.models.Coin
 import com.vultisig.wallet.models.Coins
 import kotlinx.coroutines.flow.Flow
@@ -76,13 +76,11 @@ internal class TokenRepositoryImpl @Inject constructor(
         var ticker = ""
         var decimal = 0
         rpcResponses.forEach {
-            if (it.result == null) {
-                return null
-            }
+            val result = it.result ?: return null
             if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
-                ticker = it.result.decodeContractString() ?: return null
+                ticker = result.decodeContractString() ?: return null
             else decimal =
-                it.result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
+                result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
         }
         val coin = Coin(
             chain = chain,

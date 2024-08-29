@@ -23,7 +23,6 @@ import com.vultisig.wallet.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.common.saveBitmapToDownloads
 import com.vultisig.wallet.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.models.ShareVaultQrModel
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.utils.SnackbarFlow
@@ -43,6 +42,14 @@ internal data class ShareVaultQrState(
     val shareVaultQrString: String? = null,
     val fileName: String? = null,
     val fileUri: Uri? = null,
+)
+
+internal data class ShareVaultQrModel(
+    val uid: String,
+    val name: String,
+    val publicKeyEcdsa: String,
+    val publicKeyEddsa: String,
+    val hexChainCode: String,
 )
 
 @HiltViewModel

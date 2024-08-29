@@ -1,8 +1,8 @@
 package com.vultisig.wallet.presenter.settings.default_chains_setting
 
 import androidx.annotation.DrawableRes
-import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.logo
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.logo
 
 data class DefaultChainsUiModel(
     val chains: List<DefaultChain> = emptyList(),

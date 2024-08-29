@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
-import com.vultisig.wallet.models.swap.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 
 internal sealed class SwapQuote {
 

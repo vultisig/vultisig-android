@@ -1,6 +1,7 @@
 package com.vultisig.wallet.models
 
 import com.google.gson.annotations.SerializedName
+import com.vultisig.wallet.data.models.KeyShare
 
 internal data class Vault(
     @SerializedName("id")

@@ -5,8 +5,8 @@ import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
-import com.vultisig.wallet.models.Chain
-import com.vultisig.wallet.models.oneInchChainId
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.oneInchChainId
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter

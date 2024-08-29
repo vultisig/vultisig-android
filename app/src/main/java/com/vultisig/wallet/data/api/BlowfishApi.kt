@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.api
 import com.google.gson.Gson
 import com.vultisig.wallet.data.api.models.BlowfishRequest
 import com.vultisig.wallet.data.api.models.BlowfishResponse
-import com.vultisig.wallet.models.Chain
+import com.vultisig.wallet.data.models.Chain
 import io.ktor.client.HttpClient
 import io.ktor.client.request.header
 import io.ktor.client.request.post
