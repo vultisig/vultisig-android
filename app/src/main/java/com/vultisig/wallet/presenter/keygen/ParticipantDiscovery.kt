@@ -78,9 +78,7 @@ class ParticipantDiscovery(
     }
 
     suspend fun stop() {
-
-            job?.cancel()
-            job?.join()
-
+        job?.cancel()
+        job?.join()
     }
 }
