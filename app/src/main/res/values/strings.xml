@@ -362,4 +362,7 @@
     <string name="failed_to_resolve_address">Failed to resolve address</string>
     <string name="vault_settings_success_backup_message" translatable="false">File saved successfully</string>
     <string name="vault_settings_error_extension_backup_file" translatable="false">Supported file extensions are: %s</string>
+    <string name="default_error"  translatable="false">Default error</string>
+    <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
+    <string name="join_keygen_failed">Failed to join keygen</string>
 </resources>

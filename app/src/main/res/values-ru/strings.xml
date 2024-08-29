@@ -317,5 +317,7 @@
     <string name="onboard_intro2_desc">Vultisig не отслеживает ваши действия и не требует никаких регистраций. Vultisig имеет полностью открытый исходный код, что обеспечивает прозрачность и доверие.</string>
     <string name="onboard_intro3_title">Диалог</string>
     <string name="failed_to_resolve_address">Не удалось определить адрес</string>
+    <string name="join_keygen_invalid_qr_code">Не удалось проанализировать QR-код</string>
+    <string name="join_keygen_failed">Не удалось присоединиться к кейгену</string>
 
 </resources>

@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.ui.components.InformationNoteSnackBar
 import com.vultisig.wallet.ui.components.TopBar
@@ -88,14 +89,14 @@ internal fun JoinKeygenView(
             JoinKeygenState.FailedToStart -> {
                 KeygenFailedToStart(
                     navController = navController,
-                    errorMessage = viewModel.errorMessage.value
+                    errorMessage = viewModel.errorMessage.value.asString()
                 )
             }
 
             JoinKeygenState.ERROR -> {
                 KeygenFailedToStart(
                     navController = navController,
-                    errorMessage = viewModel.errorMessage.value
+                    errorMessage = viewModel.errorMessage.value.asString()
                 )
             }
         }

@@ -306,5 +306,7 @@
     <string name="share_vault_qr_card_keys">ECDSA ključ: %s EdDSA ključ: %s</string>
     <string name="import_file_not_supported">Vrsta datoteke nije podržana</string>
     <string name="failed_to_resolve_address">Neuspjelo rješavanje adrese</string>
+    <string name="join_keygen_invalid_qr_code">Analiza QR koda nije uspjela</string>
+    <string name="join_keygen_failed">Pridruživanje keygenu nije uspjelo</string>
 
 </resources>

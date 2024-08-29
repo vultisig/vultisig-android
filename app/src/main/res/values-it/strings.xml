@@ -306,4 +306,6 @@
     <string name="share_vault_qr_card_keys">Chiave ECDSA: %s Chiave EdDSA: %s</string>
     <string name="import_file_not_supported">Il tipo di file non è supportato</string>
     <string name="failed_to_resolve_address">Errore nel risolvere l\'indirizzo</string>
+    <string name="join_keygen_invalid_qr_code">Impossibile analizzare il codice QR</string>
+    <string name="join_keygen_failed">Impossibile unirsi al keygen</string>
 </resources>

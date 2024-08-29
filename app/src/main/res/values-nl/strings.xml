@@ -317,4 +317,6 @@
     <string name="share_vault_qr_card_keys">ECDSA-sleutel: %s EdDSA-sleutel: %s</string>
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
     <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>
+    <string name="join_keygen_invalid_qr_code">Het is niet gelukt om de QR-code te parseren</string>
+    <string name="join_keygen_failed">Kan geen keygen joinen</string>
 </resources>
