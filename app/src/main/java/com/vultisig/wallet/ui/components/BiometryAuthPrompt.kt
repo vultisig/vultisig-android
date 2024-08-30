@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.closestActivityOrNull
@@ -41,7 +42,8 @@ private val allowedAuthenticatorTypes
 @Composable
 internal fun BiometryAuthScreen(
 ) {
-    var isAuthorized by rememberSaveable { mutableStateOf(false) }
+    // skip authorization in debug mode
+    var isAuthorized by rememberSaveable { mutableStateOf(BuildConfig.DEBUG) }
 
     if (!isAuthorized) {
         Timber.d("Unauthorized, checking biometric availability")
