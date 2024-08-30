@@ -83,11 +83,11 @@ internal class GeneratingKeyViewModel(
 
     suspend fun generateKey() {
         currentState.value = KeygenState.CreatingInstance
-        withContext(Dispatchers.IO) {
-            createInstance()
-        }
 
         try {
+            withContext(Dispatchers.IO) {
+                createInstance()
+            }
             this.tssInstance?.let {
                 keygenWithRetry(it, 1)
             }
