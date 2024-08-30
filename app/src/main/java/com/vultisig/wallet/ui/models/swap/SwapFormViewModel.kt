@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -396,6 +397,7 @@ internal class SwapFormViewModel @Inject constructor(
             val buffer = selectedSrc.value
             selectedSrc.value = selectedDst.value
             selectedDst.value = buffer
+            srcAmountState.setTextAndPlaceCursorAtEnd("0")
         }
 
     }
