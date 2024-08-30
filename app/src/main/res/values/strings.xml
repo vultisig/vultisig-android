@@ -234,7 +234,7 @@
     <string name="swap_screen_provider_title">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
     <string name="swap_form_provider_mayachain" translatable="false">MayaChain</string>
-    <string name="swap_form_minimum_amount">Swap amount too small. Recommended amount %s %s </string>
+    <string name="swap_form_minimum_amount">"Swap amount too small. Recommended amount %1s %2s "</string>
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="verify_approve_amount_title">Amount to approve</string>
@@ -279,7 +279,7 @@
     <string name="share_vault_qr_title" >Share Vault QR</string>
     <string name="share_vault_qr_save_or_share" >Save and Share</string>
     <string name="share_vault_qr_card_title" >Main Vault</string>
-    <string name="share_vault_qr_card_keys">ECDSA Key: %s EdDSA Key: %s</string>
+    <string name="share_vault_qr_card_keys">ECDSA Key: %1s EdDSA Key: %2s</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>

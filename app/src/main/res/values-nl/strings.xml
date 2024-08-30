@@ -227,7 +227,7 @@
     <string name="join_keygen_wrong_reshare">Verkeerde ReShare</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
     <string name="swap_screen_provider_title">Leverancier</string>
-    <string name="swap_form_minimum_amount">ProvideraSwap bedrag te klein. Aanbevolen bedrag %s %s</string>
+    <string name="swap_form_minimum_amount">ProvideraSwap bedrag te klein. Aanbevolen bedrag %1s %2s</string>
     <string name="verify_approve_amount_title">Bedrag om goed te keuren</string>
     <string name="verify_approve_amount_unlimited">ONBEPERKT</string>
     <string name="backup_password_screen_title">Back-up</string>
@@ -314,7 +314,7 @@
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
     <string name="share_vault_qr_card_title">Hoofdkluis</string>
-    <string name="share_vault_qr_card_keys">ECDSA-sleutel: %s EdDSA-sleutel: %s</string>
+    <string name="share_vault_qr_card_keys">ECDSA-sleutel: %1s EdDSA-sleutel: %2s</string>
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
     <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>
 </resources>

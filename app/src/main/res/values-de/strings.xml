@@ -216,7 +216,7 @@
     <string name="join_keygen_wrong_reshare">Falsches ReShare</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
     <string name="swap_screen_provider_title">Anbieterin</string>
-    <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %s %s</string>
+    <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1s %2s</string>
     <string name="verify_approve_amount_title">Zu genehmigender Betrag</string>
     <string name="verify_approve_amount_unlimited">UNBEGRENZT</string>
     <string name="backup_password_screen_title">Sicherung</string>
@@ -303,7 +303,7 @@
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
     <string name="settings_screen_tos">Servicebedingungen</string>
     <string name="share_vault_qr_card_title">Haupttresor</string>
-    <string name="share_vault_qr_card_keys">ECDSA-Schlüssel: %s EdDSA-Schlüssel: %s</string>
+    <string name="share_vault_qr_card_keys">ECDSA-Schlüssel: %1s EdDSA-Schlüssel: %2s</string>
     <string name="import_file_not_supported">Der Dateityp wird nicht unterstützt</string>
     <string name="failed_to_resolve_address">Fehler beim Auflösen der Adresse</string>
 </resources>

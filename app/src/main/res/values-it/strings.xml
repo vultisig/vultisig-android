@@ -216,7 +216,7 @@
     <string name="join_keygen_wrong_reshare">Condivisione errata</string>
     <string name="join_keysign_wrong_reshare">Condivisione errata</string>
     <string name="swap_screen_provider_title">Fornitrice</string>
-    <string name="swap_form_minimum_amount">Importo dello swap troppo piccolo. Importo consigliato %s %s</string>
+    <string name="swap_form_minimum_amount">Importo dello swap troppo piccolo. Importo consigliato %1s %2s</string>
     <string name="verify_approve_amount_title">Importo da approvare</string>
     <string name="verify_approve_amount_unlimited">ILLIMITATA</string>
     <string name="backup_password_screen_title">Backup</string>
@@ -303,7 +303,7 @@
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">politica sulla riservatezza</string>
     <string name="settings_screen_tos">Termini di servizio</string>
-    <string name="share_vault_qr_card_keys">Chiave ECDSA: %s Chiave EdDSA: %s</string>
+    <string name="share_vault_qr_card_keys">Chiave ECDSA: %1s Chiave EdDSA: %2s</string>
     <string name="import_file_not_supported">Il tipo di file non è supportato</string>
     <string name="failed_to_resolve_address">Errore nel risolvere l\'indirizzo</string>
 </resources>
