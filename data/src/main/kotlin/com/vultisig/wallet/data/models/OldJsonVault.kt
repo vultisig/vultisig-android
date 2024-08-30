@@ -18,20 +18,18 @@ data class OldJsonVault(
     val pubKeyECDSA: String,
     @SerializedName("hexChainCode")
     val hexChainCode: String,
-    @SerializedName("pubKeyEdDSA")
+    @SerializedName("pubKeyEdDSA", alternate = ["pubKeyEDDSA"])
     val pubKeyEdDSA: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("signers")
     val signers: List<String>,
-    @SerializedName("createdAt")
-    val createdAt: Float,
     @SerializedName("keyshares")
     val keyShares: List<OldJsonVaultKeyShare>,
 )
 
 data class OldJsonVaultKeyShare(
-    @SerializedName("pubkey")
+    @SerializedName("pubkey", alternate = ["pubKey"])
     val pubKey: String,
     @SerializedName("keyshare")
     val keyShare: String,

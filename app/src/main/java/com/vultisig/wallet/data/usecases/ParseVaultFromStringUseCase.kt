@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.data.mappers.VaultFromOldJsonMapper
 import com.vultisig.wallet.data.mappers.utils.MapHexToPlainString
 import com.vultisig.wallet.data.models.KeyShare
+import com.vultisig.wallet.data.models.OldJsonVault
 import com.vultisig.wallet.data.models.OldJsonVaultRoot
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
@@ -81,17 +82,22 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
         input: String,
         password: String?
     ): Result<Vault> = runCatching {
-        val decrypted = mapHexToPlainString(
-            if (password != null) {
-                encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password)
-                    ?.decodeToString()
-                    ?: error("Failed to decrypt the old vault")
-            } else {
-                input
-            }
-        )
+        val fromJson = try {
+            gson.fromJson(
+                mapHexToPlainString(
+                    if (password != null) {
+                        encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password)
+                            ?.decodeToString()
+                            ?: error("Failed to decrypt the old vault")
+                    } else {
+                        input
+                    }
+                ), OldJsonVaultRoot::class.java
+            ).vault
+        } catch (e: Exception) {
+            gson.fromJson(input, OldJsonVault::class.java)
+        }
 
-        val fromJson = gson.fromJson(decrypted, OldJsonVaultRoot::class.java)
         vaultFromOldJsonMapper(fromJson)
     }
 
