@@ -46,6 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.android.play.core.review.ReviewException
+import com.google.android.play.core.review.ReviewManager
+import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.android.play.core.review.model.ReviewErrorCode
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
@@ -66,6 +70,7 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.showReviewPopUp
 import kotlinx.coroutines.launch
 
 @Composable
@@ -107,6 +112,7 @@ private fun ChainTokensScreen(
     val appColor = Theme.colors
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val reviewManager = remember { ReviewManagerFactory.create(context) }
     val snackbarHostState = remember {
         SnackbarHostState()
     }
@@ -229,6 +235,7 @@ private fun ChainTokensScreen(
                                             )
                                         )
                                     }
+                                    reviewManager.showReviewPopUp(context)
                                 },
                                 isBalanceVisible = uiModel.isBalanceVisible,
                                 onQrBtnClick = {
