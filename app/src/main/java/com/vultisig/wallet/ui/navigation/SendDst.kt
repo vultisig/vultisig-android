@@ -56,4 +56,7 @@ internal sealed class SendDst(route: String) : Dst(route) {
         }
     }
 
+    data object Back : SendDst(
+        route = "back"
+    )
 }

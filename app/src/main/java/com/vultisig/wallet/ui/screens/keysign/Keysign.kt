@@ -28,7 +28,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun Keysign(
     viewModel: KeysignViewModel,
     onComplete: () -> Unit,
-    onKeysignFinished: () -> Unit = {},
+    onKeysignFinished: (() -> Unit)? = null,
 ) {
 
     val wrapperViewModel = hiltViewModel(
@@ -42,7 +42,7 @@ internal fun Keysign(
     val state: KeysignState = keysignViewModel.currentState.collectAsState().value
     LaunchedEffect(state) {
         if (state == KeysignState.KeysignFinished) {
-            onKeysignFinished()
+            onKeysignFinished?.invoke()
         }
     }
     KeysignScreen(
