@@ -211,12 +211,12 @@
     <string name="verify_transaction_memo_title">dopis</string>
     <string name="send_form_screen_memo_optional">MEMO (nije obavezno)</string>
     <string name="vault_already_exist">Trezor s imenom %s već postoji</string>
-    <string name="vault_detail_this_device">%1s (Ovaj uređaj)</string>
+    <string name="vault_detail_this_device">%1$s (Ovaj uređaj)</string>
     <string name="vault_settings_delete_vault_value">Vault Vrijednost:</string>
     <string name="join_keygen_wrong_reshare">Pogrešan ReShare</string>
     <string name="join_keysign_wrong_reshare">Pogrešan ReShare</string>
     <string name="swap_screen_provider_title">Davatelj</string>
-    <string name="swap_form_minimum_amount">Iznos zamjene premali. Preporučena količina %1s %2s</string>
+    <string name="swap_form_minimum_amount">Iznos zamjene premali. Preporučena količina %1$s %2$s</string>
     <string name="verify_approve_amount_title">Iznos za odobrenje</string>
     <string name="verify_approve_amount_unlimited">NEOGRANIČEN</string>
     <string name="backup_password_screen_title">Sigurnosna kopija</string>
@@ -303,7 +303,7 @@
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
     <string name="settings_screen_tos">Uvjeti usluge</string>
     <string name="share_vault_qr_card_title">Glavni trezor</string>
-    <string name="share_vault_qr_card_keys">ECDSA ključ: %1s EdDSA ključ: %2s</string>
+    <string name="share_vault_qr_card_keys">ECDSA ključ: %1$s EdDSA ključ: %2$s</string>
     <string name="import_file_not_supported">Vrsta datoteke nije podržana</string>
     <string name="failed_to_resolve_address">Neuspjelo rješavanje adrese</string>
 
