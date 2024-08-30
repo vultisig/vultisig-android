@@ -397,7 +397,7 @@ internal class SwapFormViewModel @Inject constructor(
             val buffer = selectedSrc.value
             selectedSrc.value = selectedDst.value
             selectedDst.value = buffer
-            srcAmountState.setTextAndPlaceCursorAtEnd(uiState.value.estimatedDstTokenValue)
+            srcAmountState.setTextAndPlaceCursorAtEnd("0")
         }
 
     }
