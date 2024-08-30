@@ -224,12 +224,14 @@ internal class KeysignFlowViewModel @Inject constructor(
                             accountNumber = specific.accountNumber.toString().toULong(),
                             sequence = specific.sequence.toString().toULong(),
                             fee = specific.fee.toString().toULong(),
+                            isDeposit = specific.isDeposit,
                         )
                     } else null,
                     mayaSpecific = if (specific is BlockChainSpecific.MayaChain) {
                         MAYAChainSpecific(
                             accountNumber = specific.accountNumber.toString().toULong(),
                             sequence = specific.sequence.toString().toULong(),
+                            isDeposit = specific.isDeposit,
                         )
                     } else null,
                     cosmosSpecific = if (specific is BlockChainSpecific.Cosmos) {
