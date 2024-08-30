@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models.proto.v1
-
+import kotlinx.serialization.ExperimentalSerializationApi
 import vultisig.vault.v1.Vault
+@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 
 typealias KeysignMessageProto = vultisig.keysign.v1.KeysignMessage
 typealias KeysignPayloadProto = vultisig.keysign.v1.KeysignPayload
