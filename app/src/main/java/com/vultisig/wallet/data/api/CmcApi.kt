@@ -70,14 +70,6 @@ internal class CmcApiImpl @Inject constructor(
     }
 
 
-    private suspend fun saveToDatabase(updatedCoins: List<Coin>) {
-        val vaultId = lastOpenedVaultRepository.lastOpenedVaultId.first()
-        vaultId?.let {
-            vaultRepository.upsertCoins(vaultId, updatedCoins)
-        }
-    }
-
-
     private suspend fun saveToDatabase(coin: CoinCmcPrice) {
         cmcPriceDao.insertCmcPrice(
             CmcPriceEntity(
@@ -108,12 +100,6 @@ internal class CmcApiImpl @Inject constructor(
             coin.tokenId to (price ?: BigDecimal.ZERO)
         } ?: emptyMap()
     }
-
-    private fun convertRespToTokenToPriceList(cmcPriceResponse: JsonElement?) =
-        cmcPriceResponse?.jsonObject?.map {
-            it.key to it.value.jsonObject["quote"]?.jsonObject?.toMap()?.values?.firstOrNull()
-                ?.jsonObject?.get("price")?.jsonPrimitive?.contentOrNull?.toBigDecimal()
-        }
 
     private fun extractCoinAndPrice(
         cmcPriceResponse: JsonElement?,

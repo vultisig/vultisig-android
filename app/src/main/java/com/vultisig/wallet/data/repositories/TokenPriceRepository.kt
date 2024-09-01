@@ -3,8 +3,6 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CmcApi
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
