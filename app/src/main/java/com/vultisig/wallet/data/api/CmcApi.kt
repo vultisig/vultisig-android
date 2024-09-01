@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.CmcPriceResponseJson
 import com.vultisig.wallet.data.db.dao.CmcPriceDao
 import com.vultisig.wallet.data.db.models.CmcPriceEntity
 import com.vultisig.wallet.data.models.Chain
@@ -11,15 +12,11 @@ import io.ktor.client.request.parameter
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
-
 
 internal interface CmcApi {
 
@@ -90,11 +87,9 @@ internal class CmcApiImpl @Inject constructor(
     }
 
     private fun extractCoinAndPrice(
-        cmcPriceResponse: JsonElement?,
+        cmcPriceResponse: CmcPriceResponseJson?,
         coins: List<CoinCmcPrice>
     ): Map<String, BigDecimal> {
-        // Due to dynamic response keys, a data class is not feasible. example response:
-        // "1027": { "id": 1027, ... ,"quote": { "USD": {  "price": 2685.777349396061,... } } }
         return convertRespToTokenToPriceList(cmcPriceResponse)?.associate { (cmcId, price) ->
             val coin = coins.find { it.cmcId == cmcId.toInt() }!!
             coin.tokenId to (price ?: BigDecimal.ZERO)
@@ -102,24 +97,22 @@ internal class CmcApiImpl @Inject constructor(
     }
 
     private fun extractCoinAndPrice(
-        cmcPriceResponse: JsonElement?,
+        cmcPriceResponse: CmcPriceResponseJson?,
         coin: CoinCmcPrice
     ) = convertRespToTokenToPriceList(cmcPriceResponse)?.associate { (_, price) ->
         coin.tokenId to (price ?: BigDecimal.ZERO)
     } ?: emptyMap()
 
 
-    private fun convertRespToTokenToPriceList(cmcPriceResponse: JsonElement?) =
-        cmcPriceResponse?.jsonObject?.map {
-            it.key to it.value.jsonObject["quote"]?.jsonObject?.values?.firstOrNull()?.jsonObject
-                ?.get("price")?.jsonPrimitive?.contentOrNull?.toBigDecimal()
+    private fun convertRespToTokenToPriceList(cmcPriceResponse: CmcPriceResponseJson?) =
+        cmcPriceResponse?.data?.map { (cmcId, data) ->
+            cmcId to data.quote.values.firstOrNull()?.price
         }
-
 
     private suspend fun fetchCmcPriceResponse(
         cmcIds: String,
         currency: String
-    ): JsonElement? {
+    ): CmcPriceResponseJson? {
         try {
             val response =
                 http.get("https://api.vultisig.com/cmc/v2/cryptocurrency/quotes/latest") {
@@ -128,7 +121,7 @@ internal class CmcApiImpl @Inject constructor(
                     parameter("aux", "is_active")
                     parameter("convert", currency)
                 }
-            return response.body<Map<String, JsonElement>>()["data"]
+            return response.body<CmcPriceResponseJson>()
         } catch (e: Exception) {
             Timber.tag("CmcApiImpl").e(e, "can not get token price")
             return null
@@ -178,5 +171,4 @@ internal class CmcApiImpl @Inject constructor(
             Chain.ZkSync -> 1027
             else -> null
         }
-
 }
