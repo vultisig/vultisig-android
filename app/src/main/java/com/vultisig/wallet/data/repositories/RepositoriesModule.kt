@@ -179,4 +179,10 @@ internal interface RepositoriesModule {
     fun bindAddressParserRepository(
         impl: AddressParserRepositoryImpl
     ): AddressParserRepository
+
+    @Binds
+    @Singleton
+    fun bindCmcIdRepository(
+        impl: CmcIdRepositoryImpl
+    ): CmcIdRepository
 }

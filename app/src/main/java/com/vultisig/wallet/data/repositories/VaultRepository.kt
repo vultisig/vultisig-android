@@ -34,8 +34,6 @@ internal interface VaultRepository {
 
     suspend fun upsert(vault: Vault)
 
-    suspend fun upsertCoins(vaultId: String, coins: List<Coin>)
-
     suspend fun setVaultName(vaultId: String, name: String)
 
     suspend fun delete(vaultId: String)
@@ -83,10 +81,6 @@ internal class VaultRepositoryImpl @Inject constructor(
 
     override suspend fun upsert(vault: Vault) {
         vaultDao.upsert(vault.toVaultDb())
-    }
-
-    override suspend fun upsertCoins(vaultId: String, coins: List<Coin>) {
-        vaultDao.upsertCoins(coins.map { it.toCoinEntity(vaultId) })
     }
 
     override suspend fun setVaultName(vaultId: String, name: String) {
@@ -138,7 +132,6 @@ internal class VaultRepositoryImpl @Inject constructor(
                     priceProviderID = it.priceProviderID,
                     contractAddress = it.contractAddress,
                     isNativeToken = it.contractAddress.isBlank(),
-                    cmcId = it.cmcId,
                 )
             },
         )
@@ -188,7 +181,6 @@ internal class VaultRepositoryImpl @Inject constructor(
             priceProviderID = this.priceProviderID,
             contractAddress = this.contractAddress,
             logo = this.logo,
-            cmcId = this.cmcId,
         )
 
 }

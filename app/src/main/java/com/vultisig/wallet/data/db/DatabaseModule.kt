@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
+import com.vultisig.wallet.data.db.dao.CmcPriceDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.migrations.MIGRATION_10_11
@@ -47,7 +48,7 @@ internal interface DatabaseModule {
                     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
                     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
                     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
-                    MIGRATION_13_14,
+                    MIGRATION_13_14, MIGRATION_13_14,
                 )
                 .build()
 
@@ -88,6 +89,12 @@ internal interface DatabaseModule {
         fun provideAddressBookOrderDao(
             appDatabase: AppDatabase,
         ): AddressBookOrderDao = appDatabase.addressBookOrderDao()
+
+        @Provides
+        @Singleton
+        fun provideCmcPriceDao(
+            appDatabase: AppDatabase,
+        ): CmcPriceDao = appDatabase.cmcPriceDao()
 
     }
 

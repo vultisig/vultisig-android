@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +45,7 @@ internal interface TokenPriceRepository {
 internal class TokenPriceRepositoryImpl @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val cmcApi: CmcApi,
+    private val cmcIdRepository: CmcIdRepository,
     private val tokenPriceDao: TokenPriceDao,
 ) : TokenPriceRepository {
 
@@ -72,13 +74,19 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
     override suspend fun refresh(tokens: List<Coin>) {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
-        val refreshedPrices = cmcApi.fetchPrices(tokens, currency)
+        val refreshedPrices = cmcApi.fetchPrices(
+            cmcIdRepository.getCmcIds(tokens),
+            currency
+        )
         savePrices(refreshedPrices, currency)
     }
 
     override suspend fun getCustomTokenPrice(token: Coin): BigDecimal {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
-        val currencyAndPrice = cmcApi.fetchPrice(token, currency)
+        val currencyAndPrice = cmcApi.fetchPrice(
+            cmcIdRepository.getCmcId(token),
+            currency
+        )
         currencyAndPrice.let {
             savePrices(
                 mapOf(token.id to it),
