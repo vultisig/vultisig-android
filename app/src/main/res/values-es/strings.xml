@@ -19,7 +19,7 @@
     <string name="vault_settings_reshare_subtitle">Recompartir caja fuerte con un nuevo comité</string>
     <string name="vault_settings_delete_title">Eliminar</string>
     <string name="vault_settings_delete_subtitle">Eliminar tu recurso compartido de caja fuerte de forma permanente</string>
-    <string name="join_keysign_wrong_vault">Cambiar bóveda</string>
+    <string name="join_keysign_wrong_vault">No tienes la bóveda necesaria para Keysign</string>
     <string name="join_keysign_discovery_service">Descubriendo el servicio</string>
     <string name="join_keysign_waiting_keysign_start">Esperando que se inicie Keysign.</string>
     <string name="naming_vault_screen_invalid_name">Nombre inválido</string>
