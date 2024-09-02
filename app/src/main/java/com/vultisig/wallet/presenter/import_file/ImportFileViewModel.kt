@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -105,7 +106,8 @@ internal class ImportFileViewModel @Inject constructor(
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id,
-            )
+            ),
+            opts = NavigationOptions(clearBackStack = true)
         )
     }
 
