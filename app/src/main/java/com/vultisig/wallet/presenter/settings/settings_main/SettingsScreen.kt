@@ -42,6 +42,7 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.clickOnce
+import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Destination
@@ -210,18 +211,7 @@ fun SettingsScreen(navController: NavHostController) {
                     }
                 )
             }
-
-            UiSpacer(size = 12.dp)
-
-            Text(
-                text = stringResource(
-                    R.string.vultisig_app_version,
-                    "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-                ),
-                style = Theme.menlo.body2,
-                color = Theme.colors.turquoise600Main,
-            )
-            UiSpacer(size = 24.dp)
+            AppVersionText(Modifier.padding(top = 12.dp, bottom = 24.dp))
         }
 
     }
