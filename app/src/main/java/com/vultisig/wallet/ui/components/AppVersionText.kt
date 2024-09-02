@@ -11,7 +11,9 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun AppVersionText(modifier: Modifier = Modifier.padding(12.dp)) {
+internal fun AppVersionText(
+    modifier: Modifier = Modifier.padding(12.dp)
+) {
     Text(
         modifier = modifier,
         text = stringResource(
