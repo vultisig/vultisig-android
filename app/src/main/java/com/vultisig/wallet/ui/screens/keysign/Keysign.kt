@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +18,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.presenter.keysign.KeysignViewModel
+import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
@@ -111,7 +113,9 @@ internal fun KeysignScreen(
                 title = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open)
             )
 
-            UiSpacer(size = 80.dp)
+            UiSpacer(size = 60.dp)
+
+            AppVersionText(Modifier.padding(bottom = 24.dp))
         }
     }
 }
