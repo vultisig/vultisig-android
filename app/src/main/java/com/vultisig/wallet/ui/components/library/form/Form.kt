@@ -354,7 +354,6 @@ internal fun FormBasicSecureTextField(
         FormCard {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -362,32 +361,35 @@ internal fun FormBasicSecureTextField(
                         vertical = 6.dp
                     ),
             ) {
-                BasicSecureTextField(
-                    state = textFieldState,
-                    textStyle = textStyle.copy(color = Theme.colors.neutral100),
-                    cursorBrush = Theme.cursorBrush,
-                    textObfuscationMode = if (isObfuscationMode)
-                        TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
-                    modifier = modifier
-                        .onFocusEvent {
-                            if (isFocused != it.isFocused) {
-                                isFocused = it.isFocused
-                                if (!isFocused) {
-                                    onLostFocus()
+                Row(modifier = Modifier.weight(1f)) {
+                    BasicSecureTextField(
+                        state = textFieldState,
+                        textStyle = textStyle.copy(color = Theme.colors.neutral100),
+                        cursorBrush = Theme.cursorBrush,
+                        textObfuscationMode = if (isObfuscationMode)
+                            TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .onFocusEvent {
+                                if (isFocused != it.isFocused) {
+                                    isFocused = it.isFocused
+                                    if (!isFocused) {
+                                        onLostFocus()
+                                    }
                                 }
+                            },
+                        decorator = { textField ->
+                            if (textFieldState.text.isEmpty()) {
+                                Text(
+                                    text = hint,
+                                    color = Theme.colors.neutral100,
+                                    style = textStyle,
+                                )
                             }
-                        },
-                    decorator = { textField ->
-                        if (textFieldState.text.isEmpty()) {
-                            Text(
-                                text = hint,
-                                color = Theme.colors.neutral100,
-                                style = textStyle,
-                            )
+                            textField()
                         }
-                        textField()
-                    }
-                )
+                    )
+                }
 
                 actions?.invoke(this)
             }
