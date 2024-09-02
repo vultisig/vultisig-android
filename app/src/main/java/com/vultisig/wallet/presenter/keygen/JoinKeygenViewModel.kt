@@ -10,6 +10,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -33,6 +34,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_IS_RESHARE
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -75,6 +77,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
     @ApplicationContext private val context: Context,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -92,12 +95,15 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
     private var _isDiscoveryListenerRegistered = false
-
+    private val isReshareMode = savedStateHandle.get<Boolean>(ARG_IS_RESHARE) == true
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveringSessionID)
     var errorMessage: MutableState<UiText> =
         mutableStateOf(UiText.StringResource(R.string.default_error))
     val warningHostState = SnackbarHostState()
+    val screenTitle =
+        if (isReshareMode) UiText.StringResource(R.string.resharing_the_vault)
+        else UiText.StringResource(R.string.join_key_gen_screen_keygen)
 
     private val warningLauncher =
         viewModelScope.launch {
@@ -124,6 +130,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            isReshareMode = isReshareMode,
         )
 
     @OptIn(ExperimentalEncodingApi::class)

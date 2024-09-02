@@ -23,6 +23,7 @@ import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_IS_RESHARE
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
@@ -50,6 +51,7 @@ import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenRoleScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
@@ -98,7 +100,8 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.JoinKeygen.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(ARG_QR) { type = NavType.StringType }
+                navArgument(ARG_QR) { type = NavType.StringType },
+                navArgument(ARG_IS_RESHARE) { type = NavType.BoolType },
             )
         ) { entry ->
             val qrCodeResult = entry.arguments?.getString(ARG_QR)!!
@@ -110,7 +113,13 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.KeygenRole.route,
+            route = Destination.KeygenRole.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID){
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
         ) {
             KeygenRoleScreen(navController = navController)
         }
@@ -140,6 +149,10 @@ internal fun SetupNavGraph(
                 navArgument(Destination.KeygenFlow.ARG_VAULT_TYPE) {
                     type = NavType.IntType
                     defaultValue = 0
+                },
+                navArgument(ARG_IS_RESHARE) {
+                    type = NavType.BoolType
+                    defaultValue = false
                 }
             )
         ) {
@@ -301,6 +314,9 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
                     nullable = true
+                },
+                navArgument(ARG_IS_RESHARE) {
+                    type = NavType.BoolType
                 }
             )
         ) {
@@ -467,6 +483,20 @@ internal fun SetupNavGraph(
             route = Destination.CustomToken.STATIC_ROUTE,
         ) {
             CustomTokenScreen(navController)
+        }
+
+        composable(
+            route = Destination.ReshareStartScreen.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true                }
+            )
+        ) { entry ->
+            ReshareStartScreen(
+                navController,
+                requireNotNull(entry.arguments?.getString(ARG_VAULT_ID))
+            )
         }
     }
 }

@@ -43,5 +43,11 @@ internal open class VaultSettingsViewModel @Inject constructor(
         }
     }
 
+    fun onReshareClick() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.ReshareStartScreen(vaultId))
+        }
+    }
+
 
 }

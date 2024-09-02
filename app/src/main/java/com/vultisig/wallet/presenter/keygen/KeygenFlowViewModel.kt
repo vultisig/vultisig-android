@@ -58,6 +58,7 @@ enum class KeygenFlowState {
 
 internal data class KeygenFlowUiModel(
     val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
+    val isReshareMode: Boolean,
     val selection: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
     val keygenPayload: String = "",
@@ -100,7 +101,8 @@ internal class KeygenFlowViewModel @Inject constructor(
             vaultSetupType =
             VaultSetupType.fromInt(
                 navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
-            )
+            ),
+            isReshareMode = navBackStackEntry.get<Boolean>(Destination.ARG_IS_RESHARE) == true
         )
     )
 
@@ -135,6 +137,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            isReshareMode = uiState.value.isReshareMode,
         )
 
     init {

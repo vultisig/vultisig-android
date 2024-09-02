@@ -55,6 +55,7 @@ internal fun DeviceList(
         navController = navController,
         localPartyId = viewModel.localPartyID,
         items = items,
+        isReshare=uiState.isReshareMode,
         onContinueClick = {
             CoroutineScope(Dispatchers.IO).launch {
                 viewModel.startKeygen()
@@ -69,6 +70,7 @@ private fun DeviceList(
     navController: NavController,
     localPartyId: String,
     items: List<String>,
+    isReshare :Boolean,
     onContinueClick: () -> Unit,
 ) {
     val textColor = Theme.colors.neutral0
@@ -108,7 +110,11 @@ private fun DeviceList(
         },
         topBar = {
             TopBar(
-                centerText = stringResource(R.string.device_list_screen_keygen),
+                centerText = if (isReshare) {
+                    stringResource(R.string.resharing_the_vault)
+                } else {
+                    stringResource(R.string.device_list_screen_keygen)
+                },
                 startIcon = R.drawable.caret_left,
                 navController = navController
             )
@@ -216,7 +222,10 @@ private fun Hint(
                 .drawWithCache {
                     onDrawWithContent {
                         drawContent()
-                        drawRect(brushGradient, blendMode = BlendMode.SrcAtop)
+                        drawRect(
+                            brushGradient,
+                            blendMode = BlendMode.SrcAtop
+                        )
                     }
                 }
                 .size(20.dp)
@@ -238,6 +247,7 @@ private fun DeviceListPreview() {
     DeviceList(
         navController = rememberNavController(),
         localPartyId = "localPartyId",
+        isReshare = false,
         items = listOf("device1", "device2", "device3"),
         onContinueClick = {}
     )

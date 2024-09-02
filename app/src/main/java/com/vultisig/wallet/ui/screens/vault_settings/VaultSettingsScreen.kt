@@ -88,15 +88,9 @@ internal fun VaultSettingsScreen(
             SettingsItem(
                 title = stringResource(R.string.vault_settings_reshare_title),
                 subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
-                icon = R.drawable.share
-            ) {
-                navController.navigate(
-                    Destination.KeygenFlow(
-                        uiModel.id,
-                        VaultSetupType.M_OF_N,
-                    ).route
-                )
-            }
+                icon = R.drawable.share,
+                onClick = viewModel::onReshareClick
+            )
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_delete_title),

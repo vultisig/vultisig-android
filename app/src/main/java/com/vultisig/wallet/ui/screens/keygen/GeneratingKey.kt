@@ -63,10 +63,12 @@ internal fun GeneratingKey(
             }
         )
 
+    val generatingKeyViewModel = wrapperViewModel.viewModel
     GeneratingKey(
         navController = navController,
-        keygenState = wrapperViewModel.viewModel.currentState.collectAsState().value,
-        errorMessage = wrapperViewModel.viewModel.errorMessage.value,
+        keygenState = generatingKeyViewModel.currentState.collectAsState().value,
+        errorMessage = generatingKeyViewModel.errorMessage.value,
+        isReshare = generatingKeyViewModel.isReshareMode
     )
 }
 
@@ -74,14 +76,20 @@ internal fun GeneratingKey(
 internal fun GeneratingKey(
     navController: NavHostController,
     keygenState: KeygenState,
-    errorMessage: String
+    errorMessage: String,
+    isReshare: Boolean
 ) {
     val textColor = Theme.colors.neutral0
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
         topBar = {
             TopBar(
-                centerText = stringResource(R.string.generating_key_title),
+                centerText = stringResource(
+                    if (isReshare)
+                        R.string.resharing_the_vault
+                    else
+                        R.string.generating_key_title
+                ),
                 startIcon = R.drawable.caret_left,
                 navController = navController
             )
@@ -297,6 +305,7 @@ private fun GeneratingKeyPreview() {
     GeneratingKey(
         navController = rememberNavController(),
         keygenState = KeygenState.CreatingInstance,
-        errorMessage = ""
+        errorMessage = "",
+        isReshare = false
     )
 }

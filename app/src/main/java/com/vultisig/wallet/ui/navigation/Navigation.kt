@@ -18,6 +18,7 @@ internal sealed class Destination(
         const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
+        const val ARG_IS_RESHARE = "is_reshare"
     }
 
     data object AddVault : Destination(
@@ -134,9 +135,10 @@ internal sealed class Destination(
 
     data class JoinThroughQr(
         val vaultId: String?,
-    ) : Destination(route = "join/qr?vault_id=$vaultId") {
+        val isReshare: Boolean,
+    ) : Destination(route = "join/qr?vault_id=$vaultId&is_reshare=$isReshare") {
         companion object {
-            const val STATIC_ROUTE = "join/qr?vault_id={$ARG_VAULT_ID}"
+            const val STATIC_ROUTE = "join/qr?vault_id={$ARG_VAULT_ID}&is_reshare={$ARG_IS_RESHARE}"
         }
     }
 
@@ -155,7 +157,8 @@ internal sealed class Destination(
         route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
     ) {
         companion object {
-            const val STATIC_ROUTE = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+            const val STATIC_ROUTE =
+                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
         }
     }
 
@@ -243,7 +246,11 @@ internal sealed class Destination(
         }
     }
 
-    data object KeygenRole : Destination(route = "keygen/role")
+    data class KeygenRole(val vaultId: String? = null) : Destination(route = "keygen/role?$ARG_VAULT_ID=$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "keygen/role?$ARG_VAULT_ID={$ARG_VAULT_ID}"
+        }
+    }
 
     data class Setup(
         val vaultId: String? = null,
@@ -254,10 +261,13 @@ internal sealed class Destination(
         }
     }
 
-    data class KeygenFlow(val vaultName: String, val vaultSetupType: VaultSetupType) :
-        Destination(route = "keygen_flow/$vaultName/${vaultSetupType.raw}") {
+    data class KeygenFlow(
+        val vaultName: String,
+        val vaultSetupType: VaultSetupType,
+        val isReshare: Boolean,
+    ) : Destination(route = "keygen_flow/$vaultName/${vaultSetupType.raw}/$isReshare") {
         companion object {
-            const val STATIC_ROUTE = "keygen_flow/{vault_name}/{vault_type}"
+            const val STATIC_ROUTE = "keygen_flow/{vault_name}/{vault_type}/{is_reshare}"
             const val ARG_VAULT_NAME = "vault_name"
             const val ARG_VAULT_TYPE = "vault_type"
             const val DEFAULT_NEW_VAULT = "*vultisig_new_vault*"
@@ -277,10 +287,11 @@ internal sealed class Destination(
 
     data class JoinKeygen(
         val qr: String,
-    ) : Destination(route = "join_keygen?qr=$qr") {
+        val isReshare: Boolean,
+    ) : Destination(route = "join_keygen?qr=$qr&is_reshare=$isReshare") {
 
         companion object {
-            const val STATIC_ROUTE = "join_keygen?qr={$ARG_QR}"
+            const val STATIC_ROUTE = "join_keygen?qr={$ARG_QR}&is_reshare={$ARG_IS_RESHARE}"
         }
 
     }
@@ -314,6 +325,13 @@ internal sealed class Destination(
     )
 
     data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account")
+
+    data class ReshareStartScreen(val vaultId: String) :
+        Destination(route = "reshare_start_screen/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "reshare_start_screen/{$ARG_VAULT_ID}"
+        }
+    }
 
     internal data class CustomToken(val chainId: String) :
         Destination(route = "custom_token/$chainId") {

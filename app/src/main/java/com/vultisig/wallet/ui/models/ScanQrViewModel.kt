@@ -46,6 +46,7 @@ internal class ScanQrViewModel @Inject constructor(
                         JOIN_KEYGEN_FLOW -> {
                             Destination.JoinKeygen(
                                 qr = qrBase64,
+                                isReshare = qr.contains("tssType=Reshare"),
                             )
                         }
 
