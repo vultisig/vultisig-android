@@ -226,9 +226,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
                     }
                     matchingVault?.let {
-                        matchingVault.also { _currentVault = it }
-                        _localPartyID = matchingVault.localPartyID
-                    }?:run{
+                        _currentVault = it
+                        _localPartyID = it.localPartyID
+                    } ?: run {
                         currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
                         return@launch
                     }
