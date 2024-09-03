@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
-import com.vultisig.wallet.data.db.dao.CmcPriceDao
+import com.vultisig.wallet.data.db.dao.CmcIdDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.migrations.MIGRATION_10_11
@@ -95,7 +95,7 @@ internal interface DatabaseModule {
         @Singleton
         fun provideCmcPriceDao(
             appDatabase: AppDatabase,
-        ): CmcPriceDao = appDatabase.cmcPriceDao()
+        ): CmcIdDao = appDatabase.cmcIdDao()
 
     }
 

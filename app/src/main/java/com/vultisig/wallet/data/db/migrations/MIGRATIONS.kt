@@ -227,18 +227,13 @@ internal val MIGRATION_12_13 = object : Migration(12, 13) {
     }
 }
 
-internal val MIGRATION_13_14 = object : Migration(13, 14) {
+internal val MIGRATION_13_14=object :Migration(13,14){
     override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL(
-            """
-            ALTER TABLE coin 
-            ADD COLUMN cmcId INTEGER DEFAULT NULL
-            """.trimIndent()
-        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_coin_vaultId` ON `coin` (`vaultId`)")
     }
 }
 
-internal val MIGRATION_14_15 = object : Migration(13, 14) {
+internal val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
