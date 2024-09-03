@@ -20,6 +20,7 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
     val state = MutableStateFlow(
         DefaultChainsUiModel(
             chains = Chain.entries.toUiModel()
+                .sortedBy { it.title }
         )
     )
 
