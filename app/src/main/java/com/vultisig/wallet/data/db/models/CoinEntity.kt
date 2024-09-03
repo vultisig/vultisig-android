@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.db.models
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 
 
 @Entity(
@@ -16,7 +17,8 @@ import androidx.room.ForeignKey
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["vaultId"])]
 )
 internal data class CoinEntity(
     @ColumnInfo("id")

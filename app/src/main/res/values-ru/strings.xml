@@ -227,7 +227,7 @@
     <string name="join_keygen_wrong_reshare">Неправильный ReShare</string>
     <string name="join_keysign_wrong_reshare">Неправильный ReShare</string>
     <string name="swap_screen_provider_title">Провайдер</string>
-    <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %s %s</string>
+    <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
     <string name="verify_approve_amount_title">Сумма для утверждения</string>
     <string name="verify_approve_amount_unlimited">НЕОГРАНИЧЕННЫЙ</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
@@ -265,7 +265,7 @@
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save_or_share">Сохранить и поделиться</string>
     <string name="share_vault_qr_card_title">Главное хранилище</string>
-    <string name="share_vault_qr_card_keys">Ключ ECDSA: %s Ключ EdDSA: %s</string>
+    <string name="share_vault_qr_card_keys">Ключ ECDSA: %1$s Ключ EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
     <string name="deposit_form_provider_hint">Провайдер</string>

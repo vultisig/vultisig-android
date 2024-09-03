@@ -28,7 +28,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         AddressBookEntryEntity::class,
         AddressBookOrderEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = false,
 )
 internal abstract class AppDatabase : RoomDatabase() {
