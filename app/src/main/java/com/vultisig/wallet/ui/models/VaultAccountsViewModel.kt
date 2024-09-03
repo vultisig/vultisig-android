@@ -164,9 +164,11 @@ internal class VaultAccountsViewModel @Inject constructor(
             }
 
     private fun List<Address>.sortByAccountsTotalFiatValue() =
-        sortedBy {
+        sortedWith(compareBy({
             it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
-        }
+        }, {
+            it.chain.raw
+        }))
 
     private fun List<Address>.updateUiStateFromList() {
         val totalFiatValue = this.calculateAddressesTotalFiatValue()
