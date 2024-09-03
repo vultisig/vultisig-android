@@ -42,6 +42,7 @@ serialization = "1.7.1"
 protobuf = "0.9.4"
 rive = "8.7.0"
 update = "2.1.0"
+review = "2.0.1"
 material = "1.10.0"
 
 [libraries]
@@ -104,6 +105,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 
 rive = { module = "app.rive:rive-android", version.ref = "rive" }
 play-update = { module = "com.google.android.play:app-update", version.ref = "update" }
+play-review = { module = "com.google.android.play:review", version.ref = "review" }
 
 
 [plugins]

@@ -151,6 +151,7 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.rive)
     implementation(libs.play.update)
+    implementation(libs.play.review)
 
     // test
     testImplementation(libs.junit)

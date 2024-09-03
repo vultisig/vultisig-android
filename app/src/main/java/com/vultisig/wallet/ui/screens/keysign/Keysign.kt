@@ -7,13 +7,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keysign.KeysignState
@@ -25,6 +28,7 @@ import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.showReviewPopUp
 
 @Composable
 internal fun Keysign(
@@ -32,6 +36,8 @@ internal fun Keysign(
     onComplete: () -> Unit,
     onKeysignFinished: (() -> Unit)? = null,
 ) {
+    val context = LocalContext.current
+    val reviewManager = remember { ReviewManagerFactory.create(context) }
 
     val wrapperViewModel = hiltViewModel(
         creationCallback = { factory: KeySignWrapperViewModel.Factory ->
@@ -45,6 +51,7 @@ internal fun Keysign(
     LaunchedEffect(state) {
         if (state == KeysignState.KeysignFinished) {
             onKeysignFinished?.invoke()
+            reviewManager.showReviewPopUp(context)
         }
     }
     KeysignScreen(
