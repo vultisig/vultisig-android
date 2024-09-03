@@ -238,6 +238,20 @@ internal val MIGRATION_13_14 = object : Migration(13, 14) {
     }
 }
 
+internal val MIGRATION_14_15 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `cmcPrice` (
+                `contractAddress` TEXT NOT NULL,
+                `cmcId` INTEGER DEFAULT NULL,
+                PRIMARY KEY(`contractAddress`)
+            )
+            """.trimIndent()
+        )
+    }
+}
+
 private fun SupportSQLiteDatabase.updateCoinDecimals(ticker: String, decimal: Int) {
     execSQL(
         """

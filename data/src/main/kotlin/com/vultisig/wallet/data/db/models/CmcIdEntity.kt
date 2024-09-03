@@ -4,12 +4,12 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "cmcPrice")
-internal data class CmcPriceEntity(
+@Entity(tableName = "cmcId")
+data class CmcIdEntity(
     @PrimaryKey
     @ColumnInfo(name = "contractAddress")
     val contractAddress: String,
 
-    @ColumnInfo(name = "cmcId")
-    val cmcId: Int? = null,
+    @ColumnInfo(name = "id")
+    val id: Int? = null,
 )

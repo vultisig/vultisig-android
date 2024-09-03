@@ -4,12 +4,12 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
-import com.vultisig.wallet.data.db.dao.CmcPriceDao
+import com.vultisig.wallet.data.db.dao.CmcIdDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.AddressBookEntryEntity
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
-import com.vultisig.wallet.data.db.models.CmcPriceEntity
+import com.vultisig.wallet.data.db.models.CmcIdEntity
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
@@ -29,7 +29,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         TokenPriceEntity::class,
         AddressBookEntryEntity::class,
         AddressBookOrderEntity::class,
-        CmcPriceEntity::class,
+        CmcIdEntity::class,
     ],
     version = 14,
     exportSchema = false,
@@ -48,6 +48,6 @@ internal abstract class AppDatabase : RoomDatabase() {
 
     abstract fun addressBookOrderDao(): AddressBookOrderDao
 
-    abstract fun cmcPriceDao(): CmcPriceDao
+    abstract fun cmcIdDao(): CmcIdDao
 
 }

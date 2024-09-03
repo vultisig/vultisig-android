@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.ksp)
     kotlin("kapt")
 }
 
@@ -50,6 +51,11 @@ dependencies {
 
     // ktor
     implementation(libs.ktor.client.core)
+
+    // room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
 
     // serialization

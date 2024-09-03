@@ -564,21 +564,6 @@ internal class DepositFormViewModel @Inject constructor(
             memo = customMemoFieldState.text.toString(),
         )
 
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        val tokenAmountInt =
-            tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
-
         val specific = blockChainSpecificRepository
             .getSpecific(
                 chain,
@@ -600,7 +585,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
-                value = tokenAmountInt,
+                value = BigInteger.ZERO,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,

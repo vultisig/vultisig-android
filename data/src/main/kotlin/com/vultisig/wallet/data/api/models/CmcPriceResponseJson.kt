@@ -1,10 +1,8 @@
-@file:UseSerializers(BigDecimalSerializer::class)
 package com.vultisig.wallet.data.api.models
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -13,20 +11,21 @@ import java.math.BigDecimal
 
 
 @Serializable
-data class CmcPriceResponseJson(
+internal data class CmcPriceResponseJson(
     @SerialName("data")
     val data: Map<String, TokenPriceJson>
 )
 
 @Serializable
-data class TokenPriceJson(
+internal data class TokenPriceJson(
     @SerialName("quote")
     val quote: Map<String, QuoteJson>
 )
 
 @Serializable
-data class QuoteJson(
+internal data class QuoteJson(
     @SerialName("price")
+    @Serializable(BigDecimalSerializer::class)
     val price: BigDecimal
 )
 

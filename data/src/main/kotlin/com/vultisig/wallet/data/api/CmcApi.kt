@@ -1,10 +1,11 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.CmcIdResponseJson
 import com.vultisig.wallet.data.api.models.CmcPriceResponseJson
-import com.vultisig.wallet.data.db.dao.CmcPriceDao
-import com.vultisig.wallet.data.db.models.CmcPriceEntity
+import com.vultisig.wallet.data.db.dao.CmcIdDao
+import com.vultisig.wallet.data.db.models.CmcIdEntity
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.repositories.CoinCmcPrice
+import com.vultisig.wallet.data.models.CoinCmcPrice
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -12,13 +13,11 @@ import io.ktor.client.request.parameter
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal interface CmcApi {
+interface CmcApi {
 
     suspend fun fetchPrice(
         coin: CoinCmcPrice,
@@ -33,18 +32,20 @@ internal interface CmcApi {
 }
 
 
-internal class CmcApiImpl @Inject constructor(
+class CmcApiImpl @Inject constructor(
     private val http: HttpClient,
-    private val cmcPriceDao: CmcPriceDao,
+    private val cmcIdDao: CmcIdDao,
 ) : CmcApi {
 
     override suspend fun fetchPrice(
         coin: CoinCmcPrice,
         currency: String
     ): BigDecimal {
-        val cmcId = fetchTokenCmcId(coin)
-        val cmcPriceResponse = fetchCmcPriceResponse(cmcId.toString(), currency)
-        return extractCoinAndPrice(cmcPriceResponse, coin).values.firstOrNull() ?: BigDecimal.ZERO
+        return fetchTokenCmcId(coin)?.let { cmcId ->
+            val cmcPriceResponse = fetchCmcPriceResponse(listOf(cmcId), currency)
+            extractCoinAndPrice(cmcPriceResponse, coin).values.firstOrNull()
+                ?: BigDecimal.ZERO
+        } ?: BigDecimal.ZERO
     }
 
 
@@ -68,10 +69,10 @@ internal class CmcApiImpl @Inject constructor(
 
 
     private suspend fun saveToDatabase(coin: CoinCmcPrice) {
-        cmcPriceDao.insertCmcPrice(
-            CmcPriceEntity(
+        cmcIdDao.insertCmcPrice(
+            CmcIdEntity(
                 contractAddress = coin.contractAddress,
-                cmcId = coin.cmcId,
+                id = coin.cmcId,
             )
         )
     }
@@ -81,7 +82,7 @@ internal class CmcApiImpl @Inject constructor(
         currency: String,
         coins: List<CoinCmcPrice>,
     ): Map<String, BigDecimal> {
-        val cmcIds = coins.mapNotNull { it.cmcId }.joinToString(",")
+        val cmcIds = coins.mapNotNull { it.cmcId }
         val cmcPriceResponse = fetchCmcPriceResponse(cmcIds, currency)
         return extractCoinAndPrice(cmcPriceResponse, coins)
     }
@@ -91,7 +92,7 @@ internal class CmcApiImpl @Inject constructor(
         coins: List<CoinCmcPrice>
     ): Map<String, BigDecimal> {
         return convertRespToTokenToPriceList(cmcPriceResponse)?.associate { (cmcId, price) ->
-            val coin = coins.find { it.cmcId == cmcId.toInt() }!!
+            val coin = coins.first { it.cmcId == cmcId.toInt() }
             coin.tokenId to (price ?: BigDecimal.ZERO)
         } ?: emptyMap()
     }
@@ -110,20 +111,20 @@ internal class CmcApiImpl @Inject constructor(
         }
 
     private suspend fun fetchCmcPriceResponse(
-        cmcIds: String,
+        cmcIds: List<Int>,
         currency: String
     ): CmcPriceResponseJson? {
         try {
             val response =
                 http.get("https://api.vultisig.com/cmc/v2/cryptocurrency/quotes/latest") {
-                    parameter("id", cmcIds)
+                    parameter("id", cmcIds.joinToString(","))
                     parameter("skip_invalid", true)
                     parameter("aux", "is_active")
                     parameter("convert", currency)
                 }
             return response.body<CmcPriceResponseJson>()
         } catch (e: Exception) {
-            Timber.tag("CmcApiImpl").e(e, "can not get token price")
+            Timber.e(e, "can not get token price")
             return null
         }
     }
@@ -134,19 +135,19 @@ internal class CmcApiImpl @Inject constructor(
             try {
                 val response = http.get("https://api.vultisig.com/cmc/v1/cryptocurrency/info") {
                     parameter("address", coin.contractAddress)
-                }.body<JsonObject>()
-                response["data"]?.jsonObject?.keys?.first()?.toInt()
+                }.body<CmcIdResponseJson>()
+                response.data.values.first().id
             } catch (e: Exception) {
-                Timber.tag("CmcApiImpl").e(e, "can not find cmc id for token ${coin.tokenId}")
+                Timber.e(e, "can not find cmc id for token ${coin.tokenId}")
                 null
             }
         } else {
-            coin.getNativeTokenCmcId()
+            coin.chain.getNativeTokenCmcId()
         }
 
 
-    private fun CoinCmcPrice.getNativeTokenCmcId() =
-        when (chain) {
+    private fun Chain.getNativeTokenCmcId() =
+        when (this) {
             Chain.Arbitrum -> 1027
             Chain.Avalanche -> 5805
             Chain.Base -> 1027
@@ -169,6 +170,8 @@ internal class CmcApiImpl @Inject constructor(
             Chain.Solana -> 5426
             Chain.ThorChain -> 4157
             Chain.ZkSync -> 1027
-            else -> null
+            else -> error("cmc id not defined for native token $id")
         }
 }
+
+
