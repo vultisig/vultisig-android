@@ -26,6 +26,7 @@ internal data class Colors(
     val aquamarine: Color = Color(0xff33E6BF),
     val sapphireGlitter: Color = Color(0xff0439C7),
 
+    val transparentOxfordBlue: Color = Color(0xFF1A2339),
     val oxfordBlue800: Color = Color(0xff02122B),
     val oxfordBlue600Main: Color = Color(0xff061B3A),
     val oxfordBlue400: Color = Color(0xff11284A),
@@ -36,11 +37,13 @@ internal data class Colors(
     val persianBlue400: Color = Color(0xff2155DF),
     val persianBlue200: Color = Color(0xff4879FD),
 
+    val trasnparentTurquoise: Color = Color(0x8015D7AC),
     val turquoise800: Color = Color(0xff15D7AC),
     val turquoise600Main: Color = Color(0xff33E6BF),
     val turquoise400: Color = Color(0xff81F8DE),
     val turquoise200: Color = Color(0xffA6FBE8),
 
+    val transparentRed: Color = Color(0x59DA2E2E),
     val red: Color = Color(0xffFF4040),
     val alertBackground: Color = Color(0x59DA2E2E),
     val alert: Color = Color(0xffDA2E2E),

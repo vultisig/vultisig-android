@@ -102,7 +102,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             VaultSetupType.fromInt(
                 navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
             ),
-            isReshareMode = navBackStackEntry.get<Boolean>(Destination.ARG_IS_RESHARE) == true
+            isReshareMode = false
         )
     )
 
@@ -165,10 +165,13 @@ internal class KeygenFlowViewModel @Inject constructor(
             vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
         }
 
-        val action = if (vault.pubKeyECDSA.isEmpty())
+        val action = if (vault.pubKeyECDSA.isEmpty()) {
+            uiState.value = uiState.value.copy(isReshareMode = false)
             TssAction.KEYGEN
-        else
+        } else {
+            uiState.value = uiState.value.copy(isReshareMode = true)
             TssAction.ReShare
+        }
 
         if (vultisigRelay.isRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY

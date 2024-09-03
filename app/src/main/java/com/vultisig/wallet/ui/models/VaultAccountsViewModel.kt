@@ -108,12 +108,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun joinKeysign() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.JoinThroughQr(
-                    vaultId = vaultId,
-                    isReshare = false,
-                )
-            )
+            navigator.navigate(Destination.JoinThroughQr(vaultId = vaultId))
         }
     }
 

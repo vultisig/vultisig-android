@@ -23,7 +23,6 @@ import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_IS_RESHARE
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
@@ -100,8 +99,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.JoinKeygen.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(ARG_QR) { type = NavType.StringType },
-                navArgument(ARG_IS_RESHARE) { type = NavType.BoolType },
+                navArgument(ARG_QR) { type = NavType.StringType }
             )
         ) { entry ->
             val qrCodeResult = entry.arguments?.getString(ARG_QR)!!
@@ -149,10 +147,6 @@ internal fun SetupNavGraph(
                 navArgument(Destination.KeygenFlow.ARG_VAULT_TYPE) {
                     type = NavType.IntType
                     defaultValue = 0
-                },
-                navArgument(ARG_IS_RESHARE) {
-                    type = NavType.BoolType
-                    defaultValue = false
                 }
             )
         ) {
@@ -314,9 +308,6 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
                     nullable = true
-                },
-                navArgument(ARG_IS_RESHARE) {
-                    type = NavType.BoolType
                 }
             )
         ) {

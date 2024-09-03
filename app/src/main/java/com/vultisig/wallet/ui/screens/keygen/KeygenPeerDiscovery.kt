@@ -131,9 +131,9 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
-        vaultSetupType = "M/N",
         networkPromptOption = NetworkPromptOption.LOCAL,
         isContinueEnabled = true,
+        vaultSetupType = "M/N",
         isReshare = true,
     )
 }

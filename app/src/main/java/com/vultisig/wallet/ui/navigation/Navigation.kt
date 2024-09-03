@@ -18,7 +18,6 @@ internal sealed class Destination(
         const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
-        const val ARG_IS_RESHARE = "is_reshare"
     }
 
     data object AddVault : Destination(
@@ -135,10 +134,9 @@ internal sealed class Destination(
 
     data class JoinThroughQr(
         val vaultId: String?,
-        val isReshare: Boolean,
-    ) : Destination(route = "join/qr?vault_id=$vaultId&is_reshare=$isReshare") {
+    ) : Destination(route = "join/qr?vault_id=$vaultId") {
         companion object {
-            const val STATIC_ROUTE = "join/qr?vault_id={$ARG_VAULT_ID}&is_reshare={$ARG_IS_RESHARE}"
+            const val STATIC_ROUTE = "join/qr?vault_id={$ARG_VAULT_ID}"
         }
     }
 
@@ -157,8 +155,7 @@ internal sealed class Destination(
         route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
     ) {
         companion object {
-            const val STATIC_ROUTE =
-                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+            const val STATIC_ROUTE = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
         }
     }
 
@@ -246,7 +243,8 @@ internal sealed class Destination(
         }
     }
 
-    data class KeygenRole(val vaultId: String? = null) : Destination(route = "keygen/role?$ARG_VAULT_ID=$vaultId") {
+    data class KeygenRole(val vaultId: String? = null) :
+        Destination(route = "keygen/role?$ARG_VAULT_ID=$vaultId") {
         companion object {
             const val STATIC_ROUTE = "keygen/role?$ARG_VAULT_ID={$ARG_VAULT_ID}"
         }
@@ -288,10 +286,10 @@ internal sealed class Destination(
     data class JoinKeygen(
         val qr: String,
         val isReshare: Boolean,
-    ) : Destination(route = "join_keygen?qr=$qr&is_reshare=$isReshare") {
+    ) : Destination(route = "join_keygen?qr=$qr") {
 
         companion object {
-            const val STATIC_ROUTE = "join_keygen?qr={$ARG_QR}&is_reshare={$ARG_IS_RESHARE}"
+            const val STATIC_ROUTE = "join_keygen?qr={$ARG_QR}"
         }
 
     }

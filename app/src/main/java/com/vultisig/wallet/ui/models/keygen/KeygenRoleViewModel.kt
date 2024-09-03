@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class KeygenRoleViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
-    stateHandle: SavedStateHandle,
+    private val stateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     val vaultId = stateHandle.remove<String>(ARG_VAULT_ID)
@@ -34,12 +34,7 @@ internal class KeygenRoleViewModel @Inject constructor(
 
     fun pair() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.JoinThroughQr(
-                    null,
-                    isReshare = vaultId != null,
-                )
-            )
+            navigator.navigate(Destination.JoinThroughQr(null))
         }
     }
 

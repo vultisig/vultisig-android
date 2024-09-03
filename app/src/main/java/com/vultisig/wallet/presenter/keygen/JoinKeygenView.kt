@@ -57,11 +57,16 @@ internal fun JoinKeygenView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        val title = if (viewModel.isReshareMode.value) {
+            stringResource(id = R.string.resharing_the_vault)
+        } else {
+            stringResource(id = R.string.join_key_gen_screen_keygen)
+        }
         when (viewModel.currentState.value) {
             JoinKeygenState.DiscoveringSessionID -> {
                 DiscoveringSessionID(
                     navController = navController,
-                    title = viewModel.screenTitle.asString(),
+                    title = title,
                 )
             }
 
@@ -70,7 +75,7 @@ internal fun JoinKeygenView(
                 viewModel.discoveryMediator(nsdManager)
                 DiscoverService(
                     navController = navController,
-                    title = viewModel.screenTitle.asString(),
+                    title = title,
                 )
             }
 
@@ -80,7 +85,7 @@ internal fun JoinKeygenView(
                 }
                 JoiningKeygen(
                     navController = navController,
-                    title = viewModel.screenTitle.asString(),
+                    title = title,
                 )
             }
 
@@ -90,7 +95,7 @@ internal fun JoinKeygenView(
                 }
                 WaitingForKeygenToStart(
                     navController = navController,
-                    title = viewModel.screenTitle.asString(),
+                    title = title,
                 )
             }
 
@@ -105,7 +110,7 @@ internal fun JoinKeygenView(
                 KeygenFailedToStart(
                     navController = navController,
                     errorMessage = viewModel.errorMessage.value.asString(),
-                    title = viewModel.screenTitle.asString(),
+                    title = title,
                 )
             }
 
@@ -113,14 +118,14 @@ internal fun JoinKeygenView(
                 KeygenFailedToStart(
                     navController = navController,
                     errorMessage = viewModel.errorMessage.value.asString(),
-                    title = viewModel.screenTitle.asString(),
+                    title = title,
                 )
             }
         }
         SnackbarHost(
             modifier = Modifier.align(Alignment.BottomCenter),
             hostState = viewModel.warningHostState
-        ) {
+        ){
             InformationNoteSnackBar(text = stringResource(id = R.string.keygen_info_note))
         }
     }

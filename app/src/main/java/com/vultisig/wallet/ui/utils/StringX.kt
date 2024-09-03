@@ -13,3 +13,7 @@ internal fun String.getAddressFromQrCode(): String {
     }
     return removedSuffix
 }
+
+internal fun String.isReshare(): Boolean {
+    return contains("tssType=Reshare")
+}
