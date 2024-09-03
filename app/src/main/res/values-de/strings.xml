@@ -258,7 +258,8 @@
     <string name="custom_token_add_token">%1$s Token hinzufügen</string>
     <string name="deposit_form_amount_title">Menge</string>
     <string name="share_vault_qr_title">Vault-QR teilen</string>
-    <string name="share_vault_qr_save_or_share">Speichern und teilen</string>
+    <string name="share_vault_qr_save" >Speichern</string>
+    <string name="share_vault_qr_share" >Teilen</string>
     <string name="deposit_form_node_address_title">Knotenadresse</string>
     <string name="deposit_form_provider_title">Anbieter (optional)</string>
     <string name="deposit_form_provider_hint">Anbieterin</string>

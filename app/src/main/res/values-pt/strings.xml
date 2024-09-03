@@ -259,7 +259,8 @@
     <string name="custom_token_add_token">Adicionar token %1$s</string>
     <string name="deposit_form_amount_title">Montante</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
-    <string name="share_vault_qr_save_or_share">Guardar e compartilhar</string>
+    <string name="share_vault_qr_save" >Guardar</string>
+    <string name="share_vault_qr_share" >Compartilhar</string>
     <string name="share_vault_qr_card_title">O tipo de ficheiro não é compatível</string>
     <string name="share_vault_qr_card_keys">Chave ECDSA: %1$s Chave EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>

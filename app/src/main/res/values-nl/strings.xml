@@ -269,7 +269,8 @@
     <string name="custom_token_add_token">%1$s-token toevoegen</string>
     <string name="deposit_form_amount_title">Hoeveelheid</string>
     <string name="share_vault_qr_title">Deel Vault QR</string>
-    <string name="share_vault_qr_save_or_share">Opslaan en delen</string>
+    <string name="share_vault_qr_save" >Opslaan</string>
+    <string name="share_vault_qr_share" >Delen</string>
     <string name="deposit_form_node_address_title">Knooppuntadres</string>
     <string name="deposit_form_provider_title">Provider (optioneel)</string>
     <string name="deposit_form_provider_hint">Leverancier</string>

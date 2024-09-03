@@ -42,6 +42,7 @@ internal data class ShareVaultQrState(
     val shareVaultQrString: String? = null,
     val fileName: String? = null,
     val fileUri: Uri? = null,
+    val fileSaved: Boolean = false,
 )
 
 internal data class ShareVaultQrModel(
@@ -157,25 +158,49 @@ internal class ShareVaultQrViewModel @Inject constructor(
     }
 
     internal fun onSaveClicked() {
+        saveBitmap(toShare = false)
+    }
+
+    internal fun onShareClicked() {
+        saveBitmap(toShare = true)
+    }
+
+    private fun saveBitmap(toShare: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val uri = context.saveBitmapToDownloads(
                 requireNotNull(shareQrBitmap.value),
                 requireNotNull(state.value.fileName)
             )
             shareQrBitmap.value?.recycle()
-            state.update {
-                it.copy(
-                    fileUri = uri
-                )
-            }
-            if (uri != null) {
-                snackbarFlow.showMessage(
-                    context.getString(
-                        R.string.vault_settings_success_backup_file,
-                        "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}"
+            if (toShare) {
+                state.update {
+                    it.copy(
+                        fileUri = uri
                     )
-                )
+                }
+            } else if (uri != null) {
+                state.update {
+                    it.copy(
+                        fileSaved = true
+                    )
+                }
+                showSnackbarMessage()
             }
+        }
+    }
+
+    private suspend fun showSnackbarMessage() {
+        snackbarFlow.showMessage(
+            context.getString(
+                R.string.vault_settings_success_backup_file,
+                "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}"
+            )
+        )
+    }
+
+    internal fun showSnackbarSavedMessage() {
+        viewModelScope.launch {
+            showSnackbarMessage()
         }
     }
 }
