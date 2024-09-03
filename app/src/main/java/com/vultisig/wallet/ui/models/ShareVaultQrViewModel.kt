@@ -25,6 +25,7 @@ import com.vultisig.wallet.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -42,7 +43,6 @@ internal data class ShareVaultQrState(
     val shareVaultQrString: String? = null,
     val fileName: String? = null,
     val fileUri: Uri? = null,
-    val fileSaved: Boolean = false,
 )
 
 internal data class ShareVaultQrModel(
@@ -56,6 +56,7 @@ internal data class ShareVaultQrModel(
 @HiltViewModel
 internal class ShareVaultQrViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val snackbarFlow: SnackbarFlow,
     @ApplicationContext private val context: Context,
@@ -157,11 +158,11 @@ internal class ShareVaultQrViewModel @Inject constructor(
         shareQrBitmap.value = bitmap
     }
 
-    internal fun onSaveClicked() {
+    internal fun save() {
         saveBitmap(toShare = false)
     }
 
-    internal fun onShareClicked() {
+    internal fun share() {
         saveBitmap(toShare = true)
     }
 
@@ -179,12 +180,8 @@ internal class ShareVaultQrViewModel @Inject constructor(
                     )
                 }
             } else if (uri != null) {
-                state.update {
-                    it.copy(
-                        fileSaved = true
-                    )
-                }
                 showSnackbarMessage()
+                navigator.navigate(Destination.Back)
             }
         }
     }

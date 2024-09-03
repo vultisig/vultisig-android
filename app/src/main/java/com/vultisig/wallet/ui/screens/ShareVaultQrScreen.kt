@@ -87,12 +87,6 @@ internal fun ShareVaultQrScreen(
         }
     }
 
-    LaunchedEffect(state.fileSaved) {
-        if (state.fileSaved) {
-            navController.popBackStack()
-        }
-    }
-
     ShareVaultQrScreen(
         navController = navController,
         ecdsa = state.shareVaultQrModel.publicKeyEcdsa,
@@ -103,14 +97,14 @@ internal fun ShareVaultQrScreen(
         saveShareQrBitmap = viewModel::saveShareQrBitmap,
         onShareButtonClicked = {
             if (state.fileUri == null) {
-                viewModel.onShareClicked()
+                viewModel.share()
             } else {
                 shareQr(requireNotNull(state.fileUri), context)
             }
         },
         onSaveButtonClicked = {
             if (state.fileUri == null) {
-                viewModel.onSaveClicked()
+                viewModel.save()
             } else {
                 viewModel.showSnackbarSavedMessage()
                 navController.popBackStack()
