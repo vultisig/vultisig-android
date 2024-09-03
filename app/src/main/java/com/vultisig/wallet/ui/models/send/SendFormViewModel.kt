@@ -229,11 +229,15 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    fun openAddressBook()  {
+    fun openAddressBook() {
         viewModelScope.launch {
-            navigator.navigate(Destination.AddressBook(
-                requestId = REQUEST_ADDRESS_ID,
-            ))
+            navigator.navigate(
+                Destination.AddressBook(
+                    requestId = REQUEST_ADDRESS_ID,
+                    chain = selectedSrc.value?.address?.chain
+                        ?: chain.value,
+                )
+            )
             val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
             selectedSrc.value = null
             selectedTokenId.value = null
@@ -400,7 +404,8 @@ internal class SendFormViewModel @Inject constructor(
                         decimals = selectedToken.decimal,
                     ),
                     fiatValue = FiatValue(
-                        value = fiatAmountFieldState.text.toString().toBigDecimalOrNull()?: BigDecimal.ZERO,
+                        value = fiatAmountFieldState.text.toString().toBigDecimalOrNull()
+                            ?: BigDecimal.ZERO,
                         currency = appCurrency.value.ticker,
                     ),
                     gasFee = gasFee,
@@ -456,8 +461,7 @@ internal class SendFormViewModel @Inject constructor(
                         Destination.ScanError(vaultId),
                         opts = NavigationOptions(popUpTo = Destination.Home().route),
                     )
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     Timber.e(e)
                 }
             }.collect()
@@ -600,7 +604,7 @@ internal class SendFormViewModel @Inject constructor(
                 return null
             }
 
-            if (price== BigDecimal.ZERO)
+            if (price == BigDecimal.ZERO)
                 return null
 
             transform(decimalValue, price, selectedToken)
@@ -618,7 +622,7 @@ internal class SendFormViewModel @Inject constructor(
             dstAddress.isBlank() ||
             !(chainAccountAddressRepository.isValid(chain, dstAddress) ||
                     addressParserRepository.isEnsNameService(dstAddress))
-            )
+        )
             return UiText.StringResource(R.string.send_error_no_address)
         return null
     }
