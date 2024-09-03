@@ -5,6 +5,7 @@ package com.vultisig.wallet.presenter.keysign
 import android.net.nsd.NsdManager
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.util.fastFirst
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -221,8 +222,16 @@ internal class JoinKeysignViewModel @Inject constructor(
                 Timber.d("Mapped proto to KeysignMessage: $payload")
 
                 if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-                    currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
-                    return@launch
+                    val matchingVault = vaultRepository.getAll().firstOrNull() {
+                        it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
+                    }
+                    matchingVault?.let {
+                        _currentVault = it
+                        _localPartyID = it.localPartyID
+                    } ?: run {
+                        currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
+                        return@launch
+                    }
                 }
                 val deepLink = DeepLinkHelper(content)
                 if (deepLink.hasResharePrefix()) {
