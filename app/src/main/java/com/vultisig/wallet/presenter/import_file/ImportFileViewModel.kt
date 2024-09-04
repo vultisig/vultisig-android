@@ -1,7 +1,6 @@
 package com.vultisig.wallet.presenter.import_file
 
 import android.content.Context
-import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
@@ -13,6 +12,7 @@ import com.vultisig.wallet.common.fileContent
 import com.vultisig.wallet.common.fileName
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
@@ -94,7 +94,7 @@ internal class ImportFileViewModel @Inject constructor(
     private suspend fun saveToDb(fileContent: String, password: String?) {
         try {
             insertVaultToDb(parseVaultFromString(fileContent, password))
-        } catch (e: SQLiteConstraintException) {
+        } catch (e: DuplicateVaultException) {
             Timber.e(e)
             snackBarChannel.send(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
         }
