@@ -277,7 +277,8 @@
     <string name="custom_token_add_token" >Add %1$s Token</string>
     <string name="deposit_form_amount_title" >Amount</string>
     <string name="share_vault_qr_title" >Share Vault QR</string>
-    <string name="share_vault_qr_save_or_share" >Save and Share</string>
+    <string name="share_vault_qr_save" >Save</string>
+    <string name="share_vault_qr_share" >Share</string>
     <string name="share_vault_qr_card_title" >Main Vault</string>
     <string name="share_vault_qr_card_keys">ECDSA Key: %1$s EdDSA Key: %2$s</string>
     <string name="deposit_form_node_address_title">Node Address</string>

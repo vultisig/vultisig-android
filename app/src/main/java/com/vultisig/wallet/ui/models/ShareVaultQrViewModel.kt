@@ -25,6 +25,7 @@ import com.vultisig.wallet.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -55,6 +56,7 @@ internal data class ShareVaultQrModel(
 @HiltViewModel
 internal class ShareVaultQrViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val snackbarFlow: SnackbarFlow,
     @ApplicationContext private val context: Context,
@@ -156,26 +158,46 @@ internal class ShareVaultQrViewModel @Inject constructor(
         shareQrBitmap.value = bitmap
     }
 
-    internal fun onSaveClicked() {
+    internal fun save() {
+        saveBitmap(toShare = false)
+    }
+
+    internal fun share() {
+        saveBitmap(toShare = true)
+    }
+
+    private fun saveBitmap(toShare: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val uri = context.saveBitmapToDownloads(
                 requireNotNull(shareQrBitmap.value),
                 requireNotNull(state.value.fileName)
             )
             shareQrBitmap.value?.recycle()
-            state.update {
-                it.copy(
-                    fileUri = uri
-                )
-            }
-            if (uri != null) {
-                snackbarFlow.showMessage(
-                    context.getString(
-                        R.string.vault_settings_success_backup_file,
-                        "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}"
+            if (toShare) {
+                state.update {
+                    it.copy(
+                        fileUri = uri
                     )
-                )
+                }
+            } else if (uri != null) {
+                showSnackbarMessage()
+                navigator.navigate(Destination.Back)
             }
+        }
+    }
+
+    private suspend fun showSnackbarMessage() {
+        snackbarFlow.showMessage(
+            context.getString(
+                R.string.vault_settings_success_backup_file,
+                "$QRCODE_DIRECTORY_NAME_FULL/${state.value.fileName}"
+            )
+        )
+    }
+
+    internal fun showSnackbarSavedMessage() {
+        viewModelScope.launch {
+            showSnackbarMessage()
         }
     }
 }

@@ -263,7 +263,8 @@
     <string name="custom_token_add_token">Добавить %1$s токен</string>
     <string name="deposit_form_amount_title">Количество</string>
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
-    <string name="share_vault_qr_save_or_share">Сохранить и поделиться</string>
+    <string name="share_vault_qr_save" >Сохранить</string>
+    <string name="share_vault_qr_share" >Поделиться</string>
     <string name="share_vault_qr_card_title">Главное хранилище</string>
     <string name="share_vault_qr_card_keys">Ключ ECDSA: %1$s Ключ EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>

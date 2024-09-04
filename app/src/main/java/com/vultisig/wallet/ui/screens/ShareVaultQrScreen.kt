@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -94,11 +95,19 @@ internal fun ShareVaultQrScreen(
         qrBitmapPainter = qrBitmapPainter,
         shareVaultQrString = state.shareVaultQrString,
         saveShareQrBitmap = viewModel::saveShareQrBitmap,
-        onButtonClicked = {
+        onShareButtonClicked = {
             if (state.fileUri == null) {
-                viewModel.onSaveClicked()
+                viewModel.share()
             } else {
                 shareQr(requireNotNull(state.fileUri), context)
+            }
+        },
+        onSaveButtonClicked = {
+            if (state.fileUri == null) {
+                viewModel.save()
+            } else {
+                viewModel.showSnackbarSavedMessage()
+                navController.popBackStack()
             }
         },
     )
@@ -113,22 +122,37 @@ internal fun ShareVaultQrScreen(
     qrBitmapPainter: BitmapPainter?,
     shareVaultQrString: String?,
     saveShareQrBitmap: (Bitmap) -> Unit,
-    onButtonClicked: () -> Unit,
+    onShareButtonClicked: () -> Unit,
+    onSaveButtonClicked: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            MultiColorButton(
-                text = stringResource(R.string.share_vault_qr_save_or_share),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 12.dp,
-                        vertical = 16.dp,
-                    ),
-                disabled = qrBitmapPainter == null,
-                onClick = onButtonClicked,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround,
+            ) {
+                MultiColorButton(
+                    text = stringResource(R.string.share_vault_qr_save),
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 12.dp,
+                            vertical = 16.dp,
+                        ),
+                    disabled = qrBitmapPainter == null,
+                    onClick = onSaveButtonClicked,
+                )
+                MultiColorButton(
+                    text = stringResource(R.string.share_vault_qr_share),
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 12.dp,
+                            vertical = 16.dp,
+                        ),
+                    disabled = qrBitmapPainter == null,
+                    onClick = onShareButtonClicked,
+                )
+            }
         },
         topBar = {
             TopBar(
@@ -154,8 +178,15 @@ internal fun ShareVaultQrScreen(
                     draw(this, this.layoutDirection, pictureCanvas, this.size) {
                         this@onDrawWithContent.drawContent()
                     }
-                    drawIntoCanvas { canvas -> canvas.nativeCanvas.drawBitmap(tempBitmap, 0f, 0f, null)}
-                    if (qrBitmapPainter != null){
+                    drawIntoCanvas { canvas ->
+                        canvas.nativeCanvas.drawBitmap(
+                            tempBitmap,
+                            0f,
+                            0f,
+                            null
+                        )
+                    }
+                    if (qrBitmapPainter != null) {
                         saveShareQrBitmap(tempBitmap)
                     } else {
                         tempBitmap.recycle()
@@ -340,6 +371,7 @@ internal fun ShareVaultQrScreenPreview() {
             Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
         ),
         saveShareQrBitmap = {},
-        onButtonClicked = {},
+        onShareButtonClicked = {},
+        onSaveButtonClicked = {},
     )
 }
