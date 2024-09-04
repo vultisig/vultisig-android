@@ -65,6 +65,8 @@ internal class ChainSelectionViewModel @Inject constructor(
 
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
+            loadChains()
+
             try {
                 tokenRepository
                     .getTokensWithBalance(nativeToken.chain, address)
@@ -80,8 +82,6 @@ internal class ChainSelectionViewModel @Inject constructor(
                 Timber.e(e)
                 // ignore
             }
-
-            loadChains()
         }
     }
 
