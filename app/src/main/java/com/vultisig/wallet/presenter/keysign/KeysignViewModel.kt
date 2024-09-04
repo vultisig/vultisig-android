@@ -189,52 +189,46 @@ internal class KeysignViewModel(
     }
 
     private suspend fun broadcastTransaction() {
-        try {
-            val signedTransaction = getSignedTransaction()
-            val txHash = when (keysignPayload.coin.chain) {
-                Chain.ThorChain -> {
-                    thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
-                }
-
-                Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash -> {
-                    blockChairApi.broadcastTransaction(
-                        keysignPayload.coin,
-                        signedTransaction.rawTransaction
-                    )
-                }
-
-                Chain.Ethereum, Chain.CronosChain, Chain.Blast, Chain.BscChain, Chain.Avalanche,
-                Chain.Base, Chain.Polygon, Chain.Optimism, Chain.Arbitrum, Chain.ZkSync -> {
-                    val evmApi = evmApiFactory.createEvmApi(keysignPayload.coin.chain)
-                    evmApi.sendTransaction(signedTransaction.rawTransaction)
-                }
-
-                Chain.Solana -> {
-                    solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
-                }
-
-                Chain.GaiaChain, Chain.Kujira, Chain.Dydx -> {
-                    val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
-                    cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
-                }
-
-                Chain.MayaChain -> {
-                    mayaChainApi.broadcastTransaction(signedTransaction.rawTransaction)
-                }
-
-                Chain.Polkadot -> {
-                    polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
-                        ?: signedTransaction.transactionHash
-                }
+        val signedTransaction = getSignedTransaction()
+        val txHash = when (keysignPayload.coin.chain) {
+            Chain.ThorChain -> {
+                thorChainApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
-            Timber.d("transaction hash: $txHash")
-            if (txHash != null) {
-                this.txHash.value = txHash
+
+            Chain.Bitcoin, Chain.BitcoinCash, Chain.Litecoin, Chain.Dogecoin, Chain.Dash -> {
+                blockChairApi.broadcastTransaction(
+                    keysignPayload.coin,
+                    signedTransaction.rawTransaction
+                )
             }
-        } catch (e: Exception) {
-            Timber.e(e)
-            errorMessage.value = e.message ?: "Unknown error"
-            currentState.value = KeysignState.ERROR
+
+            Chain.Ethereum, Chain.CronosChain, Chain.Blast, Chain.BscChain, Chain.Avalanche,
+            Chain.Base, Chain.Polygon, Chain.Optimism, Chain.Arbitrum, Chain.ZkSync -> {
+                val evmApi = evmApiFactory.createEvmApi(keysignPayload.coin.chain)
+                evmApi.sendTransaction(signedTransaction.rawTransaction)
+            }
+
+            Chain.Solana -> {
+                solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
+            }
+
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx -> {
+                val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
+                cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
+            }
+
+            Chain.MayaChain -> {
+                mayaChainApi.broadcastTransaction(signedTransaction.rawTransaction)
+            }
+
+            Chain.Polkadot -> {
+                polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
+                    ?: signedTransaction.transactionHash
+            }
+        }
+        Timber.d("transaction hash: $txHash")
+        if (txHash != null) {
+            this.txHash.value = txHash
         }
     }
 
