@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-fun DeviceInfoItem(
+internal fun DeviceInfoItem(
     info: String,
     backgroundColor: Color = Theme.colors.oxfordBlue600Main,
 ) {
@@ -61,7 +61,7 @@ fun LabelViewPreview() {
 }
 
 @Composable
-fun Hint(
+internal fun Hint(
     text: String,
 ) {
     val brushGradient = Brush.vultiGradient()
