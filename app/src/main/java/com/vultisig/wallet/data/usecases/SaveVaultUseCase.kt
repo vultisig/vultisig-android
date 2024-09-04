@@ -11,6 +11,8 @@ import javax.inject.Inject
 
 internal interface SaveVaultUseCase : suspend (Vault, Boolean) -> Unit
 
+internal class DuplicateVaultException : IllegalStateException("Vault already exists")
+
 internal class SaveVaultUseCaseImpl @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
@@ -26,7 +28,7 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
         }
         vaultRepository.getByEcdsa(vault.pubKeyECDSA)?.let {
             Timber.d("saveVault: vault already exists, updating")
-            throw IllegalArgumentException("Vault already exists")
+            throw DuplicateVaultException()
         }
         vaultRepository.add(vault)
 
@@ -55,22 +57,6 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
                         hexPublicKey = derivedPublicKey
                     )
                     vaultRepository.addTokenToVault(vaultId, updatedNativeToken)
-
-                    try {
-//                        tokenRepository
-//                            .getTokensWithBalance(nativeToken.chain, address)
-//                            .filter { it.id != nativeToken.id }
-//                            .forEach { token ->
-//                                val updatedToken = token.copy(
-//                                    address = address,
-//                                    hexPublicKey = derivedPublicKey
-//                                )
-//                                vaultRepository.addTokenToVault(vaultId, updatedToken)
-//                            }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        // ignore
-                    }
                 }
         }
     }
