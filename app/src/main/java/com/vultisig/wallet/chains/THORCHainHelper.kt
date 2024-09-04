@@ -28,6 +28,7 @@ internal class THORCHainHelper(
     companion object{
         private val coinType: CoinType = CoinType.THORCHAIN
         const val THOR_CHAIN_GAS_UNIT: Long = 20000000
+        const val THORCHAIN_NETWORK_ID: String = "thorchain-1"
     }
 
     fun getSwapPreSignedInputData(
@@ -39,6 +40,7 @@ internal class THORCHainHelper(
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val inputData = input.apply {
+            this.chainId = THORCHAIN_NETWORK_ID
             this.publicKey = ByteString.copyFrom(publicKey.data())
             this.accountNumber = thorchainData.accountNumber.toLong()
             this.sequence = thorchainData.sequence.toLong()
@@ -108,7 +110,7 @@ internal class THORCHainHelper(
         val input = Cosmos.SigningInput.newBuilder().apply {
             this.publicKey = ByteString.copyFrom(publicKey.data())
             this.signingMode = Cosmos.SigningMode.Protobuf
-            this.chainId = coinType.chainId()
+            this.chainId = THORCHAIN_NETWORK_ID
             this.accountNumber = thorchainData.accountNumber.toLong()
             this.sequence = thorchainData.sequence.toLong()
             this.mode = Cosmos.BroadcastMode.SYNC
