@@ -237,16 +237,15 @@ internal val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
-            CREATE TABLE IF NOT EXISTS cmcId (
-                contractAddress TEXT NOT NULL,
-                id INTEGER DEFAULT NULL,
-                PRIMARY KEY(contractAddress)
+            CREATE TABLE IF NOT EXISTS `cmcId` (
+                `contractAddress` TEXT NOT NULL,
+                `id` INTEGER DEFAULT NULL,
+                PRIMARY KEY(`contractAddress`)
             )
             """.trimIndent()
         )
     }
 }
-
 
 private fun SupportSQLiteDatabase.updateCoinDecimals(ticker: String, decimal: Int) {
     execSQL(
