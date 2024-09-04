@@ -69,7 +69,7 @@ class CmcApiImpl @Inject constructor(
 
 
     private suspend fun saveToDatabase(coin: CoinCmcPrice) {
-        cmcIdDao.insertCmcPrice(
+        cmcIdDao.insertCmcId(
             CmcIdEntity(
                 contractAddress = coin.contractAddress,
                 id = coin.cmcId,

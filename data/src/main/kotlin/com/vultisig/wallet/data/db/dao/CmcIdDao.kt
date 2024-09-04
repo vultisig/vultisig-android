@@ -9,7 +9,7 @@ import com.vultisig.wallet.data.db.models.CmcIdEntity
 interface CmcIdDao {
 
     @Upsert
-    suspend fun insertCmcPrice(cmcPrice: CmcIdEntity)
+    suspend fun insertCmcId(cmcId: CmcIdEntity)
 
     @Query("SELECT id FROM cmcId WHERE contractAddress = :contractAddress")
     suspend fun getCmcId(contractAddress: String): Int?
