@@ -132,7 +132,7 @@ internal fun JoinKeygenView(
 }
 
 @Composable
-fun DiscoveringSessionID(
+internal fun DiscoveringSessionID(
     navController: NavHostController,
     title: String,
 ) {
@@ -171,13 +171,13 @@ fun DiscoveringSessionID(
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewDiscoveringSessionID() {
+private fun PreviewDiscoveringSessionID() {
     val navController = rememberNavController()
     DiscoveringSessionID(navController = navController, title = "title")
 }
 
 @Composable
-fun DiscoverService(
+internal fun DiscoverService(
     navController: NavHostController,
     title: String,
 ) {
@@ -215,7 +215,7 @@ fun DiscoverService(
 }
 
 @Composable
-fun JoiningKeygen(
+internal fun JoiningKeygen(
     navController: NavHostController,
     title: String,
 ) {
@@ -253,7 +253,7 @@ fun JoiningKeygen(
 }
 
 @Composable
-fun WaitingForKeygenToStart(
+internal fun WaitingForKeygenToStart(
     navController: NavHostController,
     title: String,
 ) {
@@ -291,7 +291,7 @@ fun WaitingForKeygenToStart(
 }
 
 @Composable
-fun KeygenFailedToStart(
+internal fun KeygenFailedToStart(
     navController: NavHostController,
     errorMessage: String,
     title: String,

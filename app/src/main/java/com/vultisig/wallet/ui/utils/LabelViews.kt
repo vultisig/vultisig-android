@@ -53,7 +53,7 @@ internal fun DeviceInfoItem(
 
 @Preview
 @Composable
-fun LabelViewPreview() {
+private fun LabelViewPreview() {
     DeviceInfoItem(
         "iPad Pro 6th generation (This Device)",
         Theme.colors.trasnparentTurquoise,
