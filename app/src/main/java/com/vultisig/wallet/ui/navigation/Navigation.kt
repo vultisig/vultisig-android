@@ -243,7 +243,12 @@ internal sealed class Destination(
         }
     }
 
-    data object KeygenRole : Destination(route = "keygen/role")
+    data class KeygenRole(val vaultId: String? = null) :
+        Destination(route = "keygen/role?$ARG_VAULT_ID=$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "keygen/role?$ARG_VAULT_ID={$ARG_VAULT_ID}"
+        }
+    }
 
     data class Setup(
         val vaultId: String? = null,
@@ -254,10 +259,13 @@ internal sealed class Destination(
         }
     }
 
-    data class KeygenFlow(val vaultName: String, val vaultSetupType: VaultSetupType) :
-        Destination(route = "keygen_flow/$vaultName/${vaultSetupType.raw}") {
+    data class KeygenFlow(
+        val vaultName: String,
+        val vaultSetupType: VaultSetupType,
+        val isReshare: Boolean,
+    ) : Destination(route = "keygen_flow/$vaultName/${vaultSetupType.raw}/$isReshare") {
         companion object {
-            const val STATIC_ROUTE = "keygen_flow/{vault_name}/{vault_type}"
+            const val STATIC_ROUTE = "keygen_flow/{vault_name}/{vault_type}/{is_reshare}"
             const val ARG_VAULT_NAME = "vault_name"
             const val ARG_VAULT_TYPE = "vault_type"
             const val DEFAULT_NEW_VAULT = "*vultisig_new_vault*"
@@ -277,6 +285,7 @@ internal sealed class Destination(
 
     data class JoinKeygen(
         val qr: String,
+        val isReshare: Boolean,
     ) : Destination(route = "join_keygen?qr=$qr") {
 
         companion object {
@@ -314,6 +323,13 @@ internal sealed class Destination(
     )
 
     data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account")
+
+    data class ReshareStartScreen(val vaultId: String) :
+        Destination(route = "reshare_start_screen/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "reshare_start_screen/{$ARG_VAULT_ID}"
+        }
+    }
 
     internal data class CustomToken(val chainId: String) :
         Destination(route = "custom_token/$chainId") {

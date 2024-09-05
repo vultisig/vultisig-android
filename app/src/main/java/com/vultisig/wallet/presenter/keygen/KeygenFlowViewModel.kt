@@ -58,6 +58,7 @@ enum class KeygenFlowState {
 
 internal data class KeygenFlowUiModel(
     val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
+    val isReshareMode: Boolean,
     val selection: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
     val keygenPayload: String = "",
@@ -100,7 +101,8 @@ internal class KeygenFlowViewModel @Inject constructor(
             vaultSetupType =
             VaultSetupType.fromInt(
                 navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
-            )
+            ),
+            isReshareMode = false
         )
     )
 
@@ -135,6 +137,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            isReshareMode = uiState.value.isReshareMode,
         )
 
     init {
@@ -162,10 +165,13 @@ internal class KeygenFlowViewModel @Inject constructor(
             vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
         }
 
-        val action = if (vault.pubKeyECDSA.isEmpty())
+        val action = if (vault.pubKeyECDSA.isEmpty()) {
+            uiState.value = uiState.value.copy(isReshareMode = false)
             TssAction.KEYGEN
-        else
+        } else {
+            uiState.value = uiState.value.copy(isReshareMode = true)
             TssAction.ReShare
+        }
 
         if (vultisigRelay.isRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY

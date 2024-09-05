@@ -24,7 +24,6 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.SettingsItem
 import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -88,15 +87,9 @@ internal fun VaultSettingsScreen(
             SettingsItem(
                 title = stringResource(R.string.vault_settings_reshare_title),
                 subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
-                icon = R.drawable.share
-            ) {
-                navController.navigate(
-                    Destination.KeygenFlow(
-                        uiModel.id,
-                        VaultSetupType.M_OF_N,
-                    ).route
-                )
-            }
+                icon = R.drawable.share,
+                onClick = viewModel::navigateToReshareStartScreen
+            )
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_delete_title),

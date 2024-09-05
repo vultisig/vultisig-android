@@ -10,6 +10,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -75,6 +76,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
     @ApplicationContext private val context: Context,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -92,7 +94,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
     private var _isDiscoveryListenerRegistered = false
-
+    internal val isReshareMode: MutableState<Boolean> = mutableStateOf(false)
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveringSessionID)
     var errorMessage: MutableState<UiText> =
@@ -124,6 +126,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            isReshareMode = isReshareMode.value,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -151,17 +154,23 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val contentBytes = decompressQr(qrCodeContent.decodeBase64Bytes())
 
                 val payload = when (deepLink.getTssAction()) {
-                    TssAction.KEYGEN -> PeerDiscoveryPayload.Keygen(
-                        mapKeygenMessageFromProto(
-                            protoBuf.decodeFromByteArray<KeygenMessageProto>(contentBytes)
+                    TssAction.KEYGEN -> {
+                        isReshareMode.value = false
+                        PeerDiscoveryPayload.Keygen(
+                            mapKeygenMessageFromProto(
+                                protoBuf.decodeFromByteArray<KeygenMessageProto>(contentBytes)
+                            )
                         )
-                    )
+                }
 
-                    TssAction.ReShare -> PeerDiscoveryPayload.Reshare(
-                        mapReshareMessageFromProto(
-                            protoBuf.decodeFromByteArray<ReshareMessageProto>(contentBytes)
+                    TssAction.ReShare ->{
+                        isReshareMode.value = true
+                        PeerDiscoveryPayload.Reshare(
+                            mapReshareMessageFromProto(
+                                protoBuf.decodeFromByteArray<ReshareMessageProto>(contentBytes)
+                            )
                         )
-                    )
+                    }
 
                     else -> error("Invalid TssAction")
                 }

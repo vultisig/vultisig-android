@@ -366,4 +366,15 @@
     <string name="default_error"  translatable="false">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
     <string name="join_keygen_failed">Failed to join keygen</string>
+    <string name="reshare_start_screen_title" translatable="false">Reshare your vault</string>
+    <string name="reshare_start_screen_body" translatable="false">Reshare can be used to refresh, expand or reduce the amount of devices in a Vault.</string>
+    <string name="reshare_start_screen_warning" translatable="false">For all Reshare actions the threshold of devices is always required.</string>
+    <string name="reshare_start_screen_start_reshare" translatable="false">Start Reshare</string>
+    <string name="resharing_the_vault" translatable="false">Resharing the Vault</string>
+    <string name="reshare_device_screen_changes_in_setup" translatable="false">Changes in Setup</string>
+    <string name="reshare_device_list_screen_new_vault_setup" translatable="false"> New Vault Setup</string>
+    <string name="reshare_device_list_screen_desc1" translatable="false">Your configuration changed, make a new backup.</string>
+    <string name="reshare_device_list_of_vault" translatable="false">%1$s of %2$s</string>
+    <string name="reshare_start" translatable="false">Start</string>
+
 </resources>

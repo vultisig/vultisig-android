@@ -54,7 +54,9 @@ internal class NamingVaultViewModel @Inject constructor(
                 Destination.KeygenFlow(
                     name.takeIf { it.isNotEmpty() }
                         ?: Destination.KeygenFlow.DEFAULT_NEW_VAULT,
-                    vaultSetupType)
+                    vaultSetupType,
+                    false
+                )
             )
         }
     }

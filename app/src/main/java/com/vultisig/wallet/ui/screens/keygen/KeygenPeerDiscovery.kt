@@ -39,6 +39,7 @@ internal fun KeygenPeerDiscovery(
     KeygenPeerDiscoveryScreen(
         navController = navController,
         selectionState = uiState.selection,
+        isReshare = uiState.isReshareMode,
         participants = uiState.participants,
         keygenPayloadState = uiState.keygenPayload,
         vaultSetupType = uiState.vaultSetupType.asString(),
@@ -72,15 +73,18 @@ internal fun KeygenPeerDiscoveryScreen(
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
+    isReshare: Boolean,
 ) {
-    val textColor = Theme.colors.neutral0
 
     UiBarContainer(
         navController = navController,
-        title = stringResource(
-            R.string.keygen_peer_discovery_keygen,
-            vaultSetupType
-        ),
+        title = if (isReshare)
+            stringResource(id = R.string.resharing_the_vault)
+        else
+            stringResource(
+                R.string.keygen_peer_discovery_keygen,
+                vaultSetupType
+            ),
         endIcon = R.drawable.qr_share,
         onEndIconClick = onQrAddressClick
     ) {
@@ -130,5 +134,6 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         networkPromptOption = NetworkPromptOption.LOCAL,
         isContinueEnabled = true,
         vaultSetupType = "M/N",
+        isReshare = true,
     )
 }

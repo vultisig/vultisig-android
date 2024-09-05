@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenRoleScreen
 import com.vultisig.wallet.ui.screens.keygen.Setup
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
@@ -110,7 +111,13 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.KeygenRole.route,
+            route = Destination.KeygenRole.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID){
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
         ) {
             KeygenRoleScreen(navController = navController)
         }
@@ -467,6 +474,20 @@ internal fun SetupNavGraph(
             route = Destination.CustomToken.STATIC_ROUTE,
         ) {
             CustomTokenScreen(navController)
+        }
+
+        composable(
+            route = Destination.ReshareStartScreen.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true                }
+            )
+        ) { entry ->
+            ReshareStartScreen(
+                navController,
+                requireNotNull(entry.arguments?.getString(ARG_VAULT_ID))
+            )
         }
     }
 }

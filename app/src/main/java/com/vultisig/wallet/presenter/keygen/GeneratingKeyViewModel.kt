@@ -50,6 +50,7 @@ internal class GeneratingKeyViewModel(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    internal val isReshareMode: Boolean
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =

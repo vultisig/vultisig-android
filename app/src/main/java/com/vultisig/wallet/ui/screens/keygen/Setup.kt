@@ -135,7 +135,8 @@ internal fun Setup(
                     navController.navigate(
                         Destination.KeygenFlow(
                             vaultId,
-                            VaultSetupType.M_OF_N
+                            VaultSetupType.M_OF_N,
+                            true
                         ).route
                     )
                 }

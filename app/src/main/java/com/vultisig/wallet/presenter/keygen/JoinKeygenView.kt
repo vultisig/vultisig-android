@@ -57,46 +57,68 @@ internal fun JoinKeygenView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        val title = if (viewModel.isReshareMode.value) {
+            stringResource(id = R.string.resharing_the_vault)
+        } else {
+            stringResource(id = R.string.join_key_gen_screen_keygen)
+        }
         when (viewModel.currentState.value) {
             JoinKeygenState.DiscoveringSessionID -> {
-                DiscoveringSessionID(navController = navController)
+                DiscoveringSessionID(
+                    navController = navController,
+                    title = title,
+                )
             }
 
             JoinKeygenState.DiscoverService -> {
                 val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
                 viewModel.discoveryMediator(nsdManager)
-                DiscoverService(navController = navController)
+                DiscoverService(
+                    navController = navController,
+                    title = title,
+                )
             }
 
             JoinKeygenState.JoinKeygen -> {
                 LaunchedEffect(key1 = viewModel) {
                     viewModel.joinKeygen()
                 }
-                JoiningKeygen(navController = navController)
+                JoiningKeygen(
+                    navController = navController,
+                    title = title,
+                )
             }
 
             JoinKeygenState.WaitingForKeygenStart -> {
                 LaunchedEffect(key1 = viewModel) {
                     viewModel.waitForKeygenToStart()
                 }
-                WaitingForKeygenToStart(navController = navController)
+                WaitingForKeygenToStart(
+                    navController = navController,
+                    title = title,
+                )
             }
 
             JoinKeygenState.Keygen -> {
-                GeneratingKey(navController = navController, viewModel.generatingKeyViewModel)
+                GeneratingKey(
+                    navController = navController,
+                    viewModel.generatingKeyViewModel
+                )
             }
 
             JoinKeygenState.FailedToStart -> {
                 KeygenFailedToStart(
                     navController = navController,
-                    errorMessage = viewModel.errorMessage.value.asString()
+                    errorMessage = viewModel.errorMessage.value.asString(),
+                    title = title,
                 )
             }
 
             JoinKeygenState.ERROR -> {
                 KeygenFailedToStart(
                     navController = navController,
-                    errorMessage = viewModel.errorMessage.value.asString()
+                    errorMessage = viewModel.errorMessage.value.asString(),
+                    title = title,
                 )
             }
         }
@@ -110,7 +132,10 @@ internal fun JoinKeygenView(
 }
 
 @Composable
-fun DiscoveringSessionID(navController: NavHostController) {
+internal fun DiscoveringSessionID(
+    navController: NavHostController,
+    title: String,
+) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -121,7 +146,8 @@ fun DiscoveringSessionID(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
+            centerText = title,
+            startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -145,13 +171,16 @@ fun DiscoveringSessionID(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewDiscoveringSessionID() {
+private fun PreviewDiscoveringSessionID() {
     val navController = rememberNavController()
-    DiscoveringSessionID(navController = navController)
+    DiscoveringSessionID(navController = navController, title = "title")
 }
 
 @Composable
-fun DiscoverService(navController: NavHostController) {
+internal fun DiscoverService(
+    navController: NavHostController,
+    title: String,
+) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -162,7 +191,8 @@ fun DiscoverService(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = stringResource(R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
+            centerText = title,
+            startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -185,7 +215,10 @@ fun DiscoverService(navController: NavHostController) {
 }
 
 @Composable
-fun JoiningKeygen(navController: NavHostController) {
+internal fun JoiningKeygen(
+    navController: NavHostController,
+    title: String,
+) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -196,7 +229,8 @@ fun JoiningKeygen(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
+            centerText = title,
+            startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -219,7 +253,10 @@ fun JoiningKeygen(navController: NavHostController) {
 }
 
 @Composable
-fun WaitingForKeygenToStart(navController: NavHostController) {
+internal fun WaitingForKeygenToStart(
+    navController: NavHostController,
+    title: String,
+) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -230,7 +267,8 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
             )
     ) {
         TopBar(
-            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
+            centerText = title,
+            startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -253,7 +291,11 @@ fun WaitingForKeygenToStart(navController: NavHostController) {
 }
 
 @Composable
-fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) {
+internal fun KeygenFailedToStart(
+    navController: NavHostController,
+    errorMessage: String,
+    title: String,
+) {
     Column(
         horizontalAlignment = CenterHorizontally,
         modifier = Modifier
@@ -264,7 +306,8 @@ fun KeygenFailedToStart(navController: NavHostController, errorMessage: String) 
             )
     ) {
         TopBar(
-            centerText = stringResource(id = R.string.join_key_gen_screen_keygen), startIcon = R.drawable.caret_left,
+            centerText = title,
+            startIcon = R.drawable.caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))

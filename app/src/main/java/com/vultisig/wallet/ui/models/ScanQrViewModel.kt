@@ -7,6 +7,7 @@ import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
+import com.vultisig.wallet.ui.utils.isReshare
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -46,6 +47,7 @@ internal class ScanQrViewModel @Inject constructor(
                         JOIN_KEYGEN_FLOW -> {
                             Destination.JoinKeygen(
                                 qr = qrBase64,
+                                isReshare = qr.isReshare(),
                             )
                         }
 
