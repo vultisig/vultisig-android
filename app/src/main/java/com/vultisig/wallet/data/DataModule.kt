@@ -7,7 +7,6 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
-import com.vultisig.wallet.data.sources.AppDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,8 +24,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.apache.commons.compress.compressors.CompressorStreamProvider
 import javax.inject.Singleton
 
 @Module
@@ -62,17 +59,6 @@ internal interface DataModule {
                 )
             }
         }
-
-        @Provides
-        @Singleton
-        fun provideAppDataStore(
-            @ApplicationContext context: Context
-        ): AppDataStore = AppDataStore(context)
-
-        @Provides
-        @Singleton
-        fun provideCompressorStreamProvider(): CompressorStreamProvider =
-            CompressorStreamFactory()
 
         @Singleton
         @Provides

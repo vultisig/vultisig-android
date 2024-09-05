@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.chains.DydxHelper
-import com.vultisig.wallet.chains.MayaChainHelper
-import com.vultisig.wallet.chains.SolanaHelper.Companion.DefaultFeeInLamports
+import com.vultisig.wallet.data.chains.helpers.DydxHelper
+import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
+import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi

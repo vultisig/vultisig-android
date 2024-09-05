@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.common.DeepLinkHelper
+import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode

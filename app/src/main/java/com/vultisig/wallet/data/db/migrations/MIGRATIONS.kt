@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.db.migrations
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-internal val MIGRATION_1_2 = object : Migration(1, 2) {
+val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -15,7 +15,7 @@ internal val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
-internal val MIGRATION_2_3 = object : Migration(2, 3) {
+val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -41,7 +41,7 @@ internal val MIGRATION_2_3 = object : Migration(2, 3) {
 }
 
 
-internal val MIGRATION_3_4 = object : Migration(3, 4) {
+val MIGRATION_3_4 = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -68,13 +68,13 @@ internal val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
-internal val MIGRATION_4_5 = object : Migration(4, 5) {
+val MIGRATION_4_5 = object : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("DROP TABLE `chainOrder`".trimMargin())
     }
 }
 
-internal val MIGRATION_5_6 = object : Migration(5, 6) {
+val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -103,7 +103,7 @@ internal val MIGRATION_5_6 = object : Migration(5, 6) {
 }
 
 
-internal val MIGRATION_6_7 = object : Migration(6, 7) {
+val MIGRATION_6_7 = object : Migration(6, 7) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -119,7 +119,7 @@ internal val MIGRATION_6_7 = object : Migration(6, 7) {
 }
 
 
-internal val MIGRATION_7_8 = object : Migration(7, 8) {
+val MIGRATION_7_8 = object : Migration(7, 8) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.updateChainNameValue("Maya Chain", "MayaChain")
         db.updateChainNameValue("Cronos Chain", "CronosChain")
@@ -161,7 +161,7 @@ private fun SupportSQLiteDatabase.updateChainNameValue(before: String, after: St
     )
 }
 
-internal val MIGRATION_8_9 = object : Migration(8, 9) {
+val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -173,7 +173,7 @@ internal val MIGRATION_8_9 = object : Migration(8, 9) {
     }
 }
 
-internal val MIGRATION_9_10 = object : Migration(9, 10) {
+val MIGRATION_9_10 = object : Migration(9, 10) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -199,13 +199,13 @@ internal val MIGRATION_9_10 = object : Migration(9, 10) {
     }
 }
 
-internal val MIGRATION_10_11 = object : Migration(10, 11) {
+val MIGRATION_10_11 = object : Migration(10, 11) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.updateChainNameValue("Gaia", "Cosmos")
     }
 }
 
-internal val MIGRATION_11_12 = object : Migration(11, 12) {
+val MIGRATION_11_12 = object : Migration(11, 12) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -217,7 +217,7 @@ internal val MIGRATION_11_12 = object : Migration(11, 12) {
     }
 }
 
-internal val MIGRATION_12_13 = object : Migration(12, 13) {
+val MIGRATION_12_13 = object : Migration(12, 13) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.updateCoinDecimals("UNI", 18)
         db.updateCoinDecimals("MATIC", 18)
@@ -227,7 +227,7 @@ internal val MIGRATION_12_13 = object : Migration(12, 13) {
     }
 }
 
-internal val MIGRATION_13_14=object :Migration(13,14){
+val MIGRATION_13_14=object :Migration(13,14){
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coin_vaultId` ON `coin` (`vaultId`)")
     }

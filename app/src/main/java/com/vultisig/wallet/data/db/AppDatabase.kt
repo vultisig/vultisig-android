@@ -31,7 +31,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
     version = 14,
     exportSchema = false,
 )
-internal abstract class AppDatabase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
 
     abstract fun vaultDao(): VaultDao
 

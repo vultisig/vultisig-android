@@ -1,6 +1,7 @@
 package com.vultisig.wallet.common
 
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import com.vultisig.wallet.data.common.Utils
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not

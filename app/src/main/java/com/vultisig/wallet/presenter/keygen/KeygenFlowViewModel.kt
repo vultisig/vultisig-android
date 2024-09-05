@@ -13,9 +13,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.VultisigRelay
+import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.common.VultisigRelay
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
@@ -25,7 +25,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.mediator.MediatorService
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator

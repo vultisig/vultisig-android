@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.chains.SolanaHelper
+import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.api.BlowfishApi
 import com.vultisig.wallet.data.api.blowfishChainName
 import com.vultisig.wallet.data.api.blowfishNetwork

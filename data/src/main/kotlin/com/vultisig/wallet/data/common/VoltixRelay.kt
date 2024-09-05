@@ -1,0 +1,21 @@
+package com.vultisig.wallet.data.common
+
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import com.vultisig.wallet.data.sources.AppDataStore
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
+
+class VultisigRelay @Inject constructor(private val appDataStore: AppDataStore) {
+    var isRelayEnabled: Boolean
+        get() = runBlocking { appDataStore.readData(relayKey, true).first() }
+        set(value) = runBlocking {
+            appDataStore.editData { preferences ->
+                preferences[relayKey] = value
+            }
+        }
+
+    companion object {
+        private val relayKey = booleanPreferencesKey(name = "relay_enabled")
+    }
+}
