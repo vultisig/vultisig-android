@@ -42,6 +42,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
 import com.vultisig.wallet.presenter.keygen.KeygenState
+import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.PagerCircleIndicator
 import com.vultisig.wallet.ui.components.TopBar
@@ -104,6 +105,7 @@ internal fun GeneratingKey(
                 DevicesOnSameNetworkHint(
                     title = stringResource(R.string.generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
                 )
+                AppVersionText(Modifier.padding(top = 24.dp))
             }
         }
     ) {
