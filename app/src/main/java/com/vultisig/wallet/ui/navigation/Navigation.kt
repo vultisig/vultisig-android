@@ -235,11 +235,15 @@ internal sealed class Destination(
     }
 
 
-    data class QrAddressScreen(val address: String) :
-        Destination(route = "vault_details/qr_address_screen/$address") {
+    data class QrAddressScreen(
+        val vaultId: String? = null,
+        val address: String,
+    ) :
+        Destination(route = "vault_details/${vaultId}/qr_address_screen/$address") {
         companion object {
             const val ARG_COIN_ADDRESS = "coin_address"
-            const val STATIC_ROUTE = "vault_details/qr_address_screen/{$ARG_COIN_ADDRESS}"
+            const val STATIC_ROUTE =
+                "vault_details/{$ARG_VAULT_ID}/qr_address_screen/{$ARG_COIN_ADDRESS}"
         }
     }
 

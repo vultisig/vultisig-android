@@ -6,21 +6,32 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.core.content.FileProvider
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.sha256
+import com.vultisig.wallet.data.models.Vault
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Date
 
 
-fun Context.share(bitmap: Bitmap) {
+enum class ShareType {
+    SEND, SWAP, KEYGEN, RESHARE, TOKENADDRESS
+}
+
+fun Context.share(bitmap: Bitmap, fileName: String) {
     try {
         val cachePath = File(cacheDir, "images")
         cachePath.mkdirs()
-        FileOutputStream("$cachePath/image.png").use { stream ->
+        FileOutputStream("$cachePath/${fileName}").use { stream ->
             val resizedBitmap = bitmap.getResizedBitmap(500f, 500f)
             resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         }
         val imagePath = File(cacheDir, "images")
-        val newFile = File(imagePath, "image.png")
+        val newFile = File(imagePath, fileName)
         val contentUri = FileProvider.getUriForFile(
             this, "$packageName.provider", newFile
         )
@@ -42,6 +53,29 @@ fun Context.share(bitmap: Bitmap) {
     }
 }
 
+ internal fun shareFileName(vault: Vault, shareType: ShareType): String {
+    val uid =
+        ("${vault.name} - ${vault.pubKeyECDSA} - " +
+                "${vault.pubKeyEDDSA} - ${vault.hexChainCode}").sha256()
+
+    val date = Date()
+    val format = SimpleDateFormat(
+        "yyyy-MM-dd-HH-mm-ss",
+        java.util.Locale.getDefault()
+    )
+    val formattedDate = format.format(date)
+    return "Vault${shareType.toStringValue()}-${vault.name}-${uid.takeLast(3)}-${formattedDate}.png"
+}
+
+private fun ShareType.toStringValue(): String {
+    return when (this) {
+        ShareType.SEND -> "Send"
+        ShareType.SWAP -> "Swap"
+        ShareType.KEYGEN -> "Keygen"
+        ShareType.RESHARE -> "Reshare"
+        ShareType.TOKENADDRESS -> "TokenAddress"
+    }
+}
 private fun Bitmap.getResizedBitmap(
     newWidth: Float,
     newHeight: Float

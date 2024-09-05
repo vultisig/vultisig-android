@@ -16,8 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.presenter.common.ShareType
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.presenter.common.share
+import com.vultisig.wallet.presenter.common.shareFileName
 import com.vultisig.wallet.presenter.keygen.KeygenFlowState
 import com.vultisig.wallet.presenter.keygen.KeygenFlowViewModel
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
@@ -45,10 +47,7 @@ internal fun KeygenPeerDiscovery(
         vaultSetupType = uiState.vaultSetupType.asString(),
         networkPromptOption = uiState.networkOption,
         isContinueEnabled = uiState.isContinueButtonEnabled,
-        onQrAddressClick = {
-            val qrBitmap = generateQrBitmap(uiState.keygenPayload)
-            context.share(qrBitmap)
-        },
+        onQrAddressClick = { viewModel.shareQRCode(context) },
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },

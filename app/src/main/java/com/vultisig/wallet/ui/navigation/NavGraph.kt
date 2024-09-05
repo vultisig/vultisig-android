@@ -427,6 +427,9 @@ internal fun SetupNavGraph(
 
         composable(
             route = Destination.QrAddressScreen.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            )
         ) {
             QrAddressScreen(navController = navController)
         }

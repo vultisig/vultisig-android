@@ -94,6 +94,7 @@ internal fun ChainTokensScreen(
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
         onBuyWeweClick = viewModel::buyWewe,
+        onQrBtnClick = viewModel::navigatoToQrAddressScreen
     )
 }
 
@@ -108,6 +109,7 @@ private fun ChainTokensScreen(
     onSelectTokens: () -> Unit = {},
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
     onBuyWeweClick: () -> Unit = {},
+    onQrBtnClick: () -> Unit = {},
 ) {
     val appColor = Theme.colors
     val context = LocalContext.current
@@ -238,9 +240,7 @@ private fun ChainTokensScreen(
                                     reviewManager.showReviewPopUp(context)
                                 },
                                 isBalanceVisible = uiModel.isBalanceVisible,
-                                onQrBtnClick = {
-                                    navController.navigate(Destination.QrAddressScreen(uiModel.chainAddress).route)
-                                }
+                                onQrBtnClick = onQrBtnClick,
                             )
 
                             uiModel.tokens.forEach { token ->
@@ -282,7 +282,7 @@ private fun ChainAccountInfo(
     totalBalance: String?,
     explorerURL: String,
     onQrBtnClick: () -> Unit = {},
-    onCopy: (String) -> Unit
+    onCopy: (String) -> Unit,
 ) {
     val appColor = Theme.colors
     val uriHandler = LocalUriHandler.current

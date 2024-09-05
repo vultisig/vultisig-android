@@ -26,6 +26,10 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
+import com.vultisig.wallet.presenter.common.ShareType
+import com.vultisig.wallet.presenter.common.generateQrBitmap
+import com.vultisig.wallet.presenter.common.share
+import com.vultisig.wallet.presenter.common.shareFileName
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -382,6 +386,21 @@ internal class KeygenFlowViewModel @Inject constructor(
             updateKeygenPayload(context)
         }
     }
+    internal fun shareQRCode(activity: Context): Unit {
+        val qrBitmap = generateQrBitmap(uiState.value.keygenPayload)
+        activity.share(
+            qrBitmap,
+            shareFileName(
+                vault,
+                if (uiState.value.isReshareMode) {
+                    ShareType.RESHARE
+                } else {
+                    ShareType.KEYGEN
+                }
+            )
+        )
+    }
+
 
     override fun onCleared() {
         stopParticipantDiscovery()
