@@ -26,7 +26,7 @@ internal fun TokenLogo(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = title.first().toString(),
+                    text = if (title.isNotEmpty()) title.first().toString() else "",
                     color = Theme.colors.oxfordBlue600Main,
                     style = Theme.montserrat.subtitle1
                 )
