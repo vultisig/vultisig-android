@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.MapperFunc
 import com.vultisig.wallet.data.models.TokenValue
+import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -39,6 +40,7 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
             }
             return decimalValue
         } catch (e: Exception) {
+            Timber.tag("TokenValueToDecimalUiStringMapper").e(e)
             return BigDecimal.ZERO.toString()
         }
     }
