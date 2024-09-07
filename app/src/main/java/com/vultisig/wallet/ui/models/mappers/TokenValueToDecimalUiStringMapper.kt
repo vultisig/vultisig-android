@@ -39,7 +39,6 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
             }
             return decimalValue
         } catch (e: Exception) {
-            e.printStackTrace()
             return BigDecimal.ZERO.toString()
         }
     }
