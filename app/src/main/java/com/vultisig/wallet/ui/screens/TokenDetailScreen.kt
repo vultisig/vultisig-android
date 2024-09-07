@@ -137,17 +137,17 @@ private fun TokenDetailScreen(
                                     vertical = 12.dp,
                                 )
                         ) {
-
-                            val token = uiModel.token
-
-                            CoinItem(
-                                title = token.name,
-                                balance = token.balance,
-                                fiatBalance = token.fiatBalance,
-                                tokenLogo = token.tokenLogo,
-                                chainLogo = token.chainLogo,
-                                isBalanceVisible = uiModel.isBalanceVisible,
-                            )
+                            if (!uiModel.isRefreshing) {
+                                val token = uiModel.token
+                                CoinItem(
+                                    title = token.name,
+                                    balance = token.balance,
+                                    fiatBalance = token.fiatBalance,
+                                    tokenLogo = token.tokenLogo,
+                                    chainLogo = token.chainLogo,
+                                    isBalanceVisible = uiModel.isBalanceVisible,
+                                )
+                            }
                         }
                     }
                 }
