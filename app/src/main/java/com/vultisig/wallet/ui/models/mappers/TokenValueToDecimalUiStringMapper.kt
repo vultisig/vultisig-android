@@ -45,13 +45,6 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
         }
     }
 
-
-    companion object {
-        private const val MAX_UI_TOKEN_VALUE_DECIMALS = 8
-        private val ONE_BILLION = BigDecimal(1_000_000_000)
-        private val ONE_MILLION = BigDecimal(1_000_000)
-    }
-
     private fun formatDecimal(decimal: BigDecimal): String = decimalFormat.format(
         decimal
             .setScale(
@@ -60,4 +53,11 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
             )
             .stripTrailingZeros()
     )
+
+    companion object {
+        private const val MAX_UI_TOKEN_VALUE_DECIMALS = 8
+        private val ONE_BILLION = BigDecimal(1_000_000_000)
+        private val ONE_MILLION = BigDecimal(1_000_000)
+    }
+
 }
