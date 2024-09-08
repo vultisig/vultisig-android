@@ -120,7 +120,7 @@
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
     <string name="device_list_desc1">Você só pode enviar transações com estes %1$s dispositivos presentes.</string>
     <string name="join_keysign_waiting_keysign_start">Aguardando o início do Keysign.</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Aguardando o início do Keygen.</string>
+    <string name="join_key_gen_screen_waiting_for_operationType_to_start">Aguardando o início do %1$s.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Os tokens VULT são queimados com taxas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Os tokens VULT são distribuídos aos usuários.</string>
     <string name="vultisig_token_setting_screen_title">TOKEN VULTISIG</string>
@@ -308,5 +308,7 @@
     <string name="settings_screen_tos">Termos de Serviço</string>
     <string name="failed_to_resolve_address">Falha ao resolver o endereço</string>
     <string name="join_keygen_invalid_qr_code">Falha ao analisar o código QR</string>
-    <string name="join_keygen_failed">Falha ao aderir ao keygen</string>
+    <string name="join_keygen_failed">Falha ao aderir ao %1$s</string>
+    <string name="join_keygen_screen_reshare">Recompartilhar</string>
+    <string name="join_keygen_screen_keygen">Gerador de chaves</string>
 </resources>

@@ -112,7 +112,7 @@
     <string name="join_key_gen_screen_discovering_service">Discovering Service</string>
     <string name="join_key_gen_screen_discovering_session_id">Discovering Session ID</string>
     <string name="join_key_gen_screen_joining_keygen">Joining Keygen</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Waiting for Keygen to start</string>
+    <string name="join_key_gen_screen_waiting_for_operationType_to_start">Waiting for %1$s to start</string>
     <string name="keygen_flow_views_success">Success</string>
     <string name="keygen_peer_discovery_keygen">Keygen for %1$s vault</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
@@ -226,6 +226,8 @@
     <string name="circular_progress_indicator_done">Done</string>
     <string name="vault_already_exist">Vault with name %s already exist</string>
     <string name="vault_detail_this_device">%1$s (This Device)</string>
+    <string name="join_keygen_screen_reshare" >reshare</string>
+    <string name="join_keygen_screen_keygen">keygen</string>
 
 
     <!-- TODO needs translation-->
@@ -365,7 +367,7 @@
     <string name="vault_settings_error_extension_backup_file" translatable="false">Supported file extensions are: %s</string>
     <string name="default_error"  translatable="false">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
-    <string name="join_keygen_failed">Failed to join keygen</string>
+    <string name="join_keygen_failed">Failed to join %1$s</string>
     <string name="reshare_start_screen_title" translatable="false">Reshare your vault</string>
     <string name="reshare_start_screen_body" translatable="false">Reshare can be used to refresh, expand or reduce the amount of devices in a Vault.</string>
     <string name="reshare_start_screen_warning" translatable="false">For all Reshare actions the threshold of devices is always required.</string>
@@ -380,6 +382,7 @@
     <string name="generating_key_renew" translatable="false">Renew</string>
     <string name="generating_key_retry" translatable="false">Retry</string>
     <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>
+    <string name="join_keygen_screen_renew" translatable="false">Renew</string>
 
 
 </resources>
