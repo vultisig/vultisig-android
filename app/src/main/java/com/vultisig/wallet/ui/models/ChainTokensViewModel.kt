@@ -127,6 +127,17 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
+    internal fun navigatoToQrAddressScreen() {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.QrAddressScreen(
+                    vaultId,
+                    uiState.value.chainAddress
+                )
+            )
+        }
+    }
+
     fun selectTokens() {
         viewModelScope.launch {
             navigator.navigate(

@@ -23,8 +23,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
-import com.vultisig.wallet.presenter.common.generateQrBitmap
-import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -42,10 +40,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
                 centerText = stringResource(id = R.string.qr_address_screen_title),
                 startIcon = R.drawable.caret_left,
                 endIcon = R.drawable.qr_share,
-                onEndIconClick = {
-                    val qrBitmap = generateQrBitmap(address)
-                    context.share(qrBitmap)
-                }
+                onEndIconClick = { viewmodel.shareQRCode(context) }
             )
         },
     ) {
