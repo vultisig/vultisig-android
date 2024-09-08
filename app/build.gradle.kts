@@ -61,6 +61,9 @@ android {
             srcDir("${project.rootProject.rootDir}/commondata/proto")
         }
     }
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }
 
 protobuf {
