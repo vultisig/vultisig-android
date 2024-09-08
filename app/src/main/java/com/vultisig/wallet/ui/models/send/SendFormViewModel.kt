@@ -596,8 +596,7 @@ internal class SendFormViewModel @Inject constructor(
 
             val price = try {
                 tokenPriceRepository.getPrice(
-                    selectedToken,
-                    appCurrency.value,
+                    selectedToken
                 ).first()
             } catch (e: Exception) {
                 Timber.d("Failed to get price for token $selectedToken")

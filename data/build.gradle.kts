@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ksp)
     kotlin("kapt")
 }
 
@@ -35,6 +37,9 @@ android {
 }
 
 dependencies {
+    //kotlinx
+    implementation(libs.kotlinx.serialization)
+
     // core
     implementation(libs.androidx.core.ktx)
     implementation(libs.timber)
@@ -47,8 +52,16 @@ dependencies {
     // ktor
     implementation(libs.ktor.client.core)
 
+    // room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+
     // serialization
     implementation(libs.gson)
+    implementation(libs.ktor.client.negotiation)
+    implementation(libs.ktor.client.serialization.kotlinx)
 
     // crypto
     implementation(libs.wallet.core)
