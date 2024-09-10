@@ -7,6 +7,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,9 +25,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -35,15 +37,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
 import com.vultisig.wallet.presenter.keygen.KeygenState
 import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
+import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.PagerCircleIndicator
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -68,8 +74,7 @@ internal fun GeneratingKey(
     GeneratingKey(
         navController = navController,
         keygenState = generatingKeyViewModel.currentState.collectAsState().value,
-        errorMessage = generatingKeyViewModel.errorMessage.value,
-        isReshare = generatingKeyViewModel.isReshareMode
+        isReshare = generatingKeyViewModel.isReshareMode,
     )
 }
 
@@ -77,8 +82,7 @@ internal fun GeneratingKey(
 internal fun GeneratingKey(
     navController: NavHostController,
     keygenState: KeygenState,
-    errorMessage: String,
-    isReshare: Boolean
+    isReshare: Boolean,
 ) {
     val textColor = Theme.colors.neutral0
     Scaffold(
@@ -86,10 +90,14 @@ internal fun GeneratingKey(
         topBar = {
             TopBar(
                 centerText = stringResource(
-                    if (isReshare)
-                        R.string.resharing_the_vault
-                    else
-                        R.string.generating_key_title
+                    if (isReshare && keygenState is KeygenState.Error) {
+                        R.string.generating_key_renew
+                    } else {
+                        if (isReshare)
+                            R.string.resharing_the_vault
+                        else
+                            R.string.generating_key_title
+                    }
                 ),
                 startIcon = R.drawable.caret_left,
                 navController = navController
@@ -99,13 +107,30 @@ internal fun GeneratingKey(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(all = 32.dp),
+                    .padding(all = 16.dp),
                 horizontalAlignment = CenterHorizontally
             ) {
-                DevicesOnSameNetworkHint(
-                    title = stringResource(R.string.generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
-                )
-                AppVersionText(Modifier.padding(top = 24.dp))
+                if (keygenState is KeygenState.Error) {
+                    AppVersionText(Modifier.padding(bottom = 24.dp))
+                    MultiColorButton(
+                        text = stringResource(R.string.generating_key_retry),
+                        minHeight = 45.dp,
+                        backgroundColor = Theme.colors.turquoise800,
+                        textColor = Theme.colors.oxfordBlue800,
+                        iconColor = Theme.colors.turquoise800,
+                        textStyle = Theme.montserrat.subtitle1,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                    ) {
+                        navController.popBackStack()
+                    }
+                }
+                else {
+                    DevicesOnSameNetworkHint(
+                        title = stringResource(R.string.generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open),
+                    )
+                    AppVersionText(Modifier.padding(top = 24.dp))
+                }
             }
         }
     ) {
@@ -114,7 +139,7 @@ internal fun GeneratingKey(
                 .fillMaxSize()
                 .padding(it)
                 .padding(all = 16.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Center
         ) {
             when (keygenState) {
                 KeygenState.CreatingInstance,
@@ -198,23 +223,37 @@ internal fun GeneratingKey(
                     }
                 }
 
-                KeygenState.ERROR -> {
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = CenterHorizontally
-                    ) {
-                        Text(
-                            text = stringResource(R.string.generating_key_screen_keygen_failed),
-                            color = textColor,
-                            style = Theme.menlo.heading5
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = errorMessage,
-                            color = textColor,
-                            style = Theme.menlo.body2
-                        )
-                    }
+                is KeygenState.Error -> {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = CenterHorizontally
+                        ) {
+                            if (keygenState.isThresholdError) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.danger),
+                                    contentDescription = stringResource(R.string.danger_icon),
+                                    alignment = Center
+                                )
+                            } else {
+                                Text(
+                                    text = if (isReshare) {
+                                        stringResource(R.string.generating_key_screen_reshare_failed)
+                                    } else {
+                                        stringResource(R.string.generating_key_screen_keygen_failed)
+                                    },
+                                    color = textColor,
+                                    style = Theme.menlo.heading5
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = keygenState.errorMessage.asString(),
+                                color = textColor,
+                                style = Theme.montserrat.subtitle1,
+                                lineHeight = 24.sp,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                 }
             }
         }
@@ -306,8 +345,10 @@ private fun KeygenIndicator(
 private fun GeneratingKeyPreview() {
     GeneratingKey(
         navController = rememberNavController(),
-        keygenState = KeygenState.CreatingInstance,
-        errorMessage = "",
-        isReshare = false
+        keygenState = KeygenState.Error(
+            UiText.StringResource(R.string.threshold_error),
+            true
+        ),
+        isReshare = false,
     )
 }

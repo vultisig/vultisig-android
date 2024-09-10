@@ -120,7 +120,7 @@
     <string name="home_screen_title">Sefovi</string>
     <string name="device_list_desc1">Transakcije možete slati samo s ovim %1$s uređajima.</string>
     <string name="join_keysign_waiting_keysign_start">Čeka se da se Keysign pokrene.</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Čeka se da se Keysign pokrene.</string>
+    <string name="join_key_gen_screen_waiting_for_operationType_to_start">Čeka se da se %1$s pokrene.</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT tokeni troše se od naknada.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokeni se ispuštaju korisnicima.</string>
     <string name="vultisig_token_setting_screen_title">ŽETON VULTISIG</string>
@@ -308,6 +308,8 @@
     <string name="import_file_not_supported">Vrsta datoteke nije podržana</string>
     <string name="failed_to_resolve_address">Neuspjelo rješavanje adrese</string>
     <string name="join_keygen_invalid_qr_code">Analiza QR koda nije uspjela</string>
-    <string name="join_keygen_failed">Pridruživanje keygenu nije uspjelo</string>
+    <string name="join_keygen_failed">Pridruživanje %1$s nije uspjelo</string>
+    <string name="join_keygen_screen_reshare">Ponovno podijeli</string>
+    <string name="join_keygen_screen_keygen">Keygen</string>
 
 </resources>

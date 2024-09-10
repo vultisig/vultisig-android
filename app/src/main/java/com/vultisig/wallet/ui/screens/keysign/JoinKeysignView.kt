@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.keysign
 
-import ErrorView
 import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.activity.compose.BackHandler
@@ -31,6 +30,7 @@ import com.vultisig.wallet.presenter.keysign.JoinKeysignState.WaitingForKeysignS
 import com.vultisig.wallet.presenter.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.presenter.keysign.KeysignState
 import com.vultisig.wallet.presenter.keysign.VerifyUiModel
+import com.vultisig.wallet.ui.components.ErrorView
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.navigation.Screen
@@ -88,6 +88,7 @@ internal fun JoinKeysignView(
                             state = model.model,
                             isConsentsEnabled = false,
                             confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
+                            onFastSignClick = {},
                             onConfirm = viewModel::joinKeysign,
                         )
                     }
@@ -97,6 +98,7 @@ internal fun JoinKeysignView(
                             state = model.model,
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
                             isConsentsEnabled = false,
+                            onFastSignClick = {},
                             onConfirm = viewModel::joinKeysign,
                         )
                     }
@@ -105,6 +107,7 @@ internal fun JoinKeysignView(
                         VerifyDepositScreen(
                             state = model.model,
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                            onFastSignClick = {},
                             onConfirm = viewModel::joinKeysign
                         )
                     }

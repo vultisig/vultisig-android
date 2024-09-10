@@ -96,7 +96,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                     it.copy(
                         shareVaultQrModel = shareVaultQrModel,
                         shareVaultQrString = gson.toJson(shareVaultQrModel),
-                        fileName = "Vultisig-${vault.name}-${vault.id.takeLast(3)}.png"
+                        fileName = "VultisigQR-${vault.name}-${shareVaultQrModel.uid.takeLast(3)}.png"
                     )
                 }
                 if (!hasWritePermission) {

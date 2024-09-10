@@ -22,16 +22,14 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
     override suspend fun invoke(vault: Vault, isReshare: Boolean) {
         Timber.d("saveVault(vault = $vault)")
         if (isReshare) {
-            // when it is reshare , user already select the chain
             vaultRepository.upsert(vault)
-            return
+        } else {
+            vaultRepository.getByEcdsa(vault.pubKeyECDSA)?.let {
+                Timber.d("saveVault: vault already exists, updating")
+                throw DuplicateVaultException()
+            }
+            vaultRepository.add(vault)
         }
-        vaultRepository.getByEcdsa(vault.pubKeyECDSA)?.let {
-            Timber.d("saveVault: vault already exists, updating")
-            throw DuplicateVaultException()
-        }
-        vaultRepository.add(vault)
-
         // if vault has no coins, then add default coins
         if (vault.coins.isEmpty()) {
             Timber.d("saveVault: vault has no coins, adding default coins")

@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ksp)
     kotlin("kapt")
 }
 
@@ -57,9 +59,12 @@ dependencies {
 
     // ktor
     implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.negotiation)
+    implementation(libs.ktor.client.serialization.kotlinx)
 
     // serialization
     implementation(libs.gson)
+    implementation(libs.kotlinx.serialization)
 
     // crypto
     implementation(libs.wallet.core)

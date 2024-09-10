@@ -18,6 +18,10 @@ internal sealed class Destination(
         const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
+        const val ARG_VAULT_SETUP_TYPE = "vault_setup_type"
+        const val ARG_VAULT_NAME = "vault_name"
+        const val ARG_EMAIL = "email"
+        const val ARG_PASSWORD = "password"
     }
 
     data object AddVault : Destination(
@@ -155,7 +159,8 @@ internal sealed class Destination(
         route = "address_book?$ARG_REQUEST_ID=$requestId&$ARG_CHAIN_ID=${chain?.id}"
     ) {
         companion object {
-            const val STATIC_ROUTE = "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
+            const val STATIC_ROUTE =
+                "address_book?$ARG_REQUEST_ID={$ARG_REQUEST_ID}&$ARG_CHAIN_ID={$ARG_CHAIN_ID}"
         }
     }
 
@@ -235,11 +240,15 @@ internal sealed class Destination(
     }
 
 
-    data class QrAddressScreen(val address: String) :
-        Destination(route = "vault_details/qr_address_screen/$address") {
+    data class QrAddressScreen(
+        val vaultId: String? = null,
+        val address: String,
+    ) :
+        Destination(route = "vault_details/${vaultId}/qr_address_screen/$address") {
         companion object {
             const val ARG_COIN_ADDRESS = "coin_address"
-            const val STATIC_ROUTE = "vault_details/qr_address_screen/{$ARG_COIN_ADDRESS}"
+            const val STATIC_ROUTE =
+                "vault_details/{$ARG_VAULT_ID}/qr_address_screen/{$ARG_COIN_ADDRESS}"
         }
     }
 
@@ -250,7 +259,7 @@ internal sealed class Destination(
         }
     }
 
-    data class Setup(
+    data class SelectVaultType(
         val vaultId: String? = null,
     ) : Destination(route = buildRoute(vaultId)) {
         companion object {
@@ -259,16 +268,82 @@ internal sealed class Destination(
         }
     }
 
+    data class SecureSetup(
+        val vaultId: String? = null,
+    ) : Destination(route = buildRoute(vaultId)) {
+        companion object {
+            val staticRoute = buildRoute("{$ARG_VAULT_ID}")
+            private fun buildRoute(vaultId: String?) = "setup/secure/$vaultId"
+        }
+    }
+
+    data class KeygenEmail(
+        val name: String,
+        val setupType: VaultSetupType,
+    ) : Destination(route = buildRoute(name, setupType.raw)) {
+        companion object {
+            const val STATIC_ROUTE = "keygen/email?${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
+                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}"
+
+            fun buildRoute(name: String, setupType: Int) =
+                "keygen/email?${ARG_VAULT_NAME}=${name}&${ARG_VAULT_SETUP_TYPE}=${setupType}"
+        }
+    }
+
+    data class KeygenPassword(
+        val name: String,
+        val setupType: VaultSetupType,
+        val email: String,
+    ) : Destination(route = buildRoute(name, email, setupType)) {
+        companion object {
+            const val STATIC_ROUTE = "keygen/password?${ARG_EMAIL}={$ARG_EMAIL}" +
+                    "&${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
+                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}"
+
+            private fun buildRoute(
+                name: String,
+                email: String,
+                setupType: VaultSetupType,
+            ) = "keygen/password?${ARG_EMAIL}=$email&${ARG_VAULT_SETUP_TYPE}=${setupType.raw}" +
+                    "&${ARG_VAULT_NAME}=$name"
+
+        }
+    }
+
     data class KeygenFlow(
-        val vaultName: String,
+        val vaultName: String?,
         val vaultSetupType: VaultSetupType,
         val isReshare: Boolean,
-    ) : Destination(route = "keygen_flow/$vaultName/${vaultSetupType.raw}/$isReshare") {
+        val email: String?,
+        val password: String?,
+    ) : Destination(
+        route = buildRoute(
+            vaultName,
+            vaultSetupType.raw,
+            isReshare.toString(),
+            email,
+            password
+        )
+    ) {
         companion object {
-            const val STATIC_ROUTE = "keygen_flow/{vault_name}/{vault_type}/{is_reshare}"
             const val ARG_VAULT_NAME = "vault_name"
-            const val ARG_VAULT_TYPE = "vault_type"
-            const val DEFAULT_NEW_VAULT = "*vultisig_new_vault*"
+            const val ARG_IS_RESHARE = "is_reshare"
+
+            const val STATIC_ROUTE = "keygen/generate?${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
+                    "&${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
+                    "&${ARG_IS_RESHARE}={$ARG_IS_RESHARE}" +
+                    "&${ARG_EMAIL}={$ARG_EMAIL}" +
+                    "&${ARG_PASSWORD}={$ARG_PASSWORD}"
+
+            private fun buildRoute(
+                name: String?,
+                type: Int,
+                isReshare: String,
+                email: String?,
+                password: String?,
+            ) = "keygen/generate?${ARG_VAULT_NAME}=$name&${ARG_VAULT_SETUP_TYPE}=${type}" +
+                    "&${ARG_IS_RESHARE}=$isReshare&${ARG_EMAIL}=$email&${ARG_PASSWORD}=$password"
+
         }
     }
 
@@ -322,7 +397,8 @@ internal sealed class Destination(
         route = "create_new_vault"
     )
 
-    data class AddChainAccount(val vaultId: String) : Destination(route = "vault_detail/$vaultId/add_account")
+    data class AddChainAccount(val vaultId: String) :
+        Destination(route = "vault_detail/$vaultId/add_account")
 
     data class ReshareStartScreen(val vaultId: String) :
         Destination(route = "reshare_start_screen/$vaultId") {

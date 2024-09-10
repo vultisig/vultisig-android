@@ -3,11 +3,11 @@ package com.vultisig.wallet.presenter.keygen
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.vultisig.wallet.R
+import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -31,8 +31,14 @@ import tss.ServiceImpl
 import tss.Tss
 import kotlin.time.Duration.Companion.seconds
 
-enum class KeygenState {
-    CreatingInstance, KeygenECDSA, KeygenEdDSA, ReshareECDSA, ReshareEdDSA, Success, ERROR
+internal sealed interface KeygenState {
+    data object CreatingInstance : KeygenState
+    data object KeygenECDSA : KeygenState
+    data object KeygenEdDSA : KeygenState
+    data object ReshareECDSA : KeygenState
+    data object ReshareEdDSA : KeygenState
+    data object Success : KeygenState
+    data class Error(val errorMessage: UiText,val isThresholdError: Boolean) : KeygenState
 }
 
 internal class GeneratingKeyViewModel(
@@ -57,7 +63,6 @@ internal class GeneratingKeyViewModel(
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
-    val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
 
     init {
@@ -69,7 +74,7 @@ internal class GeneratingKeyViewModel(
     private suspend fun collectCurrentState() {
         currentState.collect { state ->
             when (state) {
-                KeygenState.ERROR -> {
+                is KeygenState.Error -> {
                     stopService(context.applicationContext)
                 }
 
@@ -97,8 +102,13 @@ internal class GeneratingKeyViewModel(
             this._messagePuller?.stop()
         } catch (e: Exception) {
             Timber.tag("GeneratingKeyViewModel").d("generateKey error: %s", e.stackTraceToString())
-            errorMessage.value = e.message ?: "Unknown error"
-            currentState.value = KeygenState.ERROR
+            val errorMessage = UiText.DynamicString(e.message ?: "Unknown error")
+            val isThresholdError = checkIsThresholdError(e)
+            currentState.value = KeygenState.Error(
+                if (isThresholdError)
+                    UiText.StringResource(R.string.threshold_error) else errorMessage,
+                isThresholdError
+            )
         }
 
     }
@@ -241,4 +251,7 @@ internal class GeneratingKeyViewModel(
         Timber.d("stop MediatorService: Mediator service stopped")
 
     }
+
+    private fun checkIsThresholdError(errorMessage: Exception) =
+         errorMessage.message?.contains("threshold") == true
 }

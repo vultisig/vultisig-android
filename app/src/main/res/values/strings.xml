@@ -112,7 +112,7 @@
     <string name="join_key_gen_screen_discovering_service">Discovering Service</string>
     <string name="join_key_gen_screen_discovering_session_id">Discovering Session ID</string>
     <string name="join_key_gen_screen_joining_keygen">Joining Keygen</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Waiting for Keygen to start</string>
+    <string name="join_key_gen_screen_waiting_for_operationType_to_start">Waiting for %1$s to start</string>
     <string name="keygen_flow_views_success">Success</string>
     <string name="keygen_peer_discovery_keygen">Keygen for %1$s vault</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
@@ -226,6 +226,8 @@
     <string name="circular_progress_indicator_done">Done</string>
     <string name="vault_already_exist">Vault with name %s already exist</string>
     <string name="vault_detail_this_device">%1$s (This Device)</string>
+    <string name="join_keygen_screen_reshare" >reshare</string>
+    <string name="join_keygen_screen_keygen">keygen</string>
 
 
     <!-- TODO needs translation-->
@@ -365,7 +367,7 @@
     <string name="vault_settings_error_extension_backup_file" translatable="false">Supported file extensions are: %s</string>
     <string name="default_error"  translatable="false">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
-    <string name="join_keygen_failed">Failed to join keygen</string>
+    <string name="join_keygen_failed">Failed to join %1$s</string>
     <string name="reshare_start_screen_title" translatable="false">Reshare your vault</string>
     <string name="reshare_start_screen_body" translatable="false">Reshare can be used to refresh, expand or reduce the amount of devices in a Vault.</string>
     <string name="reshare_start_screen_warning" translatable="false">For all Reshare actions the threshold of devices is always required.</string>
@@ -376,5 +378,36 @@
     <string name="reshare_device_list_screen_desc1" translatable="false">Your configuration changed, make a new backup.</string>
     <string name="reshare_device_list_of_vault" translatable="false">%1$s of %2$s</string>
     <string name="reshare_start" translatable="false">Start</string>
+    <string name="threshold_error" translatable="false">Threshold not reached\nMissing enough initial devices</string>
+    <string name="generating_key_renew" translatable="false">Renew</string>
+    <string name="generating_key_retry" translatable="false">Retry</string>
+    <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>
+    <string name="join_keygen_screen_renew" translatable="false">Renew</string>
+
+    <string name="select_vault_type_fast_title" translatable="false">FAST</string>
+    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>
+    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>
+    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>
+    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>
+    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>
+    <string name="select_vault_type_start" translatable="false">START</string>
+    <string name="select_vault_type_select" translatable="false">Select</string>
+    <string name="keygen_email_screen_title" translatable="false">EMAIL</string>
+    <string name="keygen_email_continue_button" translatable="false">Continue</string>
+    <string name="keygen_email_caption" translatable="false">Enter your email to receive your backup</string>
+    <string name="keygen_email_input_hint" translatable="false">Email</string>
+    <string name="keygen_verify_email_hint" translatable="false">Verify Email</string>
+    <string name="keygen_email_transactions_caption" translatable="false">Receive transaction alerts here\n(customise later)</string>
+    <string name="keygen_invalid_email_error" translatable="false">Invalid email</string>
+    <string name="keygen_email_dont_match" translatable="false">Emails do not match</string>
+    <string name="keygen_password_description_caption" translatable="false">This Password encrypts your Vault Share</string>
+    <string name="keygen_password_caption" translatable="false">Protect your vault</string>
+    <string name="keygen_password_title" translatable="false">PASSWORD</string>
+    <string name="keygen_password_warning_caption" translatable="false">Do not forget your password.</string>
+    <string name="keygen_passwords_dont_match" translatable="false">Passwords should match</string>
+    <string name="password_should_not_be_empty" translatable="false">Password should not be empty</string>
+    <string name="verify_transaction_fast_sign_btn_title" translatable="false">Fast Sign</string>
+    <string name="keysign_paired_sign_title" translatable="false">Paired Sign</string>
+    <string name="keysign_password_title" translatable="false">Password</string>
 
 </resources>

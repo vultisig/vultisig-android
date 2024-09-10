@@ -351,6 +351,7 @@ internal class SwapFormViewModel @Inject constructor(
                 sendNavigator.navigate(
                     SendDst.VerifyTransaction(
                         transactionId = transaction.id,
+                        vaultId = vaultId,
                     )
                 )
             }

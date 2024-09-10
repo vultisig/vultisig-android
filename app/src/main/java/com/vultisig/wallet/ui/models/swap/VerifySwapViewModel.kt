@@ -9,6 +9,8 @@ import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -33,6 +35,7 @@ internal data class VerifySwapUiModel(
     val hasConsentAllowance: Boolean = false,
     val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
+    val hasFastSign: Boolean = false,
 )
 
 @HiltViewModel
@@ -45,11 +48,14 @@ internal class VerifySwapViewModel @Inject constructor(
 
     private val swapTransactionRepository: SwapTransactionRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val vaultRepository: VaultRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
 
     private val transactionId: String = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
+    private val vaultId: String? = savedStateHandle["vault_id"]
 
     init {
         viewModelScope.launch {
@@ -80,6 +86,7 @@ internal class VerifySwapViewModel @Inject constructor(
                 )
             }
         }
+        loadFastSign()
     }
 
     fun consentReceiveAmount(consent: Boolean) {
@@ -98,18 +105,37 @@ internal class VerifySwapViewModel @Inject constructor(
         state.update { it.copy(errorText = null) }
     }
 
+    fun fastSign() {
+        keysign(true)
+    }
+
     fun confirm() {
+        keysign(false)
+    }
+
+    private fun keysign(
+        hasFastSign: Boolean,
+    ) {
         val hasAllConsents = state.value.let {
             it.consentReceiveAmount && it.consentAmount && it.consentAllowance
         }
 
         if (hasAllConsents) {
             viewModelScope.launch {
-                sendNavigator.navigate(
-                    SendDst.Keysign(
-                        transactionId = transactionId,
+                if (hasFastSign) {
+                    sendNavigator.navigate(
+                        SendDst.Password(
+                            transactionId = transactionId,
+                        )
                     )
-                )
+                } else {
+                    sendNavigator.navigate(
+                        SendDst.Keysign(
+                            transactionId = transactionId,
+                            password = null,
+                        )
+                    )
+                }
             }
         } else {
             state.update {
@@ -117,6 +143,19 @@ internal class VerifySwapViewModel @Inject constructor(
                     errorText = UiText.StringResource(
                         R.string.verify_transaction_error_not_enough_consent
                     )
+                )
+            }
+        }
+    }
+
+    private fun loadFastSign() {
+        viewModelScope.launch {
+            if (vaultId == null) return@launch
+            val vault = requireNotNull(vaultRepository.get(vaultId))
+            val hasFastSign = vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            state.update {
+                it.copy(
+                    hasFastSign = hasFastSign
                 )
             }
         }

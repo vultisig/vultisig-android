@@ -9,11 +9,18 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface DataApiModule {
+
     @Binds
     @Singleton
     fun bindOneInchApi(
         impl: OneInchApiImpl
     ): OneInchApi
+
+    @Binds
+    @Singleton
+    fun bindVultiSignerApi(
+        impl: VultiSignerApiImpl
+    ): VultiSignerApi
 
     @Binds
     @Singleton
