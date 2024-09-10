@@ -39,7 +39,6 @@ internal class AddAddressEntryViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val addressBookRepository: AddressBookRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
 
     val state = MutableStateFlow(AddAddressEntryUiModel())

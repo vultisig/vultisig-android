@@ -22,7 +22,6 @@ internal sealed class Destination(
         const val ARG_VAULT_NAME = "vault_name"
         const val ARG_EMAIL = "email"
         const val ARG_PASSWORD = "password"
-        const val ARG_COIN_ADDRESS = "coin_address"
     }
 
     data object AddVault : Destination(
@@ -136,7 +135,6 @@ internal sealed class Destination(
     }
 
     data object ScanQr : Destination(route = "scan_qr")
-    data object ScanTokenAddressQr : Destination(route = "scan_qr")
 
     data class JoinThroughQr(
         val vaultId: String?,
@@ -248,6 +246,7 @@ internal sealed class Destination(
     ) :
         Destination(route = "vault_details/${vaultId}/qr_address_screen/$address") {
         companion object {
+            const val ARG_COIN_ADDRESS = "coin_address"
             const val STATIC_ROUTE =
                 "vault_details/{$ARG_VAULT_ID}/qr_address_screen/{$ARG_COIN_ADDRESS}"
         }

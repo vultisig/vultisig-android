@@ -24,7 +24,7 @@ internal class QrAddressViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
 ) : ViewModel() {
-    val address = savedStateHandle.get<String>(Destination.ARG_COIN_ADDRESS)
+    val address = savedStateHandle.get<String>(Destination.QrAddressScreen.ARG_COIN_ADDRESS)
     val currentVault: MutableState<Vault?> = mutableStateOf(null)
 
     init {

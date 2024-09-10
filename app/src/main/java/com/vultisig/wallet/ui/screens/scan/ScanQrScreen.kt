@@ -79,7 +79,6 @@ internal fun ScanQrAndJoin(
     )
 }
 
-
 @Composable
 internal fun ScanQrScreen(
     navController: NavController,

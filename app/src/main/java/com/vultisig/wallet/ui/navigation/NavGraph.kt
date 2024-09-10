@@ -388,7 +388,6 @@ internal fun SetupNavGraph(
             val savedStateHandle = entry.savedStateHandle
             val args = requireNotNull(entry.arguments)
 
-
             AddAddressEntryScreen(navController = navController,
                 qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR))
         }

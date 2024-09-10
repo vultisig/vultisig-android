@@ -79,8 +79,6 @@ internal fun AddAddressEntryScreen(
     onSetOutputAddress: (String) -> Unit = {},
     onScan: () -> Unit = {},
     ) {
-
-
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
         topBar = {
