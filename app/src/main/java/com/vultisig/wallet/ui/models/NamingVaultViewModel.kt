@@ -50,14 +50,27 @@ internal class NamingVaultViewModel @Inject constructor(
         if (errorMessageState.value != null)
             return
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.KeygenFlow(
-                    name.takeIf { it.isNotEmpty() }
-                        ?: Destination.KeygenFlow.DEFAULT_NEW_VAULT,
-                    vaultSetupType,
-                    false
-                )
-            )
+            when (vaultSetupType) {
+                VaultSetupType.ACTIVE, VaultSetupType.FAST -> {
+                    navigator.navigate(
+                        Destination.KeygenEmail(
+                            name = name,
+                            setupType = vaultSetupType
+                        )
+                    )
+                }
+                else -> {
+                    navigator.navigate(
+                        Destination.KeygenFlow(
+                            vaultName = name,
+                            vaultSetupType = vaultSetupType,
+                            isReshare = false,
+                            email = null,
+                            password = null,
+                        )
+                    )
+                }
+            }
         }
     }
 

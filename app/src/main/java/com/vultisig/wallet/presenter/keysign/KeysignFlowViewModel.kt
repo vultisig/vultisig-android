@@ -11,6 +11,7 @@ import android.os.Build
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
@@ -37,6 +39,7 @@ import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.mediator.MediatorService
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
@@ -44,6 +47,7 @@ import com.vultisig.wallet.presenter.keygen.ParticipantDiscovery
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -83,6 +87,7 @@ enum class KeysignFlowState {
 
 @HiltViewModel
 internal class KeysignFlowViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val vultisigRelay: VultisigRelay,
     private val gson: Gson,
     private val protoBuf: ProtoBuf,
@@ -98,6 +103,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     @ApplicationContext  private val context: Context,
     private val compressQr: CompressQrUseCase,
     private val navigator: Navigator<Destination>,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -121,6 +127,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
     val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.LOCAL)
+
+    val password = savedStateHandle.get<String?>(SendDst.ARG_PASSWORD)
 
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -157,6 +165,10 @@ internal class KeysignFlowViewModel @Inject constructor(
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
         _currentVault = vault
         _keysignPayload = keysignPayload
+        messagesToSign = SigningHelper.getKeysignMessages(
+            payload = _keysignPayload!!,
+            vault = _currentVault!!,
+        )
         this.selection.value = listOf(vault.localPartyID)
         if (vultisigRelay.isRelayEnabled) {
             _serverAddress = Endpoints.VULTISIG_RELAY
@@ -398,7 +410,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         Timber.tag("KeysignFlowViewModel").d("startMediatorService: Mediator service started")
     }
 
-    private fun startSession(
+    private suspend fun startSession(
         serverAddr: String,
         sessionID: String,
         localPartyID: String,
@@ -421,6 +433,21 @@ internal class KeysignFlowViewModel @Inject constructor(
                     )
                 }
             }
+
+            if (password != null) {
+                val vault = _currentVault!!
+                vultiSignerRepository.joinKeysign(
+                    JoinKeysignRequestJson(
+                        publicKeyEcdsa = vault.pubKeyECDSA,
+                        messages = messagesToSign,
+                        sessionId = sessionID,
+                        hexEncryptionKey = _encryptionKeyHex,
+                        derivePath = _keysignPayload!!.coin.coinType.derivationPath(),
+                        isEcdsa = _keysignPayload?.coin?.chain?.TssKeysignType == TssKeyType.ECDSA,
+                        password = password,
+                    )
+                )
+            }
         } catch (e: Exception) {
             Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
         }
@@ -440,10 +467,6 @@ internal class KeysignFlowViewModel @Inject constructor(
     fun moveToState(nextState: KeysignFlowState) {
         try {
             if (nextState == KeysignFlowState.KEYSIGN) {
-                messagesToSign = SigningHelper.getKeysignMessages(
-                    payload = _keysignPayload!!,
-                    vault = _currentVault!!,
-                )
                 cleanQrAddress()
             }
             currentState.update { nextState }

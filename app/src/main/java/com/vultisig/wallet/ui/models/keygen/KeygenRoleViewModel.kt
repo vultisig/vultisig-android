@@ -21,12 +21,14 @@ internal class KeygenRoleViewModel @Inject constructor(
     fun initiate() {
         viewModelScope.launch {
             val nextPage = if (vaultId == null)
-                Destination.Setup()
+                Destination.SelectVaultType()
             else
                 Destination.KeygenFlow(
                     vaultId,
                     VaultSetupType.M_OF_N,
-                    true
+                    true,
+                    email = null,
+                    password = null,
                 )
             navigator.navigate(nextPage)
         }
