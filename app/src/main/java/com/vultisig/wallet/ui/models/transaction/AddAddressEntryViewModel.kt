@@ -36,13 +36,11 @@ internal data class AddAddressEntryUiModel(
 
 @HiltViewModel
 internal class AddAddressEntryViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val addressBookRepository: AddressBookRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
-
 
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
@@ -53,17 +51,12 @@ internal class AddAddressEntryViewModel @Inject constructor(
         state.update { it.copy(selectedChain = chain) }
     }
 
-
     fun saveAddress() {
         val chain = state.value.selectedChain
         val title = titleTextFieldState.text.toString()
         val address = addressTextFieldState.text.toString()
 
-        if (validateAddress(
-                chain,
-                address
-            ) != null
-        ) {
+        if (validateAddress(chain, address) != null) {
             return
         }
 
@@ -84,19 +77,12 @@ internal class AddAddressEntryViewModel @Inject constructor(
         val address = addressTextFieldState.text.toString()
         val chain = state.value.selectedChain
 
-        val error = validateAddress(
-            chain,
-            address
-        )
+        val error = validateAddress(chain, address)
         state.update { it.copy(addressError = error) }
     }
 
     private fun validateAddress(chain: Chain, address: String): UiText? =
-        if (address.isBlank() || !chainAccountAddressRepository.isValid(
-                chain,
-                address
-            )
-        ) {
+        if (address.isBlank() || !chainAccountAddressRepository.isValid(chain, address)) {
             UiText.StringResource(R.string.send_error_no_address)
         } else {
             null
