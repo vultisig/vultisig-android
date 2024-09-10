@@ -12,7 +12,6 @@ import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,8 +58,6 @@ internal fun AddAddressEntryScreen(
         onAddressFieldLostFocus = model::validateAddress,
         onSetOutputAddress =model::setOutputAddress ,
         onScan =model::scanAddress,
-        setAddressFromQrCode = model::setAddressFromQrCode,
-        qrCodeResult = state.q
     )
 }
 
@@ -75,16 +72,7 @@ internal fun AddAddressEntryScreen(
     onAddressFieldLostFocus: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onScan: () -> Unit = {},
-    setAddressFromQrCode:(String?)-> Unit = {},
-    qrCodeResult :String?,
-
-    ) {
-    LaunchedEffect(qrCodeResult) {
-        setAddressFromQrCode(qrCodeResult)
-    }
-
-
-
+) {
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
         topBar = {
@@ -94,7 +82,6 @@ internal fun AddAddressEntryScreen(
                 startIcon = R.drawable.caret_left,
             )
         },
-
         content = { scaffoldPadding ->
             Column(
                 modifier = Modifier

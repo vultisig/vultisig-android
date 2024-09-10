@@ -12,10 +12,16 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_COIN_ADDRESS
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
+import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -34,8 +40,9 @@ internal class AddAddressEntryViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val addressBookRepository: AddressBookRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val requestResultRepository: RequestResultRepository,
 ) : ViewModel() {
-    val address=savedStateHandle.get<String>(Destination.ARG_COIN_ADDRESS)
+
 
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
@@ -46,12 +53,17 @@ internal class AddAddressEntryViewModel @Inject constructor(
         state.update { it.copy(selectedChain = chain) }
     }
 
+
     fun saveAddress() {
         val chain = state.value.selectedChain
         val title = titleTextFieldState.text.toString()
         val address = addressTextFieldState.text.toString()
 
-        if (validateAddress(chain, address) != null) {
+        if (validateAddress(
+                chain,
+                address
+            ) != null
+        ) {
             return
         }
 
@@ -72,12 +84,19 @@ internal class AddAddressEntryViewModel @Inject constructor(
         val address = addressTextFieldState.text.toString()
         val chain = state.value.selectedChain
 
-        val error = validateAddress(chain, address)
+        val error = validateAddress(
+            chain,
+            address
+        )
         state.update { it.copy(addressError = error) }
     }
 
     private fun validateAddress(chain: Chain, address: String): UiText? =
-        if (address.isBlank() || !chainAccountAddressRepository.isValid(chain, address)) {
+        if (address.isBlank() || !chainAccountAddressRepository.isValid(
+                chain,
+                address
+            )
+        ) {
             UiText.StringResource(R.string.send_error_no_address)
         } else {
             null
@@ -86,22 +105,12 @@ internal class AddAddressEntryViewModel @Inject constructor(
     fun scanAddress() {
         viewModelScope.launch {
             navigator.navigate(Destination.ScanQr)
+            setOutputAddress(requestResultRepository.request<String>(ARG_COIN_ADDRESS))
         }
-    }
-    fun setOutputAddress(address: String) {
-        addressTextFieldState.setTextAndPlaceCursorAtEnd(address)
     }
 
-    fun setAddressFromQrCode(qrCode: String?) {
-        if (qrCode != null) {
-            addressTextFieldState.setTextAndPlaceCursorAtEnd(qrCode)
-            Chain.entries.find { chain ->
-                chainAccountAddressRepository.isValid(
-                    chain,
-                    qrCode
-                )
-            }
-        }
+    fun setOutputAddress(address: String) {
+        addressTextFieldState.setTextAndPlaceCursorAtEnd(address)
     }
 
 }

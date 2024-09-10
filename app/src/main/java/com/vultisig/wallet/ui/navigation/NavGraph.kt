@@ -57,6 +57,7 @@ import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
+import com.vultisig.wallet.ui.screens.scan.ScanQrTokenAddress
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
@@ -341,6 +342,11 @@ internal fun SetupNavGraph(
         ) {
             ScanQrScreen(navController = navController)
         }
+        composable(
+            route = Destination.ScanTokenAddressQr.route,
+        ) {
+            ScanQrTokenAddress(navController = navController)
+        }
 
         composable(
             route = Destination.JoinThroughQr.STATIC_ROUTE,
@@ -384,12 +390,6 @@ internal fun SetupNavGraph(
 
         composable(
             route = Destination.AddAddressEntry.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_COIN_ADDRESS) {
-                    type = NavType.StringType
-                    nullable = true
-                },
-            )
         ) {
             AddAddressEntryScreen(navController = navController)
         }

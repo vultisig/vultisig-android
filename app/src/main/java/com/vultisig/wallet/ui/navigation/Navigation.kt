@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.navigation
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
-import com.vultisig.wallet.ui.utils.address
 
 internal open class Dst(
     val route: String,
@@ -137,6 +136,7 @@ internal sealed class Destination(
     }
 
     data object ScanQr : Destination(route = "scan_qr")
+    data object ScanTokenAddressQr : Destination(route = "scan_qr")
 
     data class JoinThroughQr(
         val vaultId: String?,

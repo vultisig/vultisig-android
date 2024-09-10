@@ -56,13 +56,6 @@ internal class ScanQrViewModel @Inject constructor(
                             Destination.Send(vaultId = requireNotNull(vaultId), address = address)
                         }
 
-                        Add_ADDRESS_FLOW -> {
-                            val address = qr.getAddressFromQrCode()
-                            Destination.AddAddressEntry(
-                                address = address
-                            )
-                        }
-
                         else -> throw IllegalArgumentException(
                             "Unsupported QR-code flowType: $flowType"
                         )
@@ -78,7 +71,6 @@ internal class ScanQrViewModel @Inject constructor(
         private const val JOIN_KEYSIGN_FLOW = "SignTransaction"
         private const val JOIN_KEYGEN_FLOW = "NewVault"
         private const val JOIN_SEND_ON_ADDRESS_FLOW = "SendOnAddress"
-        private const val Add_ADDRESS_FLOW = "AddAddress"
     }
 
 }
