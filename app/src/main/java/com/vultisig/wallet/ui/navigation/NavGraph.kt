@@ -22,6 +22,7 @@ import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScree
 import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
 import com.vultisig.wallet.presenter.welcome.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_COIN_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
@@ -344,6 +345,12 @@ internal fun SetupNavGraph(
 
         composable(
             route = Destination.AddAddressEntry.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_COIN_ADDRESS) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+            )
         ) {
             AddAddressEntryScreen(navController = navController)
         }

@@ -4,6 +4,8 @@ package com.vultisig.wallet.ui.models.transaction
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -28,10 +30,12 @@ internal data class AddAddressEntryUiModel(
 
 @HiltViewModel
 internal class AddAddressEntryViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val addressBookRepository: AddressBookRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
+    val address=savedStateHandle.get<String>(Destination.ARG_COIN_ADDRESS)
 
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
@@ -78,5 +82,26 @@ internal class AddAddressEntryViewModel @Inject constructor(
         } else {
             null
         }
+
+    fun scanAddress() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.ScanQr)
+        }
+    }
+    fun setOutputAddress(address: String) {
+        addressTextFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
+    fun setAddressFromQrCode(qrCode: String?) {
+        if (qrCode != null) {
+            addressTextFieldState.setTextAndPlaceCursorAtEnd(qrCode)
+            Chain.entries.find { chain ->
+                chainAccountAddressRepository.isValid(
+                    chain,
+                    qrCode
+                )
+            }
+        }
+    }
 
 }

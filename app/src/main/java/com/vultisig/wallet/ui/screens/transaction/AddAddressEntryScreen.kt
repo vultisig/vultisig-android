@@ -12,17 +12,20 @@ import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -30,6 +33,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.TokenCard
@@ -52,6 +57,10 @@ internal fun AddAddressEntryScreen(
         onSelectChainClick = model::selectChain,
         onSaveAddressClick = model::saveAddress,
         onAddressFieldLostFocus = model::validateAddress,
+        onSetOutputAddress =model::setOutputAddress ,
+        onScan =model::scanAddress,
+        setAddressFromQrCode = model::setAddressFromQrCode,
+        qrCodeResult = state.q
     )
 }
 
@@ -64,7 +73,18 @@ internal fun AddAddressEntryScreen(
     onSelectChainClick: (Chain) -> Unit = {},
     onSaveAddressClick: () -> Unit = {},
     onAddressFieldLostFocus: () -> Unit = {},
-) {
+    onSetOutputAddress: (String) -> Unit = {},
+    onScan: () -> Unit = {},
+    setAddressFromQrCode:(String?)-> Unit = {},
+    qrCodeResult :String?,
+
+    ) {
+    LaunchedEffect(qrCodeResult) {
+        setAddressFromQrCode(qrCodeResult)
+    }
+
+
+
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
         topBar = {
@@ -74,6 +94,7 @@ internal fun AddAddressEntryScreen(
                 startIcon = R.drawable.caret_left,
             )
         },
+
         content = { scaffoldPadding ->
             Column(
                 modifier = Modifier
@@ -128,7 +149,27 @@ internal fun AddAddressEntryScreen(
                     keyboardType = KeyboardType.Text,
                     textFieldState = addressTextFieldState,
                     onLostFocus = onAddressFieldLostFocus,
-                )
+                ){
+                    val clipboard = LocalClipboardManager.current
+
+                    UiIcon(
+                        drawableResId = R.drawable.copy,
+                        size = 20.dp,
+                        onClick = {
+                            clipboard.getText()
+                                ?.toString()
+                                ?.let(onSetOutputAddress)
+                        }
+                    )
+
+                    UiSpacer(size = 8.dp)
+
+                    UiIcon(
+                        drawableResId = R.drawable.camera,
+                        size = 20.dp,
+                        onClick = onScan,
+                    )
+                }
             }
         },
         bottomBar = {

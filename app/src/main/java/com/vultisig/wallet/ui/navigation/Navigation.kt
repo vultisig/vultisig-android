@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.navigation
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
+import com.vultisig.wallet.ui.utils.address
 
 internal open class Dst(
     val route: String,
@@ -18,6 +19,7 @@ internal sealed class Destination(
         const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
+        const val ARG_COIN_ADDRESS = "coin_address"
     }
 
     data object AddVault : Destination(
@@ -159,10 +161,13 @@ internal sealed class Destination(
         }
     }
 
-    data object AddAddressEntry : Destination(
-        route = "address_book/add"
+    data class AddAddressEntry(val address: String? = null) : Destination(
+        route = "address_book/add?$ARG_COIN_ADDRESS=$address"
     ) {
-        const val STATIC_ROUTE = "address_book/add"
+
+        companion object {
+            const val STATIC_ROUTE = "address_book/add?$ARG_COIN_ADDRESS={$ARG_COIN_ADDRESS}"
+        }
     }
 
 
@@ -241,7 +246,6 @@ internal sealed class Destination(
     ) :
         Destination(route = "vault_details/${vaultId}/qr_address_screen/$address") {
         companion object {
-            const val ARG_COIN_ADDRESS = "coin_address"
             const val STATIC_ROUTE =
                 "vault_details/{$ARG_VAULT_ID}/qr_address_screen/{$ARG_COIN_ADDRESS}"
         }
