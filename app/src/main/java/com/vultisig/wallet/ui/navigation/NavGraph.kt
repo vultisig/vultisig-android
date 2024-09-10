@@ -57,7 +57,6 @@ import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
-import com.vultisig.wallet.ui.screens.scan.ScanQrTokenAddress
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
@@ -342,11 +341,6 @@ internal fun SetupNavGraph(
         ) {
             ScanQrScreen(navController = navController)
         }
-        composable(
-            route = Destination.ScanTokenAddressQr.route,
-        ) {
-            ScanQrTokenAddress(navController = navController)
-        }
 
         composable(
             route = Destination.JoinThroughQr.STATIC_ROUTE,
@@ -390,8 +384,13 @@ internal fun SetupNavGraph(
 
         composable(
             route = Destination.AddAddressEntry.STATIC_ROUTE,
-        ) {
-            AddAddressEntryScreen(navController = navController)
+        ) { entry ->
+            val savedStateHandle = entry.savedStateHandle
+            val args = requireNotNull(entry.arguments)
+
+
+            AddAddressEntryScreen(navController = navController,
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR))
         }
 
         composable(

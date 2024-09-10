@@ -91,7 +91,6 @@ internal class AddAddressEntryViewModel @Inject constructor(
     fun scanAddress() {
         viewModelScope.launch {
             navigator.navigate(Destination.ScanQr)
-            setOutputAddress(requestResultRepository.request<String>(ARG_COIN_ADDRESS))
         }
     }
 
