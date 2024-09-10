@@ -383,8 +383,12 @@ internal fun SetupNavGraph(
 
         composable(
             route = Destination.AddAddressEntry.STATIC_ROUTE,
-        ) {
-            AddAddressEntryScreen(navController = navController)
+        ) { entry ->
+            val savedStateHandle = entry.savedStateHandle
+            val args = requireNotNull(entry.arguments)
+
+            AddAddressEntryScreen(navController = navController,
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR))
         }
 
         composable(
