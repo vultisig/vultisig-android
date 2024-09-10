@@ -21,6 +21,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositViewModel
@@ -46,6 +47,7 @@ internal fun VerifyDepositScreen(
     VerifyDepositScreen(
         state = state,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onFastSignClick = viewModel::fastSign,
         onConfirm = viewModel::confirm,
     )
 }
@@ -54,6 +56,7 @@ internal fun VerifyDepositScreen(
 internal fun VerifyDepositScreen(
     state: VerifyDepositUiModel,
     confirmTitle: String,
+    onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
 ) {
     VerifyDepositScreen(
@@ -63,6 +66,8 @@ internal fun VerifyDepositScreen(
         memo = state.memo,
         nodeAddress = state.nodeAddress,
         confirmTitle = confirmTitle,
+        hasFastSign = state.hasFastSign,
+        onFastSignClick = onFastSignClick,
         onConfirm = onConfirm,
     )
 }
@@ -74,7 +79,9 @@ private fun VerifyDepositScreen(
     estimatedFees: String,
     memo: String,
     nodeAddress: String,
+    hasFastSign: Boolean,
     confirmTitle: String,
+    onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
 ) {
     Scaffold(
@@ -82,15 +89,42 @@ private fun VerifyDepositScreen(
             .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
         bottomBar = {
-            MultiColorButton(
-                text = confirmTitle,
-                textColor = Theme.colors.oxfordBlue800,
-                minHeight = 44.dp,
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(all = 16.dp),
-                onClick = onConfirm,
-            )
+                    .padding(all = 16.dp)
+            ) {
+                if (hasFastSign) {
+                    MultiColorButton(
+                        text = stringResource(R.string.verify_transaction_fast_sign_btn_title),
+                        textColor = Theme.colors.oxfordBlue800,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onFastSignClick,
+                    )
+
+                    UiSpacer(size = 16.dp)
+
+                    MultiColorButton(
+                        text = confirmTitle,
+                        backgroundColor = Theme.colors.oxfordBlue800,
+                        textColor = Theme.colors.turquoise800,
+                        iconColor = Theme.colors.oxfordBlue800,
+                        borderSize = 1.dp,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onConfirm
+                    )
+                } else {
+                    MultiColorButton(
+                        text = confirmTitle,
+                        textColor = Theme.colors.oxfordBlue800,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onConfirm,
+                    )
+                }
+            }
         }
     ) {
         Column(
@@ -152,6 +186,8 @@ private fun VerifyDepositScreenPreview() {
         memo = "BOND:addressHere",
         nodeAddress = "123abc456bca",
         confirmTitle = "Sign",
+        hasFastSign = false,
+        onFastSignClick = {},
         onConfirm = {},
     )
 }

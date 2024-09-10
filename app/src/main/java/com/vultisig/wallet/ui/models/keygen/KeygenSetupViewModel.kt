@@ -40,7 +40,10 @@ internal data class KeygenSetupTabUiModel(
 enum class VaultSetupType(val raw: Int) {
     TWO_OF_TWO(0),
     TWO_OF_THREE(1),
-    M_OF_N(2);
+    M_OF_N(2),
+    FAST(3),
+    ACTIVE(4),
+    ;
 
     companion object {
         fun fromInt(value: Int): VaultSetupType = entries.first { it.raw == value }
@@ -49,6 +52,8 @@ enum class VaultSetupType(val raw: Int) {
                 TWO_OF_TWO -> "2/2"
                 TWO_OF_THREE -> "2/3"
                 M_OF_N -> "M/N"
+                FAST -> "2/2"
+                ACTIVE -> "2/3"
             }
     }
 }

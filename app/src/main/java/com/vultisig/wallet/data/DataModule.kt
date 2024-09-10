@@ -17,13 +17,16 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.cache.HttpCache
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.HttpHeaders
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
@@ -48,7 +51,9 @@ internal interface DataModule {
 
         @Provides
         @Singleton
-        fun provideHttpClient(): HttpClient = HttpClient(OkHttp) {
+        fun provideHttpClient(
+            json: Json,
+        ): HttpClient = HttpClient(OkHttp) {
             if (BuildConfig.DEBUG) {
                 install(Logging) {
                     logger = Logger.ANDROID
@@ -61,6 +66,15 @@ internal interface DataModule {
                     HttpHeaders.ContentType, "application/json"
                 )
             }
+            install(ContentNegotiation) {
+                json(json)
+            }
+        }
+
+        @Provides
+        @Singleton
+        fun provideJson() = Json {
+            ignoreUnknownKeys = true
         }
 
         @Provides

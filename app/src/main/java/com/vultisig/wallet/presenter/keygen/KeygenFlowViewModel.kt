@@ -16,6 +16,7 @@ import com.google.gson.Gson
 import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.VultisigRelay
+import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
@@ -23,6 +24,7 @@ import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.mediator.MediatorService
@@ -32,6 +34,7 @@ import com.vultisig.wallet.presenter.common.share
 import com.vultisig.wallet.presenter.common.shareFileName
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -71,11 +74,11 @@ internal data class KeygenFlowUiModel(
 ) {
     val isContinueButtonEnabled =
         when (vaultSetupType) {
-            VaultSetupType.TWO_OF_TWO -> {
+            VaultSetupType.TWO_OF_TWO, VaultSetupType.FAST -> {
                 selection.size == 2
             }
 
-            VaultSetupType.TWO_OF_THREE -> {
+            VaultSetupType.TWO_OF_THREE, VaultSetupType.ACTIVE -> {
                 selection.size == 3
             }
 
@@ -87,24 +90,25 @@ internal data class KeygenFlowUiModel(
 
 @HiltViewModel
 internal class KeygenFlowViewModel @Inject constructor(
-    navBackStackEntry: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vultisigRelay: VultisigRelay,
     private val gson: Gson,
-    private val vaultRepository: VaultRepository,
+    private val compressQr: CompressQrUseCase,
     private val saveVault: SaveVaultUseCase,
+    private val vaultRepository: VaultRepository,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val signerRepository: VultiSignerRepository,
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
-    private val compressQr: CompressQrUseCase,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(
         KeygenFlowUiModel(
             vaultSetupType =
             VaultSetupType.fromInt(
-                navBackStackEntry.get<Int>(Destination.KeygenFlow.ARG_VAULT_TYPE) ?: 0
+                savedStateHandle.get<Int>(ARG_VAULT_SETUP_TYPE) ?: 0
             ),
             isReshareMode = false
         )
@@ -120,7 +124,9 @@ internal class KeygenFlowViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
 
 
-    private val vaultId = navBackStackEntry.get<String>(Destination.KeygenFlow.ARG_VAULT_NAME) ?: ""
+    private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
+    private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
+    private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
 
     val localPartyID: String
         get() = vault.localPartyID
@@ -150,11 +156,11 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    private suspend fun setData(vaultId: String, context: Context) {
+    private suspend fun setData(vaultId: String?, context: Context) {
         // start mediator server
         val allVaults = vaultRepository.getAll()
 
-        val vault = if (vaultId == Destination.KeygenFlow.DEFAULT_NEW_VAULT) {
+        val vault = if (vaultId == null) {
             var newVaultName: String
             var idx = 1
             while (true) {
@@ -302,7 +308,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         Timber.d("startMediatorService: Mediator service started")
     }
 
-    private fun startSession(
+    private suspend fun startSession(
         serverAddress: String,
         sessionID: String,
         localPartyID: String,
@@ -323,10 +329,31 @@ internal class KeygenFlowViewModel @Inject constructor(
                     else -> Timber.d("startSession: Response code: " + response.code)
                 }
             }
+
+            if (email != null) {
+                if (password != null) {
+                    signerRepository.joinKeygen(
+                        JoinKeygenRequestJson(
+                            vaultName = vault.name,
+                            sessionId = sessionID,
+                            hexEncryptionKey = _encryptionKeyHex,
+                            hexChainCode = vault.hexChainCode,
+                            localPartyId = generateServerPartyId(),
+                            encryptionPassword = password,
+                            email = email,
+                        )
+                    )
+                } else {
+                    error("Email is not null, but password is null, this should not happen")
+                }
+            }
         } catch (e: Exception) {
             Timber.e("startSession: ${e.stackTraceToString()}")
         }
     }
+
+    private fun generateServerPartyId(): String =
+        "Server-${Random.nextInt(100, 999)}"
 
     fun addParticipant(participant: String) {
         val currentList = uiState.value.selection

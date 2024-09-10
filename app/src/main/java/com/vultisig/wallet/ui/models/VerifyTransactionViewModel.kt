@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -26,7 +27,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
-data class TransactionUiModel(
+internal data class TransactionUiModel(
     val srcAddress: String = "",
     val dstAddress: String = "",
     val memo: String? = null,
@@ -38,7 +39,7 @@ data class TransactionUiModel(
 )
 
 @Immutable
-data class VerifyTransactionUiModel(
+internal data class VerifyTransactionUiModel(
     val transaction: TransactionUiModel = TransactionUiModel(),
     val consentAddress: Boolean = false,
     val consentAmount: Boolean = false,
@@ -46,6 +47,7 @@ data class VerifyTransactionUiModel(
     val errorText: UiText? = null,
     val blowfishShow: Boolean = false,
     val blowfishWarnings: List<String> = emptyList(),
+    val hasFastSign: Boolean = false,
 )
 
 @HiltViewModel
@@ -57,6 +59,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     transactionRepository: TransactionRepository,
     private val vaultRepository: VaultRepository,
     private val blowfishRepository: BlowfishRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
@@ -72,6 +75,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
 
     init {
+        loadFastSign()
         loadTransaction()
         blowfishTransactionScan()
     }
@@ -94,7 +98,21 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
+    fun fastSign() {
+        keysign(true)
+    }
+
     fun joinKeysign() {
+        keysign(false)
+    }
+
+    fun dismissError() {
+        uiState.update { it.copy(errorText = null) }
+    }
+
+    private fun keysign(
+        hasFastSign: Boolean,
+    ) {
         val hasAllConsents = uiState.value.let {
             it.consentAddress && it.consentAmount && it.consentDst
         }
@@ -103,11 +121,20 @@ internal class VerifyTransactionViewModel @Inject constructor(
             viewModelScope.launch {
                 val transaction = transaction.filterNotNull().first()
 
-                navigator.navigate(
-                    SendDst.Keysign(
-                        transactionId = transaction.id,
+                if (hasFastSign) {
+                    navigator.navigate(
+                        SendDst.Password(
+                            transactionId = transaction.id,
+                        )
                     )
-                )
+                } else {
+                    navigator.navigate(
+                        SendDst.Keysign(
+                            transactionId = transaction.id,
+                            password = null,
+                        )
+                    )
+                }
             }
         } else {
             uiState.update {
@@ -120,8 +147,17 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    fun dismissError() {
-        uiState.update { it.copy(errorText = null) }
+    private fun loadFastSign() {
+        viewModelScope.launch {
+            if (vaultId == null) return@launch
+            val vault = requireNotNull(vaultRepository.get(vaultId))
+            val hasFastSign = vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            uiState.update {
+                it.copy(
+                    hasFastSign = hasFastSign
+                )
+            }
+        }
     }
 
     private fun loadTransaction() {

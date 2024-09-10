@@ -53,10 +53,11 @@ internal fun VerifyTransactionScreen(
     VerifyTransactionScreen(
         state = state,
         isConsentsEnabled = true,
-        confirmTitle = stringResource(R.string.verify_transaction_sign),
+        confirmTitle = stringResource(R.string.keysign_paired_sign_title),
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
+        onFastSignClick = viewModel::fastSign,
         onConfirm = viewModel::joinKeysign,
     )
 }
@@ -66,6 +67,7 @@ internal fun VerifyTransactionScreen(
     state: VerifyTransactionUiModel,
     isConsentsEnabled: Boolean,
     confirmTitle: String,
+    onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
     onConsentAddress: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
@@ -81,14 +83,42 @@ internal fun VerifyTransactionScreen(
                     isShow = state.blowfishShow,
                     warnings = state.blowfishWarnings,
                 )
-                MultiColorButton(
-                    text = confirmTitle,
-                    textColor = Theme.colors.oxfordBlue800,
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(all = 16.dp),
-                    onClick = onConfirm,
-                )
+                        .padding(all = 16.dp)
+                ) {
+                    if (state.hasFastSign) {
+                        MultiColorButton(
+                            text = stringResource(R.string.verify_transaction_fast_sign_btn_title),
+                            textColor = Theme.colors.oxfordBlue800,
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            onClick = onFastSignClick,
+                        )
+
+                        UiSpacer(size = 16.dp)
+
+                        MultiColorButton(
+                            text = confirmTitle,
+                            backgroundColor = Theme.colors.oxfordBlue800,
+                            textColor = Theme.colors.turquoise800,
+                            iconColor = Theme.colors.oxfordBlue800,
+                            borderSize = 1.dp,
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            onClick = onConfirm
+                        )
+                    } else {
+                        MultiColorButton(
+                            text = confirmTitle,
+                            textColor = Theme.colors.oxfordBlue800,
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            onClick = onConfirm,
+                        )
+                    }
+                }
             }
         }
     ) {
@@ -286,13 +316,15 @@ private fun VerifyTransactionScreenPreview() {
                 fiatCurrency = "USD",
                 gasValue = "1.1",
                 memo = "some memo",
-            )
+            ),
+            hasFastSign = true,
         ),
         isConsentsEnabled = true,
-        confirmTitle = stringResource(R.string.verify_transaction_sign),
+        confirmTitle = stringResource(R.string.keysign_paired_sign_title),
         onConsentAddress = {},
         onConsentAmount = {},
         onConsentDst = {},
+        onFastSignClick = {},
         onConfirm = {},
     )
 }
