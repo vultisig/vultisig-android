@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
 
@@ -337,7 +336,7 @@ internal class DepositFormViewModel @Inject constructor(
         val memo = DepositMemo.Unbond(
             nodeAddress = nodeAddress,
             srcTokenValue = TokenValue(
-                value = 1.toBigInteger(),
+                value = tokenAmountInt,
                 token = selectedToken,
             ),
             providerAddress = provider,
@@ -364,7 +363,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
-                value = BigInteger.ZERO,
+                value = 1.toBigInteger(),
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
