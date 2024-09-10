@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.VultisigRelay
@@ -27,6 +28,10 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.presenter.common.ShareType
+import com.vultisig.wallet.presenter.common.generateQrBitmap
+import com.vultisig.wallet.presenter.common.share
+import com.vultisig.wallet.presenter.common.shareFileName
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE

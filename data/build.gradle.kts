@@ -74,7 +74,7 @@ dependencies {
 
     // other
     implementation(libs.okhttp)
-    implementation(files("libs/mobile-tss-lib.aar"))
+    implementation(files("../app/libs/mobile-tss-lib.aar"))
     implementation(libs.timber)
     implementation(libs.spark.core)
     implementation(libs.guava)
