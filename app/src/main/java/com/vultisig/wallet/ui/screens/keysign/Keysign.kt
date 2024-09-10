@@ -18,9 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.keysign.KeysignState
-import com.vultisig.wallet.presenter.keysign.KeysignViewModel
+import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.models.keysign.KeysignState
+import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.UiSpacer

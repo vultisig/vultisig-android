@@ -36,7 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.clickOnce
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.models.HomeUiModel
 import com.vultisig.wallet.ui.models.HomeViewModel

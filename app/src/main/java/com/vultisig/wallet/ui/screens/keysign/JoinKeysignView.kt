@@ -18,21 +18,22 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.keysign.JoinKeysignError
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoverService
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.DiscoveringSessionID
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Error
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.JoinKeysign
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.Keysign
-import com.vultisig.wallet.presenter.keysign.JoinKeysignState.WaitingForKeysignStart
-import com.vultisig.wallet.presenter.keysign.JoinKeysignViewModel
-import com.vultisig.wallet.presenter.keysign.KeysignState
-import com.vultisig.wallet.presenter.keysign.VerifyUiModel
+import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoverService
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoveringSessionID
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.Error
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.JoinKeysign
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.Keysign
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.WaitingForKeysignStart
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
+import com.vultisig.wallet.ui.models.keysign.KeysignState
+import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.components.ErrorView
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
@@ -130,7 +131,7 @@ internal fun JoinKeysignView(
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
                     isThorChainSwap = keysignViewModel.isThorChainSwap,
                     onComplete = {
-                        navController.navigate(Screen.Home.route)
+                        navController.navigate(Destination.Home().route)
                     },
                     onBack = keysignViewModel::navigateToHome
                 )

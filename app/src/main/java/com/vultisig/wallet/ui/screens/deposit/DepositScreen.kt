@@ -15,10 +15,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.presenter.keysign.KeysignFlowView
-import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
+import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
+import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.deposit.DepositViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
@@ -144,7 +145,7 @@ private fun DepositScreen(
                 KeysignFlowView(
                     navController = mainNavController,
                     onComplete = {
-                        mainNavController.navigate(Screen.Home.route)
+                        mainNavController.navigate(Destination.Home().route)
                     },
                     onKeysignFinished = enableNavigationToHome,
                 )

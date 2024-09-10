@@ -25,9 +25,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.QRCodeKeyGenImage
-import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
-import com.vultisig.wallet.presenter.keygen.components.DeviceInfo
+import com.vultisig.wallet.ui.components.QRCodeKeyGenImage
+import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.models.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.components.NetworkPrompts
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer

@@ -34,8 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.presenter.common.clickOnce
+import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader

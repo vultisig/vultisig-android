@@ -16,13 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.ShareType
-import com.vultisig.wallet.presenter.common.generateQrBitmap
-import com.vultisig.wallet.presenter.common.share
-import com.vultisig.wallet.presenter.common.shareFileName
-import com.vultisig.wallet.presenter.keygen.KeygenFlowState
-import com.vultisig.wallet.presenter.keygen.KeygenFlowViewModel
-import com.vultisig.wallet.presenter.keygen.NetworkPromptOption
+import com.vultisig.wallet.ui.models.keygen.KeygenFlowState
+import com.vultisig.wallet.ui.models.keygen.KeygenFlowViewModel
+import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType.Companion.asString

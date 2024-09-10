@@ -8,17 +8,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.presenter.common.ShareType
-import com.vultisig.wallet.presenter.common.generateQrBitmap
-import com.vultisig.wallet.presenter.common.share
-import com.vultisig.wallet.presenter.common.shareFileName
+import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.components.generateQrBitmap
+import com.vultisig.wallet.ui.utils.share
+import com.vultisig.wallet.ui.utils.shareFileName
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 

@@ -7,20 +7,20 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.vultisig.wallet.presenter.import_file.ImportFileScreen
-import com.vultisig.wallet.presenter.keygen.JoinKeygenView
-import com.vultisig.wallet.presenter.keygen.KeygenFlowView
-import com.vultisig.wallet.presenter.qr_address.QrAddressScreen
-import com.vultisig.wallet.presenter.settings.currency_unit_setting.CurrencyUnitSettingScreen
-import com.vultisig.wallet.presenter.settings.default_chains_setting.DefaultChainSetting
-import com.vultisig.wallet.presenter.settings.faq_setting.FAQSettingScreen
-import com.vultisig.wallet.presenter.settings.language_setting.LanguageSettingScreen
-import com.vultisig.wallet.presenter.settings.settings_main.SettingsScreen
-import com.vultisig.wallet.presenter.settings.vultisig_token_setting.VultisigTokenScreen
-import com.vultisig.wallet.presenter.signing_error.SigningError
-import com.vultisig.wallet.presenter.vault_setting.vault_detail.VaultDetailScreen
-import com.vultisig.wallet.presenter.vault_setting.vault_edit.VaultRenameScreen
-import com.vultisig.wallet.presenter.welcome.WelcomeScreen
+import com.vultisig.wallet.ui.screens.ImportFileScreen
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenView
+import com.vultisig.wallet.ui.models.keygen.KeygenFlowView
+import com.vultisig.wallet.ui.screens.QrAddressScreen
+import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
+import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
+import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
+import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
+import com.vultisig.wallet.ui.screens.settings.SettingsScreen
+import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
+import com.vultisig.wallet.ui.components.SigningError
+import com.vultisig.wallet.ui.screens.VaultDetailScreen
+import com.vultisig.wallet.ui.screens.VaultRenameScreen
+import com.vultisig.wallet.ui.screens.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
@@ -82,7 +82,7 @@ internal fun SetupNavGraph(
         popEnterTransition = slideInFromStartEnterTransition(),
         popExitTransition = slideOutToEndExitTransition(),
     ) {
-        composable(route = Screen.Welcome.route) {
+        composable(route = Destination.Welcome.route) {
             WelcomeScreen(navController = navController)
         }
         composable(
@@ -251,7 +251,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Screen.CreateNewVault.route
+            route = Destination.CreateNewVault.route
         ) {
             AddVaultScreen(navController)
         }

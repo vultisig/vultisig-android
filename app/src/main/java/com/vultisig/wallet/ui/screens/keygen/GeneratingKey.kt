@@ -44,9 +44,9 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.presenter.common.KeepScreenOn
-import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
-import com.vultisig.wallet.presenter.keygen.KeygenState
+import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.models.keygen.GeneratingKeyViewModel
+import com.vultisig.wallet.ui.models.keygen.KeygenState
 import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.MultiColorButton

@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +35,7 @@ internal class MainViewModel @Inject constructor(
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
 
-    private val _startDestination: MutableState<String> = mutableStateOf(Screen.Home.route)
+    private val _startDestination: MutableState<String> = mutableStateOf(Destination.Home().route)
     val startDestination: State<String> = _startDestination
 
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
@@ -46,16 +45,16 @@ internal class MainViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             if (vaultRepository.hasVaults()) {
-                _startDestination.value = Screen.Home.route
+                _startDestination.value = Destination.Home().route
                 _isLoading.value = false
             } else {
                 val isUserPassedOnboarding = repository.readOnBoardingState()
                     .first()
 
                 if (isUserPassedOnboarding) {
-                    _startDestination.value = Screen.CreateNewVault.route
+                    _startDestination.value = Destination.CreateNewVault.route
                 } else {
-                    _startDestination.value = Screen.Welcome.route
+                    _startDestination.value = Destination.Welcome.route
                 }
 
                 _isLoading.value = false

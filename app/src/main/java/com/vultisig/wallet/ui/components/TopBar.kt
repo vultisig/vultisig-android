@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.closestActivityOrNull
 
