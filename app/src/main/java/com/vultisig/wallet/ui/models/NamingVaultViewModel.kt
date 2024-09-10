@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.common.UiText.StringResource
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
@@ -25,12 +27,20 @@ import javax.inject.Inject
 internal class NamingVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val vaultRepository: VaultRepository,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
 
     val namingTextFieldState = TextFieldState()
     val errorMessageState = MutableStateFlow<UiText?>(null)
+    private val vaultNamesList = MutableStateFlow<List<String>>(emptyList())
+
+    init {
+        viewModelScope.launch {
+            vaultNamesList.update { vaultRepository.getAll().map { it.name } }
+        }
+    }
 
 
     private val vaultSetupType =
@@ -41,7 +51,11 @@ internal class NamingVaultViewModel @Inject constructor(
 
     private fun validateVaultName(s: String): UiText? {
         if (isNameNotValid(s))
-            return UiText.StringResource(R.string.naming_vault_screen_invalid_name)
+            return StringResource(R.string.naming_vault_screen_invalid_name)
+        val isNameAlreadyExist = vaultNamesList.value.any { it == s }
+        if (isNameAlreadyExist) {
+            return StringResource(R.string.vault_edit_this_name_already_exist)
+        }
         return null
     }
 
@@ -74,7 +88,7 @@ internal class NamingVaultViewModel @Inject constructor(
         }
     }
 
-    fun validate() {
+    fun validate() = viewModelScope.launch {
         val placeholder = context.getString(R.string.naming_vault_screen_vault_placeholder)
         val name = namingTextFieldState.text.toString().ifEmpty { placeholder }
         val errorMessage = validateVaultName(name)
