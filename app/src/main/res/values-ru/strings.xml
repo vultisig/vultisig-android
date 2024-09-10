@@ -111,7 +111,7 @@
     <string name="join_key_gen_screen_discovering_service">Обнаружение сервиса</string>
     <string name="join_key_gen_screen_discovering_session_id">Обнаружение идентификатора сессии</string>
     <string name="join_key_gen_screen_joining_keygen">Присоединение к генерации ключа</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Ожидание начала генерации ключа</string>
+    <string name="join_key_gen_screen_waiting_for_operationType_to_start">Ожидание начала %1$s</string>
     <string name="keygen_flow_views_success">Успех</string>
     <string name="keygen_peer_discovery_keygen">Генерация ключа для хранилища %1$s</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Сопряжение с другими устройствами:</string>
@@ -319,6 +319,8 @@
     <string name="onboard_intro3_title">Диалог</string>
     <string name="failed_to_resolve_address">Не удалось определить адрес</string>
     <string name="join_keygen_invalid_qr_code">Не удалось проанализировать QR-код</string>
-    <string name="join_keygen_failed">Не удалось присоединиться к кейгену</string>
+    <string name="join_keygen_failed">Не удалось присоединиться к %1$s</string>
+    <string name="join_keygen_screen_reshare">Повторное совместное использование</string>
+    <string name="join_keygen_screen_keygen">Генерация ключа</string>
 
 </resources>

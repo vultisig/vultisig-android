@@ -111,7 +111,7 @@
     <string name="join_key_gen_screen_discovering_service">Service ontdekken</string>
     <string name="join_key_gen_screen_discovering_session_id">Sessienummer ontdekken</string>
     <string name="join_key_gen_screen_joining_keygen">Keygen betreden</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Wachten op de start van Keygen</string>
+    <string name="join_key_gen_screen_waiting_for_operationType_to_start">Wachten op de start van %1$s</string>
     <string name="keygen_flow_views_success">Succes</string>
     <string name="keygen_peer_discovery_keygen">Keygen voor %1$s kluis</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Koppel met andere apparaten:</string>
@@ -319,5 +319,7 @@
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
     <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>
     <string name="join_keygen_invalid_qr_code">Het is niet gelukt om de QR-code te parseren</string>
-    <string name="join_keygen_failed">Kan geen keygen joinen</string>
+    <string name="join_keygen_failed">Kan geen %1$s joinen</string>
+    <string name="join_keygen_screen_reshare">Opnieuw delen</string>
+    <string name="join_keygen_screen_keygen">Keygen</string>
 </resources>

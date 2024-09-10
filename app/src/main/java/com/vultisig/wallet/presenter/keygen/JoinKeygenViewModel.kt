@@ -21,6 +21,7 @@ import com.vultisig.wallet.common.Endpoints
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.Utils
 import com.vultisig.wallet.common.asString
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.PeerDiscoveryPayload
@@ -60,8 +61,10 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 private const val WARNING_TIMEOUT = 10000L
 
 enum class JoinKeygenState {
-    DiscoveringSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart, ERROR
+    DiscoveringSessionID, DiscoverService, JoinKeygen, WaitingForKeygenStart, Keygen, FailedToStart
 }
+
+
 
 @HiltViewModel
 internal class JoinKeygenViewModel @Inject constructor(
@@ -94,7 +97,8 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
     private var _isDiscoveryListenerRegistered = false
-    internal val isReshareMode: MutableState<Boolean> = mutableStateOf(false)
+    var operationMode =mutableStateOf(OperationMode.KEYGEN)
+
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveringSessionID)
     var errorMessage: MutableState<UiText> =
@@ -126,7 +130,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
-            isReshareMode = isReshareMode.value,
+            isReshareMode = operationMode.value.isReshare()
         )
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -155,7 +159,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                 val payload = when (deepLink.getTssAction()) {
                     TssAction.KEYGEN -> {
-                        isReshareMode.value = false
+                        operationMode.value=OperationMode.KEYGEN
                         PeerDiscoveryPayload.Keygen(
                             mapKeygenMessageFromProto(
                                 protoBuf.decodeFromByteArray<KeygenMessageProto>(contentBytes)
@@ -164,7 +168,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 }
 
                     TssAction.ReShare ->{
-                        isReshareMode.value = true
+                        operationMode.value=OperationMode.RESHARE
                         PeerDiscoveryPayload.Reshare(
                             mapReshareMessageFromProto(
                                 protoBuf.decodeFromByteArray<ReshareMessageProto>(contentBytes)
@@ -275,7 +279,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 val serverUrl = URL("${_serverAddress}/$_sessionID")
-                Timber.d("Joining keygen at $serverUrl")
+                Timber.d("Joining ${operationMode.value.name} at $serverUrl")
                 val conn = serverUrl.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -285,13 +289,17 @@ internal class JoinKeygenViewModel @Inject constructor(
                     conn.outputStream.write(it.toByteArray())
                 }
                 val responseCode = conn.responseCode
-                Timber.d("Join Keygen: Response code: $responseCode")
+                Timber.d("Join ${operationMode.value.name}}:: Response code: $responseCode")
                 conn.disconnect()
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
-                Timber.e("Failed to join keygen: ${e.stackTraceToString()}")
-                errorMessage.value = UiText.StringResource(R.string.join_keygen_failed)
-                currentState.value = JoinKeygenState.FailedToStart
+                Timber.e("Failed to join ${operationMode.value.name}}: ${e.stackTraceToString()}")
+                errorMessage.value =
+                    R.string.join_keygen_failed.asUiText(
+                        UiText.StringResource(
+                            if (operationMode.value == OperationMode.RESHARE) R.string.join_keygen_screen_reshare else R.string.join_keygen_screen_keygen
+                        ).asString(context)
+                    )
             }
         }
     }
@@ -327,7 +335,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             client.newCall(request).execute().use { response ->
                 when (response.code) {
                     HttpURLConnection.HTTP_OK -> {
-                        Timber.tag("JoinKeygenViewModel").d("Keygen started")
+                        Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
                         response.body?.let {
                             val result = it.string()
                             val tokenType = object : TypeToken<List<String>>() {}.type
@@ -340,15 +348,24 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                     else -> {
                         Timber.tag("JoinKeygenViewModel")
-                            .d("Failed to check start keygen: Response code: ${response.code}")
+                            .d("Failed to check start ${operationMode.value.name}}: Response code: ${response.code}")
                     }
                 }
             }
         } catch (e: Exception) {
             Timber.tag("JoinKeygenViewModel")
-                .e("Failed to check keygen start: ${e.stackTraceToString()}")
+                .e("Failed to check ${operationMode.value} start: ${e.stackTraceToString()}")
         }
         return false
+    }
+
+    enum class OperationMode {
+        KEYGEN,
+        RESHARE;
+
+        fun isReshare(): Boolean {
+            return this == OperationMode.RESHARE
+        }
     }
 }
 

@@ -2,6 +2,7 @@ package com.vultisig.wallet.presenter.keygen
 
 import android.content.Context
 import android.net.nsd.NsdManager
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,17 +19,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.presenter.common.KeepScreenOn
 import com.vultisig.wallet.ui.components.InformationNoteSnackBar
 import com.vultisig.wallet.ui.components.TopBar
@@ -57,7 +63,7 @@ internal fun JoinKeygenView(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        val title = if (viewModel.isReshareMode.value) {
+        val title = if (viewModel.operationMode.value.isReshare()) {
             stringResource(id = R.string.resharing_the_vault)
         } else {
             stringResource(id = R.string.join_key_gen_screen_keygen)
@@ -96,6 +102,7 @@ internal fun JoinKeygenView(
                 WaitingForKeygenToStart(
                     navController = navController,
                     title = title,
+                    isReshare = viewModel.operationMode.value.isReshare()
                 )
             }
 
@@ -110,17 +117,13 @@ internal fun JoinKeygenView(
                 KeygenFailedToStart(
                     navController = navController,
                     errorMessage = viewModel.errorMessage.value.asString(),
-                    title = title,
+                    title = if (viewModel.operationMode.value.isReshare())
+                        stringResource(id = R.string.join_keygen_screen_renew)
+                    else
+                        stringResource(id = R.string.join_key_gen_screen_keygen),
                 )
             }
 
-            JoinKeygenState.ERROR -> {
-                KeygenFailedToStart(
-                    navController = navController,
-                    errorMessage = viewModel.errorMessage.value.asString(),
-                    title = title,
-                )
-            }
         }
         SnackbarHost(
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -256,6 +259,7 @@ internal fun JoiningKeygen(
 internal fun WaitingForKeygenToStart(
     navController: NavHostController,
     title: String,
+    isReshare: Boolean,
 ) {
     Column(
         horizontalAlignment = CenterHorizontally,
@@ -278,7 +282,14 @@ internal fun WaitingForKeygenToStart(
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = stringResource(R.string.join_key_gen_screen_waiting_for_keygen_to_start),
+                text = stringResource(
+                    R.string.join_key_gen_screen_waiting_for_operationType_to_start,
+                    if (isReshare) {
+                        stringResource(R.string.join_keygen_screen_reshare)
+                    } else {
+                        stringResource(R.string.join_keygen_screen_keygen)
+                    }
+                ),
                 color = Theme.colors.neutral0,
                 style = Theme.menlo.body2
             )
@@ -311,15 +322,23 @@ internal fun KeygenFailedToStart(
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
-        Row(
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = CenterHorizontally,
+            modifier = Modifier.weight(1f)
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.danger),
+                contentDescription = stringResource(R.string.danger_icon),
+                alignment = Center
+            )
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = stringResource(R.string.failed_to_start_error, errorMessage),
                 color = Theme.colors.neutral0,
-                style = Theme.menlo.body2
+                style = Theme.montserrat.subtitle1,
+                lineHeight = 24.sp,
+                textAlign = TextAlign.Center,
             )
         }
     }
