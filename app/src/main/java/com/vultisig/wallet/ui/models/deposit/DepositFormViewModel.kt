@@ -192,6 +192,7 @@ internal class DepositFormViewModel @Inject constructor(
                 sendNavigator.navigate(
                     SendDst.VerifyTransaction(
                         transactionId = transaction.id,
+                        vaultId = vaultId,
                     )
                 )
             } catch (e: InvalidTransactionDataException) {

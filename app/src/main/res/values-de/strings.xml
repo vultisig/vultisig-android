@@ -120,7 +120,7 @@
     <string name="home_screen_title">Tresore</string>
     <string name="device_list_desc1">Sie können nur Transaktionen senden, wenn diese %1$s Geräte vorhanden sind.</string>
     <string name="join_keysign_waiting_keysign_start">Warte auf den Start von Keysign.</string>
-    <string name="join_key_gen_screen_waiting_for_keygen_to_start">Warten auf den Start von Keygen</string>
+    <string name="join_key_gen_screen_waiting_for_operationType_to_start">Warten auf den Start von %1$s</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-Token werden durch Gebühren verbrannt.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT-Token werden den Benutzern per Airdrop zugeschickt.</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG-TOKEN</string>
@@ -307,6 +307,8 @@
     <string name="share_vault_qr_card_keys">ECDSA-Schlüssel: %1$s EdDSA-Schlüssel: %2$s</string>
     <string name="import_file_not_supported">Der Dateityp wird nicht unterstützt</string>
     <string name="join_keygen_invalid_qr_code">QR-Code konnte nicht analysiert werden</string>
-    <string name="join_keygen_failed">Beitritt zum Keygen fehlgeschlagen</string>
+    <string name="join_keygen_failed">Beitritt zum %1$s fehlgeschlagen</string>
     <string name="failed_to_resolve_address">Fehler beim Auflösen der Adresse</string>
+    <string name="join_keygen_screen_reshare">Erneut teilen</string>
+    <string name="join_keygen_screen_keygen">Keygen</string>
 </resources>

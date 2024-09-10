@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -49,6 +50,7 @@ internal fun DepositScreen(
     val progress = when (route) {
         SendDst.Send.route -> 0.25f
         SendDst.VerifyTransaction.staticRoute -> 0.5f
+        SendDst.Password.staticRoute -> 0.65f
         SendDst.Keysign.staticRoute -> 0.75f
         else -> 0.0f
     }
@@ -62,6 +64,7 @@ internal fun DepositScreen(
     val title = when (route) {
         SendDst.Send.route -> stringResource(R.string.deposit_screen_title)
         SendDst.VerifyTransaction.staticRoute -> stringResource(R.string.verify_transaction_screen_title)
+        SendDst.Password.staticRoute -> stringResource(id = R.string.keygen_password_title)
         SendDst.Keysign.staticRoute -> stringResource(R.string.keysign)
         else -> stringResource(R.string.deposit_screen_title)
     }
@@ -120,6 +123,12 @@ private fun DepositScreen(
                 arguments = SendDst.transactionArgs,
             ) {
                 VerifyDepositScreen()
+            }
+            composable(
+                route = SendDst.Password.staticRoute,
+                arguments = SendDst.transactionArgs,
+            ) {
+                KeysignPasswordScreen()
             }
             composable(
                 route = SendDst.Keysign.staticRoute,
