@@ -90,7 +90,6 @@ dependencies {
     implementation(project(":data"))
 
     implementation(files("libs/mobile-tss-lib.aar"))
-    implementation(libs.bcprov.jdk15on)
 
     // kotlinx
     implementation(libs.kotlinx.coroutines.core)
