@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.common.DeepLinkHelper
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
-import com.vultisig.wallet.ui.models.transaction.AddAddressEntryViewModel.Companion.REQUEST_QR_RESULT_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_COIN_ADDRESS
 import com.vultisig.wallet.ui.navigation.Navigator

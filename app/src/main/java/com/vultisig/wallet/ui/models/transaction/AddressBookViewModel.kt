@@ -129,7 +129,7 @@ internal class AddressBookViewModel @Inject constructor(
 
     fun addAddress() {
         viewModelScope.launch {
-            navigator.navigate(Destination.AddAddressEntry())
+            navigator.navigate(Destination.AddAddressEntry)
         }
     }
 

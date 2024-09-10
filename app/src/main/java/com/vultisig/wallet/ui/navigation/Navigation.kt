@@ -166,13 +166,10 @@ internal sealed class Destination(
         }
     }
 
-    data class AddAddressEntry(val address: String? = null) : Destination(
-        route = "address_book/add?$ARG_COIN_ADDRESS=$address"
+    data object AddAddressEntry : Destination(
+        route = "address_book/add"
     ) {
-
-        companion object {
-            const val STATIC_ROUTE = "address_book/add?$ARG_COIN_ADDRESS={$ARG_COIN_ADDRESS}"
-        }
+        const val STATIC_ROUTE = "address_book/add"
     }
 
 
