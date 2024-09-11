@@ -158,6 +158,7 @@
     <string name="vault_settings_delete_vault_name">Vault Name:</string>
     <string name="vault_settings_delete_vault_value">Vault Value:</string>
     <string name="vault_settings_delete_vault_type">Vault Type:</string>
+    <string name="vault_settings_delete_vault_id" translatable="false">Device ID:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Key:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Key:</string>
 

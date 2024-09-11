@@ -67,7 +67,8 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                             name = vault.name,
                             pubKeyECDSA = vault.pubKeyECDSA,
                             pubKeyEDDSA = vault.pubKeyEDDSA,
-                            deviceList = vault.signers
+                            deviceList = vault.signers,
+                            localPartyId = vault.localPartyID,
                         )
                     )
                 }
