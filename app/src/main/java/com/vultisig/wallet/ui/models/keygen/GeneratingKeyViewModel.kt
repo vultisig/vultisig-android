@@ -8,17 +8,17 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.data.api.KeygenVerifier
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.mediator.MediatorService
-import com.vultisig.wallet.data.api.KeygenVerifier
-import com.vultisig.wallet.tss.LocalStateAccessor
-import com.vultisig.wallet.tss.TssMessagePuller
-import com.vultisig.wallet.tss.TssMessenger
+import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.tss.LocalStateAccessor
+import com.vultisig.wallet.data.tss.TssMessagePuller
+import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -62,7 +62,7 @@ internal class GeneratingKeyViewModel(
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex)
-    private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
+    private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
     private var _messagePuller: TssMessagePuller? = null
 

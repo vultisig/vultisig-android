@@ -13,10 +13,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.VultisigRelay
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
+import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.common.VultisigRelay
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -25,13 +25,15 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.mediator.MediatorService
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.components.generateQrBitmap
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.data.api.ParticipantDiscovery
+import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
+import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -222,7 +224,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                 "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
                         compressQr(
                             protoBuf.encodeToByteArray(
-                                com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto(
+                                KeygenMessageProto(
                                     sessionId = sessionID,
                                     hexChainCode = vault.hexChainCode,
                                     serviceName = serviceName,
@@ -238,7 +240,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                 "vultisig://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" +
                         compressQr(
                             protoBuf.encodeToByteArray(
-                                com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto(
+                                ReshareMessageProto(
                                     sessionId = sessionID,
                                     hexChainCode = vault.hexChainCode,
                                     serviceName = serviceName,

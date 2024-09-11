@@ -15,10 +15,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.vultisig.wallet.chains.SigningHelper
-import com.vultisig.wallet.common.Endpoints
-import com.vultisig.wallet.common.Utils
-import com.vultisig.wallet.common.VultisigRelay
+import com.vultisig.wallet.data.chains.helpers.SigningHelper
+import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.common.VultisigRelay
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -38,9 +38,12 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
-import com.vultisig.wallet.mediator.MediatorService
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.data.api.ParticipantDiscovery
+import com.vultisig.wallet.data.models.proto.v1.CoinProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -199,10 +202,10 @@ internal class KeysignFlowViewModel @Inject constructor(
         val specific = keysignPayload.blockChainSpecific
 
         val keysignProto = protoBuf.encodeToByteArray(
-            com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto(
+            KeysignMessageProto(
                 sessionId = _sessionID,
                 serviceName = _serviceName,
-                keysignPayload = com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto(
+                keysignPayload = KeysignPayloadProto(
                     coin = keysignPayload.coin.toCoinProto(),
                     toAddress = keysignPayload.toAddress,
                     toAmount = keysignPayload.toAmount.toString(),
@@ -527,7 +530,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         }
     }
 
-    private fun Coin.toCoinProto() = com.vultisig.wallet.data.models.proto.v1.CoinProto(
+    private fun Coin.toCoinProto() = CoinProto(
         chain = chain.raw,
         ticker = ticker,
         address = address,

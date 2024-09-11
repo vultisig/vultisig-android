@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.ui.components.InformationNoteSnackBar
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
