@@ -37,10 +37,7 @@ android {
 }
 
 dependencies {
-
-
-    implementation(files("libs/mobile-tss-lib.aar"))
-
+    compileOnly(files("../app/libs/mobile-tss-lib.aar"))
     // core
     implementation(libs.androidx.core.ktx)
     implementation(libs.timber)
