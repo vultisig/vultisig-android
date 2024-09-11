@@ -41,7 +41,7 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
         publicKeyEcdsa: String
     ): Boolean {
         return try {
-            api.get(publicKeyEcdsa)
+            api.exist(publicKeyEcdsa)
             true
         } catch (e: Exception) {
             false
