@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -188,6 +189,8 @@ internal fun AddAddressEntryScreen(
 private fun AddAddressEntryScreenPreview() {
     AddAddressEntryScreen(
         navController = rememberNavController(),
-        qrCodeResult = ""
+        state = AddAddressEntryUiModel(),
+        titleTextFieldState = rememberTextFieldState(),
+        addressTextFieldState = rememberTextFieldState(),
     )
 }

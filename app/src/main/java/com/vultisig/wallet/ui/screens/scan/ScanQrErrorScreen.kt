@@ -22,6 +22,11 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun ScanQrErrorScreen(
     viewModel: ScanQrErrorViewModel = hiltViewModel(),
 ) {
+    ScanQrErrorScreen(viewModel::enableChain)
+}
+
+@Composable
+private fun ScanQrErrorScreen(onEnableChainClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -38,7 +43,7 @@ internal fun ScanQrErrorScreen(
         ErrorView(
             errorLabel = stringResource(R.string.enable_chain_warning),
             buttonText = stringResource(R.string.enable_chain_button),
-            onButtonClick = viewModel::enableChain,
+            onButtonClick = onEnableChainClick,
         )
     }
 }
@@ -47,5 +52,5 @@ internal fun ScanQrErrorScreen(
 @Preview
 @Composable
 fun ScanQrErrorScreenPreview() {
-    ScanQrErrorScreen()
+    ScanQrErrorScreen {}
 }

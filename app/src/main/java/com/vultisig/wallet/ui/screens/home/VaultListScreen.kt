@@ -105,15 +105,15 @@ private fun VaultListScreenPreview() {
         isRearrangeMode = false,
         vaults = listOf(
             Vault(
-                id = "",
+                id = "1",
                 name = "Vault 1",
             ),
             Vault(
-                id = "",
+                id = "2",
                 name = "Vault 2",
             ),
             Vault(
-                id = "",
+                id = "3",
                 name = "Vault 3",
             ),
         ),
