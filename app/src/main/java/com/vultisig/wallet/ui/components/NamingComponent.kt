@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.text2.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -38,15 +35,11 @@ internal fun NamingComponent(
     inputTitle: String = "",
     errorText: UiText? = null,
     onLostFocus: () -> Unit = {},
-    snackBarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onSave: () -> Unit = {}
 ) {
 
     val focusManager = LocalFocusManager.current
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackBarHostState)
-        },
         bottomBar = {
             Box(Modifier.imePadding()) {
                 MultiColorButton(

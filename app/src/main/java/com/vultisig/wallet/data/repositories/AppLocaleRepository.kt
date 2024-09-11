@@ -4,7 +4,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.models.settings.AppLanguage.Companion.fromName
 import com.vultisig.wallet.data.sources.AppDataStore
-import com.vultisig.wallet.presenter.settings.settings_main.Language
+import com.vultisig.wallet.ui.models.settings.Language
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

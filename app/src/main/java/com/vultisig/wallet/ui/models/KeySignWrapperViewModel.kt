@@ -1,7 +1,7 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.lifecycle.ViewModel
-import com.vultisig.wallet.presenter.keysign.KeysignViewModel
+import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject

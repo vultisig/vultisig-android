@@ -23,7 +23,7 @@ import com.vultisig.wallet.data.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.data.common.saveBitmapToDownloads
 import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.presenter.common.generateQrBitmap
+import com.vultisig.wallet.ui.components.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow

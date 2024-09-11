@@ -6,6 +6,7 @@ import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.vultisig.wallet.data.mediator.HttpStatus
 import spark.Request
 import spark.Response
 import spark.Service

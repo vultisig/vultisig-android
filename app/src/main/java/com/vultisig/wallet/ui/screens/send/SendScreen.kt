@@ -15,13 +15,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.presenter.common.ShareType
-import com.vultisig.wallet.presenter.common.generateQrBitmap
-import com.vultisig.wallet.presenter.common.share
-import com.vultisig.wallet.presenter.keysign.KeysignFlowView
-import com.vultisig.wallet.presenter.keysign.KeysignShareViewModel
+import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
+import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.send.SendViewModel
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
@@ -135,7 +133,7 @@ internal fun SendScreen(
                 KeysignFlowView(
                     navController = navController,
                     onComplete = {
-                        navController.navigate(Screen.Home.route)
+                        navController.navigate(Destination.Home().route)
                     },
                     onKeysignFinished = {
                         viewModel.enableNavigationToHome()

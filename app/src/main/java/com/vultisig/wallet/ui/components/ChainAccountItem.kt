@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.presenter.common.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme

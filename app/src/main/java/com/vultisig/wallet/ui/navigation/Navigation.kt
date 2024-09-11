@@ -24,6 +24,8 @@ internal sealed class Destination(
         const val ARG_PASSWORD = "password"
     }
 
+    data object Welcome : Destination(route = "welcome_screen")
+
     data object AddVault : Destination(
         route = "vault/new"
     )

@@ -22,3 +22,9 @@
 # Retain generic signatures of TypeToken and its subclasses with R8 version 3.0 and higher.
 -keep,allowobfuscation,allowshrinking class com.google.gson.reflect.TypeToken
 -keep,allowobfuscation,allowshrinking class * extends com.google.gson.reflect.TypeToken
+
+
+# Jetty
+-keep class org.eclipse.jetty.** { *; }
+-keep class org.eclipse.jetty.websocket.** { *; }
+-keep class org.eclipse.jetty.server.** { *; }

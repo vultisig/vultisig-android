@@ -1,10 +1,8 @@
 package com.vultisig.wallet.ui.navigation
 
 sealed class Screen(val route: String) {
-    data object Welcome : Screen(route = "welcome_screen")
-    data object Home : Screen(route = "home")
 
-    data object CreateNewVault : Screen(route = "create_new_vault")
+
     data object ImportFile : Screen(route = "import_file")
 
     data object SigningError : Screen(route = "signing_error")

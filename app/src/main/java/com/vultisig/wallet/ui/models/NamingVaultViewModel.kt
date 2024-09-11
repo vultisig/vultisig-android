@@ -8,9 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
+import com.vultisig.wallet.ui.utils.TextFieldUtils
 import com.vultisig.wallet.common.UiText.StringResource
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.presenter.common.TextFieldUtils
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator

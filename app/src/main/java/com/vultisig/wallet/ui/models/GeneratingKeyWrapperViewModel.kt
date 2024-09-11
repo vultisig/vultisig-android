@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.presenter.keygen.GeneratingKeyViewModel
+import com.vultisig.wallet.ui.models.keygen.GeneratingKeyViewModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
