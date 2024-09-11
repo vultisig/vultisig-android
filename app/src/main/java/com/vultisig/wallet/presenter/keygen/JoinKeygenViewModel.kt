@@ -16,10 +16,10 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.DeepLinkHelper
-import com.vultisig.wallet.common.Endpoints
+import com.vultisig.wallet.data.common.DeepLinkHelper
+import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper

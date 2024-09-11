@@ -7,7 +7,7 @@ import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.chains.EvmHelper
+import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.api.errors.SwapException

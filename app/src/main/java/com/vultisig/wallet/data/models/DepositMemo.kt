@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.models
 
-import com.vultisig.wallet.chains.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 
 internal sealed class DepositMemo {
 

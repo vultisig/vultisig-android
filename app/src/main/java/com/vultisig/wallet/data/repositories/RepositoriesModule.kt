@@ -26,12 +26,6 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindChainAccountAddressRepository(
-        impl: ChainAccountAddressRepositoryImpl,
-    ): ChainAccountAddressRepository
-
-    @Binds
-    @Singleton
     fun bindTokenPriceRepository(
         impl: TokenPriceRepositoryImpl,
     ): TokenPriceRepository
@@ -53,12 +47,6 @@ internal interface RepositoriesModule {
     fun bindOnBoardRepository(
         impl: OnBoardRepositoryImpl,
     ): OnBoardRepository
-
-    @Binds
-    @Singleton
-    fun bindTokenRepository(
-        impl: TokenRepositoryImpl,
-    ): TokenRepository
 
     @Binds
     @Singleton
@@ -101,12 +89,6 @@ internal interface RepositoriesModule {
     fun bindLastOpenedVaultRepository(
         impl: LastOpenedVaultRepositoryImpl,
     ): LastOpenedVaultRepository
-
-    @Binds
-    @Singleton
-    fun bindVaultRepository(
-        impl: VaultRepositoryImpl
-    ): VaultRepository
 
     @Binds
     @Singleton

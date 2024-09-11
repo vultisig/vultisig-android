@@ -1,6 +1,11 @@
 package com.vultisig.wallet.common
 
 import android.util.Log
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.common.decrypt
+import com.vultisig.wallet.data.common.encrypt
+import com.vultisig.wallet.data.common.md5
+import com.vultisig.wallet.data.common.sha256
 import org.junit.Test
 
 class EncryptionTest{

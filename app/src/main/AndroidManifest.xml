@@ -62,7 +62,7 @@
         </activity>
 
         <service
-                android:name=".mediator.MediatorService"
+                android:name=".data.mediator.MediatorService"
                 android:enabled="true" />
         <service
                 android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

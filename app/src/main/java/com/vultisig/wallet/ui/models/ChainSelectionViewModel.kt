@@ -66,7 +66,6 @@ internal class ChainSelectionViewModel @Inject constructor(
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
             loadChains()
-
             try {
                 tokenRepository
                     .getTokensWithBalance(nativeToken.chain, address)

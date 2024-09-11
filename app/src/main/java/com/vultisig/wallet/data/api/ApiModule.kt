@@ -36,12 +36,6 @@ internal interface ApiModule {
 
     @Binds
     @Singleton
-    fun bindEvmApi(
-        impl: EvmApiFactoryImp,
-    ): EvmApiFactory
-
-    @Binds
-    @Singleton
     fun bindCosmosApi(
         impl: CosmosApiFactoryImp,
     ): CosmosApiFactory
@@ -51,18 +45,6 @@ internal interface ApiModule {
     fun bindSolanaApi(
         impl: SolanaApiImp,
     ): SolanaApi
-
-    @Binds
-    @Singleton
-    fun bindPolkadotApi(
-        impl: PolkadotApiImp
-    ): PolkadotApi
-
-    @Binds
-    @Singleton
-    fun bindOneInchApi(
-        impl: OneInchApiImpl
-    ): OneInchApi
 
     @Binds
     @Singleton

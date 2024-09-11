@@ -3,7 +3,7 @@ package com.vultisig.wallet.presenter.keygen
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.vultisig.wallet.mediator.HttpStatus
+import com.vultisig.wallet.data.mediator.HttpStatus
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job

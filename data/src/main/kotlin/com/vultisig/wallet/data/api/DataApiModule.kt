@@ -12,8 +12,25 @@ internal interface DataApiModule {
 
     @Binds
     @Singleton
+    fun bindOneInchApi(
+        impl: OneInchApiImpl
+    ): OneInchApi
+
+    @Binds
+    @Singleton
     fun bindVultiSignerApi(
         impl: VultiSignerApiImpl
     ): VultiSignerApi
 
+    @Binds
+    @Singleton
+    fun bindEvmApi(
+        impl: EvmApiFactoryImp,
+    ): EvmApiFactory
+
+    @Binds
+    @Singleton
+    fun bindPolkadotApi(
+        impl: PolkadotApiImp
+    ): PolkadotApi
 }

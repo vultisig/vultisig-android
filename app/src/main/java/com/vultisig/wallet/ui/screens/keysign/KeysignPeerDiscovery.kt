@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.Utils
+import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.presenter.keygen.NetworkPromptOption

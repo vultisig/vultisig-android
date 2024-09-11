@@ -8,8 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.fileContent
-import com.vultisig.wallet.common.fileName
+import com.vultisig.wallet.data.common.fileContent
+import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.usecases.DuplicateVaultException

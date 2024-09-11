@@ -19,9 +19,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.QRCODE_DIRECTORY_NAME_FULL
-import com.vultisig.wallet.common.saveBitmapToDownloads
-import com.vultisig.wallet.common.sha256
+import com.vultisig.wallet.data.common.QRCODE_DIRECTORY_NAME_FULL
+import com.vultisig.wallet.data.common.saveBitmapToDownloads
+import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.presenter.common.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination

@@ -6,15 +6,12 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import androidx.core.content.FileProvider
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.sha256
+import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.models.Vault
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.Date
 
 

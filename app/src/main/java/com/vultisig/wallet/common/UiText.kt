@@ -25,7 +25,7 @@ sealed class UiText {
 internal fun Int.asUiText(vararg args: Any): UiText =
     FormattedText(this, args.toList())
 
-internal fun Int.asUiText(): UiText =
+fun Int.asUiText(): UiText =
     StringResource(this)
 
 @Composable

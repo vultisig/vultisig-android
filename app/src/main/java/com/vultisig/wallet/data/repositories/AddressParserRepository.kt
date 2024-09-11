@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.Numeric
 import javax.inject.Inject

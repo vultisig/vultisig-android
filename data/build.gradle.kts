@@ -40,12 +40,22 @@ dependencies {
 
     // core
     implementation(libs.androidx.core.ktx)
-    implementation(libs.timber)
+
+    // worker
+    implementation(libs.androidx.work)
+    implementation(libs.androidx.work.ktx)
+
+    implementation(libs.androidx.datastore.preferences)
 
     // hilt di
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.hilt.common)
     kapt(libs.hilt.android.compiler)
+
+    // room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
 
     // ktor
     implementation(libs.ktor.client.core)
@@ -62,11 +72,19 @@ dependencies {
     // encryption
     implementation(libs.bcprov.jdk15on)
 
+    // other
+    implementation(libs.okhttp)
+    compileOnly(files("../app/libs/mobile-tss-lib.aar"))
+    implementation(libs.timber)
+    implementation(libs.spark.core)
+    implementation(libs.guava)
+    implementation(libs.apache.compress)
+    implementation(libs.apache.compress.xz)
+
     // test
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(kotlin("test"))
-
 }
