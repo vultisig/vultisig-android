@@ -187,7 +187,9 @@ internal fun ChainAccountItem(
                 UiSpacer(14.dp)
 
                 MiddleEllipsisText(
-                    text = account.address,
+                    text = if (isBalanceVisible)
+                        account.address
+                    else "************",
                     style = Theme.montserrat.body1,
                     color = Theme.colors.turquoise600Main,
                 )
@@ -199,22 +201,45 @@ internal fun ChainAccountItem(
 @Preview
 @Composable
 private fun PreviewChainAccountItem() {
-    ChainAccountItem(
-        isRearrangeMode = true,
-        isBalanceVisible = true,
-        onCopy = {},
-        account = AccountUiModel(
-            chainName = "Bitcoin",
-            logo = R.drawable.bitcoin,
-            address = "123abc456bca123abc456bca123abc456bca",
-            nativeTokenAmount = "0.01",
-            fiatAmount = "1000$",
-            assetsSize = 4,
-            model = Address(
-                chain = Chain.Bitcoin,
+    Column {
+        ChainAccountItem(
+            isRearrangeMode = true,
+            isBalanceVisible = true,
+            onCopy = {},
+            account = AccountUiModel(
+                chainName = "Bitcoin",
+                logo = R.drawable.bitcoin,
                 address = "123abc456bca123abc456bca123abc456bca",
-                accounts = emptyList()
+                nativeTokenAmount = "0.01",
+                fiatAmount = "1000$",
+                assetsSize = 4,
+                model = Address(
+                    chain = Chain.Bitcoin,
+                    address = "123abc456bca123abc456bca123abc456bca",
+                    accounts = emptyList()
+                )
             )
         )
-    )
+
+        UiSpacer(size = 10.dp)
+
+        ChainAccountItem(
+            isRearrangeMode = true,
+            isBalanceVisible = false,
+            onCopy = {},
+            account = AccountUiModel(
+                chainName = "Ethereum",
+                logo = R.drawable.ethereum,
+                address = "0x123abc456bca123abc456bca123abc456bca",
+                nativeTokenAmount = "0.01",
+                fiatAmount = "999$",
+                assetsSize = 4,
+                model = Address(
+                    chain = Chain.Bitcoin,
+                    address = "123abc456bca123abc456bca123abc456bca",
+                    accounts = emptyList()
+                )
+            )
+        )
+    }
 }
