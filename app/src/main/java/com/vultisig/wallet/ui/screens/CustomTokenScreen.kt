@@ -46,12 +46,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.MiddleEllipsisText
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.CustomTokenUiModel
@@ -281,7 +281,7 @@ private fun SearchTokenTextField(
                 textFieldState = searchTextFieldState,
                 actions = {
                     Icon(
-                        painter = painterResource(id = R.drawable.copy),
+                        painter = painterResource(id = R.drawable.ic_paste),
                         contentDescription = null,
                         tint = Theme.colors.neutral0,
                         modifier = Modifier.clickOnce(onClick = onPasteClick)

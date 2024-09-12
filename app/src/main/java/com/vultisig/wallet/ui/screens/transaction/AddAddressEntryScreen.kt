@@ -25,7 +25,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -146,7 +145,7 @@ internal fun AddAddressEntryScreen(
                     val clipboard = LocalClipboardManager.current
 
                     UiIcon(
-                        drawableResId = R.drawable.copy,
+                        drawableResId = R.drawable.ic_paste,
                         size = 20.dp,
                         onClick = {
                             clipboard.getText()
