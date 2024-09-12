@@ -35,6 +35,25 @@ internal fun VaultSettingsScreen(
     val uiModel by viewModel.uiModel.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
 
+    VaultSettingsScreen(
+        uiModel = uiModel,
+        snackBarHostState = snackBarHostState,
+        navController = navController,
+        onBackupClick = viewModel::navigateToBackupPasswordScreen,
+        onReshareClick = viewModel::navigateToReshareStartScreen,
+        onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
+    )
+}
+
+@Composable
+private fun VaultSettingsScreen(
+    uiModel: VaultSettingsState,
+    snackBarHostState: SnackbarHostState,
+    navController: NavController,
+    onBackupClick: () -> Unit = {},
+    onReshareClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
+) {
     Scaffold(
         snackbarHost = {
             SnackbarHost(snackBarHostState)
@@ -71,7 +90,7 @@ internal fun VaultSettingsScreen(
                 title = stringResource(R.string.vault_settings_backup_title),
                 subtitle = stringResource(R.string.vault_settings_backup_subtitle),
                 icon = R.drawable.download_simple,
-                onClick = viewModel::navigateToBackupPasswordScreen
+                onClick = onBackupClick
             )
 
             SettingsItem(
@@ -88,7 +107,7 @@ internal fun VaultSettingsScreen(
                 title = stringResource(R.string.vault_settings_reshare_title),
                 subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
                 icon = R.drawable.share,
-                onClick = viewModel::navigateToReshareStartScreen
+                onClick = onReshareClick
             )
 
             SettingsItem(
@@ -96,7 +115,7 @@ internal fun VaultSettingsScreen(
                 subtitle = stringResource(R.string.vault_settings_delete_subtitle),
                 icon = R.drawable.trash_outline,
                 colorTint = Theme.colors.red,
-                onClick = viewModel::navigateToConfirmDeleteScreen
+                onClick = onDeleteClick
             )
         }
     }
@@ -105,5 +124,9 @@ internal fun VaultSettingsScreen(
 @Preview
 @Composable
 private fun VaultSettingsScreenPreview() {
-    VaultSettingsScreen(navController = rememberNavController())
+    VaultSettingsScreen(
+        uiModel = VaultSettingsState(),
+        snackBarHostState = SnackbarHostState(),
+        navController = rememberNavController()
+    )
 }

@@ -79,6 +79,8 @@ internal fun ChainTokensScreen(
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val reviewManager = remember { ReviewManagerFactory.create(context) }
 
     LaunchedEffect(Unit) {
         viewModel.refresh()
@@ -94,7 +96,10 @@ internal fun ChainTokensScreen(
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
         onBuyWeweClick = viewModel::buyWewe,
-        onQrBtnClick = viewModel::navigatoToQrAddressScreen
+        onQrBtnClick = viewModel::navigatoToQrAddressScreen,
+        onShowReviewPopUp = {
+            reviewManager.showReviewPopUp(context)
+        }
     )
 }
 
@@ -110,11 +115,11 @@ private fun ChainTokensScreen(
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
     onBuyWeweClick: () -> Unit = {},
     onQrBtnClick: () -> Unit = {},
+    onShowReviewPopUp: () -> Unit = {},
 ) {
     val appColor = Theme.colors
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val reviewManager = remember { ReviewManagerFactory.create(context) }
     val snackbarHostState = remember {
         SnackbarHostState()
     }
@@ -237,7 +242,7 @@ private fun ChainTokensScreen(
                                             )
                                         )
                                     }
-                                    reviewManager.showReviewPopUp(context)
+                                   onShowReviewPopUp()
                                 },
                                 isBalanceVisible = uiModel.isBalanceVisible,
                                 onQrBtnClick = onQrBtnClick,
