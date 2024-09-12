@@ -280,7 +280,7 @@
     <string name="add_address_title_title">Titel</string>
     <string name="add_address_address_title">Adresse</string>
     <string name="add_address_type_hint">Geben Sie hier ein</string>
-    <string name="deposit_form_remove_from_pool">Aus dem Pool entfernen</string>
+    <string name="deposit_form_remove_from_pool">Aus dem RUNEPool entfernen</string>
     <string name="deposit_form_add_to_pool">Zum Pool hinzufügen</string>
     <string name="blowfish_approve">Transaktion durch Blowfish verifiziert.</string>
     <string name="join_keysign_invalid_qr">Ungültiger QR-Code-Inhalt</string>

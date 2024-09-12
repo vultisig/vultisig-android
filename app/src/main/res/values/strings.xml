@@ -304,8 +304,8 @@
     <string name="add_address_title_title">Title</string>
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
-    <string name="deposit_form_remove_from_pool">Remove from pool</string>
-    <string name="deposit_form_add_to_pool">Add to pool</string>
+    <string name="deposit_form_remove_from_pool">Remove from RUNEPool</string>
+    <string name="deposit_form_add_to_pool">Add to RUNEPool</string>
     <string name="blowfish_approve">Transaction verified by Blowfish.</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
     <string name="join_keysign_failed_to_start">Failed to join keysign</string>
