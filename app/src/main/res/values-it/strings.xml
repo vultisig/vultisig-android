@@ -281,7 +281,7 @@
     <string name="add_address_title_title">Titolo</string>
     <string name="add_address_address_title">Indirizzo</string>
     <string name="add_address_type_hint">Scrivi qui</string>
-    <string name="deposit_form_remove_from_pool">Rimuovi dalla piscina</string>
+    <string name="deposit_form_remove_from_pool">Rimuovi dalla RUNEPool</string>
     <string name="deposit_form_add_to_pool">Aggiungi al pool</string>
     <string name="blowfish_approve">Transazione verificata da Blowfish.</string>
     <string name="join_keysign_invalid_qr">Contenuto del codice QR non valido</string>

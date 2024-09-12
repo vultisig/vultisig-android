@@ -280,7 +280,7 @@
     <string name="add_address_title_title">Titula</string>
     <string name="add_address_address_title">Adresa</string>
     <string name="add_address_type_hint">Upišite ovdje</string>
-    <string name="deposit_form_remove_from_pool">Ukloni iz bazena</string>
+    <string name="deposit_form_remove_from_pool">Ukloni iz RUNEPool</string>
     <string name="deposit_form_add_to_pool">Dodaj u bazen</string>
     <string name="blowfish_approve">Transakciju je potvrdio Blowfish.</string>
     <string name="join_keysign_invalid_qr">Nevažeći sadržaj QR koda</string>
