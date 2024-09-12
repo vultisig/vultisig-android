@@ -61,7 +61,6 @@ private fun VaultListScreen(
             .background(Theme.colors.oxfordBlue800)
             .clickable(enabled = false, onClick = {})
     ) {
-
         VerticalReorderList(
             onMove = onMove,
             data = vaults,
@@ -74,7 +73,11 @@ private fun VaultListScreen(
                 bottom = 64.dp,
             )
         ) { vault ->
-                VaultCeil(vault = vault,onSelectVault = onSelectVault)
+            VaultCeil(
+                vault = vault,
+                isInEditMode = isRearrangeMode,
+                onSelectVault = onSelectVault,
+            )
         }
 
         MultiColorButton(
