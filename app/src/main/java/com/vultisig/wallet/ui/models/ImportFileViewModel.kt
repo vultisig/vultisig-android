@@ -75,7 +75,6 @@ internal class ImportFileViewModel @Inject constructor(
                 try {
                     saveToDb(vaultFileContent, key)
                     hidePasswordPromptDialog()
-
                 } catch (e: Exception) {
                     Timber.e(e)
                     showErrorHint()
