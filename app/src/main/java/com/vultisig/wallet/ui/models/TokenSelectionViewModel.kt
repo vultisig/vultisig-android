@@ -115,7 +115,10 @@ internal class TokenSelectionViewModel @Inject constructor(
             enabledTokens.value = enabledTokenIds
 
             builtInTokens.value = tokenRepository.builtInTokens.first()
+                .asSequence()
                 .filter { it.chain == chain && !it.isNativeToken }
+                .filter { it.id !in enabledTokenIds }
+                .toList()
 
             try {
                 val tokens = tokenRepository.getChainTokens(chain)
