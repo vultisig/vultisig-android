@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,16 +12,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
@@ -28,31 +29,31 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VaultListScreen(
-    navController: NavHostController,
     onSelectVault: (vaultId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
+    onImportVaultClick: () -> Unit = {},
     viewModel: VaultListViewModel = hiltViewModel(),
     isRearrangeMode: Boolean,
 ) {
     val vaults by viewModel.vaults.collectAsState()
 
     VaultListScreen(
-        navController = navController,
         vaults = vaults,
         isRearrangeMode = isRearrangeMode,
         onMove = viewModel::onMove,
         onSelectVault = onSelectVault,
         onCreateNewVault = onCreateNewVault,
+        onImportVaultClick = onImportVaultClick,
     )
 }
 
 @Composable
 private fun VaultListScreen(
-    navController: NavHostController,
     isRearrangeMode: Boolean,
     vaults: List<Vault>,
     onSelectVault: (vaultId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
+    onImportVaultClick: () -> Unit = {},
     onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
     Box(
@@ -80,21 +81,44 @@ private fun VaultListScreen(
             )
         }
 
-        MultiColorButton(
-            text = stringResource(R.string.home_screen_add_new_vault),
-            backgroundColor = Theme.colors.turquoise800,
-            textColor = Theme.colors.oxfordBlue800,
-            iconColor = Theme.colors.turquoise800,
-            textStyle = Theme.montserrat.subtitle1,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 16.dp,
-                    horizontal = 12.dp,
-                )
-                .align(Alignment.BottomCenter)
+        Column(
+            horizontalAlignment = CenterHorizontally,
+            modifier = Modifier.align(Alignment.BottomCenter),
         ) {
-            onCreateNewVault()
+            MultiColorButton(
+                text = stringResource(R.string.home_screen_add_new_vault),
+                backgroundColor = Theme.colors.turquoise800,
+                textColor = Theme.colors.oxfordBlue800,
+                iconColor = Theme.colors.turquoise800,
+                textStyle = Theme.montserrat.subtitle1,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp,
+                    ),
+                onClick = onCreateNewVault,
+            )
+
+            UiSpacer(size = 4.dp)
+
+            MultiColorButton(
+                text = stringResource(R.string.home_screen_import_vault),
+                backgroundColor = Theme.colors.oxfordBlue800,
+                textColor = Theme.colors.turquoise800,
+                iconColor = Theme.colors.oxfordBlue800,
+                borderSize = 1.dp,
+                textStyle = Theme.montserrat.subtitle1,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp,
+                    ),
+                onClick = onImportVaultClick,
+            )
         }
     }
 }
@@ -102,9 +126,7 @@ private fun VaultListScreen(
 @Preview(showBackground = true, name = "VaultListScreen")
 @Composable
 private fun VaultListScreenPreview() {
-    val navController = rememberNavController()
     VaultListScreen(
-        navController = navController,
         isRearrangeMode = false,
         vaults = listOf(
             Vault(

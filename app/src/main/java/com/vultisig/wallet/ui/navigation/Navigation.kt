@@ -399,6 +399,8 @@ internal sealed class Destination(
         route = "create_new_vault"
     )
 
+    data object ImportVault : Destination(route = "import_file")
+
     data class AddChainAccount(val vaultId: String) :
         Destination(route = "vault_detail/$vaultId/add_account")
 

@@ -30,7 +30,6 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -102,7 +101,7 @@ private fun AddVaultScreen(
                             bottom = 16.dp,
                         )
                 ) {
-                    navController.navigate(Screen.ImportFile.route)
+                    navController.navigate(Destination.ImportVault.route)
                 }
             }
         }
