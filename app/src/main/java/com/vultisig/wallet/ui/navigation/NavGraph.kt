@@ -186,7 +186,15 @@ internal fun SetupNavGraph(
                 navArgument(ARG_VAULT_SETUP_TYPE) {
                     type = NavType.IntType
                     defaultValue = 0
-                }
+                },
+                navArgument(Destination.ARG_EMAIL) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument(Destination.ARG_PASSWORD) {
+                    type = NavType.StringType
+                    nullable = true
+                },
             )
         ) {
             KeygenFlowView(navController)
