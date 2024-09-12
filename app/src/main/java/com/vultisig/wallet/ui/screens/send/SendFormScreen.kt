@@ -154,7 +154,7 @@ internal fun SendFormScreen(
                 val clipboard = LocalClipboardManager.current
 
                 UiIcon(
-                    drawableResId = R.drawable.copy,
+                    drawableResId = R.drawable.ic_paste,
                     size = 20.dp,
                     onClick = {
                         clipboard.getText()
