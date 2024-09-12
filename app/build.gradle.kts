@@ -131,6 +131,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.work)
 
     // ktor
     implementation(libs.ktor.client.core)
@@ -156,6 +157,7 @@ dependencies {
     implementation(libs.rive)
     implementation(libs.play.update)
     implementation(libs.play.review)
+    implementation(libs.androidx.work.ktx)
 
     // test
     testImplementation(libs.junit)

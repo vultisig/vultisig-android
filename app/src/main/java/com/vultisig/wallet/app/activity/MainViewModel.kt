@@ -11,6 +11,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.WorkerRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -29,6 +30,7 @@ internal class MainViewModel @Inject constructor(
     navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
+    private val workerRepository: WorkerRepository,
     private val appUpdateManager: AppUpdateManager
 ) : ViewModel() {
 
@@ -47,6 +49,7 @@ internal class MainViewModel @Inject constructor(
             if (vaultRepository.hasVaults()) {
                 _startDestination.value = Destination.Home().route
                 _isLoading.value = false
+                workerRepository.discoveryTokens()
             } else {
                 val isUserPassedOnboarding = repository.readOnBoardingState()
                     .first()
