@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun VaultCeil(
     vault: Vault,
+    isInEditMode: Boolean,
     onSelectVault: (vaultId: String) -> Unit,
 ) {
     FormCard {
@@ -33,10 +35,12 @@ internal fun VaultCeil(
                 .clickOnce(onClick = { onSelectVault(vault.id) })
                 .padding(all = 14.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.hamburger_menu),
-                contentDescription = "draggable item", modifier = Modifier.width(16.dp)
-            )
+            if (isInEditMode) {
+                Icon(
+                    painter = painterResource(id = R.drawable.hamburger_menu),
+                    contentDescription = "draggable item", modifier = Modifier.width(16.dp)
+                )
+            }
             Text(
                 text = vault.name,
                 style = Theme.menlo.body3,
@@ -58,11 +62,23 @@ internal fun VaultCeil(
 @Preview
 @Composable
 private fun VaultCeilPreview() {
-    VaultCeil(
-        vault = Vault(
-            id = "",
-            name = "Vault 1",
-        ),
-        onSelectVault = {}
-    )
+    Column {
+        VaultCeil(
+            vault = Vault(
+                id = "",
+                name = "Vault 1",
+            ),
+            isInEditMode = true,
+            onSelectVault = {}
+        )
+
+        VaultCeil(
+            vault = Vault(
+                id = "",
+                name = "Vault 2",
+            ),
+            isInEditMode = false,
+            onSelectVault = {}
+        )
+    }
 }
