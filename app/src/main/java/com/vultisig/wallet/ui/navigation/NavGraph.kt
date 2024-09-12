@@ -7,20 +7,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.vultisig.wallet.ui.screens.ImportFileScreen
+import com.vultisig.wallet.ui.components.SigningError
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenView
 import com.vultisig.wallet.ui.models.keygen.KeygenFlowView
-import com.vultisig.wallet.ui.screens.QrAddressScreen
-import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
-import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
-import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
-import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
-import com.vultisig.wallet.ui.screens.settings.SettingsScreen
-import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
-import com.vultisig.wallet.ui.components.SigningError
-import com.vultisig.wallet.ui.screens.VaultDetailScreen
-import com.vultisig.wallet.ui.screens.VaultRenameScreen
-import com.vultisig.wallet.ui.screens.WelcomeScreen
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
@@ -36,11 +25,16 @@ import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
 import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.CustomTokenScreen
+import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
+import com.vultisig.wallet.ui.screens.QrAddressScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
 import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
+import com.vultisig.wallet.ui.screens.VaultDetailScreen
+import com.vultisig.wallet.ui.screens.VaultRenameScreen
+import com.vultisig.wallet.ui.screens.WelcomeScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
@@ -57,6 +51,12 @@ import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
+import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
+import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
+import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
+import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
+import com.vultisig.wallet.ui.screens.settings.SettingsScreen
+import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
@@ -196,7 +196,7 @@ internal fun SetupNavGraph(
             SigningError(navController)
         }
 
-        composable(route = Screen.ImportFile.route) {
+        composable(route = Destination.ImportVault.route) {
             ImportFileScreen(navController)
         }
         composable(

@@ -36,8 +36,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.HomeUiModel
 import com.vultisig.wallet.ui.models.HomeViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -56,7 +56,8 @@ internal fun HomeScreen(
         onEdit = viewModel::edit,
         onToggleVaults = viewModel::toggleVaults,
         onSelectVault = viewModel::selectVault,
-        onCreateNewVault = viewModel::createNewVault,
+        onCreateNewVault = viewModel::addVault,
+        onImportVaultClick = viewModel::importVault,
         onShareVaultQr = viewModel::shareVaultQr,
         isEditMode = viewModel.isEditMode
     )
@@ -73,6 +74,7 @@ private fun HomeScreen(
     onToggleVaults: () -> Unit = {},
     onSelectVault: (vaultId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
+    onImportVaultClick: () -> Unit = {},
     onShareVaultQr: () -> Unit = {},
 ) {
     val caretRotation by animateFloatAsState(
@@ -180,9 +182,9 @@ private fun HomeScreen(
                 exit = slideOutVertically(targetOffsetY = { height -> -height })
             ) {
                 VaultListScreen(
-                    navController = navController,
                     onSelectVault = onSelectVault,
                     onCreateNewVault = onCreateNewVault,
+                    onImportVaultClick = onImportVaultClick,
                     isRearrangeMode = state.isVaultRearrangeMode,
                 )
             }

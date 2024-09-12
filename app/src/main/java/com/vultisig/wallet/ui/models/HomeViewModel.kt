@@ -70,19 +70,22 @@ internal class HomeViewModel @Inject constructor(
 
     fun selectVault(vaultId: String) {
         viewModelScope.launch {
-            uiState.update {
-                it.copy(showVaultList = false)
-            }
+            hideVaultList()
             lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
         }
     }
 
-    fun createNewVault() {
+    fun addVault() {
         viewModelScope.launch {
-            uiState.update {
-                it.copy(showVaultList = false)
-            }
-            navigator.navigate(Destination.CreateNewVault)
+            hideVaultList()
+            navigator.navigate(Destination.KeygenRole())
+        }
+    }
+
+    fun importVault() {
+        viewModelScope.launch {
+            hideVaultList()
+            navigator.navigate(Destination.ImportVault)
         }
     }
 
@@ -100,6 +103,10 @@ internal class HomeViewModel @Inject constructor(
             return (!state.showVaultList && state.isChainRearrangeMode)
                     || (state.showVaultList && state.isVaultRearrangeMode)
         }
+
+    private fun hideVaultList() {
+        uiState.update { it.copy(showVaultList = false) }
+    }
 
     private fun collectLastOpenedVault() {
         viewModelScope.launch {
