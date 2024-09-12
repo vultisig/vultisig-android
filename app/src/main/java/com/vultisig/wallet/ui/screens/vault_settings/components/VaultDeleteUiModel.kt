@@ -5,5 +5,6 @@ data class VaultDeleteUiModel (
     val totalFiatValue: String? = null,
     val pubKeyECDSA: String = "",
     val pubKeyEDDSA: String = "",
-    val deviceList: List<String> = emptyList()
+    val deviceList: List<String> = emptyList(),
+    val localPartyId: String = "",
 )

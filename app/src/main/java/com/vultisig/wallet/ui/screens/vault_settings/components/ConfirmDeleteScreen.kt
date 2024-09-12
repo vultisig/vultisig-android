@@ -240,6 +240,23 @@ internal fun ConfirmDeleteScreen(
                         .padding(horizontal = 12.dp),
                 ) {
                     Text(
+                        text = stringResource(R.string.vault_settings_delete_vault_id),
+                        color = colors.neutral0,
+                        style = Theme.menlo.body2,
+                    )
+                    UiSpacer(size = 12.dp)
+                    Text(
+                        text = vaultDeleteUiModel.localPartyId,
+                        color = colors.neutral0,
+                        style = Theme.menlo.overline2,
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp),
+                ) {
+                    Text(
                         text = stringResource(R.string.vault_settings_delete_vault_ecdsa_key),
                         color = colors.neutral0,
                         style = Theme.menlo.body2,
