@@ -157,6 +157,7 @@
     <string name="vault_settings_delete_vault_name">Имя хранилища:</string>
     <string name="vault_settings_delete_vault_value">Стоимость хранилища:</string>
     <string name="vault_settings_delete_vault_type">Тип хранилища:</string>
+    <string name="vault_settings_delete_vault_id">Идентификатор устройства:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Ключ ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Ключ EdDSA:</string>
     <string name="confirm_delete_permanent_delete_message">Вы навсегда удаляете своё хранилище</string>

@@ -157,6 +157,7 @@
     <string name="vault_settings_delete_vault_name">Kluisnaam:</string>
     <string name="vault_settings_delete_vault_value">Kluiswaarde:</string>
     <string name="vault_settings_delete_vault_type">Kluistype:</string>
+    <string name="vault_settings_delete_vault_id">Apparaat-ID:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA-sleutel:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA-sleutel:</string>
     <string name="confirm_delete_permanent_delete_message">U verwijdert uw kluis permanent</string>
