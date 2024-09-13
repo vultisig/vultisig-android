@@ -104,7 +104,10 @@ internal fun SecureSetupScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(32.dp)
+                    .padding(
+                        vertical = 32.dp,
+                        horizontal = 56.dp,
+                    )
             )
 
             UiSpacer(size = 24.dp)
@@ -118,9 +121,8 @@ internal fun SecureSetupScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp,
+                        vertical = 12.dp,
+                        horizontal = 16.dp,
                     )
             ) {
                 if (vaultId == null) {
