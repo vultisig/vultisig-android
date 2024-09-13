@@ -98,8 +98,13 @@ private fun SelectVaultTypeScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(
+                        vertical = 16.dp,
+                        horizontal = 56.dp,
+                    )
             )
+
+            UiSpacer(size = 24.dp)
 
             Text(
                 text = selected.description.asString(),
@@ -120,9 +125,8 @@ private fun SelectVaultTypeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 12.dp,
+                        vertical = 12.dp,
+                        horizontal = 16.dp,
                     ),
                 onClick = onStartClick,
             )
@@ -135,7 +139,7 @@ private fun SelectVaultTypeScreen(
 private fun SelectVaultTypeScreenPreview() {
     SelectVaultTypeScreen(
         navController = rememberNavController(),
-        state = SelectVaultTypeUiModel(),
+        state = SelectVaultTypeUiModel(selectedTypeIndex = 0),
         onTabClick = {},
         onStartClick = {},
     )
