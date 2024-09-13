@@ -52,7 +52,7 @@ internal class MainViewModel @Inject constructor(
                     .first()
 
                 if (isUserPassedOnboarding) {
-                    _startDestination.value = Destination.CreateNewVault.route
+                    _startDestination.value = Destination.AddVault.route
                 } else {
                     _startDestination.value = Destination.Welcome.route
                 }

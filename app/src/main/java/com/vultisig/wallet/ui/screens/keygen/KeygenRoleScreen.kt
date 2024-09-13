@@ -41,6 +41,7 @@ internal fun KeygenRoleScreen(
         navController = navController,
         onInitiateClick = model::initiate,
         onPairClick = model::pair,
+        onImportClick = model::import
     )
 }
 
@@ -49,6 +50,7 @@ private fun KeygenRoleScreen(
     navController: NavController,
     onInitiateClick: () -> Unit = {},
     onPairClick: () -> Unit = {},
+    onImportClick: () -> Unit = {},
 ) {
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
@@ -72,6 +74,7 @@ private fun KeygenRoleScreen(
                     title = stringResource(R.string.keygen_role_initiate_title),
                     action = stringResource(R.string.keygen_role_initiate_action),
                     onClick = onInitiateClick,
+                    isSecondaryAction = false,
                     modifier = Modifier.weight(1f),
                 )
 
@@ -99,8 +102,23 @@ private fun KeygenRoleScreen(
                     drawableResId = R.drawable.ic_pair,
                     title = stringResource(R.string.keygen_role_pair_title),
                     action = stringResource(R.string.keygen_role_pair_action),
+                    isSecondaryAction = true,
                     onClick = onPairClick,
                     modifier = Modifier.weight(1f),
+                )
+
+                MultiColorButton(
+                    text = stringResource(R.string.home_screen_import_vault),
+                    backgroundColor = Theme.colors.oxfordBlue800,
+                    textColor = Theme.colors.turquoise800,
+                    iconColor = Theme.colors.oxfordBlue800,
+                    borderSize = 1.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .padding(
+                            all = 16.dp,
+                        ),
+                    onClick = onImportClick,
                 )
             }
         }
@@ -128,6 +146,7 @@ private fun RoleOption(
     @DrawableRes drawableResId: Int,
     title: String,
     action: String,
+    isSecondaryAction: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -171,13 +190,27 @@ private fun RoleOption(
             UiSpacer(size = 36.dp)
         }
 
-        MultiColorButton(
-            minHeight = 44.dp,
-            modifier = Modifier
-                .fillMaxWidth(),
-            text = action,
-            onClick = onClick,
-        )
+        if (isSecondaryAction) {
+            MultiColorButton(
+                text = action,
+                backgroundColor = Theme.colors.oxfordBlue600Main,
+                textColor = Theme.colors.turquoise800,
+                iconColor = Theme.colors.oxfordBlue800,
+                borderSize = 1.dp,
+                textStyle = Theme.montserrat.subtitle1,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                onClick = onClick,
+            )
+        } else {
+            MultiColorButton(
+                minHeight = 44.dp,
+                text = action,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                onClick = onClick,
+            )
+        }
     }
 }
 
