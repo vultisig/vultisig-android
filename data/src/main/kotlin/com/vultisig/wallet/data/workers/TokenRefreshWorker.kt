@@ -47,6 +47,7 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                         try {
                             tokenRepository
                                 .getTokensWithBalance(chain, address)
+                                .filter { !it.isNativeToken }
                                 .forEach { token ->
                                     val updatedToken = token.copy(
                                         address = address,

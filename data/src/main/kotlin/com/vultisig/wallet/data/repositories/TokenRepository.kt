@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.Coins.SupportedCoins
 import com.vultisig.wallet.data.models.TokenStandard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -110,7 +111,6 @@ internal class TokenRepositoryImpl @Inject constructor(
         val oneInchTokensWithBalance = oneInchApi.getTokensByContracts(chain, contractsWithBalance)
         return oneInchTokensWithBalance
             .toCoins(chain)
-            .filter { token -> Coins.SupportedCoins.first {token.id == it.id }.isNativeToken }
     }
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
@@ -146,13 +146,14 @@ internal class TokenRepositoryImpl @Inject constructor(
         asSequence()
             .map { it.value }
             .map {
+                val supportedCoin = SupportedCoins.firstOrNull { coin -> coin.id == "${it.symbol}-${chain.id}" }
                 Coin(
                     contractAddress = it.address,
                     chain = chain,
                     ticker = it.symbol,
                     logo = it.logoURI ?: "",
                     decimal = it.decimals,
-                    isNativeToken = false,
+                    isNativeToken = supportedCoin?.isNativeToken?: false,
                     priceProviderID = "",
                     address = "",
                     hexPublicKey = "",
