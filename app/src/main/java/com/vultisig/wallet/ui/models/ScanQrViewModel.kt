@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.getAddressFromQrCode
+import com.vultisig.wallet.ui.utils.isJson
 import com.vultisig.wallet.ui.utils.isReshare
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -27,12 +28,7 @@ internal class ScanQrViewModel @Inject constructor(
     fun joinOrSend(qr: String) {
         Timber.d("joinOrSend(qr = $qr)")
         viewModelScope.launch {
-            val flowType = try {
-                DeepLinkHelper(qr).getFlowType()?: JOIN_SEND_ON_ADDRESS_FLOW
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to parse QR-code via DeepLinkHelper")
-                JOIN_SEND_ON_ADDRESS_FLOW
-            }
+            val flowType = getFlowType(qr)
             val qrBase64 = Base64.UrlSafe.encode(qr.toByteArray())
             try {
                 navigator.navigate(
@@ -67,10 +63,24 @@ internal class ScanQrViewModel @Inject constructor(
         }
     }
 
+    fun getFlowType(qr: String): String {
+        return try {
+            DeepLinkHelper(qr).getFlowType()?: throw IllegalArgumentException("No flowType found")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to parse QR-code via DeepLinkHelper")
+            if (qr.isJson()) {
+                UNKNOWN_FLOW
+            } else {
+                JOIN_SEND_ON_ADDRESS_FLOW
+            }
+        }
+    }
+
     companion object {
-        private const val JOIN_KEYSIGN_FLOW = "SignTransaction"
-        private const val JOIN_KEYGEN_FLOW = "NewVault"
-        private const val JOIN_SEND_ON_ADDRESS_FLOW = "SendOnAddress"
+        const val JOIN_KEYSIGN_FLOW = "SignTransaction"
+        const val JOIN_KEYGEN_FLOW = "NewVault"
+        const val JOIN_SEND_ON_ADDRESS_FLOW = "SendOnAddress"
+        const val UNKNOWN_FLOW = "Unknown"
     }
 
 }

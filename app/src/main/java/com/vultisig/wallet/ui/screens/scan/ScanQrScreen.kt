@@ -82,13 +82,16 @@ internal fun ScanQrAndJoin(
 @Composable
 internal fun ScanQrScreen(
     navController: NavController,
+    viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     ScanQrScreen(
         navController = navController,
         onScanSuccess = { qr ->
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set(ARG_QR_CODE, qr)
+            if (viewModel.getFlowType(qr) == ScanQrViewModel.JOIN_SEND_ON_ADDRESS_FLOW) {
+                navController.previousBackStackEntry
+                    ?.savedStateHandle
+                    ?.set(ARG_QR_CODE, qr)
+            }
             navController.popBackStack()
         }
     )
