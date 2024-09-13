@@ -91,7 +91,7 @@ fun KeyGenErrorScreen(
                         horizontal = 16.dp,
                     ),
             ) {
-                navController.navigate(Destination.CreateNewVault.route)
+                navController.navigate(Destination.AddVault.route)
             }
         }
     }

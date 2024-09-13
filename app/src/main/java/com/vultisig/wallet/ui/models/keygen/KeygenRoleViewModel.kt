@@ -40,4 +40,10 @@ internal class KeygenRoleViewModel @Inject constructor(
         }
     }
 
+    fun import() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.ImportVault)
+        }
+    }
+
 }

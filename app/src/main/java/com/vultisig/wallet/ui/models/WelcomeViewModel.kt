@@ -8,10 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -48,7 +46,7 @@ internal class WelcomeViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val dest = if (vaultsRepository.hasVaults())
                 Destination.Home()
-            else Destination.CreateNewVault
+            else Destination.AddVault
 
             _channel.send(UiEvent.ScrollToNextPage(dest))
         }
@@ -68,7 +66,7 @@ internal class WelcomeViewModel @Inject constructor(
 
             val dest = if (vaultsRepository.hasVaults())
                 Destination.Home()
-            else Destination.CreateNewVault
+            else Destination.AddVault
 
             navigator.navigate(dest)
         }

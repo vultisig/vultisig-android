@@ -259,12 +259,6 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.CreateNewVault.route
-        ) {
-            AddVaultScreen(navController)
-        }
-
-        composable(
             route = Destination.AddVault.route,
         ) {
             AddVaultScreen(navController)
