@@ -36,7 +36,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val discoverTokenUseCase: DiscoverTokenUseCase,
+    private val discoverToken: DiscoverTokenUseCase,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -67,7 +67,7 @@ internal class ChainSelectionViewModel @Inject constructor(
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
             loadChains()
-            discoverTokenUseCase(vaultId, nativeToken.chain.id)
+            discoverToken(vaultId, nativeToken.chain.id)
         }
     }
 

@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -26,13 +24,13 @@ internal class TokenRefreshWorker @AssistedInject constructor(
         override suspend fun doWork(): Result {
 
                 val inputVaultId = inputData.getString(ARG_VAULT_ID)
-                val inputChainId = inputData.getString(ARG_CHAIN_ID)
+                val inputChainId = inputData.getString(ARG_CHAIN)
 
                 val vaults = if (inputVaultId == null) {
                     vaultRepository.getAll()
                 } else {
-                    listOf(vaultRepository.get(inputVaultId))
-                }.filterNotNull()
+                    listOf(vaultRepository.get(inputVaultId)?: return Result.failure())
+                }
 
                 for (vault in vaults) {
                     val allVaultChains = vault.coins.map { it.chain }.toSet()
@@ -49,7 +47,6 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                         try {
                             tokenRepository
                                 .getTokensWithBalance(chain, address)
-                                .filter { token -> Coins.SupportedCoins.first {token.id == it.id }.isNativeToken }
                                 .forEach { token ->
                                     val updatedToken = token.copy(
                                         address = address,
@@ -68,6 +65,6 @@ internal class TokenRefreshWorker @AssistedInject constructor(
 
     companion object {
         val ARG_VAULT_ID = "vault_id"
-        val ARG_CHAIN_ID = "chain_id"
+        val ARG_CHAIN = "chain_id"
     }
 }

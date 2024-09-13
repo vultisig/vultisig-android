@@ -108,7 +108,9 @@ internal class TokenRepositoryImpl @Inject constructor(
         delay(1000) //TODO remove when we will use api without rate limit
 
         val oneInchTokensWithBalance = oneInchApi.getTokensByContracts(chain, contractsWithBalance)
-        return oneInchTokensWithBalance.toCoins(chain)
+        return oneInchTokensWithBalance
+            .toCoins(chain)
+            .filter { token -> Coins.SupportedCoins.first {token.id == it.id }.isNativeToken }
     }
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)

@@ -23,7 +23,7 @@ internal class DiscoverTokenUseCaseImpl @Inject constructor(
             dataBuilder.putString(TokenRefreshWorker.ARG_VAULT_ID, vaultId)
         }
         if (chainId != null) {
-            dataBuilder.putString(TokenRefreshWorker.ARG_CHAIN_ID, chainId)
+            dataBuilder.putString(TokenRefreshWorker.ARG_CHAIN, chainId)
         }
         val workData = dataBuilder.build()
 

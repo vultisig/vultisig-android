@@ -30,7 +30,7 @@ internal class MainViewModel @Inject constructor(
     navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
-    private val discoverTokenUseCase: DiscoverTokenUseCase,
+    private val discoverToken: DiscoverTokenUseCase,
     private val appUpdateManager: AppUpdateManager
 ) : ViewModel() {
 
@@ -49,7 +49,7 @@ internal class MainViewModel @Inject constructor(
             if (vaultRepository.hasVaults()) {
                 _startDestination.value = Destination.Home().route
                 _isLoading.value = false
-                discoverTokenUseCase(null ,null)
+                discoverToken(null ,null)
             } else {
                 val isUserPassedOnboarding = repository.readOnBoardingState()
                     .first()
