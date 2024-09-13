@@ -12,7 +12,7 @@ import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.repositories.WorkerRepository
+import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
@@ -51,7 +51,7 @@ internal class ImportFileViewModel @Inject constructor(
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
     private val snackbarFlow: SnackbarFlow,
-    private val workerRepository: WorkerRepository,
+    private val discoverTokenUseCase: DiscoverTokenUseCase,
 ) : ViewModel() {
     val uiModel = MutableStateFlow(ImportFileState())
 
@@ -115,7 +115,7 @@ internal class ImportFileViewModel @Inject constructor(
     private suspend fun insertVaultToDb(vault: Vault) {
         saveVault(vault, false)
         vaultDataStoreRepository.setBackupStatus(vault.id, true)
-        workerRepository.discoveryTokens(vault.id)
+        discoverTokenUseCase(vault.id, null)
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id,

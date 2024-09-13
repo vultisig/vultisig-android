@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.repositories
+package com.vultisig.wallet.data.usecases
 
 import android.content.Context
 import androidx.work.Constraints
@@ -6,30 +6,24 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.google.gson.Gson
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.workers.TokenRefreshWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
 private const val TAG = "TokenRefreshWorker"
 
-interface WorkerRepository {
-    fun discoveryTokens(vaultId: String? = null, nativeToken: Coin? = null)
-}
+interface DiscoverTokenUseCase: (String?, String?) -> Unit
 
-internal class WorkerRepositoryImpl @Inject constructor(
+internal class DiscoverTokenUseCaseImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    val gson: Gson,
-) : WorkerRepository {
-    override fun discoveryTokens(vaultId: String?, nativeToken: Coin?) {
+) : DiscoverTokenUseCase {
+    override fun invoke(vaultId: String?, chainId: String?) {
         val dataBuilder = Data.Builder()
         if (vaultId != null) {
-            dataBuilder.putString(TokenRefreshWorker.VAULT_ID, vaultId)
+            dataBuilder.putString(TokenRefreshWorker.ARG_VAULT_ID, vaultId)
         }
-        if (nativeToken != null) {
-            dataBuilder.putString(TokenRefreshWorker.NATIVE_TOKEN, gson.toJson(nativeToken))
+        if (chainId != null) {
+            dataBuilder.putString(TokenRefreshWorker.ARG_CHAIN_ID, chainId)
         }
         val workData = dataBuilder.build()
 

@@ -9,7 +9,7 @@ import dagger.hilt.components.SingletonComponent
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
-interface InitializerEntryPoint {
+internal interface InitializerEntryPoint {
 
     fun getHiltWorkerFactory(): HiltWorkerFactory
 

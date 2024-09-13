@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.google.gson.Gson
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -15,10 +15,9 @@ import kotlinx.coroutines.delay
 import timber.log.Timber
 
 @HiltWorker
-class TokenRefreshWorker @AssistedInject constructor(
+internal class TokenRefreshWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val gson: Gson,
     private val tokenRepository: TokenRepository,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository
@@ -26,37 +25,38 @@ class TokenRefreshWorker @AssistedInject constructor(
 
         override suspend fun doWork(): Result {
 
-                val defaultVaultId = inputData.getString(VAULT_ID)
-                val defaultNativeTokenJson = inputData.getString(NATIVE_TOKEN)
+                val inputVaultId = inputData.getString(ARG_VAULT_ID)
+                val inputChainId = inputData.getString(ARG_CHAIN_ID)
 
-                val vaults = if (defaultVaultId == null) {
+                val vaults = if (inputVaultId == null) {
                     vaultRepository.getAll()
                 } else {
-                    listOf(vaultRepository.get(defaultVaultId))
+                    listOf(vaultRepository.get(inputVaultId))
                 }.filterNotNull()
 
                 for (vault in vaults) {
-                    val nativeTokens = if (defaultNativeTokenJson == null) {
-                        vault.coins.filter { it.isNativeToken }
+                    val allVaultChains = vault.coins.map { it.chain }.toSet()
+                    val chains = if (inputChainId == null) {
+                        allVaultChains
                     } else {
-                        listOf(gson.fromJson(defaultNativeTokenJson, Coin::class.java))
+                        allVaultChains.filter { it.id == inputChainId }
                     }
-                    for (nativeToken in nativeTokens) {
+                    for (chain in chains) {
                         val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
-                            nativeToken,
+                            chain,
                             vault
                         )
                         try {
-                        tokenRepository
-                            .getTokensWithBalance(nativeToken.chain, address)
-                            .filter { token -> token.id != nativeToken.id }
-                            .forEach { token ->
-                                val updatedToken = token.copy(
-                                    address = address,
-                                    hexPublicKey = derivedPublicKey
-                                )
-                                vaultRepository.addTokenToVault(vault.id, updatedToken)
-                            }
+                            tokenRepository
+                                .getTokensWithBalance(chain, address)
+                                .filter { token -> Coins.SupportedCoins.first {token.id == it.id }.isNativeToken }
+                                .forEach { token ->
+                                    val updatedToken = token.copy(
+                                        address = address,
+                                        hexPublicKey = derivedPublicKey
+                                    )
+                                    vaultRepository.addTokenToVault(vault.id, updatedToken)
+                                }
                         } catch (e: Exception) {
                             Timber.e(e)
                         }
@@ -67,7 +67,7 @@ class TokenRefreshWorker @AssistedInject constructor(
         }
 
     companion object {
-        val VAULT_ID = "vaultId"
-        val NATIVE_TOKEN = "native_token"
+        val ARG_VAULT_ID = "vault_id"
+        val ARG_CHAIN_ID = "chain_id"
     }
 }

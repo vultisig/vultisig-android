@@ -2,33 +2,23 @@
 
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.google.gson.Gson
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.repositories.WorkerRepository
-import com.vultisig.wallet.data.workers.TokenRefreshWorker
+import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 internal data class ChainSelectionUiModel(
@@ -46,7 +36,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
-    private val workerRepository: WorkerRepository,
+    private val discoverTokenUseCase: DiscoverTokenUseCase,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -77,7 +67,7 @@ internal class ChainSelectionViewModel @Inject constructor(
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
             loadChains()
-            workerRepository.discoveryTokens(vaultId, nativeToken)
+            discoverTokenUseCase(vaultId, nativeToken.chain.id)
         }
     }
 

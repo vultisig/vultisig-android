@@ -5,7 +5,7 @@ import androidx.startup.Initializer
 import androidx.work.Configuration
 import androidx.work.WorkManager
 
-class WorkManagerInitializer : Initializer<WorkManager> {
+internal class WorkManagerInitializer : Initializer<WorkManager> {
 
     override fun create(context: Context): WorkManager {
         val workerFactory =

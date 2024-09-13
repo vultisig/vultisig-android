@@ -33,10 +33,4 @@ internal interface DataRepositoriesModule {
     fun bindVultiSignerRepository(
         impl: VultiSignerRepositoryImpl
     ): VultiSignerRepository
-
-    @Binds
-    @Singleton
-    fun bindWorkerRepository(
-        impl: WorkerRepositoryImpl
-    ): WorkerRepository
 }
