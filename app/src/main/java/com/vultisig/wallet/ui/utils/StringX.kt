@@ -17,3 +17,7 @@ internal fun String.getAddressFromQrCode(): String {
 internal fun String.isReshare(): Boolean {
     return contains("tssType=Reshare")
 }
+
+internal fun String.isJson(): Boolean {
+    return startsWith("{") && endsWith("}")
+}
