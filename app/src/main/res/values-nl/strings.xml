@@ -280,7 +280,7 @@
     <string name="deposit_message_deposit_title">%s bericht storting</string>
     <string name="deposit_form_custom_memo_title">Aangepaste memo</string>
     <string name="naming_vault_screen_vault_placeholder">Hoofdkluis</string>
-    <string name="transaction_done_swap_progress">Wisselvoortgang</string>
+    <string name="transaction_swap_tracking_link">Trackinglink ruilen</string>
     <string name="swap_screen_same_asset_error_message">Bron- en bestemmingsactiva kunnen niet hetzelfde zijn.</string>
     <string name="address_book_toolbar_title">Adresboek</string>
     <string name="address_book_settings_title">Adresboek</string>

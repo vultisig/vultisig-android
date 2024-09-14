@@ -276,7 +276,7 @@
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
     <string name="naming_vault_screen_vault_placeholder">Главное хранилище</string>
-    <string name="transaction_done_swap_progress">Прогресс обмена</string>
+    <string name="transaction_swap_tracking_link">Обмен ссылкой отслеживания</string>
     <string name="swap_screen_same_asset_error_message">Исходные и целевые активы не могут быть одинаковыми.</string>
     <string name="address_book_toolbar_title">Адресная книга</string>
     <string name="address_book_settings_title">Адресная книга</string>

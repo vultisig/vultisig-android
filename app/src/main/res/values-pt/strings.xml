@@ -272,7 +272,7 @@
     <string name="deposit_message_deposit_title">%s depósito de mensagens</string>
     <string name="deposit_form_custom_memo_title">Memorando personalizado</string>
     <string name="naming_vault_screen_vault_placeholder">Cofre Principal</string>
-    <string name="transaction_done_swap_progress">Progresso da troca</string>
+    <string name="transaction_swap_tracking_link">Trocar link de rastreio</string>
     <string name="swap_screen_same_asset_error_message">Os ativos de origem e de destino não podem ser iguais.</string>
     <string name="address_book_toolbar_title">Catálogo de endereços</string>
     <string name="address_book_settings_title">Catálogo de endereços</string>
