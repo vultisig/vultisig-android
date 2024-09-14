@@ -20,7 +20,6 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.send.SendViewModel
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
@@ -60,8 +59,8 @@ internal fun SendScreen(
         SendDst.Keysign.staticRoute -> 0.75f
         else -> 0.0f
     }
-
-    val progressNav = if (route == SendDst.Send.route) {
+    val useMainNavigator = route == SendDst.Send.route
+    val progressNav = if (useMainNavigator) {
         navController
     } else {
         sendNav
@@ -87,7 +86,7 @@ internal fun SendScreen(
                 viewModel.shareQRCode(context)
             }
         } ?: {},
-        onStartIconClick =viewModel::navigateToHome,
+        onStartIconClick = { viewModel.navigateToHome(useMainNavigator) },
     ) {
         NavHost(
             navController = sendNav,

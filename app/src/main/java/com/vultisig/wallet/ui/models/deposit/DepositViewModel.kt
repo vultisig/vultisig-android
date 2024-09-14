@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class DepositViewModel @Inject constructor(
-    sendNavigator: Navigator<SendDst>,
+    private val sendNavigator: Navigator<SendDst>,
     private val mainNavigator: Navigator<Destination>,
     ) : ViewModel() {
     val dst = sendNavigator.destination
@@ -20,7 +20,7 @@ internal class DepositViewModel @Inject constructor(
     fun enableNavigationToHome() {
         isNavigateToHome = true
     }
-    fun navigateToHome (){
+    fun navigateToHome(useMainNavigator: Boolean) {
         viewModelScope.launch {
             if (isNavigateToHome) {
                 mainNavigator.navigate(
@@ -29,8 +29,12 @@ internal class DepositViewModel @Inject constructor(
                         clearBackStack = true
                     )
                 )
-            }else{
-                mainNavigator.navigate(Destination.Back)
+            } else {
+                if (useMainNavigator) {
+                    mainNavigator.navigate(Destination.Back)
+                } else {
+                    sendNavigator.navigate(SendDst.Back)
+                }
             }
         }
     }

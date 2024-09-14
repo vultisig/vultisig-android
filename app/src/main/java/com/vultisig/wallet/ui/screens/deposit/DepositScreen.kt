@@ -20,7 +20,6 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.deposit.DepositViewModel
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
@@ -56,7 +55,8 @@ internal fun DepositScreen(
         else -> 0.0f
     }
 
-    val topBarNavController = if (route == SendDst.Send.route) {
+    val shouldUseMainNavigator = route == SendDst.Send.route
+    val topBarNavController = if (shouldUseMainNavigator) {
         navController
     } else {
         depositNavHostController
@@ -78,7 +78,7 @@ internal fun DepositScreen(
         chainId = chainId,
         title = title,
         progress = progress,
-        onKeysignFinished = viewModel::navigateToHome,
+        onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
         enableNavigationToHome = viewModel::enableNavigationToHome,
     )
 }
