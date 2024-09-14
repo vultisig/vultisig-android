@@ -270,7 +270,7 @@
     <string name="deposit_message_deposit_title">%s messaggio di deposito</string>
     <string name="deposit_form_custom_memo_title">Promemoria personalizzato</string>
     <string name="naming_vault_screen_vault_placeholder">Caveau principale</string>
-    <string name="transaction_done_swap_progress">Avanzamento dello scambio</string>
+    <string name="transaction_swap_tracking_link">Link di monitoraggio dello scambio</string>
     <string name="swap_screen_same_asset_error_message">Le risorse di origine e di destinazione non possono essere le stesse.</string>
     <string name="address_book_toolbar_title">Rubrica</string>
     <string name="address_book_settings_title">Rubrica</string>

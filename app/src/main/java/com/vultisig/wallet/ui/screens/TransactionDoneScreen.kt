@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -34,6 +35,7 @@ internal fun TransactionDoneScreen(
     navController: NavController,
     transactionHash: String,
     transactionLink: String,
+    isThorChainSwap: Boolean
 ) {
     UiBarContainer(
         navController = navController,
@@ -43,6 +45,7 @@ internal fun TransactionDoneScreen(
             transactionHash = transactionHash,
             transactionLink = transactionLink,
             onComplete = navController::popBackStack,
+            isThorChainSwap = isThorChainSwap
         )
     }
 }
@@ -119,9 +122,12 @@ internal fun TransactionDoneView(
                                     )
                                 )
                             },
-                        text = stringResource(R.string.transaction_done_swap_progress),
-                        color = Theme.colors.neutral0,
-                        style = Theme.menlo.subtitle2,
+                        text = stringResource(R.string.transaction_swap_tracking_link),
+                        color = Theme.colors.turquoise800,
+                        style = Theme.menlo.subtitle2.copy(
+                            textDecoration = TextDecoration.Underline
+                        ),
+
                     )
                 }
             }
@@ -146,6 +152,7 @@ private fun TransactionDoneScreenPreview() {
     TransactionDoneScreen(
         navController = rememberNavController(),
         transactionHash = "0x1234567890",
-        transactionLink = ""
+        transactionLink = "",
+        isThorChainSwap = true
     )
 }

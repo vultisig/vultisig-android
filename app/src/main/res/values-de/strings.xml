@@ -269,7 +269,7 @@
     <string name="deposit_message_deposit_title">%s Nachricht Einzahlung</string>
     <string name="deposit_form_custom_memo_title">Benutzerdefiniertes Memo</string>
     <string name="naming_vault_screen_vault_placeholder">Haupttresor</string>
-    <string name="transaction_done_swap_progress">Swap-Fortschritt</string>
+    <string name="transaction_swap_tracking_link">Tracking-Link austauschen</string>
     <string name="swap_screen_same_asset_error_message">Quell- und Ziel-Assets können nicht identisch sein.</string>
     <string name="address_book_toolbar_title">Adressbuch</string>
     <string name="address_book_settings_title">Adressbuch</string>

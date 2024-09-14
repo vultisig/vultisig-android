@@ -269,7 +269,7 @@
     <string name="deposit_message_deposit_title">%s depozit poruke</string>
     <string name="deposit_form_custom_memo_title">Prilagođeni dopis</string>
     <string name="naming_vault_screen_vault_placeholder">Glavni trezor</string>
-    <string name="transaction_done_swap_progress">Zamjena napredovanja</string>
+    <string name="transaction_swap_tracking_link">Swap link za praćenje</string>
     <string name="swap_screen_same_asset_error_message">Izvorna i odredišna imovina ne mogu biti ista.</string>
     <string name="address_book_toolbar_title">Adresar</string>
     <string name="address_book_settings_title">Adresar</string>

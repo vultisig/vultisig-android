@@ -271,7 +271,7 @@
     <string name="deposit_message_deposit_title">%s mensaje de deposito</string>
     <string name="deposit_form_custom_memo_title">Memo personalizado</string>
     <string name="naming_vault_screen_vault_placeholder">Bóveda principal</string>
-    <string name="transaction_done_swap_progress">Progreso del intercambio</string>
+    <string name="transaction_swap_tracking_link">Enlace de seguimiento de intercambio</string>
     <string name="swap_screen_same_asset_error_message">Los activos de origen y destino no pueden ser los mismos.</string>
     <string name="address_book_toolbar_title">Libreta de direcciones</string>
     <string name="address_book_settings_title">Libreta de direcciones</string>
