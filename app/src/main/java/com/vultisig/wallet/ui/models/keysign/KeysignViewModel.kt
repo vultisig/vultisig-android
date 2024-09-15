@@ -253,9 +253,13 @@ internal class KeysignViewModel(
             nonceAcc++
         }
 
-        if (swapPayload != null && swapPayload !is SwapPayload.MayaChain) {
+        if (swapPayload != null ) {
             when (swapPayload) {
                 is SwapPayload.ThorChain -> {
+                    return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
+                }
+                is SwapPayload.MayaChain -> {
                     return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                         .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
                 }
