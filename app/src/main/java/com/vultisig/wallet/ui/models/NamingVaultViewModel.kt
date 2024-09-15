@@ -8,12 +8,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.ui.utils.TextFieldUtils
 import com.vultisig.wallet.common.UiText.StringResource
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.TextFieldUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+internal data class NamingVaultUiModel(
+    val placeholder: UiText = StringResource(R.string.naming_vault_screen_vault_placeholder)
+)
 
 @HiltViewModel
 @OptIn(ExperimentalFoundationApi::class)
@@ -31,23 +35,30 @@ internal class NamingVaultViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
+    val state = MutableStateFlow(NamingVaultUiModel())
 
     val namingTextFieldState = TextFieldState()
     val errorMessageState = MutableStateFlow<UiText?>(null)
     private val vaultNamesList = MutableStateFlow<List<String>>(emptyList())
-
-    init {
-        viewModelScope.launch {
-            vaultNamesList.update { vaultRepository.getAll().map { it.name } }
-        }
-    }
-
 
     private val vaultSetupType =
         VaultSetupType.fromInt(
             (savedStateHandle.get<String>(Destination.NamingVault.ARG_VAULT_SETUP_TYPE)
                 ?: "0").toInt()
         )
+
+    init {
+        val placeholder = when (vaultSetupType) {
+            VaultSetupType.FAST -> StringResource(R.string.naming_vault_placeholder_hot_vault)
+            VaultSetupType.ACTIVE -> StringResource(R.string.naming_vault_screen_vault_placeholder)
+            else -> StringResource(R.string.naming_vault_placeholder_cold_vault)
+        }
+        state.update { it.copy(placeholder = placeholder) }
+
+        viewModelScope.launch {
+            vaultNamesList.update { vaultRepository.getAll().map { it.name } }
+        }
+    }
 
     private fun validateVaultName(s: String): UiText? {
         if (isNameNotValid(s))

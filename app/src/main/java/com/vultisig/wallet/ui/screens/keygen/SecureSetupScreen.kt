@@ -24,7 +24,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.R.drawable
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.GradientButton
 import com.vultisig.wallet.ui.components.MultiColorButton
@@ -51,7 +50,7 @@ internal fun SecureSetupScreen(
     UiBarContainer(
         navController = navController,
         title = stringResource(R.string.setup_title),
-        endIcon = drawable.question,
+        endIcon = R.drawable.question,
         onEndIconClick = {
             uriHandler.openUri(helpLink)
         },

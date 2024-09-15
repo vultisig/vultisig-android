@@ -233,8 +233,10 @@ internal sealed class Destination(
     data object VultisigToken : Destination(route = "settings/vultisig_token")
     data object LanguageSetting : Destination(route = "settings/language")
     data object CurrencyUnitSetting : Destination(route = "settings/currency")
-    data class NamingVault(val vaultSetupType: VaultSetupType) :
-        Destination(route = "naming_vault/${vaultSetupType.raw}") {
+
+    data class NamingVault(
+        val vaultSetupType: VaultSetupType,
+    ) : Destination(route = "naming_vault/${vaultSetupType.raw}") {
         companion object {
             const val ARG_VAULT_SETUP_TYPE = "vault_setup_type"
             const val STATIC_ROUTE = "naming_vault/{$ARG_VAULT_SETUP_TYPE}"
