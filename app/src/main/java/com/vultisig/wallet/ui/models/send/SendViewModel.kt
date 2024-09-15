@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SendViewModel @Inject constructor(
-    sendNavigator: Navigator<SendDst>,
+    private val sendNavigator: Navigator<SendDst>,
     private val mainNavigator: Navigator<Destination>,
     val addressProvider: AddressProvider,
     private val savedStateHandle: SavedStateHandle,
@@ -46,7 +46,7 @@ internal class SendViewModel @Inject constructor(
         isNavigateToHome = true
     }
 
-    fun navigateToHome() {
+    fun navigateToHome(useMainNavigator: Boolean) {
         viewModelScope.launch {
             if (isNavigateToHome) {
                 mainNavigator.navigate(
@@ -55,8 +55,11 @@ internal class SendViewModel @Inject constructor(
                         clearBackStack = true
                     )
                 )
-            } else {
+            }
+            if (useMainNavigator) {
                 mainNavigator.navigate(Destination.Back)
+            } else {
+                sendNavigator.navigate(SendDst.Back)
             }
         }
     }
