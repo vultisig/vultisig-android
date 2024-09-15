@@ -32,8 +32,8 @@ internal interface BlockChairApi {
 }
 
 internal class BlockChairApiImp @Inject constructor(
-    private val httpClient: HttpClient,
     private val json: Json,
+    private val httpClient: HttpClient,
 ) : BlockChairApi {
 
     private fun getChainName(chain: Chain): String = when (chain) {
