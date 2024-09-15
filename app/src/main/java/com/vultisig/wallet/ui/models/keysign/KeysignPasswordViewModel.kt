@@ -10,11 +10,17 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.SendDst.Companion.ARG_TRANSACTION_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,6 +34,12 @@ internal data class KeysignPasswordUiModel(
 internal class KeysignPasswordViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<SendDst>,
+    private val vultiSignerRepository: VultiSignerRepository,
+    private val vaultRepository: VaultRepository,
+
+    private val transactionRepository: TransactionRepository,
+    private val swapTransactionRepository: SwapTransactionRepository,
+    private val depositTransaction: DepositTransactionRepository,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
@@ -54,17 +66,53 @@ internal class KeysignPasswordViewModel @Inject constructor(
 
     fun proceed() {
         val password = password
-        if (!isPasswordEmpty() ) {
+        if (!isPasswordEmpty()) {
             viewModelScope.launch {
-                navigator.navigate(
-                    SendDst.Keysign(
-                        transactionId = transactionId,
-                        password = password,
-                    )
+                val vaultId = getTransactionVaultId(transactionId)
+                val vault = vaultRepository.get(vaultId)
+                    ?: error("No vault with id $vaultId exists")
+
+                val isPasswordValid = vultiSignerRepository.isPasswordValid(
+                    publicKeyEcdsa = vault.pubKeyECDSA,
+                    password = password,
                 )
+
+                if (isPasswordValid) {
+                    navigator.navigate(
+                        SendDst.Keysign(
+                            transactionId = transactionId,
+                            password = password,
+                        )
+                    )
+                } else {
+                    state.update {
+                        it.copy(
+                            passwordError = UiText.StringResource(
+                                R.string.keysign_password_incorrect_password
+                            )
+                        )
+                    }
+                }
             }
         } else {
             verifyPassword()
+        }
+    }
+
+    // FIXME forgive me god, this is terrible, but i need this asap;
+    private suspend fun getTransactionVaultId(transactionId: String): String {
+        return try {
+            transactionRepository.getTransaction(transactionId)
+                .first()
+                .vaultId
+        } catch (e: Exception) {
+            try {
+                swapTransactionRepository.getTransaction(transactionId)
+                    .vaultId
+            } catch (e: Exception) {
+                depositTransaction.getTransaction(transactionId)
+                    .vaultId
+            }
         }
     }
 

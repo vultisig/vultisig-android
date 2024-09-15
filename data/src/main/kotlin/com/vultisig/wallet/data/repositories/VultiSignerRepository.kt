@@ -15,6 +15,11 @@ interface VultiSignerRepository {
         request: JoinKeysignRequestJson,
     )
 
+    suspend fun isPasswordValid(
+        publicKeyEcdsa: String,
+        password: String,
+    ): Boolean
+
     suspend fun hasFastSign(
         publicKeyEcdsa: String,
     ): Boolean
@@ -35,6 +40,16 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
         request: JoinKeysignRequestJson,
     ) {
         api.joinKeysign(request)
+    }
+
+    override suspend fun isPasswordValid(
+        publicKeyEcdsa: String,
+        password: String,
+    ): Boolean = try {
+        api.get(publicKeyEcdsa, password)
+        true
+    } catch (e: Exception) {
+        false
     }
 
     override suspend fun hasFastSign(

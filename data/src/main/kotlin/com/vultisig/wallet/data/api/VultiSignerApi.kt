@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import javax.inject.Inject
@@ -17,6 +18,11 @@ internal interface VultiSignerApi {
 
     suspend fun joinKeysign(
         requestJson: JoinKeysignRequestJson,
+    )
+
+    suspend fun get(
+        publicKeyEcdsa: String,
+        password: String,
     )
 
     suspend fun exist(
@@ -42,6 +48,15 @@ internal class VultiSignerApiImpl @Inject constructor(
     ) {
         http.post("https://api.vultisig.com/vault/sign") {
             setBody(requestJson)
+        }.throwIfUnsuccessful()
+    }
+
+    override suspend fun get(
+        publicKeyEcdsa: String,
+        password: String,
+    ) {
+        http.get("https://api.vultisig.com/vault/get/$publicKeyEcdsa") {
+            header("x-password", password)
         }.throwIfUnsuccessful()
     }
 

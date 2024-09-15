@@ -411,6 +411,7 @@
     <string name="keysign_paired_sign_title" translatable="false">Paired Sign</string>
     <string name="keysign_password_title" translatable="false">Password</string>
     <string name="home_screen_import_vault" translatable="false">Import Vault</string>
+    <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
 
     <string name="naming_vault_placeholder_cold_vault" translatable="false">Cold Vault</string>
     <string name="naming_vault_placeholder_hot_vault" translatable="false">Hot Vault</string>
