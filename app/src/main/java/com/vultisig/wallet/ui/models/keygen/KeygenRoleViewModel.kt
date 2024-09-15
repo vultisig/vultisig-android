@@ -25,7 +25,7 @@ internal class KeygenRoleViewModel @Inject constructor(
             else
                 Destination.KeygenFlow(
                     vaultId,
-                    VaultSetupType.M_OF_N,
+                    VaultSetupType.SECURE,
                     true,
                     email = null,
                     password = null,

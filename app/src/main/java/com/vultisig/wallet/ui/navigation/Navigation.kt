@@ -272,15 +272,6 @@ internal sealed class Destination(
         }
     }
 
-    data class SecureSetup(
-        val vaultId: String? = null,
-    ) : Destination(route = buildRoute(vaultId)) {
-        companion object {
-            val staticRoute = buildRoute("{$ARG_VAULT_ID}")
-            private fun buildRoute(vaultId: String?) = "setup/secure/$vaultId"
-        }
-    }
-
     data class KeygenEmail(
         val name: String,
         val setupType: VaultSetupType,

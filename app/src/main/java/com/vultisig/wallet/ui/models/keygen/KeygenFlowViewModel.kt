@@ -71,19 +71,19 @@ internal data class KeygenFlowUiModel(
     val participants: List<String> = emptyList(),
     val keygenPayload: String = "",
     val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
-    val vaultSetupType: VaultSetupType = VaultSetupType.TWO_OF_TWO,
+    val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
 ) {
     val isContinueButtonEnabled =
         when (vaultSetupType) {
-            VaultSetupType.TWO_OF_TWO, VaultSetupType.FAST -> {
+            VaultSetupType.FAST -> {
                 selection.size == 2
             }
 
-            VaultSetupType.TWO_OF_THREE, VaultSetupType.ACTIVE -> {
+            VaultSetupType.ACTIVE -> {
                 selection.size == 3
             }
 
-            VaultSetupType.M_OF_N -> {
+            VaultSetupType.SECURE -> {
                 selection.size >= 2
             }
         }

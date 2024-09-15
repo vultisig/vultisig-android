@@ -89,7 +89,7 @@ internal class SelectVaultTypeViewModel @Inject constructor(
 
             2 -> {
                 viewModelScope.launch {
-                    navigator.navigate(Destination.SecureSetup())
+                    navigator.navigate(Destination.NamingVault(VaultSetupType.SECURE))
                 }
             }
         }
