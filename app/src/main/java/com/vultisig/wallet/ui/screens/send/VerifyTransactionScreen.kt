@@ -78,46 +78,41 @@ internal fun VerifyTransactionScreen(
             .background(Theme.colors.oxfordBlue800)
             .fillMaxSize(),
         bottomBar = {
-            Column (horizontalAlignment = Alignment.CenterHorizontally) {
-                BlowfishMessage(
-                    isShow = state.blowfishShow,
-                    warnings = state.blowfishWarnings,
-                )
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(all = 16.dp)
-                ) {
-                    if (state.hasFastSign) {
-                        MultiColorButton(
-                            text = stringResource(R.string.verify_transaction_fast_sign_btn_title),
-                            textColor = Theme.colors.oxfordBlue800,
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            onClick = onFastSignClick,
-                        )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp)
+            ) {
+                if (state.hasFastSign) {
+                    MultiColorButton(
+                        text = stringResource(R.string.verify_transaction_fast_sign_btn_title),
+                        textColor = Theme.colors.oxfordBlue800,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onFastSignClick,
+                    )
 
-                        UiSpacer(size = 16.dp)
+                    UiSpacer(size = 16.dp)
 
-                        MultiColorButton(
-                            text = confirmTitle,
-                            backgroundColor = Theme.colors.oxfordBlue800,
-                            textColor = Theme.colors.turquoise800,
-                            iconColor = Theme.colors.oxfordBlue800,
-                            borderSize = 1.dp,
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            onClick = onConfirm
-                        )
-                    } else {
-                        MultiColorButton(
-                            text = confirmTitle,
-                            textColor = Theme.colors.oxfordBlue800,
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            onClick = onConfirm,
-                        )
-                    }
+                    MultiColorButton(
+                        text = confirmTitle,
+                        backgroundColor = Theme.colors.oxfordBlue800,
+                        textColor = Theme.colors.turquoise800,
+                        iconColor = Theme.colors.oxfordBlue800,
+                        borderSize = 1.dp,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onConfirm
+                    )
+                } else {
+                    MultiColorButton(
+                        text = confirmTitle,
+                        textColor = Theme.colors.oxfordBlue800,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onConfirm,
+                    )
                 }
             }
         }
@@ -199,6 +194,13 @@ internal fun VerifyTransactionScreen(
                     )
                 }
             }
+
+            BlowfishMessage(
+                isShow = state.blowfishShow,
+                warnings = state.blowfishWarnings,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+            )
         }
     }
 }
@@ -317,6 +319,7 @@ private fun VerifyTransactionScreenPreview() {
                 gasValue = "1.1",
                 memo = "some memo",
             ),
+            blowfishShow = true,
             hasFastSign = true,
         ),
         isConsentsEnabled = true,

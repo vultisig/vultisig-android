@@ -21,7 +21,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun BlowfishMessage(isShow: Boolean, warnings: List<String>) {
+internal fun BlowfishMessage(
+    isShow: Boolean,
+    warnings: List<String>,
+    modifier: Modifier = Modifier,
+) {
     if (isShow) {
         val isWarning = warnings.isNotEmpty()
         val blowfishMainColor =
@@ -34,7 +38,7 @@ internal fun BlowfishMessage(isShow: Boolean, warnings: List<String>) {
             if (isWarning) R.drawable.ic_warning
             else R.drawable.ic_blowfish_approve
         Card(
-            modifier = Modifier.padding(
+            modifier = modifier.padding(
                 start = 16.dp,
                 end = 16.dp,
                 bottom = 16.dp
