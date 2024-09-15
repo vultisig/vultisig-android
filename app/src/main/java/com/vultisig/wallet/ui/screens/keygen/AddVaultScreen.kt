@@ -80,10 +80,27 @@ private fun AddVaultScreen(
                         .padding(
                             start = 16.dp,
                             end = 16.dp,
+                            bottom = 12.dp,
+                        )
+                ) {
+                    navController.navigate(route = Destination.SelectVaultType.route)
+                }
+                MultiColorButton(
+                    text = stringResource(R.string.home_screen_import_vault),
+                    backgroundColor = Theme.colors.oxfordBlue800,
+                    textColor = Theme.colors.turquoise800,
+                    iconColor = Theme.colors.oxfordBlue800,
+                    borderSize = 1.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
                             bottom = 16.dp,
                         )
                 ) {
-                    navController.navigate(route = Destination.KeygenRole().route)
+                    navController.navigate(Destination.ImportVault.route)
                 }
             }
         }
