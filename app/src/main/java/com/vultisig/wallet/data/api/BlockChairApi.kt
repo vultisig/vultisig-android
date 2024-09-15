@@ -33,6 +33,7 @@ internal interface BlockChairApi {
 
 internal class BlockChairApiImp @Inject constructor(
     private val httpClient: HttpClient,
+    private val json: Json,
 ) : BlockChairApi {
 
     private fun getChainName(chain: Chain): String = when (chain) {
@@ -73,7 +74,7 @@ internal class BlockChairApiImp @Inject constructor(
     }
 
     override suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String {
-        val bodyContent = Json.encodeToString(
+        val bodyContent = json.encodeToString(
             TransactionHashRequestBodyJson(signedTransaction)
         )
         Timber.d("bodyContent:$bodyContent")
