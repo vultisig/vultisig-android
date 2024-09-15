@@ -38,22 +38,19 @@ internal data class KeygenSetupTabUiModel(
 )
 
 enum class VaultSetupType(val raw: Int) {
-    TWO_OF_TWO(0),
-    TWO_OF_THREE(1),
-    M_OF_N(2),
-    FAST(3),
-    ACTIVE(4),
+    SECURE(2), // m to n devices
+    // with vultiserver
+    FAST(3), // 1 to 1
+    ACTIVE(4), // 2 to 1
     ;
 
     companion object {
         fun fromInt(value: Int): VaultSetupType = entries.first { it.raw == value }
         fun VaultSetupType.asString(): String =
             when (this) {
-                TWO_OF_TWO -> "2/2"
-                TWO_OF_THREE -> "2/3"
-                M_OF_N -> "M/N"
-                FAST -> "2/2"
-                ACTIVE -> "2/3"
+                SECURE -> "Secure"
+                FAST -> "Fast"
+                ACTIVE -> "Active"
             }
     }
 }

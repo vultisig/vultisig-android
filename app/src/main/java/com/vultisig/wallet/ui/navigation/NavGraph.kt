@@ -42,7 +42,6 @@ import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenRoleScreen
-import com.vultisig.wallet.ui.screens.keygen.SecureSetupScreen
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
@@ -138,20 +137,6 @@ internal fun SetupNavGraph(
             SelectVaultTypeScreen(
                 navController = navController
             )
-        }
-
-        composable(
-            route = Destination.SecureSetup.staticRoute,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            ),
-        ) { navBackStackEntry ->
-            val vaultId =
-                navBackStackEntry.arguments?.getString(ARG_VAULT_ID)
-            SecureSetupScreen(navController, vaultId)
         }
 
         composable(
