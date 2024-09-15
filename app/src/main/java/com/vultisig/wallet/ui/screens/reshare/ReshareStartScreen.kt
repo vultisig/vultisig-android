@@ -24,6 +24,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.GradientInfoCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.vultiGradient
+import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.Theme.colors
@@ -96,7 +97,15 @@ internal fun ReshareStartScreen(
                         ),
                     text = stringResource(R.string.reshare_start_screen_start_reshare),
                     onClick = {
-                        navController.navigate(Destination.KeygenRole(vaultId = vaultId).route)
+                        navController.navigate(
+                            Destination.KeygenFlow(
+                                vaultName = vaultId,
+                                vaultSetupType = VaultSetupType.SECURE,
+                                isReshare = true,
+                                email = null,
+                                password = null,
+                            ).route
+                        )
                     },
                 )
             }

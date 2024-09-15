@@ -256,21 +256,7 @@ internal sealed class Destination(
         }
     }
 
-    data class KeygenRole(val vaultId: String? = null) :
-        Destination(route = "keygen/role?$ARG_VAULT_ID=$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "keygen/role?$ARG_VAULT_ID={$ARG_VAULT_ID}"
-        }
-    }
-
-    data class SelectVaultType(
-        val vaultId: String? = null,
-    ) : Destination(route = buildRoute(vaultId)) {
-        companion object {
-            val staticRoute = buildRoute("{$ARG_VAULT_ID}")
-            private fun buildRoute(vaultId: String?) = "setup/$vaultId"
-        }
-    }
+    data object SelectVaultType : Destination(route = "setup")
 
     data class KeygenEmail(
         val name: String,

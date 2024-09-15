@@ -45,6 +45,7 @@ internal fun SelectVaultTypeScreen(
         state = state,
         onTabClick = model::selectTab,
         onStartClick = model::start,
+        onPairClick = model::pair,
     )
 }
 
@@ -54,6 +55,7 @@ private fun SelectVaultTypeScreen(
     state: SelectVaultTypeUiModel,
     onTabClick: (index: Int) -> Unit,
     onStartClick: () -> Unit,
+    onPairClick: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
     val helpLink = stringResource(R.string.link_docs_create_vault)
@@ -117,7 +119,7 @@ private fun SelectVaultTypeScreen(
             UiSpacer(size = 24.dp)
 
             MultiColorButton(
-                text = selected.startTitle.asString(),
+                text = stringResource(id = R.string.select_vault_type_start),
                 backgroundColor = Theme.colors.turquoise600Main,
                 textColor = Theme.colors.oxfordBlue600Main,
                 minHeight = 44.dp,
@@ -125,11 +127,31 @@ private fun SelectVaultTypeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        vertical = 12.dp,
                         horizontal = 16.dp,
                     ),
                 onClick = onStartClick,
             )
+
+            if (selected.hasPair) {
+                UiSpacer(size = 12.dp)
+
+                MultiColorButton(
+                    text = stringResource(R.string.select_vault_type_pair_action),
+                    backgroundColor = Theme.colors.oxfordBlue800,
+                    textColor = Theme.colors.turquoise800,
+                    iconColor = Theme.colors.oxfordBlue800,
+                    borderSize = 1.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 16.dp,
+                        ),
+                    onClick = onPairClick,
+                )
+            }
+
+            UiSpacer(size = 12.dp)
         }
     }
 }
@@ -142,5 +164,6 @@ private fun SelectVaultTypeScreenPreview() {
         state = SelectVaultTypeUiModel(selectedTypeIndex = 0),
         onTabClick = {},
         onStartClick = {},
+        onPairClick = {},
     )
 }

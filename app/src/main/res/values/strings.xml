@@ -94,7 +94,7 @@
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
-    <string name="create_new_vault_screen_create_a_new_vault">Create a New Vault</string>
+    <string name="create_new_vault_screen_create_a_new_vault">Create a new Vault</string>
     <string name="create_new_vault_screen_import_an_existing_vault">Import an Existing Vault</string>
     <string name="device_list_screen_keygen">Keygen</string>
     <string name="device_list_screen_with_these_devices">With these devices</string>
@@ -415,5 +415,6 @@
 
     <string name="naming_vault_placeholder_cold_vault" translatable="false">Cold Vault</string>
     <string name="naming_vault_placeholder_hot_vault" translatable="false">Hot Vault</string>
+    <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
 
 </resources>
