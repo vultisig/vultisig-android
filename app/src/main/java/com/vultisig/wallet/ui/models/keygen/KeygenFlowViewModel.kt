@@ -13,30 +13,30 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.VultisigRelay
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
+import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.data.mediator.MediatorService
-import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.components.generateQrBitmap
-import com.vultisig.wallet.ui.utils.share
-import com.vultisig.wallet.ui.utils.shareFileName
-import com.vultisig.wallet.ui.utils.NetworkPromptOption
-import com.vultisig.wallet.data.api.ParticipantDiscovery
-import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
-import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.share
+import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -105,12 +105,13 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val protoBuf: ProtoBuf,
 ) : ViewModel() {
 
+    private val setupType = VaultSetupType.fromInt(
+        savedStateHandle.get<Int>(ARG_VAULT_SETUP_TYPE) ?: 0
+    )
+
     val uiState = MutableStateFlow(
         KeygenFlowUiModel(
-            vaultSetupType =
-            VaultSetupType.fromInt(
-                savedStateHandle.get<Int>(ARG_VAULT_SETUP_TYPE) ?: 0
-            ),
+            vaultSetupType = setupType,
             isReshareMode = false
         )
     )
