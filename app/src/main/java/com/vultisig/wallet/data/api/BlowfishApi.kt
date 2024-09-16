@@ -35,7 +35,7 @@ internal class BlowfishApiImpl @Inject constructor(
             .post("https://api.vultisig.com/blowfish/$chain/v0/$network/scan/transactions?language=en&method=eth_sendTransaction") {
                 contentType(ContentType.Application.Json)
                 header(HEADER_API_TITLE, BLOWFISH_API_VERSION)
-                setBody(json.encodeToString(blowfishRequest))
+                setBody(blowfishRequest)
             }
 
         return response.body<BlowfishResponse>()
@@ -48,7 +48,7 @@ internal class BlowfishApiImpl @Inject constructor(
             .post("https://api.vultisig.com/blowfish/solana/v0/mainnet/scan/transactions?language=en"){
                 contentType(ContentType.Application.Json)
                 header(HEADER_API_TITLE, BLOWFISH_API_VERSION)
-                setBody(json.encodeToString(blowfishRequest))
+                setBody(blowfishRequest)
             }
 
         return response.body<BlowfishResponse>()
