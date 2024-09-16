@@ -1,64 +1,72 @@
 package com.vultisig.wallet.data.api.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal data class BlowfishRequest(
-    @SerializedName("userAccount")
+    @SerialName("userAccount")
     val userAccount: String,
-    @SerializedName("metadata")
+    @SerialName("metadata")
     val metadata: BlowfishMetadata,
-    @SerializedName("txObjects")
+    @SerialName("txObjects")
     val txObjects: List<BlowfishTxObject>?,
-    @SerializedName("simulatorConfig")
+    @SerialName("simulatorConfig")
     val simulatorConfig: BlowfishSimulatorConfig?,
-    @SerializedName("transactions")
+    @SerialName("transactions")
     val transactions: List<String>?
 )
 
 
+@Serializable
 internal data class BlowfishTxObject(
-    @SerializedName("from")
+    @SerialName("from")
     val from: String,
-    @SerializedName("to")
+    @SerialName("to")
     val to: String,
-    @SerializedName("value")
+    @SerialName("value")
     val value: String,
-    @SerializedName("data")
+    @SerialName("data")
     val data: String?,
 )
 
+@Serializable
 internal data class BlowfishMetadata(
-    @SerializedName("origin")
+    @SerialName("origin")
     val origin: String,
 )
 
+@Serializable
 internal data class BlowfishSimulatorConfig(
-    @SerializedName("blockNumber")
+    @SerialName("blockNumber")
     val blockNumber: String?,
-    @SerializedName("blockTimestamp")
+    @SerialName("blockTimestamp")
     val stateOverrides: BlowfishStateOverrides?,
 )
 
+@Serializable
 internal data class BlowfishStateOverrides(
-    @SerializedName("nativeBalances")
+    @SerialName("nativeBalances")
     val nativeBalances: List<BlowfishNativeBalance>,
-    @SerializedName("storage")
+    @SerialName("storage")
     val storage: List<BlowfishStorage>?
 )
 
+@Serializable
 internal data class BlowfishNativeBalance(
-    @SerializedName("address")
+    @SerialName("address")
     val address: String,
-    @SerializedName("value")
+    @SerialName("value")
     val value: String,
 )
 
+@Serializable
 internal data class BlowfishStorage(
-    @SerializedName("address")
+    @SerialName("address")
     val address: String,
-    @SerializedName("slot")
+    @SerialName("slot")
     val slot: String,
-    @SerializedName("value")
+    @SerialName("value")
     val value: String,
 )
 
