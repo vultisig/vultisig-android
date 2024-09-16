@@ -11,7 +11,7 @@ data class BlockChairInfoJson(val data: Map<String, BlockChairInfo>)
 @Serializable
 data class BlockChairAddress(
     @SerialName("balance")
-    val balance: String,
+    val balance: Int,
     @SerialName("unspent_output_count")
     val unspentOutputCount: Int,
 )
