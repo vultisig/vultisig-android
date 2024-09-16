@@ -14,7 +14,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -22,6 +21,7 @@ import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.common.asUiText
+import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.PeerDiscoveryPayload
@@ -48,7 +48,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import okhttp3.OkHttpClient
 import timber.log.Timber
 import java.net.HttpURLConnection
 import java.net.Inet4Address
@@ -78,6 +77,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
+    private val keygenApi: KeygenApi,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -278,19 +278,9 @@ internal class JoinKeygenViewModel @Inject constructor(
     suspend fun joinKeygen() {
         withContext(Dispatchers.IO) {
             try {
-                val serverUrl = URL("${_serverAddress}/$_sessionID")
-                Timber.d("Joining ${operationMode.value.name} at $serverUrl")
-                val conn = serverUrl.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val payload = listOf(_localPartyID)
-                gson.toJson(payload).also {
-                    conn.outputStream.write(it.toByteArray())
-                }
-                val responseCode = conn.responseCode
-                Timber.d("Join ${operationMode.value.name}}:: Response code: $responseCode")
-                conn.disconnect()
+                Timber.d("Joining ${operationMode.value.name}")
+                keygenApi.joinKeygen(_serverAddress, _sessionID, listOf(_localPartyID))
+                Timber.d("Join ${operationMode.value.name} ")
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
                 Timber.e("Failed to join ${operationMode.value.name}}: ${e.stackTraceToString()}")
@@ -326,31 +316,12 @@ internal class JoinKeygenViewModel @Inject constructor(
     }
 
     @SuppressLint("BinaryOperationInTimber")
-    private fun checkKeygenStarted(): Boolean {
+    private suspend fun checkKeygenStarted(): Boolean {
         try {
-            val serverURL = "$_serverAddress/start/$_sessionID"
-            Timber.d("Checking keygen start at $serverURL")
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url(serverURL).get().build()
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HttpURLConnection.HTTP_OK -> {
-                        Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
-                        response.body?.let {
-                            val result = it.string()
-                            val tokenType = object : TypeToken<List<String>>() {}.type
-                            this._keygenCommittee = gson.fromJson(result, tokenType)
-                            if (this._keygenCommittee.contains(_localPartyID)) {
-                                return true
-                            }
-                        }
-                    }
-
-                    else -> {
-                        Timber.tag("JoinKeygenViewModel")
-                            .d("Failed to check start ${operationMode.value.name}}: Response code: ${response.code}")
-                    }
-                }
+            this._keygenCommittee = keygenApi.checkKeygenCommittee(_serverAddress, _sessionID)
+            if (this._keygenCommittee.contains(_localPartyID)) {
+                Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
+                return true
             }
         } catch (e: Exception) {
             Timber.tag("JoinKeygenViewModel")
