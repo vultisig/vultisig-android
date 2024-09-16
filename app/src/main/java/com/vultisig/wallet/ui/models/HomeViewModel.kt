@@ -78,7 +78,7 @@ internal class HomeViewModel @Inject constructor(
     fun addVault() {
         viewModelScope.launch {
             hideVaultList()
-            navigator.navigate(Destination.KeygenRole())
+            navigator.navigate(Destination.SelectVaultType)
         }
     }
 

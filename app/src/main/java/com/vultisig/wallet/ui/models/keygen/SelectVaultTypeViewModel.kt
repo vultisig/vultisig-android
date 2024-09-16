@@ -21,19 +21,19 @@ internal data class SelectVaultTypeUiModel(
             title = UiText.StringResource(R.string.select_vault_type_fast_title),
             drawableResId = R.drawable.vault_type_fast,
             description = UiText.StringResource(R.string.select_vault_type_fast_description),
-            startTitle = UiText.StringResource(R.string.select_vault_type_start),
+            hasPair = false,
         ),
         VaultTypeUiModel(
             title = UiText.StringResource(R.string.select_vault_type_active_title),
             drawableResId = R.drawable.vault_type_active,
             description = UiText.StringResource(R.string.select_vault_type_active_description),
-            startTitle = UiText.StringResource(R.string.select_vault_type_start),
+            hasPair = true,
         ),
         VaultTypeUiModel(
             title = UiText.StringResource(R.string.select_vault_type_secure_title),
             drawableResId = R.drawable.vault_type_secure,
             description = UiText.StringResource(R.string.select_vault_type_secure_description),
-            startTitle = UiText.StringResource(R.string.select_vault_type_select),
+            hasPair = true,
         ),
     ),
 )
@@ -42,7 +42,7 @@ internal data class VaultTypeUiModel(
     val title: UiText,
     @DrawableRes val drawableResId: Int,
     val description: UiText,
-    val startTitle: UiText,
+    val hasPair: Boolean,
 )
 
 @HiltViewModel
@@ -93,7 +93,12 @@ internal class SelectVaultTypeViewModel @Inject constructor(
                 }
             }
         }
+    }
 
+    fun pair() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.JoinThroughQr(null))
+        }
     }
 
 }
