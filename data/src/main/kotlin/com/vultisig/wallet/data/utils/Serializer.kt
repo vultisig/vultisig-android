@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.api.utils
+package com.vultisig.wallet.data.utils
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
