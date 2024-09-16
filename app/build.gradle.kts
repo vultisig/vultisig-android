@@ -64,6 +64,11 @@ android {
     tasks.withType<Test> {
         useJUnitPlatform()
     }
+    lint {
+        abortOnError = true
+        absolutePaths = false
+        lintConfig = file("$rootDir/config/lint/lint.xml")
+    }
 }
 
 protobuf {
