@@ -126,8 +126,7 @@ class EvmHelper(
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
-        val firstKey = signatures.keys.firstOrNull()
-        val signature = signatures[firstKey]?.getSignatureWithRecoveryID()
+        val signature = signatures[key]?.getSignatureWithRecoveryID()
             ?: throw Exception("Signature not found")
         if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
             throw Exception("Signature verification failed")

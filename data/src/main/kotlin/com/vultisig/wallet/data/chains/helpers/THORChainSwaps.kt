@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
-import com.vultisig.wallet.data.common.toByteString
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -33,7 +32,7 @@ class THORChainSwaps(
             .setFromAsset(swapPayload.fromAsset)
             .setFromAddress(swapPayload.fromAddress)
             .setToAsset(swapPayload.toAsset)
-            .setToAddress("thor12a9rpf9u2ulwuezxkh6uas4au7xnde8umdua5t")
+            .setToAddress(swapPayload.toAddress)
             .setVaultAddress(swapPayload.vaultAddress)
             .setRouterAddress(swapPayload.routerAddress ?: "")
             .setFromAmount(swapPayload.fromAmount.toString())
@@ -57,26 +56,7 @@ class THORChainSwaps(
             .build()
         val inputData = input.toByteArray()
         val outputData = wallet.core.jni.THORChainSwap.buildSwap(inputData)
-        val outputDataString = ByteString.copyFrom(outputData).toStringUtf8()
-//        outputDataString.replace("thor12a9rpf9u2ulwuezxkh6uas4au7xnde8umdua5t",swapPayload.toAddress)
-     //   val replacedOutputData = ByteString.copyFromUtf8(outputDataString).toByteArray()
-        val output: THORChainSwap.SwapOutput =THORChainSwap.SwapOutput.parseFrom(outputData)
-            val a = output.
-                toBuilder()
-                    .mergeEthereum(
-                        SigningInput.newBuilder().mergeTransaction(
-                            Transaction.newBuilder().mergeTransfer(
-                                Transaction.Transfer.newBuilder()
-                                    .setData("=:MAYA.CACAO:maya152cwamus8j0q0c373v9ht3arzd2r9mzxfjy5c2:0/3/0".toByteString())
-                                    .build()
-                            ).build()
-                        ).build()
-                    )
-                    .build()
-            //        output.ethereum.transaction.transfer.data = "=:MAYA.CACAO:maya152cwamus8j0q0c373v9ht3arzd2r9mzxfjy5c2:0/3/0"
-     /*    output.toBuilder().apply {
-             ethereum.transaction.transfer.data = ByteString.copyFromUtf8("=:MAYA.CACAO:maya152cwamus8j0q0c373v9ht3arzd2r9mzxfjy5c2:0/3/0")
-        }.build()*/
+        val output = THORChainSwap.SwapOutput.parseFrom(outputData)
         when (swapPayload.fromAsset.chain) {
             THORChainSwap.Chain.THOR -> {
                 return THORCHainHelper(
@@ -84,7 +64,7 @@ class THORChainSwaps(
                     vaultHexChainCode
                 ).getSwapPreSignedInputData(
                     keysignPayload,
-                    a.cosmos.toBuilder()
+                    output.cosmos.toBuilder()
                 )
             }
 
@@ -93,7 +73,7 @@ class THORChainSwaps(
                     UtxoHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSigningInputData(
                     keysignPayload,
-                    a.bitcoin.toBuilder()
+                    output.bitcoin.toBuilder()
                 )
             }
 
@@ -102,7 +82,7 @@ class THORChainSwaps(
                     EvmHelper(keysignPayload.coin.coinType, vaultHexPublicKey, vaultHexChainCode)
                 return helper.getPreSignedInputData(
                     keysignPayload = keysignPayload,
-                    signingInput = a.ethereum,
+                    signingInput = output.ethereum,
                     nonceIncrement = nonceIncrement,
                 )
             }
@@ -111,7 +91,7 @@ class THORChainSwaps(
                 val helper = AtomHelper(vaultHexPublicKey, vaultHexChainCode)
                 return helper.getSwapPreSignedInputData(
                     keysignPayload = keysignPayload,
-                    input = a.cosmos.toBuilder()
+                    input = output.cosmos.toBuilder()
                 )
             }
 
