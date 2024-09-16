@@ -32,11 +32,16 @@ jobs:
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
         run: ./gradlew build
 
+      - name: Run Lint Checks
+        run: ./gradlew lint
       - name: Archive code analysis reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Lint-Reports
-          path: app/build/reports/lint-results-debug.html
+          path: |
+            app/build/reports/lint-results-debug.html
+            app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
 
       - name: Run tests
         env:
