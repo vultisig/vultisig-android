@@ -1,13 +1,15 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.utils.BigDecimalSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -30,8 +32,16 @@ internal interface CoinGeckoApi {
 
 internal class CoinGeckoApiImpl @Inject constructor(
     private val http: HttpClient,
-    private val gson: Gson,
+    private val json: Json,
 ) : CoinGeckoApi {
+
+    private val currencyToPriceMapSerializer = MapSerializer(
+        String.serializer(),
+        MapSerializer(
+            String.serializer(),
+            BigDecimalSerializer
+        )
+    )
 
     override suspend fun getCryptoPrices(
         priceProviderIds: List<String>,
@@ -39,27 +49,23 @@ internal class CoinGeckoApiImpl @Inject constructor(
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = priceProviderIds.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-
-        val type = object : TypeToken<Map<String, CurrencyToPrice>>() {}.type
-        return gson.fromJson(fetchPrices(priceProviderIdsParam, currenciesParam), type)
+        val prices = fetchPrices(priceProviderIdsParam, currenciesParam)
+        return json.decodeFromString(currencyToPriceMapSerializer, prices)
     }
 
     override suspend fun getContractsPrice(
         chain: Chain,
         contractAddresses: List<String>,
-        currencies: List<String>
+        currencies: List<String>,
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = contractAddresses.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-
-        val type = object : TypeToken<Map<String, CurrencyToPrice>>() {}.type
-        return gson.fromJson(
-            fetchContractPrices(
-                chain.coinGeckoAssetId,
-                priceProviderIdsParam,
-                currenciesParam,
-            ), type
+        val contractPrices = fetchContractPrices(
+            chain.coinGeckoAssetId,
+            priceProviderIdsParam,
+            currenciesParam,
         )
+        return json.decodeFromString(currencyToPriceMapSerializer, contractPrices)
     }
 
     private suspend fun fetchPrices(
