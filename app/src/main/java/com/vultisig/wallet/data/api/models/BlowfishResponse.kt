@@ -1,20 +1,24 @@
 package com.vultisig.wallet.data.api.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-internal data class BlowfishResponse (
-    @SerializedName("warnings")
+@Serializable
+internal data class BlowfishResponse(
+    @SerialName("warnings")
     val warnings: List<BlowfishWarning>?,
-    @SerializedName("aggregated")
+    @SerialName("aggregated")
     val aggregated: BlowfishAggregated?,
 )
 
-internal data class BlowfishAggregated (
-    @SerializedName("warnings")
+@Serializable
+internal data class BlowfishAggregated(
+    @SerialName("warnings")
     val warnings: List<BlowfishWarning>?,
 )
 
+@Serializable
 internal data class BlowfishWarning(
-    @SerializedName("message")
+    @SerialName("message")
     val message: String?,
 )

@@ -37,11 +37,14 @@ internal data class KeygenSetupTabUiModel(
     @DrawableRes val drawableResId: Int,
 )
 
-enum class VaultSetupType(val raw: Int) {
-    SECURE(2), // m to n devices
+enum class VaultSetupType(
+    val raw: Int,
+    val isFast: Boolean,
+) {
+    SECURE(2, false), // m to n devices
     // with vultiserver
-    FAST(3), // 1 to 1
-    ACTIVE(4), // 2 to 1
+    FAST(3, true), // 1 to 1
+    ACTIVE(4, true), // 2 to 1
     ;
 
     companion object {

@@ -45,6 +45,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -128,6 +129,9 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
 
+    private val isFastSign: Boolean
+        get() = setupType.isFast && email != null && password != null
+
     val localPartyID: String
         get() = vault.localPartyID
 
@@ -153,6 +157,17 @@ internal class KeygenFlowViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             setData(vaultId, context.applicationContext)
+        }
+
+        viewModelScope.launch {
+            if (setupType == VaultSetupType.FAST) {
+                uiState.map { it.selection }
+                    .collect {
+                        if (it.size == 2) {
+                            finishPeerDiscovery()
+                        }
+                    }
+            }
         }
     }
 
@@ -318,21 +333,23 @@ internal class KeygenFlowViewModel @Inject constructor(
             keyApi.keygenStart(serverAddress, sessionID, listOf(localPartyID))
             Timber.d("startSession: Session started")
 
-            if (email != null) {
-                if (password != null) {
-                    signerRepository.joinKeygen(
-                        JoinKeygenRequestJson(
-                            vaultName = vault.name,
-                            sessionId = sessionID,
-                            hexEncryptionKey = _encryptionKeyHex,
-                            hexChainCode = vault.hexChainCode,
-                            localPartyId = generateServerPartyId(),
-                            encryptionPassword = password,
-                            email = email,
+            if (isFastSign) {
+                if (email != null) {
+                    if (password != null) {
+                        signerRepository.joinKeygen(
+                            JoinKeygenRequestJson(
+                                vaultName = vault.name,
+                                sessionId = sessionID,
+                                hexEncryptionKey = _encryptionKeyHex,
+                                hexChainCode = vault.hexChainCode,
+                                localPartyId = generateServerPartyId(),
+                                encryptionPassword = password,
+                                email = email,
+                            )
                         )
-                    )
-                } else {
-                    error("Email is not null, but password is null, this should not happen")
+                    } else {
+                        error("Email is not null, but password is null, this should not happen")
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -353,14 +370,31 @@ internal class KeygenFlowViewModel @Inject constructor(
         uiState.update { it.copy(selection = uiState.value.selection.minus(participant)) }
     }
 
-    fun moveToState(nextState: KeygenFlowState) {
+    private fun moveToState(nextState: KeygenFlowState) {
         viewModelScope.launch {
             stopParticipantDiscovery()
             uiState.update { it.copy(currentState = nextState) }
         }
     }
 
-    suspend fun startKeygen() {
+    fun moveToKeygen() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                startKeygen()
+            }
+            moveToState(KeygenFlowState.KEYGEN)
+        }
+    }
+
+    fun finishPeerDiscovery() {
+        if (setupType == VaultSetupType.FAST) {
+            moveToKeygen()
+        } else {
+            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
+        }
+    }
+
+    private suspend fun startKeygen() {
         try {
             val keygenCommittee = uiState.value.selection
             keyApi.keygenStartWithCommittee(serverAddress, sessionID, keygenCommittee)

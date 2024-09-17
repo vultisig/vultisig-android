@@ -20,8 +20,8 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 34
-        versionCode = 21
-        versionName = "1.0.21"
+        versionCode = 23
+        versionName = "1.0.23"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -136,6 +136,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.work)
 
     // ktor
     implementation(libs.ktor.client.core)
@@ -161,6 +162,7 @@ dependencies {
     implementation(libs.rive)
     implementation(libs.play.update)
     implementation(libs.play.review)
+    implementation(libs.androidx.work.ktx)
 
     // test
     testImplementation(libs.junit)

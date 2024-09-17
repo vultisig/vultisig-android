@@ -12,13 +12,13 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 internal data class ChainSelectionUiModel(
@@ -36,6 +36,7 @@ internal class ChainSelectionViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val discoverToken: DiscoverTokenUseCase,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -66,21 +67,7 @@ internal class ChainSelectionViewModel @Inject constructor(
             vaultRepository.addTokenToVault(vaultId, updatedCoin)
 
             loadChains()
-            try {
-                tokenRepository
-                    .getTokensWithBalance(nativeToken.chain, address)
-                    .filter { it.id != nativeToken.id }
-                    .forEach { token ->
-                        val updatedToken = token.copy(
-                            address = address,
-                            hexPublicKey = derivedPublicKey
-                        )
-                        vaultRepository.addTokenToVault(vaultId, updatedToken)
-                    }
-            } catch (e: Exception) {
-                Timber.e(e)
-                // ignore
-            }
+            discoverToken(vaultId, nativeToken.chain.id)
         }
     }
 

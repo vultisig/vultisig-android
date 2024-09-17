@@ -1,16 +1,17 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
 import com.vultisig.wallet.data.api.models.BlowfishRequest
 import com.vultisig.wallet.data.api.models.BlowfishResponse
 import com.vultisig.wallet.data.models.Chain
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 private const val HEADER_API_TITLE = "X-Api-Version"
@@ -22,7 +23,7 @@ internal interface BlowfishApi {
 }
 
 internal class BlowfishApiImpl @Inject constructor(
-    private val gson: Gson,
+    private val json: Json,
     private val httpClient: HttpClient,
 ) : BlowfishApi {
     override suspend fun fetchBlowfishTransactions(
@@ -34,10 +35,10 @@ internal class BlowfishApiImpl @Inject constructor(
             .post("https://api.vultisig.com/blowfish/$chain/v0/$network/scan/transactions?language=en&method=eth_sendTransaction") {
                 contentType(ContentType.Application.Json)
                 header(HEADER_API_TITLE, BLOWFISH_API_VERSION)
-                setBody(gson.toJson(blowfishRequest))
+                setBody(blowfishRequest)
             }
 
-        return gson.fromJson(response.bodyAsText(), BlowfishResponse::class.java)
+        return response.body<BlowfishResponse>()
     }
 
     override suspend fun fetchBlowfishSolanaTransactions(
@@ -47,10 +48,10 @@ internal class BlowfishApiImpl @Inject constructor(
             .post("https://api.vultisig.com/blowfish/solana/v0/mainnet/scan/transactions?language=en"){
                 contentType(ContentType.Application.Json)
                 header(HEADER_API_TITLE, BLOWFISH_API_VERSION)
-                setBody(gson.toJson(blowfishRequest))
+                setBody(blowfishRequest)
             }
 
-        return gson.fromJson(response.bodyAsText(), BlowfishResponse::class.java)
+        return response.body<BlowfishResponse>()
     }
 }
 

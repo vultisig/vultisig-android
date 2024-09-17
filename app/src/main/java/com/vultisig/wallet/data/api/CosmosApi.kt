@@ -1,13 +1,13 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -28,29 +28,26 @@ internal interface CosmosApiFactory {
 }
 
 internal class CosmosApiFactoryImp @Inject constructor(
-    private val gson: Gson,
     private val httpClient: HttpClient,
 ) : CosmosApiFactory {
     override fun createCosmosApi(chain: Chain): CosmosApi {
         return when (chain) {
-            Chain.GaiaChain -> CosmosApiImp(gson, httpClient, "https://cosmos-rest.publicnode.com")
-            Chain.Kujira -> CosmosApiImp(gson, httpClient, "https://kujira-rest.publicnode.com")
-            Chain.Dydx -> CosmosApiImp(gson, httpClient, "https://dydx-rest.publicnode.com")
+            Chain.GaiaChain -> CosmosApiImp(httpClient, "https://cosmos-rest.publicnode.com")
+            Chain.Kujira -> CosmosApiImp(httpClient, "https://kujira-rest.publicnode.com")
+            Chain.Dydx -> CosmosApiImp(httpClient, "https://dydx-rest.publicnode.com")
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
     }
 }
 
 internal class CosmosApiImp @Inject constructor(
-    private val gson: Gson,
     private val httpClient: HttpClient,
     private val rpcEndpoint: String,
 ) : CosmosApi {
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response = httpClient
-            .get("$rpcEndpoint/cosmos/bank/v1beta1/balances/$address") {
-            }
-        val resp = gson.fromJson(response.bodyAsText(), CosmosBalanceResponse::class.java)
+            .get("$rpcEndpoint/cosmos/bank/v1beta1/balances/$address")
+        val resp = response.body<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
     }
 
@@ -58,14 +55,9 @@ internal class CosmosApiImp @Inject constructor(
         val response = httpClient
             .get("$rpcEndpoint/cosmos/auth/v1beta1/accounts/$address") {
             }
-        val responseBody = response.bodyAsText()
+        val responseBody = response.body<THORChainAccountJson>()
         Timber.d("getAccountNumber: $responseBody")
-        val jsonObject = gson.fromJson(responseBody, JsonObject::class.java)
-        val valueObject = jsonObject.get("account").asJsonObject
-
-        return valueObject?.let {
-            gson.fromJson(valueObject, THORChainAccountValue::class.java)
-        } ?: error("Error getting account")
+        return responseBody.account ?: error("Error getting account")
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
@@ -75,22 +67,15 @@ internal class CosmosApiImp @Inject constructor(
                     contentType(ContentType.Application.Json)
                     setBody(tx)
                 }
-            val responseRawString = response.bodyAsText()
-            val result = gson.fromJson(
-                responseRawString,
-                CosmosTransactionBroadcastResponse::class.java
-            )
-            result?.let {
-                val response = it.txResponse
-                if (response?.code == 0 || response?.code == 19) {
-                    return response.txHash
-                }
-                throw Exception("Error broadcasting transaction: $responseRawString")
+            val result = response.body<CosmosTransactionBroadcastResponse>()
+            val txResponse = result.txResponse
+            if (txResponse?.code == 0 || txResponse?.code == 19) {
+                return txResponse.txHash
             }
+            throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
         } catch (e: Exception) {
             Timber.tag("CosmosApiService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
-        return null
     }
 }
