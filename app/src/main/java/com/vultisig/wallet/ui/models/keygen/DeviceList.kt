@@ -32,9 +32,6 @@ import com.vultisig.wallet.ui.components.digitStringToWords
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.DeviceInfoItem
 import com.vultisig.wallet.ui.utils.Hint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun DeviceList(
@@ -50,10 +47,7 @@ internal fun DeviceList(
         items = items,
         isReshare = uiState.isReshareMode,
         onContinueClick = {
-            CoroutineScope(Dispatchers.IO).launch {
-                viewModel.startKeygen()
-                viewModel.moveToState(KeygenFlowState.KEYGEN)
-            }
+            viewModel.moveToKeygen()
         }
     )
 }
