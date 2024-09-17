@@ -51,7 +51,6 @@ internal class GeneratingKeyViewModel(
     private val sessionId: String,
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
-    private val gson: Gson,
     @SuppressLint("StaticFieldLeak") private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,

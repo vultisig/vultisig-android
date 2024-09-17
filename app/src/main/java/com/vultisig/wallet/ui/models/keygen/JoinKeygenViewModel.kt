@@ -67,7 +67,6 @@ enum class JoinKeygenState {
 internal class JoinKeygenViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
-    private val gson: Gson,
     private val protoBuf: ProtoBuf,
     private val mapKeygenMessageFromProto: KeygenMessageFromProtoMapper,
     private val mapReshareMessageFromProto: ReshareMessageFromProtoMapper,
@@ -121,7 +120,6 @@ internal class JoinKeygenViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             _encryptionKeyHex,
-            gson = gson,
             oldResharePrefix = _oldResharePrefix,
             navigator = navigator,
             saveVault = saveVault,

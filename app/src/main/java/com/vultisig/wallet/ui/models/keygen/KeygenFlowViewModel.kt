@@ -141,7 +141,6 @@ internal class KeygenFlowViewModel @Inject constructor(
             sessionID,
             _encryptionKeyHex,
             _oldResharePrefix,
-            gson,
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
