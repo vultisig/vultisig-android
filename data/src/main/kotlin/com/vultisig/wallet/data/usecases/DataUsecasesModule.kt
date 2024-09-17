@@ -16,4 +16,10 @@ internal interface DataUsecasesModule {
         impl: AesEncryption
     ): Encryption
 
+    @Binds
+    @Singleton
+    fun bindDiscoverTokenUseCase(
+        impl: DiscoverTokenUseCaseImpl
+    ): DiscoverTokenUseCase
+
 }
