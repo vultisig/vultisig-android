@@ -36,6 +36,6 @@ internal interface DataApiModule {
 
     @Binds
     fun bindKeygenApi(
-        impl: KeygenApiImp
-    ): KeygenApi
+        impl: KeyApiImp
+    ): KeyApi
 }

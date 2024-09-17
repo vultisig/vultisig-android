@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
+import com.vultisig.wallet.data.api.KeyApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.common.Endpoints
@@ -50,11 +51,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
-import java.net.HttpURLConnection
 import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
@@ -103,6 +100,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val signerRepository: VultiSignerRepository,
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
+    private val keyApi: KeyApi,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -149,6 +147,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            keyApi = keyApi,
             isReshareMode = uiState.value.isReshareMode,
         )
 
@@ -317,20 +316,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url("$serverAddress/$sessionID").post(
-                gson.toJson(listOf(localPartyID))
-                    .toRequestBody("application/json".toMediaType())
-            ).build()
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HttpURLConnection.HTTP_CREATED -> {
-                        Timber.d("startSession: Session started")
-                    }
-
-                    else -> Timber.d("startSession: Response code: " + response.code)
-                }
-            }
+            keyApi.keygenStart(serverAddress, sessionID, listOf(localPartyID))
+            Timber.d("startSession: Session started")
 
             if (email != null) {
                 if (password != null) {
@@ -374,21 +361,12 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    fun startKeygen() {
+    suspend fun startKeygen() {
         try {
             val keygenCommittee = uiState.value.selection
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val payload = gson.toJson(keygenCommittee)
-            val request = okhttp3.Request.Builder().url("$serverAddress/start/$sessionID")
-                .post(payload.toRequestBody("application/json".toMediaType())).build()
-            client.newCall(request).execute().use { response ->
-                if (response.code == HttpURLConnection.HTTP_OK) {
-                    Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
-                } else {
-                    Timber.tag("KeygenDiscoveryViewModel")
-                        .e("startKeygen: Response code: %s", response.code)
-                }
-            }
+            keyApi.keygenStartWithCommittee(serverAddress, sessionID, keygenCommittee)
+            Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
+
         } catch (e: Exception) {
             Timber.tag("KeygenDiscoveryViewModel").e("startKeygen: %s", e.stackTraceToString())
         }

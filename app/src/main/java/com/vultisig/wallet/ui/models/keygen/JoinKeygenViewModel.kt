@@ -21,7 +21,7 @@ import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.common.asUiText
-import com.vultisig.wallet.data.api.KeygenApi
+import com.vultisig.wallet.data.api.KeyApi
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.PeerDiscoveryPayload
@@ -49,9 +49,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
-import java.net.HttpURLConnection
 import java.net.Inet4Address
-import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -77,7 +75,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
-    private val keygenApi: KeygenApi,
+    private val keyApi: KeyApi,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -97,7 +95,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
     private var _isDiscoveryListenerRegistered = false
-    var operationMode =mutableStateOf(OperationMode.KEYGEN)
+    var operationMode = mutableStateOf(OperationMode.KEYGEN)
 
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveringSessionID)
@@ -130,6 +128,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            keyApi = keyApi,
             isReshareMode = operationMode.value.isReshare()
         )
 
@@ -279,7 +278,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 Timber.d("Joining ${operationMode.value.name}")
-                keygenApi.joinKeygen(_serverAddress, _sessionID, listOf(_localPartyID))
+                keyApi.keygenStart(_serverAddress, _sessionID, listOf(_localPartyID))
                 Timber.d("Join ${operationMode.value.name} ")
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
@@ -305,7 +304,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         return@withContext
                     }
                     // backoff 1s
-                    Thread.sleep(1000)
+                    delay(1000)
                 }
             }
         }
@@ -318,7 +317,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     @SuppressLint("BinaryOperationInTimber")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
-            this._keygenCommittee = keygenApi.checkKeygenCommittee(_serverAddress, _sessionID)
+            this._keygenCommittee = keyApi.keygenCheckCommittee(_serverAddress, _sessionID)
             if (this._keygenCommittee.contains(_localPartyID)) {
                 Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
                 return true

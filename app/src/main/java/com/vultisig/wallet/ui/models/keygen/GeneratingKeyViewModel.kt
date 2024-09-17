@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.data.api.KeygenVerifier
+import com.vultisig.wallet.data.api.KeyApi
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -57,6 +57,7 @@ internal class GeneratingKeyViewModel(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val keyApi: KeyApi,
     internal val isReshareMode: Boolean
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
@@ -158,17 +159,17 @@ internal class GeneratingKeyViewModel(
                 }
             }
             // here is the keygen process is done
-            val keygenVerifier = KeygenVerifier(
-                this.serverAddress,
-                this.sessionId,
-                vault.localPartyID,
-                this.keygenCommittee, gson = gson,
-            )
             withContext(Dispatchers.IO) {
-                keygenVerifier.markLocalPartyComplete()
-                if (!keygenVerifier.checkCompletedParties()) {
-                    throw Exception("another party failed to complete the keygen process")
+                keyApi.keygenMarkLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
+                Timber.d("Local party ${vault.localPartyID} marked as complete")
+                var repeate = true
+                while (repeate){
+                    val serverCompletedParties = keyApi.keygenGetCompletedParties(serverAddress, sessionId)
+                    repeate = !serverCompletedParties.containsAll(keygenCommittee)
+                    delay(1000)
                 }
+                Timber.d("All parties have completed the key generation process")
+
             }
         } catch (e: Exception) {
             this._messagePuller?.stop()
