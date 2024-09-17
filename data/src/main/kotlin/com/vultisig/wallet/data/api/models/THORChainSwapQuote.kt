@@ -1,56 +1,63 @@
+@file:UseSerializers(BigIntegerSerializer::class)
+
 package com.vultisig.wallet.data.api.models
 
-import com.google.gson.annotations.SerializedName
+import com.vultisig.wallet.data.utils.BigIntegerSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import java.math.BigInteger
 
+@Serializable
 data class THORChainSwapQuote(
-    @SerializedName("dust_threshold")
+    @SerialName("dust_threshold")
     val dustThreshold: String?,
-    @SerializedName("expected_amount_out")
+    @SerialName("expected_amount_out")
     val expectedAmountOut: String,
-    @SerializedName("expiry")
+    @SerialName("expiry")
     val expiry: BigInteger,
-    @SerializedName("fees")
+    @SerialName("fees")
     val fees: Fees,
-    @SerializedName("inbound_address")
+    @SerialName("inbound_address")
     val inboundAddress: String?,
-    @SerializedName("inbound_confirmation_blocks")
+    @SerialName("inbound_confirmation_blocks")
     val inboundConfirmationBlocks: BigInteger?,
-    @SerializedName("inbound_confirmation_seconds")
+    @SerialName("inbound_confirmation_seconds")
     val inboundConfirmationSeconds: BigInteger?,
-    @SerializedName("max_streaming_quantity")
+    @SerialName("max_streaming_quantity")
     val maxStreamingQuantity: Int,
-    @SerializedName("memo")
+    @SerialName("memo")
     val memo: String?,
-    @SerializedName("notes")
+    @SerialName("notes")
     val notes: String,
-    @SerializedName("outbound_delay_blocks")
+    @SerialName("outbound_delay_blocks")
     val outboundDelayBlocks: BigInteger,
-    @SerializedName("outbound_delay_seconds")
+    @SerialName("outbound_delay_seconds")
     val outboundDelaySeconds: BigInteger,
-    @SerializedName("recommended_min_amount_in")
+    @SerialName("recommended_min_amount_in")
     val recommendedMinAmountIn: BigInteger,
-    @SerializedName("slippage_bps")
+    @SerialName("slippage_bps")
     val slippageBps: BigInteger,
-    @SerializedName("streaming_swap_blocks")
+    @SerialName("streaming_swap_blocks")
     val streamingSwapBlocks: BigInteger,
-    @SerializedName("total_swap_seconds")
+    @SerialName("total_swap_seconds")
     val totalSwapSeconds: Long?,
-    @SerializedName("warning")
+    @SerialName("warning")
     val warning: String,
-    @SerializedName("router")
+    @SerialName("router")
     val router: String?,
-    @SerializedName("error")
+    @SerialName("error")
     val error: String?,
 )
 
+@Serializable
 data class Fees(
-    @SerializedName("affiliate")
+    @SerialName("affiliate")
     val affiliate: String,
-    @SerializedName("asset")
+    @SerialName("asset")
     val asset: String,
-    @SerializedName("outbound")
+    @SerialName("outbound")
     val outbound: String,
-    @SerializedName("total")
+    @SerialName("total")
     val total: String,
 )
