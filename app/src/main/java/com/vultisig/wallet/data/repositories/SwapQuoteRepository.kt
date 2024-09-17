@@ -237,7 +237,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
-        if (dstToken.chain == Chain.MayaChain) {
+        if (srcToken.chain in listOf(
+                Chain.Ethereum,
+                Chain.Arbitrum
+            ) && dstToken.chain == Chain.MayaChain
+        ) {
             return null
         }
         return srcToken.swapProviders.intersect(dstToken.swapProviders).firstOrNull()
