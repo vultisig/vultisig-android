@@ -1,15 +1,18 @@
 package com.vultisig.wallet.data.api.models.cosmos
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CosmosTransactionBroadcastResponse(
-    @SerializedName("tx_response")
+    @SerialName("tx_response")
     val txResponse: CosmosTransactionBroadcastTx?,
 )
 
+@Serializable
 data class CosmosTransactionBroadcastTx(
-    @SerializedName("txhash")
+    @SerialName("txhash")
     val txHash: String?,
-    @SerializedName("code")
+    @SerialName("code")
     val code: Int?,
 )

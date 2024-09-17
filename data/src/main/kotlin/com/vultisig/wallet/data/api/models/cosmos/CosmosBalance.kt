@@ -1,10 +1,12 @@
 package com.vultisig.wallet.data.api.models.cosmos
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CosmosBalance(
-    @SerializedName("denom")
+    @SerialName("denom")
     val denom: String,
-    @SerializedName("amount")
+    @SerialName("amount")
     val amount: String
 )
