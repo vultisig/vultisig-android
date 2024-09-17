@@ -8,7 +8,7 @@ import kotlinx.serialization.encoding.Encoder
 import java.math.BigDecimal
 import java.math.BigInteger
 
-internal object BigDecimalSerializer : KSerializer<BigDecimal> {
+object BigDecimalSerializer : KSerializer<BigDecimal> {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigDecimal",
         PrimitiveKind.DOUBLE
