@@ -6,7 +6,6 @@ import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
@@ -56,7 +55,6 @@ internal class GeneratingKeyViewModel(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
-    private val keygenApi: KeygenApi,
     private val sessionApi: SessionApi,
     internal val isReshareMode: Boolean
 ) : ViewModel(){
@@ -165,11 +163,11 @@ internal class GeneratingKeyViewModel(
             }
             // here is the keygen process is done
             withContext(Dispatchers.IO) {
-                keygenApi.markLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
+                sessionApi.markLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
                 Timber.d("Local party ${vault.localPartyID} marked as complete")
                 var counter = 0
                 while (counter < 60){
-                    val serverCompletedParties = keygenApi.getCompletedParties(serverAddress, sessionId)
+                    val serverCompletedParties = sessionApi.getCompletedParties(serverAddress, sessionId)
                     if (!serverCompletedParties.containsAll(keygenCommittee)) break
                     delay(1000)
                     counter++

@@ -9,7 +9,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -70,13 +69,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import vultisig.keysign.v1.KeysignMessage
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -461,18 +455,8 @@ internal class JoinKeysignViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 try {
-                    val serverUrl = URL("${_serverAddress}/$_sessionID")
-                    Timber.tag("JoinKeysignViewModel").d("Joining keysign at $serverUrl")
-                    val payload = listOf(_localPartyID)
-
-                    val client = OkHttpClient().newBuilder().retryOnConnectionFailure(true).build()
-                    val request = okhttp3.Request.Builder().method(
-                        "POST", gson.toJson(payload).toRequestBody("application/json".toMediaType())
-                    ).url(serverUrl).build()
-                    client.newCall(request).execute().use {
-                        Timber.tag("JoinKeysignViewModel")
-                            .d("Join keysign: Response code: %s", it.code)
-                    }
+                    Timber.tag("JoinKeysignViewModel").d("Joining keysign")
+                    sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: Exception) {
@@ -518,36 +502,17 @@ internal class JoinKeysignViewModel @Inject constructor(
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-    private fun checkKeygenStarted(): Boolean {
+    private suspend fun checkKeygenStarted(): Boolean {
         try {
-            val serverURL = "$_serverAddress/start/$_sessionID"
-            Timber.tag("JoinKeysignViewModel").d("Checking keysign start at %s", serverURL)
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url(serverURL).get().build()
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HttpURLConnection.HTTP_OK -> {
-                        Timber.d("Keysign started")
-                        response.body?.let {
-                            val result = it.string()
-                            val tokenType = object : TypeToken<List<String>>() {}.type
-                            this._keysignCommittee = gson.fromJson(result, tokenType)
-                            Timber.d("Keysign committee: $_keysignCommittee")
-                            Timber.d("local party: $_localPartyID")
-                            if (this._keysignCommittee.contains(_localPartyID)) {
-                                this.messagesToSign = SigningHelper.getKeysignMessages(
-                                    payload = keysignPayload!!,
-                                    vault = _currentVault,
-                                )
-                                return true
-                            }
-                        }
-                    }
-
-                    else -> {
-                        Timber.d("Failed to check start keysign: Response code: ${response.code}")
-                    }
-                }
+            this._keysignCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
+            Timber.d("Keysign committee: $_keysignCommittee")
+            Timber.d("local party: $_localPartyID")
+            if (this._keysignCommittee.contains(_localPartyID)) {
+                this.messagesToSign = SigningHelper.getKeysignMessages(
+                    payload = keysignPayload!!,
+                    vault = _currentVault,
+                )
+                return true
             }
         } catch (e: Exception) {
             Timber.e(
@@ -558,6 +523,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
         return false
     }
+
     fun enableNavigationToHome() {
         isNavigateToHome = true
     }

@@ -35,11 +35,6 @@ internal interface DataApiModule {
     ): PolkadotApi
 
     @Binds
-    fun bindKeygenApi(
-        impl: KeygenApiImpl
-    ): KeygenApi
-
-    @Binds
     fun bindSessionApi(
         impl: SessionApiImpl
     ): SessionApi

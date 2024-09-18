@@ -63,9 +63,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
@@ -80,7 +77,6 @@ import vultisig.keysign.v1.THORChainSpecific
 import vultisig.keysign.v1.THORChainSwapPayload
 import vultisig.keysign.v1.UTXOSpecific
 import vultisig.keysign.v1.UtxoInfo
-import java.net.HttpURLConnection
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
@@ -426,22 +422,9 @@ internal class KeysignFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url("$serverAddr/$sessionID").post(
-                gson.toJson(listOf(localPartyID))
-                    .toRequestBody("application/json".toMediaType())
-            ).build()
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HttpURLConnection.HTTP_CREATED -> {
-                        Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
-                    }
+            sessionApi.startSession(serverAddr, sessionID, listOf(localPartyID))
 
-                    else -> Timber.tag("KeysignFlowViewModel").d(
-                        "startSession: Response code: ${response.code}"
-                    )
-                }
-            }
+            Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
 
             if (password != null) {
                 val vault = _currentVault!!
@@ -519,18 +502,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 val keygenCommittee = selection.value ?: emptyList()
-                val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-                val payload = gson.toJson(keygenCommittee)
-                val request = okhttp3.Request.Builder().url("$_serverAddress/start/$_sessionID")
-                    .post(payload.toRequestBody("application/json".toMediaType())).build()
-                client.newCall(request).execute().use { response ->
-                    if (response.code == HttpURLConnection.HTTP_OK) {
-                        Timber.d("Keysign started")
-                    } else {
-                        Timber.e("Fail to start keysign: Response code: ${response.code}")
-
-                    }
-                }
+                sessionApi.startWithCommittee(_serverAddress, _sessionID, keygenCommittee)
+                Timber.d("Keysign started")
             } catch (e: Exception) {
                 Timber.e("Failed to start keysign: ${e.stackTraceToString()}")
             }
