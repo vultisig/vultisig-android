@@ -21,7 +21,7 @@ object BigDecimalSerializer : KSerializer<BigDecimal> {
         BigDecimal.valueOf(decoder.decodeDouble())
 }
 
-internal object BigIntegerSerializer : KSerializer<BigInteger> {
+object BigIntegerSerializer : KSerializer<BigInteger> {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigInteger",
         PrimitiveKind.DOUBLE
