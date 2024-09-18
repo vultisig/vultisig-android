@@ -131,8 +131,13 @@ internal class DepositFormViewModel @Inject constructor(
     }
 
     fun validateOperatorFee() {
-        val errorText = validateTokenAmount(operatorFeeFieldState.text.toString())
-        state.update { it.copy(operatorFeeError = errorText) }
+        val text = operatorFeeFieldState.text.toString()
+        if (text.isNotEmpty()) {
+            val errorText = validateBasisPoints(text.toIntOrNull())
+            state.update {
+                it.copy(operatorFeeError = errorText)
+            }
+        }
     }
 
     fun validateCustomMemo() {
@@ -240,13 +245,9 @@ internal class DepositFormViewModel @Inject constructor(
                 .movePointRight(selectedToken.decimal)
                 .toBigInteger()
 
-        val operatorFeeTokenValue = operatorFeeAmount?.let {
-            TokenValue(
-                value = it.movePointRight(selectedToken.decimal)
-                    .toBigInteger(),
-                token = selectedToken,
-            )
-        }
+        val operatorFeeValue = operatorFeeAmount
+            ?.movePointRight(2)
+            ?.toInt()
 
         val srcAddress = selectedToken.address
 
@@ -258,7 +259,7 @@ internal class DepositFormViewModel @Inject constructor(
         val memo = DepositMemo.Bond(
             nodeAddress = nodeAddress,
             providerAddress = provider,
-            operatorFee = operatorFeeTokenValue,
+            operatorFee = operatorFeeValue,
         )
 
         val specific = blockChainSpecificRepository

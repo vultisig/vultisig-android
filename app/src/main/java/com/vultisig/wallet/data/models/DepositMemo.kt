@@ -7,7 +7,7 @@ internal sealed class DepositMemo {
     data class Bond(
         val nodeAddress: String,
         val providerAddress: String?,
-        val operatorFee: TokenValue?,
+        val operatorFee: Int?,
     ) : DepositMemo() {
 
         override fun toString(): String = buildString {
@@ -19,7 +19,7 @@ internal sealed class DepositMemo {
             }
             if (operatorFee != null) {
                 append(":")
-                append(operatorFee.value)
+                append(operatorFee)
             }
         }
 
