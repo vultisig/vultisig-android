@@ -5,10 +5,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.data.api.KeygenVerifier
+import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -51,12 +50,12 @@ internal class GeneratingKeyViewModel(
     private val sessionId: String,
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
-    private val gson: Gson,
     @SuppressLint("StaticFieldLeak") private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val keygenApi: KeygenApi,
     internal val isReshareMode: Boolean
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
@@ -158,17 +157,18 @@ internal class GeneratingKeyViewModel(
                 }
             }
             // here is the keygen process is done
-            val keygenVerifier = KeygenVerifier(
-                this.serverAddress,
-                this.sessionId,
-                vault.localPartyID,
-                this.keygenCommittee, gson = gson,
-            )
             withContext(Dispatchers.IO) {
-                keygenVerifier.markLocalPartyComplete()
-                if (!keygenVerifier.checkCompletedParties()) {
-                    throw Exception("another party failed to complete the keygen process")
+                keygenApi.markLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
+                Timber.d("Local party ${vault.localPartyID} marked as complete")
+                var counter = 0
+                while (counter < 60){
+                    val serverCompletedParties = keygenApi.getCompletedParties(serverAddress, sessionId)
+                    if (!serverCompletedParties.containsAll(keygenCommittee)) break
+                    delay(1000)
+                    counter++
                 }
+                Timber.d("All parties have completed the key generation process")
+
             }
         } catch (e: Exception) {
             this._messagePuller?.stop()
