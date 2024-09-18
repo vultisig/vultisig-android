@@ -33,14 +33,7 @@ internal interface CoinGeckoApi {
 internal class CoinGeckoApiImpl @Inject constructor(
     private val http: HttpClient,
 ) : CoinGeckoApi {
-
-    private val currencyToPriceMapSerializer = MapSerializer(
-        String.serializer(),
-        MapSerializer(
-            String.serializer(),
-            BigDecimalSerializer
-        )
-    )
+    
 
     override suspend fun getCryptoPrices(
         priceProviderIds: List<String>,
