@@ -23,6 +23,8 @@ interface SessionApi {
     suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message)
     suspend fun getTssMessages(serverUrl: String): List<Message>
     suspend fun deleteTssMessage(serverUrl: String, messageId: String?)
+    suspend fun markLocalPartyKeysignComplete(serverUrl: String, messageId: String, sig: tss.KeysignResponse)
+    suspend fun checkKeysignComplete(serverUrl: String, messageId: String): tss.KeysignResponse
 }
 
 internal class SessionApiImpl @Inject constructor(
@@ -101,9 +103,26 @@ internal class SessionApiImpl @Inject constructor(
     override suspend fun deleteTssMessage(url: String, messageId: String?) {
         httpClient.delete(url){
             messageId?.let {
-                header(MESSAGE_ID_HEADER_TITLE, messageId)
+                header(MESSAGE_ID_HEADER_TITLE, it)
             }
         }.throwIfUnsuccessful()
+    }
+
+    override suspend fun markLocalPartyKeysignComplete(
+        serverUrl: String,
+        messageId: String,
+        sig: tss.KeysignResponse
+    ) {
+        httpClient.post(serverUrl) {
+            header(MESSAGE_ID_HEADER_TITLE, messageId)
+            setBody(json.encodeToString(sig))
+        }.throwIfUnsuccessful()
+    }
+
+    override suspend fun checkKeysignComplete(serverUrl: String, messageId: String): tss.KeysignResponse {
+        return httpClient.get(serverUrl) {
+            header(MESSAGE_ID_HEADER_TITLE, messageId)
+        }.throwIfUnsuccessful().body<tss.KeysignResponse>()
     }
 
     companion object {

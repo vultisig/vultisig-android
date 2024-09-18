@@ -147,7 +147,7 @@ internal class KeysignViewModel(
     }
 
     private suspend fun signMessageWithRetry(service: ServiceImpl, message: String, attempt: Int) {
-        val keysignVerify = KeysignVerify(serverAddress, sessionId, gson)
+        val keysignVerify = KeysignVerify(serverAddress, sessionId, sessionApi, gson)
         try {
             Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()
