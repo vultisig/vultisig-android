@@ -129,7 +129,7 @@ internal fun KeygenPeerDiscoveryScreen(
 }
 
 @Composable
-private fun FastPeerDiscovery() {
+internal fun FastPeerDiscovery() {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,

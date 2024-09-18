@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.keysign
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,12 +20,13 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
-import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
+import com.vultisig.wallet.ui.screens.keygen.FastPeerDiscovery
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import timber.log.Timber
 
 @Composable
@@ -69,6 +69,8 @@ internal fun KeysignPeerDiscovery(
     }
 
     KeysignPeerDiscovery(
+        isLookingForVultiServer = viewModel.isFastSign &&
+                Utils.getThreshold(vault.signers.size) == 2,
         selectionState = selectionState,
         participants = participants,
         keysignMessage = viewModel.keysignMessage.value,
@@ -85,6 +87,7 @@ internal fun KeysignPeerDiscovery(
 
 @Composable
 internal fun KeysignPeerDiscovery(
+    isLookingForVultiServer: Boolean,
     selectionState: List<String>,
     participants: List<String>,
     keysignMessage: String,
@@ -94,47 +97,57 @@ internal fun KeysignPeerDiscovery(
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
 ) {
-    Scaffold(bottomBar = {
-        MultiColorButton(
-            text = stringResource(R.string.keysign_peer_discovery_start),
-            backgroundColor = Theme.colors.turquoise600Main,
-            textColor = Theme.colors.oxfordBlue600Main,
-            minHeight = 45.dp,
-            textStyle = Theme.montserrat.subtitle1,
-            disabled = selectionState.size < 2,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 16.dp,
-                    horizontal = 16.dp,
-                ),
-            onClick = onStopParticipantDiscovery,
-        )
-    }) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .background(Theme.colors.oxfordBlue800)
-                .fillMaxSize()
-                .padding(it)
-        ) {
-            PeerDiscoveryView(
-                selectionState = selectionState,
-                participants = participants,
-                keygenPayloadState = keysignMessage,
-                networkPromptOption = networkPromptOption,
-                onChangeNetwork = onChangeNetwork,
-                onAddParticipant = onAddParticipant,
-                onRemoveParticipant = onRemoveParticipant,
-            )
+    Scaffold(
+        containerColor = Theme.colors.oxfordBlue800,
+        content = {
+            if (isLookingForVultiServer) {
+                FastPeerDiscovery()
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it)
+                ) {
+                    PeerDiscoveryView(
+                        selectionState = selectionState,
+                        participants = participants,
+                        keygenPayloadState = keysignMessage,
+                        networkPromptOption = networkPromptOption,
+                        onChangeNetwork = onChangeNetwork,
+                        onAddParticipant = onAddParticipant,
+                        onRemoveParticipant = onRemoveParticipant,
+                    )
+                }
+            }
+        },
+        bottomBar = {
+            if (!isLookingForVultiServer) {
+                MultiColorButton(
+                    text = stringResource(R.string.keysign_peer_discovery_start),
+                    backgroundColor = Theme.colors.turquoise600Main,
+                    textColor = Theme.colors.oxfordBlue600Main,
+                    minHeight = 45.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    disabled = selectionState.size < 2,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            vertical = 16.dp,
+                            horizontal = 16.dp,
+                        ),
+                    onClick = onStopParticipantDiscovery,
+                )
+            }
         }
-    }
+    )
 }
 
 @Preview
 @Composable
 private fun KeysignPeerDiscoveryPreview() {
     KeysignPeerDiscovery(
+        isLookingForVultiServer = true,
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keysignMessage = "keysignMessage",
