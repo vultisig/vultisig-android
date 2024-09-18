@@ -13,7 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
-import com.vultisig.wallet.data.api.KeyApi
+import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.common.Endpoints
@@ -101,7 +101,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val signerRepository: VultiSignerRepository,
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
-    private val keyApi: KeyApi,
+    private val keygenApi: KeygenApi,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -150,7 +150,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
-            keyApi = keyApi,
+            keygenApi = keygenApi,
             isReshareMode = uiState.value.isReshareMode,
         )
 
@@ -330,7 +330,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            keyApi.keygenStart(serverAddress, sessionID, listOf(localPartyID))
+            keygenApi.start(serverAddress, sessionID, listOf(localPartyID))
             Timber.d("startSession: Session started")
 
             if (isFastSign) {
@@ -397,7 +397,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private suspend fun startKeygen() {
         try {
             val keygenCommittee = uiState.value.selection
-            keyApi.keygenStartWithCommittee(serverAddress, sessionID, keygenCommittee)
+            keygenApi.startWithCommittee(serverAddress, sessionID, keygenCommittee)
             Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
 
         } catch (e: Exception) {

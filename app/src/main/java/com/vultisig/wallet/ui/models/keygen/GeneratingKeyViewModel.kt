@@ -5,10 +5,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.data.api.KeyApi
+import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -56,7 +55,7 @@ internal class GeneratingKeyViewModel(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
-    private val keyApi: KeyApi,
+    private val keygenApi: KeygenApi,
     internal val isReshareMode: Boolean
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
@@ -159,13 +158,12 @@ internal class GeneratingKeyViewModel(
             }
             // here is the keygen process is done
             withContext(Dispatchers.IO) {
-                keyApi.keygenMarkLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
+                keygenApi.markLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
                 Timber.d("Local party ${vault.localPartyID} marked as complete")
-                var repeate = true
                 var counter = 0
-                while (repeate && counter < 60){
-                    val serverCompletedParties = keyApi.keygenGetCompletedParties(serverAddress, sessionId)
-                    repeate = !serverCompletedParties.containsAll(keygenCommittee)
+                while (counter < 60){
+                    val serverCompletedParties = keygenApi.getCompletedParties(serverAddress, sessionId)
+                    if (!serverCompletedParties.containsAll(keygenCommittee)) break
                     delay(1000)
                     counter++
                 }

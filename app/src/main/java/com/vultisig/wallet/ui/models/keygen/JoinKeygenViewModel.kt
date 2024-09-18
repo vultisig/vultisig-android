@@ -13,7 +13,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -21,7 +20,7 @@ import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.common.asUiText
-import com.vultisig.wallet.data.api.KeyApi
+import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.PeerDiscoveryPayload
@@ -74,7 +73,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
-    private val keyApi: KeyApi,
+    private val keygenApi: KeygenApi,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -126,7 +125,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
-            keyApi = keyApi,
+            keygenApi = keygenApi,
             isReshareMode = operationMode.value.isReshare()
         )
 
@@ -276,7 +275,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 Timber.d("Joining ${operationMode.value.name}")
-                keyApi.keygenStart(_serverAddress, _sessionID, listOf(_localPartyID))
+                keygenApi.start(_serverAddress, _sessionID, listOf(_localPartyID))
                 Timber.d("Join ${operationMode.value.name} ")
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
@@ -315,7 +314,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     @SuppressLint("BinaryOperationInTimber")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
-            this._keygenCommittee = keyApi.keygenCheckCommittee(_serverAddress, _sessionID)
+            this._keygenCommittee = keygenApi.checkCommittee(_serverAddress, _sessionID)
             if (this._keygenCommittee.contains(_localPartyID)) {
                 Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
                 return true
