@@ -11,13 +11,6 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.chains.helpers.EvmHelper
-import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
-import com.vultisig.wallet.data.chains.helpers.SigningHelper
-import com.vultisig.wallet.data.common.DeepLinkHelper
-import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -25,6 +18,11 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
+import com.vultisig.wallet.data.chains.helpers.SigningHelper
+import com.vultisig.wallet.data.common.DeepLinkHelper
+import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
@@ -44,9 +42,9 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
+import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -55,6 +53,8 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers

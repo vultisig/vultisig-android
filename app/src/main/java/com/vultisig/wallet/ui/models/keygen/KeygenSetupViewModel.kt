@@ -3,8 +3,8 @@ package com.vultisig.wallet.ui.models.keygen
 import androidx.annotation.DrawableRes
 import androidx.lifecycle.ViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.asUiText
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update

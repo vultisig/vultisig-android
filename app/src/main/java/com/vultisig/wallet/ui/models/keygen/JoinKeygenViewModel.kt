@@ -14,13 +14,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.common.asUiText
-import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.PeerDiscoveryPayload
@@ -35,6 +32,9 @@ import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.decodeBase64Bytes
