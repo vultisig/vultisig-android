@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -9,7 +8,6 @@ class KeysignVerify(
     serverAddress: String,
     sessionId: String,
     private val sessionApi: SessionApi,
-    private val gson: Gson,
 ) {
     private val serverURL = "$serverAddress/complete/$sessionId/keysign"
     suspend fun markLocalPartyKeysignComplete(messageId: String, sig: tss.KeysignResponse) {

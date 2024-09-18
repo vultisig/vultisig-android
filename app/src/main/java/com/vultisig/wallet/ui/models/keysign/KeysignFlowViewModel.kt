@@ -14,7 +14,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -89,7 +88,6 @@ enum class KeysignFlowState {
 internal class KeysignFlowViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val vultisigRelay: VultisigRelay,
-    private val gson: Gson,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
@@ -144,7 +142,6 @@ internal class KeysignFlowViewModel @Inject constructor(
             messagesToSign = messagesToSign,
             keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
-            gson = gson,
             thorChainApi = thorChainApi,
             blockChairApi = blockChairApi,
             evmApiFactory = evmApiFactory,

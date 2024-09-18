@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
@@ -128,7 +127,6 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
 
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
-    private val gson: Gson,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
@@ -174,7 +172,6 @@ internal class JoinKeysignViewModel @Inject constructor(
             messagesToSign = messagesToSign,
             keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
-            gson = gson,
             thorChainApi = thorChainApi,
             blockChairApi = blockChairApi,
             evmApiFactory = evmApiFactory,

@@ -4,7 +4,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.data.chains.helpers.AtomHelper
 import com.vultisig.wallet.data.chains.helpers.DydxHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -72,7 +71,6 @@ internal class KeysignViewModel(
     private val messagesToSign: List<String>,
     private val keyType: TssKeyType,
     private val keysignPayload: KeysignPayload,
-    private val gson: Gson,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
@@ -147,7 +145,7 @@ internal class KeysignViewModel(
     }
 
     private suspend fun signMessageWithRetry(service: ServiceImpl, message: String, attempt: Int) {
-        val keysignVerify = KeysignVerify(serverAddress, sessionId, sessionApi, gson)
+        val keysignVerify = KeysignVerify(serverAddress, sessionId, sessionApi)
         try {
             Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()
