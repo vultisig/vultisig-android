@@ -135,7 +135,7 @@ internal class KeysignViewModel(
                 Timber.d("signing message: $message")
                 signMessageWithRetry(this.tssInstance!!, message, 1)
             }
-//            broadcastTransaction()
+            broadcastTransaction()
             currentState.value = KeysignState.KeysignFinished
             isNavigateToHome = true
             this._messagePuller?.stop()
