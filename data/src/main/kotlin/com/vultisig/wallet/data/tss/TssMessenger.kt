@@ -1,18 +1,19 @@
 package com.vultisig.wallet.data.tss
 
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.encrypt
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class TssMessenger(
     serverAddress: String,
     private val sessionID: String,
     private val encryptionHex: String,
-
+    private val sessionApi: SessionApi,
+    private val coroutineScope: CoroutineScope
     ) : tss.Messenger {
     private val serverUrl = "$serverAddress/message/$sessionID"
     private var messageID: String? = null
@@ -26,29 +27,18 @@ class TssMessenger(
         val message = Message(
             sessionID, from, listOf(to), encryptedBody, body.md5(), counter++
         )
-        for (i in 1..3) {
-            try {
-                val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-                val request = okhttp3.Request.Builder().url(serverUrl)
-                    .post(message.toJson().toRequestBody("application/json".toMediaType()))
-                this.messageID?.let {
-                    request.addHeader("message_id", it)
-                }
+        coroutineScope.launch {
+            for (i in 1..3) {
+                try {
+                    sessionApi.sendTssMessage(serverUrl, messageID, message)
+                    Timber.tag("TssMessenger").d("send message success")
+                    // when it reach to this point , it means the message was sent successfully
+                    break
+                } catch (e: Exception) {
+                    Timber.tag("TssMessenger")
+                        .e("fail to send message: ${e.stackTraceToString()} , attempt: $i")
 
-                Timber.tag("TssMessenger")
-                    .d("sending message from: $from to: $to, hash: ${message.hash}")
-                client.newCall(request.build()).execute().use { response ->
-                    if (response.code == 201) {
-                        Timber.tag("TssMessenger").d("send message success")
-                        return
-                    }
                 }
-                // when it reach to this point , it means the message was sent successfully
-                break
-            } catch (e: Exception) {
-                Timber.tag("TssMessenger")
-                    .e("fail to send message: ${e.stackTraceToString()} , attempt: $i")
-
             }
         }
     }

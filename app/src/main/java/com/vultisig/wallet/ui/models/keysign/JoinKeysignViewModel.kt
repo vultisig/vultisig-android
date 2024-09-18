@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
@@ -59,6 +60,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -67,6 +69,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -143,6 +146,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
+    private val sessionApi: SessionApi,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -186,6 +190,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             solanaApi = solanaApi,
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
+            sessionApi = sessionApi,
             navigator = navigator,
         )
 
@@ -507,7 +512,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         return@withContext
                     }
                     // backoff 1s
-                    Thread.sleep(1000)
+                    delay(1000)
                 }
             }
         }

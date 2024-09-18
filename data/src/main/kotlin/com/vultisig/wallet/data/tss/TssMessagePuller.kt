@@ -3,13 +3,16 @@ package com.vultisig.wallet.data.tss
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.decrypt
 import com.vultisig.wallet.data.mediator.Message
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import timber.log.Timber
@@ -21,6 +24,7 @@ class TssMessagePuller(
     private val serverAddress: String,
     private val localPartyKey: String,
     private val sessionID: String,
+    private val sessionApi: SessionApi,
 ) {
     private val serverURL = "$serverAddress/message/$sessionID/$localPartyKey"
     private var job: Job? = null
@@ -34,48 +38,28 @@ class TssMessagePuller(
         this.job = GlobalScope.launch {
             while (isActive) {
                 getMessagesFromServer(messageID)
-                Thread.sleep(1000)
+                delay(1000)
             }
         }
     }
 
-    private fun getMessagesFromServer(messageID: String?) {
+    private suspend fun getMessagesFromServer(messageID: String?) {
         try {
-            val client = OkHttpClient
-                .Builder()
-                .retryOnConnectionFailure(true)
-                .build()
-            val request = okhttp3.Request.Builder()
-                .url(serverURL)
-                .get()
-                .addHeader("Content-Type", "application/json")
-                .build()
-
-            client.newCall(request).execute().use { response ->
-                if (response.code == 200) {
-                    response.body?.let { it ->
-                        val messages = Gson().fromJson(it.string(), Array<Message>::class.java)
-                        for (msg in messages.sortedBy { it.sequenceNo }) {
-                            val key = messageID?.let { "$sessionID-$localPartyKey-$messageID-${msg.hash}" }
-                                ?: run { "$sessionID-$localPartyKey-${msg.hash}" }
-                            // when the message is already in the cache, skip it
-                            if (cache.getIfPresent(key) != null) {
-                                Timber.tag("TssMessagePuller")
-                                    .d("skip message: $key, applied already")
-                                continue
-                            }
-                            cache.put(key, msg)
-                            val decryptedBody = msg.body.decrypt(hexEncryptionKey)
-                            Timber.d("apply message to TSS: hash: " + msg.hash + ", messageID: " + key)
-                            this.service.applyData(decryptedBody)
-                            deleteMessageFromServer(msg.hash, messageID)
-                        }
-                    }
-                } else {
-                    Timber.tag("TssMessagePuller").e(
-                        "fail to get messages from server,${response.message} , ${response.code}"
-                    )
+            val messages = sessionApi.getTssMessages(serverURL)
+            for (msg in messages.sortedBy { it.sequenceNo }) {
+                val key = messageID?.let { "$sessionID-$localPartyKey-$messageID-${msg.hash}" }
+                    ?: run { "$sessionID-$localPartyKey-${msg.hash}" }
+                // when the message is already in the cache, skip it
+                if (cache.getIfPresent(key) != null) {
+                    Timber.tag("TssMessagePuller")
+                        .d("skip message: $key, applied already")
+                    continue
                 }
+                cache.put(key, msg)
+                val decryptedBody = msg.body.decrypt(hexEncryptionKey)
+                Timber.d("apply message to TSS: hash: " + msg.hash + ", messageID: " + key)
+                this.service.applyData(decryptedBody)
+                deleteMessageFromServer(msg.hash, messageID)
             }
         } catch (e: Exception) {
             Timber.tag("TssMessagePuller")
@@ -83,30 +67,10 @@ class TssMessagePuller(
         }
     }
 
-    private fun deleteMessageFromServer(msgHash: String, messageID: String?) {
-        val client = OkHttpClient
-            .Builder()
-            .retryOnConnectionFailure(true)
-            .build()
+    private suspend fun deleteMessageFromServer(msgHash: String, messageID: String?) {
         val urlString = "$serverAddress/message/$sessionID/$localPartyKey/$msgHash"
-        val request = okhttp3.Request.Builder()
-            .url(urlString)
-            .delete()
-        messageID?.let {
-            request.addHeader("message_id", it)
-        }
-        client.newCall(request.build()).enqueue(object : Callback {
-            override fun onFailure(call: okhttp3.Call, e: IOException) {
-                Timber.tag("TssMessagePuller")
-                    .e("fail to delete message: ${e.stackTraceToString()}")
-            }
-
-            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                if (response.code == 200) {
-                    Timber.tag("TssMessagePuller").d("delete message success")
-                }
-            }
-        })
+        sessionApi.deleteTssMessage(urlString, messageID)
+        Timber.tag("TssMessagePuller").d("delete message success")
     }
 
     fun stop() {

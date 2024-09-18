@@ -38,4 +38,9 @@ internal interface DataApiModule {
     fun bindKeygenApi(
         impl: KeygenApiImpl
     ): KeygenApi
+
+    @Binds
+    fun bindSessionApi(
+        impl: SessionApiImpl
+    ): SessionApi
 }

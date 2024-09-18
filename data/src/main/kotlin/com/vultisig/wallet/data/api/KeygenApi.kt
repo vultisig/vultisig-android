@@ -6,8 +6,6 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 interface KeygenApi {
@@ -19,7 +17,6 @@ interface KeygenApi {
 }
 
 internal class KeygenApiImpl @Inject constructor(
-    private val json: Json,
     private val httpClient: HttpClient,
 ) : KeygenApi {
     override suspend fun checkCommittee(

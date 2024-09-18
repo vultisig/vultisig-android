@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.KeygenApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
@@ -26,6 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
@@ -56,11 +58,12 @@ internal class GeneratingKeyViewModel(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val keygenApi: KeygenApi,
+    private val sessionApi: SessionApi,
     internal val isReshareMode: Boolean
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
-        TssMessenger(serverAddress, sessionId, encryptionKeyHex)
+        TssMessenger(serverAddress, sessionId, encryptionKeyHex, sessionApi = sessionApi, coroutineScope = viewModelScope)
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
     private var _messagePuller: TssMessagePuller? = null
@@ -116,7 +119,12 @@ internal class GeneratingKeyViewModel(
     private suspend fun keygenWithRetry(service: ServiceImpl, attempt: Int = 1) {
         try {
             _messagePuller = TssMessagePuller(
-                service, this.encryptionKeyHex, serverAddress, vault.localPartyID, sessionId
+                service,
+                this.encryptionKeyHex,
+                serverAddress,
+                vault.localPartyID,
+                sessionId,
+                sessionApi,
             )
             _messagePuller?.pullMessages(null)
             when (this.action) {

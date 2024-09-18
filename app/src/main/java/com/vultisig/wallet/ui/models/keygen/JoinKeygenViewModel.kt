@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.KeygenApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import java.net.Inet4Address
@@ -74,6 +76,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
     private val keygenApi: KeygenApi,
+    private val sessionApi: SessionApi,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -126,6 +129,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
             keygenApi = keygenApi,
+            sessionApi = sessionApi,
             isReshareMode = operationMode.value.isReshare()
         )
 
@@ -155,7 +159,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                 val payload = when (deepLink.getTssAction()) {
                     TssAction.KEYGEN -> {
-                        operationMode.value=OperationMode.KEYGEN
+                        operationMode.value = OperationMode.KEYGEN
                         PeerDiscoveryPayload.Keygen(
                             mapKeygenMessageFromProto(
                                 protoBuf.decodeFromByteArray<KeygenMessageProto>(contentBytes)
@@ -164,7 +168,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 }
 
                     TssAction.ReShare ->{
-                        operationMode.value=OperationMode.RESHARE
+                        operationMode.value = OperationMode.RESHARE
                         PeerDiscoveryPayload.Reshare(
                             mapReshareMessageFromProto(
                                 protoBuf.decodeFromByteArray<ReshareMessageProto>(contentBytes)

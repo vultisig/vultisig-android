@@ -1,0 +1,59 @@
+package com.vultisig.wallet.data.api
+
+import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
+import com.vultisig.wallet.data.mediator.Message
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import javax.inject.Inject
+
+interface SessionApi {
+    suspend fun getParticipants(serverUrl: String, sessionId: String): List<String>
+    suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message)
+    suspend fun getTssMessages(serverUrl: String): List<Message>
+    suspend fun deleteTssMessage(serverUrl: String, messageId: String?)
+}
+
+internal class SessionApiImpl @Inject constructor(
+    private val json: Json,
+    private val httpClient: HttpClient,
+) : SessionApi {
+    override suspend fun getParticipants(serverUrl: String, sessionId: String): List<String> {
+        return httpClient.get("$serverUrl/$sessionId")
+            .throwIfUnsuccessful()
+            .body<List<String>>()
+    }
+
+    override suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message) {
+        httpClient.post(serverUrl) {
+            messageId?.let {
+                header(MESSAGE_ID_HEADER_TITLE, it)
+            }
+            setBody(json.encodeToString(message))
+        }.throwIfUnsuccessful()
+    }
+
+    override suspend fun getTssMessages(serverUrl: String): List<Message> {
+        return httpClient.get(serverUrl)
+            .throwIfUnsuccessful()
+            .body<List<Message>>()
+    }
+
+    override suspend fun deleteTssMessage(url: String, messageId: String?) {
+        httpClient.delete(url){
+            messageId?.let {
+                header(MESSAGE_ID_HEADER_TITLE, messageId)
+            }
+        }.throwIfUnsuccessful()
+    }
+
+    companion object {
+        private const val MESSAGE_ID_HEADER_TITLE = "message_id"
+    }
+}

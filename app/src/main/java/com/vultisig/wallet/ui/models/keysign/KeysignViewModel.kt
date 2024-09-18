@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.Chain
@@ -48,6 +49,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
@@ -81,11 +83,12 @@ internal class KeysignViewModel(
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
+    private val sessionApi: SessionApi,
 
     ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
-        TssMessenger(serverAddress, sessionId, encryptionKeyHex)
+        TssMessenger(serverAddress, sessionId, encryptionKeyHex, sessionApi, viewModelScope)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     var isThorChainSwap =
         keysignPayload.swapPayload is SwapPayload.ThorChain
@@ -126,6 +129,7 @@ internal class KeysignViewModel(
                 hexEncryptionKey = encryptionKeyHex,
                 serverAddress = serverAddress,
                 localPartyKey = vault.localPartyID,
+                sessionApi = sessionApi,
                 sessionID = sessionId
             )
             this.messagesToSign.forEach { message ->

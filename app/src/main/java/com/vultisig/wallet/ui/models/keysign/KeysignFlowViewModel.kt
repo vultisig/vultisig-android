@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
@@ -54,12 +55,14 @@ import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -106,6 +109,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val compressQr: CompressQrUseCase,
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
+    private val sessionApi: SessionApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -154,6 +158,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             solanaApi = solanaApi,
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
+            sessionApi = sessionApi,
             navigator = navigator,
         )
 
@@ -195,7 +200,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             vault.localPartyID,
-            gson
+            sessionApi
         )
 
         val keysignPayload = _keysignPayload!!
@@ -380,7 +385,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                 }
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
-                    Thread.sleep(1000) // back off a second
+                    delay(1000) // back off a second
                     startSession(_serverAddress, _sessionID, _currentVault!!.localPartyID)
                 }
                 // kick off discovery
