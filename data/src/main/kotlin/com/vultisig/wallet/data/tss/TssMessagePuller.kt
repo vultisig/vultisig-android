@@ -12,11 +12,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import okhttp3.Callback
-import okhttp3.OkHttpClient
 import timber.log.Timber
-import java.io.IOException
 
 class TssMessagePuller(
     private val service: tss.ServiceImpl,
