@@ -1,4 +1,4 @@
-package com.vultisig.wallet.startup
+package com.vultisig.wallet.app.startup
 
 import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory

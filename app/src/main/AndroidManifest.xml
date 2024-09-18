@@ -94,7 +94,7 @@
                 tools:node="remove" />
 
             <meta-data
-                android:name="com.vultisig.wallet.startup.WorkManagerInitializer"
+                android:name="com.vultisig.wallet.app.startup.WorkManagerInitializer"
                 android:value="androidx.startup" />
         </provider>
 

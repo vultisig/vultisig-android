@@ -33,13 +33,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.ui.components.KeepScreenOn
-import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.ui.components.InformationNoteSnackBar
+import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.screens.keygen.GeneratingKey
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun JoinKeygenView(

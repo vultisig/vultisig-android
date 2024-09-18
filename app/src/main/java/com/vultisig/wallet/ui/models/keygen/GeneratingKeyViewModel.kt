@@ -6,21 +6,21 @@ import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.api.KeygenApi
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +38,7 @@ internal sealed interface KeygenState {
     data object ReshareECDSA : KeygenState
     data object ReshareEdDSA : KeygenState
     data object Success : KeygenState
-    data class Error(val errorMessage: UiText,val isThresholdError: Boolean) : KeygenState
+    data class Error(val errorMessage: UiText, val isThresholdError: Boolean) : KeygenState
 }
 
 internal class GeneratingKeyViewModel(

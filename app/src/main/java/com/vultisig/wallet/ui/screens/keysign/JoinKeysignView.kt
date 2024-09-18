@@ -17,8 +17,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.asString
+import com.vultisig.wallet.ui.components.ErrorView
 import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.components.ProgressScreen
+import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoverService
@@ -30,14 +32,11 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.WaitingForKeysignS
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
-import com.vultisig.wallet.ui.components.ErrorView
-import com.vultisig.wallet.ui.components.ProgressScreen
-import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun JoinKeysignView(
