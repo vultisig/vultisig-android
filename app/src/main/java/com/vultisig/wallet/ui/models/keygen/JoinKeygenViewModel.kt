@@ -14,7 +14,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.KeygenApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
@@ -73,7 +73,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
-    private val keygenApi: KeygenApi,
+    private val sessionApi: SessionApi,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -125,7 +125,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
-            keygenApi = keygenApi,
+            sessionApi = sessionApi,
             isReshareMode = operationMode.value.isReshare()
         )
 
@@ -155,7 +155,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                 val payload = when (deepLink.getTssAction()) {
                     TssAction.KEYGEN -> {
-                        operationMode.value=OperationMode.KEYGEN
+                        operationMode.value = OperationMode.KEYGEN
                         PeerDiscoveryPayload.Keygen(
                             mapKeygenMessageFromProto(
                                 protoBuf.decodeFromByteArray<KeygenMessageProto>(contentBytes)
@@ -164,7 +164,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 }
 
                     TssAction.ReShare ->{
-                        operationMode.value=OperationMode.RESHARE
+                        operationMode.value = OperationMode.RESHARE
                         PeerDiscoveryPayload.Reshare(
                             mapReshareMessageFromProto(
                                 protoBuf.decodeFromByteArray<ReshareMessageProto>(contentBytes)
@@ -275,7 +275,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 Timber.d("Joining ${operationMode.value.name}")
-                keygenApi.start(_serverAddress, _sessionID, listOf(_localPartyID))
+                sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
                 Timber.d("Join ${operationMode.value.name} ")
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
@@ -314,7 +314,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     @SuppressLint("BinaryOperationInTimber")
     private suspend fun checkKeygenStarted(): Boolean {
         try {
-            this._keygenCommittee = keygenApi.checkCommittee(_serverAddress, _sessionID)
+            this._keygenCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
             if (this._keygenCommittee.contains(_localPartyID)) {
                 Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
                 return true

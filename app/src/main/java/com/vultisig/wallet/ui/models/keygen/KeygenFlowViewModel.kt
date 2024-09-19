@@ -12,9 +12,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.vultisig.wallet.data.api.KeygenApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
@@ -44,6 +43,7 @@ import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -92,7 +92,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vultisigRelay: VultisigRelay,
-    private val gson: Gson,
     private val compressQr: CompressQrUseCase,
     private val saveVault: SaveVaultUseCase,
     private val vaultRepository: VaultRepository,
@@ -101,7 +100,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val signerRepository: VultiSignerRepository,
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
-    private val keygenApi: KeygenApi,
+    private val sessionApi: SessionApi,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -150,7 +149,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
-            keygenApi = keygenApi,
+            sessionApi = sessionApi,
             isReshareMode = uiState.value.isReshareMode,
         )
 
@@ -222,7 +221,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         // stop participant discovery
         stopParticipantDiscovery()
         this.participantDiscovery =
-            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, gson)
+            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, sessionApi)
         viewModelScope.launch {
             participantDiscovery?.participants?.asFlow()?.collect { newList ->
                 // add all participants to the selection
@@ -296,7 +295,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                 Timber.d("onReceive: Mediator service started")
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
-                    Thread.sleep(1000) // back off a second
+                    delay(1000) // back off a second
                     startSession(serverAddress, sessionID, vault.localPartyID)
                 }
                 // kick off discovery
@@ -330,7 +329,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            keygenApi.start(serverAddress, sessionID, listOf(localPartyID))
+            sessionApi.startSession(serverAddress, sessionID, listOf(localPartyID))
             Timber.d("startSession: Session started")
 
             if (isFastSign) {
@@ -397,7 +396,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private suspend fun startKeygen() {
         try {
             val keygenCommittee = uiState.value.selection
-            keygenApi.startWithCommittee(serverAddress, sessionID, keygenCommittee)
+            sessionApi.startWithCommittee(serverAddress, sessionID, keygenCommittee)
             Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
 
         } catch (e: Exception) {

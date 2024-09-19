@@ -6,7 +6,7 @@ import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.vultisig.wallet.data.mediator.HttpStatus
+import kotlinx.serialization.json.Json
 import spark.Request
 import spark.Response
 import spark.Service
@@ -252,7 +252,11 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return ""
         }
         val messageID = request.headers("message_id")
-        val message = Message.fromJson(request.body())
+        val json = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+        }
+        val message = json.decodeFromString<Message>(request.body())
         for (recipient in message.to) {
             val key = messageID?.let {
                 "${sessionID.trim()}-$recipient-$it-${message.hash}"
