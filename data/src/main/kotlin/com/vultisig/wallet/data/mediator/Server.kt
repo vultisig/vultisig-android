@@ -113,7 +113,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatusCode.OK.value)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val key = "session-$sessionID-start"
