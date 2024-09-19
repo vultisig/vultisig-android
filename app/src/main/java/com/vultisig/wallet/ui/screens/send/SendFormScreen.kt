@@ -218,6 +218,10 @@ internal fun SendFormScreen(
                     title = stringResource(R.string.send_gas_title),
                     value = state.fee ?: "",
                 )
+                FormDetails(
+                    title = stringResource(R.string.send_form_estimated_fees_title),
+                    value = state.estimatedFee ?: "",
+                )
             }
             UiSpacer(size = 80.dp)
 

@@ -32,7 +32,9 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc
 import com.vultisig.wallet.ui.navigation.Destination
@@ -78,6 +80,7 @@ internal data class SendFormUiModel(
     val from: String = "",
     val fiatCurrency: String = "",
     val fee: String? = null,
+    val estimatedFee: String? = null,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
     val dstAddressError: UiText? = null,
@@ -101,7 +104,7 @@ internal class SendFormViewModel @Inject constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
-
+    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val accountsRepository: AccountsRepository,
     appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -110,8 +113,9 @@ internal class SendFormViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
-    private val addressParserRepository: AddressParserRepository
-) : ViewModel() {
+    private val addressParserRepository: AddressParserRepository,
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
+    ) : ViewModel() {
 
     private var vaultId: String? = null
 
@@ -483,6 +487,7 @@ internal class SendFormViewModel @Inject constructor(
                 .collect { gasFee ->
                     this@SendFormViewModel.gasFee.value = gasFee
 
+
                     uiState.update {
                         it.copy(fee = mapGasFeeToString(gasFee))
                     }
@@ -510,6 +515,26 @@ internal class SendFormViewModel @Inject constructor(
                         isMaxAmountEnabled = false,
                         isDeposit = false,
                     )
+
+                    val gasLimit = if (chain.standard == TokenStandard.EVM) {
+                        (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                    } else {
+                        BigInteger.valueOf(1)
+                    }
+                    var tokenValue = TokenValue(
+                        value = gasFee.value.multiply(gasLimit),
+                        unit = gasFee.unit,
+                        decimals = gasFee.decimals
+                    )
+
+                    val fiatFees = convertTokenValueToFiat(
+                        selectedAccount.token,
+                        tokenValue,
+                        appCurrency.value
+                    )
+                    uiState.update {
+                        it.copy(estimatedFee = fiatValueToStringMapper.map(fiatFees))
+                    }
                 } catch (e: Exception) {
                     // todo handle errors
                     Timber.e(e)
