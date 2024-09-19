@@ -417,5 +417,8 @@
     <string name="naming_vault_placeholder_hot_vault" translatable="false">Hot Vault</string>
     <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
+    <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
+    <string name="scan_qr_upload_from_files" translatable="false">Upload from\nFiles</string>
+
 
 </resources>

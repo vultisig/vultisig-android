@@ -6,6 +6,7 @@ import android.content.Context
 import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
@@ -17,8 +18,10 @@ import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -55,10 +58,11 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTypes
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.launch
@@ -139,15 +143,32 @@ internal fun ScanQrScreen(
             }
         }
     }
-    val appColor = Theme.colors
+
+    val pickFromFilesMedia =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            coroutineScope.launch {
+                if (uri != null) {
+                    val result = scanImage(InputImage.fromFilePath(context, uri))
+                    val barcodes = if (result.isEmpty()) {
+                        val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
+                            .addWhiteBorder(2F)
+                        val inputImage = InputImage.fromBitmap(bitmap, 0)
+                        val resultBarcodes = scanImage(inputImage)
+                        bitmap.recycle()
+                        resultBarcodes
+                    } else result
+                    onSuccess(barcodes)
+                }
+            }
+        }
 
     Scaffold(
         bottomBar = {
             if (cameraPermissionState.status.isGranted.not())
                 MultiColorButton(
-                    backgroundColor = appColor.turquoise800,
-                    textColor = appColor.oxfordBlue800,
-                    iconColor = appColor.turquoise800,
+                    backgroundColor = Theme.colors.turquoise800,
+                    textColor = Theme.colors.oxfordBlue800,
+                    iconColor = Theme.colors.turquoise800,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -161,27 +182,90 @@ internal fun ScanQrScreen(
                 )
 
         },
-        topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(id = R.string.scan_qr_default_title),
-                endIcon = R.drawable.ic_gallery,
-                startIcon = R.drawable.caret_left,
-                onEndIconClick = {
-                    pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                },
-            )
-        },
     ) {
         Box(
             modifier = Modifier
                 .padding(it)
         ) {
-
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
                     onSuccess = onSuccess,
                 )
+                Image(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(40.dp),
+                    painter = painterResource(id = R.drawable.camera_frame),
+                    contentDescription = null,
+                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    MultiColorButton(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(
+                                horizontal = 12.dp,
+                                vertical = 16.dp,
+                            ),
+                        iconSize = 15.dp,
+                        onClick = {
+                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                        },
+                        centerContent = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                UiIcon(
+                                    size = 20.dp,
+                                    drawableResId = R.drawable.ic_gallery_min,
+                                    tint = Theme.colors.oxfordBlue600Main,
+                                )
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    text = stringResource(id = R.string.scan_qr_upload_from_gallery),
+                                    style = Theme.montserrat.subtitle2,
+                                    color = Theme.colors.oxfordBlue600Main,
+                                )
+                            }
+                        }
+                    )
+                    MultiColorButton(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(
+                                horizontal = 12.dp,
+                                vertical = 16.dp,
+                            ),
+                        iconSize = 15.dp,
+                        onClick = {
+                            pickFromFilesMedia.launch("image/*") // TODO: make decision about second button
+                        },
+                        centerContent = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                UiIcon(
+                                    size = 20.dp,
+                                    drawableResId = R.drawable.ic_files,
+                                    tint = Theme.colors.oxfordBlue600Main,
+                                )
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    text = stringResource(id = R.string.scan_qr_upload_from_files),
+                                    style = Theme.montserrat.subtitle2,
+                                    color = Theme.colors.oxfordBlue600Main,
+                                )
+                            }
+                        }
+                    )
+                }
             } else if (cameraPermissionState.status.shouldShowRationale ||
                 cameraPermissionState.status.isGranted.not()
             ) {
