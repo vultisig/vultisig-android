@@ -35,7 +35,8 @@ internal class KeygenEmailViewModel @Inject constructor(
     val emailFieldState = TextFieldState()
     val verifyEmailFieldState = TextFieldState()
 
-    private val name = requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_NAME))
+    private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
+    private val name: String? = savedStateHandle.get<String>(Destination.ARG_VAULT_NAME)
     private val setupType = VaultSetupType.fromInt(
         requireNotNull(savedStateHandle.get<Int>(Destination.ARG_VAULT_SETUP_TYPE))
     )
@@ -75,6 +76,7 @@ internal class KeygenEmailViewModel @Inject constructor(
             viewModelScope.launch {
                 navigator.navigate(
                     Destination.KeygenPassword(
+                        vaultId = vaultId,
                         name = name,
                         setupType = setupType,
                         email = email,
