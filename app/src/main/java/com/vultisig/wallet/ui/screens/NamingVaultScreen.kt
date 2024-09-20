@@ -11,7 +11,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.NamingComponent
 import com.vultisig.wallet.ui.models.NamingVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.asString
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
