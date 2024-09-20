@@ -21,18 +21,15 @@ internal fun NamingVaultScreen(
 ) {
     val state by model.state.collectAsState()
 
-    val placeholder = state.placeholder.asString()
-
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_setup),
         textFieldState = model.namingTextFieldState,
         navHostController = navController,
         inputTitle = stringResource(id = R.string.naming_vault_screen_vault_name),
-        hint = placeholder,
+        hint = state.placeholder,
         hintColor = Theme.colors.neutral500,
         saveButtonText = stringResource(id = R.string.naming_vault_screen_continue),
-        onSave = { model.navigateToKeygen(placeholder) },
-        onLostFocus = model::validate,
+        onSave = { model.navigateToKeygen() },
         errorText = model.errorMessageState.collectAsState().value
     )
 }

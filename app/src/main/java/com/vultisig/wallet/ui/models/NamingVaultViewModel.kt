@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.models
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.forEachTextValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +25,7 @@ import javax.inject.Inject
 
 
 internal data class NamingVaultUiModel(
-    val placeholder: UiText = StringResource(R.string.naming_vault_screen_vault_placeholder)
+    val placeholder: String = ""
 )
 
 @HiltViewModel
@@ -48,32 +50,33 @@ internal class NamingVaultViewModel @Inject constructor(
         )
 
     init {
-        val placeholder = when (vaultSetupType) {
-            VaultSetupType.FAST -> StringResource(R.string.naming_vault_placeholder_hot_vault)
-            VaultSetupType.ACTIVE -> StringResource(R.string.naming_vault_screen_vault_placeholder)
-            else -> StringResource(R.string.naming_vault_placeholder_cold_vault)
-        }
+        val placeholder =
+            context.getString(
+                when (vaultSetupType) {
+                    VaultSetupType.FAST -> R.string.naming_vault_placeholder_fast_vault
+                    VaultSetupType.ACTIVE -> R.string.naming_vault_placeholder_active_vault
+                    else -> R.string.naming_vault_placeholder_secure_vault
+                }
+            )
         state.update { it.copy(placeholder = placeholder) }
 
         viewModelScope.launch {
             vaultNamesList.update { vaultRepository.getAll().map { it.name } }
+            namingTextFieldState.forEachTextValue {
+                validate()
+            }
         }
     }
 
-    private fun validateVaultName(s: String): UiText? {
-        if (isNameNotValid(s))
-            return StringResource(R.string.naming_vault_screen_invalid_name)
-        val isNameAlreadyExist = vaultNamesList.value.any { it == s }
-        if (isNameAlreadyExist) {
-            return StringResource(R.string.vault_edit_this_name_already_exist)
-        }
-        return null
-    }
-
-    fun navigateToKeygen(placeholder: String) {
-        val name = namingTextFieldState.text.toString().ifEmpty { placeholder }
+    fun navigateToKeygen() {
         if (errorMessageState.value != null)
             return
+        val name = Uri.encode(
+            makeVaultNameUnique(
+                namingTextFieldState.text.toString()
+                    .ifEmpty { state.value.placeholder }
+            )
+        )
         viewModelScope.launch {
             when (vaultSetupType) {
                 VaultSetupType.ACTIVE, VaultSetupType.FAST -> {
@@ -99,13 +102,24 @@ internal class NamingVaultViewModel @Inject constructor(
         }
     }
 
-    fun validate() = viewModelScope.launch {
-        val placeholder = context.getString(R.string.naming_vault_screen_vault_placeholder)
-        val name = namingTextFieldState.text.toString().ifEmpty { placeholder }
-        val errorMessage = validateVaultName(name)
+    private fun validate() = viewModelScope.launch {
+        val name = namingTextFieldState.text.toString()
+        val errorMessage = if (isNameLengthNotValid(name))
+            StringResource(R.string.naming_vault_screen_invalid_name)
+        else null
         errorMessageState.update { errorMessage }
     }
 
-    private fun isNameNotValid(s: String) =
-        s.isEmpty() || s.length > TextFieldUtils.VAULT_NAME_MAX_LENGTH
+    private fun makeVaultNameUnique(name: String): String {
+        var newName = name
+        var i = 1
+        while (vaultNamesList.value.contains(newName)) {
+            newName = "$name #$i"
+            i++
+        }
+        return newName
+    }
+
+    private fun isNameLengthNotValid(s: String) =
+        s.length > TextFieldUtils.VAULT_NAME_MAX_LENGTH
 }

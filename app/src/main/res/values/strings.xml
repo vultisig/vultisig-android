@@ -413,8 +413,9 @@
     <string name="home_screen_import_vault" translatable="false">Import Vault</string>
     <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
 
-    <string name="naming_vault_placeholder_cold_vault" translatable="false">Cold Vault</string>
-    <string name="naming_vault_placeholder_hot_vault" translatable="false">Hot Vault</string>
+    <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
+    <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>
+    <string name="naming_vault_placeholder_secure_vault" translatable="false">Secure Vault</string>
     <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
 
