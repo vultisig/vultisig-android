@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.VultisigRelay
@@ -124,7 +125,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
 
 
-    private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
+    private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_ID]
+    private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
 
@@ -175,18 +177,24 @@ internal class KeygenFlowViewModel @Inject constructor(
         val allVaults = vaultRepository.getAll()
 
         val vault = if (vaultId == null) {
-            var newVaultName: String
-            var idx = 1
-            while (true) {
-                newVaultName = "New vault ${allVaults.size + idx}"
-                if (allVaults.find { it.name == newVaultName } == null) {
-                    break
+            // generate
+            if (vaultName != null) {
+                Vault(id = UUID.randomUUID().toString(), vaultName)
+            } else {
+                var newVaultName: String
+                var idx = 1
+                while (true) {
+                    newVaultName = "New vault ${allVaults.size + idx}"
+                    if (allVaults.find { it.name == newVaultName } == null) {
+                        break
+                    }
+                    idx++
                 }
-                idx++
+                Vault(id = UUID.randomUUID().toString(), newVaultName)
             }
-            Vault(id = UUID.randomUUID().toString(), newVaultName)
         } else {
-            vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
+            // reshare
+            vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
         }
 
         val action = if (vault.pubKeyECDSA.isEmpty()) {
@@ -332,20 +340,40 @@ internal class KeygenFlowViewModel @Inject constructor(
             sessionApi.startSession(serverAddress, sessionID, listOf(localPartyID))
             Timber.d("startSession: Session started")
 
-            if (isFastSign) {
+            val isReshare = uiState.value.isReshareMode
+            if (isFastSign || isReshare) {
                 if (email != null) {
                     if (password != null) {
-                        signerRepository.joinKeygen(
-                            JoinKeygenRequestJson(
-                                vaultName = vault.name,
-                                sessionId = sessionID,
-                                hexEncryptionKey = _encryptionKeyHex,
-                                hexChainCode = vault.hexChainCode,
-                                localPartyId = generateServerPartyId(),
-                                encryptionPassword = password,
-                                email = email,
+                        if (uiState.value.isReshareMode) {
+                            val pubKeyEcdsa = if (signerRepository.hasFastSign(vault.pubKeyECDSA))
+                                vault.pubKeyECDSA
+                            else null
+
+                            signerRepository.joinReshare(
+                                JoinReshareRequestJson(
+                                    vaultName = vault.name,
+                                    publicKeyEcdsa = pubKeyEcdsa,
+                                    sessionId = sessionID,
+                                    hexEncryptionKey = _encryptionKeyHex,
+                                    hexChainCode = vault.hexChainCode,
+                                    localPartyId = generateServerPartyId(),
+                                    encryptionPassword = password,
+                                    email = email,
+                                )
                             )
-                        )
+                        } else {
+                            signerRepository.joinKeygen(
+                                JoinKeygenRequestJson(
+                                    vaultName = vault.name,
+                                    sessionId = sessionID,
+                                    hexEncryptionKey = _encryptionKeyHex,
+                                    hexChainCode = vault.hexChainCode,
+                                    localPartyId = generateServerPartyId(),
+                                    encryptionPassword = password,
+                                    email = email,
+                                )
+                            )
+                        }
                     } else {
                         error("Email is not null, but password is null, this should not happen")
                     }

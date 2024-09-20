@@ -259,71 +259,94 @@ internal sealed class Destination(
     data object SelectVaultType : Destination(route = "setup")
 
     data class KeygenEmail(
-        val name: String,
+        val vaultId: String?,
+        val name: String?,
         val setupType: VaultSetupType,
-    ) : Destination(route = buildRoute(name, setupType.raw)) {
+    ) : Destination(route = buildRoute(vaultId, name, setupType.raw)) {
         companion object {
             const val STATIC_ROUTE = "keygen/email?${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
-                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}"
+                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
+                    "&${ARG_VAULT_ID}={$ARG_VAULT_ID}"
 
-            fun buildRoute(name: String, setupType: Int) =
-                "keygen/email?${ARG_VAULT_NAME}=${name}&${ARG_VAULT_SETUP_TYPE}=${setupType}"
+            fun buildRoute(vaultId: String?, name: String?, setupType: Int) =
+                "keygen/email?${ARG_VAULT_NAME}=${name}" +
+                        "&${ARG_VAULT_SETUP_TYPE}=${setupType}" +
+                        "&${ARG_VAULT_ID}=$vaultId"
         }
     }
 
     data class KeygenPassword(
-        val name: String,
+        val vaultId: String?,
+        val name: String?,
         val setupType: VaultSetupType,
         val email: String,
-    ) : Destination(route = buildRoute(name, email, setupType)) {
+    ) : Destination(route = buildRoute(vaultId, name, email, setupType)) {
         companion object {
             const val STATIC_ROUTE = "keygen/password?${ARG_EMAIL}={$ARG_EMAIL}" +
                     "&${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
-                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}"
+                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
+                    "&${ARG_VAULT_ID}={$ARG_VAULT_ID}"
 
             private fun buildRoute(
-                name: String,
+                vaultId: String?,
+                name: String?,
                 email: String,
                 setupType: VaultSetupType,
-            ) = "keygen/password?${ARG_EMAIL}=$email&${ARG_VAULT_SETUP_TYPE}=${setupType.raw}" +
-                    "&${ARG_VAULT_NAME}=$name"
+            ) = "keygen/password?${ARG_EMAIL}=$email" +
+                    "&${ARG_VAULT_SETUP_TYPE}=${setupType.raw}" +
+                    "&${ARG_VAULT_NAME}=$name" +
+                    "&${ARG_VAULT_ID}=$vaultId"
 
         }
     }
 
     data class KeygenFlow(
+        val vaultId: String?,
         val vaultName: String?,
         val vaultSetupType: VaultSetupType,
-        val isReshare: Boolean,
         val email: String?,
         val password: String?,
     ) : Destination(
         route = buildRoute(
+            vaultId,
             vaultName,
             vaultSetupType.raw,
-            isReshare.toString(),
             email,
             password
         )
     ) {
         companion object {
+            const val ARG_VAULT_ID = "vault_id"
             const val ARG_VAULT_NAME = "vault_name"
-            const val ARG_IS_RESHARE = "is_reshare"
 
-            const val STATIC_ROUTE = "keygen/generate?${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
+            const val STATIC_ROUTE = "keygen/generate?${ARG_VAULT_ID}={$ARG_VAULT_ID}" +
+                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
                     "&${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
-                    "&${ARG_IS_RESHARE}={$ARG_IS_RESHARE}" +
                     "&${ARG_EMAIL}={$ARG_EMAIL}" +
                     "&${ARG_PASSWORD}={$ARG_PASSWORD}"
 
+            fun generateNewVault(
+                name: String,
+                setupType: VaultSetupType
+            ) = KeygenFlow(
+                vaultId = null,
+                vaultName = name,
+                vaultSetupType = setupType,
+                email = null,
+                password = null,
+            )
+
             private fun buildRoute(
+                vaultId: String?,
                 name: String?,
                 type: Int,
-                isReshare: String,
                 email: String?,
                 password: String?,
-            ) = "keygen/generate?${ARG_VAULT_NAME}=$name&${ARG_VAULT_SETUP_TYPE}=${type}" +
-                    "&${ARG_IS_RESHARE}=$isReshare&${ARG_EMAIL}=$email&${ARG_PASSWORD}=$password"
+            ) = "keygen/generate?${ARG_VAULT_ID}=$vaultId" +
+                    "&${ARG_VAULT_NAME}=$name" +
+                    "&${ARG_VAULT_SETUP_TYPE}=${type}" +
+                    "&${ARG_EMAIL}=$email" +
+                    "&${ARG_PASSWORD}=$password"
 
         }
     }
