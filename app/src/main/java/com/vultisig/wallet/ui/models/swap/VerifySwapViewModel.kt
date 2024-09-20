@@ -62,9 +62,9 @@ internal class VerifySwapViewModel @Inject constructor(
             val currency = appCurrencyRepository.currency.first()
             val transaction = swapTransactionRepository.getTransaction(transactionId)
 
-            val fiatFees = convertTokenValueToFiat(
-                transaction.dstToken,
-                transaction.estimatedFees, currency
+            val fiatFees = convertTokenValueToFiat( //FiatValue(value=14.80373801065170, currency=USD)
+                transaction.dstToken,//Coin(chain=Ethereum, ticker=THOR, logo=https://tokens.1inch.io/0xa5f2211b9b8170f694421f2046281775e8468044.png, address=0xC8c8CA8902f58f9b751C3a5Dfa677D724416a886, decimal=18, hexPublicKey=03591449887e576bbaeabf5248b8a7de3d264f792a0d64c49fe0973b1a479c1e06, priceProviderID=, contractAddress=0xa5f2211b9b8170f694421f2046281775e8468044, isNativeToken=false)
+                transaction.estimatedFees, currency //TokenValue(value=50643274050000000000, unit=THOR, decimals=18)
             )
 
             val providerText = when (transaction.payload) {

@@ -35,7 +35,7 @@ data class THORChainSwapQuote(
     @SerialName("outbound_delay_seconds")
     val outboundDelaySeconds: BigInteger,
     @SerialName("recommended_min_amount_in")
-    val recommendedMinAmountIn: BigInteger,
+    val recommendedMinAmountIn: String,
     @SerialName("streaming_swap_blocks")
     val streamingSwapBlocks: BigInteger,
     @SerialName("total_swap_seconds")
