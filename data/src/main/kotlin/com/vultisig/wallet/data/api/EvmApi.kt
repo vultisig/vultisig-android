@@ -1,67 +1,31 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
+import com.vultisig.wallet.data.api.models.CustomTokenResponse
+import com.vultisig.wallet.data.api.models.RpcPayload
+import com.vultisig.wallet.data.api.models.RpcResponse
+import com.vultisig.wallet.data.api.models.RpcResponseJson
+import com.vultisig.wallet.data.api.models.SendTransactionJson
+import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
-import com.vultisig.wallet.data.api.models.CustomTokenResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.Numeric
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
 
-data class RpcPayload(
-    @SerializedName("method")
-    val method: String,
-    @SerializedName("params")
-    val params: List<Any>,
-
-    @SerializedName("jsonrpc")
-    val jsonrpc: String = "2.0",
-    @SerializedName("id")
-    val id: Int = 1,
-)
-
-data class RpcResponse(
-    @SerializedName("id")
-    val id: Int,
-    @SerializedName("result")
-    val result: String?,
-    @SerializedName("error")
-    val error: RpcError?,
-)
-
-data class RpcResponseJson(
-    @SerializedName("id")
-    val id: Int,
-    @SerializedName("result")
-    val result: JsonObject?,
-    @SerializedName("error")
-    val error: RpcError?,
-)
-
-data class RpcError(
-    @SerializedName("code")
-    val code: Int,
-    @SerializedName("message")
-    val message: String,
-)
-
-data class ZkGasFee(
-    val gasLimit: BigInteger,
-    val gasPerPubdataLimit: BigInteger,
-    val maxFeePerGas: BigInteger,
-    val maxPriorityFeePerGas: BigInteger,
-)
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -80,38 +44,66 @@ interface EvmApiFactory {
 }
 
 class EvmApiFactoryImp @Inject constructor(
-    private val gson: Gson,
     private val httpClient: HttpClient,
 ) : EvmApiFactory {
     override fun createEvmApi(chain: Chain): EvmApi {
         return when (chain) {
-            Chain.Ethereum -> EvmApiImp(gson, httpClient, "https://ethereum-rpc.publicnode.com")
-            Chain.BscChain -> EvmApiImp(gson, httpClient, "https://bsc-rpc.publicnode.com")
+            Chain.Ethereum -> EvmApiImp(
+                httpClient,
+                "https://ethereum-rpc.publicnode.com"
+            )
+
+            Chain.BscChain -> EvmApiImp(
+                httpClient,
+                "https://bsc-rpc.publicnode.com"
+            )
+
             Chain.Avalanche -> EvmApiImp(
-                gson,
                 httpClient,
                 "https://avalanche-c-chain-rpc.publicnode.com"
             )
 
-            Chain.Polygon -> EvmApiImp(gson, httpClient, "https://polygon-bor-rpc.publicnode.com")
-            Chain.Optimism -> EvmApiImp(gson, httpClient, "https://optimism-rpc.publicnode.com")
+            Chain.Polygon -> EvmApiImp(
+                httpClient,
+                "https://polygon-bor-rpc.publicnode.com"
+            )
+
+            Chain.Optimism -> EvmApiImp(
+                httpClient,
+                "https://optimism-rpc.publicnode.com"
+            )
+
             Chain.CronosChain -> EvmApiImp(
-                gson,
                 httpClient,
                 "https://cronos-evm-rpc.publicnode.com"
             )
 
-            Chain.Blast -> EvmApiImp(gson, httpClient, "https://rpc.ankr.com/blast")
-            Chain.Base -> EvmApiImp(gson, httpClient, "https://base-rpc.publicnode.com")
-            Chain.Arbitrum -> EvmApiImp(gson, httpClient, "https://arbitrum-one-rpc.publicnode.com")
-            Chain.ZkSync -> EvmApiImp(gson, httpClient, "https://mainnet.era.zksync.io")
+            Chain.Blast -> EvmApiImp(
+                httpClient,
+                "https://rpc.ankr.com/blast"
+            )
+
+            Chain.Base -> EvmApiImp(
+                httpClient,
+                "https://base-rpc.publicnode.com"
+            )
+
+            Chain.Arbitrum -> EvmApiImp(
+                httpClient,
+                "https://arbitrum-one-rpc.publicnode.com"
+            )
+
+            Chain.ZkSync -> EvmApiImp(
+                httpClient,
+                "https://mainnet.era.zksync.io"
+            )
+
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
     }
 }
 
 class EvmApiImp(
-    private val gson: Gson,
     private val http: HttpClient,
     private val rpcUrl: String,
 ) : EvmApi {
@@ -131,25 +123,32 @@ class EvmApiImp(
     private suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger {
         val rpcResp = fetch<RpcResponse>(
             "eth_call",
-            listOf(
-                mapOf(
-                    "to" to contractAddress,
-                    "data" to "0x70a08231000000000000000000000000${address.removePrefix("0x")}"
-                ),
-                "latest"
-            )
+            buildJsonArray {
+                addJsonObject {
+                    put("to", contractAddress)
+                    put(
+                        "data",
+                        "0x70a08231000000000000000000000000${address.removePrefix("0x")}"
+                    )
+                }
+                add("latest")
+            }
         )
         if (rpcResp.error != null) {
             Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: ${rpcResp.error.message}")
             return BigInteger.ZERO
         }
         return rpcResp.result.convertToBigIntegerOrZero()
+
     }
 
     private suspend fun getETHBalance(address: String): BigInteger {
         val rpcResp = fetch<RpcResponse>(
             "eth_getBalance",
-            listOf(address, "latest")
+            buildJsonArray {
+                add(address)
+                add("latest")
+            }
         )
         if (rpcResp.error != null) {
             Timber.d("get balance ,address: $address error: ${rpcResp.error.message}")
@@ -161,7 +160,10 @@ class EvmApiImp(
     override suspend fun getNonce(address: String): BigInteger {
         val rpcResp = fetch<RpcResponse>(
             "eth_getTransactionCount",
-            listOf(address, "latest")
+            buildJsonArray {
+                add(address)
+                add("latest")
+            }
         )
         if (rpcResp.error != null) {
             Timber.d("get nonce ,address: $address error: ${rpcResp.error.message}")
@@ -174,7 +176,7 @@ class EvmApiImp(
     override suspend fun getGasPrice(): BigInteger {
         val rpcResp = fetch<RpcResponse>(
             "eth_gasPrice",
-            emptyList()
+            buildJsonArray { }
         )
         if (rpcResp.error != null) {
             Timber.d("get gas price error: ${rpcResp.error.message}")
@@ -186,7 +188,7 @@ class EvmApiImp(
     override suspend fun getMaxPriorityFeePerGas(): BigInteger {
         val rpcResp = fetch<RpcResponse>(
             "eth_maxPriorityFeePerGas",
-            emptyList()
+            buildJsonArray { }
         )
         if (rpcResp.error != null) {
             Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
@@ -205,13 +207,13 @@ class EvmApiImp(
         val paddedSpender = spender.removePrefix("0x").padStart(64, '0')
         val rpcResp = fetch<RpcResponse>(
             "eth_call",
-            listOf(
-                mapOf(
-                    "to" to contractAddress,
-                    "data" to "0xdd62ed3e$paddedOwner$paddedSpender"
-                ),
-                "latest"
-            )
+            buildJsonArray {
+                addJsonObject {
+                    put("to", contractAddress)
+                    put("data", "0xdd62ed3e$paddedOwner$paddedSpender")
+                }
+                add("latest")
+            }
         )
         if (rpcResp.error != null) {
             Timber.d("get allowance,contract address: $contractAddress,owner: $owner,spender: $spender, error: ${rpcResp.error.message}")
@@ -223,17 +225,19 @@ class EvmApiImp(
     override suspend fun sendTransaction(signedTransaction: String): String {
         val payload = RpcPayload(
             method = "eth_sendRawTransaction",
-            params = listOf("0x$signedTransaction"),
+            params = buildJsonArray {
+                add("0x$signedTransaction")
+            },
         )
         Timber.d("send transaction: $signedTransaction")
         val response = http.post(rpcUrl) {
-            setBody(gson.toJson(payload))
+            setBody(payload)
         }
         val responseBody = response.bodyAsText()
         Timber.d("broadcast response: $responseBody")
-        val jsonObject = gson.fromJson(responseBody, JsonObject::class.java)
-        if (jsonObject.has("error")) {
-            val message = jsonObject.getAsJsonObject("error").get("message").asString
+        val jsonObject = response.body<SendTransactionJson>()
+        if (jsonObject.error != null) {
+            val message = jsonObject.error.message
             if (message.contains("known") ||
                 message.contains("already known") ||
                 message.contains("Transaction is temporarily banned") ||
@@ -248,7 +252,7 @@ class EvmApiImp(
                 throw Exception(responseBody)
             }
         }
-        return jsonObject.get("result").asString
+        return jsonObject.result ?: error("send transaction failed")
     }
 
     override suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse> {
@@ -256,19 +260,13 @@ class EvmApiImp(
         return try {
             val response = http.post(rpcUrl) {
                 setBody(
-                    gson.toJson(
-                        listOf(
-                            payload1,
-                            payload2
-                        )
+                    listOf(
+                        payload1,
+                        payload2
                     )
                 )
             }
-            val responseContent = response.bodyAsText()
-            val responseList = gson.fromJson<List<RpcResponse>?>(
-                responseContent,
-                object : TypeToken<List<RpcResponse>>() {}.type
-            )
+            val responseList = response.body<List<RpcResponse>>()
             responseList.map {
                 CustomTokenResponse(
                     id = it.id,
@@ -299,16 +297,17 @@ class EvmApiImp(
     override suspend fun zkEstimateFee(
         srcAddress: String,
         dstAddress: String,
-        data: String
+        data: String,
     ): ZkGasFee {
         val response = fetch<RpcResponseJson>(
-            "zks_estimateFee", listOf(
-                mapOf(
-                    "from" to srcAddress,
-                    "to" to dstAddress,
-                    "data" to data
-                )
-            )
+            "zks_estimateFee",
+            buildJsonArray {
+                addJsonObject {
+                    put("from", srcAddress)
+                    put("to", dstAddress)
+                    put("data", data)
+                }
+            }
         )
         return if (response.error != null) {
             Timber.d(
@@ -320,15 +319,14 @@ class EvmApiImp(
             val resultJson = response.result ?: return ZkGasFee(
                 BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO
             )
-
             ZkGasFee(
-                gasLimit = resultJson.get("gas_limit").asString
+                gasLimit = resultJson.gasLimit
                     .convertToBigIntegerOrZero(),
-                gasPerPubdataLimit = resultJson.get("gas_per_pubdata_limit").asString
+                gasPerPubdataLimit = resultJson.gasPerPubdataLimit
                     .convertToBigIntegerOrZero(),
-                maxFeePerGas = resultJson.get("max_fee_per_gas").asString
+                maxFeePerGas = resultJson.maxFeePerGas
                     .convertToBigIntegerOrZero(),
-                maxPriorityFeePerGas = resultJson.get("max_priority_fee_per_gas").asString
+                maxPriorityFeePerGas = resultJson.maxPriorityFeePerGas
                     .convertToBigIntegerOrZero(),
             )
         }
@@ -336,47 +334,41 @@ class EvmApiImp(
 
     private suspend inline fun <reified T> fetch(
         method: String,
-        params: List<Any>,
-        id: Int = 1
-    ): T {
-        val response = http.post(rpcUrl) {
-            setBody(
-                gson.toJson(
-                    RpcPayload(
-                        method = method,
-                        params = params,
-                        id = id
-                    )
-                )
+        params: JsonArray,
+        id: Int = 1,
+    ): T = http.post(rpcUrl) {
+        setBody(
+            RpcPayload(
+                method = method,
+                params = params,
+                id = id
             )
-        }
-        val responseContent = response.bodyAsText()
-        return gson.fromJson(responseContent, T::class.java)
-    }
+        )
+    }.body()
 
     private fun generateCustomTokenPayload(
-        contractAddress: String
+        contractAddress: String,
     ): Pair<RpcPayload, RpcPayload> {
         val payload1 = RpcPayload(
             method = "eth_call",
-            params = listOf(
-                mapOf(
-                    "to" to contractAddress,
-                    "data" to CUSTOM_TOKEN_REQUEST_TICKER_DATA
-                ),
-                "latest"
-            ),
+            params = buildJsonArray {
+                addJsonObject {
+                    put("to", contractAddress)
+                    put("data", CUSTOM_TOKEN_REQUEST_TICKER_DATA)
+                }
+                add("latest")
+            },
             id = CUSTOM_TOKEN_RESPONSE_TICKER_ID,
         )
         val payload2 = RpcPayload(
             method = "eth_call",
-            params = listOf(
-                mapOf(
-                    "to" to contractAddress,
-                    "data" to CUSTOM_TOKEN_REQUEST_DECIMAL_DATA
-                ),
-                "latest"
-            ),
+            params = buildJsonArray {
+                addJsonObject {
+                    put("to", contractAddress)
+                    put("data", CUSTOM_TOKEN_REQUEST_DECIMAL_DATA)
+                }
+                add("latest")
+            },
             id = CUSTOM_TOKEN_RESPONSE_DECIMAL_ID_,
         )
         return Pair(
@@ -385,13 +377,18 @@ class EvmApiImp(
         )
     }
 
-    private suspend fun fetchEns(params: Map<String,String>): String {
+    private suspend fun fetchEns(params: Map<String, String>): String {
         val rpcResp = fetch<RpcResponse>(
             method = "eth_call",
-            params = listOf(
-                params,
-                "latest"
-            )
+            params =
+            buildJsonArray {
+                addJsonObject {
+                    params.forEach { (key, value) ->
+                        put(key, value)
+                    }
+                }
+                add("latest")
+            }
         )
         val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))

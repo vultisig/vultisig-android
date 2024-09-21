@@ -1,13 +1,18 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
+import com.vultisig.wallet.data.api.models.PolkadotResponseJson
+import com.vultisig.wallet.data.api.models.RpcPayload
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotBroadcastTransactionJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHashJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -24,8 +29,7 @@ interface PolkadotApi {
 }
 
 internal class PolkadotApiImp @Inject constructor(
-    private val gson: Gson,
-    private val httpClient: HttpClient,
+    private val httpClient: HttpClient
 ) : PolkadotApi {
     private val polkadotApiUrl = "https://polkadot-rpc.publicnode.com"
     private val polkadotBalanceApiUrl = "https://polkadot.api.subscan.io/api/v2/scan/search"
@@ -37,16 +41,14 @@ internal class PolkadotApiImp @Inject constructor(
         )
         val response = httpClient
             .post(polkadotBalanceApiUrl) {
-                contentType(ContentType.Application.Json)
-                setBody(gson.toJson(bodyMap))
+                setBody(bodyMap)
             }
-        val rpcResp = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-        val respCode = rpcResp.get("code").asInt
+        val rpcResp = response.body<PolkadotResponseJson>()
+        val respCode = rpcResp.code
         if (respCode == 10004) {
             return BigInteger.ZERO
         }
-        val balance =
-            rpcResp.get("data").asJsonObject.get("account").asJsonObject.get("balance").asBigDecimal
+        val balance = BigDecimal(rpcResp.data.account.balance)
         return balance.multiply(BigDecimal(10000000000)).toBigInteger()
     }
 
@@ -54,33 +56,30 @@ internal class PolkadotApiImp @Inject constructor(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "system_accountNextIndex",
-            params = listOf(address),
+            params = buildJsonArray {
+                add(address)
+            },
             id = 1,
         )
         val response = httpClient.post(polkadotApiUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(gson.toJson(payload))
+            setBody(payload)
         }
-        val responseContent = response.bodyAsText()
-        val rpcResp = gson.fromJson(responseContent, JsonObject::class.java)
-        return rpcResp.get("result").asBigInteger
+        return response.body<PolkadotGetNonceJson>().result
     }
 
     override suspend fun getBlockHash(isGenesis: Boolean): String {
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "chain_getBlockHash",
-            params = if (isGenesis) listOf(0) else listOf(),
+            params = buildJsonArray {
+                if (isGenesis) add(0)
+            },
             id = 1,
         )
-
         val response = httpClient.post(polkadotApiUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(gson.toJson(payload))
+            setBody(payload)
         }
-        val responseContent = response.bodyAsText()
-        val rpcResp = gson.fromJson(responseContent, JsonObject::class.java)
-        return rpcResp.get("result").asString
+        return response.body<PolkadotGetBlockHashJson>().result
     }
 
     override suspend fun getGenesisBlockHash(): String {
@@ -91,19 +90,15 @@ internal class PolkadotApiImp @Inject constructor(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "state_getRuntimeVersion",
-            params = listOf(),
+            params = buildJsonArray { },
             id = 1,
         )
-
         val response = httpClient.post(polkadotApiUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(gson.toJson(payload))
+            setBody(payload)
         }
-        val responseContent = response.bodyAsText()
-        val rpcResp = gson.fromJson(responseContent, JsonObject::class.java)
-        val specVersion = rpcResp.get("result").asJsonObject.get("specVersion").asBigInteger
-        val transactionVersion =
-            rpcResp.get("result").asJsonObject.get("transactionVersion").asBigInteger
+        val rpcResp = response.body<PolkadotGetRunTimeVersionJson>()
+        val specVersion = rpcResp.result.specVersion
+        val transactionVersion = rpcResp.result.transactionVersion
         return Pair(specVersion, transactionVersion)
     }
 
@@ -111,17 +106,15 @@ internal class PolkadotApiImp @Inject constructor(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "chain_getHeader",
-            params = listOf(),
+            params = buildJsonArray { },
             id = 1,
         )
 
         val response = httpClient.post(polkadotApiUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(gson.toJson(payload))
+            setBody(payload)
         }
-        val responseContent = response.bodyAsText()
-        val rpcResp = gson.fromJson(responseContent, JsonObject::class.java)
-        val number = rpcResp.get("result").asJsonObject.get("number").asString
+        val responseContent = response.body<PolkadotGetBlockHeaderJson>()
+        val number = responseContent.result.number
         return BigInteger(number.drop(2), 16)
     }
 
@@ -129,21 +122,21 @@ internal class PolkadotApiImp @Inject constructor(
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "author_submitExtrinsic",
-            params = listOf(if (tx.startsWith("0x")) tx else "0x${tx}"),
+            params = buildJsonArray {
+                add(if (tx.startsWith("0x")) tx else "0x${tx}")
+            },
             id = 1,
         )
         val response = httpClient.post(polkadotApiUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(gson.toJson(payload))
+            setBody(payload)
         }
-        val responseContent = response.bodyAsText()
-        val rpcResp = gson.fromJson(responseContent, RpcResponse::class.java)
-        if (rpcResp.error != null) {
-            if (rpcResp.error.code == 1012) {
+        val responseContent = response.body<PolkadotBroadcastTransactionJson>()
+        if (responseContent.error != null) {
+            if (responseContent.error.code == 1012) {
                 return null
             }
             throw Exception("Error broadcasting transaction: $responseContent")
         }
-        return rpcResp.result
+        return responseContent.result
     }
 }
