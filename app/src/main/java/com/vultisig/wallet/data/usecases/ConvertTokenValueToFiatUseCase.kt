@@ -12,7 +12,6 @@ import javax.inject.Inject
 internal interface ConvertTokenValueToFiatUseCase :
     suspend (Coin, TokenValue, AppCurrency) -> FiatValue
 
-
 internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
 ) : ConvertTokenValueToFiatUseCase {
