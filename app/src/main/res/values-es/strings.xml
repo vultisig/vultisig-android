@@ -36,6 +36,7 @@
     <string name="send_amount_currency_hint">Ingresar Cantidad</string>
     <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Nombre de la Caja Fuerte</string>
+    <string name="send_form_estimated_fees_title">Tarifas estimadas</string>
     <string name="chain_account_view_send">ENVIAR</string>
     <string name="chain_account_view_swap">INTERCAMBIAR</string>
     <string name="chain_account_view_deposit">Depósito</string>

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
@@ -13,7 +12,6 @@ import javax.inject.Inject
 internal interface ConvertTokenValueToFiatUseCase :
     suspend (Coin, TokenValue, AppCurrency) -> FiatValue
 
-private const val ONE_GWEI = 1_000_000_000L
 
 internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
@@ -38,16 +36,22 @@ internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
         } else {
             priceDraft
         }
-        var decimal = tokenValue.decimal
-        if (token.chain.feeUnit.equals("Gwei")) {
-            decimal = decimal.divide(BigDecimal.valueOf(ONE_GWEI))
-        }
 
+        val decimal = if (token.chain.feeUnit == GWEI_UNIT) {
+            tokenValue.decimal.divide(ONE_GWEI)
+        } else {
+            tokenValue.decimal
+        }
 
         return FiatValue(
             value = decimal * price,
             currency = appCurrency.ticker,
         )
+    }
+
+    companion object {
+        private val ONE_GWEI = BigDecimal.valueOf(1_000_000_000L)
+        private const val GWEI_UNIT = "Gwei"
     }
 
 }

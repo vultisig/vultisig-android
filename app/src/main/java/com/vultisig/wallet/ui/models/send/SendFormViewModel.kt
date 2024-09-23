@@ -487,7 +487,6 @@ internal class SendFormViewModel @Inject constructor(
                 .collect { gasFee ->
                     this@SendFormViewModel.gasFee.value = gasFee
 
-
                     uiState.update {
                         it.copy(fee = mapGasFeeToString(gasFee))
                     }
