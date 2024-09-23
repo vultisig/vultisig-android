@@ -80,6 +80,7 @@ internal interface DataModule {
         ) = Json {
             ignoreUnknownKeys = true
             explicitNulls = false
+            encodeDefaults = true
             this.serializersModule = serializersModule
         }
 

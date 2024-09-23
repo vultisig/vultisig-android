@@ -1,12 +1,38 @@
 package com.vultisig.wallet.data.api.models.cosmos
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
+data class THORChainAccountJson(
+    @SerialName("account")
+    val account: THORChainAccountValue?,
+)
+
+@Serializable
+data class THORChainAccountValueJson(
+    @SerialName("value")
+    val value: THORChainAccountValue?,
+)
+
+@Serializable
+data class THORChainAccountResultJson(
+    @SerialName("result")
+    val result: THORChainAccountValueJson?,
+)
+
+@Serializable
 data class THORChainAccountValue(
-    @SerializedName("address")
+    @SerialName("address")
     val address: String?,
-    @SerializedName("account_number")
+    @SerialName("account_number")
     val accountNumber: String?,
-    @SerializedName("sequence")
+    @SerialName("sequence")
     val sequence: String?,
+)
+
+@Serializable
+data class NativeTxFeeRune(
+    @SerialName("native_tx_fee_rune")
+    val value: String?
 )

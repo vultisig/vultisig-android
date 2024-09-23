@@ -1,17 +1,13 @@
 package com.vultisig.wallet.ui.screens.home
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -56,71 +52,64 @@ private fun VaultListScreen(
     onImportVaultClick: () -> Unit = {},
     onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Theme.colors.oxfordBlue800)
-            .clickable(enabled = false, onClick = {})
-    ) {
-        VerticalReorderList(
-            onMove = onMove,
-            data = vaults,
-            isReorderEnabled = isRearrangeMode,
-            key = { it.id },
-            contentPadding = PaddingValues(
-                top = 16.dp,
-                start = 12.dp,
-                end = 12.dp,
-                bottom = 64.dp,
-            )
-        ) { vault ->
-            VaultCeil(
-                vault = vault,
-                isInEditMode = isRearrangeMode,
-                onSelectVault = onSelectVault,
-            )
-        }
-
-        Column(
-            horizontalAlignment = CenterHorizontally,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        ) {
-            MultiColorButton(
-                text = stringResource(R.string.home_screen_add_new_vault),
-                backgroundColor = Theme.colors.turquoise800,
-                textColor = Theme.colors.oxfordBlue800,
-                iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.subtitle1,
+    Scaffold(
+        content = { contentPadding ->
+            VerticalReorderList(
+                onMove = onMove,
+                data = vaults,
+                isReorderEnabled = isRearrangeMode,
+                key = { it.id },
+                contentPadding = PaddingValues(
+                    vertical = 16.dp,
+                    horizontal = 16.dp,
+                ),
+                modifier = Modifier
+                    .padding(contentPadding),
+            ) { vault ->
+                VaultCeil(
+                    vault = vault,
+                    isInEditMode = isRearrangeMode,
+                    onSelectVault = onSelectVault,
+                )
+            }
+        },
+        bottomBar = {
+            Column(
+                horizontalAlignment = CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp,
+                        horizontal = 16.dp,
+                        vertical = 12.dp,
                     ),
-                onClick = onCreateNewVault,
-            )
+            ) {
+                MultiColorButton(
+                    text = stringResource(R.string.home_screen_add_new_vault),
+                    backgroundColor = Theme.colors.turquoise800,
+                    textColor = Theme.colors.oxfordBlue800,
+                    iconColor = Theme.colors.turquoise800,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = onCreateNewVault,
+                )
 
-            UiSpacer(size = 4.dp)
+                UiSpacer(size = 12.dp)
 
-            MultiColorButton(
-                text = stringResource(R.string.home_screen_import_vault),
-                backgroundColor = Theme.colors.oxfordBlue800,
-                textColor = Theme.colors.turquoise800,
-                iconColor = Theme.colors.oxfordBlue800,
-                borderSize = 1.dp,
-                textStyle = Theme.montserrat.subtitle1,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp,
-                    ),
-                onClick = onImportVaultClick,
-            )
-        }
-    }
+                MultiColorButton(
+                    text = stringResource(R.string.home_screen_import_vault),
+                    backgroundColor = Theme.colors.oxfordBlue800,
+                    textColor = Theme.colors.turquoise800,
+                    iconColor = Theme.colors.oxfordBlue800,
+                    borderSize = 1.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = onImportVaultClick,
+                )
+            }
+        },
+    )
 }
 
 @Preview(showBackground = true, name = "VaultListScreen")

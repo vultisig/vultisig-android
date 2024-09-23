@@ -109,9 +109,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             .convertToTokenValue(dstToken)
 
         val recommendedMinTokenValue = if (srcToken.chain != Chain.MayaChain) {
-            tokenValue.copy(
-                value = mayaQuote.recommendedMinAmountIn, decimals = FIXED_MAYA_SWAP_DECIMALS
-            )
+            mayaQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
         } else tokenValue
 
         return SwapQuote.MayaChain(
@@ -148,9 +146,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val expectedDstTokenValue = thorQuote.expectedAmountOut
             .convertToTokenValue(dstToken)
 
-        val recommendedMinTokenValue = tokenValue.copy(
-            value = thorQuote.recommendedMinAmountIn, decimals = FIXED_THOR_SWAP_DECIMALS
-        )
+        val recommendedMinTokenValue = thorQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
 
         return SwapQuote.ThorChain(
             expectedDstValue = expectedDstTokenValue,

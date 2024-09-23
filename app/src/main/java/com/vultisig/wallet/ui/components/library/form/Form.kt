@@ -52,8 +52,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.PercentText
 import com.vultisig.wallet.ui.components.TokenLogo
@@ -62,6 +60,8 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.clearFocusOnKeyboardDismiss
 
 

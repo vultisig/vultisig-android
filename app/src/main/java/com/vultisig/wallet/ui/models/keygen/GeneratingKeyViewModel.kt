@@ -5,23 +5,22 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.data.api.KeygenVerifier
+import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.UiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +38,7 @@ internal sealed interface KeygenState {
     data object ReshareECDSA : KeygenState
     data object ReshareEdDSA : KeygenState
     data object Success : KeygenState
-    data class Error(val errorMessage: UiText,val isThresholdError: Boolean) : KeygenState
+    data class Error(val errorMessage: UiText, val isThresholdError: Boolean) : KeygenState
 }
 
 internal class GeneratingKeyViewModel(
@@ -51,17 +50,17 @@ internal class GeneratingKeyViewModel(
     private val sessionId: String,
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
-    private val gson: Gson,
     @SuppressLint("StaticFieldLeak") private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val sessionApi: SessionApi,
     internal val isReshareMode: Boolean
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
-        TssMessenger(serverAddress, sessionId, encryptionKeyHex)
+        TssMessenger(serverAddress, sessionId, encryptionKeyHex, sessionApi = sessionApi, coroutineScope = viewModelScope)
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
     private var _messagePuller: TssMessagePuller? = null
@@ -117,7 +116,12 @@ internal class GeneratingKeyViewModel(
     private suspend fun keygenWithRetry(service: ServiceImpl, attempt: Int = 1) {
         try {
             _messagePuller = TssMessagePuller(
-                service, this.encryptionKeyHex, serverAddress, vault.localPartyID, sessionId
+                service,
+                this.encryptionKeyHex,
+                serverAddress,
+                vault.localPartyID,
+                sessionId,
+                sessionApi,
             )
             _messagePuller?.pullMessages(null)
             when (this.action) {
@@ -158,17 +162,18 @@ internal class GeneratingKeyViewModel(
                 }
             }
             // here is the keygen process is done
-            val keygenVerifier = KeygenVerifier(
-                this.serverAddress,
-                this.sessionId,
-                vault.localPartyID,
-                this.keygenCommittee, gson = gson,
-            )
             withContext(Dispatchers.IO) {
-                keygenVerifier.markLocalPartyComplete()
-                if (!keygenVerifier.checkCompletedParties()) {
-                    throw Exception("another party failed to complete the keygen process")
+                sessionApi.markLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
+                Timber.d("Local party ${vault.localPartyID} marked as complete")
+                var counter = 0
+                while (counter < 60){
+                    val serverCompletedParties = sessionApi.getCompletedParties(serverAddress, sessionId)
+                    if (!serverCompletedParties.containsAll(keygenCommittee)) break
+                    delay(1000)
+                    counter++
                 }
+                Timber.d("All parties have completed the key generation process")
+
             }
         } catch (e: Exception) {
             this._messagePuller?.stop()

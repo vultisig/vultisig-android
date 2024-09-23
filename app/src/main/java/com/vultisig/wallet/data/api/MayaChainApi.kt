@@ -1,14 +1,14 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -43,7 +43,6 @@ internal interface MayaChainApi {
 }
 
 internal class MayaChainApiImp @Inject constructor(
-    private val gson: Gson,
     private val httpClient: HttpClient,
 ) : MayaChainApi {
 
@@ -55,7 +54,7 @@ internal class MayaChainApiImp @Inject constructor(
             .get("https://mayanode.mayachain.info/cosmos/bank/v1beta1/balances/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val resp = gson.fromJson(response.bodyAsText(), CosmosBalanceResponse::class.java)
+        val resp = response.body<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
     }
 
@@ -80,7 +79,7 @@ internal class MayaChainApiImp @Inject constructor(
                 }
                 header(xClientID, xClientIDValue)
             }
-        return gson.fromJson(response.bodyAsText(), THORChainSwapQuote::class.java)
+        return response.body<THORChainSwapQuote>()
     }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
@@ -88,14 +87,9 @@ internal class MayaChainApiImp @Inject constructor(
             .get("https://mayanode.mayachain.info/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val responseBody = response.bodyAsText()
+        val responseBody = response.body<THORChainAccountResultJson>()
         Timber.d("getAccountNumber: $responseBody")
-        val jsonObject = gson.fromJson(responseBody, JsonObject::class.java)
-        val valueObject = jsonObject.get("result")?.asJsonObject?.get("value")?.asJsonObject
-
-        return valueObject?.let {
-            gson.fromJson(valueObject, THORChainAccountValue::class.java)
-        } ?: error("Field value is not found in the response")
+        return responseBody.result?.value ?: error("Field value is not found in the response")
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
@@ -106,22 +100,15 @@ internal class MayaChainApiImp @Inject constructor(
                     header(xClientID, xClientIDValue)
                     setBody(tx)
                 }
-            val responseRawString = response.bodyAsText()
-            val result = gson.fromJson(
-                responseRawString,
-                CosmosTransactionBroadcastResponse::class.java
-            )
-            result?.let {
-                val response = it.txResponse
-                if (response?.code == 0 || response?.code == 19) {
-                    return response.txHash
-                }
-                throw Exception("Error broadcasting transaction: $responseRawString")
+            val result = response.body<CosmosTransactionBroadcastResponse>()
+            val txResponse = result.txResponse
+            if (txResponse?.code == 0 || txResponse?.code == 19) {
+                return txResponse.txHash
             }
+            throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
         } catch (e: Exception) {
             Timber.tag("MayaChainService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
-        return null
     }
 }

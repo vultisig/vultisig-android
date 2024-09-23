@@ -28,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
@@ -40,6 +39,7 @@ import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun DepositFormScreen(

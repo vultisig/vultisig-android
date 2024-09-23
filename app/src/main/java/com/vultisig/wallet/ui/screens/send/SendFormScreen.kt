@@ -27,7 +27,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.asString
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
@@ -41,6 +40,7 @@ import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

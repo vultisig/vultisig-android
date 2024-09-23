@@ -3,13 +3,13 @@ package com.vultisig.wallet.ui.models.deposit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
