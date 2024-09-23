@@ -1,25 +1,28 @@
 package com.vultisig.wallet.data.api.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class OneInchTokensJson(
-    @SerializedName("tokens")
+    @SerialName("tokens")
     val tokens: Map<String, OneInchTokenJson>
 )
 
+@Serializable
 data class OneInchTokenJson(
-    @SerializedName("address")
+    @SerialName("address")
     val address: String,
-    @SerializedName("symbol")
+    @SerialName("symbol")
     val symbol: String,
-    @SerializedName("decimals")
+    @SerialName("decimals")
     val decimals: Int,
-    @SerializedName("name")
+    @SerialName("name")
     val name: String,
-    @SerializedName("logoURI")
+    @SerialName("logoURI")
     val logoURI: String?,
-    @SerializedName("eip2612")
+    @SerialName("eip2612")
     val eip2612: Boolean? = null,
-    @SerializedName("tags")
+    @SerialName("tags")
     val tags: List<String>? = null,
 )

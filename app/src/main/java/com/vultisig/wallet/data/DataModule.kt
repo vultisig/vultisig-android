@@ -73,6 +73,7 @@ internal interface DataModule {
         fun provideJson() = Json {
             ignoreUnknownKeys = true
             explicitNulls = false
+            encodeDefaults = true
         }
 
         @Singleton

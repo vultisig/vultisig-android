@@ -79,6 +79,7 @@ internal class NamingVaultViewModel @Inject constructor(
                 VaultSetupType.ACTIVE, VaultSetupType.FAST -> {
                     navigator.navigate(
                         Destination.KeygenEmail(
+                            vaultId = null,
                             name = name,
                             setupType = vaultSetupType
                         )
@@ -86,12 +87,9 @@ internal class NamingVaultViewModel @Inject constructor(
                 }
                 else -> {
                     navigator.navigate(
-                        Destination.KeygenFlow(
-                            vaultName = name,
-                            vaultSetupType = vaultSetupType,
-                            isReshare = false,
-                            email = null,
-                            password = null,
+                        Destination.KeygenFlow.generateNewVault(
+                            name = name,
+                            setupType = vaultSetupType,
                         )
                     )
                 }

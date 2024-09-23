@@ -16,7 +16,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.google.zxing.WriterException
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.QRCODE_DIRECTORY_NAME_FULL
@@ -36,6 +35,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 internal data class ShareVaultQrState(
@@ -45,6 +47,7 @@ internal data class ShareVaultQrState(
     val fileUri: Uri? = null,
 )
 
+@Serializable
 internal data class ShareVaultQrModel(
     val uid: String,
     val name: String,
@@ -60,7 +63,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val snackbarFlow: SnackbarFlow,
     @ApplicationContext private val context: Context,
-    private val gson: Gson,
+    private val json: Json,
 ) : ViewModel() {
     private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
@@ -95,7 +98,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 state.update {
                     it.copy(
                         shareVaultQrModel = shareVaultQrModel,
-                        shareVaultQrString = gson.toJson(shareVaultQrModel),
+                        shareVaultQrString = json.encodeToString(shareVaultQrModel),
                         fileName = "VultisigQR-${vault.name}-${shareVaultQrModel.uid.takeLast(3)}.png"
                     )
                 }

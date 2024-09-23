@@ -1,12 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -18,14 +18,14 @@ internal interface DefaultChainsRepository {
 
 internal class DefaultChainsRepositoryImpl @Inject constructor(
     private val dataStore: AppDataStore,
-    private val gson: Gson
+    private val json: Json
 ) : DefaultChainsRepository {
 
     override val selectedDefaultChains: Flow<List<Chain>>
         get() = dataStore.readData(stringPreferencesKey(SELECTED_DEFAULT_CHAINS_KEY), "")
             .map { it ->
                 try {
-                    gson.fromJson<List<String>>(it, object : TypeToken<List<String>>() {}.type)
+                    json.decodeFromString<List<String>>(it)
                         .map { Chain.fromRaw(it) }
                 } catch (e: Throwable) {
                     Timber.e(e)
@@ -37,7 +37,7 @@ internal class DefaultChainsRepositoryImpl @Inject constructor(
         dataStore.editData { preferences ->
             preferences.set(
                 key = stringPreferencesKey(SELECTED_DEFAULT_CHAINS_KEY),
-                value = gson.toJson(chains.map { it.id })
+                value = json.encodeToString(chains.map { it.id })
             )
         }
     }
