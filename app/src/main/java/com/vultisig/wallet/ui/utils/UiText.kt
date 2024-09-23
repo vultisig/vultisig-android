@@ -1,11 +1,11 @@
-package com.vultisig.wallet.common
+package com.vultisig.wallet.ui.utils
 
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.vultisig.wallet.common.UiText.DynamicString
-import com.vultisig.wallet.common.UiText.FormattedText
-import com.vultisig.wallet.common.UiText.StringResource
+import com.vultisig.wallet.ui.utils.UiText.DynamicString
+import com.vultisig.wallet.ui.utils.UiText.FormattedText
+import com.vultisig.wallet.ui.utils.UiText.StringResource
 
 
 sealed class UiText {

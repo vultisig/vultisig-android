@@ -1,32 +1,36 @@
 package com.vultisig.wallet.data.api.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 internal data class LiFiSwapQuoteJson(
-    @SerializedName("estimate")
+    @SerialName("estimate")
     val estimate: LiFiSwapEstimateJson,
-    @SerializedName("transactionRequest")
+    @SerialName("transactionRequest")
     val transactionRequest: LiFiSwapTxJson,
-    @SerializedName("message")
+    @SerialName("message")
     val message: String? = null,
 )
 
+@Serializable
 internal data class LiFiSwapTxJson(
-    @SerializedName("from")
+    @SerialName("from")
     val from: String,
-    @SerializedName("to")
+    @SerialName("to")
     val to: String,
-    @SerializedName("gasLimit")
+    @SerialName("gasLimit")
     val gasLimit: String,
-    @SerializedName("data")
+    @SerialName("data")
     val data: String,
-    @SerializedName("value")
+    @SerialName("value")
     val value: String,
-    @SerializedName("gasPrice")
+    @SerialName("gasPrice")
     val gasPrice: String,
 )
 
+@Serializable
 internal data class LiFiSwapEstimateJson(
-    @SerializedName("toAmount")
+    @SerialName("toAmount")
     val toAmount: String,
 )

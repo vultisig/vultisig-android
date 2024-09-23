@@ -7,11 +7,11 @@ import androidx.compose.foundation.text2.input.TextFieldState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
@@ -19,6 +19,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
@@ -50,6 +51,7 @@ internal class ImportFileViewModel @Inject constructor(
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
     private val snackbarFlow: SnackbarFlow,
+    private val discoverToken: DiscoverTokenUseCase,
 ) : ViewModel() {
     val uiModel = MutableStateFlow(ImportFileState())
 
@@ -113,6 +115,7 @@ internal class ImportFileViewModel @Inject constructor(
     private suspend fun insertVaultToDb(vault: Vault) {
         saveVault(vault, false)
         vaultDataStoreRepository.setBackupStatus(vault.id, true)
+        discoverToken(vault.id, null)
         navigator.navigate(
             Destination.Home(
                 openVaultId = vault.id,

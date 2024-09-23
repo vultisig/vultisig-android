@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import com.google.gson.Gson
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -10,6 +9,7 @@ import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.wallet.Swaps
+import kotlinx.serialization.json.Json
 import tss.KeysignResponse
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
@@ -171,7 +171,7 @@ class THORCHainHelper(
             allPublicKeys
         )
         val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
-        val cosmosSig = Gson().fromJson(output.serialized, CosmoSignature::class.java)
+        val cosmosSig = Json.decodeFromString<CosmoSignature>(output.serialized)
         return SignedTransactionResult(
             output.serialized,
             cosmosSig.transactionHash(),

@@ -1,14 +1,16 @@
 package com.vultisig.wallet.data.models
 
-import com.google.gson.annotations.SerializedName
 import com.vultisig.wallet.data.utils.Numeric
 import io.ktor.util.decodeBase64Bytes
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.security.MessageDigest
 
+@Serializable
 data class CosmoSignature(
-    @SerializedName("mode")
+    @SerialName("mode")
     val mode: String,
-    @SerializedName("tx_bytes")
+    @SerialName("tx_bytes")
     val txBytes: String
 )
 

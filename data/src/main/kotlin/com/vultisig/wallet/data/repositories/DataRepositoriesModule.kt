@@ -28,4 +28,9 @@ internal interface DataRepositoriesModule {
         impl: VaultRepositoryImpl
     ): VaultRepository
 
+    @Binds
+    @Singleton
+    fun bindVultiSignerRepository(
+        impl: VultiSignerRepositoryImpl
+    ): VultiSignerRepository
 }

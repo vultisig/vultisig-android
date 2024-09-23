@@ -1,15 +1,16 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -46,7 +47,6 @@ internal interface ThorChainApi {
 }
 
 internal class ThorChainApiImpl @Inject constructor(
-    private val gson: Gson,
     private val httpClient: HttpClient,
 ) : ThorChainApi {
 
@@ -58,7 +58,7 @@ internal class ThorChainApiImpl @Inject constructor(
             .get("https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val resp = gson.fromJson(response.bodyAsText(), CosmosBalanceResponse::class.java)
+        val resp = response.body<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
     }
 
@@ -69,34 +69,27 @@ internal class ThorChainApiImpl @Inject constructor(
         amount: String,
         interval: String,
         isAffiliate: Boolean,
-    ): THORChainSwapQuote {
-        val response = httpClient
-            .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
-                parameter("from_asset", fromAsset)
-                parameter("to_asset", toAsset)
-                parameter("amount", amount)
-                parameter("destination", address)
-                parameter("streaming_interval", interval)
-                if (isAffiliate) {
-                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
-                }
-                header(xClientID, xClientIDValue)
+    ): THORChainSwapQuote = httpClient
+        .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
+            parameter("from_asset", fromAsset)
+            parameter("to_asset", toAsset)
+            parameter("amount", amount)
+            parameter("destination", address)
+            parameter("streaming_interval", interval)
+            if (isAffiliate) {
+                parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
             }
-        return gson.fromJson(response.bodyAsText(), THORChainSwapQuote::class.java)
-    }
+            header(xClientID, xClientIDValue)
+        }.body()
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient
             .get("https://thornode.ninerealms.com/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val jsonObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-        val valueObject = jsonObject.get("result")?.asJsonObject?.get("value")?.asJsonObject
-
-        return valueObject?.let {
-            gson.fromJson(valueObject, THORChainAccountValue::class.java)
-        } ?: error("Field value is not found in the response")
+        return response.body<THORChainAccountResultJson>().result?.value
+            ?: error("Field value is not found in the response")
     }
 
     override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
@@ -104,9 +97,8 @@ internal class ThorChainApiImpl @Inject constructor(
             val response = httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
                 header(xClientID, xClientIDValue)
             }
-            val content = response.bodyAsText()
-            val jsonObject = gson.fromJson(content, JsonObject::class.java)
-            return jsonObject.get("native_tx_fee_rune")?.asBigInteger ?: 0.toBigInteger()
+            val content = response.body<NativeTxFeeRune>()
+            return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
         } catch (e: Exception) {
             Timber.tag("THORChainService")
                 .e("Error getting THORChain native transaction fee: ${e.message}")
@@ -122,21 +114,16 @@ internal class ThorChainApiImpl @Inject constructor(
                 setBody(tx)
             }
             val responseRawString = response.bodyAsText()
-            val result = gson.fromJson(
-                responseRawString,
-                CosmosTransactionBroadcastResponse::class.java
-            )
-            result?.let {
-                val response = it.txResponse
-                if (response?.code == 0 || response?.code == 19) {
-                    return response.txHash
-                }
-                throw Exception("Error broadcasting transaction: $responseRawString")
+            val result = response.body<CosmosTransactionBroadcastResponse>()
+
+            val txResponse = result.txResponse
+            if (txResponse?.code == 0 || txResponse?.code == 19) {
+                return txResponse.txHash
             }
+            throw Exception("Error broadcasting transaction: $responseRawString")
         } catch (e: Exception) {
             Timber.tag("THORChainService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
-        return null
     }
 }

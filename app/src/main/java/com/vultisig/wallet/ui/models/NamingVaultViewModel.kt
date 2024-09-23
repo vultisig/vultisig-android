@@ -7,13 +7,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiText
-import com.vultisig.wallet.common.UiText.StringResource
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.TextFieldUtils
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.UiText.StringResource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,6 +79,7 @@ internal class NamingVaultViewModel @Inject constructor(
                 VaultSetupType.ACTIVE, VaultSetupType.FAST -> {
                     navigator.navigate(
                         Destination.KeygenEmail(
+                            vaultId = null,
                             name = name,
                             setupType = vaultSetupType
                         )
@@ -86,12 +87,9 @@ internal class NamingVaultViewModel @Inject constructor(
                 }
                 else -> {
                     navigator.navigate(
-                        Destination.KeygenFlow(
-                            vaultName = name,
-                            vaultSetupType = vaultSetupType,
-                            isReshare = false,
-                            email = null,
-                            password = null,
+                        Destination.KeygenFlow.generateNewVault(
+                            name = name,
+                            setupType = vaultSetupType,
                         )
                     )
                 }

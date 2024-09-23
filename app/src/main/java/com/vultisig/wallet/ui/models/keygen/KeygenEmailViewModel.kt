@@ -9,9 +9,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -35,7 +35,8 @@ internal class KeygenEmailViewModel @Inject constructor(
     val emailFieldState = TextFieldState()
     val verifyEmailFieldState = TextFieldState()
 
-    private val name = requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_NAME))
+    private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
+    private val name: String? = savedStateHandle.get<String>(Destination.ARG_VAULT_NAME)
     private val setupType = VaultSetupType.fromInt(
         requireNotNull(savedStateHandle.get<Int>(Destination.ARG_VAULT_SETUP_TYPE))
     )
@@ -75,6 +76,7 @@ internal class KeygenEmailViewModel @Inject constructor(
             viewModelScope.launch {
                 navigator.navigate(
                     Destination.KeygenPassword(
+                        vaultId = vaultId,
                         name = name,
                         setupType = setupType,
                         email = email,

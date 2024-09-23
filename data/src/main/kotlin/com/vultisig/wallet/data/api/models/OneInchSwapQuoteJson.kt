@@ -1,27 +1,30 @@
 package com.vultisig.wallet.data.api.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class OneInchSwapQuoteJson(
-    @SerializedName("dstAmount")
+    @SerialName("dstAmount")
     val dstAmount: String,
-    @SerializedName("tx")
+    @SerialName("tx")
     val tx: OneInchSwapTxJson,
-    @SerializedName("error")
+    @SerialName("error")
     val error: String? = null,
 )
 
+@Serializable
 data class OneInchSwapTxJson(
-    @SerializedName("from")
+    @SerialName("from")
     val from: String,
-    @SerializedName("to")
+    @SerialName("to")
     val to: String,
-    @SerializedName("gas")
+    @SerialName("gas")
     val gas: Long,
-    @SerializedName("data")
+    @SerialName("data")
     val data: String,
-    @SerializedName("value")
+    @SerialName("value")
     val value: String,
-    @SerializedName("gasPrice")
+    @SerialName("gasPrice")
     val gasPrice: String,
 )

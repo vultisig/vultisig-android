@@ -4,7 +4,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.data.chains.helpers.AtomHelper
 import com.vultisig.wallet.data.chains.helpers.DydxHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -24,6 +23,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.Chain
@@ -71,7 +71,6 @@ internal class KeysignViewModel(
     private val messagesToSign: List<String>,
     private val keyType: TssKeyType,
     private val keysignPayload: KeysignPayload,
-    private val gson: Gson,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
@@ -81,11 +80,12 @@ internal class KeysignViewModel(
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
+    private val sessionApi: SessionApi,
 
     ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
-        TssMessenger(serverAddress, sessionId, encryptionKeyHex)
+        TssMessenger(serverAddress, sessionId, encryptionKeyHex, sessionApi, viewModelScope)
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     var isThorChainSwap =
         keysignPayload.swapPayload is SwapPayload.ThorChain
@@ -126,6 +126,7 @@ internal class KeysignViewModel(
                 hexEncryptionKey = encryptionKeyHex,
                 serverAddress = serverAddress,
                 localPartyKey = vault.localPartyID,
+                sessionApi = sessionApi,
                 sessionID = sessionId
             )
             this.messagesToSign.forEach { message ->
@@ -144,7 +145,7 @@ internal class KeysignViewModel(
     }
 
     private suspend fun signMessageWithRetry(service: ServiceImpl, message: String, attempt: Int) {
-        val keysignVerify = KeysignVerify(serverAddress, sessionId, gson)
+        val keysignVerify = KeysignVerify(serverAddress, sessionId, sessionApi)
         try {
             Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()

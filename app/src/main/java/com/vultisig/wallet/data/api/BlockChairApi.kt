@@ -1,17 +1,22 @@
 package com.vultisig.wallet.data.api
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.vultisig.wallet.data.api.models.BlockChairInfo
+import com.vultisig.wallet.data.api.models.BlockChairInfoJson
+import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
+import com.vultisig.wallet.data.api.models.TransactionHashDataJson
+import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -27,7 +32,7 @@ internal interface BlockChairApi {
 }
 
 internal class BlockChairApiImp @Inject constructor(
-    private val gson: Gson,
+    private val json: Json,
     private val httpClient: HttpClient,
 ) : BlockChairApi {
 
@@ -51,12 +56,9 @@ internal class BlockChairApiImp @Inject constructor(
                 httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/dashboards/address/${address}?state=latest") {
                     header("Content-Type", "application/json")
                 }
-            val responseData = response.bodyAsText()
+            val responseData = response.body<BlockChairInfoJson>()
             Timber.d("response data: $responseData")
-            val rootObject = gson.fromJson(responseData, JsonObject::class.java)
-            val data = rootObject.getAsJsonObject("data").getAsJsonObject().get(address)
-            val blockChairInfo = gson.fromJson(data, BlockChairInfo::class.java)
-            return blockChairInfo
+            return responseData.data[address]
         } catch (e: Exception) {
             Timber.e("fail to get address info from blockchair: ${e.message}")
         }
@@ -68,15 +70,13 @@ internal class BlockChairApiImp @Inject constructor(
             httpClient.get("https://api.vultisig.com/blockchair/${getChainName(chain)}/stats") {
                 header("Content-Type", "application/json")
             }
-        val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-        return rootObject.getAsJsonObject("data")
-            .get("suggested_transaction_fee_per_byte_sat").asBigInteger
+        return response.body<SuggestedTransactionFeeDataJson>().data.value
     }
 
     override suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String {
-        val jsonObject = JsonObject()
-        jsonObject.addProperty("data", signedTransaction)
-        val bodyContent = gson.toJson(jsonObject)
+        val bodyContent = json.encodeToString(
+            TransactionHashRequestBodyJson(signedTransaction)
+        )
         Timber.d("bodyContent:$bodyContent")
         val response =
             httpClient.post("https://api.vultisig.com/blockchair/${getChainName(coin)}/push/transaction") {
@@ -87,7 +87,7 @@ internal class BlockChairApiImp @Inject constructor(
             Timber.d("fail to broadcast transaction: ${response.bodyAsText()}")
             throw Exception("fail to broadcast transaction")
         }
-        val rootObject = gson.fromJson(response.bodyAsText(), JsonObject::class.java)
-        return rootObject.getAsJsonObject("data").get("transaction_hash").asString
+
+        return response.body<TransactionHashDataJson>().data.value
     }
 }

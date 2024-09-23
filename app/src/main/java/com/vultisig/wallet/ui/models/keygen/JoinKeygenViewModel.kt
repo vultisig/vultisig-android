@@ -13,15 +13,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.common.UiText
 import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.common.asString
-import com.vultisig.wallet.common.asUiText
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.PeerDiscoveryPayload
@@ -36,6 +32,9 @@ import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.decodeBase64Bytes
@@ -48,11 +47,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import okhttp3.OkHttpClient
 import timber.log.Timber
-import java.net.HttpURLConnection
 import java.net.Inet4Address
-import java.net.URL
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -70,7 +66,6 @@ enum class JoinKeygenState {
 internal class JoinKeygenViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
-    private val gson: Gson,
     private val protoBuf: ProtoBuf,
     private val mapKeygenMessageFromProto: KeygenMessageFromProtoMapper,
     private val mapReshareMessageFromProto: ReshareMessageFromProtoMapper,
@@ -78,6 +73,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val decompressQr: DecompressQrUseCase,
+    private val sessionApi: SessionApi,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -97,7 +93,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
     private var jobWaitingForKeygenStart: Job? = null
     private var _isDiscoveryListenerRegistered = false
-    var operationMode =mutableStateOf(OperationMode.KEYGEN)
+    var operationMode = mutableStateOf(OperationMode.KEYGEN)
 
     var currentState: MutableState<JoinKeygenState> =
         mutableStateOf(JoinKeygenState.DiscoveringSessionID)
@@ -123,13 +119,13 @@ internal class JoinKeygenViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             _encryptionKeyHex,
-            gson = gson,
             oldResharePrefix = _oldResharePrefix,
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            sessionApi = sessionApi,
             isReshareMode = operationMode.value.isReshare()
         )
 
@@ -159,7 +155,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                 val payload = when (deepLink.getTssAction()) {
                     TssAction.KEYGEN -> {
-                        operationMode.value=OperationMode.KEYGEN
+                        operationMode.value = OperationMode.KEYGEN
                         PeerDiscoveryPayload.Keygen(
                             mapKeygenMessageFromProto(
                                 protoBuf.decodeFromByteArray<KeygenMessageProto>(contentBytes)
@@ -168,7 +164,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 }
 
                     TssAction.ReShare ->{
-                        operationMode.value=OperationMode.RESHARE
+                        operationMode.value = OperationMode.RESHARE
                         PeerDiscoveryPayload.Reshare(
                             mapReshareMessageFromProto(
                                 protoBuf.decodeFromByteArray<ReshareMessageProto>(contentBytes)
@@ -278,19 +274,9 @@ internal class JoinKeygenViewModel @Inject constructor(
     suspend fun joinKeygen() {
         withContext(Dispatchers.IO) {
             try {
-                val serverUrl = URL("${_serverAddress}/$_sessionID")
-                Timber.d("Joining ${operationMode.value.name} at $serverUrl")
-                val conn = serverUrl.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-                val payload = listOf(_localPartyID)
-                gson.toJson(payload).also {
-                    conn.outputStream.write(it.toByteArray())
-                }
-                val responseCode = conn.responseCode
-                Timber.d("Join ${operationMode.value.name}}:: Response code: $responseCode")
-                conn.disconnect()
+                Timber.d("Joining ${operationMode.value.name}")
+                sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
+                Timber.d("Join ${operationMode.value.name} ")
                 currentState.value = JoinKeygenState.WaitingForKeygenStart
             } catch (e: Exception) {
                 Timber.e("Failed to join ${operationMode.value.name}}: ${e.stackTraceToString()}")
@@ -315,7 +301,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         return@withContext
                     }
                     // backoff 1s
-                    Thread.sleep(1000)
+                    delay(1000)
                 }
             }
         }
@@ -326,31 +312,12 @@ internal class JoinKeygenViewModel @Inject constructor(
     }
 
     @SuppressLint("BinaryOperationInTimber")
-    private fun checkKeygenStarted(): Boolean {
+    private suspend fun checkKeygenStarted(): Boolean {
         try {
-            val serverURL = "$_serverAddress/start/$_sessionID"
-            Timber.d("Checking keygen start at $serverURL")
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url(serverURL).get().build()
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HttpURLConnection.HTTP_OK -> {
-                        Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
-                        response.body?.let {
-                            val result = it.string()
-                            val tokenType = object : TypeToken<List<String>>() {}.type
-                            this._keygenCommittee = gson.fromJson(result, tokenType)
-                            if (this._keygenCommittee.contains(_localPartyID)) {
-                                return true
-                            }
-                        }
-                    }
-
-                    else -> {
-                        Timber.tag("JoinKeygenViewModel")
-                            .d("Failed to check start ${operationMode.value.name}}: Response code: ${response.code}")
-                    }
-                }
+            this._keygenCommittee = sessionApi.checkCommittee(_serverAddress, _sessionID)
+            if (this._keygenCommittee.contains(_localPartyID)) {
+                Timber.tag("JoinKeygenViewModel").d("${operationMode.value.name}} started")
+                return true
             }
         } catch (e: Exception) {
             Timber.tag("JoinKeygenViewModel")

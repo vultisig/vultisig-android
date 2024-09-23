@@ -238,7 +238,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
             Solana -> {
                 if (coin.isNativeToken) {
-                    solanaApi.getBalance(address).toBigInteger()
+                    solanaApi.getBalance(address)
                 } else {
                     splTokenRepository.getBalance(coin)
                         ?: splTokenRepository.getCachedBalance(coin)

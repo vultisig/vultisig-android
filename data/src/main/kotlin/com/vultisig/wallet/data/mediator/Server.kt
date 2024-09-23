@@ -4,9 +4,9 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import com.vultisig.wallet.data.mediator.HttpStatus
+import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import spark.Request
 import spark.Response
 import spark.Service
@@ -112,14 +112,13 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val key = "session-$sessionID-start"
-        val decodeType = object : TypeToken<List<String>>() {}.type
-        val participants: List<String> = Gson().fromJson(request.body(), decodeType)
+        val participants: List<String> = Json.decodeFromString(request.body())
         cache.put(key, Session(sessionID, participants.toMutableList()))
-        response.status(HttpStatus.OK)
+        response.status(HttpStatusCode.OK.value)
         response.type("application/json")
         return ""
     }
@@ -128,7 +127,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val key = "session-$sessionID-start"
@@ -136,10 +135,10 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             val session = it as? Session
             session?.let {
                 response.type("application/json")
-                response.status(HttpStatus.OK)
-                return Gson().toJson(session.participants)
-            } ?: response.status(HttpStatus.NOT_FOUND)
-        } ?: response.status(HttpStatus.NOT_FOUND)
+                response.status(HttpStatusCode.OK.value)
+                return Json.encodeToString(session.participants)
+            } ?: response.status(HttpStatusCode.NotFound.value)
+        } ?: response.status(HttpStatusCode.NotFound.value)
         return ""
     }
 
@@ -147,22 +146,22 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val messageID = request.headers("message_id")
         messageID ?: run {
             response.body("message_id is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val key = "keysign-${sessionID.trim()}-$messageID-complete"
         cache.getIfPresent(key)?.let {
             response.type("application/json")
-            response.status(HttpStatus.OK)
+            response.status(HttpStatusCode.OK.value)
             return it as String
         } ?: run {
-            response.status(HttpStatus.NOT_FOUND)
+            response.status(HttpStatusCode.NotFound.value)
         }
         return ""
     }
@@ -171,18 +170,18 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val messageID = request.headers("message_id")
         messageID ?: run {
             response.body("message_id is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val key = "keysign-${sessionID.trim()}-$messageID-complete"
         cache.put(key, request.body())
-        response.status(HttpStatus.OK)
+        response.status(HttpStatusCode.OK.value)
         response.type("application/json")
         return ""
     }
@@ -191,19 +190,19 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val participantKey = request.params(":participantKey")
         participantKey ?: run {
             response.body("participantKey is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val hash = request.params(":hash")
         hash ?: run {
             response.body("hash is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val messageID = request.headers("message_id")
@@ -213,7 +212,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             "$sessionID-$participantKey-$hash"
         }
         cache.invalidate(key)
-        response.status(HttpStatus.OK)
+        response.status(HttpStatusCode.OK.value)
         return ""
     }
 
@@ -221,13 +220,13 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val participantKey = request.params(":participantKey")
         participantKey ?: run {
             response.body("participantKey is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val messageID = request.headers("message_id")
@@ -238,9 +237,9 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         }
         cache.asMap().filterKeys { it.startsWith(keyPrefix) }.let {
             val messages = it.values.toList()
-            response.status(HttpStatus.OK)
+            response.status(HttpStatusCode.OK.value)
             response.type("application/json")
-            return Gson().toJson(messages)
+            return Json.encodeToString(messages)
         }
     }
 
@@ -248,11 +247,15 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
             response.body("sessionID is empty")
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val messageID = request.headers("message_id")
-        val message = Message.fromJson(request.body())
+        val json = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+        }
+        val message = json.decodeFromString<Message>(request.body())
         for (recipient in message.to) {
             val key = messageID?.let {
                 "${sessionID.trim()}-$recipient-$it-${message.hash}"
@@ -262,7 +265,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             Timber.tag("server").d("put message %s", key)
             cache.put(key, message)
         }
-        response.status(HttpStatus.ACCEPTED)
+        response.status(HttpStatusCode.Accepted.value)
         return ""
     }
 
@@ -273,7 +276,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
     ): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val cleanSessionID = sessionID.trim()
@@ -283,9 +286,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             "session-$cleanSessionID"
         }
         Timber.tag("server").d("body: %s", request.body())
-        val gson = Gson()
-        val decodeType = object : TypeToken<List<String>>() {}.type
-        val participants: List<String> = gson.fromJson(request.body(), decodeType)
+        val participants: List<String> = Json.decodeFromString(request.body())
         cache.getIfPresent(key)?.let {
             val session = it as? Session
             session?.let {
@@ -304,14 +305,14 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             cache.put(key, newParticipants)
         }
 
-        response.status(HttpStatus.CREATED)
+        response.status(HttpStatusCode.Created.value)
         return ""
     }
 
     private fun getSession(request: Request, response: Response, prefix: String? = null): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val cleanSessionID = sessionID.trim()
@@ -324,18 +325,18 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         cache.getIfPresent(key)?.let {
             val session = it as? Session
             session?.let {
-                response.status(HttpStatus.OK)
+                response.status(HttpStatusCode.OK.value)
                 response.type("application/json")
-                return Gson().toJson(session.participants)
-            } ?: response.status(HttpStatus.NOT_FOUND)
-        } ?: response.status(HttpStatus.NOT_FOUND)
+                return Json.encodeToString(session.participants)
+            } ?: response.status(HttpStatusCode.NotFound.value)
+        } ?: response.status(HttpStatusCode.NotFound.value)
         return ""
     }
 
     private fun deleteSession(request: Request, response: Response): String {
         val sessionID = request.params(":sessionID")
         sessionID ?: run {
-            response.status(HttpStatus.BAD_REQUEST)
+            response.status(HttpStatusCode.BadRequest.value)
             return ""
         }
         val cleanSessionID = sessionID.trim()

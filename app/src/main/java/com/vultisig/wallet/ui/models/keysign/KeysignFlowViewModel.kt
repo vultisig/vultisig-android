@@ -14,19 +14,21 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.vultisig.wallet.data.chains.helpers.SigningHelper
-import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.data.common.VultisigRelay
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
+import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
+import com.vultisig.wallet.data.chains.helpers.SigningHelper
+import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.common.VultisigRelay
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
@@ -35,25 +37,24 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
-import com.vultisig.wallet.data.repositories.VultiSignerRepository
-import com.vultisig.wallet.data.usecases.CompressQrUseCase
-import com.vultisig.wallet.data.mediator.MediatorService
-import com.vultisig.wallet.ui.utils.NetworkPromptOption
-import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -61,9 +62,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
 import vultisig.keysign.v1.CosmosSpecific
 import vultisig.keysign.v1.Erc20ApprovePayload
@@ -78,7 +76,6 @@ import vultisig.keysign.v1.THORChainSpecific
 import vultisig.keysign.v1.THORChainSwapPayload
 import vultisig.keysign.v1.UTXOSpecific
 import vultisig.keysign.v1.UtxoInfo
-import java.net.HttpURLConnection
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
@@ -91,7 +88,6 @@ enum class KeysignFlowState {
 internal class KeysignFlowViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val vultisigRelay: VultisigRelay,
-    private val gson: Gson,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
@@ -106,6 +102,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val compressQr: CompressQrUseCase,
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
+    private val sessionApi: SessionApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -132,6 +129,9 @@ internal class KeysignFlowViewModel @Inject constructor(
 
     val password = savedStateHandle.get<String?>(SendDst.ARG_PASSWORD)
 
+    val isFastSign: Boolean
+        get() = password != null
+
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
             vault = _currentVault!!,
@@ -142,7 +142,6 @@ internal class KeysignFlowViewModel @Inject constructor(
             messagesToSign = messagesToSign,
             keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
-            gson = gson,
             thorChainApi = thorChainApi,
             blockChairApi = blockChairApi,
             evmApiFactory = evmApiFactory,
@@ -151,6 +150,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             solanaApi = solanaApi,
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
+            sessionApi = sessionApi,
             navigator = navigator,
         )
 
@@ -192,7 +192,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             vault.localPartyID,
-            gson
+            sessionApi
         )
 
         val keysignPayload = _keysignPayload!!
@@ -377,7 +377,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                 }
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
-                    Thread.sleep(1000) // back off a second
+                    delay(1000) // back off a second
                     startSession(_serverAddress, _sessionID, _currentVault!!.localPartyID)
                 }
                 // kick off discovery
@@ -419,22 +419,9 @@ internal class KeysignFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url("$serverAddr/$sessionID").post(
-                gson.toJson(listOf(localPartyID))
-                    .toRequestBody("application/json".toMediaType())
-            ).build()
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HttpURLConnection.HTTP_CREATED -> {
-                        Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
-                    }
+            sessionApi.startSession(serverAddr, sessionID, listOf(localPartyID))
 
-                    else -> Timber.tag("KeysignFlowViewModel").d(
-                        "startSession: Response code: ${response.code}"
-                    )
-                }
-            }
+            Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
 
             if (password != null) {
                 val vault = _currentVault!!
@@ -512,18 +499,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         withContext(Dispatchers.IO) {
             try {
                 val keygenCommittee = selection.value ?: emptyList()
-                val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-                val payload = gson.toJson(keygenCommittee)
-                val request = okhttp3.Request.Builder().url("$_serverAddress/start/$_sessionID")
-                    .post(payload.toRequestBody("application/json".toMediaType())).build()
-                client.newCall(request).execute().use { response ->
-                    if (response.code == HttpURLConnection.HTTP_OK) {
-                        Timber.d("Keysign started")
-                    } else {
-                        Timber.e("Fail to start keysign: Response code: ${response.code}")
-
-                    }
-                }
+                sessionApi.startWithCommittee(_serverAddress, _sessionID, keygenCommittee)
+                Timber.d("Keysign started")
             } catch (e: Exception) {
                 Timber.e("Failed to start keysign: ${e.stackTraceToString()}")
             }

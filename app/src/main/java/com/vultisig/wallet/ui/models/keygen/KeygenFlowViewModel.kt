@@ -12,9 +12,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
 import com.vultisig.wallet.data.api.ParticipantDiscovery
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.VultisigRelay
@@ -43,18 +44,16 @@ import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
 import timber.log.Timber
-import java.net.HttpURLConnection
 import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
@@ -94,7 +93,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vultisigRelay: VultisigRelay,
-    private val gson: Gson,
     private val compressQr: CompressQrUseCase,
     private val saveVault: SaveVaultUseCase,
     private val vaultRepository: VaultRepository,
@@ -103,6 +101,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val signerRepository: VultiSignerRepository,
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
+    private val sessionApi: SessionApi,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -126,9 +125,13 @@ internal class KeygenFlowViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
 
 
-    private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
+    private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_ID]
+    private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
+
+    private val isFastSign: Boolean
+        get() = setupType.isFast && email != null && password != null
 
     val localPartyID: String
         get() = vault.localPartyID
@@ -143,18 +146,29 @@ internal class KeygenFlowViewModel @Inject constructor(
             sessionID,
             _encryptionKeyHex,
             _oldResharePrefix,
-            gson,
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
+            sessionApi = sessionApi,
             isReshareMode = uiState.value.isReshareMode,
         )
 
     init {
         viewModelScope.launch {
             setData(vaultId, context.applicationContext)
+        }
+
+        viewModelScope.launch {
+            if (setupType == VaultSetupType.FAST) {
+                uiState.map { it.selection }
+                    .collect {
+                        if (it.size == 2) {
+                            finishPeerDiscovery()
+                        }
+                    }
+            }
         }
     }
 
@@ -163,18 +177,24 @@ internal class KeygenFlowViewModel @Inject constructor(
         val allVaults = vaultRepository.getAll()
 
         val vault = if (vaultId == null) {
-            var newVaultName: String
-            var idx = 1
-            while (true) {
-                newVaultName = "New vault ${allVaults.size + idx}"
-                if (allVaults.find { it.name == newVaultName } == null) {
-                    break
+            // generate
+            if (vaultName != null) {
+                Vault(id = UUID.randomUUID().toString(), vaultName)
+            } else {
+                var newVaultName: String
+                var idx = 1
+                while (true) {
+                    newVaultName = "New vault ${allVaults.size + idx}"
+                    if (allVaults.find { it.name == newVaultName } == null) {
+                        break
+                    }
+                    idx++
                 }
-                idx++
+                Vault(id = UUID.randomUUID().toString(), newVaultName)
             }
-            Vault(id = UUID.randomUUID().toString(), newVaultName)
         } else {
-            vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
+            // reshare
+            vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
         }
 
         val action = if (vault.pubKeyECDSA.isEmpty()) {
@@ -209,7 +229,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         // stop participant discovery
         stopParticipantDiscovery()
         this.participantDiscovery =
-            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, gson)
+            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, sessionApi)
         viewModelScope.launch {
             participantDiscovery?.participants?.asFlow()?.collect { newList ->
                 // add all participants to the selection
@@ -283,7 +303,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                 Timber.d("onReceive: Mediator service started")
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
-                    Thread.sleep(1000) // back off a second
+                    delay(1000) // back off a second
                     startSession(serverAddress, sessionID, vault.localPartyID)
                 }
                 // kick off discovery
@@ -317,36 +337,46 @@ internal class KeygenFlowViewModel @Inject constructor(
     ) {
         // start the session
         try {
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val request = okhttp3.Request.Builder().url("$serverAddress/$sessionID").post(
-                gson.toJson(listOf(localPartyID))
-                    .toRequestBody("application/json".toMediaType())
-            ).build()
-            client.newCall(request).execute().use { response ->
-                when (response.code) {
-                    HttpURLConnection.HTTP_CREATED -> {
-                        Timber.d("startSession: Session started")
+            sessionApi.startSession(serverAddress, sessionID, listOf(localPartyID))
+            Timber.d("startSession: Session started")
+
+            val isReshare = uiState.value.isReshareMode
+            if (isFastSign || isReshare) {
+                if (email != null) {
+                    if (password != null) {
+                        if (uiState.value.isReshareMode) {
+                            val pubKeyEcdsa = if (signerRepository.hasFastSign(vault.pubKeyECDSA))
+                                vault.pubKeyECDSA
+                            else null
+
+                            signerRepository.joinReshare(
+                                JoinReshareRequestJson(
+                                    vaultName = vault.name,
+                                    publicKeyEcdsa = pubKeyEcdsa,
+                                    sessionId = sessionID,
+                                    hexEncryptionKey = _encryptionKeyHex,
+                                    hexChainCode = vault.hexChainCode,
+                                    localPartyId = generateServerPartyId(),
+                                    encryptionPassword = password,
+                                    email = email,
+                                )
+                            )
+                        } else {
+                            signerRepository.joinKeygen(
+                                JoinKeygenRequestJson(
+                                    vaultName = vault.name,
+                                    sessionId = sessionID,
+                                    hexEncryptionKey = _encryptionKeyHex,
+                                    hexChainCode = vault.hexChainCode,
+                                    localPartyId = generateServerPartyId(),
+                                    encryptionPassword = password,
+                                    email = email,
+                                )
+                            )
+                        }
+                    } else {
+                        error("Email is not null, but password is null, this should not happen")
                     }
-
-                    else -> Timber.d("startSession: Response code: " + response.code)
-                }
-            }
-
-            if (email != null) {
-                if (password != null) {
-                    signerRepository.joinKeygen(
-                        JoinKeygenRequestJson(
-                            vaultName = vault.name,
-                            sessionId = sessionID,
-                            hexEncryptionKey = _encryptionKeyHex,
-                            hexChainCode = vault.hexChainCode,
-                            localPartyId = generateServerPartyId(),
-                            encryptionPassword = password,
-                            email = email,
-                        )
-                    )
-                } else {
-                    error("Email is not null, but password is null, this should not happen")
                 }
             }
         } catch (e: Exception) {
@@ -367,28 +397,36 @@ internal class KeygenFlowViewModel @Inject constructor(
         uiState.update { it.copy(selection = uiState.value.selection.minus(participant)) }
     }
 
-    fun moveToState(nextState: KeygenFlowState) {
+    private fun moveToState(nextState: KeygenFlowState) {
         viewModelScope.launch {
             stopParticipantDiscovery()
             uiState.update { it.copy(currentState = nextState) }
         }
     }
 
-    fun startKeygen() {
+    fun moveToKeygen() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                startKeygen()
+            }
+            moveToState(KeygenFlowState.KEYGEN)
+        }
+    }
+
+    fun finishPeerDiscovery() {
+        if (setupType == VaultSetupType.FAST) {
+            moveToKeygen()
+        } else {
+            moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
+        }
+    }
+
+    private suspend fun startKeygen() {
         try {
             val keygenCommittee = uiState.value.selection
-            val client = OkHttpClient.Builder().retryOnConnectionFailure(true).build()
-            val payload = gson.toJson(keygenCommittee)
-            val request = okhttp3.Request.Builder().url("$serverAddress/start/$sessionID")
-                .post(payload.toRequestBody("application/json".toMediaType())).build()
-            client.newCall(request).execute().use { response ->
-                if (response.code == HttpURLConnection.HTTP_OK) {
-                    Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
-                } else {
-                    Timber.tag("KeygenDiscoveryViewModel")
-                        .e("startKeygen: Response code: %s", response.code)
-                }
-            }
+            sessionApi.startWithCommittee(serverAddress, sessionID, keygenCommittee)
+            Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
+
         } catch (e: Exception) {
             Timber.tag("KeygenDiscoveryViewModel").e("startKeygen: %s", e.stackTraceToString())
         }
