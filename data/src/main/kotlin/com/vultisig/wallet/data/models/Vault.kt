@@ -24,3 +24,7 @@ data class Vault(
     @SerializedName("coins")
     val coins: List<Coin> = emptyList(),
 )
+
+fun Vault.getVaultPart(): Int {
+    return signers.indexOf(localPartyID) + 1
+}
