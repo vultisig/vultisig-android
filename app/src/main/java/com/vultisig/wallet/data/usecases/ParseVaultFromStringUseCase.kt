@@ -3,7 +3,6 @@
 package com.vultisig.wallet.data.usecases
 
 import android.util.Base64
-import com.google.gson.Gson
 import com.vultisig.wallet.data.mappers.VaultFromOldJsonMapper
 import com.vultisig.wallet.data.mappers.utils.MapHexToPlainString
 import com.vultisig.wallet.data.models.KeyShare
@@ -15,6 +14,7 @@ import com.vultisig.wallet.data.models.proto.v1.VaultProto
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import java.util.UUID
 import javax.inject.Inject
@@ -26,7 +26,7 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
     private val mapHexToPlainString: MapHexToPlainString,
     private val encryption: Encryption,
     private val protoBuf: ProtoBuf,
-    private val gson: Gson,
+    private val json: Json,
 ) : ParseVaultFromStringUseCase {
 
     override fun invoke(input: String, password: String?): Vault =
@@ -80,22 +80,21 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
 
     private fun parseOldVault(
         input: String,
-        password: String?
+        password: String?,
     ): Result<Vault> = runCatching {
         val fromJson = try {
-            gson.fromJson(
-                mapHexToPlainString(
-                    if (password != null) {
-                        encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password)
-                            ?.decodeToString()
-                            ?: error("Failed to decrypt the old vault")
-                    } else {
-                        input
-                    }
-                ), OldJsonVaultRoot::class.java
-            ).vault
+            val hexToPlainString = mapHexToPlainString(
+                if (password != null) {
+                    encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password)
+                        ?.decodeToString()
+                        ?: error("Failed to decrypt the old vault")
+                } else {
+                    input
+                }
+            )
+            json.decodeFromString<OldJsonVaultRoot>(hexToPlainString).vault
         } catch (e: Exception) {
-            gson.fromJson(input, OldJsonVault::class.java)
+            json.decodeFromString<OldJsonVault>(input)
         }
 
         vaultFromOldJsonMapper(fromJson)

@@ -1,36 +1,44 @@
 package com.vultisig.wallet.data.models
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 
+@Serializable
 data class OldJsonVaultRoot(
-    @SerializedName("vault")
+    @SerialName("vault")
     val vault: OldJsonVault,
-    @SerializedName("version")
+    @SerialName("version")
     val version: String,
 )
 
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable
 data class OldJsonVault(
-    @SerializedName("id")
+    @SerialName("id")
     val id: String?,
-    @SerializedName("localPartyID")
+    @SerialName("localPartyID")
     val localPartyID: String,
-    @SerializedName("pubKeyECDSA")
+    @SerialName("pubKeyECDSA")
     val pubKeyECDSA: String,
-    @SerializedName("hexChainCode")
+    @SerialName("hexChainCode")
     val hexChainCode: String,
-    @SerializedName("pubKeyEdDSA", alternate = ["pubKeyEDDSA"])
+    @JsonNames("pubKeyEdDSA", "pubKeyEDDSA")
     val pubKeyEdDSA: String,
-    @SerializedName("name")
+    @SerialName("name")
     val name: String,
-    @SerializedName("signers")
+    @SerialName("signers")
     val signers: List<String>,
-    @SerializedName("keyshares")
+    @SerialName("keyshares")
     val keyShares: List<OldJsonVaultKeyShare>,
 )
 
+@OptIn(ExperimentalSerializationApi::class)
+@Serializable
 data class OldJsonVaultKeyShare(
-    @SerializedName("pubkey", alternate = ["pubKey"])
+    @JsonNames("pubkey", "pubKey")
     val pubKey: String,
-    @SerializedName("keyshare")
+    @SerialName("keyshare")
     val keyShare: String,
 )
