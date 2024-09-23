@@ -24,3 +24,11 @@ data class Vault(
     @SerializedName("coins")
     val coins: List<Coin> = emptyList(),
 )
+
+fun Vault.getVaultPart(): Int {
+    return signers.indexOf(localPartyID) + 1
+}
+
+fun Vault.containsServerSigner(): Boolean {
+    return signers.firstOrNull { it.lowercase().contains("server") } != null
+}
