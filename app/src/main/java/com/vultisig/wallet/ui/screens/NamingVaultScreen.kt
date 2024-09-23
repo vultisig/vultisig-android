@@ -28,7 +28,7 @@ internal fun NamingVaultScreen(
         hint = state.placeholder,
         hintColor = Theme.colors.neutral500,
         saveButtonText = stringResource(id = R.string.naming_vault_screen_continue),
-        onSave = { model.navigateToKeygen() },
+        onSave = model::navigateToKeygen,
         errorText = model.errorMessageState.collectAsState().value
     )
 }

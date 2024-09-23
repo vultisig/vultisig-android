@@ -15,7 +15,7 @@ import com.vultisig.wallet.ui.navigation.Destination.VaultSettings.Companion.ARG
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
-import com.vultisig.wallet.ui.utils.TextFieldUtils
+import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.asString

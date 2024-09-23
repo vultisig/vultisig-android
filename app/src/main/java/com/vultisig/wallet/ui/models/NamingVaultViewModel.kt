@@ -10,10 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.GenerateUniqueName
+import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.utils.TextFieldUtils
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,6 +35,8 @@ internal class NamingVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
+    private val uniqueName: GenerateUniqueName,
+    private val isNameLengthValid: IsVaultNameValid,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -72,9 +75,10 @@ internal class NamingVaultViewModel @Inject constructor(
         if (errorMessageState.value != null)
             return
         val name = Uri.encode(
-            makeVaultNameUnique(
+            uniqueName(
                 namingTextFieldState.text.toString()
-                    .ifEmpty { state.value.placeholder }
+                    .ifEmpty { state.value.placeholder },
+                vaultNamesList.value
             )
         )
         viewModelScope.launch {
@@ -104,22 +108,9 @@ internal class NamingVaultViewModel @Inject constructor(
 
     private fun validate() = viewModelScope.launch {
         val name = namingTextFieldState.text.toString()
-        val errorMessage = if (isNameLengthNotValid(name))
+        val errorMessage = if (!isNameLengthValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
         errorMessageState.update { errorMessage }
     }
-
-    private fun makeVaultNameUnique(name: String): String {
-        var newName = name
-        var i = 1
-        while (vaultNamesList.value.contains(newName)) {
-            newName = "$name #$i"
-            i++
-        }
-        return newName
-    }
-
-    private fun isNameLengthNotValid(s: String) =
-        s.length > TextFieldUtils.VAULT_NAME_MAX_LENGTH
 }
