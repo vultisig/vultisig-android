@@ -20,7 +20,7 @@ import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
-internal object BigDecimalSerializer : KSerializer<BigDecimal> {
+object BigDecimalSerializer : KSerializer<BigDecimal> {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigDecimal",
         PrimitiveKind.DOUBLE
@@ -33,7 +33,7 @@ internal object BigDecimalSerializer : KSerializer<BigDecimal> {
         BigDecimal.valueOf(decoder.decodeDouble())
 }
 
-internal object BigIntegerSerializer : KSerializer<BigInteger> {
+object BigIntegerSerializer : KSerializer<BigInteger> {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigInteger",
         PrimitiveKind.DOUBLE
