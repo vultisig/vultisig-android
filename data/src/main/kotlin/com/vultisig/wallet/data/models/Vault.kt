@@ -32,3 +32,7 @@ fun Vault.getVaultPart(): Int {
 fun Vault.containsServerSigner(): Boolean {
     return signers.firstOrNull { it.lowercase().contains("server") } != null
 }
+
+fun Vault.isFastVault(): Boolean {
+    return containsServerSigner() || signers.size == 2
+}

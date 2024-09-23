@@ -21,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.containsServerSigner
 import com.vultisig.wallet.data.models.getVaultPart
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -60,7 +60,7 @@ internal fun VaultCeil(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (vault.containsServerSigner()) {
+                if (vault.isFastVault()) {
                     Card (
                         modifier = Modifier.padding(end = 4.dp),
                         colors =  CardDefaults.cardColors(
