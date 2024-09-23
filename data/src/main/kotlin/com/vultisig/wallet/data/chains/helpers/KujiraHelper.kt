@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import com.google.gson.Gson
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -9,6 +8,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.transactionHash
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
+import kotlinx.serialization.json.Json
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -114,7 +114,7 @@ class KujiraHelper(
             allPublicKeys
         )
         val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
-        val cosmosSig = Gson().fromJson(output.serialized, CosmoSignature::class.java)
+        val cosmosSig = Json.decodeFromString<CosmoSignature>(output.serialized)
         return SignedTransactionResult(
             output.serialized,
             cosmosSig.transactionHash(),
