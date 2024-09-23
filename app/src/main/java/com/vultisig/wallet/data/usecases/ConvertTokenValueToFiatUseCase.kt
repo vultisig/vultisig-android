@@ -36,7 +36,7 @@ internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
             priceDraft
         }
 
-        val decimal = if (token.chain.feeUnit == GWEI_UNIT) {
+        val decimal = if (tokenValue.unit == GWEI_UNIT) {
             tokenValue.decimal.divide(ONE_GWEI)
         } else {
             tokenValue.decimal
