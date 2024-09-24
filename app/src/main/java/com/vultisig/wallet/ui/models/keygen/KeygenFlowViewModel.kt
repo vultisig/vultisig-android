@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.ui.components.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
@@ -385,7 +386,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     private fun generateServerPartyId(): String =
-        "Server-${Random.nextInt(100, 999)}"
+        "$LOCAL_PARTY_ID_PREFIX-${Random.nextInt(100, 999)}"
 
     fun addParticipant(participant: String) {
         val currentList = uiState.value.selection

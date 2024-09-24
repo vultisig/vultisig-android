@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.google.gson.annotations.SerializedName
+import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 
 data class Vault(
     @SerializedName("id")
@@ -30,7 +31,7 @@ fun Vault.getVaultPart(): Int {
 }
 
 fun Vault.containsServerSigner(): Boolean {
-    return signers.firstOrNull { it.contains("server", ignoreCase = true) } != null
+    return signers.firstOrNull { it.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true) } != null
 }
 
 fun Vault.isFastVault(): Boolean {
