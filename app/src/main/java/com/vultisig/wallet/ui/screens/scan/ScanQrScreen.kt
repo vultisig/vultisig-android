@@ -144,24 +144,6 @@ internal fun ScanQrScreen(
         }
     }
 
-    val pickFromFilesMedia =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            coroutineScope.launch {
-                if (uri != null) {
-                    val result = scanImage(InputImage.fromFilePath(context, uri))
-                    val barcodes = if (result.isEmpty()) {
-                        val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
-                            .addWhiteBorder(2F)
-                        val inputImage = InputImage.fromBitmap(bitmap, 0)
-                        val resultBarcodes = scanImage(inputImage)
-                        bitmap.recycle()
-                        resultBarcodes
-                    } else result
-                    onSuccess(barcodes)
-                }
-            }
-        }
-
     Scaffold(
         bottomBar = {
             if (cameraPermissionState.status.isGranted.not())
@@ -212,53 +194,28 @@ internal fun ScanQrScreen(
                                 horizontal = 12.dp,
                                 vertical = 16.dp,
                             ),
-                        iconSize = 15.dp,
+                        iconSize = 0.dp,
                         onClick = {
                             pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                         },
                         centerContent = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
                             ) {
                                 UiIcon(
-                                    size = 20.dp,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                        .padding(start = 16.dp),
+                                    size = 35.dp,
                                     drawableResId = R.drawable.ic_gallery_min,
                                     tint = Theme.colors.oxfordBlue600Main,
                                 )
                                 Text(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.Center),
                                     textAlign = TextAlign.Center,
                                     text = stringResource(id = R.string.scan_qr_upload_from_gallery),
-                                    style = Theme.montserrat.subtitle2,
-                                    color = Theme.colors.oxfordBlue600Main,
-                                )
-                            }
-                        }
-                    )
-                    MultiColorButton(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(
-                                horizontal = 12.dp,
-                                vertical = 16.dp,
-                            ),
-                        iconSize = 15.dp,
-                        onClick = {
-                            pickFromFilesMedia.launch("image/*") // TODO: make decision about second button
-                        },
-                        centerContent = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                UiIcon(
-                                    size = 20.dp,
-                                    drawableResId = R.drawable.ic_files,
-                                    tint = Theme.colors.oxfordBlue600Main,
-                                )
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    text = stringResource(id = R.string.scan_qr_upload_from_files),
                                     style = Theme.montserrat.subtitle2,
                                     color = Theme.colors.oxfordBlue600Main,
                                 )
