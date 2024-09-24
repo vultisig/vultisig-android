@@ -6,7 +6,6 @@ import android.content.Context
 import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
@@ -62,7 +61,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTypes
 import com.vultisig.wallet.ui.utils.addWhiteBorder
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.launch
