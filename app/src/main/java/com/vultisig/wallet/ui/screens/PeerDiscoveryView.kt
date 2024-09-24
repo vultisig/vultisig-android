@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.utils.NetworkPromptOption
 @Composable
 internal fun PeerDiscoveryView(
     modifier: Modifier = Modifier,
+    hasNetworkPrompt: Boolean,
     selectionState: List<String>,
     participants: List<String>,
     keygenPayloadState: String,
@@ -64,15 +65,16 @@ internal fun PeerDiscoveryView(
 
         else -> {
             VerticalView(
-                modifier,
-                textColor,
-                keygenPayloadState,
-                networkPromptOption,
-                onChangeNetwork,
-                participants,
-                selectionState,
-                onAddParticipant,
-                onRemoveParticipant
+                modifier = modifier,
+                textColor = textColor,
+                keygenPayloadState = keygenPayloadState,
+                networkPromptOption = networkPromptOption,
+                hasNetworkPrompt = hasNetworkPrompt,
+                onChangeNetwork = onChangeNetwork,
+                participants = participants,
+                selectionState = selectionState,
+                onAddParticipant = onAddParticipant,
+                onRemoveParticipant = onRemoveParticipant
             )
         }
     }
@@ -188,6 +190,7 @@ private fun VerticalView(
     textColor: Color,
     keygenPayloadState: String,
     networkPromptOption: NetworkPromptOption,
+    hasNetworkPrompt: Boolean,
     onChangeNetwork: (NetworkPromptOption) -> Unit,
     participants: List<String>,
     selectionState: List<String>,
@@ -198,11 +201,13 @@ private fun VerticalView(
         modifier.verticalScroll(rememberScrollState()),
         horizontalAlignment = CenterHorizontally
     ) {
-        NetworkPrompts(
-            networkPromptOption = networkPromptOption,
-            onChange = onChangeNetwork,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
+        if (hasNetworkPrompt) {
+            NetworkPrompts(
+                networkPromptOption = networkPromptOption,
+                onChange = onChangeNetwork,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
 
         if (keygenPayloadState.isNotEmpty()) {
             QRCodeKeyGenImage(
@@ -288,6 +293,7 @@ private fun PeerDiscoveryPreview() {
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygen payload",
         networkPromptOption = NetworkPromptOption.LOCAL,
+        hasNetworkPrompt = true,
         modifier = Modifier,
     )
 }
