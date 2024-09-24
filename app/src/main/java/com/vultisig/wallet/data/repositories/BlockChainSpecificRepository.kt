@@ -117,7 +117,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                             if (chain == Chain.Arbitrum)
                                 "120000" // arbitrum has higher gas limit
                             else
-                                "23000"
+                                "30000"
                         }
 
                         else -> "120000"
