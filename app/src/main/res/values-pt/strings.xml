@@ -46,7 +46,6 @@
     <string name="verify_transaction_amount_title">Quantidade</string>
     <string name="verify_transaction_gas_title">Gás</string>
     <string name="verify_transaction_join_keysign">Juntar-se à assinatura de chave</string>
-    <string name="verify_transaction_sign">Sign</string>
     <string name="verify_transaction_consent_address">Estou enviando para o endereço correto</string>
     <string name="verify_transaction_consent_amount">A quantidade está correta</string>
     <string name="qr_address_screen_title">Endereço</string>
@@ -61,7 +60,6 @@
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">COFRE SEGURO DE CRIPTO</string>
     <string name="create_new_vault_screen_create_a_new_vault">Criar um Novo Cofre</string>
-    <string name="create_new_vault_screen_import_an_existing_vault">Importar um Cofre Existente</string>
     <string name="device_list_screen_with_these_devices">Com estes dispositivos</string>
     <string name="device_list_screen_continue">Continuar</string>
     <string name="generating_key_preparing_vault">PREPARANDO COFRE…</string>
@@ -73,7 +71,6 @@
     <string name="keygen_peer_discovery_continue">Continuar</string>
     <string name="network_prompts_local">Local</string>
     <string name="setup_title">Configurar</string>
-    <string name="setup_start">Iniciar</string>
     <string name="keysign_peer_discovery_start">Iniciar</string>
     <string name="signing_error_signing_error_please_try_again">Erro ao Assinar. Por favor, tente novamente.</string>
     <string name="signing_error_try_again">Tentar Novamente</string>
@@ -262,7 +259,6 @@
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartilhar</string>
-    <string name="share_vault_qr_card_title">O tipo de ficheiro não é compatível</string>
     <string name="share_vault_qr_card_keys">Chave ECDSA: %1$s Chave EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
@@ -271,7 +267,6 @@
     <string name="deposit_form_operator_fee_title">Taxa do Operador (opcional)</string>
     <string name="deposit_message_deposit_title">%s depósito de mensagens</string>
     <string name="deposit_form_custom_memo_title">Memorando personalizado</string>
-    <string name="naming_vault_screen_vault_placeholder">Cofre Principal</string>
     <string name="transaction_swap_tracking_link">Trocar link de rastreio</string>
     <string name="swap_screen_same_asset_error_message">Os ativos de origem e de destino não podem ser iguais.</string>
     <string name="address_book_toolbar_title">Catálogo de endereços</string>
@@ -290,20 +285,12 @@
     <string name="join_keysign_invalid_qr">Conteúdo de código QR inválido</string>
     <string name="join_keysign_failed_to_start">Falha ao aderir ao keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Percentagem a ser removida</string>
-    <string name="keygen_role_title">Configurar</string>
-    <string name="keygen_role_initiate_action">Criar QR</string>
-    <string name="keygen_role_initiate_title">Dispositivo inicial</string>
-    <string name="keygen_role_pair_title">Dispositivo de emparelhamento</string>
-    <string name="keygen_role_pair_action">Digitalizar QR / Emparelhar dispositivo</string>
-    <string name="keygen_role_option_caption">Este dispositivo é o</string>
-    <string name="keygen_role_or">OU</string>
     <string name="setup_1_device_of_vault">Precisa de mais 1 dispositivo para emparelhar</string>
     <string name="setup_2_device_of_vault">Precisa de mais 2 dispositivos para emparelhar</string>
     <string name="setup_m_device_of_vault">Pode emparelhar quantos dispositivos quiser</string>
     <string name="enable_chain_button">Pode emparelhar quantos dispositivos quiser</string>
     <string name="enable_chain_warning">A cadeia não está selecionada. Por favor, ative-o na seleção da cadeia.</string>
     <string name="s_of_s">%1$s de %2$s</string>
-    <string name="setup_select_your_vault_type">Selecione o tipo do seu cofre</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de Privacidade</string>
     <string name="settings_screen_tos">Termos de Serviço</string>
