@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.keygen
 
+import android.net.Uri
 import android.util.Patterns
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.TextFieldState
@@ -77,7 +78,7 @@ internal class KeygenEmailViewModel @Inject constructor(
                 navigator.navigate(
                     Destination.KeygenPassword(
                         vaultId = vaultId,
-                        name = name,
+                        name = Uri.encode(name),
                         setupType = setupType,
                         email = email,
                     )
