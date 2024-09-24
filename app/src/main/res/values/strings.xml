@@ -412,13 +412,16 @@
     <string name="keysign_password_title" translatable="false">Password</string>
     <string name="home_screen_import_vault" translatable="false">Import Vault</string>
     <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
+    <string name="vault_list_part_n_of_t" translatable="false">Part %dof%d</string>
+    <string name="vault_list_fast_badge" translatable="false">Fast</string>
 
-    <string name="naming_vault_placeholder_cold_vault" translatable="false">Cold Vault</string>
-    <string name="naming_vault_placeholder_hot_vault" translatable="false">Hot Vault</string>
+    <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
+    <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>
+    <string name="naming_vault_placeholder_secure_vault" translatable="false">Secure Vault</string>
     <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
-    <string name="scan_qr_upload_from_files" translatable="false">Upload from\nFiles</string>
-
+    <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
+    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultisigner</string>
 
 </resources>

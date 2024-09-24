@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.VultiSignerApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
+import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import javax.inject.Inject
 
 interface VultiSignerRepository {
@@ -13,6 +14,10 @@ interface VultiSignerRepository {
 
     suspend fun joinKeysign(
         request: JoinKeysignRequestJson,
+    )
+
+    suspend fun joinReshare(
+        request: JoinReshareRequestJson,
     )
 
     suspend fun isPasswordValid(
@@ -40,6 +45,10 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
         request: JoinKeysignRequestJson,
     ) {
         api.joinKeysign(request)
+    }
+
+    override suspend fun joinReshare(request: JoinReshareRequestJson) {
+        api.joinReshare(request)
     }
 
     override suspend fun isPasswordValid(

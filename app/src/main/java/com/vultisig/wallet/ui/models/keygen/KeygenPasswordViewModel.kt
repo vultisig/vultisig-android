@@ -8,6 +8,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
@@ -28,6 +30,8 @@ internal data class KeygenPasswordUiModel(
 internal class KeygenPasswordViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val vaultRepository: VaultRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
 
     val state = MutableStateFlow(KeygenPasswordUiModel())
@@ -35,7 +39,8 @@ internal class KeygenPasswordViewModel @Inject constructor(
     val passwordFieldState = TextFieldState()
     val verifyPasswordFieldState = TextFieldState()
 
-    private val name: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_NAME])
+    private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
+    private val name: String? = savedStateHandle[Destination.ARG_VAULT_NAME]
     private val email: String =
         requireNotNull(savedStateHandle[Destination.ARG_EMAIL])
     private val setupType: VaultSetupType =
@@ -80,12 +85,30 @@ internal class KeygenPasswordViewModel @Inject constructor(
         val password = password
         if (!isPasswordEmpty() && isPasswordsMatch()) {
             viewModelScope.launch {
+                if (vaultId != null) {
+                    // reshare, check password
+                    val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
+                    if (!vultiSignerRepository.isPasswordValid(
+                            publicKeyEcdsa = vault.pubKeyECDSA,
+                            password = password
+                        )
+                    ) {
+                        state.update {
+                            it.copy(
+                                passwordError = UiText.StringResource(
+                                    R.string.keysign_password_incorrect_password
+                                )
+                            )
+                        }
+                        return@launch
+                    }
+                }
+
                 navigator.navigate(
                     Destination.KeygenFlow(
+                        vaultId = vaultId,
                         vaultName = name,
                         vaultSetupType = setupType,
-                        isReshare = false, // todo correct check for reshare
-
                         email = email,
                         password = password,
                     )

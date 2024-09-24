@@ -1,4 +1,4 @@
-package com.vulitisig.wallet.data.mappers.utils
+package com.vultisig.wallet.data.mappers.utils
 
 import com.vultisig.wallet.data.mappers.utils.MapHexToPlainStringImpl
 import org.junit.Test

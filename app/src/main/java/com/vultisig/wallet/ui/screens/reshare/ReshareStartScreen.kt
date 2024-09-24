@@ -18,21 +18,35 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.GradientInfoCard
 import com.vultisig.wallet.ui.components.MultiColorButton
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.vultiGradient
-import com.vultisig.wallet.ui.models.keygen.VaultSetupType
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.models.reshare.ReshareStartViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.Theme.colors
 
 @Composable
 internal fun ReshareStartScreen(
-    navController: NavHostController,
-    vaultId: String,
+    navController: NavController,
+    model: ReshareStartViewModel = hiltViewModel(),
+) {
+
+    ReshareStartScreen(
+        onStartClick = model::start,
+        onStartWithServerClick = model::startWithServer,
+        onJoinClick = model::join,
+    )
+}
+
+@Composable
+private fun ReshareStartScreen(
+    onStartClick: () -> Unit,
+    onStartWithServerClick: () -> Unit,
+    onJoinClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = colors.oxfordBlue800,
@@ -46,7 +60,7 @@ internal fun ReshareStartScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.vultisig_icon_text),
-                    contentDescription = "Resahre Image"
+                    contentDescription = "Reshare Image"
                 )
             }
             Column(
@@ -91,23 +105,40 @@ internal fun ReshareStartScreen(
                     iconColor = colors.turquoise800,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            bottom = 16.dp,
-                        ),
+                        .fillMaxWidth(),
                     text = stringResource(R.string.reshare_start_screen_start_reshare),
-                    onClick = {
-                        navController.navigate(
-                            Destination.KeygenFlow(
-                                vaultName = vaultId,
-                                vaultSetupType = VaultSetupType.SECURE,
-                                isReshare = true,
-                                email = null,
-                                password = null,
-                            ).route
-                        )
-                    },
+                    onClick = onStartClick,
                 )
+
+                UiSpacer(size = 12.dp)
+
+                MultiColorButton(
+                    text = stringResource(R.string.reshare_start_start_with_vultisigner_button),
+                    backgroundColor = Theme.colors.oxfordBlue800,
+                    textColor = Theme.colors.turquoise800,
+                    iconColor = Theme.colors.oxfordBlue800,
+                    borderSize = 1.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = onStartWithServerClick,
+                )
+
+                UiSpacer(size = 12.dp)
+
+                MultiColorButton(
+                    text = stringResource(R.string.reshare_start_join_reshare_button),
+                    backgroundColor = Theme.colors.oxfordBlue800,
+                    textColor = Theme.colors.turquoise800,
+                    iconColor = Theme.colors.oxfordBlue800,
+                    borderSize = 1.dp,
+                    textStyle = Theme.montserrat.subtitle1,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    onClick = onJoinClick,
+                )
+
+                UiSpacer(size = 16.dp)
             }
         })
 
@@ -117,8 +148,9 @@ internal fun ReshareStartScreen(
 @Composable
 private fun PreviewReshareScreen() {
     ReshareStartScreen(
-        rememberNavController(),
-        ""
+        onStartClick = {},
+        onStartWithServerClick = {},
+        onJoinClick = {},
     )
 }
 
