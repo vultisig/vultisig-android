@@ -54,7 +54,7 @@
     <string name="home_screen_add_new_vault">+ Neuen Tresor hinzufügen</string>
     <string name="import_file_screen_title">Importieren</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share"> Laden Ihren zuvor erstellten Tresor ein :</string>
-    <string name="import_file_screen_upload_file_text_or_image">Wählen Sie eine .bak oder .dat Backup-Datei aus</string>
+    <string name="import_file_screen_upload_file_text_or_image">Wählen Sie eine .vult, .bak oder .dat Backup-Datei aus</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SICHERER KRYPTO-TRESOR</string>
     <string name="create_new_vault_screen_create_a_new_vault">Einen neuen Tresor erstellen</string>

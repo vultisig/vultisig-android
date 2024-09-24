@@ -52,7 +52,7 @@
     <string name="home_screen_add_new_vault">+ Aggiungi Nuova Cassaforte</string>
     <string name="import_file_screen_title">Importa</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Caricare la tua cassaforte creata in precedenza</string>
-    <string name="import_file_screen_upload_file_text_or_image">Seleziona un file di backup .bak o .dat</string>
+    <string name="import_file_screen_upload_file_text_or_image">Seleziona un file di backup .vult, .bak o .dat</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">CASSETTA DI SICUREZZA CRYPTO</string>
     <string name="create_new_vault_screen_create_a_new_vault">Crea una Nuova Cassaforte</string>

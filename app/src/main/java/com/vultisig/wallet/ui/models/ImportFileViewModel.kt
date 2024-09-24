@@ -41,7 +41,7 @@ internal data class ImportFileState(
 )
 
 internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*")
-internal val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat")
+internal val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat","vult")
 @OptIn(ExperimentalFoundationApi::class)
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(

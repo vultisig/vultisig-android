@@ -138,7 +138,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     private fun generateFileName(vault: Vault): String {
         val fileName =
             "${vault.name}-${vault.pubKeyECDSA.takeLast(4)}" +
-                    "-part${vault.getVaultPart()}of${vault.signers.size}.bak"
+                    "-part${vault.getVaultPart()}of${vault.signers.size}.vult"
         return fileName
     }
 

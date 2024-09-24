@@ -89,7 +89,7 @@
     <string name="home_screen_add_new_vault">+ Nieuwe kluis toevoegen</string>
     <string name="import_file_screen_title">Importeren</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Upload uw eerder gemaakte kluis delen in</string>
-    <string name="import_file_screen_upload_file_text_or_image">Selecteer een .bak of .dat back-upbestand</string>
+    <string name="import_file_screen_upload_file_text_or_image">Selecteer een .vult, .bak of .dat back-upbestand</string>
     <string name="import_file_screen_duplicate_vault">De kluis is dubbel</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">VEILIGE CRYPTO KLUIS</string>

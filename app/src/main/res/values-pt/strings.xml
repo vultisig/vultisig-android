@@ -57,7 +57,7 @@
     <string name="home_screen_add_new_vault">+ Adicionar Novo Cofre</string>
     <string name="import_file_screen_title">Importar</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Carregue seu cofre criado anteriormente</string>
-    <string name="import_file_screen_upload_file_text_or_image">Selecione um arquivo de backup .bak ou .dat</string>
+    <string name="import_file_screen_upload_file_text_or_image">Selecione um arquivo de backup .vult, .bak ou .dat</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">COFRE SEGURO DE CRIPTO</string>
     <string name="create_new_vault_screen_create_a_new_vault">Criar um Novo Cofre</string>
