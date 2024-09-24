@@ -90,7 +90,7 @@
     <string name="home_screen_add_new_vault">+ Add New Vault</string>
     <string name="import_file_screen_title">Import</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Upload your previously created vault share :</string>
-    <string name="import_file_screen_upload_file_text_or_image">Select a .bak or .dat backup file</string>
+    <string name="import_file_screen_upload_file_text_or_image">Select a .vult, .bak or .dat backup file</string>
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
