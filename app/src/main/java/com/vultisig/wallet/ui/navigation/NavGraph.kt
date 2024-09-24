@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_NAME
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
@@ -131,6 +132,14 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(ARG_VAULT_SETUP_TYPE) {
                     type = NavType.IntType
+                },
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument(ARG_VAULT_NAME) {
+                    type = NavType.StringType
+                    nullable = true
                 }
             )
         ) {
@@ -142,6 +151,14 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(ARG_VAULT_SETUP_TYPE) {
                     type = NavType.IntType
+                },
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument(ARG_VAULT_NAME) {
+                    type = NavType.StringType
+                    nullable = true
                 }
             )
         ) {
@@ -151,6 +168,10 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.KeygenFlow.STATIC_ROUTE,
             arguments = listOf(
+                navArgument(Destination.KeygenFlow.ARG_VAULT_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
                 navArgument(Destination.KeygenFlow.ARG_VAULT_NAME) {
                     type = NavType.StringType
                     nullable = false
@@ -501,13 +522,10 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
                     type = NavType.StringType
-                    nullable = true                }
+                }
             )
-        ) { entry ->
-            ReshareStartScreen(
-                navController,
-                requireNotNull(entry.arguments?.getString(ARG_VAULT_ID))
-            )
+        ) {
+            ReshareStartScreen(navController)
         }
     }
 }

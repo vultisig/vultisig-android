@@ -317,7 +317,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
                                 dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
                                 estimatedFees = fiatValueToStringMapper.map(
-                                    convertTokenValueToFiat(nativeToken, quote.fees, currency)
+                                    convertTokenValueToFiat(dstToken, quote.fees, currency)
                                 ),
                             )
                         )

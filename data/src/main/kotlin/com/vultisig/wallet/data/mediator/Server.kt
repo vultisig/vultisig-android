@@ -4,9 +4,8 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import spark.Request
 import spark.Response
@@ -117,8 +116,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return ""
         }
         val key = "session-$sessionID-start"
-        val decodeType = object : TypeToken<List<String>>() {}.type
-        val participants: List<String> = Gson().fromJson(request.body(), decodeType)
+        val participants: List<String> = Json.decodeFromString(request.body())
         cache.put(key, Session(sessionID, participants.toMutableList()))
         response.status(HttpStatusCode.OK.value)
         response.type("application/json")
@@ -138,7 +136,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             session?.let {
                 response.type("application/json")
                 response.status(HttpStatusCode.OK.value)
-                return Gson().toJson(session.participants)
+                return Json.encodeToString(session.participants)
             } ?: response.status(HttpStatusCode.NotFound.value)
         } ?: response.status(HttpStatusCode.NotFound.value)
         return ""
@@ -241,7 +239,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             val messages = it.values.toList()
             response.status(HttpStatusCode.OK.value)
             response.type("application/json")
-            return Gson().toJson(messages)
+            return Json.encodeToString(messages)
         }
     }
 
@@ -288,9 +286,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             "session-$cleanSessionID"
         }
         Timber.tag("server").d("body: %s", request.body())
-        val gson = Gson()
-        val decodeType = object : TypeToken<List<String>>() {}.type
-        val participants: List<String> = gson.fromJson(request.body(), decodeType)
+        val participants: List<String> = Json.decodeFromString(request.body())
         cache.getIfPresent(key)?.let {
             val session = it as? Session
             session?.let {
@@ -331,7 +327,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             session?.let {
                 response.status(HttpStatusCode.OK.value)
                 response.type("application/json")
-                return Gson().toJson(session.participants)
+                return Json.encodeToString(session.participants)
             } ?: response.status(HttpStatusCode.NotFound.value)
         } ?: response.status(HttpStatusCode.NotFound.value)
         return ""

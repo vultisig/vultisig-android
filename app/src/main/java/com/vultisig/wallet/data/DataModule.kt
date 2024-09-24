@@ -7,6 +7,8 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
+import com.vultisig.wallet.data.utils.BigDecimalSerializer
+import com.vultisig.wallet.data.utils.BigIntegerSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,7 +28,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
+import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Singleton
 
 @Module
@@ -70,10 +75,38 @@ internal interface DataModule {
 
         @Provides
         @Singleton
-        fun provideJson() = Json {
+        fun provideJson(
+            serializersModule: SerializersModule,
+        ) = Json {
             ignoreUnknownKeys = true
             explicitNulls = false
+            encodeDefaults = true
+            this.serializersModule = serializersModule
         }
+
+        @Provides
+        @Singleton
+        fun provideSerializersModule(
+            bigDecimalSerializer: BigDecimalSerializer,
+            bigIntegerSerializer: BigIntegerSerializer,
+        ) = SerializersModule {
+            contextual(
+                BigDecimal::class,
+                bigDecimalSerializer
+            )
+            contextual(
+                BigInteger::class,
+                bigIntegerSerializer
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideBigDecimalSerializer() = BigDecimalSerializer
+
+        @Provides
+        @Singleton
+        fun provideBigIntegerSerializer() = BigIntegerSerializer
 
         @Singleton
         @Provides
