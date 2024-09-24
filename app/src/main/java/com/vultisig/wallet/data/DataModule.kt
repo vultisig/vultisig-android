@@ -4,8 +4,6 @@ package com.vultisig.wallet.data
 
 import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.utils.BigDecimalSerializer
 import com.vultisig.wallet.data.utils.BigIntegerSerializer
@@ -39,13 +37,6 @@ import javax.inject.Singleton
 internal interface DataModule {
 
     companion object {
-
-        @Provides
-        @Singleton
-        fun provideGson(): Gson {
-            return GsonBuilder()
-                .create()
-        }
 
         @Provides
         @Singleton

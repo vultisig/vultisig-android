@@ -65,7 +65,6 @@ dependencies {
     implementation(libs.ktor.client.serialization.kotlinx)
 
     // serialization
-    implementation(libs.gson)
     implementation(libs.kotlinx.serialization)
 
     // crypto
