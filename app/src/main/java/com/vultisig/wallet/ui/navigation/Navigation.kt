@@ -292,7 +292,7 @@ internal sealed class Destination(
     }
 
     data class KeygenFlow(
-        val vaultName: String?,
+        val vaultName: String,
         val vaultSetupType: VaultSetupType,
         val isReshare: Boolean,
         val email: String?,
@@ -317,7 +317,7 @@ internal sealed class Destination(
                     "&${ARG_PASSWORD}={$ARG_PASSWORD}"
 
             private fun buildRoute(
-                name: String?,
+                name: String,
                 type: Int,
                 isReshare: String,
                 email: String?,

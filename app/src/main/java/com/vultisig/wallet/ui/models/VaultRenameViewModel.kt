@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.VaultSettings.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -32,6 +33,7 @@ internal class VaultRenameViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
+    private val isVaultNameValid: IsVaultNameValid,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -89,7 +91,7 @@ internal class VaultRenameViewModel @Inject constructor(
     }
 
     private suspend fun validateName(newName: String): UiText? {
-        if (newName.isEmpty() || newName.length > TextFieldUtils.VAULT_NAME_MAX_LENGTH)
+        if (newName.isEmpty() || !isVaultNameValid(newName))
             return StringResource(R.string.rename_vault_invalid_name)
         val isNameAlreadyExist = vaultRepository.getAll().any { it.name == newName }
         if (isNameAlreadyExist) {

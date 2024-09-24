@@ -153,7 +153,7 @@ internal fun SetupNavGraph(
             arguments = listOf(
                 navArgument(Destination.KeygenFlow.ARG_VAULT_NAME) {
                     type = NavType.StringType
-                    nullable = true
+                    nullable = false
                 },
                 navArgument(ARG_VAULT_SETUP_TYPE) {
                     type = NavType.IntType

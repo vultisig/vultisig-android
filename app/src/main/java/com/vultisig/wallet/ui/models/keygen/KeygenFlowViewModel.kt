@@ -124,7 +124,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     private var _oldResharePrefix: String = ""
 
 
-    private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
+    private val vaultId: String =
+        savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME] ?: "New Vault"
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
 
@@ -170,24 +171,10 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    private suspend fun setData(vaultId: String?, context: Context) {
+    private suspend fun setData(vaultId: String, context: Context) {
         // start mediator server
-        val allVaults = vaultRepository.getAll()
-
-        val vault = if (vaultId == null) {
-            var newVaultName: String
-            var idx = 1
-            while (true) {
-                newVaultName = "New vault ${allVaults.size + idx}"
-                if (allVaults.find { it.name == newVaultName } == null) {
-                    break
-                }
-                idx++
-            }
-            Vault(id = UUID.randomUUID().toString(), newVaultName)
-        } else {
+        val vault =
             vaultRepository.get(vaultId) ?: Vault(id = UUID.randomUUID().toString(), vaultId)
-        }
 
         val action = if (vault.pubKeyECDSA.isEmpty()) {
             uiState.value = uiState.value.copy(isReshareMode = false)
