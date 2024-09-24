@@ -302,7 +302,7 @@ internal sealed class Destination(
 
     data class KeygenFlow(
         val vaultId: String?,
-        val vaultName: String,
+        val vaultName: String?,
         val vaultSetupType: VaultSetupType,
         val email: String?,
         val password: String?,
@@ -338,7 +338,7 @@ internal sealed class Destination(
 
             private fun buildRoute(
                 vaultId: String?,
-                name: String,
+                name: String?,
                 type: Int,
                 email: String?,
                 password: String?,

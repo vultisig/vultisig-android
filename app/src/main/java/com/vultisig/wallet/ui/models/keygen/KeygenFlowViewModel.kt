@@ -126,8 +126,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
 
     private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_ID]
-    private val vaultName: String =
-        savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME] ?: "New Vault"
+    private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
 
@@ -178,7 +177,8 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         val vault = if (vaultId == null) {
             // generate
-                Vault(id = UUID.randomUUID().toString(), vaultName)
+            vaultName ?: error("No vault name provided")
+            Vault(id = UUID.randomUUID().toString(), vaultName)
         } else {
             // reshare
             vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
