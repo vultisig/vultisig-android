@@ -62,7 +62,6 @@ internal fun VaultCeil(
             ) {
                 if (vault.isFastVault()) {
                     Card (
-                        modifier = Modifier.padding(end = 4.dp),
                         colors =  CardDefaults.cardColors(
                             containerColor = Theme.colors.oxfordBlue200,
                         ),
@@ -74,6 +73,7 @@ internal fun VaultCeil(
                             color = Theme.colors.body,
                         )
                     }
+                    UiSpacer(size = 4.dp)
                 }
                 Text(
                     text = stringResource(
