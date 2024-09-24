@@ -174,24 +174,11 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     private suspend fun setData(vaultId: String?, context: Context) {
         // start mediator server
-        val allVaults = vaultRepository.getAll()
 
         val vault = if (vaultId == null) {
             // generate
-            if (vaultName != null) {
-                Vault(id = UUID.randomUUID().toString(), vaultName)
-            } else {
-                var newVaultName: String
-                var idx = 1
-                while (true) {
-                    newVaultName = "New vault ${allVaults.size + idx}"
-                    if (allVaults.find { it.name == newVaultName } == null) {
-                        break
-                    }
-                    idx++
-                }
-                Vault(id = UUID.randomUUID().toString(), newVaultName)
-            }
+            vaultName ?: error("No vault name provided")
+            Vault(id = UUID.randomUUID().toString(), vaultName)
         } else {
             // reshare
             vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
