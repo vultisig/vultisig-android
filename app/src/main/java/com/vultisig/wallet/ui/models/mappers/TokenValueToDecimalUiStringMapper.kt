@@ -21,23 +21,17 @@ internal class TokenValueToDecimalUiStringMapperImpl @Inject constructor() :
             val decimal = from.decimal
             val decimalValue = when {
                 decimal >= ONE_BILLION -> {
-                    String.format(
-                        "%sB",
-                        formatDecimal(
-                            decimal.divide(ONE_BILLION),
-                            1
-                        )
-                    )
+                    formatDecimal(
+                        decimal.divide(ONE_BILLION),
+                        1
+                    ) + "B"
                 }
 
                 decimal >= ONE_MILLION -> {
-                    String.format(
-                        "%sM",
-                        formatDecimal(
-                            decimal.divide(ONE_MILLION),
-                            1
-                        )
-                    )
+                    formatDecimal(
+                        decimal.divide(ONE_MILLION),
+                        1
+                    ) + "M"
                 }
 
                 else -> formatDecimal(decimal)
