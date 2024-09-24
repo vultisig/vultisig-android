@@ -197,12 +197,11 @@ internal fun ScanQrScreen(
                             pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                         },
                         centerContent = {
-                            Box(
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 UiIcon(
                                     modifier = Modifier
-                                        .align(Alignment.CenterStart)
                                         .padding(start = 16.dp),
                                     size = 35.dp,
                                     drawableResId = R.drawable.ic_gallery_min,
@@ -210,13 +209,13 @@ internal fun ScanQrScreen(
                                 )
                                 Text(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .align(Alignment.Center),
+                                        .weight(1f),
                                     textAlign = TextAlign.Center,
                                     text = stringResource(id = R.string.scan_qr_upload_from_gallery),
                                     style = Theme.montserrat.subtitle2,
                                     color = Theme.colors.oxfordBlue600Main,
                                 )
+                                UiSpacer(size = 41.dp)
                             }
                         }
                     )
