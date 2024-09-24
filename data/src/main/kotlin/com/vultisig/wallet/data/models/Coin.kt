@@ -1,26 +1,16 @@
 package com.vultisig.wallet.data.models
 
-import com.google.gson.annotations.SerializedName
 import wallet.core.jni.CoinType
 
 data class Coin(
-    @SerializedName("chain")
     val chain: Chain,
-    @SerializedName("ticker")
     val ticker: String,
-    @SerializedName("logo")
     val logo: String,
-    @SerializedName("address")
     val address: String,
-    @SerializedName("decimals")
     val decimal: Int,
-    @SerializedName("hexPublicKey")
     val hexPublicKey: String,
-    @SerializedName("priceProviderId", alternate = ["priceProviderID"])
     val priceProviderID: String,
-    @SerializedName("contractAddress")
     val contractAddress: String,
-    @SerializedName("isNativeToken")
     val isNativeToken: Boolean,
 ) {
     val id: String
@@ -48,7 +38,7 @@ object Coins {
         contractAddress = "0x6b9bb36519538e0C073894E964E90172E1c0B41F",
         isNativeToken = false,
     )
-    val solana =  Coin(
+    val solana = Coin(
         chain = Chain.Solana,
         ticker = "SOL",
         logo = "sol",
