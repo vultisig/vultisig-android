@@ -74,7 +74,6 @@
     <string name="verify_transaction_fiat_amount_title">Bedrag in (%s)</string>
     <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Doe mee met Keysign</string>
-    <string name="verify_transaction_sign">Ondertekenen</string>
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_consent_correct_dst">Ik stuur niet naar een oplichter of hacker</string>
@@ -94,7 +93,6 @@
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">VEILIGE CRYPTO KLUIS</string>
     <string name="create_new_vault_screen_create_a_new_vault">Maak een nieuwe kluis</string>
-    <string name="create_new_vault_screen_import_an_existing_vault">Importeer een bestaande kluis</string>
     <string name="device_list_screen_keygen">Sleutel genereren</string>
     <string name="device_list_screen_with_these_devices">Met deze apparaten</string>
     <string name="device_list_screen_continue">Doorgaan</string>
@@ -119,7 +117,6 @@
     <string name="network_prompts_local">Lokaal</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="setup_title">Instellen</string>
-    <string name="setup_start">Start</string>
     <string name="keysign_peer_discovery_start">Start</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-tokens worden verbrand door kosten.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT-tokens worden aan gebruikers uitgedeeld.</string>
@@ -279,7 +276,6 @@
     <string name="deposit_form_operator_fee_title">Exploitantenvergoeding (optioneel)</string>
     <string name="deposit_message_deposit_title">%s bericht storting</string>
     <string name="deposit_form_custom_memo_title">Aangepaste memo</string>
-    <string name="naming_vault_screen_vault_placeholder">Hoofdkluis</string>
     <string name="transaction_swap_tracking_link">Trackinglink ruilen</string>
     <string name="swap_screen_same_asset_error_message">Bron- en bestemmingsactiva kunnen niet hetzelfde zijn.</string>
     <string name="address_book_toolbar_title">Adresboek</string>
@@ -298,24 +294,15 @@
     <string name="join_keysign_invalid_qr">Ongeldige QR-code-inhoud</string>
     <string name="join_keysign_failed_to_start">Kan geen keysign joinen</string>
     <string name="deposit_form_percentage_to_remove_title">Percentage om te verwijderen</string>
-    <string name="keygen_role_title">Instellen</string>
-    <string name="keygen_role_initiate_action">QR-code maken</string>
-    <string name="keygen_role_initiate_title">Initiërend apparaat</string>
-    <string name="keygen_role_pair_title">Koppelingsapparaat</string>
-    <string name="keygen_role_pair_action">Scan QR / Koppel apparaat</string>
-    <string name="keygen_role_option_caption">Dit apparaat is de</string>
-    <string name="keygen_role_or">OF</string>
     <string name="setup_1_device_of_vault">Je hebt nog 1 apparaat nodig om te koppelen</string>
     <string name="setup_2_device_of_vault">Je hebt nog 2 apparaten nodig om te koppelen</string>
     <string name="setup_m_device_of_vault">U kunt zoveel apparaten koppelen als u wilt</string>
     <string name="enable_chain_button">Schakel keten in</string>
     <string name="enable_chain_warning">Chain is niet geselecteerd. Schakel het in bij chain selection.</string>
     <string name="s_of_s">%1$s van %2$s</string>
-    <string name="setup_select_your_vault_type">Selecteer uw kluistype</string>
     <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
-    <string name="share_vault_qr_card_title">Hoofdkluis</string>
     <string name="share_vault_qr_card_keys">ECDSA-sleutel: %1$s EdDSA-sleutel: %2$s</string>
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
     <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>

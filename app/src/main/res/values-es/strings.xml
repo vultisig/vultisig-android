@@ -69,7 +69,6 @@
     <string name="verify_transaction_amount_title">Cantidad</string>
     <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Unirse a la firma de clave</string>
-    <string name="verify_transaction_sign">Firmar</string>
     <string name="verify_transaction_consent_address">Estoy enviando a la dirección correcta</string>
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
     <string name="verify_transaction_consent_correct_dst">No estoy enviando a una estafa ni a un hacker</string>
@@ -88,7 +87,6 @@
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">CAJA FUERTE DE CRIPTO</string>
     <string name="create_new_vault_screen_create_a_new_vault">Crear una Nueva Caja Fuert</string>
-    <string name="create_new_vault_screen_import_an_existing_vault">Importar una Caja Fuerte Existente</string>
     <string name="device_list_screen_keygen">Generador de claves</string>
     <string name="device_list_screen_with_these_devices">Con estos dispositivos</string>
     <string name="device_list_screen_continue">Continuar</string>
@@ -112,7 +110,6 @@
     <string name="keygen_peer_discovery_continue">Continuar</string>
     <string name="network_prompts_local">Local</string>
     <string name="setup_title">Configurar</string>
-    <string name="setup_start">Iniciar</string>
     <string name="keysign_peer_discovery_start">Iniciar</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Los tokens VULT se queman a partir de las tarifas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Los tokens VULT se envían vía airdrop a los usuarios.</string>
@@ -261,7 +258,6 @@
     <string name="share_vault_qr_title">Compartir Bóveda QR</string>
     <string name="share_vault_qr_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartir</string>
-    <string name="share_vault_qr_card_title">Bóveda principal</string>
     <string name="share_vault_qr_card_keys">Clave ECDSA: %1$s Clave EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Dirección del nodo</string>
     <string name="deposit_form_provider_title">Proveedor (opcional)</string>
@@ -270,7 +266,6 @@
     <string name="deposit_form_operator_fee_title">Tarifa del operador (opcional)</string>
     <string name="deposit_message_deposit_title">%s mensaje de deposito</string>
     <string name="deposit_form_custom_memo_title">Memo personalizado</string>
-    <string name="naming_vault_screen_vault_placeholder">Bóveda principal</string>
     <string name="transaction_swap_tracking_link">Enlace de seguimiento de intercambio</string>
     <string name="swap_screen_same_asset_error_message">Los activos de origen y destino no pueden ser los mismos.</string>
     <string name="address_book_toolbar_title">Libreta de direcciones</string>
@@ -289,20 +284,12 @@
     <string name="join_keysign_invalid_qr">Contenido de código QR no válido</string>
     <string name="join_keysign_failed_to_start">No se pudo unir a keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Porcentaje a eliminar</string>
-    <string name="keygen_role_title">Configuración</string>
-    <string name="keygen_role_initiate_action">Crear QR</string>
-    <string name="keygen_role_initiate_title">Dispositivo iniciador</string>
-    <string name="keygen_role_pair_title">Dispositivo de emparejamiento</string>
-    <string name="keygen_role_pair_action">Escanear código QR / Emparejar dispositivo</string>
-    <string name="keygen_role_option_caption">Este dispositivo es el</string>
-    <string name="keygen_role_or">O</string>
     <string name="setup_1_device_of_vault">Necesita 1 dispositivo más para emparejar</string>
     <string name="setup_2_device_of_vault">Necesitas 2 dispositivos más para emparejar</string>
     <string name="setup_m_device_of_vault">Puedes emparejar tantos dispositivos como quieras</string>
     <string name="enable_chain_button">Habilitar cadena</string>
     <string name="enable_chain_warning">La cadena no está seleccionada. Habilítela en la selección de cadena.</string>
     <string name="s_of_s">%1$s de %2$s</string>
-    <string name="setup_select_your_vault_type">Seleccione su tipo de bóveda</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de privacidad</string>
     <string name="settings_screen_tos">Condiciones de servicio</string>
