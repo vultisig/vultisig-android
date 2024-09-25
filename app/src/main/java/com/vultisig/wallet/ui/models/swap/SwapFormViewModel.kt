@@ -7,6 +7,7 @@ import androidx.compose.foundation.text2.input.textAsFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Address
@@ -16,7 +17,7 @@ import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
-import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.SwapTransaction.*
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -103,6 +104,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val evmApiFactory: EvmApiFactory,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
@@ -196,18 +198,17 @@ internal class SwapFormViewModel @Inject constructor(
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
-                val specificAndUtxo = blockChainSpecificRepository.getSpecific(
-                    srcToken.chain,
-                    srcAddress,
-                    srcToken,
-                    gasFee,
-                    isSwap = true,
-                    isMaxAmountEnabled = false,
-                    isDeposit = srcToken.chain == Chain.MayaChain,
-                )
-
                 val transaction = when (quote) {
                     is SwapQuote.ThorChain -> {
+                        val specificAndUtxo = blockChainSpecificRepository.getSpecific(
+                            srcToken.chain,
+                            srcAddress,
+                            srcToken,
+                            gasFee,
+                            isSwap = true,
+                            isMaxAmountEnabled = false,
+                            isDeposit = srcToken.chain == Chain.MayaChain,
+                        )
                         val dstAddress =
                             quote.data.router ?: quote.data.inboundAddress ?: srcAddress
                         val allowance = allowanceRepository.getAllowance(
@@ -226,7 +227,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val isAffiliate = srcFiatValue.value >=
                                 AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                        SwapTransaction(
+                        RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
                             vaultId = vaultId,
                             srcToken = srcToken,
@@ -259,8 +260,36 @@ internal class SwapFormViewModel @Inject constructor(
                     }
 
                     is SwapQuote.MayaChain -> {
+                        val memo = quote.data.memo
+                        val isEthToCacaoSwapTransaction =
+                            srcToken.isNativeToken &&
+                                    srcToken.chain in listOf(Chain.Ethereum, Chain.Arbitrum) &&
+                                    dstToken.chain == Chain.MayaChain
                         val dstAddress =
-                            quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                            if (isEthToCacaoSwapTransaction) {
+                                quote.data.inboundAddress ?: srcAddress
+                            } else {
+                                quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                            }
+                        val gasLimit = if (isEthToCacaoSwapTransaction) evmApiFactory
+                            .createEvmApi(srcToken.chain)
+                            .getGasLimit(
+                                srcAddress,
+                                dstAddress,
+                                srcAmountInt,
+                                memo
+                            ) else null
+                        val specificAndUtxo = blockChainSpecificRepository
+                            .getSpecific(
+                                srcToken.chain,
+                                srcAddress,
+                                srcToken,
+                                gasFee,
+                                isSwap = true,
+                                isMaxAmountEnabled = false,
+                                isDeposit = srcToken.chain == Chain.MayaChain,
+                                gasLimit = gasLimit
+                            )
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
                             contractAddress = srcToken.contractAddress,
@@ -277,7 +306,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val isAffiliate = srcFiatValue.value >=
                                 AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                        SwapTransaction(
+                        val regularSwapTransaction = RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
                             vaultId = vaultId,
                             srcToken = srcToken,
@@ -287,7 +316,7 @@ internal class SwapFormViewModel @Inject constructor(
                             expectedDstTokenValue = dstTokenValue,
                             blockChainSpecific = specificAndUtxo,
                             estimatedFees = quote.fees,
-                            memo = quote.data.memo,
+                            memo = memo,
                             isApprovalRequired = isApprovalRequired,
                             payload = SwapPayload.MayaChain(
                                 THORChainSwapPayload(
@@ -307,11 +336,28 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
                             )
                         )
+                        if (isEthToCacaoSwapTransaction) {
+                            EthToCacaoSwapTransaction(
+                                regularSwapTransaction,
+                                gasFee = gasFee
+                            )
+                        } else {
+                            regularSwapTransaction
+                        }
                     }
 
                     is SwapQuote.OneInch -> {
                         val dstAddress = quote.data.tx.to
-
+                        val specificAndUtxo = blockChainSpecificRepository
+                            .getSpecific(
+                                srcToken.chain,
+                                srcAddress,
+                                srcToken,
+                                gasFee,
+                                isSwap = true,
+                                isMaxAmountEnabled = false,
+                                isDeposit = srcToken.chain == Chain.MayaChain,
+                            )
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
                             contractAddress = srcToken.contractAddress,
@@ -321,7 +367,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val isApprovalRequired =
                             allowance != null && allowance < srcTokenValue.value
 
-                        SwapTransaction(
+                        RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
                             vaultId = vaultId,
                             srcToken = srcToken,
@@ -746,8 +792,10 @@ internal class SwapFormViewModel @Inject constructor(
                         val formError = when (e) {
                             is SwapException.SwapIsNotSupported ->
                                 UiText.StringResource(R.string.swap_route_not_available)
+
                             is SwapException.AmountCannotBeZero ->
                                 UiText.StringResource(R.string.swap_form_invalid_amount)
+
                             is SwapException.SameAssets ->
                                 UiText.StringResource(R.string.swap_screen_same_asset_error_message)
                         }
