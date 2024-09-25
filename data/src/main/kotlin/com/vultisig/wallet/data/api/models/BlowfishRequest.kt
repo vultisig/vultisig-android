@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class BlowfishRequest(
+data class BlowfishRequest(
     @SerialName("userAccount")
     val userAccount: String,
     @SerialName("metadata")
@@ -19,7 +19,7 @@ internal data class BlowfishRequest(
 
 
 @Serializable
-internal data class BlowfishTxObject(
+data class BlowfishTxObject(
     @SerialName("from")
     val from: String,
     @SerialName("to")
@@ -31,13 +31,13 @@ internal data class BlowfishTxObject(
 )
 
 @Serializable
-internal data class BlowfishMetadata(
+data class BlowfishMetadata(
     @SerialName("origin")
     val origin: String,
 )
 
 @Serializable
-internal data class BlowfishSimulatorConfig(
+data class BlowfishSimulatorConfig(
     @SerialName("blockNumber")
     val blockNumber: String?,
     @SerialName("blockTimestamp")
@@ -45,7 +45,7 @@ internal data class BlowfishSimulatorConfig(
 )
 
 @Serializable
-internal data class BlowfishStateOverrides(
+data class BlowfishStateOverrides(
     @SerialName("nativeBalances")
     val nativeBalances: List<BlowfishNativeBalance>,
     @SerialName("storage")
@@ -53,7 +53,7 @@ internal data class BlowfishStateOverrides(
 )
 
 @Serializable
-internal data class BlowfishNativeBalance(
+data class BlowfishNativeBalance(
     @SerialName("address")
     val address: String,
     @SerialName("value")
@@ -61,7 +61,7 @@ internal data class BlowfishNativeBalance(
 )
 
 @Serializable
-internal data class BlowfishStorage(
+data class BlowfishStorage(
     @SerialName("address")
     val address: String,
     @SerialName("slot")

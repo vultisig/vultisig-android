@@ -10,13 +10,12 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 private const val HEADER_API_TITLE = "X-Api-Version"
 private const val BLOWFISH_API_VERSION = "2023-06-05"
-internal interface BlowfishApi {
+interface BlowfishApi {
     suspend fun fetchBlowfishTransactions(chain: String, network: String, blowfishRequest: BlowfishRequest) : BlowfishResponse
 
     suspend fun fetchBlowfishSolanaTransactions(blowfishRequest: BlowfishRequest) : BlowfishResponse
@@ -55,7 +54,7 @@ internal class BlowfishApiImpl @Inject constructor(
     }
 }
 
-internal val Chain.blowfishChainName: String?
+val Chain.blowfishChainName: String?
     get() = when (this) {
         Chain.Ethereum -> "ethereum"
         Chain.Polygon -> "polygon"
@@ -70,7 +69,7 @@ internal val Chain.blowfishChainName: String?
     }
 
 
-internal val Chain.blowfishNetwork: String?
+val Chain.blowfishNetwork: String?
     get() = when (this) {
         Chain.Ethereum, Chain.Polygon, Chain.Avalanche, Chain.Optimism, Chain.Base, Chain.Blast,
         Chain.BscChain, Chain.Solana -> "mainnet"

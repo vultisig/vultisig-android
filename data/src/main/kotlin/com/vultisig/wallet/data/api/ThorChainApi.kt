@@ -1,12 +1,14 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -18,9 +20,10 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import timber.log.Timber
+import java.math.BigInteger
 import javax.inject.Inject
 
-internal interface MayaChainApi {
+interface ThorChainApi {
 
     suspend fun getBalance(
         address: String,
@@ -40,18 +43,19 @@ internal interface MayaChainApi {
     ): THORChainSwapQuote
 
     suspend fun broadcastTransaction(tx: String): String?
+    suspend fun getTHORChainNativeTransactionFee(): BigInteger
 }
 
-internal class MayaChainApiImp @Inject constructor(
+internal class ThorChainApiImpl @Inject constructor(
     private val httpClient: HttpClient,
-) : MayaChainApi {
+) : ThorChainApi {
 
     private val xClientID = "X-Client-ID"
     private val xClientIDValue = "vultisig"
 
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response = httpClient
-            .get("https://mayanode.mayachain.info/cosmos/bank/v1beta1/balances/$address") {
+            .get("https://thornode.ninerealms.com/cosmos/bank/v1beta1/balances/$address") {
                 header(xClientID, xClientIDValue)
             }
         val resp = response.body<CosmosBalanceResponse>()
@@ -65,49 +69,60 @@ internal class MayaChainApiImp @Inject constructor(
         amount: String,
         interval: String,
         isAffiliate: Boolean,
-    ): THORChainSwapQuote {
-        val response = httpClient
-            .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
-                parameter("from_asset", fromAsset)
-                parameter("to_asset", toAsset)
-                parameter("amount", amount)
-                parameter("destination", address)
-                parameter("streaming_interval", interval)
-                if (isAffiliate) {
-                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
-                }
-                header(xClientID, xClientIDValue)
+    ): THORChainSwapQuote = httpClient
+        .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
+            parameter("from_asset", fromAsset)
+            parameter("to_asset", toAsset)
+            parameter("amount", amount)
+            parameter("destination", address)
+            parameter("streaming_interval", interval)
+            if (isAffiliate) {
+                parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
             }
-        return response.body<THORChainSwapQuote>()
-    }
+            header(xClientID, xClientIDValue)
+        }.body()
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient
-            .get("https://mayanode.mayachain.info/auth/accounts/$address") {
+            .get("https://thornode.ninerealms.com/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val responseBody = response.body<THORChainAccountResultJson>()
-        Timber.d("getAccountNumber: $responseBody")
-        return responseBody.result?.value ?: error("Field value is not found in the response")
+        return response.body<THORChainAccountResultJson>().result?.value
+            ?: error("Field value is not found in the response")
+    }
+
+    override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
+        try {
+            val response = httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
+                header(xClientID, xClientIDValue)
+            }
+            val content = response.body<NativeTxFeeRune>()
+            return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
+        } catch (e: Exception) {
+            Timber.tag("THORChainService")
+                .e("Error getting THORChain native transaction fee: ${e.message}")
+            throw e
+        }
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
         try {
-            val response =
-                httpClient.post("https://mayanode.mayachain.info/cosmos/tx/v1beta1/txs") {
-                    contentType(ContentType.Application.Json)
-                    header(xClientID, xClientIDValue)
-                    setBody(tx)
-                }
+            val response = httpClient.post(Endpoints.THORCHAIN_BROADCAST_TX) {
+                contentType(ContentType.Application.Json)
+                header(xClientID, xClientIDValue)
+                setBody(tx)
+            }
+            val responseRawString = response.bodyAsText()
             val result = response.body<CosmosTransactionBroadcastResponse>()
+
             val txResponse = result.txResponse
             if (txResponse?.code == 0 || txResponse?.code == 19) {
                 return txResponse.txHash
             }
-            throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
+            throw Exception("Error broadcasting transaction: $responseRawString")
         } catch (e: Exception) {
-            Timber.tag("MayaChainService").e("Error broadcasting transaction: ${e.message}")
+            Timber.tag("THORChainService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
     }

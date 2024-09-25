@@ -21,7 +21,7 @@ import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
-internal interface BlockChairApi {
+interface BlockChairApi {
     suspend fun getAddressInfo(
         chain: Chain,
         address: String,

@@ -28,7 +28,7 @@ import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
-internal interface SolanaApi {
+interface SolanaApi {
     suspend fun getBalance(address: String): BigInteger
     suspend fun getRecentBlockHash(): String
     suspend fun getHighPriorityFee(account: String): String
