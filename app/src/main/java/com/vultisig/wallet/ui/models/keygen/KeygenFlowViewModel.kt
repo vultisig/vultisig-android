@@ -68,6 +68,7 @@ internal data class KeygenFlowUiModel(
     val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
     val isReshareMode: Boolean,
     val selection: List<String> = emptyList(),
+    val deletedParticipants: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
     val keygenPayload: String = "",
     val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
@@ -405,6 +406,11 @@ internal class KeygenFlowViewModel @Inject constructor(
         if (setupType == VaultSetupType.FAST) {
             moveToKeygen()
         } else {
+            uiState.update {
+                it.copy(
+                    deletedParticipants = (vault.signers subtract uiState.value.selection).toList()
+                )
+            }
             moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
         }
     }
