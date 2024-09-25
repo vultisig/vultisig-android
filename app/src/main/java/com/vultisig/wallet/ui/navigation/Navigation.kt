@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
+import android.net.Uri
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 
@@ -280,7 +281,7 @@ internal sealed class Destination(
         val name: String?,
         val setupType: VaultSetupType,
         val email: String,
-    ) : Destination(route = buildRoute(vaultId, name, email, setupType)) {
+    ) : Destination(route = buildRoute(vaultId, name, Uri.encode(email), setupType)) {
         companion object {
             const val STATIC_ROUTE = "keygen/password?${ARG_EMAIL}={$ARG_EMAIL}" +
                     "&${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
@@ -311,8 +312,8 @@ internal sealed class Destination(
             vaultId,
             vaultName,
             vaultSetupType.raw,
-            email,
-            password
+            Uri.encode(email),
+            Uri.encode(password),
         )
     ) {
         companion object {

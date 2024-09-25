@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.navigation
 
+import android.net.Uri
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.vultisig.wallet.data.models.TransactionId
@@ -65,7 +66,7 @@ internal sealed class SendDst(route: String) : Dst(route) {
         val transactionId: TransactionId,
         val password: String?,
     ) : SendDst(
-        route = buildRoute(transactionId, password)
+        route = buildRoute(transactionId, Uri.encode(password))
     ) {
         companion object {
 
