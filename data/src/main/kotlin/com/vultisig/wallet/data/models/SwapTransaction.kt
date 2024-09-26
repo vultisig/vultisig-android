@@ -4,7 +4,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import java.math.BigInteger
 
-internal data class SwapTransaction(
+data class SwapTransaction(
     val id: TransactionId,
     val vaultId: String,
     val srcToken: Coin,

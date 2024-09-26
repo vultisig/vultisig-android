@@ -170,4 +170,16 @@ internal interface DataRepositoriesModule {
     fun bindSwapQuoteRepository(
         impl: SwapQuoteRepositoryImpl
     ): SwapQuoteRepository
+
+    @Binds
+    @Singleton
+    fun bindChainAccountsRepository(
+        impl: AccountsRepositoryImpl,
+    ): AccountsRepository
+
+    @Binds
+    @Singleton
+    fun bindSwapTransactionRepository(
+        impl: SwapTransactionRepositoryImpl
+    ): SwapTransactionRepository
 }

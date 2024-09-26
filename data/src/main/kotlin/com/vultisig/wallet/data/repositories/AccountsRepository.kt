@@ -19,7 +19,7 @@ import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import javax.inject.Inject
 
-internal interface AccountsRepository {
+interface AccountsRepository {
 
     fun loadAddresses(
         vaultId: String,

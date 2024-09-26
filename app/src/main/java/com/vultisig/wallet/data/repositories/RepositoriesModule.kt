@@ -10,21 +10,9 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 internal interface RepositoriesModule {
 
-    @Binds
-    @Singleton
-    fun bindChainAccountsRepository(
-        impl: AccountsRepositoryImpl,
-    ): AccountsRepository
-
     @Singleton
     @Binds
     fun bindOnBoardRepository(
         impl: OnBoardRepositoryImpl,
     ): OnBoardRepository
-
-    @Binds
-    @Singleton
-    fun bindSwapTransactionRepository(
-        impl: SwapTransactionRepositoryImpl
-    ): SwapTransactionRepository
 }

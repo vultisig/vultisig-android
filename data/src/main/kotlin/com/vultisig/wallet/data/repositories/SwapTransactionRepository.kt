@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
-internal interface SwapTransactionRepository {
+interface SwapTransactionRepository {
 
     suspend fun addTransaction(transaction: SwapTransaction)
 
