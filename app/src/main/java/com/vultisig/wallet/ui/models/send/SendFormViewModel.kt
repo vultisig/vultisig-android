@@ -530,25 +530,21 @@ internal class SendFormViewModel @Inject constructor(
                         isMaxAmountEnabled = false,
                         isDeposit = false,
                     )
-
-                    val gasLimit = if (chain.standard == TokenStandard.EVM) {
-                        (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                    } else {
-                        BigInteger.valueOf(1)
-                    }
-                    var tokenValue = TokenValue(
-                        value = gasFee.value.multiply(gasLimit),
-                        unit = gasFee.unit,
-                        decimals = gasFee.decimals
+                    
+                    var estimatedFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                            } else {
+                                BigInteger.valueOf(1)
+                            },
+                            gasFee = gasFee,
+                            selectedToken = selectedAccount.token,
+                        )
                     )
 
-                    val fiatFees = convertTokenValueToFiat(
-                        selectedAccount.token,
-                        tokenValue,
-                        appCurrency.value
-                    )
                     uiState.update {
-                        it.copy(estimatedFee = fiatValueToStringMapper.map(fiatFees))
+                        it.copy(estimatedFee = estimatedFee)
                     }
                 } catch (e: Exception) {
                     // todo handle errors
