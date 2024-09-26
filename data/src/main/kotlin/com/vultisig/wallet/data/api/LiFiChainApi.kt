@@ -7,7 +7,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import javax.inject.Inject
 
-internal interface LiFiChainApi {
+interface LiFiChainApi {
     suspend fun getSwapQuote(
         fromChain: String,
         toChain: String,

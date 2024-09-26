@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class LiFiSwapQuoteJson(
+data class LiFiSwapQuoteJson(
     @SerialName("estimate")
     val estimate: LiFiSwapEstimateJson,
     @SerialName("transactionRequest")
@@ -14,7 +14,7 @@ internal data class LiFiSwapQuoteJson(
 )
 
 @Serializable
-internal data class LiFiSwapTxJson(
+data class LiFiSwapTxJson(
     @SerialName("from")
     val from: String,
     @SerialName("to")
@@ -30,7 +30,7 @@ internal data class LiFiSwapTxJson(
 )
 
 @Serializable
-internal data class LiFiSwapEstimateJson(
+data class LiFiSwapEstimateJson(
     @SerialName("toAmount")
     val toAmount: String,
 )

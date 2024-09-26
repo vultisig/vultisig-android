@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
@@ -45,6 +45,7 @@ internal fun DeviceList(
         navController = navController,
         localPartyId = viewModel.localPartyID,
         items = items,
+        deletedItems = uiState.deletedParticipants,
         isReshare = uiState.isReshareMode,
         onContinueClick = {
             viewModel.moveToKeygen()
@@ -57,6 +58,7 @@ private fun DeviceList(
     navController: NavController,
     localPartyId: String,
     items: List<String>,
+    deletedItems: List<String>,
     isReshare: Boolean,
     onContinueClick: () -> Unit,
 ) {
@@ -148,10 +150,6 @@ private fun DeviceList(
                             color = textColor,
                             style = Theme.montserrat.subtitle3,
                             modifier = Modifier
-                                .size(
-                                    width = 71.dp,
-                                    height = 30.dp
-                                )
                                 .background(
                                     color = Theme.colors.transparentOxfordBlue,
                                     shape = RoundedCornerShape(4.dp),
@@ -206,7 +204,7 @@ private fun DeviceList(
                         else
                             DeviceInfoItem(
                                 "${index + 1}. $item ${stringResource(R.string.backup_device)}",
-                                Theme.colors.transparentRed
+                                Theme.colors.trasnparentTurquoise
                             )
                     }
                 } else {
@@ -220,6 +218,13 @@ private fun DeviceList(
                     }
                 }
 
+                UiSpacer(size = 16.dp)
+            }
+            items(deletedItems) { item ->
+                DeviceInfoItem(
+                    "x. $item ${stringResource(R.string.deleted_device)}",
+                    Theme.colors.transparentRed
+                )
                 UiSpacer(size = 16.dp)
             }
 
@@ -236,6 +241,20 @@ private fun DeviceListPreview() {
         localPartyId = "localPartyId",
         isReshare = false,
         items = listOf("device1", "device2", "device3"),
+        deletedItems = emptyList(),
+        onContinueClick = {}
+    )
+}
+
+@Preview
+@Composable
+private fun DeviceReshareListPreview() {
+    DeviceList(
+        navController = rememberNavController(),
+        localPartyId = "localPartyId",
+        isReshare = true,
+        items = listOf("device1", "device2", "device3"),
+        deletedItems = listOf("deletedDevice1", "deletedDevice2"),
         onContinueClick = {}
     )
 }

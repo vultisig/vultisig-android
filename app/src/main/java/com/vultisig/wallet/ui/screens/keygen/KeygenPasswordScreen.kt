@@ -101,7 +101,7 @@ private fun KeygenPasswordScreen(
                     isObfuscationMode = !state.isPasswordVisible,
                     textFieldState = passwordFieldState,
                     onLostFocus = onPasswordLostFocus,
-                    actions = {
+                    content = {
                         VisibilityToggle(
                             isChecked = state.isPasswordVisible,
                             onClick = onPasswordVisibilityToggle,
@@ -117,7 +117,7 @@ private fun KeygenPasswordScreen(
                     isObfuscationMode = !state.isVerifyPasswordVisible,
                     textFieldState = verifyPasswordFieldState,
                     onLostFocus = onVerifyPasswordLostFocus,
-                    actions = {
+                    content = {
                         VisibilityToggle(
                             isChecked = state.isVerifyPasswordVisible,
                             onClick = onVerifyPasswordVisibilityToggle
