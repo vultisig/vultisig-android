@@ -406,7 +406,7 @@ internal class SendFormViewModel @Inject constructor(
                             BigInteger.valueOf(1)
                         },
                         gasFee = gasFee,
-                        selectedToken = selectedAccount.token,
+                        selectedToken = selectedToken,
                     )
                 )
 
@@ -530,7 +530,7 @@ internal class SendFormViewModel @Inject constructor(
                         isMaxAmountEnabled = false,
                         isDeposit = false,
                     )
-                    
+
                     var estimatedFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = if (chain.standard == TokenStandard.EVM) {
@@ -539,7 +539,7 @@ internal class SendFormViewModel @Inject constructor(
                                 BigInteger.valueOf(1)
                             },
                             gasFee = gasFee,
-                            selectedToken = selectedAccount.token,
+                            selectedToken = selectedToken,
                         )
                     )
 
