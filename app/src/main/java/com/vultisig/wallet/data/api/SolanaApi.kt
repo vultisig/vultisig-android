@@ -75,7 +75,7 @@ internal class SolanaApiImp @Inject constructor(
             method = "getLatestBlockhash",
             params = buildJsonArray {
                 addJsonObject {
-                    put("commitment", "finalized")
+                    put("commitment", "confirmed")
                 }
             },
             id = 1,
@@ -141,9 +141,9 @@ internal class SolanaApiImp @Inject constructor(
             }
             val responseRawString = response.bodyAsText()
             val result = response.body<BroadcastTransactionRespJson>()
-            if (result.error != null) {
+            result.error?.let { error ->
                 Timber.tag("SolanaApiImp").d("Error broadcasting transaction: $responseRawString")
-                return null
+                error(error["message"].toString())
             }
             return result.result ?: error("broadcastTransaction error")
         } catch (e: Exception) {

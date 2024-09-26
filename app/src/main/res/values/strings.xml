@@ -75,7 +75,6 @@
     <string name="verify_transaction_fiat_amount_title">Amount in (%s)</string>
     <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Join Keysign</string>
-    <string name="verify_transaction_sign">Sign</string>
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_consent_correct_dst">I’m not sending to a scam or hacker</string>
@@ -90,12 +89,11 @@
     <string name="home_screen_add_new_vault">+ Add New Vault</string>
     <string name="import_file_screen_title">Import</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Upload your previously created vault share :</string>
-    <string name="import_file_screen_upload_file_text_or_image">Select a .bak or .dat backup file</string>
+    <string name="import_file_screen_upload_file_text_or_image">Select a .vult, .bak or .dat backup file</string>
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
     <string name="create_new_vault_screen_create_a_new_vault">Create a new Vault</string>
-    <string name="create_new_vault_screen_import_an_existing_vault">Import an Existing Vault</string>
     <string name="device_list_screen_keygen">Keygen</string>
     <string name="device_list_screen_with_these_devices">With these devices</string>
     <string name="device_list_screen_continue">Continue</string>
@@ -120,7 +118,6 @@
     <string name="network_prompts_local">Local</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="setup_title">Setup</string>
-    <string name="setup_start">Start</string>
     <string name="keysign_peer_discovery_start">Start</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT tokens are burnt from fees.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokens are airdropped to users.</string>
@@ -282,7 +279,6 @@
     <string name="share_vault_qr_title" >Share Vault QR</string>
     <string name="share_vault_qr_save" >Save</string>
     <string name="share_vault_qr_share" >Share</string>
-    <string name="share_vault_qr_card_title" >Main Vault</string>
     <string name="share_vault_qr_card_keys">ECDSA Key: %1$s EdDSA Key: %2$s</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
@@ -291,7 +287,6 @@
     <string name="deposit_form_operator_fee_title">Operator\’s Fee (optional)</string>
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
-    <string name="naming_vault_screen_vault_placeholder">Main Vault</string>
     <string name="transaction_swap_tracking_link">Swap tracking link</string>
     <string name="transaction_done_track_ninerealms" translatable="false">https://track.ninerealms.com/%1$s</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
@@ -311,20 +306,12 @@
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
     <string name="join_keysign_failed_to_start">Failed to join keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Percentage to remove</string>
-    <string name="keygen_role_title">Setup</string>
-    <string name="keygen_role_initiate_action">Create QR</string>
-    <string name="keygen_role_initiate_title">Initiating device</string>
-    <string name="keygen_role_pair_title">Pairing device</string>
-    <string name="keygen_role_pair_action">Scan QR / Pair device</string>
-    <string name="keygen_role_option_caption">This device is the</string>
-    <string name="keygen_role_or">OR</string>
     <string name="setup_1_device_of_vault">You need 1 more device to pair</string>
     <string name="setup_2_device_of_vault">You need 2 more devices to pair</string>
     <string name="setup_m_device_of_vault">You can pair as many devices you want</string>
     <string name="enable_chain_button">Enable Chain</string>
     <string name="enable_chain_warning">Chain is not selected.\nPlease enable it in chain selection.</string>
     <string name="s_of_s">%1$s of %2$s</string>
-    <string name="setup_select_your_vault_type">Select your vault type</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
@@ -392,13 +379,11 @@
     <string name="select_vault_type_secure_title" translatable="false">SECURE</string>
     <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>
     <string name="select_vault_type_start" translatable="false">START</string>
-    <string name="select_vault_type_select" translatable="false">Select</string>
     <string name="keygen_email_screen_title" translatable="false">EMAIL</string>
     <string name="keygen_email_continue_button" translatable="false">Continue</string>
     <string name="keygen_email_caption" translatable="false">Enter your email to receive your backup</string>
     <string name="keygen_email_input_hint" translatable="false">Email</string>
     <string name="keygen_verify_email_hint" translatable="false">Verify Email</string>
-    <string name="keygen_email_transactions_caption" translatable="false">Receive transaction alerts here\n(customise later)</string>
     <string name="keygen_invalid_email_error" translatable="false">Invalid email</string>
     <string name="keygen_email_dont_match" translatable="false">Emails do not match</string>
     <string name="keygen_password_description_caption" translatable="false">This Password encrypts your Vault Share</string>
@@ -412,11 +397,15 @@
     <string name="keysign_password_title" translatable="false">Password</string>
     <string name="home_screen_import_vault" translatable="false">Import Vault</string>
     <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
+    <string name="vault_list_part_n_of_t" translatable="false">Part %dof%d</string>
+    <string name="vault_list_fast_badge" translatable="false">Fast</string>
 
-    <string name="naming_vault_placeholder_cold_vault" translatable="false">Cold Vault</string>
-    <string name="naming_vault_placeholder_hot_vault" translatable="false">Hot Vault</string>
+    <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
+    <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>
+    <string name="naming_vault_placeholder_secure_vault" translatable="false">Secure Vault</string>
     <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
+    <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
     <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultisigner</string>
 

@@ -1,34 +1,21 @@
 package com.vultisig.wallet.data.models
 
-import com.google.gson.annotations.SerializedName
 import wallet.core.jni.proto.THORChainSwap.Asset
 import java.math.BigDecimal
 import java.math.BigInteger
 
 data class THORChainSwapPayload(
-    @SerializedName("fromAddress")
     val fromAddress: String,
-    @SerializedName("fromCoin")
     val fromCoin: Coin,
-    @SerializedName("toCoin")
     val toCoin: Coin,
-    @SerializedName("vaultAddress")
     val vaultAddress: String,
-    @SerializedName("routerAddress")
     val routerAddress: String?,
-    @SerializedName("fromAmount")
     val fromAmount: BigInteger,
-    @SerializedName("toAmountDecimal")
     val toAmountDecimal: BigDecimal,
-    @SerializedName("toAmountLimit")
     val toAmountLimit: String,
-    @SerializedName("steamingInterval")
     val streamingInterval: String,
-    @SerializedName("streamingQuantity")
     val streamingQuantity: String,
-    @SerializedName("expirationTime")
     val expirationTime: ULong,
-    @SerializedName("isAffiliate")
     val isAffiliate: Boolean,
 ) {
     val toAddress: String

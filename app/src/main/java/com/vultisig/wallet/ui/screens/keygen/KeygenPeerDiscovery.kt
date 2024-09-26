@@ -42,6 +42,7 @@ internal fun KeygenPeerDiscovery(
     KeygenPeerDiscoveryScreen(
         navController = navController,
         isLookingForVultiServer = uiState.vaultSetupType == VaultSetupType.FAST,
+        hasNetworkPrompt = uiState.vaultSetupType == VaultSetupType.SECURE,
         selectionState = uiState.selection,
         isReshare = uiState.isReshareMode,
         participants = uiState.participants,
@@ -63,6 +64,7 @@ internal fun KeygenPeerDiscovery(
 internal fun KeygenPeerDiscoveryScreen(
     navController: NavHostController,
     isLookingForVultiServer: Boolean,
+    hasNetworkPrompt: Boolean,
     selectionState: List<String>,
     participants: List<String>,
     keygenPayloadState: String,
@@ -102,6 +104,7 @@ internal fun KeygenPeerDiscoveryScreen(
                     selectionState = selectionState,
                     participants = participants,
                     keygenPayloadState = keygenPayloadState,
+                    hasNetworkPrompt = hasNetworkPrompt,
                     networkPromptOption = networkPromptOption,
                     onChangeNetwork = onChangeNetwork,
                     onAddParticipant = onAddParticipant,
@@ -141,7 +144,8 @@ internal fun FastPeerDiscovery() {
             color = Theme.colors.neutral0,
             style = Theme.montserrat.subtitle3,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(horizontal = 48.dp)
         )
 
@@ -156,7 +160,7 @@ internal fun FastPeerDiscovery() {
 private fun KeygenPeerDiscoveryScreenPreview() {
     KeygenPeerDiscoveryScreen(
         navController = rememberNavController(),
-        isLookingForVultiServer = true,
+        isLookingForVultiServer = false,
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygenPayloadState",
@@ -164,5 +168,6 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         isContinueEnabled = true,
         vaultSetupType = "M/N",
         isReshare = true,
+        hasNetworkPrompt = true
     )
 }

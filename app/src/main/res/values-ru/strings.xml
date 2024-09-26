@@ -74,7 +74,6 @@
     <string name="verify_transaction_fiat_amount_title">Сумма в (%s)</string>
     <string name="verify_transaction_gas_title">Газ</string>
     <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
-    <string name="verify_transaction_sign">Подписать</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
     <string name="verify_transaction_consent_correct_dst">Я не отправляю мошеннику или хакеру</string>
@@ -89,12 +88,11 @@
     <string name="home_screen_add_new_vault">+ Добавить новое хранилище</string>
     <string name="import_file_screen_title">Импорт</string>
     <string name="import_file_screen_enter_your_previously_created_vault_share">Загрузите созданную ранее долю хранилища</string>
-    <string name="import_file_screen_upload_file_text_or_image">Выберите файл резервной копии с расширением .bak или .dat</string>
+    <string name="import_file_screen_upload_file_text_or_image">Выберите файл резервной копии с расширением .vult, .bak или .dat</string>
     <string name="import_file_screen_duplicate_vault">Хранилище дублируется</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">БЕЗОПАСНОЕ КРИПТОХРАНИЛИЩЕ</string>
     <string name="create_new_vault_screen_create_a_new_vault">Создать новое хранилище</string>
-    <string name="create_new_vault_screen_import_an_existing_vault">Импортировать существующее хранилище</string>
     <string name="device_list_screen_keygen">Генерация ключей</string>
     <string name="device_list_screen_with_these_devices">С этими устройствами</string>
     <string name="device_list_screen_continue">Продолжить</string>
@@ -119,7 +117,6 @@
     <string name="network_prompts_local">Локально</string>
     <string name="network_prompts_internet">Интернет</string>
     <string name="setup_title">Настройка</string>
-    <string name="setup_start">Начать</string>
     <string name="keysign_peer_discovery_start">Начать</string>
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Токены VULT сжигаются из комиссий.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Токены VULT раздаются пользователям.</string>
@@ -266,7 +263,6 @@
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save" >Сохранить</string>
     <string name="share_vault_qr_share" >Поделиться</string>
-    <string name="share_vault_qr_card_title">Главное хранилище</string>
     <string name="share_vault_qr_card_keys">Ключ ECDSA: %1$s Ключ EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
@@ -275,7 +271,6 @@
     <string name="deposit_form_operator_fee_title">Возникли проблемы с подключением по WiFi? Используйте вместо этого персональную точку доступа. Или попробуйте другую сеть.</string>
     <string name="deposit_message_deposit_title">%s сообщение депозит</string>
     <string name="deposit_form_custom_memo_title">Пользовательская записка</string>
-    <string name="naming_vault_screen_vault_placeholder">Главное хранилище</string>
     <string name="transaction_swap_tracking_link">Обмен ссылкой отслеживания</string>
     <string name="swap_screen_same_asset_error_message">Исходные и целевые активы не могут быть одинаковыми.</string>
     <string name="address_book_toolbar_title">Адресная книга</string>
@@ -294,20 +289,12 @@
     <string name="join_keysign_invalid_qr">Недействительное содержимое QR-кода</string>
     <string name="join_keysign_failed_to_start">Не удалось присоединиться к keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Процент для удаления</string>
-    <string name="keygen_role_title">Настраивать</string>
-    <string name="keygen_role_initiate_action">Создать QR-код</string>
-    <string name="keygen_role_initiate_title">Инициирующее устройство</string>
-    <string name="keygen_role_pair_title">Сопряжение устройств</string>
-    <string name="keygen_role_pair_action">Сканировать QR/Подключить устройство</string>
-    <string name="keygen_role_option_caption">Это устройство является</string>
-    <string name="keygen_role_or">ИЛИ</string>
     <string name="setup_1_device_of_vault">Вам нужно еще 1 устройство для сопряжения</string>
     <string name="setup_2_device_of_vault">Для сопряжения вам понадобятся еще 2 устройства.</string>
     <string name="setup_m_device_of_vault">Вы можете подключить столько устройств, сколько захотите.</string>
     <string name="enable_chain_button">Включить цепочку</string>
     <string name="enable_chain_warning">Цепь не выбрана. Включите ее в выборе цепи.</string>
     <string name="s_of_s">%1$s из %2$s</string>
-    <string name="setup_select_your_vault_type">Выберите тип хранилища</string>
     <string name="settings_screen_legal">Юридический</string>
     <string name="settings_screen_privacy_policy">политика конфиденциальности</string>
     <string name="settings_screen_tos">Условия обслуживания</string>
