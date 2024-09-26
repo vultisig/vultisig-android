@@ -279,7 +279,7 @@ private fun SearchTokenTextField(
                 error = null,
                 keyboardType = KeyboardType.Text,
                 textFieldState = searchTextFieldState,
-                actions = {
+                content = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_paste),
                         contentDescription = null,
