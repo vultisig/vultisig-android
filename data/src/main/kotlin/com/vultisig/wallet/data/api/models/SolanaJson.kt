@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api.models
 import com.vultisig.wallet.data.utils.BigIntegerSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import java.math.BigInteger
 
 
@@ -53,7 +54,8 @@ data class SolanaFeeObjectRespJson(
 @Serializable
 data class BroadcastTransactionRespJson(
     @SerialName("error")
-    val error: String?,
+    @Serializable
+    val error: JsonObject?,
     @SerialName("result")
     val result: String?,
 )
