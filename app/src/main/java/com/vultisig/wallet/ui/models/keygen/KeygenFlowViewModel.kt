@@ -408,7 +408,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         } else {
             uiState.update {
                 it.copy(
-                    deletedParticipants = (vault.signers subtract uiState.value.selection).toList()
+                    deletedParticipants = (vault.signers - uiState.value.selection).toList()
                 )
             }
             moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
