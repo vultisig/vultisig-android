@@ -17,13 +17,13 @@ import io.ktor.http.contentType
 import timber.log.Timber
 import javax.inject.Inject
 
-internal interface CosmosApi {
+interface CosmosApi {
     suspend fun getBalance(address: String): List<CosmosBalance>
     suspend fun getAccountNumber(address: String): THORChainAccountValue
     suspend fun broadcastTransaction(tx: String): String?
 }
 
-internal interface CosmosApiFactory {
+interface CosmosApiFactory {
     fun createCosmosApi(chain: Chain): CosmosApi
 }
 
