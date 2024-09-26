@@ -13,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface DataRepositoriesModule {
+internal interface RepositoriesModule {
 
     @Binds
     @Singleton
@@ -182,4 +182,10 @@ internal interface DataRepositoriesModule {
     fun bindSwapTransactionRepository(
         impl: SwapTransactionRepositoryImpl
     ): SwapTransactionRepository
+
+    @Singleton
+    @Binds
+    fun bindOnBoardRepository(
+        impl: OnBoardRepositoryImpl,
+    ): OnBoardRepository
 }
