@@ -72,7 +72,7 @@ private fun KeysignPasswordScreen(
                     isObfuscationMode = !state.isPasswordVisible,
                     textFieldState = passwordFieldState,
                     onLostFocus = onPasswordLostFocus,
-                    actions = {
+                    content = {
                         VisibilityToggle(
                             isChecked = state.isPasswordVisible,
                             onClick = onPasswordVisibilityToggle,
