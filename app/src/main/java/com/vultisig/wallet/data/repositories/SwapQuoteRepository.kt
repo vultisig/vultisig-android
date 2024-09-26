@@ -233,13 +233,13 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
-//        if (srcToken.chain in listOf(
-//                Chain.Ethereum,
-//                Chain.Arbitrum
-//            ) && dstToken.chain == Chain.MayaChain
-//        ) {
-//            return null
-//        }
+        if (!srcToken.isNativeToken && srcToken.chain in listOf(
+                Chain.Ethereum,
+                Chain.Arbitrum
+            ) && dstToken.chain == Chain.MayaChain
+        ) {
+            return null
+        }
         return srcToken.swapProviders.intersect(dstToken.swapProviders).firstOrNull()
     }
 

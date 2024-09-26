@@ -32,6 +32,7 @@ internal interface BlockChainSpecificRepository {
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
+        gasLimit: BigInteger? = null,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -54,6 +55,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
+        gasLimit: BigInteger?
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {
@@ -110,14 +112,14 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                val gasLimit = BigInteger(
+                val defaultGasLimit = BigInteger(
                     when {
                         isSwap -> "600000"
                         token.isNativeToken -> {
                             if (chain == Chain.Arbitrum)
                                 "120000" // arbitrum has higher gas limit
                             else
-                                "30000"
+                                "23000"
                         }
 
                         else -> "120000"
@@ -134,12 +136,11 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         maxFeePerGasWei = gasFee.value,
                         priorityFeeWei = maxPriorityFee,
                         nonce = nonce,
-                        gasLimit = gasLimit,
+                        gasLimit = gasLimit ?: defaultGasLimit,
                     )
                 )
             }
         }
-
         TokenStandard.UTXO -> {
             val utxos = blockChairApi.getAddressInfo(chain, address)
 
