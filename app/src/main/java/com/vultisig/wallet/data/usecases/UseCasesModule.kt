@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.ui.models.mappers.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.ui.models.mappers.GasFeeToEstimatedFeeUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -58,4 +60,9 @@ internal interface UseCasesModule {
         impl: EnableTokenUseCaseImpl
     ): EnableTokenUseCase
 
+    @Binds
+    @Singleton
+    fun bindGasFeeToEstimatedFeeUseCase(
+        impl: GasFeeToEstimatedFeeUseCaseImpl,
+    ): GasFeeToEstimatedFeeUseCase
 }

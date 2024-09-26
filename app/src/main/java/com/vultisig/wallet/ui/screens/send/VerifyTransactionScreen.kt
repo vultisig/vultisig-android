@@ -168,6 +168,11 @@ internal fun VerifyTransactionScreen(
                             divider = false
                         )
                     }
+                    OtherField(
+                        title = stringResource(R.string.verify_transaction_estimated_fee),
+                        value = state.transaction.estimatedFee,
+                        divider = false
+                    )
                 }
             }
 

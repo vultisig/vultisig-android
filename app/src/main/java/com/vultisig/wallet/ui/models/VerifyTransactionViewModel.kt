@@ -36,6 +36,7 @@ internal data class TransactionUiModel(
     val fiatCurrency: String = "",
     val gasValue: String = "",
     val showGasField: Boolean = true,
+    val estimatedFee: String = "",
 )
 
 @Immutable

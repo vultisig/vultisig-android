@@ -313,5 +313,6 @@
     <string name="join_keygen_failed">Pridruživanje %1$s nije uspjelo</string>
     <string name="join_keygen_screen_reshare">Ponovno podijeli</string>
     <string name="join_keygen_screen_keygen">Keygen</string>
+    <string name="verify_transaction_estimated_fee">Procijenjene naknade</string>
 
 </resources>

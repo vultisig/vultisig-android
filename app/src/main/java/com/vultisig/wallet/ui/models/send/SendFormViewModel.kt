@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -35,6 +36,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc
 import com.vultisig.wallet.ui.navigation.Destination
@@ -115,6 +117,7 @@ internal class SendFormViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
     private val addressParserRepository: AddressParserRepository,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val gasFeeToEstimatedFee : GasFeeToEstimatedFeeUseCase
     ) : ViewModel() {
 
     private var vaultId: String? = null
@@ -395,6 +398,18 @@ internal class SendFormViewModel @Inject constructor(
                         isDeposit = false,
                     )
 
+                var estimatedFee = gasFeeToEstimatedFee(
+                    GasFeeParams(
+                        gasLimit = if (chain.standard == TokenStandard.EVM) {
+                            (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                        } else {
+                            BigInteger.valueOf(1)
+                        },
+                        gasFee = gasFee,
+                        selectedToken = selectedAccount.token,
+                    )
+                )
+
                 val transaction = Transaction(
                     id = UUID.randomUUID().toString(),
                     vaultId = vaultId,
@@ -417,6 +432,7 @@ internal class SendFormViewModel @Inject constructor(
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
+                    estimatedFee =estimatedFee,
                 )
 
                 Timber.d("Transaction: $transaction")
