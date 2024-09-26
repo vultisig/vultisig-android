@@ -20,18 +20,6 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindAppCurrencyRepository(
-        impl: AppCurrencyRepositoryImpl,
-    ): AppCurrencyRepository
-
-    @Binds
-    @Singleton
-    fun bindTokenPriceRepository(
-        impl: TokenPriceRepositoryImpl,
-    ): TokenPriceRepository
-
-    @Binds
-    @Singleton
     fun bindChainAccountsRepository(
         impl: AccountsRepositoryImpl,
     ): AccountsRepository
@@ -65,12 +53,6 @@ internal interface RepositoriesModule {
     fun bindDefaultChainsRepository(
         impl: DefaultChainsRepositoryImpl,
     ): DefaultChainsRepository
-
-    @Binds
-    @Singleton
-    fun bindTransactionRepository(
-        impl: TransactionRepositoryImpl,
-    ): TransactionRepository
 
     @Binds
     @Singleton
@@ -119,12 +101,6 @@ internal interface RepositoriesModule {
     fun bindBalanceVisibilityRepository(
         impl: BalanceVisibilityRepositoryImpl
     ): BalanceVisibilityRepository
-
-    @Binds
-    @Singleton
-    fun bindVaultDataStoreRepository(
-        impl: VaultDataStoreRepositoryImpl
-    ): VaultDataStoreRepository
 
     @Binds
     @Singleton

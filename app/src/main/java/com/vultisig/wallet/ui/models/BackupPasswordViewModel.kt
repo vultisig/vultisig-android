@@ -14,7 +14,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
@@ -37,8 +36,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
 import javax.inject.Inject
 
 internal data class BackupPasswordState(

@@ -33,4 +33,28 @@ internal interface DataRepositoriesModule {
     fun bindVultiSignerRepository(
         impl: VultiSignerRepositoryImpl
     ): VultiSignerRepository
+
+    @Binds
+    @Singleton
+    fun bindVaultDataStoreRepository(
+        impl: VaultDataStoreRepositoryImpl
+    ): VaultDataStoreRepository
+
+    @Binds
+    @Singleton
+    fun bindTransactionRepository(
+        impl: TransactionRepositoryImpl,
+    ): TransactionRepository
+
+    @Binds
+    @Singleton
+    fun bindAppCurrencyRepository(
+        impl: AppCurrencyRepositoryImpl,
+    ): AppCurrencyRepository
+
+    @Binds
+    @Singleton
+    fun bindTokenPriceRepository(
+        impl: TokenPriceRepositoryImpl,
+    ): TokenPriceRepository
 }

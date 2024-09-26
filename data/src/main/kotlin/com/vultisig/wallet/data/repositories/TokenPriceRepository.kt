@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal interface TokenPriceRepository {
+interface TokenPriceRepository {
 
     suspend fun getCachedPrice(
         tokenId: String,

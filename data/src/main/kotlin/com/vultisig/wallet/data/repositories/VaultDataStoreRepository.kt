@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-internal interface VaultDataStoreRepository {
+interface VaultDataStoreRepository {
     suspend fun setBackupStatus(vaultId: String, status: Boolean)
 
     suspend fun readBackupStatus(vaultId: String): Flow<Boolean>

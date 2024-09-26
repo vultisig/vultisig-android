@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-internal interface AppCurrencyRepository {
+interface AppCurrencyRepository {
 
     val defaultCurrency: AppCurrency
 
