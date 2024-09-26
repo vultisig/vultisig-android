@@ -13,7 +13,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigInteger
 import javax.inject.Inject
 
-internal interface GasFeeRepository {
+interface GasFeeRepository {
 
     suspend fun getGasFee(
         chain: Chain,

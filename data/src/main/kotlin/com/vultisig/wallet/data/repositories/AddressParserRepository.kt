@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.utils.Numeric
 import javax.inject.Inject
 
 
-internal interface AddressParserRepository {
+interface AddressParserRepository {
     suspend fun resolveName(input: String, chain: Chain): String
 
     suspend fun isEnsNameService(input: String): Boolean

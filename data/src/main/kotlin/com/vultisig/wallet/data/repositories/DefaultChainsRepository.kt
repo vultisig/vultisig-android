@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
 
-internal interface DefaultChainsRepository {
+interface DefaultChainsRepository {
     val selectedDefaultChains: Flow<List<Chain>>
     suspend fun setSelectedDefaultChains(chains: List<Chain>)
     fun getAllDefaultChains(): List<Chain>

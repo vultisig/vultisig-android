@@ -16,7 +16,7 @@ import com.vultisig.wallet.data.models.oneInchChainId
 import java.math.BigDecimal
 import javax.inject.Inject
 
-internal interface SwapQuoteRepository {
+interface SwapQuoteRepository {
 
     suspend fun getSwapQuote(
         dstAddress: String,

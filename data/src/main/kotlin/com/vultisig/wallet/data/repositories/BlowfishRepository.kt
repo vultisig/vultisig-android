@@ -15,7 +15,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import javax.inject.Inject
 
-internal interface BlowfishRepository {
+interface BlowfishRepository {
 
     suspend fun scanBlowfishTransaction(
         vault: Vault,

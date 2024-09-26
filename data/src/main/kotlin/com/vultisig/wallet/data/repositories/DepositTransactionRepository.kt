@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
-internal interface DepositTransactionRepository {
+interface DepositTransactionRepository {
 
     suspend fun addTransaction(transaction: DepositTransaction)
 
@@ -16,7 +16,8 @@ internal interface DepositTransactionRepository {
 
 }
 
-internal class DepositTransactionRepositoryImpl @Inject constructor() : DepositTransactionRepository {
+internal class DepositTransactionRepositoryImpl @Inject constructor() :
+    DepositTransactionRepository {
 
     private val transactions = MutableStateFlow(mapOf<TransactionId, DepositTransaction>())
 

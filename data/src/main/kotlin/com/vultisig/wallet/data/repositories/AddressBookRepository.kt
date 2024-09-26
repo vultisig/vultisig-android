@@ -6,7 +6,7 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import javax.inject.Inject
 
-internal interface AddressBookRepository {
+interface AddressBookRepository {
 
     suspend fun getEntries(): List<AddressBookEntry>
 

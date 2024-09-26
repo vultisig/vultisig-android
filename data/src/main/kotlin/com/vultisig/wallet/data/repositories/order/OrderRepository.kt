@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.repositories
+package com.vultisig.wallet.data.repositories.order
 
 import com.vultisig.wallet.data.db.BaseOrderDao
 import com.vultisig.wallet.data.db.models.BaseOrderEntity
@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
 
-internal interface OrderRepository<T : BaseOrderEntity> {
+interface OrderRepository<T : BaseOrderEntity> {
     fun loadOrders(parentId: String?): Flow<List<T>>
     suspend fun updateItemOrder(
         parentId: String?,
@@ -23,7 +23,7 @@ internal interface OrderRepository<T : BaseOrderEntity> {
 }
 
 
-internal abstract class OrderRepositoryImpl<T : BaseOrderEntity>(
+abstract class OrderRepositoryImpl<T : BaseOrderEntity>(
     private val baseOrderDao: BaseOrderDao<T>
 ) : OrderRepository<T> {
     override fun loadOrders(parentId: String?): Flow<List<T>> = baseOrderDao.loadOrders(parentId)

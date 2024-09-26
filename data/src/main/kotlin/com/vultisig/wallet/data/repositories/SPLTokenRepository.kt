@@ -17,7 +17,7 @@ private data class SplTokenResponse(
     val amount: BigInteger,
 )
 
-internal interface SplTokenRepository {
+interface SplTokenRepository {
     suspend fun getTokens(address: String, vault: Vault): List<Coin>
     suspend fun getCachedBalance(coin: Coin): BigInteger
     suspend fun getBalance(coin: Coin): BigInteger?

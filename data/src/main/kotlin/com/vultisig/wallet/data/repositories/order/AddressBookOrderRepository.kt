@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.repositories
+package com.vultisig.wallet.data.repositories.order
 
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity

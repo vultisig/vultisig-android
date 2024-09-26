@@ -47,7 +47,7 @@ import java.math.RoundingMode
 import javax.inject.Inject
 
 
-internal interface BalanceRepository {
+interface BalanceRepository {
 
     suspend fun getCachedTokenBalance(
         address: String,

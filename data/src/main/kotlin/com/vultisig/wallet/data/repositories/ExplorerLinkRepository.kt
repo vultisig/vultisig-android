@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.models.Chain
 import javax.inject.Inject
 
-internal interface ExplorerLinkRepository {
+interface ExplorerLinkRepository {
 
     fun getTransactionLink(
         chain: Chain,

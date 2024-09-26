@@ -17,12 +17,12 @@ import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
-internal data class BlockChainSpecificAndUtxo(
+data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),
 )
 
-internal interface BlockChainSpecificRepository {
+interface BlockChainSpecificRepository {
 
     suspend fun getSpecific(
         chain: Chain,

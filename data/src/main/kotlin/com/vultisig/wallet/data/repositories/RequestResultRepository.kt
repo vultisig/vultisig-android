@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-internal interface RequestResultRepository {
+interface RequestResultRepository {
 
     suspend fun <T> request(requestId: String): T
 

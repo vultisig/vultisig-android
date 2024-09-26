@@ -1,10 +1,10 @@
-package com.vultisig.wallet.data.repositories
+package com.vultisig.wallet.data.repositories.order
 
 import com.vultisig.wallet.data.db.VaultOrderDao
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import javax.inject.Inject
 
-internal class VaultOrderRepository @Inject constructor(vaultOrderDao: VaultOrderDao) :
+class VaultOrderRepository @Inject constructor(vaultOrderDao: VaultOrderDao) :
     OrderRepositoryImpl<VaultOrderEntity>(vaultOrderDao) {
 
     override fun defaultOrder(parentId: String?): VaultOrderEntity

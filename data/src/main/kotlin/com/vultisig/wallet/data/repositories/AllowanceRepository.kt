@@ -6,7 +6,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import java.math.BigInteger
 import javax.inject.Inject
 
-internal interface AllowanceRepository {
+interface AllowanceRepository {
 
     suspend fun getAllowance(
         chain: Chain,
