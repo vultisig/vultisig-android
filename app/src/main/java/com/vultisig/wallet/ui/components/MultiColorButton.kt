@@ -36,7 +36,7 @@ internal fun MultiColorButton(
     textStyle: TextStyle? = null,
     textColor: Color? = null,
     modifier: Modifier,
-    centerContent : (@Composable ()->Unit)? = null,
+    content : (@Composable ()->Unit)? = null,
     onClick: () -> Unit,
 ) {
     val emptyClickAction: () -> Unit = {}
@@ -82,7 +82,7 @@ internal fun MultiColorButton(
                 modifier = Modifier.size(iconSize ?: 15.dp)
             )
         else UiSpacer(iconSize ?: 25.dp)
-        centerContent?.invoke() ?: Text(
+        content?.invoke() ?: Text(
             text = text,
             color = if (disabled == true) appColor.neutral800 else textColor
                 ?: appColor.oxfordBlue800,

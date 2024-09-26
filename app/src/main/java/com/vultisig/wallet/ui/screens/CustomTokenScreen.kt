@@ -250,7 +250,7 @@ private fun SearchTokenResult(
         .fillMaxWidth()
         .imePadding(),
         onClick = onAddTokenClick,
-        centerContent = {
+        content = {
             Text(
                 text = stringResource(
                     R.string.custom_token_add_token,
