@@ -44,12 +44,6 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindAppLocaleRepository(
-        impl: AppLocaleRepositoryImpl,
-    ): AppLocaleRepository
-
-    @Binds
-    @Singleton
     fun bindDefaultChainsRepository(
         impl: DefaultChainsRepositoryImpl,
     ): DefaultChainsRepository

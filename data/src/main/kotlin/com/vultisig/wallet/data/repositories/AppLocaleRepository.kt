@@ -1,21 +1,22 @@
 package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.vultisig.wallet.data.models.Language
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.models.settings.AppLanguage.Companion.fromName
 import com.vultisig.wallet.data.sources.AppDataStore
-import com.vultisig.wallet.ui.models.settings.Language
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-internal interface AppLocaleRepository {
+interface AppLocaleRepository {
     val local: Flow<AppLanguage>
     suspend fun setLocale(lang: Language)
     fun getAllLocales(): List<AppLanguage>
 }
 
-internal class AppLocaleRepositoryImpl @Inject constructor(private val dataStore: AppDataStore) : AppLocaleRepository {
+internal class AppLocaleRepositoryImpl @Inject constructor(private val dataStore: AppDataStore) :
+    AppLocaleRepository {
 
     private val defaultLocal = LOCALE_LIST[0]
     override val local: Flow<AppLanguage>

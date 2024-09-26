@@ -57,4 +57,10 @@ internal interface DataRepositoriesModule {
     fun bindTokenPriceRepository(
         impl: TokenPriceRepositoryImpl,
     ): TokenPriceRepository
+
+    @Binds
+    @Singleton
+    fun bindAppLocaleRepository(
+        impl: AppLocaleRepositoryImpl,
+    ): AppLocaleRepository
 }

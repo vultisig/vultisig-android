@@ -5,4 +5,4 @@ import com.vultisig.wallet.data.models.settings.AppLanguage
 
 
 internal val CURRENCY_LIST: List<AppCurrency> = AppCurrency.entries.toList()
-val LOCALE_LIST: List<AppLanguage> = AppLanguage.entries.toList()
+internal val LOCALE_LIST: List<AppLanguage> = AppLanguage.entries.toList()
