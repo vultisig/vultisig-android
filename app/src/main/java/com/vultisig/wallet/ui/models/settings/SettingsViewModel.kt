@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.settings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.Language
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -20,12 +21,6 @@ internal data class SettingsUiModel(
     val selectedCurrency: CurrencyUnit = CurrencyUnit(),
     val selectedLocal: Language = Language()
 )
-
-internal data class Language(
-    val mainName: String = "",
-    val englishName: String? = null
-)
-
 
 internal data class CurrencyUnit(
     val name: String = "",
