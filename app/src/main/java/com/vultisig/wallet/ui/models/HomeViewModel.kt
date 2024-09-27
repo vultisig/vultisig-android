@@ -32,9 +32,10 @@ internal class HomeViewModel @Inject constructor(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
 ) : ViewModel() {
 
-    private var requestedVaultId: String? = savedStateHandle.remove(Destination.ARG_VAULT_ID)
+    private var requestedVaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
     private var showVaultList: Boolean =
-        savedStateHandle.remove(Destination.Home.ARG_SHOW_VAULT_LIST)!!
+        savedStateHandle[Destination.Home.ARG_SHOW_VAULT_LIST] ?: false
+
     val uiState = MutableStateFlow(HomeUiModel(showVaultList = showVaultList))
     init {
         collectLastOpenedVault()
