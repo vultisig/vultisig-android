@@ -31,12 +31,12 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
-import com.vultisig.wallet.ui.components.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.generateQrBitmap
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -447,7 +447,8 @@ internal class KeygenFlowViewModel @Inject constructor(
             updateKeygenPayload(context)
         }
     }
-    internal fun shareQRCode(activity: Context): Unit {
+
+    internal fun shareQRCode(activity: Context) {
         val qrBitmap = generateQrBitmap(uiState.value.keygenPayload)
         activity.share(
             qrBitmap,

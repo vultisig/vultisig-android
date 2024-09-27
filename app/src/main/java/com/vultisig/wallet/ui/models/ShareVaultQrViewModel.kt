@@ -22,10 +22,10 @@ import com.vultisig.wallet.data.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.data.common.saveBitmapToDownloads
 import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.components.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.generateQrBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -109,7 +109,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
-    internal fun loadQrCode(
+    internal fun loadQrCodePainter(
         mainColor: Color,
         backgroundColor: Color,
         logo: Bitmap? = null,

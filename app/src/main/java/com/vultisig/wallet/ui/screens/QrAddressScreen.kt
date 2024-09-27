@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.PathEffect
@@ -26,6 +28,7 @@ import com.vultisig.wallet.ui.components.QRCodeKeyGenImage
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.models.QrAddressViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.extractBitmap
 
 @Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
@@ -33,6 +36,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
     val viewmodel = hiltViewModel<QrAddressViewModel>()
     val address = viewmodel.address!!
     val context = LocalContext.current
+    val bitmapPainter by viewmodel.qrBitmapPainter.collectAsState()
 
     Scaffold(
         topBar = {
@@ -67,7 +71,15 @@ internal fun QrAddressScreen(navController: NavHostController) {
                     modifier = Modifier
                         .width(min(maxHeight, maxWidth))
                         .padding(all = 48.dp)
-                        .aspectRatio(1f),
+                        .aspectRatio(1f)
+                        .extractBitmap { bitmap ->
+                            if (bitmapPainter != null) {
+                                viewmodel.saveShareQrBitmap(bitmap)
+                            } else {
+                                bitmap.recycle()
+                            }
+                        },
+                    bitmapPainter,
                 )
             }
         }
