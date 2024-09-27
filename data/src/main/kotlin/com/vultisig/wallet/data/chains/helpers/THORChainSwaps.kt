@@ -88,7 +88,10 @@ class THORChainSwaps(
             }
 
             THORChainSwap.Chain.ATOM -> {
-                val helper = AtomHelper(vaultHexPublicKey, vaultHexChainCode)
+                val helper = CosmosHelper(
+                    coinType = CoinType.COSMOS,
+                    denom = CosmosHelper.ATOM_DENOM,
+                )
                 return helper.getSwapPreSignedInputData(
                     keysignPayload = keysignPayload,
                     input = output.cosmos.toBuilder()
@@ -192,7 +195,10 @@ class THORChainSwaps(
             }
 
             THORChainSwap.Chain.ATOM -> {
-                val helper = AtomHelper(vaultHexPublicKey, vaultHexChainCode)
+                val helper = CosmosHelper(
+                    coinType = CoinType.COSMOS,
+                    denom = CosmosHelper.ATOM_DENOM,
+                )
                 return helper.getSignedTransaction(
                     input = inputData,
                     keysignPayload = keysignPayload,
