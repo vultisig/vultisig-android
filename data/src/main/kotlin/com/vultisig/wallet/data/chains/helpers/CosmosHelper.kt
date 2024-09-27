@@ -14,113 +14,64 @@ import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
+import wallet.core.jni.TransactionCompiler.compileWithSignatures
+import wallet.core.jni.TransactionCompiler.preImageHashes
 import wallet.core.jni.proto.Cosmos
+import wallet.core.jni.proto.TransactionCompiler
 
 @OptIn(ExperimentalStdlibApi::class)
-class DydxHelper(
-    private val vaultHexPublicKey: String,
-    private val vaultHexChainCode: String,
+class CosmosHelper(
+    private val coinType: CoinType,
+    private val denom: String,
 ) {
-    val coinType = CoinType.DYDX
 
     companion object {
-        const val DYDX_CHAIN_GAS_LIMIT = 2500000000000000
+        private const val GAS_LIMIT = 200000L
+
+        const val ATOM_DENOM = "uatom"
+        const val KUJI_DENOM = "ukuji"
+        const val DYDX_DENOM = "adydx"
     }
 
-    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-        val dydxData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
+    fun getSwapPreSignedInputData(
+        keysignPayload: KeysignPayload,
+        input: Cosmos.SigningInput.Builder,
+    ): ByteArray {
+        val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
             ?: throw Exception("Invalid blockChainSpecific")
+
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        var input = Cosmos.SigningInput.newBuilder()
+        val inputData = input
             .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .setSigningMode(Cosmos.SigningMode.Protobuf)
-            .setChainId(coinType.chainId())
-            .setAccountNumber(dydxData.accountNumber.toLong())
-            .setSequence(dydxData.sequence.toLong())
+            .setAccountNumber(atomData.accountNumber.toLong())
+            .setSequence(atomData.sequence.toLong())
             .setMode(Cosmos.BroadcastMode.SYNC)
-            .addAllMessages(
-                listOf(
-                    Cosmos.Message.newBuilder()
-                        .setSendCoinsMessage(
-                            Cosmos.Message.Send.newBuilder()
-                                .setFromAddress(keysignPayload.coin.address)
-                                .setToAddress(keysignPayload.toAddress)
-                                .addAllAmounts(
-                                    listOf(
-                                        Cosmos.Amount.newBuilder()
-                                            .setDenom("adydx")
-                                            .setAmount(keysignPayload.toAmount.toString())
-                                            .build()
-                                    )
-                                )
-                                .build()
-                        )
-                        .build()
-                )
-            )
             .setFee(
                 Cosmos.Fee.newBuilder()
-                    .setGas(200000)
+                    .setGas(GAS_LIMIT)
                     .addAllAmounts(
                         listOf(
                             Cosmos.Amount.newBuilder()
-                                .setDenom("adydx")
-                                .setAmount(dydxData.gas.toString())
+                                .setDenom(denom)
+                                .setAmount(atomData.gas.toString())
                                 .build()
                         )
                     )
-            )
-        keysignPayload.memo?.let {
-            input = input.setMemo(it)
-        }
 
-        return input.build().toByteArray()
+            ).build()
+        return inputData.toByteArray()
     }
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
-        val hashes = wallet.core.jni.TransactionCompiler.preImageHashes(coinType, result)
+        val hashes = preImageHashes(coinType, result)
         val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+            TransactionCompiler.PreSigningOutput.parseFrom(hashes)
         if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
             throw Exception(preSigningOutput.errorMessage)
         }
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
-    }
-
-    fun getSignedTransaction(
-        input: ByteArray,
-        keysignPayload: KeysignPayload,
-        signatures: Map<String, KeysignResponse>,
-    ): SignedTransactionResult {
-        val publicKey =
-            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        val hashes = wallet.core.jni.TransactionCompiler.preImageHashes(coinType, input)
-        val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-        val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
-        val signature = signatures[key]?.getSignatureWithRecoveryID()
-            ?: throw Exception("Invalid signature")
-        if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
-            throw Exception("Invalid signature")
-        }
-        val allSignatures = DataVector()
-        val allPublicKeys = DataVector()
-        allSignatures.add(signature)
-        allPublicKeys.add(publicKey.data())
-        val compileWithSignature = wallet.core.jni.TransactionCompiler.compileWithSignatures(
-            coinType,
-            input,
-            allSignatures,
-            allPublicKeys
-        )
-        val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
-        val cosmosSig = Json.decodeFromString<CosmoSignature>(output.serialized)
-        return SignedTransactionResult(
-            output.serialized,
-            cosmosSig.transactionHash(),
-        )
     }
 
     fun getSignedTransaction(
@@ -134,4 +85,90 @@ class DydxHelper(
             signatures = signatures
         )
     }
+
+    private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+        val atomData = keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
+            ?: error("Invalid blockChainSpecific for Cosmos")
+        val publicKey =
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        var input = Cosmos.SigningInput.newBuilder()
+            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+            .setSigningMode(Cosmos.SigningMode.Protobuf)
+            .setChainId(coinType.chainId())
+            .setAccountNumber(atomData.accountNumber.toLong())
+            .setSequence(atomData.sequence.toLong())
+            .setMode(Cosmos.BroadcastMode.SYNC)
+            .addAllMessages(
+                listOf(
+                    Cosmos.Message.newBuilder()
+                        .setSendCoinsMessage(
+                            Cosmos.Message.Send.newBuilder()
+                                .setFromAddress(keysignPayload.coin.address)
+                                .setToAddress(keysignPayload.toAddress)
+                                .addAllAmounts(
+                                    listOf(
+                                        Cosmos.Amount.newBuilder()
+                                            .setDenom(denom)
+                                            .setAmount(keysignPayload.toAmount.toString())
+                                            .build()
+                                    )
+                                )
+                                .build()
+                        )
+                        .build()
+                )
+            )
+            .setFee(
+                Cosmos.Fee.newBuilder()
+                    .setGas(GAS_LIMIT)
+                    .addAllAmounts(
+                        listOf(
+                            Cosmos.Amount.newBuilder()
+                                .setDenom(denom)
+                                .setAmount(atomData.gas.toString())
+                                .build()
+                        )
+                    )
+            )
+        keysignPayload.memo?.let {
+            input = input.setMemo(it)
+        }
+
+        return input.build().toByteArray()
+    }
+
+    fun getSignedTransaction(
+        input: ByteArray,
+        keysignPayload: KeysignPayload,
+        signatures: Map<String, KeysignResponse>,
+    ): SignedTransactionResult {
+        val publicKey =
+            PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+        val hashes = preImageHashes(coinType, input)
+        val preSigningOutput =
+            TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+        val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
+        val signature = signatures[key]?.getSignatureWithRecoveryID()
+            ?: throw Exception("Invalid signature")
+        if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
+            throw Exception("Invalid signature")
+        }
+        val allSignatures = DataVector()
+        val allPublicKeys = DataVector()
+        allSignatures.add(signature)
+        allPublicKeys.add(publicKey.data())
+        val compileWithSignature = compileWithSignatures(
+            coinType,
+            input,
+            allSignatures,
+            allPublicKeys
+        )
+        val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
+        val cosmosSig = Json.decodeFromString<CosmoSignature>(output.serialized)
+        return SignedTransactionResult(
+            output.serialized,
+            cosmosSig.transactionHash(),
+        )
+    }
+
 }

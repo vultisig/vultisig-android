@@ -1,12 +1,11 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.chains.helpers.DydxHelper
-import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
-import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
+import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -83,7 +82,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             Chain.Dydx -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
-                    value = DydxHelper.DYDX_CHAIN_GAS_LIMIT.toBigInteger(),
+                    value = 2500000000000000L.toBigInteger(),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

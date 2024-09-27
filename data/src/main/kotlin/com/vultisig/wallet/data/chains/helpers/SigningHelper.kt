@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.wallet.OneInchSwap
-import com.vultisig.wallet.data.wallet.Swaps.getPreSignedImageHash
+import wallet.core.jni.CoinType
 import java.math.BigInteger
 
 object SigningHelper {
@@ -76,17 +76,26 @@ object SigningHelper {
                 }
 
                 Chain.GaiaChain -> {
-                    val atomHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                    val atomHelper = CosmosHelper(
+                        coinType = CoinType.COSMOS,
+                        denom = CosmosHelper.ATOM_DENOM,
+                    )
                     atomHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.Dydx -> {
-                    val dydxHelper = DydxHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                    val dydxHelper = CosmosHelper(
+                        coinType = CoinType.DYDX,
+                        denom = CosmosHelper.DYDX_DENOM,
+                    )
                     dydxHelper.getPreSignedImageHash(payload)
                 }
 
                 Chain.Kujira -> {
-                    val kujiraHelper = KujiraHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                    val kujiraHelper = CosmosHelper(
+                        coinType = CoinType.KUJIRA,
+                        denom = CosmosHelper.KUJI_DENOM,
+                    )
                     kujiraHelper.getPreSignedImageHash(payload)
                 }
 
