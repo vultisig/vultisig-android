@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.scale
 import androidx.core.graphics.toColorInt
@@ -36,6 +37,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlin.math.PI
 
 private const val QR_CODE_SCALE_FACTOR = 8
 private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
@@ -44,23 +46,38 @@ private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
 internal fun QRCodeKeyGenImage(
     qrCodeContent: String,
     modifier: Modifier = Modifier,
-    pathEffect: PathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 50f), 0.0f),
+    cornerRadius: Dp = 16.dp,
+    innerPadding: Dp = 24.dp,
+    relativePaintedDashLength: Float = 7f,
+    relativeEmptyDashLength: Float = 5f,
+    countDashesInRect: Int = 4,
 ) {
     Box(
         modifier = modifier.drawBehind {
+            val cornerRadiusPx = cornerRadius.toPx()
+            val rectWidth = size.width
+            val rectHeight = size.height
+            val halfRectLength = rectWidth + rectHeight -
+                    ( 2 * cornerRadiusPx - PI.toFloat() * cornerRadiusPx / 2) * 2
+            val relativeDashLength = relativePaintedDashLength + relativeEmptyDashLength
+            val dashLengthTicker = halfRectLength / ( relativeDashLength * countDashesInRect / 2 )
+            val emptyDashLength = dashLengthTicker * relativeEmptyDashLength
+            val paintedDashLength = dashLengthTicker * relativePaintedDashLength
+            val phase = PI.toFloat() * cornerRadiusPx / 4  + paintedDashLength / 2
             drawRoundRect(
                 color = Color("#33e6bf".toColorInt()), style = Stroke(
                     width = 8f,
-                    pathEffect = pathEffect,
-                ), cornerRadius = CornerRadius(16.dp.toPx())
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(paintedDashLength, emptyDashLength), phase),
+                ),
+                cornerRadius = CornerRadius(cornerRadiusPx),
             )
         }
     ) {
         Surface(
             color = Theme.colors.neutral0,
-            shape = RoundedCornerShape(4.dp),
+            shape = RoundedCornerShape(10.dp),
             modifier = Modifier
-                .padding(16.dp),
+                .padding(innerPadding),
         ) {
             Image(
                 painter = rememberQRBitmapPainter(
@@ -153,7 +170,7 @@ internal fun rememberQRBitmapPainter(
 
     val scaledWidth = bitmap.width * QR_CODE_SCALE_FACTOR
     val scaledHeight = bitmap.height * QR_CODE_SCALE_FACTOR
-     val scaledLogoWidthTemp = scaledWidth / QR_CODE_VS_LOGO_SCALE_FACTOR
+    val scaledLogoWidthTemp = scaledWidth / QR_CODE_VS_LOGO_SCALE_FACTOR
     val scaledLogoHeightTemp = scaledHeight / QR_CODE_VS_LOGO_SCALE_FACTOR
     val scaledLogoWidth = if (scaledLogoWidthTemp == 0) 1 else scaledLogoWidthTemp
     val scaledLogoHeight = if (scaledLogoHeightTemp == 0) 1 else scaledLogoHeightTemp
