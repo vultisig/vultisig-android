@@ -196,7 +196,7 @@ internal fun ScanQrScreen(
                         onClick = {
                             pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                         },
-                        centerContent = {
+                        content = {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {

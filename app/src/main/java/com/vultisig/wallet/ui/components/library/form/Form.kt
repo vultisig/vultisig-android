@@ -171,7 +171,7 @@ internal fun FormTextFieldCard(
     textFieldState: TextFieldState,
     onLostFocus: () -> Unit = {},
     hintColor: Color = Theme.colors.neutral100,
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     TextFieldValidator(
         errorText = error,
@@ -183,7 +183,7 @@ internal fun FormTextFieldCard(
                 hint = hint,
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
-                actions = actions,
+                content = content,
                 onLostFocus = onLostFocus,
                 hintColor = hintColor,
             )
@@ -199,7 +199,7 @@ internal fun FormTextFieldCard(
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     onLostFocus: () -> Unit = {},
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     TextFieldValidator(
         errorText = error,
@@ -209,7 +209,7 @@ internal fun FormTextFieldCard(
                 hint = hint,
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
-                actions = actions,
+                content = content,
                 onLostFocus = onLostFocus
             )
         }
@@ -226,7 +226,7 @@ internal fun FormTextFieldCardWithPercentage(
     textFieldState: TextFieldState,
     onLostFocus: () -> Unit = {},
     onPercentClick: (percent: Float) -> Unit = {},
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    content: (@Composable RowScope.() -> Unit)? = null,
 
     ) {
     TextFieldValidator(
@@ -240,7 +240,7 @@ internal fun FormTextFieldCardWithPercentage(
                 hint = hint,
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
-                actions = actions,
+                content = content,
                 onLostFocus = onLostFocus
             )
         }
@@ -253,7 +253,7 @@ internal fun FormTextField(
     hint: String,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    content: (@Composable RowScope.() -> Unit)? = null,
     hintColor: Color = Theme.colors.neutral100,
     onLostFocus: () -> Unit,
 ) {
@@ -279,7 +279,7 @@ internal fun FormTextField(
 
         UiSpacer(size = 8.dp)
 
-        actions?.invoke(this)
+        content?.invoke(this)
     }
 }
 
@@ -344,7 +344,7 @@ internal fun FormBasicSecureTextField(
     onLostFocus: () -> Unit,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = Theme.menlo.body1,
-    actions: @Composable (RowScope.() -> Unit)?
+    content: @Composable (RowScope.() -> Unit)?
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -391,7 +391,7 @@ internal fun FormBasicSecureTextField(
                     )
                 }
 
-                actions?.invoke(this)
+                content?.invoke(this)
             }
         }
     }
@@ -458,7 +458,7 @@ internal fun FormTitleCollapsibleTextField(
     hint: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     textFieldState: TextFieldState,
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    content: (@Composable RowScope.() -> Unit)? = null,
     onLostFocus: () -> Unit,
 ) {
     var isExpanded by remember {
@@ -498,7 +498,7 @@ internal fun FormTitleCollapsibleTextField(
                     hint = hint,
                     keyboardType = keyboardType,
                     textFieldState = textFieldState,
-                    actions = actions,
+                    content = content,
                     onLostFocus = onLostFocus,
                 )
             }
