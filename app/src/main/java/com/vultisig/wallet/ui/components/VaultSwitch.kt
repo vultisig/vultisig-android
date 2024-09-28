@@ -14,7 +14,7 @@ internal fun VaultSwitch(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
-    thumbContent: (@Composable () -> Unit)? = null,
+    content: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     colors: SwitchColors = SwitchDefaults.colors(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -23,7 +23,7 @@ internal fun VaultSwitch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier.scale(0.6f),
-        thumbContent = thumbContent,
+        thumbContent = content,
         enabled = enabled,
         colors = colors,
         interactionSource = interactionSource

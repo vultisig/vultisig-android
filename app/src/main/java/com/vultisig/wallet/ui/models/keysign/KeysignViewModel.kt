@@ -4,19 +4,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.chains.helpers.AtomHelper
-import com.vultisig.wallet.data.chains.helpers.DydxHelper
-import com.vultisig.wallet.data.chains.helpers.ERC20Helper
-import com.vultisig.wallet.data.chains.helpers.EvmHelper
-import com.vultisig.wallet.data.chains.helpers.KujiraHelper
-import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
-import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
-import com.vultisig.wallet.data.chains.helpers.SolanaHelper
-import com.vultisig.wallet.data.chains.helpers.THORCHainHelper
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
-import com.vultisig.wallet.data.chains.helpers.UtxoHelper
-import com.vultisig.wallet.data.common.md5
-import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -26,6 +13,17 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.chains.helpers.CosmosHelper
+import com.vultisig.wallet.data.chains.helpers.ERC20Helper
+import com.vultisig.wallet.data.chains.helpers.EvmHelper
+import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
+import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
+import com.vultisig.wallet.data.chains.helpers.SolanaHelper
+import com.vultisig.wallet.data.chains.helpers.THORCHainHelper
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
+import com.vultisig.wallet.data.common.md5
+import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.TssKeyType
@@ -33,10 +31,10 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
-import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -51,6 +49,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
+import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.Base64
 
@@ -283,17 +282,26 @@ internal class KeysignViewModel(
             }
 
             Chain.GaiaChain -> {
-                val atomHelper = AtomHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val atomHelper = CosmosHelper(
+                    coinType = CoinType.COSMOS,
+                    denom = CosmosHelper.ATOM_DENOM,
+                )
                 return atomHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.Kujira -> {
-                val kujiraHelper = KujiraHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val kujiraHelper = CosmosHelper(
+                    coinType = CoinType.KUJIRA,
+                    denom = CosmosHelper.KUJI_DENOM,
+                )
                 return kujiraHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.Dydx -> {
-                val dydxHelper = DydxHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val dydxHelper = CosmosHelper(
+                    coinType = CoinType.DYDX,
+                    denom = CosmosHelper.DYDX_DENOM,
+                )
                 return dydxHelper.getSignedTransaction(keysignPayload, signatures)
             }
 

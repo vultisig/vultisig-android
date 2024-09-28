@@ -154,7 +154,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     isObfuscationMode = !uiState.isPasswordVisible,
                     textFieldState = viewModel.passwordTextFieldState,
                     onLostFocus = {},
-                    actions = {
+                    content = {
                         IconButton(onClick = viewModel::togglePasswordVisibility) {
                             Icon(
                                 painter = painterResource(
@@ -172,7 +172,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                     isObfuscationMode = !uiState.isConfirmPasswordVisible,
                     textFieldState = viewModel.confirmPasswordTextFieldState,
                     onLostFocus = viewModel::validateConfirmPassword,
-                    actions = {
+                    content = {
                         IconButton(onClick = viewModel::toggleConfirmPasswordVisibility) {
                             Icon(
                                 painter = painterResource(

@@ -158,7 +158,7 @@ private fun ImportFileScreen(
                                 error = uiModel.passwordErrorHint,
                                 onLostFocus = {},
                                 isObfuscationMode = uiModel.isPasswordObfuscated,
-                                actions = {
+                                content = {
                                     IconButton(onClick = onTogglePasswordVisibilityClick) {
                                         Icon(
                                             modifier = Modifier.width(28.dp),
