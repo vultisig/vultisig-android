@@ -62,17 +62,11 @@ internal fun QrAddressScreen(navController: NavHostController) {
                 Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                val qrBoxSize = ((maxWidth.value * .8).coerceAtMost(300.0)).dp
-                val segment = with(LocalDensity.current) {
-                    qrBoxSize.div(5).toPx()
-                }
-
                 QRCodeKeyGenImage(
                     address,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(segment, segment)),
                     modifier = Modifier
                         .width(min(maxHeight, maxWidth))
-                        .padding(all = 32.dp)
+                        .padding(all = 48.dp)
                         .aspectRatio(1f),
                 )
             }
