@@ -106,7 +106,6 @@ internal class SendFormViewModel @Inject constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
-    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val accountsRepository: AccountsRepository,
     appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
