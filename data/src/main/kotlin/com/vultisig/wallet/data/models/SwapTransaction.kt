@@ -4,7 +4,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import java.math.BigInteger
 
-internal sealed interface SwapTransaction {
+sealed interface SwapTransaction {
     val id: TransactionId
     val vaultId: String
     val srcToken: Coin
@@ -36,8 +36,7 @@ internal sealed interface SwapTransaction {
 
     data class EthToCacaoSwapTransaction(
         val swapTransaction: SwapTransaction,
-        val gasFee: TokenValue? = null,
-    ) : SwapTransaction by swapTransaction
+     ) : SwapTransaction by swapTransaction
 
     companion object {
         val maxAllowance: BigInteger

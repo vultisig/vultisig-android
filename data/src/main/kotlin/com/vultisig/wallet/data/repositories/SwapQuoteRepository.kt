@@ -233,15 +233,17 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     }
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
-        if (!srcToken.isNativeToken && srcToken.chain in listOf(
-                Chain.Ethereum,
-                Chain.Arbitrum
-            ) && dstToken.chain == Chain.MayaChain
-        ) {
-            return null
-        }
+        if (hasNotProvider(srcToken, dstToken)) return null
         return srcToken.swapProviders.intersect(dstToken.swapProviders).firstOrNull()
     }
+
+    private fun hasNotProvider(
+        srcToken: Coin,
+        dstToken: Coin,
+    ) = !srcToken.isNativeToken && srcToken.chain in listOf(
+        Chain.Ethereum,
+        Chain.Arbitrum
+    ) && dstToken.chain == Chain.MayaChain
 
     private val thorEthTokens = listOf(
         "ETH",

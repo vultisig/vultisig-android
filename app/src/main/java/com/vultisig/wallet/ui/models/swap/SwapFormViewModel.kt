@@ -204,7 +204,7 @@ internal class SwapFormViewModel @Inject constructor(
                 val gasLimit = if (isEthToCacaoSwapTransaction)
                     BigInteger.valueOf(
                         if (srcToken.chain == Chain.Ethereum)
-                            40000 else 400000
+                            ETH_GAS_LIMIT else ARB_GAS_LIMIT
                     ) else null
 
                 val specificAndUtxo = blockChainSpecificRepository.getSpecific(
@@ -327,7 +327,6 @@ internal class SwapFormViewModel @Inject constructor(
                         if (isEthToCacaoSwapTransaction) {
                             EthToCacaoSwapTransaction(
                                 regularSwapTransaction,
-                                gasFee = gasFee
                             )
                         } else regularSwapTransaction
                     }
@@ -820,9 +819,9 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     companion object {
-
         const val AFFILIATE_FEE_USD_THRESHOLD = 100
-
+        const val ETH_GAS_LIMIT: Long = 40_000
+        const val ARB_GAS_LIMIT: Long = 400_000
     }
 
 }
