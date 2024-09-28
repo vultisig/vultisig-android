@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ChainAccountItem(

@@ -1,15 +1,12 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.vultisig.wallet.ui.screens.transaction
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -51,7 +48,7 @@ internal fun AddAddressEntryScreen(
     val state by model.state.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
-        model.setOutputAddress(qrCodeResult?:"")
+        model.setOutputAddress(qrCodeResult ?: "")
     }
 
     AddAddressEntryScreen(
@@ -62,8 +59,8 @@ internal fun AddAddressEntryScreen(
         onSelectChainClick = model::selectChain,
         onSaveAddressClick = model::saveAddress,
         onAddressFieldLostFocus = model::validateAddress,
-        onSetOutputAddress =model::setOutputAddress ,
-        onScan =model::scanAddress,
+        onSetOutputAddress = model::setOutputAddress,
+        onScan = model::scanAddress,
     )
 }
 
@@ -78,7 +75,7 @@ internal fun AddAddressEntryScreen(
     onAddressFieldLostFocus: () -> Unit = {},
     onSetOutputAddress: (String) -> Unit = {},
     onScan: () -> Unit = {},
-    ) {
+) {
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
         topBar = {
@@ -142,7 +139,7 @@ internal fun AddAddressEntryScreen(
                     keyboardType = KeyboardType.Text,
                     textFieldState = addressTextFieldState,
                     onLostFocus = onAddressFieldLostFocus,
-                ){
+                ) {
                     val clipboard = LocalClipboardManager.current
 
                     UiIcon(

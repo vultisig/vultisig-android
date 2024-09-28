@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +33,7 @@ import com.vultisig.wallet.ui.models.WelcomeViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @ExperimentalAnimationApi
 @Composable
 internal fun WelcomeScreen(

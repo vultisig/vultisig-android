@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.swap
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,7 +45,7 @@ import com.vultisig.wallet.ui.utils.asString
 import java.math.BigInteger
 
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun SwapFormScreen(
     vaultId: String,
@@ -72,7 +71,7 @@ internal fun SwapFormScreen(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun SwapFormScreen(
     state: SwapFormUiModel,
@@ -216,7 +215,7 @@ internal fun SwapFormScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun SwapFormTextField(
     title: String,
@@ -276,7 +275,7 @@ internal fun SwapFormTextContent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Preview
 @Composable
 internal fun SwapFormScreenPreview() {

@@ -2,9 +2,8 @@ package com.vultisig.wallet.ui.models
 
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -37,7 +36,6 @@ internal data class CustomTokenUiModel(
 
 
 @HiltViewModel
-@OptIn(ExperimentalFoundationApi::class)
 internal class CustomTokenViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val tokenPriceRepository: TokenPriceRepository,
