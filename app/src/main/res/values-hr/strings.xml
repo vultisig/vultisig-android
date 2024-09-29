@@ -21,7 +21,6 @@
     <string name="send_amount">Iznos</string>
     <string name="send_amount_hint">Unesite iznos</string>
     <string name="send_amount_currency_hint">Unesite iznos</string>
-    <string name="send_gas_title">Plin (auto)</string>
     <string name="send_continue_button">Nastavi</string>
     <string name="send_form_network_fee">Mrežna naknada (automatski)</string>
     <string name="chain_account_view_send">POšALJI</string>

@@ -34,7 +34,6 @@
     <string name="send_amount">Cantidad</string>
     <string name="send_amount_hint">Ingresar Cantidad</string>
     <string name="send_amount_currency_hint">Ingresar Cantidad</string>
-    <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Nombre de la Caja Fuerte</string>
     <string name="send_form_network_fee">Tarifa de red (automática)</string>
     <string name="chain_account_view_send">ENVIAR</string>

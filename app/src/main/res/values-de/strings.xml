@@ -22,7 +22,6 @@
     <string name="send_amount">Menge</string>
     <string name="send_amount_hint">Menge eingeben</string>
     <string name="send_amount_currency_hint">Menge eingeben</string>
-    <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Fortfahren</string>
     <string name="send_form_network_fee">Netzwerkgebühr (auto)</string>
     <string name="chain_account_view_send">SENDEN</string>

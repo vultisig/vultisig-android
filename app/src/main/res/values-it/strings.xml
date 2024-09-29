@@ -21,7 +21,6 @@
     <string name="send_amount">Quantità</string>
     <string name="send_amount_hint">Inserisci Quantità</string>
     <string name="send_amount_currency_hint">Inserisci Quantità</string>
-    <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Continua</string>
     <string name="send_form_network_fee">Commissione di rete (automatica)</string>
     <string name="chain_account_view_send">INVIA</string>

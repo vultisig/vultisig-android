@@ -35,7 +35,6 @@
     <string name="send_amount_hint">Voer bedrag in</string>
     <string name="send_amount_currency">Bedrag (in %s)</string>
     <string name="send_amount_currency_hint">Voer bedrag in</string>
-    <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Doorgaan</string>
     <string name="send_form_network_fee">Netwerkkosten (automatisch)</string>
     <string name="chain_account_view_send">STUREN</string>
