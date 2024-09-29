@@ -164,7 +164,6 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private var isNavigateToHome: Boolean = false
 
-
     val keysignPayload: KeysignPayload?
         get() = _keysignPayload
     val keysignViewModel: KeysignViewModel

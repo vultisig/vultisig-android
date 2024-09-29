@@ -20,9 +20,9 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
 
     ) : GasFeeToEstimatedFeeUseCase {
 
-    override suspend fun invoke(from: GasFeeParams):  Pair<String, String> {
+    override suspend fun invoke(from: GasFeeParams): Pair<String, String> {
         val appCurrency = appCurrencyRepository.currency.first()
-        
+
         val tokenValue = TokenValue(
             value = from.gasFee.value.multiply(from.gasLimit),
             unit = from.gasFee.unit,
@@ -35,7 +35,9 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
             appCurrency
         )
 
-        return Pair(fiatValueToStringMapper.map(fiatFees),formatGasValue(fiatFees.value.toString()+" "+tokenValue.unit))
+        return Pair(
+            fiatValueToStringMapper.map(fiatFees),
+            formatGasValue("${fiatFees.value} ${tokenValue.unit}")        )
     }
 
 }

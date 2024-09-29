@@ -167,7 +167,7 @@ internal fun VerifyTransactionScreen(
                     )
                     FormFees(
                         title = stringResource(R.string.send_form_network_fee),
-                        gasValue = state.transaction.totalGas ,
+                        gasValue = state.transaction.totalGas,
                         feeValue = state.transaction.estimatedFee,
                     )
                 }
@@ -283,7 +283,8 @@ internal fun FormFees(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(
             vertical = 12.dp,
-        )) {
+        )
+    ) {
         Text(
             text = title,
             color = Theme.colors.neutral100,

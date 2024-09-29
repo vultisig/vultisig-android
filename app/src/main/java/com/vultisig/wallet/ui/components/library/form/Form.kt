@@ -576,6 +576,7 @@ internal fun FormDetails(
         Text(
             text = value,
             color = Theme.colors.neutral100,
+            style = Theme.menlo.body1
         )
     }
 }
