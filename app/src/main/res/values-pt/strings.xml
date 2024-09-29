@@ -312,5 +312,5 @@
     <string name="join_keygen_failed">Falha ao aderir ao %1$s</string>
     <string name="join_keygen_screen_reshare">Recompartilhar</string>
     <string name="join_keygen_screen_keygen">Gerador de chaves</string>
-    <string name="verify_transaction_estimated_fee">Taxas estimadas</string>
+    <string name="verify_transaction_network_fee">Taxa de rede (automático)</string>
 </resources>

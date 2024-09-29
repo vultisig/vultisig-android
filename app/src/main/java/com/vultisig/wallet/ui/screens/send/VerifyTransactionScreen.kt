@@ -17,13 +17,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BlowfishMessage
@@ -166,7 +162,7 @@ internal fun VerifyTransactionScreen(
                         value = state.transaction.fiatValue,
                     )
                     FormFees(
-                        title = stringResource(R.string.send_form_network_fee),
+                        title = stringResource(R.string.verify_transaction_network_fee),
                         gasValue = state.transaction.totalGas,
                         feeValue = state.transaction.estimatedFee,
                     )

@@ -72,7 +72,7 @@
     <string name="verify_transaction_from_title">From</string>
     <string name="verify_transaction_to_title">To</string>
     <string name="verify_transaction_amount_title">Amount</string>
-    <string name="verify_transaction_estimated_fee">Estimated Fees</string>
+    <string name="verify_transaction_network_fee">Network fee (auto)</string>
     <string name="verify_transaction_fiat_amount_title">Amount in (%s)</string>
     <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Join Keysign</string>

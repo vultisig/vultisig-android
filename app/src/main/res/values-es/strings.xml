@@ -312,6 +312,6 @@
     <string name="join_keygen_failed">No se pudo unir a %1$s</string>
     <string name="join_keygen_screen_reshare">Recompartir</string>
     <string name="join_keygen_screen_keygen">Generador de claves</string>
-    <string name="verify_transaction_estimated_fee">Tarifas estimadas</string>
+    <string name="verify_transaction_network_fee">Tarifa de red (automática)</string>
 
 </resources>

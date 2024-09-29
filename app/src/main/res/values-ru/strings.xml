@@ -323,6 +323,6 @@
     <string name="join_keygen_failed">Не удалось присоединиться к %1$s</string>
     <string name="join_keygen_screen_reshare">Повторное совместное использование</string>
     <string name="join_keygen_screen_keygen">Генерация ключа</string>
-    <string name="verify_transaction_estimated_fee">Ориентировочные сборы</string>
+    <string name="verify_transaction_network_fee">Сетевой сбор (авто)</string>
 
 </resources>

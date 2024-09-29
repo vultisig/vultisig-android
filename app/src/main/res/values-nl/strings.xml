@@ -323,5 +323,5 @@
     <string name="join_keygen_failed">Kan geen %1$s joinen</string>
     <string name="join_keygen_screen_reshare">Opnieuw delen</string>
     <string name="join_keygen_screen_keygen">Keygen</string>
-    <string name="verify_transaction_estimated_fee">Geschatte kosten</string>
+    <string name="verify_transaction_network_fee">Netwerkkosten (automatisch)</string>
 </resources>
