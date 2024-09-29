@@ -63,9 +63,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -407,7 +405,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     )
 
                     val gasFee = gasFeeRepository.getGasFee(chain, address)
-                    var estimatedFee = gasFeeToEstimatedFee(
+                    var totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = if (chain.standard == TokenStandard.EVM) {
                                 (payload.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
@@ -435,9 +433,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         gasFee = gasFee,
                         memo = payload.memo,
-                        estimatedFee = estimatedFee.second,
+                        estimatedFee = totalGasAndFee.first,
                         blockChainSpecific = payload.blockChainSpecific,
-                        totalGass = estimatedFee.first
+                        totalGass = totalGasAndFee.second
                     )
 
                     verifyUiModel.value = VerifyUiModel.Send(
