@@ -48,9 +48,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.PercentText
@@ -574,10 +576,49 @@ internal fun FormDetails(
         Text(
             text = value,
             color = Theme.colors.neutral100,
-            style = Theme.menlo.body1
         )
     }
 }
+
+@Composable
+internal fun FormFees(
+    title: String,
+    gasValue: String,
+    feeValue: String,
+) {
+    Row {
+        Text(
+            text = title,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body2.copy(
+                fontWeight = FontWeight.W400,
+                fontSize = 14.sp,
+                lineHeight = 22.sp
+            )
+        )
+
+        UiSpacer(weight = 1f)
+        Text(
+            text = gasValue,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body2.copy(
+                fontWeight = FontWeight.W400,
+                fontSize = 14.sp,
+                lineHeight = 22.sp
+            )
+        )
+        Text(
+            text ="(~$feeValue)",
+            color = Theme.colors.neutral400,
+            style = Theme.menlo.body2.copy(
+                fontWeight = FontWeight.W400,
+                fontSize = 14.sp,
+                lineHeight = 22.sp
+            )
+        )
+    }
+}
+
 
 @Composable
 internal fun FormError(

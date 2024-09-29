@@ -31,8 +31,8 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.library.form.FormEntry
+import com.vultisig.wallet.ui.components.library.form.FormFees
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCardWithPercentage
 import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
@@ -214,13 +214,10 @@ internal fun SendFormScreen(
                 error = null
             )
             if (state.showGasFee) {
-                FormDetails(
-                    title = stringResource(R.string.send_gas_title),
-                    value = state.fee ?: "",
-                )
-                FormDetails(
+                FormFees(
                     title = stringResource(R.string.send_form_network_fee),
-                    value = state.estimatedFee ?: "",
+                    gasValue = state.gas ?: "",
+                    feeValue = state.estimatedFee ?: "",
                 )
             }
             UiSpacer(size = 80.dp)
@@ -250,7 +247,11 @@ internal fun SendFormScreen(
 @Composable
 private fun SendFormScreenPreview() {
     SendFormScreen(
-        state = SendFormUiModel(),
+        state = SendFormUiModel().copy(
+            gas = "12.5 Gwei",
+            showGasFee = true,
+            estimatedFee = "$3.4",
+        ),
         addressFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
         fiatAmountFieldState = TextFieldState(),

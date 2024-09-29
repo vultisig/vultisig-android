@@ -10,6 +10,7 @@ internal data class Colors(
     val neutral100: Color = Color(0xffF3F4F5),
     val neutral200: Color = Color(0xffEBECED),
     val neutral300: Color = Color(0xffBDBDBD),
+    val neutral400: Color = Color(0xffA7A7A7),
     val neutral500: Color = Color(0xff9F9F9F),
     val neutral600: Color = Color(0xff777777),
     val neutral700: Color = Color(0xff3E3E3E),

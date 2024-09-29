@@ -33,7 +33,6 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
-import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.GasFeeToEstimatedFeeUseCase
@@ -81,7 +80,7 @@ internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val from: String = "",
     val fiatCurrency: String = "",
-    val fee: String? = null,
+    val gas: String? = null,
     val estimatedFee: String? = null,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
@@ -503,7 +502,7 @@ internal class SendFormViewModel @Inject constructor(
                     this@SendFormViewModel.gasFee.value = gasFee
 
                     uiState.update {
-                        it.copy(fee = mapGasFeeToString(gasFee))
+                        it.copy(gas = mapGasFeeToString(gasFee))
                     }
                 }
         }
