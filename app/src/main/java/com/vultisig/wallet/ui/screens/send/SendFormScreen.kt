@@ -219,7 +219,7 @@ internal fun SendFormScreen(
                     value = state.fee ?: "",
                 )
                 FormDetails(
-                    title = stringResource(R.string.send_form_estimated_fees_title),
+                    title = stringResource(R.string.send_form_network_fee),
                     value = state.estimatedFee ?: "",
                 )
             }

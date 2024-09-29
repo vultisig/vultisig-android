@@ -24,7 +24,7 @@
     <string name="send_amount_currency_hint">Menge eingeben</string>
     <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Fortfahren</string>
-    <string name="send_form_estimated_fees_title">Geschätzte Gebühren</string>
+    <string name="send_form_network_fee">Netzwerkgebühr (auto)</string>
     <string name="chain_account_view_send">SENDEN</string>
     <string name="chain_account_view_swap">TAUSCHEN</string>
     <string name="chain_account_view_deposit">Einzahlung</string>

@@ -37,7 +37,7 @@
     <string name="send_amount_currency_hint">Voer bedrag in</string>
     <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Doorgaan</string>
-    <string name="send_form_estimated_fees_title">Geschatte kosten</string>
+    <string name="send_form_network_fee">Netwerkkosten (automatisch)</string>
     <string name="chain_account_view_send">STUREN</string>
     <string name="chain_account_view_swap">WISSELEN</string>
     <string name="chain_account_view_deposit">STORTEN</string>

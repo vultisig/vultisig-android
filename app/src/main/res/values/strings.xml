@@ -38,7 +38,7 @@
     <string name="send_gas_title">Gas (auto)</string>
     <string name="send_continue_button">Continue</string>
     <string name="send_percent" translatable="false">%d%%</string>
-    <string name="send_form_estimated_fees_title">Estimated Fees</string>
+    <string name="send_form_network_fee">Network fee (auto)</string>
     <string name="chain_account_view_send">SEND</string>
     <string name="chain_account_view_swap">SWAP</string>
     <string name="chain_account_view_deposit">DEPOSIT</string>
