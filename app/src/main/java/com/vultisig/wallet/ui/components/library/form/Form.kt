@@ -591,8 +591,6 @@ internal fun FormFees(
             text = title,
             color = Theme.colors.neutral100,
             style = Theme.menlo.body2.copy(
-                fontWeight = FontWeight.W400,
-                fontSize = 14.sp,
                 lineHeight = 22.sp
             )
         )
@@ -602,17 +600,13 @@ internal fun FormFees(
             text = gasValue,
             color = Theme.colors.neutral100,
             style = Theme.menlo.body2.copy(
-                fontWeight = FontWeight.W400,
-                fontSize = 14.sp,
                 lineHeight = 22.sp
             )
         )
         Text(
-            text ="(~$feeValue)",
+            text = "(~$feeValue)",
             color = Theme.colors.neutral400,
             style = Theme.menlo.body2.copy(
-                fontWeight = FontWeight.W400,
-                fontSize = 14.sp,
                 lineHeight = 22.sp
             )
         )
