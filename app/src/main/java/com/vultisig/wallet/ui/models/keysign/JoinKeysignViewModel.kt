@@ -435,8 +435,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         gasFee = gasFee,
                         memo = payload.memo,
-                        estimatedFee = estimatedFee,
+                        estimatedFee = estimatedFee.second,
                         blockChainSpecific = payload.blockChainSpecific,
+                        totalGass = estimatedFee.first
                     )
 
                     verifyUiModel.value = VerifyUiModel.Send(

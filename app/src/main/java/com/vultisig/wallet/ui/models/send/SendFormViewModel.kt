@@ -81,6 +81,7 @@ internal data class SendFormUiModel(
     val from: String = "",
     val fiatCurrency: String = "",
     val gas: String? = null,
+    val totalGas: String? = null,
     val estimatedFee: String? = null,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
@@ -396,7 +397,7 @@ internal class SendFormViewModel @Inject constructor(
                         isDeposit = false,
                     )
 
-                var estimatedFee = gasFeeToEstimatedFee(
+                var totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
                             (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
@@ -430,7 +431,8 @@ internal class SendFormViewModel @Inject constructor(
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
-                    estimatedFee =estimatedFee,
+                    estimatedFee =totalGasAndFee.second,
+                    totalGass =totalGasAndFee.first,
                 )
 
                 Timber.d("Transaction: $transaction")
@@ -501,9 +503,9 @@ internal class SendFormViewModel @Inject constructor(
                 .collect { gasFee ->
                     this@SendFormViewModel.gasFee.value = gasFee
 
-                    uiState.update {
-                        it.copy(gas = mapGasFeeToString(gasFee))
-                    }
+//                    uiState.update {
+//                        it.copy(gas = mapGasFeeToString(gasFee))
+//                    }
                 }
         }
     }
@@ -542,7 +544,10 @@ internal class SendFormViewModel @Inject constructor(
                     )
 
                     uiState.update {
-                        it.copy(estimatedFee = estimatedFee)
+                        it.copy(
+                            estimatedFee = estimatedFee.first,
+                            totalGas = estimatedFee.second,
+                        )
                     }
                 } catch (e: Exception) {
                     // todo handle errors

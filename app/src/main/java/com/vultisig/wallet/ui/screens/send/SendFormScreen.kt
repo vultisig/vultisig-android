@@ -216,7 +216,7 @@ internal fun SendFormScreen(
             if (state.showGasFee) {
                 FormFees(
                     title = stringResource(R.string.send_form_network_fee),
-                    gasValue = state.gas ?: "",
+                    gasValue = state.totalGas ?: "",
                     feeValue = state.estimatedFee ?: "",
                 )
             }

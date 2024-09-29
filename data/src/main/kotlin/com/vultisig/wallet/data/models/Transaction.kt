@@ -15,6 +15,7 @@ data class Transaction(
     val tokenValue: TokenValue,
     val fiatValue: FiatValue,
     val gasFee: TokenValue,
+    val totalGass: String,
     val memo: String?,
     val estimatedFee: String,
     val blockChainSpecific: BlockChainSpecific,
