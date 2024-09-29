@@ -431,8 +431,8 @@ internal class SendFormViewModel @Inject constructor(
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
-                    estimatedFee =totalGasAndFee.second,
-                    totalGass =totalGasAndFee.first,
+                    estimatedFee =totalGasAndFee.first,
+                    totalGass =totalGasAndFee.second,
                 )
 
                 Timber.d("Transaction: $transaction")

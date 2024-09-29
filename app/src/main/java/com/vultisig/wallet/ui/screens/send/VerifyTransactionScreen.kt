@@ -17,9 +17,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BlowfishMessage
@@ -161,17 +165,10 @@ internal fun VerifyTransactionScreen(
                         ),
                         value = state.transaction.fiatValue,
                     )
-                    if (state.transaction.showGasField) {
-                        OtherField(
-                            title = stringResource(R.string.verify_transaction_gas_title),
-                            value = state.transaction.gasValue,
-                            divider = false
-                        )
-                    }
-                    OtherField(
-                        title = stringResource(R.string.verify_transaction_estimated_fee),
-                        value = state.transaction.estimatedFee,
-                        divider = false
+                    FormFees(
+                        title = stringResource(R.string.send_form_network_fee),
+                        gasValue = state.transaction.totalGas ,
+                        feeValue = state.transaction.estimatedFee,
                     )
                 }
             }
@@ -275,6 +272,40 @@ internal fun OtherField(
     }
 }
 
+
+@Composable
+internal fun FormFees(
+    title: String,
+    gasValue: String,
+    feeValue: String,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(
+            vertical = 12.dp,
+        )) {
+        Text(
+            text = title,
+            color = Theme.colors.neutral100,
+        )
+
+        UiSpacer(weight = 1f)
+        Text(
+            text = gasValue,
+            color = Theme.colors.neutral100,
+            style = Theme.montserrat.subtitle1
+        )
+        Text(
+            text = "(~$feeValue)",
+            color = Theme.colors.neutral400,
+            style = Theme.montserrat.subtitle1
+
+        )
+    }
+}
+
+
+
 @Composable
 internal fun CheckField(
     title: String,
@@ -290,7 +321,8 @@ internal fun CheckField(
                 vertical = 8.dp,
             )
             .toggleable(
-                value = isChecked, onValueChange = { checked ->
+                value = isChecked,
+                onValueChange = { checked ->
                     onCheckedChange(checked)
                 }
             )
