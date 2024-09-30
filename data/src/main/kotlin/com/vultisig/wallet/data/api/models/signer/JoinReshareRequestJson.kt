@@ -21,4 +21,8 @@ data class JoinReshareRequestJson(
     val encryptionPassword: String,
     @SerialName("email")
     val email: String,
+    @SerialName("old_parties")
+    val oldParties: List<String>,
+    @SerialName("old_reshare_prefix")
+    val oldResharePrefix: String,
 )

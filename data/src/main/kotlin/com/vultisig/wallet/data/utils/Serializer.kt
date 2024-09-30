@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.utils
 
+import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
@@ -74,3 +75,18 @@ class SplTokenResponseJsonSerializer @Inject constructor(private val json: Json)
     }
 }
 
+
+object KeysignResponseSerializer : KSerializer<tss.KeysignResponse> {
+    private val serializer = KeysignResponseSerializable.serializer()
+    override val descriptor: SerialDescriptor = serializer.descriptor
+
+    override fun serialize(encoder: Encoder, value: tss.KeysignResponse) {
+        val surrogate = KeysignResponseSerializable.serialize(value)
+        encoder.encodeSerializableValue(serializer, surrogate)
+    }
+
+    override fun deserialize(decoder: Decoder): tss.KeysignResponse {
+        val surrogate: KeysignResponseSerializable = decoder.decodeSerializableValue(serializer)
+        return surrogate.toOriginal()
+    }
+}

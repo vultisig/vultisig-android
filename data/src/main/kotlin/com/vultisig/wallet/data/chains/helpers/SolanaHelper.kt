@@ -73,21 +73,25 @@ class SolanaHelper(
                     .build()
                     .toByteArray()
             } else {
+                val fromAddress = AnyAddress(keysignPayload.coin.address, coinType)
+                val senderAddress = SolanaAddress(fromAddress.description())
                 val receiverAddress = SolanaAddress(toAddress.description())
-                val generatedAssociatedAddress = receiverAddress.defaultTokenAddress(
+                val generatedSenderAssociatedAddress = senderAddress.defaultTokenAddress(
                     keysignPayload.coin.contractAddress
                 )
-                val createAndTransferTokenMessage =
-                    Solana.CreateAndTransferToken.newBuilder()
-                        .setRecipientMainAddress(toAddress.description())
+                val generatedRecipientAssociatedAddress = receiverAddress.defaultTokenAddress(
+                    keysignPayload.coin.contractAddress
+                )
+                val transferTokenMessage =
+                    Solana.TokenTransfer.newBuilder()
                         .setTokenMintAddress(keysignPayload.coin.contractAddress)
-                        .setRecipientTokenAddress(generatedAssociatedAddress)
-                        .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
+                        .setRecipientTokenAddress(generatedRecipientAssociatedAddress)
+                        .setSenderTokenAddress(generatedSenderAssociatedAddress)
                         .setAmount(keysignPayload.toAmount.toLong())
                         .setDecimals(keysignPayload.coin.decimal)
 
                 return input
-                    .setCreateAndTransferTokenTransaction(createAndTransferTokenMessage.build())
+                    .setTokenTransferTransaction(transferTokenMessage.build())
                     .build()
                     .toByteArray()
             }
@@ -126,7 +130,7 @@ class SolanaHelper(
         publicKeys.add(publicKey.data())
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
-        val output = wallet.core.jni.proto.Solana.SigningOutput.parseFrom(compiledWithSignature)
+        val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
         return SignedTransactionResult(
             rawTransaction = output.encoded,
             transactionHash = output.encoded.take(64).encodeBase64()
@@ -144,7 +148,7 @@ class SolanaHelper(
         publicKeys.add(publicKey.data())
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
-        val output = wallet.core.jni.proto.Solana.SigningOutput.parseFrom(compiledWithSignature)
+        val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
         return output.encoded
     }
 }
