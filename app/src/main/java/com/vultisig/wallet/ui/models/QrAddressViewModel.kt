@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.utils.makeShareFormat
 import com.vultisig.wallet.ui.utils.generateQrBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -56,9 +57,21 @@ internal class QrAddressViewModel @Inject constructor(
         }
     }
 
-    internal fun saveShareQrBitmap(bitmap: Bitmap) {
+    internal fun saveShareQrBitmap(
+        bitmap: Bitmap,
+        color: Int,
+        title: String,
+        logo: Bitmap,
+    ) = viewModelScope.launch {
+        val qrBitmap = withContext(Dispatchers.IO) {
+            bitmap.makeShareFormat(
+                color = color,
+                logo = logo,
+                title = title,
+            )
+        }
         shareQrBitmap.value?.recycle()
-        shareQrBitmap.value = bitmap
+        shareQrBitmap.value = qrBitmap
     }
 
     internal fun shareQRCode(activity: Context) {

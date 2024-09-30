@@ -7,9 +7,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.os.Build
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -48,6 +50,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.utils.makeShareFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -122,6 +125,10 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = _currentVault?.localPartyID
     val keysignMessage: MutableState<String>
         get() = _keysignMessage
+
+    val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
+    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
+
     val participants: MutableLiveData<List<String>>
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
@@ -529,6 +536,23 @@ internal class KeysignFlowViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
+    }
+
+    internal fun saveShareQrBitmap(
+        bitmap: Bitmap,
+        color: Int,
+        title: String,
+        logo: Bitmap,
+    ) = viewModelScope.launch {
+        val qrBitmap = withContext(Dispatchers.IO) {
+            bitmap.makeShareFormat(
+                color = color,
+                logo = logo,
+                title = title,
+            )
+        }
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = qrBitmap
     }
 
 }

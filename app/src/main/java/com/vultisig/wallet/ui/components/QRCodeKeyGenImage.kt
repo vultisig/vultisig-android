@@ -39,7 +39,7 @@ private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
 
 @Composable
 internal fun QRCodeKeyGenImage(
-    qrCodeContent: String,
+    qrCodeContent: String? = null,
     modifier: Modifier = Modifier,
     bitmapPainter: BitmapPainter? = null,
     cornerRadius: Dp = 16.dp,
@@ -75,9 +75,10 @@ internal fun QRCodeKeyGenImage(
             modifier = Modifier
                 .padding(innerPadding),
         ) {
+            if (bitmapPainter == null && qrCodeContent == null) return@Surface
             Image(
                 painter = bitmapPainter ?: rememberQRBitmapPainter(
-                    qrCodeContent = qrCodeContent,
+                    qrCodeContent = requireNotNull(qrCodeContent),
                 ),
                 contentDescription = "qr",
                 contentScale = ContentScale.FillWidth,

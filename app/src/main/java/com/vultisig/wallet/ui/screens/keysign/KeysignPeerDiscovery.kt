@@ -114,7 +114,7 @@ internal fun KeysignPeerDiscovery(
                     PeerDiscoveryView(
                         selectionState = selectionState,
                         participants = participants,
-                        keygenPayloadState = keysignMessage,
+                        bitmapPainter = null,
                         networkPromptOption = networkPromptOption,
                         hasNetworkPrompt = hasNetworkPrompt,
                         onChangeNetwork = onChangeNetwork,

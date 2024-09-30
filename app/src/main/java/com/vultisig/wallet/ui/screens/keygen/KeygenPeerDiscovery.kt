@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +13,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -29,6 +35,7 @@ import com.vultisig.wallet.ui.models.keygen.VaultSetupType.Companion.asString
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.utils.generateQrBitmap
 
 @Composable
 internal fun KeygenPeerDiscovery(
@@ -38,6 +45,9 @@ internal fun KeygenPeerDiscovery(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val applicationContext = context.applicationContext
+    val qrShareTitle = stringResource(R.string.qr_title_join_keygen)
+    val qrShareBackground = Theme.colors.oxfordBlue800
+    val qrShareDescription = stringResource(R.string.qr_title_join_keygen_description)
 
     KeygenPeerDiscoveryScreen(
         navController = navController,
@@ -46,7 +56,7 @@ internal fun KeygenPeerDiscovery(
         selectionState = uiState.selection,
         isReshare = uiState.isReshareMode,
         participants = uiState.participants,
-        keygenPayloadState = uiState.keygenPayload,
+        bitmapPainter = uiState.qrBitmapPainter,
         vaultSetupType = uiState.vaultSetupType.asString(),
         networkPromptOption = uiState.networkOption,
         isContinueEnabled = uiState.isContinueButtonEnabled,
@@ -54,6 +64,21 @@ internal fun KeygenPeerDiscovery(
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
+        extractBitmap = { bitmap ->
+            if (uiState.qrBitmapPainter != null) {
+                viewModel.saveShareQrBitmap(
+                    bitmap,
+                    qrShareBackground.toArgb(),
+                    qrShareTitle,
+                    qrShareDescription,
+                    BitmapFactory.decodeResource(
+                        context.resources, R.drawable.ic_share_qr_logo
+                    )
+                )
+            } else {
+                bitmap.recycle()
+            }
+        },
         onStopParticipantDiscovery = {
             viewModel.finishPeerDiscovery()
         },
@@ -67,7 +92,7 @@ internal fun KeygenPeerDiscoveryScreen(
     hasNetworkPrompt: Boolean,
     selectionState: List<String>,
     participants: List<String>,
-    keygenPayloadState: String,
+    bitmapPainter: BitmapPainter?,
     vaultSetupType: String,
     networkPromptOption: NetworkPromptOption,
     isContinueEnabled: Boolean,
@@ -76,6 +101,7 @@ internal fun KeygenPeerDiscoveryScreen(
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
+    extractBitmap: (Bitmap) -> Unit,
     isReshare: Boolean,
 ) {
 
@@ -103,12 +129,13 @@ internal fun KeygenPeerDiscoveryScreen(
                     modifier = Modifier.weight(1f),
                     selectionState = selectionState,
                     participants = participants,
-                    keygenPayloadState = keygenPayloadState,
+                    bitmapPainter = bitmapPainter,
                     hasNetworkPrompt = hasNetworkPrompt,
                     networkPromptOption = networkPromptOption,
                     onChangeNetwork = onChangeNetwork,
                     onAddParticipant = onAddParticipant,
                     onRemoveParticipant = onRemoveParticipant,
+                    extractBitmap = extractBitmap
                 )
 
                 MultiColorButton(
@@ -163,11 +190,15 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         isLookingForVultiServer = false,
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
-        keygenPayloadState = "keygenPayloadState",
+        bitmapPainter = BitmapPainter(
+            generateQrBitmap("keygenPayloadState").asImageBitmap(),
+            filterQuality = FilterQuality.None
+        ),
         networkPromptOption = NetworkPromptOption.LOCAL,
         isContinueEnabled = true,
         vaultSetupType = "M/N",
         isReshare = true,
+        extractBitmap = {},
         hasNetworkPrompt = true
     )
 }

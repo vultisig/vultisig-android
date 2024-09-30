@@ -400,6 +400,9 @@
     <string name="vault_list_part_n_of_t" translatable="false">Part %dof%d</string>
     <string name="vault_list_fast_badge" translatable="false">Fast</string>
     <string name="deleted_device" translatable="false">(Deleted Device)</string>
+    <string name="qr_title_join_keygen" translatable="false">Join Keygen</string>
+    <string name="qr_title_join_keysign" translatable="false">Join Keysign</string>
+    <string name="qr_title_join_keygen_description" translatable="false">Scan with devices to join the\nvault generation</string>
 
     <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
     <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>

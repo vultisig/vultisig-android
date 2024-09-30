@@ -7,7 +7,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.os.Build
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -37,6 +41,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.generateQrBitmap
+import com.vultisig.wallet.ui.utils.makeShareFormat
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -70,7 +75,7 @@ internal data class KeygenFlowUiModel(
     val selection: List<String> = emptyList(),
     val deletedParticipants: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
-    val keygenPayload: String = "",
+    val qrBitmapPainter: BitmapPainter? = null,
     val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
     val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
 ) {
@@ -131,6 +136,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
+    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     private val isFastSign: Boolean
         get() = setupType.isFast && email != null && password != null
@@ -265,7 +271,8 @@ internal class KeygenFlowViewModel @Inject constructor(
                         ).encodeBase64()
             }
         }
-        uiState.update { it.copy(keygenPayload = keygenPayload) }
+
+        loadQrPainter(keygenPayload)
 
         if (!vultisigRelay.isRelayEnabled)
         // when relay is disabled, start the mediator service
@@ -451,7 +458,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     internal fun shareQRCode(activity: Context) {
-        val qrBitmap = generateQrBitmap(uiState.value.keygenPayload)
+        val qrBitmap = shareQrBitmap.value ?: return
         activity.share(
             qrBitmap,
             shareFileName(
@@ -463,6 +470,35 @@ internal class KeygenFlowViewModel @Inject constructor(
                 }
             )
         )
+    }
+
+    private suspend fun loadQrPainter(keygenPayload: String) {
+        withContext(Dispatchers.IO) {
+            val qrBitmap = generateQrBitmap(keygenPayload)
+            val bitmapPainter = BitmapPainter(
+                qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
+            )
+            uiState.update { it.copy(qrBitmapPainter = bitmapPainter) }
+        }
+    }
+
+    internal fun saveShareQrBitmap(
+        bitmap: Bitmap,
+        color: Int,
+        title: String,
+        description: String,
+        logo: Bitmap,
+    ) = viewModelScope.launch {
+        val qrBitmap = withContext(Dispatchers.IO) {
+            bitmap.makeShareFormat(
+                color = color,
+                logo = logo,
+                description = description,
+                title = title,
+            )
+        }
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = qrBitmap
     }
 
 
