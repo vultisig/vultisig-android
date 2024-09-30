@@ -132,6 +132,10 @@ internal class KeysignFlowViewModel @Inject constructor(
     val isFastSign: Boolean
         get() = password != null
 
+    private val isRelayEnabled: Boolean
+        get() = vultisigRelay.isRelayEnabled || isFastSign
+
+
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
             vault = _currentVault!!,
@@ -172,7 +176,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             vault = _currentVault!!,
         )
         this.selection.value = listOf(vault.localPartyID)
-        if (vultisigRelay.isRelayEnabled) {
+        if (isRelayEnabled) {
             _serverAddress = Endpoints.VULTISIG_RELAY
             networkOption.value = NetworkPromptOption.INTERNET
         }
@@ -340,7 +344,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     } else null,
                 ),
                 encryptionKeyHex = _encryptionKeyHex,
-                useVultisigRelay = vultisigRelay.isRelayEnabled
+                useVultisigRelay = isRelayEnabled
             )
         )
 
@@ -353,7 +357,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
 
         addressProvider.update(_keysignMessage.value)
-        if (!vultisigRelay.isRelayEnabled) {
+        if (!isRelayEnabled) {
             startMediatorService(context)
         } else {
             _serverAddress = Endpoints.VULTISIG_RELAY
