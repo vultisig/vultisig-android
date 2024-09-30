@@ -34,6 +34,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 
+private const val QR_CODE_SCALE_FACTOR = 8
+private const val QR_CODE_VS_LOGO_SCALE_FACTOR = 4
+
 @Composable
 internal fun QRCodeKeyGenImage(
     qrCodeContent: String,
