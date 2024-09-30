@@ -52,16 +52,14 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 val derivedPublicKey = PublicKeyHelper.getDerivedPublicKey(
                     vault.pubKeyECDSA, vault.hexChainCode, chain.coinType.derivationPath()
                 )
+                val publicKey =
+                    PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
                 if (chain == Chain.MayaChain) {
                     return Pair(
-                        MayaChainHelper(
-                            vault.pubKeyECDSA,
-                            vault.hexChainCode
-                        ).getAddress(), derivedPublicKey
+                        MayaChainHelper.getAddress(publicKey), derivedPublicKey
                     )
                 } else {
-                    val publicKey =
-                        PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
+
                     val address = adjustAddressPrefix(
                         chain.coinType,
                         chain.coinType.deriveAddressFromPublicKey(publicKey)
