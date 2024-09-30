@@ -4,8 +4,8 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
+import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -65,7 +65,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             Chain.MayaChain -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
-                    value = MayaChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger(),
+                    value = ThorChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger(),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

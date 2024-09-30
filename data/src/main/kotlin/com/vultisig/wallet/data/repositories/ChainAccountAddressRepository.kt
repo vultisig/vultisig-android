@@ -57,7 +57,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                         MayaChainHelper(
                             vault.pubKeyECDSA,
                             vault.hexChainCode
-                        ).getCoin()?.address ?: "", derivedPublicKey
+                        ).getAddress(), derivedPublicKey
                     )
                 } else {
                     val publicKey =
