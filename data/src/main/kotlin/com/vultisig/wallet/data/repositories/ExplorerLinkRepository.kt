@@ -77,7 +77,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Optimism -> "https://optimistic.etherscan.io/"
             Chain.Polygon -> "https://polygonscan.com/"
             Chain.Solana -> "https://explorer.solana.com/"
-            Chain.ThorChain -> "https://thorchain.net/tx/"
+            Chain.ThorChain -> "https://thorchain.net/"
             Chain.Polkadot -> "https://polkadot.subscan.io/account/"
             Chain.ZkSync -> "https://explorer.zksync.io/"
         }
