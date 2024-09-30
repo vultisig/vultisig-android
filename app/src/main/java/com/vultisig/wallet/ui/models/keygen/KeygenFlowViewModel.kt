@@ -348,6 +348,8 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     localPartyId = generateServerPartyId(),
                                     encryptionPassword = password,
                                     email = email,
+                                    oldParties = vault.signers,
+                                    oldResharePrefix = vault.resharePrefix
                                 )
                             )
                         } else {
