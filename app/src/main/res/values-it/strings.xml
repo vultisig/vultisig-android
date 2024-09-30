@@ -40,7 +40,6 @@
     <string name="verify_transaction_from_title">Da</string>
     <string name="verify_transaction_to_title">A</string>
     <string name="verify_transaction_amount_title">Quantità</string>
-    <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Unisciti alla firma chiave</string>
     <string name="verify_transaction_sign">Firma</string>
     <string name="verify_transaction_consent_address">Sto inviando all\’indirizzo corretto</string>

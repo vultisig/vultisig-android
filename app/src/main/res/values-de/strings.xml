@@ -42,7 +42,6 @@
     <string name="verify_transaction_from_title">Von</string>
     <string name="verify_transaction_to_title">Zu</string>
     <string name="verify_transaction_amount_title">Menge</string>
-    <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Dem Schlüsselunterschriftsprozess beitreten</string>
     <string name="verify_transaction_sign">Unterschreiben</string>
     <string name="verify_transaction_consent_address">Ich sende an die richtige Adresse</string>

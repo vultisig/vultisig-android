@@ -40,7 +40,6 @@
     <string name="verify_transaction_from_title">Od</string>
     <string name="verify_transaction_to_title">Do</string>
     <string name="verify_transaction_amount_title">Iznos</string>
-    <string name="verify_transaction_gas_title">Plin</string>
     <string name="verify_transaction_join_keysign">Pridruži se potpisu ključa</string>
     <string name="verify_transaction_sign">Potpiši</string>
     <string name="verify_transaction_consent_address">Šaljem na pravu adresu</string>

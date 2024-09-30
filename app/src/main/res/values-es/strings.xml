@@ -67,7 +67,6 @@
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">A</string>
     <string name="verify_transaction_amount_title">Cantidad</string>
-    <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Unirse a la firma de clave</string>
     <string name="verify_transaction_sign">Firmar</string>
     <string name="verify_transaction_consent_address">Estoy enviando a la dirección correcta</string>

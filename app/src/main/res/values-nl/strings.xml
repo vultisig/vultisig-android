@@ -72,7 +72,6 @@
     <string name="verify_transaction_to_title">Aan</string>
     <string name="verify_transaction_amount_title">Bedrag</string>
     <string name="verify_transaction_fiat_amount_title">Bedrag in (%s)</string>
-    <string name="verify_transaction_gas_title">Gas</string>
     <string name="verify_transaction_join_keysign">Doe mee met Keysign</string>
     <string name="verify_transaction_sign">Ondertekenen</string>
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
