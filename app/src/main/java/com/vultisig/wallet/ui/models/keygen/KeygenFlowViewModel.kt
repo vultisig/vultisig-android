@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.data.common.VultisigRelay
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
@@ -71,7 +70,7 @@ internal data class KeygenFlowUiModel(
     val deletedParticipants: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
     val keygenPayload: String = "",
-    val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
+    val networkOption: NetworkPromptOption = NetworkPromptOption.INTERNET,
     val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
 ) {
     val isContinueButtonEnabled =
@@ -94,7 +93,6 @@ internal data class KeygenFlowUiModel(
 internal class KeygenFlowViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val vultisigRelay: VultisigRelay,
     private val compressQr: CompressQrUseCase,
     private val saveVault: SaveVaultUseCase,
     private val vaultRepository: VaultRepository,
@@ -135,8 +133,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val isFastSign: Boolean
         get() = setupType.isFast && email != null && password != null
 
-    private val isRelayEnabled: Boolean
-        get() = vultisigRelay.isRelayEnabled || isFastSign
+    private val isRelayEnabled = MutableStateFlow(isFastSign)
 
     val localPartyID: String
         get() = vault.localPartyID
@@ -163,6 +160,13 @@ internal class KeygenFlowViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             setData(vaultId, context.applicationContext)
+        }
+
+        viewModelScope.launch {
+            uiState.collect {
+                isRelayEnabled.value =
+                    it.networkOption == NetworkPromptOption.INTERNET || isFastSign
+            }
         }
 
         viewModelScope.launch {
@@ -196,11 +200,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             uiState.value = uiState.value.copy(isReshareMode = true)
             TssAction.ReShare
         }
-
-        if (isRelayEnabled) {
-            serverAddress = Endpoints.VULTISIG_RELAY
-            uiState.update { it.copy(networkOption = NetworkPromptOption.INTERNET) }
-        }
+        serverAddress = Endpoints.VULTISIG_RELAY
         this.action = action
         this.vault = vault
         if (this.vault.hexChainCode.isEmpty()) {
@@ -231,7 +231,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                 }
             }
         }
-
+        val isRelayEnabled = isRelayEnabled.value
         val keygenPayload = when (action) {
             TssAction.KEYGEN -> {
                 "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
@@ -310,7 +310,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         filter.addAction(MediatorService.SERVICE_ACTION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
-        }else{
+        } else {
             //Todo Handle older Android versions if needed
             context.registerReceiver(serviceStartedReceiver, filter)
         }
@@ -384,7 +384,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     fun addParticipant(participant: String) {
         val currentList = uiState.value.selection
         if (currentList.contains(participant)) return
-        uiState.update { it.copy( selection = currentList + participant) }
+        uiState.update { it.copy(selection = currentList + participant) }
     }
 
     fun removeParticipant(participant: String) {
@@ -434,20 +434,16 @@ internal class KeygenFlowViewModel @Inject constructor(
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (uiState.value.networkOption == option) return
-        when (option) {
+        uiState.update { it.copy(networkOption = option) }
+        serverAddress = when (option) {
             NetworkPromptOption.LOCAL -> {
-                vultisigRelay.isRelayEnabled = false
-                serverAddress = "http://127.0.0.1:18080"
-                uiState.update { it.copy(networkOption = option) }
+                "http://127.0.0.1:18080"
             }
 
             NetworkPromptOption.INTERNET -> {
-                vultisigRelay.isRelayEnabled = true
-                serverAddress = Endpoints.VULTISIG_RELAY
-                uiState.update { it.copy(networkOption = option) }
+                Endpoints.VULTISIG_RELAY
             }
         }
-
         GlobalScope.launch(Dispatchers.IO) {
             updateKeygenPayload(context)
         }
