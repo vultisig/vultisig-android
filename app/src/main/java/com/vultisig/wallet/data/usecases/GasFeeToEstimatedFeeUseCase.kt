@@ -1,10 +1,11 @@
-package com.vultisig.wallet.ui.models.mappers
+package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import kotlinx.coroutines.flow.first
 import java.math.RoundingMode
 import javax.inject.Inject
