@@ -1,6 +1,12 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import android.content.Context
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapTransaction
@@ -13,9 +19,18 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.generateQrBitmap
+import com.vultisig.wallet.ui.utils.makeShareFormat
+import com.vultisig.wallet.ui.utils.share
+import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,6 +42,9 @@ internal class KeysignShareViewModel @Inject constructor(
 ) : ViewModel() {
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
+
+    val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
+    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun loadTransaction(transactionId: TransactionId) {
@@ -126,6 +144,47 @@ internal class KeysignShareViewModel @Inject constructor(
                 memo = transaction.memo,
             )
         }
+    }
+
+    fun loadQrPainter(address: String) =
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val qrBitmap = generateQrBitmap(address)
+                val bitmapPainter = BitmapPainter(
+                    qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
+                )
+                qrBitmapPainter.value = bitmapPainter
+            }
+        }
+
+    internal fun shareQRCode(activity: Context) {
+        val qrBitmap = shareQrBitmap.value ?: return
+        activity.share(
+            qrBitmap,
+            shareFileName(
+                requireNotNull(vault),
+                ShareType.SEND
+            )
+        )
+    }
+
+    internal fun saveShareQrBitmap(
+        bitmap: Bitmap,
+        color: Int,
+        title: String,
+        description: String,
+        logo: Bitmap,
+    ) = viewModelScope.launch {
+        val qrBitmap = withContext(Dispatchers.IO) {
+            bitmap.makeShareFormat(
+                color = color,
+                logo = logo,
+                title = title,
+                description = description,
+            )
+        }
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = qrBitmap
     }
 
 }

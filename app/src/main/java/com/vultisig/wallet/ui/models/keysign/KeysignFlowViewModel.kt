@@ -126,9 +126,6 @@ internal class KeysignFlowViewModel @Inject constructor(
     val keysignMessage: MutableState<String>
         get() = _keysignMessage
 
-    val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
-    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
-
     val participants: MutableLiveData<List<String>>
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
@@ -537,22 +534,4 @@ internal class KeysignFlowViewModel @Inject constructor(
             navigator.navigate(Destination.Back)
         }
     }
-
-    internal fun saveShareQrBitmap(
-        bitmap: Bitmap,
-        color: Int,
-        title: String,
-        logo: Bitmap,
-    ) = viewModelScope.launch {
-        val qrBitmap = withContext(Dispatchers.IO) {
-            bitmap.makeShareFormat(
-                color = color,
-                logo = logo,
-                title = title,
-            )
-        }
-        shareQrBitmap.value?.recycle()
-        shareQrBitmap.value = qrBitmap
-    }
-
 }

@@ -63,15 +63,4 @@ internal class SendViewModel @Inject constructor(
             }
         }
     }
-
-    internal fun shareQRCode(activity: Context) {
-        val qrBitmap = generateQrBitmap(addressProvider.address.value)
-        activity.share(
-            qrBitmap,
-            shareFileName(
-                requireNotNull(currentVault.value),
-                ShareType.SEND
-            )
-        )
-    }
 }

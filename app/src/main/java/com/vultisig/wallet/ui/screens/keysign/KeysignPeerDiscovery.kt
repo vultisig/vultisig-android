@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,35 +11,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
+import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.getSignersExceptLocalParty
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
+import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.screens.keygen.FastPeerDiscovery
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.utils.generateQrBitmap
+import com.vultisig.wallet.ui.utils.groupByTwoButKeepFirstElement
 import timber.log.Timber
 
 @Composable
 internal fun KeysignPeerDiscovery(
-    vault: Vault,
-    keysignPayload: KeysignPayload,
     viewModel: KeysignFlowViewModel,
 ) {
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
     val context = LocalContext.current.applicationContext
+    val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
+    val vault = sharedViewModel.vault ?: return
+    val keysignPayload = sharedViewModel.keysignPayload ?: return
+    val bitmapPainter by sharedViewModel.qrBitmapPainter.collectAsState()
+    val qrShareTitle = stringResource(R.string.qr_title_join_keysign)
+    val qrShareBackground = Theme.colors.oxfordBlue800
+    val qrShareDescription = stringResource(R.string.qr_title_join_keysign_description,
+        vault.getSignersExceptLocalParty()
+            .groupByTwoButKeepFirstElement()
+            .joinToString(separator = "\n", transform = { it })
+    )
+
     LaunchedEffect(key1 = viewModel.participants) {
         viewModel.participants.asFlow().collect { newList ->
             // add all participants to the selection
@@ -62,6 +83,11 @@ internal fun KeysignPeerDiscovery(
         // start mediator server
         viewModel.setData(vault, context, keysignPayload)
     }
+
+    LaunchedEffect(viewModel.keysignMessage) {
+        sharedViewModel.loadQrPainter(viewModel.keysignMessage.value)
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             viewModel.stopParticipantDiscovery()
@@ -73,7 +99,7 @@ internal fun KeysignPeerDiscovery(
                 Utils.getThreshold(vault.signers.size) == 2,
         selectionState = selectionState,
         participants = participants,
-        keysignMessage = viewModel.keysignMessage.value,
+        bitmapPainter = bitmapPainter,
         networkPromptOption = viewModel.networkOption.value,
         hasNetworkPrompt = !viewModel.isFastSign,
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
@@ -82,6 +108,21 @@ internal fun KeysignPeerDiscovery(
         onStopParticipantDiscovery = {
             viewModel.stopParticipantDiscovery()
             viewModel.moveToState(KeysignFlowState.KEYSIGN)
+        },
+        extractBitmap = { bitmap ->
+            if (bitmapPainter != null) {
+                sharedViewModel.saveShareQrBitmap(
+                    bitmap,
+                    qrShareBackground.toArgb(),
+                    qrShareTitle,
+                    qrShareDescription,
+                    BitmapFactory.decodeResource(
+                        context.resources, R.drawable.ic_share_qr_logo
+                    )
+                )
+            } else {
+                bitmap.recycle()
+            }
         }
     )
 }
@@ -91,13 +132,14 @@ internal fun KeysignPeerDiscovery(
     isLookingForVultiServer: Boolean,
     selectionState: List<String>,
     participants: List<String>,
-    keysignMessage: String,
+    bitmapPainter: BitmapPainter?,
     networkPromptOption: NetworkPromptOption,
     hasNetworkPrompt: Boolean,
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
+    extractBitmap: (Bitmap) -> Unit = {},
 ) {
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
@@ -114,12 +156,13 @@ internal fun KeysignPeerDiscovery(
                     PeerDiscoveryView(
                         selectionState = selectionState,
                         participants = participants,
-                        bitmapPainter = null,
+                        bitmapPainter = bitmapPainter,
                         networkPromptOption = networkPromptOption,
                         hasNetworkPrompt = hasNetworkPrompt,
                         onChangeNetwork = onChangeNetwork,
                         onAddParticipant = onAddParticipant,
                         onRemoveParticipant = onRemoveParticipant,
+                        extractBitmap = extractBitmap,
                     )
                 }
             }
@@ -153,7 +196,10 @@ private fun KeysignPeerDiscoveryPreview() {
         isLookingForVultiServer = true,
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
-        keysignMessage = "keysignMessage",
+        bitmapPainter = BitmapPainter(
+            generateQrBitmap("keysignMessage").asImageBitmap(),
+            filterQuality = FilterQuality.None
+        ),
         networkPromptOption = NetworkPromptOption.LOCAL,
         hasNetworkPrompt = true,
     )

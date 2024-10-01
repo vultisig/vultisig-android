@@ -19,6 +19,10 @@ fun Vault.getVaultPart(): Int {
     return signers.indexOf(localPartyID) + 1
 }
 
+fun Vault.getSignersExceptLocalParty(): List<String> {
+    return signers.filter { it != localPartyID }
+}
+
 fun Vault.containsServerSigner(): Boolean {
     return signers.firstOrNull { it.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true) } != null
 }
