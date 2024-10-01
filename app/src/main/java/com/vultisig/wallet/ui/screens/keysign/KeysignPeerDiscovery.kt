@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.ui.utils.generateQrBitmap
 import com.vultisig.wallet.ui.utils.groupByTwoButKeepFirstElement
+import com.vultisig.wallet.ui.utils.minifyAddress
 import timber.log.Timber
 
 @Composable
@@ -58,7 +59,8 @@ internal fun KeysignPeerDiscovery(
         vault.getSignersExceptLocalParty()
             .groupByTwoButKeepFirstElement()
             .joinToString(separator = "\n", transform = { it }),
-        amount
+        amount,
+        keysignPayload.toAddress.minifyAddress()
     )
 
     LaunchedEffect(key1 = viewModel.participants) {

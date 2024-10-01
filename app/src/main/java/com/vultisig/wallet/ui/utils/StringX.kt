@@ -43,3 +43,7 @@ internal fun List<String>.groupByTwoButKeepFirstElement(): List<String> {
         }
     }
 }
+
+internal fun String.minifyAddress(numSymbolsKeep: Int = 10): String {
+    return "${substring(0, numSymbolsKeep)}...${substring(length - numSymbolsKeep)}"
+}
