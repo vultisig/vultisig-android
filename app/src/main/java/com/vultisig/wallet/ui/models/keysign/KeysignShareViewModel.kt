@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.generateQrBitmap
 import com.vultisig.wallet.ui.utils.makeShareFormat
@@ -35,6 +36,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class KeysignShareViewModel @Inject constructor(
+    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val vaultRepository: VaultRepository,
     private val transactionRepository: TransactionRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
@@ -42,6 +44,8 @@ internal class KeysignShareViewModel @Inject constructor(
 ) : ViewModel() {
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
+
+    val amount = MutableStateFlow("")
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
@@ -59,6 +63,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 vault.coins.find { it.id == transaction.tokenId && it.chain.id == transaction.chainId }!!
 
             this@KeysignShareViewModel.vault = vault
+            amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
             keysignPayload = KeysignPayload(
                 coin = coin,
                 toAddress = transaction.dstAddress,
@@ -92,7 +97,7 @@ internal class KeysignShareViewModel @Inject constructor(
                 dstToken = dstToken.adjustBitcoinCashAddressFormat()
                 swapPayload = swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
             }
-
+            amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
             keysignPayload = KeysignPayload(
                 coin = srcToken,
                 toAddress = transaction.dstAddress,
