@@ -38,7 +38,7 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
 
         return Pair(
             fiatValueToStringMapper.map(fiatFees),
-            formatGasValue("${fiatFees.value} ${tokenValue.unit}")        )
+            formatGasValue("${tokenValue.value} ${tokenValue.unit}")        )
     }
 
 }
