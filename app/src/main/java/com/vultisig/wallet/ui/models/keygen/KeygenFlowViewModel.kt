@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
@@ -133,7 +135,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val isFastSign: Boolean
         get() = setupType.isFast && email != null && password != null
 
-    private val isRelayEnabled = MutableStateFlow(isFastSign)
+    private val isRelayEnabled =
+        MutableStateFlow(uiState.value.networkOption == NetworkPromptOption.INTERNET || isFastSign)
 
     val localPartyID: String
         get() = vault.localPartyID
