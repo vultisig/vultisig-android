@@ -135,8 +135,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val isFastSign: Boolean
         get() = setupType.isFast && email != null && password != null
 
-    private val isRelayEnabled =
-        MutableStateFlow(uiState.value.networkOption == NetworkPromptOption.INTERNET || isFastSign)
+    private val isRelayEnabled = MutableStateFlow(true)
 
     val localPartyID: String
         get() = vault.localPartyID
