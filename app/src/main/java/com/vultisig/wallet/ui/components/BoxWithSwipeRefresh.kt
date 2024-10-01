@@ -15,11 +15,9 @@ internal fun BoxWithSwipeRefresh(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val state = rememberPullToRefreshState()
 
     PullToRefreshBox(
         modifier = modifier,
-        state = state,
         onRefresh = onSwipe,
         content = content,
         isRefreshing = isRefreshing,

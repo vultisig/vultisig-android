@@ -19,7 +19,6 @@ import com.vultisig.wallet.ui.components.reorderable.utils.ReorderableItem
 import com.vultisig.wallet.ui.components.reorderable.utils.rememberReorderableLazyListState
 
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun <T : Any> VerticalReorderList(
