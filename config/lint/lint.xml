@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
     <issue id="AndroidGradlePluginVersion" severity="warning" />
-    <issue id="ComposableLambdaParameterNaming" severity="warning" />
+    <issue id="ComposableLambdaParameterNaming" severity="error" />
     <issue id="ComposableLambdaParameterPosition" severity="warning" />
     <issue id="DuplicateStrings" severity="ignore" />
     <issue id="EasterEgg" severity="error" />
@@ -30,19 +30,19 @@
     <issue id="StaticFieldLeak" severity="warning" />
     <issue id="StopShip" severity="warning" />
     <issue id="StringFormatMatches" severity="warning" />
-    <issue id="StringFormatTrivial" severity="warning" />
+    <issue id="StringFormatTrivial" severity="error" />
     <issue id="TypographyDashes" severity="warning" />
     <issue id="TypographyEllipsis" severity="warning" />
     <issue id="TypographyFractions" severity="warning" />
     <issue id="TypographyOther" severity="warning" />
-    <issue id="TypographyQuotes" severity="warning" />
+    <issue id="TypographyQuotes" severity="error" />
     <issue id="Typos" severity="warning" />
     <issue id="UnnecessaryComposedModifier" severity="warning" />
     <issue id="UnusedAttribute" severity="fatal" />
     <issue id="UnusedIds" severity="warning" />
     <issue id="UnusedNamespace" severity="fatal" />
     <issue id="UnusedQuantity" severity="fatal" />
-    <issue id="UnusedResources" severity="warning" />
+    <issue id="UnusedResources" severity="error" />
     <issue id="UnusedTranslation" severity="warning" />
     <issue id="UnknownNullness" severity="fatal" />
     <issue id="VectorPath" severity="ignore" />

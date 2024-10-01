@@ -14,11 +14,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
@@ -36,8 +36,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
 import javax.inject.Inject
 
 internal data class BackupPasswordState(
@@ -135,17 +133,9 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     private fun generateFileName(vault: Vault): String {
-        val thresholds = Utils.getThreshold(vault.signers.size)
-        val date = Date()
-        val format = SimpleDateFormat(
-            "yyyy-MM-dd-HH-mm-ss",
-            java.util.Locale.getDefault()
-        )
-        val formattedDate = format.format(date)
         val fileName =
-            "vultisig-${vault.name}-$formattedDate-${thresholds}of${vault.signers.size}-${
-                vault.pubKeyECDSA.takeLast(4)
-            }-${vault.localPartyID}.bak"
+            "${vault.name}-${vault.pubKeyECDSA.takeLast(4)}" +
+                    "-part${vault.getVaultPart()}of${vault.signers.size}.vult"
         return fileName
     }
 

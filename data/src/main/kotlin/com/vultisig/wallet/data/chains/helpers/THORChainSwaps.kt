@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
@@ -59,13 +60,11 @@ class THORChainSwaps(
         val output = THORChainSwap.SwapOutput.parseFrom(outputData)
         when (swapPayload.fromAsset.chain) {
             THORChainSwap.Chain.THOR -> {
-                return THORCHainHelper(
-                    vaultHexPublicKey,
-                    vaultHexChainCode
-                ).getSwapPreSignedInputData(
-                    keysignPayload,
-                    output.cosmos.toBuilder()
-                )
+                return THORCHainHelper()
+                    .getSwapPreSignedInputData(
+                        keysignPayload,
+                        output.cosmos.toBuilder()
+                    )
             }
 
             THORChainSwap.Chain.BTC, THORChainSwap.Chain.LTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH -> {
@@ -88,7 +87,10 @@ class THORChainSwaps(
             }
 
             THORChainSwap.Chain.ATOM -> {
-                val helper = AtomHelper(vaultHexPublicKey, vaultHexChainCode)
+                val helper = CosmosHelper(
+                    coinType = CoinType.COSMOS,
+                    denom = CosmosHelper.ATOM_DENOM,
+                )
                 return helper.getSwapPreSignedInputData(
                     keysignPayload = keysignPayload,
                     input = output.cosmos.toBuilder()
@@ -173,10 +175,11 @@ class THORChainSwaps(
         val inputData = getPreSignedInputData(swapPayload, keysignPayload, nonceIncrement)
         when (swapPayload.fromAsset.chain) {
             THORChainSwap.Chain.THOR -> {
-                return THORCHainHelper(vaultHexPublicKey, vaultHexChainCode).getSignedTransaction(
-                    inputData,
-                    signatures
-                )
+                return ThorChainHelper.thor(vaultHexPublicKey, vaultHexChainCode)
+                    .getSignedTransaction(
+                        inputData,
+                        signatures
+                    )
             }
 
             THORChainSwap.Chain.BTC, THORChainSwap.Chain.DOGE, THORChainSwap.Chain.BCH, THORChainSwap.Chain.LTC -> {
@@ -192,7 +195,10 @@ class THORChainSwaps(
             }
 
             THORChainSwap.Chain.ATOM -> {
-                val helper = AtomHelper(vaultHexPublicKey, vaultHexChainCode)
+                val helper = CosmosHelper(
+                    coinType = CoinType.COSMOS,
+                    denom = CosmosHelper.ATOM_DENOM,
+                )
                 return helper.getSignedTransaction(
                     input = inputData,
                     keysignPayload = keysignPayload,

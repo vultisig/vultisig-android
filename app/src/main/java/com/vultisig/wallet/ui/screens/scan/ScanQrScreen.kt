@@ -17,8 +17,10 @@ import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -55,7 +57,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -139,15 +141,14 @@ internal fun ScanQrScreen(
             }
         }
     }
-    val appColor = Theme.colors
 
     Scaffold(
         bottomBar = {
             if (cameraPermissionState.status.isGranted.not())
                 MultiColorButton(
-                    backgroundColor = appColor.turquoise800,
-                    textColor = appColor.oxfordBlue800,
-                    iconColor = appColor.turquoise800,
+                    backgroundColor = Theme.colors.turquoise800,
+                    textColor = Theme.colors.oxfordBlue800,
+                    iconColor = Theme.colors.turquoise800,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -161,27 +162,65 @@ internal fun ScanQrScreen(
                 )
 
         },
-        topBar = {
-            TopBar(
-                navController = navController,
-                centerText = stringResource(id = R.string.scan_qr_default_title),
-                endIcon = R.drawable.ic_gallery,
-                startIcon = R.drawable.caret_left,
-                onEndIconClick = {
-                    pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-                },
-            )
-        },
     ) {
         Box(
             modifier = Modifier
                 .padding(it)
         ) {
-
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
                     onSuccess = onSuccess,
                 )
+                Image(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(40.dp),
+                    painter = painterResource(id = R.drawable.camera_frame),
+                    contentDescription = null,
+                )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    MultiColorButton(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(
+                                horizontal = 12.dp,
+                                vertical = 16.dp,
+                            ),
+                        iconSize = 0.dp,
+                        onClick = {
+                            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                        },
+                        content = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                UiIcon(
+                                    modifier = Modifier
+                                        .padding(start = 16.dp),
+                                    size = 35.dp,
+                                    drawableResId = R.drawable.ic_gallery_min,
+                                    tint = Theme.colors.oxfordBlue600Main,
+                                )
+                                Text(
+                                    modifier = Modifier
+                                        .weight(1f),
+                                    textAlign = TextAlign.Center,
+                                    text = stringResource(id = R.string.scan_qr_upload_from_gallery),
+                                    style = Theme.montserrat.subtitle2,
+                                    color = Theme.colors.oxfordBlue600Main,
+                                )
+                                UiSpacer(size = 41.dp)
+                            }
+                        }
+                    )
+                }
             } else if (cameraPermissionState.status.shouldShowRationale ||
                 cameraPermissionState.status.isGranted.not()
             ) {

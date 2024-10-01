@@ -25,18 +25,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.QRCodeKeyGenImage
-import com.vultisig.wallet.ui.utils.NetworkPromptOption
-import com.vultisig.wallet.ui.models.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.components.NetworkPrompts
+import com.vultisig.wallet.ui.components.QRCodeKeyGenImage
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
+import com.vultisig.wallet.ui.models.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.NetworkPromptOption
 
 @Composable
 internal fun PeerDiscoveryView(
     modifier: Modifier = Modifier,
+    hasNetworkPrompt: Boolean,
     selectionState: List<String>,
     participants: List<String>,
     keygenPayloadState: String,
@@ -64,15 +65,16 @@ internal fun PeerDiscoveryView(
 
         else -> {
             VerticalView(
-                modifier,
-                textColor,
-                keygenPayloadState,
-                networkPromptOption,
-                onChangeNetwork,
-                participants,
-                selectionState,
-                onAddParticipant,
-                onRemoveParticipant
+                modifier = modifier,
+                textColor = textColor,
+                keygenPayloadState = keygenPayloadState,
+                networkPromptOption = networkPromptOption,
+                hasNetworkPrompt = hasNetworkPrompt,
+                onChangeNetwork = onChangeNetwork,
+                participants = participants,
+                selectionState = selectionState,
+                onAddParticipant = onAddParticipant,
+                onRemoveParticipant = onRemoveParticipant
             )
         }
     }
@@ -188,6 +190,7 @@ private fun VerticalView(
     textColor: Color,
     keygenPayloadState: String,
     networkPromptOption: NetworkPromptOption,
+    hasNetworkPrompt: Boolean,
     onChangeNetwork: (NetworkPromptOption) -> Unit,
     participants: List<String>,
     selectionState: List<String>,
@@ -198,36 +201,30 @@ private fun VerticalView(
         modifier.verticalScroll(rememberScrollState()),
         horizontalAlignment = CenterHorizontally
     ) {
+        if (hasNetworkPrompt) {
+            NetworkPrompts(
+                networkPromptOption = networkPromptOption,
+                onChange = onChangeNetwork,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+
         if (keygenPayloadState.isNotEmpty()) {
             QRCodeKeyGenImage(
                 keygenPayloadState,
                 modifier = Modifier
                     .padding(
                         vertical = 24.dp,
-                        horizontal = 16.dp,
+                        horizontal = 32.dp,
                     )
                     .fillMaxWidth(),
             )
         }
 
-        NetworkPrompts(
-            networkPromptOption = networkPromptOption,
-            onChange = onChangeNetwork,
-            modifier = Modifier.padding(horizontal = 16.dp),
-        )
-
-
         if (participants.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.keygen_peer_discovery_select_the_pairing_devices),
-                color = textColor,
-                style = Theme.montserrat.subtitle3,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
             FlowRow(
                 modifier = Modifier
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(
                     space = 8.dp,
                     alignment = CenterHorizontally
@@ -296,6 +293,7 @@ private fun PeerDiscoveryPreview() {
         participants = listOf("1", "2", "3"),
         keygenPayloadState = "keygen payload",
         networkPromptOption = NetworkPromptOption.LOCAL,
+        hasNetworkPrompt = true,
         modifier = Modifier,
     )
 }

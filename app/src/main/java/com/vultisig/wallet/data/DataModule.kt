@@ -4,9 +4,10 @@ package com.vultisig.wallet.data
 
 import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.vultisig.wallet.BuildConfig
+import com.vultisig.wallet.data.utils.BigDecimalSerializer
+import com.vultisig.wallet.data.utils.BigIntegerSerializer
+import com.vultisig.wallet.data.utils.KeysignResponseSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,7 +27,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
+import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Singleton
 
 @Module
@@ -34,13 +38,6 @@ import javax.inject.Singleton
 internal interface DataModule {
 
     companion object {
-
-        @Provides
-        @Singleton
-        fun provideGson(): Gson {
-            return GsonBuilder()
-                .create()
-        }
 
         @Provides
         @Singleton
@@ -70,11 +67,47 @@ internal interface DataModule {
 
         @Provides
         @Singleton
-        fun provideJson() = Json {
+        fun provideJson(
+            serializersModule: SerializersModule,
+        ) = Json {
             ignoreUnknownKeys = true
             explicitNulls = false
             encodeDefaults = true
+            this.serializersModule = serializersModule
         }
+
+        @Provides
+        @Singleton
+        fun provideSerializersModule(
+            bigDecimalSerializer: BigDecimalSerializer,
+            bigIntegerSerializer: BigIntegerSerializer,
+            keysignResponseSerializer: KeysignResponseSerializer,
+        ) = SerializersModule {
+            contextual(
+                BigDecimal::class,
+                bigDecimalSerializer
+            )
+            contextual(
+                BigInteger::class,
+                bigIntegerSerializer
+            )
+            contextual(
+                tss.KeysignResponse::class,
+                keysignResponseSerializer
+            )
+        }
+
+        @Provides
+        @Singleton
+        fun provideBigDecimalSerializer() = BigDecimalSerializer
+
+        @Provides
+        @Singleton
+        fun provideBigIntegerSerializer() = BigIntegerSerializer
+
+        @Provides
+        @Singleton
+        fun provideKeysignResponseSerializer() = KeysignResponseSerializer
 
         @Singleton
         @Provides

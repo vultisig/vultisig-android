@@ -18,4 +18,9 @@ internal interface DataMappersModule {
         impl: MapHexToPlainStringImpl
     ): MapHexToPlainString
 
+    @Binds
+    fun bindChainAndTokensToAddressMapper(
+        impl: ChainAndTokensToAddressMapperImpl
+    ): ChainAndTokensToAddressMapper
+
 }

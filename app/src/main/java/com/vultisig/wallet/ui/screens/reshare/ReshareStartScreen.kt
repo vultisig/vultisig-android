@@ -2,11 +2,14 @@ package com.vultisig.wallet.ui.screens.reshare
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,10 +23,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.GradientInfoCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.reshare.ReshareStartViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -39,11 +44,13 @@ internal fun ReshareStartScreen(
         onStartClick = model::start,
         onStartWithServerClick = model::startWithServer,
         onJoinClick = model::join,
+        navController = navController,
     )
 }
 
 @Composable
 private fun ReshareStartScreen(
+    navController: NavController,
     onStartClick: () -> Unit,
     onStartWithServerClick: () -> Unit,
     onJoinClick: () -> Unit,
@@ -58,10 +65,23 @@ private fun ReshareStartScreen(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.vultisig_icon_text),
-                    contentDescription = "Reshare Image"
-                )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    IconButton(
+                        modifier = Modifier.align(Alignment.CenterStart),
+                        onClick = clickOnce(navController::popBackStack)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.caret_left),
+                            contentDescription = null,
+                            tint = colors.neutral0,
+                        )
+                    }
+                    Image(
+                        modifier = Modifier.align(Alignment.Center),
+                        painter = painterResource(id = R.drawable.vultisig_icon_text),
+                        contentDescription = "Reshare Image"
+                    )
+                }
             }
             Column(
                 modifier = Modifier
@@ -114,9 +134,9 @@ private fun ReshareStartScreen(
 
                 MultiColorButton(
                     text = stringResource(R.string.reshare_start_start_with_vultisigner_button),
-                    backgroundColor = Theme.colors.oxfordBlue800,
-                    textColor = Theme.colors.turquoise800,
-                    iconColor = Theme.colors.oxfordBlue800,
+                    backgroundColor = colors.oxfordBlue800,
+                    textColor = colors.turquoise800,
+                    iconColor = colors.oxfordBlue800,
                     borderSize = 1.dp,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
@@ -128,9 +148,9 @@ private fun ReshareStartScreen(
 
                 MultiColorButton(
                     text = stringResource(R.string.reshare_start_join_reshare_button),
-                    backgroundColor = Theme.colors.oxfordBlue800,
-                    textColor = Theme.colors.turquoise800,
-                    iconColor = Theme.colors.oxfordBlue800,
+                    backgroundColor = colors.oxfordBlue800,
+                    textColor = colors.turquoise800,
+                    iconColor = colors.oxfordBlue800,
                     borderSize = 1.dp,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
@@ -151,6 +171,7 @@ private fun PreviewReshareScreen() {
         onStartClick = {},
         onStartWithServerClick = {},
         onJoinClick = {},
+        navController = rememberNavController(),
     )
 }
 

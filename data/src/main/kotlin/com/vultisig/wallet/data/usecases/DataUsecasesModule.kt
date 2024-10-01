@@ -22,4 +22,15 @@ internal interface DataUsecasesModule {
         impl: DiscoverTokenUseCaseImpl
     ): DiscoverTokenUseCase
 
+    @Binds
+    @Singleton
+    fun bindGenerateUniqueName(
+        impl: GenerateUniqueNameImpl
+    ): GenerateUniqueName
+
+    @Binds
+    @Singleton
+    fun bindIsVaultNameValid(
+        impl: IsVaultNameValidImpl
+    ): IsVaultNameValid
 }

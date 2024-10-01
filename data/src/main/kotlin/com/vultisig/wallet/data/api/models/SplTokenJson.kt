@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api.models
 
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -149,6 +148,6 @@ data class SplAmountRpcResponseResultJson(
 
 @Serializable
 data class SPLTokenRequestJson(
-    @SerializedName("tokens")
+    @SerialName("tokens")
     val tokens: List<String>,
 )

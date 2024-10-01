@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.ui.components.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
@@ -67,6 +68,7 @@ internal data class KeygenFlowUiModel(
     val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
     val isReshareMode: Boolean,
     val selection: List<String> = emptyList(),
+    val deletedParticipants: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
     val keygenPayload: String = "",
     val networkOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
@@ -133,6 +135,9 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val isFastSign: Boolean
         get() = setupType.isFast && email != null && password != null
 
+    private val isRelayEnabled: Boolean
+        get() = vultisigRelay.isRelayEnabled || isFastSign
+
     val localPartyID: String
         get() = vault.localPartyID
 
@@ -174,24 +179,11 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     private suspend fun setData(vaultId: String?, context: Context) {
         // start mediator server
-        val allVaults = vaultRepository.getAll()
 
         val vault = if (vaultId == null) {
             // generate
-            if (vaultName != null) {
-                Vault(id = UUID.randomUUID().toString(), vaultName)
-            } else {
-                var newVaultName: String
-                var idx = 1
-                while (true) {
-                    newVaultName = "New vault ${allVaults.size + idx}"
-                    if (allVaults.find { it.name == newVaultName } == null) {
-                        break
-                    }
-                    idx++
-                }
-                Vault(id = UUID.randomUUID().toString(), newVaultName)
-            }
+            vaultName ?: error("No vault name provided")
+            Vault(id = UUID.randomUUID().toString(), vaultName)
         } else {
             // reshare
             vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
@@ -205,7 +197,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             TssAction.ReShare
         }
 
-        if (vultisigRelay.isRelayEnabled) {
+        if (isRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY
             uiState.update { it.copy(networkOption = NetworkPromptOption.INTERNET) }
         }
@@ -250,7 +242,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     hexChainCode = vault.hexChainCode,
                                     serviceName = serviceName,
                                     encryptionKeyHex = this._encryptionKeyHex,
-                                    useVultisigRelay = vultisigRelay.isRelayEnabled,
+                                    useVultisigRelay = isRelayEnabled,
                                     vaultName = this.vault.name,
                                 )
                             )
@@ -268,7 +260,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     publicKeyEcdsa = vault.pubKeyECDSA,
                                     oldParties = vault.signers,
                                     encryptionKeyHex = this._encryptionKeyHex,
-                                    useVultisigRelay = vultisigRelay.isRelayEnabled,
+                                    useVultisigRelay = isRelayEnabled,
                                     oldResharePrefix = vault.resharePrefix,
                                     vaultName = vault.name
                                 )
@@ -278,7 +270,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
         uiState.update { it.copy(keygenPayload = keygenPayload) }
 
-        if (!vultisigRelay.isRelayEnabled)
+        if (!isRelayEnabled)
         // when relay is disabled, start the mediator service
             startMediatorService(context)
         else {
@@ -359,6 +351,8 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     localPartyId = generateServerPartyId(),
                                     encryptionPassword = password,
                                     email = email,
+                                    oldParties = vault.signers,
+                                    oldResharePrefix = vault.resharePrefix
                                 )
                             )
                         } else {
@@ -385,7 +379,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     private fun generateServerPartyId(): String =
-        "Server-${Random.nextInt(100, 999)}"
+        "$LOCAL_PARTY_ID_PREFIX-${Random.nextInt(100, 999)}"
 
     fun addParticipant(participant: String) {
         val currentList = uiState.value.selection
@@ -417,6 +411,11 @@ internal class KeygenFlowViewModel @Inject constructor(
         if (setupType == VaultSetupType.FAST) {
             moveToKeygen()
         } else {
+            uiState.update {
+                it.copy(
+                    deletedParticipants = (vault.signers - uiState.value.selection).toList()
+                )
+            }
             moveToState(KeygenFlowState.DEVICE_CONFIRMATION)
         }
     }

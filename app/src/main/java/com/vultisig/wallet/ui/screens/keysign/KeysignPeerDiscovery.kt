@@ -75,6 +75,7 @@ internal fun KeysignPeerDiscovery(
         participants = participants,
         keysignMessage = viewModel.keysignMessage.value,
         networkPromptOption = viewModel.networkOption.value,
+        hasNetworkPrompt = !viewModel.isFastSign,
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
@@ -92,6 +93,7 @@ internal fun KeysignPeerDiscovery(
     participants: List<String>,
     keysignMessage: String,
     networkPromptOption: NetworkPromptOption,
+    hasNetworkPrompt: Boolean,
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
@@ -114,6 +116,7 @@ internal fun KeysignPeerDiscovery(
                         participants = participants,
                         keygenPayloadState = keysignMessage,
                         networkPromptOption = networkPromptOption,
+                        hasNetworkPrompt = hasNetworkPrompt,
                         onChangeNetwork = onChangeNetwork,
                         onAddParticipant = onAddParticipant,
                         onRemoveParticipant = onRemoveParticipant,
@@ -152,5 +155,6 @@ private fun KeysignPeerDiscoveryPreview() {
         participants = listOf("1", "2", "3"),
         keysignMessage = "keysignMessage",
         networkPromptOption = NetworkPromptOption.LOCAL,
+        hasNetworkPrompt = true,
     )
 }

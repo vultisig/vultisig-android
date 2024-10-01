@@ -17,6 +17,8 @@ internal data class Colors(
     val neutral800: Color = Color(0xff101010),
     val neutral900: Color = Color(0xff000000),
 
+    val body: Color = Color(0xffBBC1C7),
+
     val ultramarine: Color = Color(0xff390F94),
     val mediumPurple: Color = Color(0xff9563FF),
     val error: Color = Color(0xffFFB400),

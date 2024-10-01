@@ -11,11 +11,6 @@ import javax.inject.Singleton
 internal interface MappersModule {
 
     @Binds
-    fun bindChainAndTokensToAddressMapper(
-        impl: ChainAndTokensToAddressMapperImpl
-    ): ChainAndTokensToAddressMapper
-
-    @Binds
     fun bindVaultIOSToAndroidMapper(
         impl: VaultFromOldJsonMapperImpl
     ): VaultFromOldJsonMapper

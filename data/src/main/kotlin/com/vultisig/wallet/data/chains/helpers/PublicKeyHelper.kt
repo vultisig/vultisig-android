@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import tss.Tss
 
-object PublicKeyHelper {
+internal object PublicKeyHelper {
     fun getDerivedPublicKey(
         hexPublicKey: String,
         hexChainCode: String,
