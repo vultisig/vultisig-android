@@ -34,7 +34,7 @@ internal data class TransactionUiModel(
     val tokenValue: String = "",
     val fiatValue: String = "",
     val fiatCurrency: String = "",
-    val gasValue: String = "",
+    val gasFeeValue: String = "",
     val totalGas: String = "",
     val showGasField: Boolean = true,
     val estimatedFee: String = "",

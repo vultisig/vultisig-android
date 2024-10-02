@@ -361,7 +361,7 @@ private fun VerifyTransactionScreenPreview() {
                 tokenValue = "1.1",
                 fiatValue = "1.1",
                 fiatCurrency = "USD",
-                gasValue = "1.1",
+                gasFeeValue = "1.1",
                 memo = "some memo",
                 estimatedFee = "1.63 USd",
                 totalGas = "209,332.23232 Gwei"

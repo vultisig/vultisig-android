@@ -25,7 +25,7 @@ internal class TransactionToUiModelMapperImpl @Inject constructor(
             tokenValue = tokenValueString,
             fiatValue = fiatValueString,
             fiatCurrency = fiatValue.currency,
-            gasValue = gasFeeString,
+            gasFeeValue = gasFeeString,
             totalGas = from.totalGass,
             estimatedFee = from.estimatedFee,
             showGasField = from.gasFee.value > 0.toBigInteger(),

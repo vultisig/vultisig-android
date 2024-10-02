@@ -403,7 +403,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         decimals = payloadToken.decimal,
                     )
 
-                    val gasPrice = gasFeeRepository.getGasFee(chain, address)
+                    val gasFee = gasFeeRepository.getGasFee(chain, address)
                     var totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = if (chain.standard == TokenStandard.EVM) {
@@ -411,7 +411,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             } else {
                                 BigInteger.valueOf(1)
                             },
-                            gasFee = gasPrice,
+                            gasFee = gasFee,
                             selectedToken = payload.coin,
                         )
                     )
@@ -430,7 +430,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             tokenValue,
                             currency,
                         ),
-                        gasFee = gasPrice,
+                        gasFee = gasFee,
                         memo = payload.memo,
                         estimatedFee = totalGasAndFee.first,
                         blockChainSpecific = payload.blockChainSpecific,

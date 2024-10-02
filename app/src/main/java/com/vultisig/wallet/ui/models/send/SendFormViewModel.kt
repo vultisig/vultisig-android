@@ -80,7 +80,7 @@ internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val from: String = "",
     val fiatCurrency: String = "",
-    val gasPrice: UiText = UiText.Empty,
+    val gasFee: UiText = UiText.Empty,
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
     val errorText: UiText? = null,
@@ -504,7 +504,7 @@ internal class SendFormViewModel @Inject constructor(
                     this@SendFormViewModel.gasFee.value = gasFee
 
 //                    uiState.update {
-//                        it.copy(gas = mapGasFeeToString(gasFee))
+//                        it.copy(gasFee = mapGasFeeToString(gasFee))
 //                    }
                 }
         }
