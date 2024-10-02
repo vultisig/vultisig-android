@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -80,11 +81,18 @@ internal class KeysignViewModel(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
-
+    private val encryption: Encryption,
     ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
-        TssMessenger(serverAddress, sessionId, encryptionKeyHex, sessionApi, viewModelScope)
+        TssMessenger(
+            serverAddress,
+            sessionId,
+            encryptionKeyHex,
+            sessionApi,
+            viewModelScope,
+            encryption
+        )
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     var isThorChainSwap =
         keysignPayload.swapPayload is SwapPayload.ThorChain
@@ -126,7 +134,8 @@ internal class KeysignViewModel(
                 serverAddress = serverAddress,
                 localPartyKey = vault.localPartyID,
                 sessionApi = sessionApi,
-                sessionID = sessionId
+                sessionID = sessionId,
+                encryption = encryption
             )
             this.messagesToSign.forEach { message ->
                 Timber.d("signing message: $message")

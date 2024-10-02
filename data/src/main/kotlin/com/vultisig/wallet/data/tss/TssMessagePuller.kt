@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.tss
 
+import android.util.Base64
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.common.decrypt
+import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -19,6 +21,7 @@ class TssMessagePuller(
     private val localPartyKey: String,
     private val sessionID: String,
     private val sessionApi: SessionApi,
+    private val encryption: Encryption,
 ) {
     private val serverURL = "$serverAddress/message/$sessionID/$localPartyKey"
     private var job: Job? = null
@@ -50,9 +53,17 @@ class TssMessagePuller(
                     continue
                 }
                 cache.put(key, msg)
-                val decryptedBody = msg.body.decrypt(hexEncryptionKey)
+                val decryptedBody = encryption.decrypt(
+                    Base64.decode(msg.body, Base64.DEFAULT),
+                    Numeric.hexStringToByteArray(hexEncryptionKey)
+                )
+                if (decryptedBody == null) {
+                    Timber.tag("TssMessagePuller")
+                        .e("fail to decrypt message: $key")
+                    continue
+                }
                 Timber.d("apply message to TSS: hash: " + msg.hash + ", messageID: " + key)
-                this.service.applyData(decryptedBody)
+                this.service.applyData(String(decryptedBody, Charsets.UTF_8))
                 deleteMessageFromServer(msg.hash, messageID)
             }
         } catch (e: Exception) {

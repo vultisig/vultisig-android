@@ -1,20 +1,25 @@
 package com.vultisig.wallet.data.tss
 
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.common.encrypt
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
+import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
+@OptIn(ExperimentalEncodingApi::class)
 class TssMessenger(
     serverAddress: String,
     private val sessionID: String,
     private val encryptionHex: String,
     private val sessionApi: SessionApi,
-    private val coroutineScope: CoroutineScope
-    ) : tss.Messenger {
+    private val coroutineScope: CoroutineScope,
+    private val encryption: Encryption,
+) : tss.Messenger {
     private val serverUrl = "$serverAddress/message/$sessionID"
     private var messageID: String? = null
     private var counter = 1
@@ -23,9 +28,10 @@ class TssMessenger(
     }
 
     override fun send(from: String, to: String, body: String) {
-        val encryptedBody = body.encrypt(encryptionHex)
+        val encryptedBody =
+            encryption.encrypt(body.toByteArray(), Numeric.hexStringToByteArray(encryptionHex))
         val message = Message(
-            sessionID, from, listOf(to), encryptedBody, body.md5(), counter++
+            sessionID, from, listOf(to), Base64.encode(encryptedBody), body.md5(), counter++
         )
         coroutineScope.launch {
             for (i in 1..3) {

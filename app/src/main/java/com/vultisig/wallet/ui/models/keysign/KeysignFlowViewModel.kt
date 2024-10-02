@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
+import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -103,6 +104,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
     private val sessionApi: SessionApi,
+    private val encryption: Encryption,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -152,6 +154,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
             navigator = navigator,
+            encryption = encryption,
         )
 
     init {

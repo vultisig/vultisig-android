@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -56,11 +57,19 @@ internal class GeneratingKeyViewModel(
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val sessionApi: SessionApi,
-    internal val isReshareMode: Boolean
+    private val encryption: Encryption,
+    internal val isReshareMode: Boolean,
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
-        TssMessenger(serverAddress, sessionId, encryptionKeyHex, sessionApi = sessionApi, coroutineScope = viewModelScope)
+        TssMessenger(
+            serverAddress,
+            sessionId,
+            encryptionKeyHex,
+            sessionApi = sessionApi,
+            coroutineScope = viewModelScope,
+            encryption = encryption
+        )
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
     private var _messagePuller: TssMessagePuller? = null
@@ -122,6 +131,7 @@ internal class GeneratingKeyViewModel(
                 vault.localPartyID,
                 sessionId,
                 sessionApi,
+                encryption,
             )
             _messagePuller?.pullMessages(null)
             when (this.action) {
