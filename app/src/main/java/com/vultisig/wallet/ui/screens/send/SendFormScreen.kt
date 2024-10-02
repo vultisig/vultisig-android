@@ -22,17 +22,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.library.form.FormEntry
-import com.vultisig.wallet.ui.components.library.form.FormFees
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCardWithPercentage
 import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
@@ -40,6 +44,7 @@ import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -214,15 +219,48 @@ internal fun SendFormScreen(
                 error = null
             )
             if (state.showGasFee) {
-                FormFees(
-                    title = stringResource(R.string.send_form_network_fee),
-                    gasValue = state.totalGas ?: "",
-                    feeValue = state.estimatedFee ?: "",
+                FormDetails(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    title = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral100,
+                                fontSize = Theme.menlo.body1.fontSize,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                                fontWeight = Theme.menlo.body1.fontWeight,
+
+                                )
+                        ) {
+                            append(stringResource(R.string.send_form_network_fee))
+                        }
+                    },
+                    value = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral100,
+                                fontSize = 10.sp,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                            )
+                        ) {
+                            append(state.totalGas.asString())
+                        }
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral400,
+                                fontSize = 10.sp,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                            )
+                        ) {
+                            append(" (~${state.estimatedFee.toString()})")
+                        }
+                    }
                 )
             }
             UiSpacer(size = 80.dp)
 
         }
+
 
         MultiColorButton(
             text = stringResource(R.string.send_continue_button),
@@ -248,7 +286,7 @@ internal fun SendFormScreen(
 private fun SendFormScreenPreview() {
     SendFormScreen(
         state = SendFormUiModel().copy(
-            gas = "12.5 Gwei",
+            gas = UiText.DynamicString("12.5 Gwei"),
             showGasFee = true,
             estimatedFee = "$3.4",
         ),

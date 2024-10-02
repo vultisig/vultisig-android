@@ -47,8 +47,8 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -566,13 +566,12 @@ internal fun FormDetails(
     title: String,
     value: String,
 ) {
-    Row {
+    Row (horizontalArrangement = Arrangement.SpaceBetween){
         Text(
             text = title,
             color = Theme.colors.neutral100,
             style = Theme.montserrat.body1,
         )
-        UiSpacer(weight = 1f)
         Text(
             text = value,
             color = Theme.colors.neutral100,
@@ -582,31 +581,26 @@ internal fun FormDetails(
 }
 
 @Composable
-internal fun FormFees(
-    title: String,
-    gasValue: String,
-    feeValue: String,
+internal fun FormDetails(
+    title: AnnotatedString,
+    value: AnnotatedString,
+    modifier: Modifier = Modifier,
 ) {
-    Row {
-        Text(
-            text = title,
-            color = Theme.colors.neutral100,
-            style = Theme.menlo.body1
-        )
+        Row(modifier = modifier,horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment =Alignment.CenterVertically ) {
+            Text(
+                text = title,
+                color = Theme.colors.neutral100,
+                style = Theme.montserrat.body1,
+            )
+            Text(
+                text = value,
+                color = Theme.colors.neutral100,
+                style = Theme.menlo.body1
+            )
+        }
 
-        UiSpacer(weight = 1f)
-        Text(
-            text = gasValue,
-            color = Theme.colors.neutral100,
-            style = Theme.menlo.body1
-        )
-        Text(
-            text = "(~$feeValue)",
-            color = Theme.colors.neutral400,
-            style = Theme.menlo.body1
-        )
-    }
 }
+
 
 
 @Composable

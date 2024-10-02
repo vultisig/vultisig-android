@@ -17,9 +17,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BlowfishMessage
@@ -29,6 +33,7 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCheckbox
 import com.vultisig.wallet.ui.components.library.form.FormCard
+import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
@@ -161,11 +166,49 @@ internal fun VerifyTransactionScreen(
                         ),
                         value = state.transaction.fiatValue,
                     )
-                    FormFees(
-                        title = stringResource(R.string.verify_transaction_network_fee),
-                        gasValue = state.transaction.totalGas,
-                        feeValue = state.transaction.estimatedFee,
+
+                    FormDetails(modifier = Modifier
+                        .padding(
+                            vertical = 12.dp,
+                        )
+                        .fillMaxWidth(),
+                        title = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = 14.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+
+                                    )
+                            ) {
+                                append(stringResource(R.string.verify_transaction_network_fee))
+                            }
+                        },
+                        value = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = 10.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                )
+                            ) {
+                                append(state.transaction.totalGas.toString())
+                            }
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral400,
+                                    fontSize = 10.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                )
+                            ) {
+                                append(" (~${state.transaction.estimatedFee.toString()})")
+                            }
+                        }
                     )
+
                 }
             }
 
@@ -269,40 +312,6 @@ internal fun OtherField(
 }
 
 
-@Composable
-internal fun FormFees(
-    title: String,
-    gasValue: String,
-    feeValue: String,
-) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(
-                vertical = 12.dp,
-            )
-        ) {
-            Text(
-                text = title,
-                color = Theme.colors.neutral100,
-                style = Theme.montserrat.subtitle1,
-            )
-            UiSpacer(weight = 1f)
-
-            Text(
-                text = gasValue,
-                color = Theme.colors.neutral100,
-                style = Theme.montserrat.subtitle1,
-            )
-            Text(
-                text = "(~$feeValue)",
-                color = Theme.colors.neutral400,
-                style = Theme.montserrat.subtitle1,
-
-                )
-        }
-    }
-}
 
 
 
@@ -355,6 +364,8 @@ private fun VerifyTransactionScreenPreview() {
                 fiatCurrency = "USD",
                 gasValue = "1.1",
                 memo = "some memo",
+                estimatedFee="1.63 USd",
+                totalGas = "209,332.23232 Gwei"
             ),
             blowfishShow = true,
             hasFastSign = true,

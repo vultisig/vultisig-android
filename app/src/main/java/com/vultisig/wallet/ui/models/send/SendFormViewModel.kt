@@ -79,9 +79,9 @@ internal data class TokenBalanceUiModel(
 internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val from: String = "",
-    val fiatCurrency: String = "",
-    val gas: String? = null,
-    val totalGas: String? = null,
+    val fiatCurrency: UiText = UiText.Empty,
+    val gas: UiText = UiText.Empty,
+    val totalGas: UiText = UiText.Empty,
     val estimatedFee: String? = null,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
@@ -546,7 +546,7 @@ internal class SendFormViewModel @Inject constructor(
                     uiState.update {
                         it.copy(
                             estimatedFee = estimatedFee.first,
-                            totalGas = estimatedFee.second,
+                            totalGas = UiText.DynamicString( estimatedFee.second,)
                         )
                     }
                 } catch (e: Exception) {
@@ -561,7 +561,7 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             appCurrency.collect { appCurrency ->
                 uiState.update {
-                    it.copy(fiatCurrency = appCurrency.ticker)
+                    it.copy(fiatCurrency = UiText.DynamicString(appCurrency.ticker))
                 }
             }
         }
