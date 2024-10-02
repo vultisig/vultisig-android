@@ -80,7 +80,7 @@ internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val from: String = "",
     val fiatCurrency: String = "",
-    val gas: UiText = UiText.Empty,
+    val gasPrice: UiText = UiText.Empty,
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
     val errorText: UiText? = null,
@@ -404,7 +404,7 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             BigInteger.valueOf(1)
                         },
-                        gasPrice = gasFee,
+                        gasFee = gasFee,
                         selectedToken = selectedToken,
                     )
                 )
@@ -538,7 +538,7 @@ internal class SendFormViewModel @Inject constructor(
                             } else {
                                 BigInteger.valueOf(1)
                             },
-                            gasPrice = gasFee,
+                            gasFee = gasFee,
                             selectedToken = selectedToken,
                         )
                     )

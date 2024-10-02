@@ -24,9 +24,9 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
         val appCurrency = appCurrencyRepository.currency.first()
 
         val tokenValue = TokenValue(
-            value = from.gasPrice.value.multiply(from.gasLimit),
-            unit = from.gasPrice.unit,
-            decimals = from.gasPrice.decimals
+            value = from.gasFee.value.multiply(from.gasLimit),
+            unit = from.gasFee.unit,
+            decimals = from.gasFee.decimals
         )
         val nativeToken = tokenRepository.getNativeToken(from.selectedToken.chain.id)
         val fiatFees = convertTokenValueToFiat(

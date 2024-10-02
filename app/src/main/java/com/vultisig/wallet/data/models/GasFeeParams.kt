@@ -4,6 +4,6 @@ import java.math.BigInteger
 
 data class GasFeeParams(
     val gasLimit: BigInteger,
-    val gasPrice: TokenValue,
+    val gasFee: TokenValue,
     val selectedToken: Coin,
 )

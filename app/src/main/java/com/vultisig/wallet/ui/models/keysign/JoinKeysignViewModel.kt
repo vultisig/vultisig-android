@@ -411,7 +411,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             } else {
                                 BigInteger.valueOf(1)
                             },
-                            gasPrice = gasPrice,
+                            gasFee = gasPrice,
                             selectedToken = payload.coin,
                         )
                     )
