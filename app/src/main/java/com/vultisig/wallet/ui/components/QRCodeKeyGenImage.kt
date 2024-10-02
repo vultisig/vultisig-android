@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,8 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
@@ -31,12 +36,13 @@ internal fun QRCodeKeyGenImage(
     relativePaintedDashLength: Float = 7f,
     relativeEmptyDashLength: Float = 5f,
     countDashesInRect: Int = 4,
+    dashesWidth: Float = 8f,
 ) {
     Box(
         modifier = modifier.drawBehind {
             val cornerRadiusPx = cornerRadius.toPx()
-            val rectWidth = size.width
-            val rectHeight = size.height
+            val rectWidth = size.width - dashesWidth
+            val rectHeight = size.height - dashesWidth
             val halfRectLength = rectWidth + rectHeight -
                     ( 2 * cornerRadiusPx - PI.toFloat() * cornerRadiusPx / 2) * 2
             val relativeDashLength = relativePaintedDashLength + relativeEmptyDashLength
@@ -45,8 +51,10 @@ internal fun QRCodeKeyGenImage(
             val paintedDashLength = dashLengthTicker * relativePaintedDashLength
             val phase = PI.toFloat() * cornerRadiusPx / 4  + paintedDashLength / 2
             drawRoundRect(
+                topLeft = Offset(dashesWidth / 2, dashesWidth / 2),
+                size = Size(rectWidth, rectHeight),
                 color = Color("#33e6bf".toColorInt()), style = Stroke(
-                    width = 8f,
+                    width = dashesWidth,
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(paintedDashLength, emptyDashLength), phase),
                 ),
                 cornerRadius = CornerRadius(cornerRadiusPx),
@@ -75,5 +83,8 @@ internal fun QRCodeKeyGenImage(
 @Preview
 @Composable
 private fun QRCodeKeyGenImagePreview() {
-    QRCodeKeyGenImage()
+    QRCodeKeyGenImage(bitmapPainter = BitmapPainter(
+        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
+        filterQuality = FilterQuality.None
+    ))
 }

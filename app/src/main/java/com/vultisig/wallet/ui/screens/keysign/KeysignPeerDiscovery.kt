@@ -36,9 +36,8 @@ import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.screens.keygen.FastPeerDiscovery
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
-import com.vultisig.wallet.ui.utils.generateQrBitmap
 import com.vultisig.wallet.ui.utils.groupByTwoButKeepFirstElement
-import com.vultisig.wallet.ui.utils.minifyAddress
+import com.vultisig.wallet.ui.utils.forCanvasMinify
 import timber.log.Timber
 
 @Composable
@@ -57,10 +56,11 @@ internal fun KeysignPeerDiscovery(
     val qrShareBackground = Theme.colors.oxfordBlue800
     val qrShareDescription = stringResource(R.string.qr_title_join_keysign_description,
         vault.getSignersExceptLocalParty()
+            .map { it.forCanvasMinify() }
             .groupByTwoButKeepFirstElement()
             .joinToString(separator = "\n", transform = { it }),
         amount,
-        keysignPayload.toAddress.minifyAddress()
+        keysignPayload.toAddress.forCanvasMinify()
     )
 
     LaunchedEffect(key1 = viewModel.participants) {
@@ -201,7 +201,7 @@ private fun KeysignPeerDiscoveryPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         bitmapPainter = BitmapPainter(
-            generateQrBitmap("keysignMessage").asImageBitmap(),
+            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
             filterQuality = FilterQuality.None
         ),
         networkPromptOption = NetworkPromptOption.LOCAL,

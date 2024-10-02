@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -19,10 +20,10 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.utils.ShareType
-import com.vultisig.wallet.ui.utils.generateQrBitmap
-import com.vultisig.wallet.ui.utils.makeShareFormat
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +42,8 @@ internal class KeysignShareViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val depositTransaction: DepositTransactionRepository,
+    private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
+    private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
@@ -154,7 +157,7 @@ internal class KeysignShareViewModel @Inject constructor(
     fun loadQrPainter(address: String) =
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val qrBitmap = generateQrBitmap(address)
+                val qrBitmap = generateQrBitmap(address, Color.Black, Color.White, null)
                 val bitmapPainter = BitmapPainter(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
                 )
@@ -181,12 +184,7 @@ internal class KeysignShareViewModel @Inject constructor(
         logo: Bitmap,
     ) = viewModelScope.launch {
         val qrBitmap = withContext(Dispatchers.IO) {
-            bitmap.makeShareFormat(
-                color = color,
-                logo = logo,
-                title = title,
-                description = description,
-            )
+            makeQrCodeBitmapShareFormat(bitmap, color, logo, title, description)
         }
         shareQrBitmap.value?.recycle()
         shareQrBitmap.value = qrBitmap

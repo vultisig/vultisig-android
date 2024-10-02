@@ -38,7 +38,6 @@ import com.vultisig.wallet.ui.models.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.ui.utils.extractBitmap
-import com.vultisig.wallet.ui.utils.generateQrBitmap
 
 @Composable
 internal fun PeerDiscoveryView(
@@ -302,7 +301,7 @@ private fun PeerDiscoveryPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         bitmapPainter = BitmapPainter(
-            generateQrBitmap("keygen payload").asImageBitmap(),
+            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
             filterQuality = FilterQuality.None
         ),
         networkPromptOption = NetworkPromptOption.LOCAL,

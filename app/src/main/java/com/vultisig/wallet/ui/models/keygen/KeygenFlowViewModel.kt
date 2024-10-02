@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.os.Build
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -33,6 +34,8 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
+import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.ui.navigation.Destination
@@ -40,8 +43,6 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_T
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.ui.utils.ShareType
-import com.vultisig.wallet.ui.utils.generateQrBitmap
-import com.vultisig.wallet.ui.utils.makeShareFormat
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -109,6 +110,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
+    private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
+    private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -474,7 +477,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     private suspend fun loadQrPainter(keygenPayload: String) {
         withContext(Dispatchers.IO) {
-            val qrBitmap = generateQrBitmap(keygenPayload)
+            val qrBitmap = generateQrBitmap(keygenPayload, Color.Black, Color.White, null)
             val bitmapPainter = BitmapPainter(
                 qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
             )
@@ -490,12 +493,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         logo: Bitmap,
     ) = viewModelScope.launch {
         val qrBitmap = withContext(Dispatchers.IO) {
-            bitmap.makeShareFormat(
-                color = color,
-                logo = logo,
-                description = description,
-                title = title,
-            )
+            makeQrCodeBitmapShareFormat(bitmap, color, logo, title, description)
         }
         shareQrBitmap.value?.recycle()
         shareQrBitmap.value = qrBitmap

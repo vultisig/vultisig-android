@@ -44,6 +44,7 @@ internal fun List<String>.groupByTwoButKeepFirstElement(): List<String> {
     }
 }
 
-internal fun String.minifyAddress(numSymbolsKeep: Int = 10): String {
+internal fun String.forCanvasMinify(numSymbolsKeep: Int = 10): String {
+    if (length <= numSymbolsKeep * 2) return this
     return "${substring(0, numSymbolsKeep)}...${substring(length - numSymbolsKeep)}"
 }
