@@ -4,11 +4,9 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import kotlinx.coroutines.flow.first
-import java.math.RoundingMode
 import javax.inject.Inject
 
 internal interface GasFeeToEstimatedFeeUseCase :
@@ -26,9 +24,9 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
         val appCurrency = appCurrencyRepository.currency.first()
 
         val tokenValue = TokenValue(
-            value = from.gasFee.value.multiply(from.gasLimit),
-            unit = from.gasFee.unit,
-            decimals = from.gasFee.decimals
+            value = from.gasPrice.value.multiply(from.gasLimit),
+            unit = from.gasPrice.unit,
+            decimals = from.gasPrice.decimals
         )
         val nativeToken = tokenRepository.getNativeToken(from.selectedToken.chain.id)
         val fiatFees = convertTokenValueToFiat(

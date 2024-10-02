@@ -404,7 +404,7 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             BigInteger.valueOf(1)
                         },
-                        gasFee = gasFee,
+                        gasPrice = gasFee,
                         selectedToken = selectedToken,
                     )
                 )
@@ -538,7 +538,7 @@ internal class SendFormViewModel @Inject constructor(
                             } else {
                                 BigInteger.valueOf(1)
                             },
-                            gasFee = gasFee,
+                            gasPrice = gasFee,
                             selectedToken = selectedToken,
                         )
                     )
