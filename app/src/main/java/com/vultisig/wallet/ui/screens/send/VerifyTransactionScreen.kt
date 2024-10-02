@@ -275,30 +275,32 @@ internal fun FormFees(
     gasValue: String,
     feeValue: String,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(
-            vertical = 12.dp,
-        )
-    ) {
-        Text(
-            text = title,
-            color = Theme.colors.neutral100,
-            style = Theme.montserrat.subtitle1,
-        )
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(
+                vertical = 12.dp,
+            )
+        ) {
+            Text(
+                text = title,
+                color = Theme.colors.neutral100,
+                style = Theme.montserrat.subtitle1,
+            )
+            UiSpacer(weight = 1f)
 
-        UiSpacer(weight = 1f)
-        Text(
-            text = gasValue,
-            color = Theme.colors.neutral100,
-            style = Theme.montserrat.subtitle1,
-        )
-        Text(
-            text = "(~$feeValue)",
-            color = Theme.colors.neutral400,
-            style = Theme.montserrat.subtitle1,
+            Text(
+                text = gasValue,
+                color = Theme.colors.neutral100,
+                style = Theme.montserrat.subtitle1,
+            )
+            Text(
+                text = "(~$feeValue)",
+                color = Theme.colors.neutral400,
+                style = Theme.montserrat.subtitle1,
 
-        )
+                )
+        }
     }
 }
 

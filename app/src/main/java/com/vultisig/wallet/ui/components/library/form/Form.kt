@@ -591,25 +591,19 @@ internal fun FormFees(
         Text(
             text = title,
             color = Theme.colors.neutral100,
-            style = Theme.menlo.body2.copy(
-                lineHeight = 22.sp
-            )
+            style = Theme.menlo.body1
         )
 
         UiSpacer(weight = 1f)
         Text(
             text = gasValue,
             color = Theme.colors.neutral100,
-            style = Theme.menlo.body2.copy(
-                lineHeight = 22.sp
-            )
+            style = Theme.menlo.body1
         )
         Text(
             text = "(~$feeValue)",
             color = Theme.colors.neutral400,
-            style = Theme.menlo.body2.copy(
-                lineHeight = 22.sp
-            )
+            style = Theme.menlo.body1
         )
     }
 }

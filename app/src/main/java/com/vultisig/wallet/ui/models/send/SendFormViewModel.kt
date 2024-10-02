@@ -397,7 +397,7 @@ internal class SendFormViewModel @Inject constructor(
                         isDeposit = false,
                     )
 
-                var totalGasAndFee = gasFeeToEstimatedFee(
+                val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
                             (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
@@ -531,7 +531,7 @@ internal class SendFormViewModel @Inject constructor(
                         isDeposit = false,
                     )
 
-                    var estimatedFee = gasFeeToEstimatedFee(
+                    val estimatedFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = if (chain.standard == TokenStandard.EVM) {
                                 (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit

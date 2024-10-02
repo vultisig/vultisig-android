@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import kotlinx.coroutines.flow.first
 import java.math.RoundingMode
 import javax.inject.Inject
@@ -18,7 +19,7 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
-
+    private val convertTokenValueToString: TokenValueToStringWithUnitMapper,
     ) : GasFeeToEstimatedFeeUseCase {
 
     override suspend fun invoke(from: GasFeeParams): Pair<String, String> {
@@ -38,23 +39,7 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
 
         return Pair(
             fiatValueToStringMapper.map(fiatFees),
-            formatGasValue("${tokenValue.decimal} ${tokenValue.unit}")           )
+            convertTokenValueToString(tokenValue)
+        )
     }
-
-}
-
-private fun formatGasValue(gasValue: String?): String {
-    return gasValue?.let {
-        val parts = it.split(" ")
-        if (parts.size == 2) {
-            val value = parts[0].toBigDecimalOrNull()?.setScale(
-                4,
-                RoundingMode.HALF_UP
-            )
-            if (value != null) {
-                return "$value ${parts[1]}"
-            }
-        }
-        it
-    } ?: ""
 }
