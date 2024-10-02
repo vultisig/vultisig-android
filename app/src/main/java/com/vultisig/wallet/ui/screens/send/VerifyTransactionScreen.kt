@@ -208,7 +208,6 @@ internal fun VerifyTransactionScreen(
                             }
                         }
                     )
-
                 }
             }
 
@@ -364,7 +363,7 @@ private fun VerifyTransactionScreenPreview() {
                 fiatCurrency = "USD",
                 gasValue = "1.1",
                 memo = "some memo",
-                estimatedFee="1.63 USd",
+                estimatedFee = "1.63 USd",
                 totalGas = "209,332.23232 Gwei"
             ),
             blowfishShow = true,

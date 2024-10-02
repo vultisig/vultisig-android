@@ -566,12 +566,13 @@ internal fun FormDetails(
     title: String,
     value: String,
 ) {
-    Row (horizontalArrangement = Arrangement.SpaceBetween){
+    Row {
         Text(
             text = title,
             color = Theme.colors.neutral100,
             style = Theme.montserrat.body1,
         )
+        UiSpacer(weight = 1f)
         Text(
             text = value,
             color = Theme.colors.neutral100,
@@ -586,22 +587,23 @@ internal fun FormDetails(
     value: AnnotatedString,
     modifier: Modifier = Modifier,
 ) {
-        Row(modifier = modifier,horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment =Alignment.CenterVertically ) {
-            Text(
-                text = title,
-                color = Theme.colors.neutral100,
-                style = Theme.montserrat.body1,
-            )
-            Text(
-                text = value,
-                color = Theme.colors.neutral100,
-                style = Theme.menlo.body1
-            )
-        }
-
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            color = Theme.colors.neutral100,
+            style = Theme.montserrat.body1,
+        )
+        Text(
+            text = value,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body1
+        )
+    }
 }
-
-
 
 @Composable
 internal fun FormError(

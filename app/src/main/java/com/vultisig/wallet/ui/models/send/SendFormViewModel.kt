@@ -546,7 +546,7 @@ internal class SendFormViewModel @Inject constructor(
                     uiState.update {
                         it.copy(
                             estimatedFee = UiText.DynamicString(estimatedFee.first),
-                            totalGas = UiText.DynamicString( estimatedFee.second,)
+                            totalGas = UiText.DynamicString(estimatedFee.second)
                         )
                     }
                 } catch (e: Exception) {
