@@ -79,10 +79,10 @@ internal data class TokenBalanceUiModel(
 internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val from: String = "",
-    val fiatCurrency: UiText = UiText.Empty,
+    val fiatCurrency: String = "",
     val gas: UiText = UiText.Empty,
     val totalGas: UiText = UiText.Empty,
-    val estimatedFee: String? = null,
+    val estimatedFee: UiText = UiText.Empty,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
     val dstAddressError: UiText? = null,
@@ -545,7 +545,7 @@ internal class SendFormViewModel @Inject constructor(
 
                     uiState.update {
                         it.copy(
-                            estimatedFee = estimatedFee.first,
+                            estimatedFee = UiText.DynamicString(estimatedFee.first),
                             totalGas = UiText.DynamicString( estimatedFee.second,)
                         )
                     }
@@ -561,7 +561,7 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             appCurrency.collect { appCurrency ->
                 uiState.update {
-                    it.copy(fiatCurrency = UiText.DynamicString(appCurrency.ticker))
+                    it.copy(fiatCurrency =appCurrency.ticker)
                 }
             }
         }

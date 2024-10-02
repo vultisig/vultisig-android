@@ -252,7 +252,7 @@ internal fun SendFormScreen(
                                 fontFamily = Theme.menlo.body1.fontFamily,
                             )
                         ) {
-                            append(" (~${state.estimatedFee.toString()})")
+                            append(" (~${state.estimatedFee.asString()})")
                         }
                     }
                 )
@@ -285,10 +285,10 @@ internal fun SendFormScreen(
 @Composable
 private fun SendFormScreenPreview() {
     SendFormScreen(
-        state = SendFormUiModel().copy(
+        state = SendFormUiModel(
             gas = UiText.DynamicString("12.5 Gwei"),
             showGasFee = true,
-            estimatedFee = "$3.4",
+            estimatedFee = UiText.DynamicString("$3.4"),
         ),
         addressFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
