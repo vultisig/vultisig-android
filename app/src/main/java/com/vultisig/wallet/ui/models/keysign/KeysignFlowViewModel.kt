@@ -133,7 +133,9 @@ internal class KeysignFlowViewModel @Inject constructor(
     val isFastSign: Boolean
         get() = password != null
 
-    private val isRelayEnabled by derivedStateOf { true }
+    private val isRelayEnabled by derivedStateOf {
+        networkOption.value == NetworkPromptOption.INTERNET || isFastSign
+    }
 
 
     val keysignViewModel: KeysignViewModel
