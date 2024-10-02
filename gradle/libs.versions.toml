@@ -27,10 +27,10 @@ kotlin = "2.0.20"
 ktor = "2.3.12"
 lifecycleRuntimeKtx = "2.8.6"
 activityCompose = "1.9.2"
-hilt="2.51.1"
+hilt="2.52"
 hiltCommon="1.2.0"
 lifecycleViewmodelComposeVersion = "2.8.6"
-navigationCompose = "2.8.1"
+navigationCompose = "2.8.2"
 okhttp = "4.12.0"
 room = "2.6.1"
 sparkCore = "2.9.4"
@@ -39,9 +39,9 @@ walletCore = "4.1.7"
 timber = "5.0.1"
 ksp = "2.0.20-1.0.25"
 appcompat = "1.7.0"
-serialization = "1.7.1"
+serialization = "1.7.3"
 protobuf = "0.9.4"
-rive = "8.7.0"
+rive = "9.9.3"
 update = "2.1.0"
 review = "2.0.1"
 material = "1.10.0"
@@ -71,13 +71,13 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 apache-compress = { module="org.apache.commons:commons-compress", version.ref ="apache-compress" }
 apache-compress-xz = { module="org.tukaani:xz", version.ref ="apache-compress-xz" }
 
-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.8.0" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.9.0" }
 kotlinx-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "serialization" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2024.09.02" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2024.09.03" }
 androidx-camera-camera2 = { group = "androidx.camera", name ="camera-camera2", version.ref = "camera" }
 androidx-camera-lifecycle = { group = "androidx.camera", name ="camera-lifecycle", version.ref = "camera" }
 androidx-camera-view = { group = "androidx.camera", name ="camera-view", version.ref = "camera" }
