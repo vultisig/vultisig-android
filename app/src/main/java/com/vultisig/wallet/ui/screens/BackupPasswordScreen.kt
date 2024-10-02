@@ -4,7 +4,6 @@ import android.app.Activity
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,7 +40,7 @@ import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
 import com.vultisig.wallet.ui.utils.createBackupFileIntent
 import kotlinx.coroutines.flow.receiveAsFlow
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun BackupPasswordScreen(navHostController: NavHostController) {
     val viewModel = hiltViewModel<BackupPasswordViewModel>()

@@ -1,13 +1,12 @@
 package com.vultisig.wallet.ui.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,7 +22,6 @@ import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun NamingComponent(
     title: String = "",
@@ -89,7 +87,7 @@ internal fun NamingComponent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Preview
 @Composable
 private fun NamingComponentPreView() {

@@ -1,15 +1,12 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.vultisig.wallet.ui.screens.keygen
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,7 +32,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun KeygenEmailScreen(
     navController: NavController,
-    model: KeygenEmailViewModel = hiltViewModel()
+    model: KeygenEmailViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
 
