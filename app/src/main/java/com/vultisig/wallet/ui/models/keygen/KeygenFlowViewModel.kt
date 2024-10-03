@@ -7,7 +7,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.os.Build
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.SavedStateHandle
@@ -30,9 +35,10 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
+import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
-import com.vultisig.wallet.ui.components.generateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -71,7 +77,7 @@ internal data class KeygenFlowUiModel(
     val selection: List<String> = emptyList(),
     val deletedParticipants: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
-    val keygenPayload: String = "",
+    val qrBitmapPainter: BitmapPainter? = null,
     val networkOption: NetworkPromptOption = NetworkPromptOption.INTERNET,
     val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
 ) {
@@ -104,6 +110,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
+    private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
+    private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -131,6 +139,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
+    private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     private val isFastSign: Boolean
         get() = setupType.isFast && email != null && password != null
@@ -271,7 +280,8 @@ internal class KeygenFlowViewModel @Inject constructor(
                         ).encodeBase64()
             }
         }
-        uiState.update { it.copy(keygenPayload = keygenPayload) }
+
+        loadQrPainter(keygenPayload)
 
         if (!isRelayEnabled)
         // when relay is disabled, start the mediator service
@@ -451,8 +461,9 @@ internal class KeygenFlowViewModel @Inject constructor(
             updateKeygenPayload(context)
         }
     }
-    internal fun shareQRCode(activity: Context): Unit {
-        val qrBitmap = generateQrBitmap(uiState.value.keygenPayload)
+
+    internal fun shareQRCode(activity: Context) {
+        val qrBitmap = shareQrBitmap.value ?: return
         activity.share(
             qrBitmap,
             shareFileName(
@@ -464,6 +475,30 @@ internal class KeygenFlowViewModel @Inject constructor(
                 }
             )
         )
+    }
+
+    private suspend fun loadQrPainter(keygenPayload: String) {
+        withContext(Dispatchers.IO) {
+            val qrBitmap = generateQrBitmap(keygenPayload, Color.Black, Color.White, null)
+            val bitmapPainter = BitmapPainter(
+                qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
+            )
+            uiState.update { it.copy(qrBitmapPainter = bitmapPainter) }
+        }
+    }
+
+    internal fun saveShareQrBitmap(
+        bitmap: Bitmap,
+        color: Int,
+        title: String,
+        description: String,
+        logo: Bitmap,
+    ) = viewModelScope.launch {
+        val qrBitmap = withContext(Dispatchers.IO) {
+            makeQrCodeBitmapShareFormat(bitmap, color, logo, title, description)
+        }
+        shareQrBitmap.value?.recycle()
+        shareQrBitmap.value = qrBitmap
     }
 
 

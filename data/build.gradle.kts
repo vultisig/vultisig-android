@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.apache.compress)
     implementation(libs.apache.compress.xz)
+    implementation(libs.core.zxing)
 
     // test
     testImplementation(libs.junit)

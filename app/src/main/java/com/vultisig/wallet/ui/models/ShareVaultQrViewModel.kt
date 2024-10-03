@@ -22,7 +22,7 @@ import com.vultisig.wallet.data.common.QRCODE_DIRECTORY_NAME_FULL
 import com.vultisig.wallet.data.common.saveBitmapToDownloads
 import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.components.generateQrBitmap
+import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
@@ -64,6 +64,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
     private val snackbarFlow: SnackbarFlow,
     @ApplicationContext private val context: Context,
     private val json: Json,
+    private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
     private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
 
@@ -109,7 +110,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
         }
     }
 
-    internal fun loadQrCode(
+    internal fun loadQrCodePainter(
         mainColor: Color,
         backgroundColor: Color,
         logo: Bitmap? = null,

@@ -7,11 +7,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.os.Build
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -122,6 +124,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = _currentVault?.localPartyID
     val keysignMessage: MutableState<String>
         get() = _keysignMessage
+
     val participants: MutableLiveData<List<String>>
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
@@ -530,5 +533,4 @@ internal class KeysignFlowViewModel @Inject constructor(
             navigator.navigate(Destination.Back)
         }
     }
-
 }
