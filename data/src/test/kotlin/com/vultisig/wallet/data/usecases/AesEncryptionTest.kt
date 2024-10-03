@@ -43,4 +43,15 @@ class AesEncryptionTest {
         }
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
+    @Test
+    fun decryptMessageFromIOS() {
+        val encryptionKey = "99bbc7c0941645762a688cb22efb1677865646c2c5b9706e940caf529c41ab19"
+        val encryptedMessage = "CXzoWhNMozIdFIh7YzbXSm26QRrwtrAviVEk1baXhQKeKD76tH8="
+        val decryptedMsg =
+            aes.decrypt(encryptedMessage.decodeBase64Bytes(), encryptionKey.hexToByteArray())!!
+                .toString(Charsets.UTF_8)
+        assertEquals("helloworld", decryptedMsg)
+    }
+
 }
