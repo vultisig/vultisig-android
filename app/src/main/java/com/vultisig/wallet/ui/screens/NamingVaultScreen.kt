@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -12,7 +11,7 @@ import com.vultisig.wallet.ui.components.NamingComponent
 import com.vultisig.wallet.ui.models.NamingVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun NamingVaultScreen(
     navController: NavHostController,

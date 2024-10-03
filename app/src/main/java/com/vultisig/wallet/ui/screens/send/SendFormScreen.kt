@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.send
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,7 +46,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun SendFormScreen(
     vaultId: String,
@@ -85,7 +84,7 @@ internal fun SendFormScreen(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun SendFormScreen(
     state: SendFormUiModel,
@@ -280,7 +279,7 @@ internal fun SendFormScreen(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Preview
 @Composable
 private fun SendFormScreenPreview() {

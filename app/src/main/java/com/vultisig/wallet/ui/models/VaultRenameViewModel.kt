@@ -1,9 +1,8 @@
 package com.vultisig.wallet.ui.models
 
 import android.content.Context
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,7 +26,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @HiltViewModel
 internal class VaultRenameViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,

@@ -2,9 +2,7 @@ package com.vultisig.wallet.ui.models
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.forEachTextValue
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,9 +15,11 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,7 +30,6 @@ internal data class NamingVaultUiModel(
 )
 
 @HiltViewModel
-@OptIn(ExperimentalFoundationApi::class)
 internal class NamingVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
@@ -65,7 +64,7 @@ internal class NamingVaultViewModel @Inject constructor(
 
         viewModelScope.launch {
             vaultNamesList.update { vaultRepository.getAll().map { it.name } }
-            namingTextFieldState.forEachTextValue {
+            namingTextFieldState.textAsFlow().collectLatest {
                 validate()
             }
         }
