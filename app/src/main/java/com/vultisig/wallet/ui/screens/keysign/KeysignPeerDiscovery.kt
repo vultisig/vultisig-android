@@ -50,16 +50,18 @@ internal fun KeysignPeerDiscovery(
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     val vault = sharedViewModel.vault ?: return
     val keysignPayload = sharedViewModel.keysignPayload ?: return
+    val isSwap = sharedViewModel.keysignPayload?.swapPayload != null
     val amount by sharedViewModel.amount.collectAsState()
     val bitmapPainter by sharedViewModel.qrBitmapPainter.collectAsState()
-    val qrShareTitle = stringResource(R.string.qr_title_join_keysign)
+    val qrShareTitle = if (isSwap)
+        stringResource(R.string.qr_title_join_swap_keysign)
+    else
+        stringResource(R.string.qr_title_join_keysign)
+
     val qrShareBackground = Theme.colors.oxfordBlue800
     val qrShareDescription = stringResource(R.string.qr_title_join_keysign_description,
-        vault.getSignersExceptLocalParty()
-            .map { it.forCanvasMinify() }
-            .groupByTwoButKeepFirstElement()
-            .joinToString(separator = "\n", transform = { it }),
-        amount,
+        vault.name.forCanvasMinify(),
+        amount.forCanvasMinify(),
         keysignPayload.toAddress.forCanvasMinify()
     )
 
