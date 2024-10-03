@@ -25,12 +25,14 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
     override suspend fun invoke(from: GasFeeParams): Pair<String, String> {
         val appCurrency = appCurrencyRepository.currency.first()
 
+        val nativeToken = tokenRepository.getNativeToken(from.selectedToken.chain.id)
+
         var tokenValue = TokenValue(
             value = from.gasFee.value.multiply(from.gasLimit),
             unit = from.gasFee.unit,
             decimals = from.gasFee.decimals
         )
-        val nativeToken = tokenRepository.getNativeToken(from.selectedToken.chain.id)
+
         val fiatFees = convertTokenValueToFiat(
             nativeToken,
             tokenValue,
@@ -40,9 +42,13 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
         if (nativeToken.chain.feeUnit.equals("Gwei", ignoreCase = true)) {
             tokenValue = tokenValue.copy(
                 value = tokenValue.value.divide(BigInteger.TEN.pow(9)),
-                unit = "ETH"
             )
         }
+        tokenValue = TokenValue(
+            value = tokenValue.value,
+            unit = nativeToken.ticker,
+            decimals =tokenValue.decimals
+        )
 
 
         return Pair(
