@@ -1,10 +1,7 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.vultisig.wallet.ui.models.transaction
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R

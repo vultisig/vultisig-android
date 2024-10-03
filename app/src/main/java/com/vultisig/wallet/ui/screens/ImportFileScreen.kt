@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,7 +61,7 @@ import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTypes
 import com.vultisig.wallet.ui.utils.asString
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun ImportFileScreen(
     navController: NavHostController,
@@ -103,7 +102,7 @@ internal fun ImportFileScreen(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 private fun ImportFileScreen(
     navController: NavHostController,
@@ -294,7 +293,7 @@ private fun ImportFileScreen(
 
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Preview(showBackground = true)
 @Composable
 private fun ImportFilePreview() {

@@ -144,6 +144,9 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val isFastSign: Boolean
         get() = setupType.isFast && email != null && password != null
 
+    private val isRelayEnabled: Boolean
+        get() = vultisigRelay.isRelayEnabled || isFastSign
+
     val localPartyID: String
         get() = vault.localPartyID
 
@@ -203,7 +206,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             TssAction.ReShare
         }
 
-        if (vultisigRelay.isRelayEnabled) {
+        if (isRelayEnabled) {
             serverAddress = Endpoints.VULTISIG_RELAY
             uiState.update { it.copy(networkOption = NetworkPromptOption.INTERNET) }
         }
@@ -248,7 +251,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     hexChainCode = vault.hexChainCode,
                                     serviceName = serviceName,
                                     encryptionKeyHex = this._encryptionKeyHex,
-                                    useVultisigRelay = vultisigRelay.isRelayEnabled,
+                                    useVultisigRelay = isRelayEnabled,
                                     vaultName = this.vault.name,
                                 )
                             )
@@ -266,7 +269,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     publicKeyEcdsa = vault.pubKeyECDSA,
                                     oldParties = vault.signers,
                                     encryptionKeyHex = this._encryptionKeyHex,
-                                    useVultisigRelay = vultisigRelay.isRelayEnabled,
+                                    useVultisigRelay = isRelayEnabled,
                                     oldResharePrefix = vault.resharePrefix,
                                     vaultName = vault.name
                                 )
@@ -277,7 +280,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         loadQrPainter(keygenPayload)
 
-        if (!vultisigRelay.isRelayEnabled)
+        if (!isRelayEnabled)
         // when relay is disabled, start the mediator service
             startMediatorService(context)
         else {

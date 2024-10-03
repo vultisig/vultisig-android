@@ -1,10 +1,6 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.vultisig.wallet.ui.models
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.textAsFlow
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -19,6 +15,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -66,7 +63,7 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
 
-    @OptIn(ExperimentalFoundationApi::class)
+
     val searchTextFieldState = TextFieldState()
 
     init {
