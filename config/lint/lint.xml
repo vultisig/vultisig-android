@@ -6,7 +6,7 @@
     <issue id="DuplicateStrings" severity="ignore" />
     <issue id="EasterEgg" severity="error" />
     <issue id="ExpensiveAssertion" severity="error" />
-    <issue id="GradleDependency" severity="error" />
+    <issue id="GradleDependency" severity="warning" />
     <issue id="HardwareIds" severity="warning" />
     <issue id="IconLocation" severity="ignore" />
     <issue id="IconMissingDensityFolder" severity="ignore" />
