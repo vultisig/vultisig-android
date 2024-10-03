@@ -56,8 +56,7 @@ internal class KeysignShareViewModel @Inject constructor(
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun loadTransaction(transactionId: TransactionId) {
         runBlocking {
-            val transaction = transactionRepository.getTransaction(transactionId)
-                .first()
+            val transaction = transactionRepository.getTransaction(transactionId).first()
 
             val vault = vaultRepository.get(transaction.vaultId)!!
 
@@ -94,36 +93,55 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
 
-            var swapPayload: SwapPayload = transaction.payload
-            var dstToken = swapPayload.dstToken
-            if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.BitcoinCash) {
-                dstToken = dstToken.adjustBitcoinCashAddressFormat()
-                swapPayload = swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
-            }
             amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
-            keysignPayload = KeysignPayload(
-                coin = srcToken,
-                toAddress = transaction.dstAddress,
-                toAmount = transaction.srcTokenValue.value,
-                blockChainSpecific = specific.blockChainSpecific,
-                swapPayload = swapPayload,
-                vaultPublicKeyECDSA = pubKeyECDSA,
-                utxos = specific.utxos,
-                vaultLocalPartyID = vault.localPartyID,
-                memo = transaction.memo,
-                approvePayload = if (transaction.isApprovalRequired)
-                    ERC20ApprovePayload(
-                        amount = SwapTransaction.maxAllowance,
-                        spender = transaction.dstAddress,
+
+            keysignPayload = when (transaction) {
+                is SwapTransaction.EthToCacaoSwapTransaction -> {
+                    KeysignPayload(
+                        coin = srcToken,
+                        toAddress = transaction.dstAddress,
+                        toAmount = transaction.srcTokenValue.value,
+                        blockChainSpecific = transaction.blockChainSpecific.blockChainSpecific,
+                        memo = transaction.memo,
+                        vaultPublicKeyECDSA = pubKeyECDSA,
+                        utxos = emptyList(),
+                        vaultLocalPartyID = vault.localPartyID,
                     )
-                else null,
-            )
+                }
+
+                is SwapTransaction.RegularSwapTransaction -> {
+                    var swapPayload: SwapPayload = transaction.payload
+                    var dstToken = swapPayload.dstToken
+                    if (swapPayload is SwapPayload.ThorChain && dstToken.chain == Chain.BitcoinCash) {
+                        dstToken = dstToken.adjustBitcoinCashAddressFormat()
+                        swapPayload =
+                            swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
+                    }
+
+                    KeysignPayload(
+                        coin = srcToken,
+                        toAddress = transaction.dstAddress,
+                        toAmount = transaction.srcTokenValue.value,
+                        blockChainSpecific = specific.blockChainSpecific,
+                        swapPayload = swapPayload,
+                        vaultPublicKeyECDSA = pubKeyECDSA,
+                        utxos = specific.utxos,
+                        vaultLocalPartyID = vault.localPartyID,
+                        memo = transaction.memo,
+                        approvePayload = if (transaction.isApprovalRequired) ERC20ApprovePayload(
+                            amount = SwapTransaction.maxAllowance,
+                            spender = transaction.dstAddress,
+                        )
+                        else null,
+                    )
+                }
+            }
         }
     }
+
     private fun Coin.adjustBitcoinCashAddressFormat() = copy(
         address = address.replace(
-            "bitcoincash:",
-            ""
+            "bitcoincash:", ""
         )
     )
 
