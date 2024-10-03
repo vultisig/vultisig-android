@@ -54,4 +54,16 @@ class AesEncryptionTest {
         assertEquals("helloworld", decryptedMsg)
     }
 
+    @Test
+    fun decryptMessageFromServer() {
+        val encryptionKey = "password"
+        val encryptedMessage = "PMUgpdrUY/6MgbxVN7Juaw+FUqq/p/Da5HE6xVptbHWP3UGfomHSfjii6qoLj8Y="
+        val decryptedMsg =
+            aes.decrypt(
+                encryptedMessage.decodeBase64Bytes(),
+                encryptionKey.toByteArray(Charsets.UTF_8)
+            )!!
+                .toString(Charsets.UTF_8)
+        assertEquals("vultiserver-message", decryptedMsg)
+    }
 }
