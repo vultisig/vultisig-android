@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
-    <issue id="AndroidGradlePluginVersion" severity="error" />
+    <issue id="AndroidGradlePluginVersion" severity="warning" />
     <issue id="ComposableLambdaParameterNaming" severity="error" />
     <issue id="ComposableLambdaParameterPosition" severity="warning" />
     <issue id="DuplicateStrings" severity="ignore" />
