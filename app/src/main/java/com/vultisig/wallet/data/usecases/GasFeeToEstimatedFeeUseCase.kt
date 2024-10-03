@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import kotlinx.coroutines.flow.first
+import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface GasFeeToEstimatedFeeUseCase :
@@ -23,7 +25,7 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
     override suspend fun invoke(from: GasFeeParams): Pair<String, String> {
         val appCurrency = appCurrencyRepository.currency.first()
 
-        val tokenValue = TokenValue(
+        var tokenValue = TokenValue(
             value = from.gasFee.value.multiply(from.gasLimit),
             unit = from.gasFee.unit,
             decimals = from.gasFee.decimals
@@ -34,6 +36,14 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
             tokenValue,
             appCurrency
         )
+
+        if (nativeToken.chain.feeUnit.equals("Gwei", ignoreCase = true)) {
+            tokenValue = tokenValue.copy(
+                value = tokenValue.value.divide(BigInteger.TEN.pow(9)),
+                unit = "ETH"
+            )
+        }
+
 
         return Pair(
             fiatValueToStringMapper.map(fiatFees),

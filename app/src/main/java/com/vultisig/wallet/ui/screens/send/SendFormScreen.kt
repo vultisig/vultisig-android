@@ -285,7 +285,7 @@ internal fun SendFormScreen(
 private fun SendFormScreenPreview() {
     SendFormScreen(
         state = SendFormUiModel(
-            totalGas = UiText.DynamicString("12.5 Gwei"),
+            totalGas = UiText.DynamicString("12.5 Eth"),
             showGasFee = true,
             estimatedFee = UiText.DynamicString("$3.4"),
         ),
