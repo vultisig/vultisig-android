@@ -160,10 +160,7 @@ internal fun VerifyTransactionScreen(
                     )
 
                     OtherField(
-                        title = stringResource(
-                            R.string.verify_transaction_fiat_amount_title,
-                            state.transaction.fiatCurrency
-                        ),
+                        title = stringResource(R.string.verify_transaction_value),
                         value = state.transaction.fiatValue,
                     )
 
@@ -189,7 +186,7 @@ internal fun VerifyTransactionScreen(
                             withStyle(
                                 style = SpanStyle(
                                     color = Theme.colors.neutral100,
-                                    fontSize = 10.sp,
+                                    fontSize = 14.sp,
                                     fontFamily = Theme.montserrat.subtitle1.fontFamily,
                                     fontWeight = Theme.montserrat.subtitle1.fontWeight,
                                 )
@@ -199,7 +196,7 @@ internal fun VerifyTransactionScreen(
                             withStyle(
                                 style = SpanStyle(
                                     color = Theme.colors.neutral400,
-                                    fontSize = 10.sp,
+                                    fontSize = 14.sp,
                                     fontFamily = Theme.montserrat.subtitle1.fontFamily,
                                     fontWeight = Theme.montserrat.subtitle1.fontWeight,
                                 )
@@ -363,8 +360,8 @@ private fun VerifyTransactionScreenPreview() {
                 fiatCurrency = "USD",
                 gasFeeValue = "1.1",
                 memo = "some memo",
-                estimatedFee = "1.63 USd",
-                totalGas = "209,332.23232 Gwei"
+                estimatedFee = "0.75 USd",
+                totalGas = "0.00031361"
             ),
             blowfishShow = true,
             hasFastSign = true,

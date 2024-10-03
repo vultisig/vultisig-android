@@ -238,7 +238,7 @@ internal fun SendFormScreen(
                         withStyle(
                             style = SpanStyle(
                                 color = Theme.colors.neutral100,
-                                fontSize = 10.sp,
+                                fontSize = Theme.menlo.body1.fontSize,
                                 fontFamily = Theme.menlo.body1.fontFamily,
                             )
                         ) {
@@ -247,7 +247,7 @@ internal fun SendFormScreen(
                         withStyle(
                             style = SpanStyle(
                                 color = Theme.colors.neutral400,
-                                fontSize = 10.sp,
+                                fontSize = Theme.menlo.body1.fontSize,
                                 fontFamily = Theme.menlo.body1.fontFamily,
                             )
                         ) {

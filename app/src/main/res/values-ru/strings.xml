@@ -71,7 +71,7 @@
     <string name="verify_transaction_from_title">От</string>
     <string name="verify_transaction_to_title">Кому</string>
     <string name="verify_transaction_amount_title">Сумма</string>
-    <string name="verify_transaction_fiat_amount_title">Сумма в (%s)</string>
+    <string name="verify_transaction_value">Ценить</string>
     <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
