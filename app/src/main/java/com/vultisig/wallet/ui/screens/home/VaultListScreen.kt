@@ -40,6 +40,7 @@ internal fun VaultListScreen(
         onSelectVault = onSelectVault,
         onCreateNewVault = onCreateNewVault,
         onImportVaultClick = onImportVaultClick,
+        onCreateNewFolder = viewModel::onCreateNewFolder,
     )
 }
 
@@ -49,6 +50,7 @@ private fun VaultListScreen(
     vaults: List<Vault>,
     onSelectVault: (vaultId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
+    onCreateNewFolder: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
     onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
@@ -83,30 +85,46 @@ private fun VaultListScreen(
                         vertical = 12.dp,
                     ),
             ) {
-                MultiColorButton(
-                    text = stringResource(R.string.home_screen_add_new_vault),
-                    backgroundColor = Theme.colors.turquoise800,
-                    textColor = Theme.colors.oxfordBlue800,
-                    iconColor = Theme.colors.turquoise800,
-                    textStyle = Theme.montserrat.subtitle1,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onClick = onCreateNewVault,
-                )
+                if (isRearrangeMode) {
+                    MultiColorButton(
+                        text = stringResource(R.string.create_folder),
+                        backgroundColor = Theme.colors.oxfordBlue800,
+                        textColor = Theme.colors.turquoise800,
+                        iconColor = Theme.colors.oxfordBlue800,
+                        borderSize = 1.dp,
+                        textStyle = Theme.montserrat.subtitle1,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onCreateNewFolder,
+                    )
 
-                UiSpacer(size = 12.dp)
+                    UiSpacer(size = 12.dp)
+                } else {
+                    MultiColorButton(
+                        text = stringResource(R.string.home_screen_add_new_vault),
+                        backgroundColor = Theme.colors.turquoise800,
+                        textColor = Theme.colors.oxfordBlue800,
+                        iconColor = Theme.colors.turquoise800,
+                        textStyle = Theme.montserrat.subtitle1,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onCreateNewVault,
+                    )
 
-                MultiColorButton(
-                    text = stringResource(R.string.home_screen_import_vault),
-                    backgroundColor = Theme.colors.oxfordBlue800,
-                    textColor = Theme.colors.turquoise800,
-                    iconColor = Theme.colors.oxfordBlue800,
-                    borderSize = 1.dp,
-                    textStyle = Theme.montserrat.subtitle1,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    onClick = onImportVaultClick,
-                )
+                    UiSpacer(size = 12.dp)
+
+                    MultiColorButton(
+                        text = stringResource(R.string.home_screen_import_vault),
+                        backgroundColor = Theme.colors.oxfordBlue800,
+                        textColor = Theme.colors.turquoise800,
+                        iconColor = Theme.colors.oxfordBlue800,
+                        borderSize = 1.dp,
+                        textStyle = Theme.montserrat.subtitle1,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        onClick = onImportVaultClick,
+                    )
+                }
             }
         },
     )

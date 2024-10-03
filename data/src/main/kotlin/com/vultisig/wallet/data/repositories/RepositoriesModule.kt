@@ -188,4 +188,10 @@ internal interface RepositoriesModule {
     fun bindOnBoardRepository(
         impl: OnBoardRepositoryImpl,
     ): OnBoardRepository
+
+    @Singleton
+    @Binds
+    fun bindFolderRepository(
+        impl: FolderRepositoryImpl,
+    ): FolderRepository
 }

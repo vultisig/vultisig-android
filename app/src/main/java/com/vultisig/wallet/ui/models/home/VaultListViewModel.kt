@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.FolderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 internal class VaultListViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
-    private val vaultOrderRepository: VaultOrderRepository
+    private val vaultOrderRepository: VaultOrderRepository,
+    private val folderRepository: FolderRepository,
 ) : ViewModel() {
     val vaults = MutableStateFlow<List<Vault>>(emptyList())
     private var reIndexJob: Job? = null
@@ -52,5 +54,9 @@ internal class VaultListViewModel @Inject constructor(
             val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id
             vaultOrderRepository.updateItemOrder(null,upperOrder, midOrder, lowerOrder)
         }
+    }
+
+    fun onCreateNewFolder() = viewModelScope.launch {
+        folderRepository.insertFolder("New Folder")
     }
 }

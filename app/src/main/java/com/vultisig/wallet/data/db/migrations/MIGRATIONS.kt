@@ -227,9 +227,32 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
     }
 }
 
-val MIGRATION_13_14=object :Migration(13,14){
+val MIGRATION_13_14 = object : Migration(13, 14){
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coin_vaultId` ON `coin` (`vaultId`)")
+    }
+}
+
+val MIGRATION_14_15 = object : Migration(14, 15){
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `vaultFolderRecord` (
+                `vaultId` TEXT NOT NULL,
+                `folderId` INTEGER NOT NULL,
+                PRIMARY KEY(`vaultId`, `folderId`)
+            )
+            """.trimMargin()
+        )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `vaultFolder` (
+                `id` INTEGER NOT NULL,
+                `name` TEXT NOT NULL,
+                PRIMARY KEY(`id`)
+            )
+            """.trimMargin()
+        )
     }
 }
 
