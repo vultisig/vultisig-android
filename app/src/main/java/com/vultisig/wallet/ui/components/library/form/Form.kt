@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,13 +21,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.BasicSecureTextField
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text2.BasicSecureTextField
-import androidx.compose.foundation.text2.BasicTextField2
-import androidx.compose.foundation.text2.input.TextFieldLineLimits
-import androidx.compose.foundation.text2.input.TextFieldState
-import androidx.compose.foundation.text2.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -161,7 +159,6 @@ internal fun TokenCard(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun FormTextFieldCard(
     title: String,
@@ -191,7 +188,7 @@ internal fun FormTextFieldCard(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun FormTextFieldCard(
     hint: String,
@@ -216,7 +213,7 @@ internal fun FormTextFieldCard(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun FormTextFieldCardWithPercentage(
     title: String,
@@ -247,7 +244,7 @@ internal fun FormTextFieldCardWithPercentage(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun FormTextField(
     hint: String,
@@ -283,7 +280,7 @@ internal fun FormTextField(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun BasicFormTextField(
     hint: String,
@@ -297,7 +294,7 @@ internal fun BasicFormTextField(
     val focusManager = LocalFocusManager.current
     var isFocused by remember { mutableStateOf(false) }
 
-    BasicTextField2(
+    BasicTextField(
         state = textFieldState,
         lineLimits = TextFieldLineLimits.SingleLine,
         textStyle = textStyle.copy(color = Theme.colors.neutral100),
@@ -306,11 +303,9 @@ internal fun BasicFormTextField(
             keyboardType = keyboardType,
             imeAction = ImeAction.Done,
         ),
-        keyboardActions = KeyboardActions(
-            onAny = {
-                focusManager.clearFocus()
-            }
-        ),
+        onKeyboardAction = {
+            focusManager.clearFocus()
+        },
         modifier = modifier
             .clearFocusOnKeyboardDismiss()
             .onFocusEvent {
@@ -334,7 +329,7 @@ internal fun BasicFormTextField(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun FormBasicSecureTextField(
     hint: String,
@@ -449,7 +444,7 @@ internal fun FormTitleContainer(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun FormTitleCollapsibleTextField(
     title: String,

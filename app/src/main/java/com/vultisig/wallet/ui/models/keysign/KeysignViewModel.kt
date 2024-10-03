@@ -16,14 +16,13 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
-import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
-import com.vultisig.wallet.data.chains.helpers.THORCHainHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
+import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.TssKeyType
@@ -286,7 +285,7 @@ internal class KeysignViewModel(
             }
 
             Chain.ThorChain -> {
-                val thorHelper = THORCHainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val thorHelper = ThorChainHelper.thor(vault.pubKeyECDSA, vault.hexChainCode)
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
@@ -340,7 +339,7 @@ internal class KeysignViewModel(
             }
 
             Chain.MayaChain -> {
-                val mayaHelper = MayaChainHelper(vault.pubKeyECDSA, vault.hexChainCode)
+                val mayaHelper = ThorChainHelper.maya(vault.pubKeyECDSA, vault.hexChainCode)
                 return mayaHelper.getSignedTransaction(keysignPayload, signatures)
             }
 

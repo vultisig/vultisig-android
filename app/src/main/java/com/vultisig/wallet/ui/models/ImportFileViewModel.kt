@@ -2,8 +2,7 @@ package com.vultisig.wallet.ui.models
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -42,7 +41,7 @@ internal data class ImportFileState(
 
 internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*")
 internal val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat","vult")
-@OptIn(ExperimentalFoundationApi::class)
+
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,

@@ -1407,10 +1407,4 @@ object Coins {
         )
     )
 
-    fun getCoin(ticker: String, address: String, hexPublicKey: String, coinType: CoinType): Coin? {
-        return SupportedCoins.find { it.ticker == ticker && it.coinType == coinType }
-            ?.copy(address = address, hexPublicKey = hexPublicKey)
-
-    }
-
 }

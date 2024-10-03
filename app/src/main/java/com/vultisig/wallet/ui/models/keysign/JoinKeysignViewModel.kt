@@ -18,10 +18,10 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
-import com.vultisig.wallet.data.chains.helpers.MayaChainHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
@@ -365,7 +365,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 if (isDeposit) {
                     val fee = when (val specific = payload.blockChainSpecific) {
-                        is BlockChainSpecific.MayaChain -> MayaChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger()
+                        is BlockChainSpecific.MayaChain -> ThorChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger()
                         is BlockChainSpecific.THORChain -> specific.fee
                         else -> error("BlockChainSpecific $specific is not supported")
                     }

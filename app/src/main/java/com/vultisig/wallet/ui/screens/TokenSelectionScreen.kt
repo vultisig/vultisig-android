@@ -1,9 +1,6 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.vultisig.wallet.ui.screens
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +39,7 @@ import com.vultisig.wallet.ui.models.TokenSelectionViewModel
 import com.vultisig.wallet.ui.models.TokenUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun TokenSelectionScreen(
     navController: NavHostController,
@@ -66,7 +63,7 @@ internal fun TokenSelectionScreen(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 internal fun TokenSelectionScreen(
     navController: NavHostController,
