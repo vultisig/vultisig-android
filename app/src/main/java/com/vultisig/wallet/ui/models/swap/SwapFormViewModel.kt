@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
-import com.vultisig.wallet.data.models.SwapTransaction
+import com.vultisig.wallet.data.models.SwapTransaction.*
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -194,6 +194,17 @@ internal class SwapFormViewModel @Inject constructor(
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
+                val isEthToCacaoSwapTransaction =
+                    srcToken.isNativeToken &&
+                            srcToken.chain in listOf(Chain.Ethereum, Chain.Arbitrum) &&
+                            dstToken.chain == Chain.MayaChain
+
+                val gasLimit = if (isEthToCacaoSwapTransaction)
+                    BigInteger.valueOf(
+                        if (srcToken.chain == Chain.Ethereum)
+                            ETH_GAS_LIMIT else ARB_GAS_LIMIT
+                    ) else null
+
                 val specificAndUtxo = blockChainSpecificRepository.getSpecific(
                     srcToken.chain,
                     srcAddress,
@@ -202,6 +213,7 @@ internal class SwapFormViewModel @Inject constructor(
                     isSwap = true,
                     isMaxAmountEnabled = false,
                     isDeposit = srcToken.chain == Chain.MayaChain,
+                    gasLimit = gasLimit,
                 )
 
                 val transaction = when (quote) {
@@ -224,7 +236,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val isAffiliate = srcFiatValue.value >=
                                 AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                        SwapTransaction(
+                        RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
                             vaultId = vaultId,
                             srcToken = srcToken,
@@ -257,8 +269,12 @@ internal class SwapFormViewModel @Inject constructor(
                     }
 
                     is SwapQuote.MayaChain -> {
-                        val dstAddress =
-                            quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                        val address = if (isEthToCacaoSwapTransaction)
+                            quote.data.inboundAddress else
+                            quote.data.router ?: quote.data.inboundAddress
+
+                        val dstAddress = address ?: srcAddress
+
                         val allowance = allowanceRepository.getAllowance(
                             chain = srcToken.chain,
                             contractAddress = srcToken.contractAddress,
@@ -275,7 +291,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val isAffiliate = srcFiatValue.value >=
                                 AFFILIATE_FEE_USD_THRESHOLD.toBigDecimal()
 
-                        SwapTransaction(
+                        val regularSwapTransaction = RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
                             vaultId = vaultId,
                             srcToken = srcToken,
@@ -305,6 +321,12 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
                             )
                         )
+
+                        if (isEthToCacaoSwapTransaction) {
+                            EthToCacaoSwapTransaction(
+                                regularSwapTransaction,
+                            )
+                        } else regularSwapTransaction
                     }
 
                     is SwapQuote.OneInch -> {
@@ -319,7 +341,7 @@ internal class SwapFormViewModel @Inject constructor(
                         val isApprovalRequired =
                             allowance != null && allowance < srcTokenValue.value
 
-                        SwapTransaction(
+                        RegularSwapTransaction(
                             id = UUID.randomUUID().toString(),
                             vaultId = vaultId,
                             srcToken = srcToken,
@@ -744,8 +766,10 @@ internal class SwapFormViewModel @Inject constructor(
                         val formError = when (e) {
                             is SwapException.SwapIsNotSupported ->
                                 UiText.StringResource(R.string.swap_route_not_available)
+
                             is SwapException.AmountCannotBeZero ->
                                 UiText.StringResource(R.string.swap_form_invalid_amount)
+
                             is SwapException.SameAssets ->
                                 UiText.StringResource(R.string.swap_screen_same_asset_error_message)
                         }
@@ -793,9 +817,9 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     companion object {
-
         const val AFFILIATE_FEE_USD_THRESHOLD = 100
-
+        const val ETH_GAS_LIMIT: Long = 40_000
+        const val ARB_GAS_LIMIT: Long = 400_000
     }
 
 }
