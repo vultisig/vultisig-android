@@ -2,8 +2,6 @@ package com.vultisig.wallet.ui.models.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.db.models.FolderEntity
-import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultListEntity
 import com.vultisig.wallet.data.repositories.FolderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
