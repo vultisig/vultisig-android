@@ -6,6 +6,7 @@ import javax.inject.Inject
 
 interface FolderRepository {
     suspend fun insertFolder(name: String)
+    suspend fun getAll(): List<FolderEntity>
 }
 
 internal class FolderRepositoryImpl @Inject constructor(
@@ -13,5 +14,8 @@ internal class FolderRepositoryImpl @Inject constructor(
 ): FolderRepository {
     override suspend fun insertFolder(name: String) {
         folderDao.insertFolder(FolderEntity(name = name))
+    }
+    override suspend fun getAll(): List<FolderEntity> {
+        return folderDao.getAll()
     }
 }

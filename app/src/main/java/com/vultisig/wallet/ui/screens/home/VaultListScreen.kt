@@ -15,7 +15,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.db.models.FolderEntity
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.VaultListEntity
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
@@ -25,19 +27,19 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VaultListScreen(
-    onSelectVault: (vaultId: String) -> Unit = {},
+    onSelect: (vaultListEntity: VaultListEntity) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
     viewModel: VaultListViewModel = hiltViewModel(),
     isRearrangeMode: Boolean,
 ) {
-    val vaults by viewModel.vaults.collectAsState()
+    val vaultListItems by viewModel.listItems.collectAsState()
 
     VaultListScreen(
-        vaults = vaults,
+        vaultListItems = vaultListItems,
         isRearrangeMode = isRearrangeMode,
         onMove = viewModel::onMove,
-        onSelectVault = onSelectVault,
+        onSelect = onSelect,
         onCreateNewVault = onCreateNewVault,
         onImportVaultClick = onImportVaultClick,
         onCreateNewFolder = viewModel::onCreateNewFolder,
@@ -47,8 +49,8 @@ internal fun VaultListScreen(
 @Composable
 private fun VaultListScreen(
     isRearrangeMode: Boolean,
-    vaults: List<Vault>,
-    onSelectVault: (vaultId: String) -> Unit = {},
+    vaultListItems: List<VaultListEntity>,
+    onSelect: (vaultListEntity: VaultListEntity) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onCreateNewFolder: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
@@ -58,7 +60,7 @@ private fun VaultListScreen(
         content = { contentPadding ->
             VerticalReorderList(
                 onMove = onMove,
-                data = vaults,
+                data = vaultListItems,
                 isReorderEnabled = isRearrangeMode,
                 key = { it.id },
                 contentPadding = PaddingValues(
@@ -69,9 +71,9 @@ private fun VaultListScreen(
                     .padding(contentPadding),
             ) { vault ->
                 VaultCeil(
-                    vault = vault,
+                    vaultListEntity = vault,
                     isInEditMode = isRearrangeMode,
-                    onSelectVault = onSelectVault,
+                    onSelect = onSelect,
                 )
             }
         },
@@ -135,18 +137,30 @@ private fun VaultListScreen(
 private fun VaultListScreenPreview() {
     VaultListScreen(
         isRearrangeMode = false,
-        vaults = listOf(
-            Vault(
-                id = "1",
-                name = "Vault 1",
+        vaultListItems = listOf(
+            VaultListEntity.VaultListItem(
+                Vault(
+                    id = "1",
+                    name = "Vault 1",
+                )
             ),
-            Vault(
-                id = "2",
-                name = "Vault 2",
+            VaultListEntity.VaultListItem(
+                Vault(
+                    id = "2",
+                    name = "Vault 2",
+                )
             ),
-            Vault(
-                id = "3",
-                name = "Vault 3",
+            VaultListEntity.VaultListItem(
+                Vault(
+                    id = "3",
+                    name = "Vault 3",
+                )
+            ),
+            VaultListEntity.FolderListItem(
+                folder = FolderEntity(
+                    id = 1,
+                    name = "Folder 1",
+                ),
             ),
         ),
     )

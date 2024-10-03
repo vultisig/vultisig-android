@@ -2,7 +2,9 @@ package com.vultisig.wallet.ui.models.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.db.models.FolderEntity
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.VaultListEntity
 import com.vultisig.wallet.data.repositories.FolderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -21,31 +23,36 @@ internal class VaultListViewModel @Inject constructor(
     private val vaultOrderRepository: VaultOrderRepository,
     private val folderRepository: FolderRepository,
 ) : ViewModel() {
-    val vaults = MutableStateFlow<List<Vault>>(emptyList())
+    val listItems = MutableStateFlow<List<VaultListEntity>>(emptyList())
     private var reIndexJob: Job? = null
 
     init {
         viewModelScope.launch {
             vaultOrderRepository.loadOrders(null).map { orders ->
-                val vaults = vaultRepository.getAll()
-                val addressAndOrderMap = mutableMapOf<Vault, Float>()
-                vaults.forEach { eachVault ->
-                    addressAndOrderMap[eachVault] =
+                val addressAndOrderMap = mutableMapOf<VaultListEntity, Float>()
+                vaultRepository.getAll().forEach { eachVault ->
+                    addressAndOrderMap[VaultListEntity.VaultListItem(eachVault)] =
                         orders.find { it.value == eachVault.id }?.order
                             ?: vaultOrderRepository.insert(null,eachVault.id)
                 }
+                folderRepository.getAll().forEach { eachFolder ->
+                    val folderListItem = VaultListEntity.FolderListItem(eachFolder)
+                    addressAndOrderMap[VaultListEntity.FolderListItem(eachFolder)] =
+                        orders.find { it.value == folderListItem.id }?.order
+                            ?: vaultOrderRepository.insert(null, folderListItem.id)
+                }
                 addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
             }.collect { orderedVaults ->
-                vaults.value = orderedVaults
+                listItems.value = orderedVaults
             }
         }
     }
 
     fun onMove(oldOrder: Int, newOrder: Int) {
-        val updatedPositionsList = vaults.value.toMutableList().apply {
+        val updatedPositionsList = listItems.value.toMutableList().apply {
             add(newOrder, removeAt(oldOrder))
         }
-        vaults.value =  updatedPositionsList
+        listItems.value =  updatedPositionsList
         reIndexJob?.cancel()
         reIndexJob = viewModelScope.launch {
             delay(500)
