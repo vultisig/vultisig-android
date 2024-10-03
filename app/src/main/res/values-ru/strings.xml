@@ -36,7 +36,7 @@
     <string name="send_amount_currency">Сумма (в %s)</string>
     <string name="send_amount_currency_hint">Введите сумму</string>
     <string name="send_continue_button">Продолжить</string>
-    <string name="send_form_network_fee">Сетевой сбор (авто)</string>
+    <string name="send_form_network_fee">Сетевой сбор</string>
     <string name="chain_account_view_send">ОТПРАВИТЬ</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
     <string name="chain_account_view_deposit">ДЕПОЗИТ</string>

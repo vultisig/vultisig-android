@@ -23,7 +23,7 @@
     <string name="send_amount_hint">Menge eingeben</string>
     <string name="send_amount_currency_hint">Menge eingeben</string>
     <string name="send_continue_button">Fortfahren</string>
-    <string name="send_form_network_fee">Netzwerkgebühr (auto)</string>
+    <string name="send_form_network_fee">Netzwerkgebühr</string>
     <string name="chain_account_view_send">SENDEN</string>
     <string name="chain_account_view_swap">TAUSCHEN</string>
     <string name="chain_account_view_deposit">Einzahlung</string>
@@ -298,5 +298,5 @@
     <string name="failed_to_resolve_address">Fehler beim Auflösen der Adresse</string>
     <string name="join_keygen_screen_reshare">Erneut teilen</string>
     <string name="join_keygen_screen_keygen">Keygen</string>
-    <string name="verify_transaction_network_fee">Netzwerkgebühr (auto)</string>
+    <string name="verify_transaction_network_fee">Netzwerkgebühr</string>
 </resources>

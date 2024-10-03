@@ -25,7 +25,7 @@
     <string name="send_amount_hint">Inserir Quantidade</string>
     <string name="send_amount_currency_hint">Inserir Quantidade</string>
     <string name="send_continue_button">Continuar</string>
-    <string name="send_form_network_fee">Taxa de rede (automático)</string>
+    <string name="send_form_network_fee">Taxa de rede</string>
     <string name="chain_account_view_send">ENVIAR</string>
     <string name="chain_account_view_swap">TROCAR</string>
     <string name="chain_account_view_deposit">Depósito</string>
