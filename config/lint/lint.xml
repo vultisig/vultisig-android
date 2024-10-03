@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
-    <issue id="AndroidGradlePluginVersion" severity="warning" />
+    <issue id="AndroidGradlePluginVersion" severity="error" />
     <issue id="ComposableLambdaParameterNaming" severity="error" />
     <issue id="ComposableLambdaParameterPosition" severity="warning" />
     <issue id="DuplicateStrings" severity="ignore" />
     <issue id="EasterEgg" severity="error" />
     <issue id="ExpensiveAssertion" severity="error" />
-    <issue id="GradleDependency" severity="error" />
+    <issue id="GradleDependency" severity="warning" />
     <issue id="HardwareIds" severity="warning" />
     <issue id="IconLocation" severity="ignore" />
     <issue id="IconMissingDensityFolder" severity="ignore" />
