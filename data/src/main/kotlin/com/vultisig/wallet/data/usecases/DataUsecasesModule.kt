@@ -25,8 +25,8 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindGenerateUniqueName(
-        impl: GenerateUniqueNameImpl
-    ): GenerateUniqueName
+        impl: GenerateRandomUniqueNameImpl
+    ): GenerateRandomUniqueName
 
     @Binds
     @Singleton
