@@ -253,6 +253,13 @@ val MIGRATION_14_15 = object : Migration(14, 15){
             )
             """.trimMargin()
         )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `folderOrder` (
+            `value` TEXT PRIMARY KEY NOT NULL,
+            `order` REAL NOT NULL)
+            """.trimMargin()
+        )
     }
 }
 

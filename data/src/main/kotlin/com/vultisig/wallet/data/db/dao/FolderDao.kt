@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.vultisig.wallet.data.db.models.FolderEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FolderDao {
@@ -12,5 +13,5 @@ interface FolderDao {
     suspend fun insertFolder(folder: FolderEntity)
 
     @Query("SELECT * FROM vaultFolder")
-    suspend fun getAll(): List<FolderEntity>
+    fun getAll(): Flow<List<FolderEntity>>
 }

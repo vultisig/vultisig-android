@@ -373,6 +373,7 @@
     <string name="join_keygen_screen_renew" translatable="false">Renew</string>
 
     <string name="select_vault_type_fast_title" translatable="false">FAST</string>
+    <string name="folders_list_title" translatable="false">Folders</string>
     <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>
     <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>
     <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>

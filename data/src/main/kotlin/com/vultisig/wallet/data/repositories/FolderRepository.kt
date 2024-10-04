@@ -2,11 +2,12 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.db.dao.FolderDao
 import com.vultisig.wallet.data.db.models.FolderEntity
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 interface FolderRepository {
     suspend fun insertFolder(name: String)
-    suspend fun getAll(): List<FolderEntity>
+    fun getAll(): Flow<List<FolderEntity>>
 }
 
 internal class FolderRepositoryImpl @Inject constructor(
@@ -15,7 +16,7 @@ internal class FolderRepositoryImpl @Inject constructor(
     override suspend fun insertFolder(name: String) {
         folderDao.insertFolder(FolderEntity(name = name))
     }
-    override suspend fun getAll(): List<FolderEntity> {
+    override fun getAll(): Flow<List<FolderEntity>> {
         return folderDao.getAll()
     }
 }

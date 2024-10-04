@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.models
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.VaultListEntity
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -70,13 +69,15 @@ internal class HomeViewModel @Inject constructor(
         uiState.update { it.copy(showVaultList = !it.showVaultList) }
     }
 
-    fun selectVaultListEntity(vaultListEntity: VaultListEntity) {
+    fun selectVault(vaultId: String) {
         viewModelScope.launch {
-            if (vaultListEntity is VaultListEntity.VaultListItem) {
-                hideVaultList()
-                lastOpenedVaultRepository.setLastOpenedVaultId(vaultListEntity.id)
-            }
+            hideVaultList()
+            lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
         }
+    }
+
+    fun selectFolder(folderId: String) {
+
     }
 
     fun addVault() {

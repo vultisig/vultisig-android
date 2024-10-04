@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import com.vultisig.wallet.data.db.BaseOrderDao
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import kotlinx.coroutines.flow.Flow
 

@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.FolderEntity
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.VaultListEntity
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.library.form.FormCard
@@ -30,26 +29,35 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VaultCeil(
-    vaultListEntity: VaultListEntity,
+    folder: FolderEntity? = null,
+    vault: Vault? = null,
     isInEditMode: Boolean,
-    onSelect: (vaultListEntity: VaultListEntity) -> Unit,
+    onSelect: (id: String) -> Unit,
 ) {
+    val isFolder = when {
+        folder != null -> true
+        vault != null -> false
+        else -> throw IllegalArgumentException("Either folderEntity or vault must be provided")
+    }
+    val id = (if (isFolder) folder?.id.toString() else vault?.id) ?: ""
+    val name = (if (isFolder) folder?.name else vault?.name) ?: ""
     FormCard {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickOnce(onClick = { onSelect(vaultListEntity) })
+                .clickOnce(onClick = { onSelect(id) })
                 .padding(all = 14.dp)
         ) {
             if (isInEditMode) {
                 Icon(
                     painter = painterResource(id = R.drawable.hamburger_menu),
-                    contentDescription = "draggable item", modifier = Modifier.width(16.dp)
+                    contentDescription = "draggable item",
+                    modifier = Modifier.width(16.dp)
                 )
             }
-            if (vaultListEntity is VaultListEntity.FolderListItem) {
+            if (isFolder) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_folder),
                     contentDescription = "draggable item",
@@ -57,22 +65,19 @@ internal fun VaultCeil(
                 )
             }
             Text(
-                text = vaultListEntity.name,
+                text = name,
                 style = Theme.menlo.body3,
                 color = Theme.colors.neutral0,
                 fontSize = 16.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (vaultListEntity is VaultListEntity.VaultListItem) {
-                    val vault = vaultListEntity.vault
-
-                    if (vault.isFastVault()) {
+                if (!isFolder) {
+                    if (vault?.isFastVault() == true) {
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = Theme.colors.oxfordBlue200,
@@ -90,8 +95,8 @@ internal fun VaultCeil(
                     Text(
                         text = stringResource(
                             id = R.string.vault_list_part_n_of_t,
-                            vault.getVaultPart(),
-                            vault.signers.size
+                            vault?.getVaultPart() ?: "",
+                            vault?.signers?.size ?: 0
                         ),
                         style = Theme.menlo.body2,
                         color = Theme.colors.body,
@@ -99,8 +104,7 @@ internal fun VaultCeil(
                 }
 
                 UiIcon(
-                    R.drawable.caret_right,
-                    size = 20.dp
+                    R.drawable.caret_right, size = 20.dp
                 )
             }
         }
@@ -113,41 +117,41 @@ internal fun VaultCeil(
 private fun VaultCeilPreview() {
     Column {
         VaultCeil(
-            vaultListEntity = VaultListEntity.VaultListItem(
-                Vault(
-                    id = "",
-                    name = "Vault 1",
-                )
+            vault = Vault(
+                id = "1",
+                name = "Vault 1",
             ),
             isInEditMode = true,
             onSelect = {}
         )
 
         VaultCeil(
-            vaultListEntity = VaultListEntity.VaultListItem(
-                Vault(
-                    id = "",
-                    localPartyID = "1",
-                    signers = listOf("1", "server-2", "3"),
-                    name = "Vault 2",
-                )
+            vault = Vault(
+                id = "2",
+                localPartyID = "1",
+                signers = listOf("1", "server-2", "3"),
+                name = "Vault 2",
             ),
             isInEditMode = false,
             onSelect = {}
         )
 
-        VaultCeil(vaultListEntity = VaultListEntity.FolderListItem(
+        VaultCeil(
             folder = FolderEntity(
                 id = 1,
                 name = "Folder 1",
-            )
-        ), isInEditMode = false, onSelect = {})
+            ),
+            isInEditMode = false,
+            onSelect = {}
+        )
 
-        VaultCeil(vaultListEntity = VaultListEntity.FolderListItem(
+        VaultCeil(
             folder = FolderEntity(
                 id = 2,
                 name = "Folder 2",
-            )
-        ), isInEditMode = true, onSelect = {})
+            ),
+            isInEditMode = true,
+            onSelect = {}
+        )
     }
 }

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.repositories.order
 
-import com.vultisig.wallet.data.db.VaultOrderDao
+import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import javax.inject.Inject
 

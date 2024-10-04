@@ -5,8 +5,11 @@ import androidx.room.Room
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.dao.FolderDao
+import com.vultisig.wallet.data.db.dao.FolderOrderDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
+import com.vultisig.wallet.data.db.dao.VaultDao
+import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.migrations.MIGRATION_10_11
 import com.vultisig.wallet.data.db.migrations.MIGRATION_11_12
 import com.vultisig.wallet.data.db.migrations.MIGRATION_12_13
@@ -76,6 +79,12 @@ internal interface DatabaseModule {
         fun provideVaultOrderDao(
             appDatabase: AppDatabase,
         ): VaultOrderDao = appDatabase.vaultOrderDao()
+
+        @Provides
+        @Singleton
+        fun provideFolderOrderDao(
+            appDatabase: AppDatabase,
+        ): FolderOrderDao = appDatabase.folderOrderDao()
 
         @Provides
         @Singleton

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,29 +18,32 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.FolderEntity
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.VaultListEntity
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
-import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.components.reorderable.VerticalDoubleReorderList
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VaultListScreen(
-    onSelect: (vaultListEntity: VaultListEntity) -> Unit = {},
+    onSelectVault: (vaultId: String) -> Unit = {},
+    onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
     viewModel: VaultListViewModel = hiltViewModel(),
     isRearrangeMode: Boolean,
 ) {
-    val vaultListItems by viewModel.listItems.collectAsState()
+    val state by viewModel.state.collectAsState()
 
     VaultListScreen(
-        vaultListItems = vaultListItems,
+        vaults = state.vaults,
+        folders = state.folders,
         isRearrangeMode = isRearrangeMode,
-        onMove = viewModel::onMove,
-        onSelect = onSelect,
+        onMoveVaults = viewModel::onMoveVaults,
+        onMoveFolders = viewModel::onMoveFolders,
+        onSelectVault = onSelectVault,
+        onSelectFolder = onSelectFolder,
         onCreateNewVault = onCreateNewVault,
         onImportVaultClick = onImportVaultClick,
         onCreateNewFolder = viewModel::onCreateNewFolder,
@@ -49,33 +53,62 @@ internal fun VaultListScreen(
 @Composable
 private fun VaultListScreen(
     isRearrangeMode: Boolean,
-    vaultListItems: List<VaultListEntity>,
-    onSelect: (vaultListEntity: VaultListEntity) -> Unit = {},
+    vaults: List<Vault>,
+    folders: List<FolderEntity>,
+    onSelectVault: (vaultId: String) -> Unit = {},
+    onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onCreateNewFolder: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
-    onMove: (from: Int, to: Int) -> Unit = { _, _ -> },
+    onMoveVaults: (from: Int, to: Int) -> Unit = { _, _ -> },
+    onMoveFolders: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
     Scaffold(
         content = { contentPadding ->
-            VerticalReorderList(
-                onMove = onMove,
-                data = vaultListItems,
+            VerticalDoubleReorderList(
+                beforeContents = listOf {
+                    Text(
+                        text = stringResource(id = R.string.folders_list_title),
+                        color = Theme.colors.neutral0,
+                        style = Theme.montserrat.body2,
+                    )
+                    UiSpacer(size = 16.dp)
+                },
+                midContents = listOf {
+                    Text(
+                        text = stringResource(id = R.string.home_screen_title),
+                        color = Theme.colors.neutral0,
+                        style = Theme.montserrat.body2,
+                    )
+                    UiSpacer(size = 16.dp)
+                },
+                onMoveT = onMoveFolders,
+                onMoveR = onMoveVaults,
+                dataT = folders,
+                dataR = vaults,
                 isReorderEnabled = isRearrangeMode,
-                key = { it.id },
+                keyR = { it.id },
+                keyT = { it.id },
                 contentPadding = PaddingValues(
                     vertical = 16.dp,
                     horizontal = 16.dp,
                 ),
-                modifier = Modifier
-                    .padding(contentPadding),
-            ) { vault ->
+                modifier = Modifier.padding(contentPadding),
+                contentR = { vault ->
                 VaultCeil(
-                    vaultListEntity = vault,
+                    vault = vault,
                     isInEditMode = isRearrangeMode,
-                    onSelect = onSelect,
+                    onSelect = onSelectVault,
                 )
-            }
+            },
+                contentT = { folder ->
+                    VaultCeil(
+                        folder = folder,
+                        isInEditMode = isRearrangeMode,
+                        onSelect = onSelectFolder,
+                    )
+                },
+            )
         },
         bottomBar = {
             Column(
@@ -95,8 +128,7 @@ private fun VaultListScreen(
                         iconColor = Theme.colors.oxfordBlue800,
                         borderSize = 1.dp,
                         textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = onCreateNewFolder,
                     )
 
@@ -108,8 +140,7 @@ private fun VaultListScreen(
                         textColor = Theme.colors.oxfordBlue800,
                         iconColor = Theme.colors.turquoise800,
                         textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = onCreateNewVault,
                     )
 
@@ -122,8 +153,7 @@ private fun VaultListScreen(
                         iconColor = Theme.colors.oxfordBlue800,
                         borderSize = 1.dp,
                         textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         onClick = onImportVaultClick,
                     )
                 }
@@ -137,31 +167,22 @@ private fun VaultListScreen(
 private fun VaultListScreenPreview() {
     VaultListScreen(
         isRearrangeMode = false,
-        vaultListItems = listOf(
-            VaultListEntity.VaultListItem(
-                Vault(
-                    id = "1",
-                    name = "Vault 1",
-                )
-            ),
-            VaultListEntity.VaultListItem(
-                Vault(
-                    id = "2",
-                    name = "Vault 2",
-                )
-            ),
-            VaultListEntity.VaultListItem(
-                Vault(
-                    id = "3",
-                    name = "Vault 3",
-                )
-            ),
-            VaultListEntity.FolderListItem(
-                folder = FolderEntity(
-                    id = 1,
-                    name = "Folder 1",
-                ),
-            ),
+        vaults = listOf(
+            Vault(
+                id = "1",
+                name = "Vault 1",
+            ), Vault(
+                id = "2",
+                name = "Vault 2",
+            ), Vault(
+                id = "3",
+                name = "Vault 3",
+            )
+        ),
+        folders = listOf(
+            FolderEntity(id = 1, name = "Folder 1"),
+            FolderEntity(id = 2, name = "Folder 2"),
+            FolderEntity(id = 3, name = "Folder 3"),
         ),
     )
 }

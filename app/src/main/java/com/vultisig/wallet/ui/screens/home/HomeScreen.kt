@@ -36,7 +36,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.VaultListEntity
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.HomeUiModel
@@ -56,7 +55,8 @@ internal fun HomeScreen(
         onOpenSettings = viewModel::openSettings,
         onEdit = viewModel::edit,
         onToggleVaults = viewModel::toggleVaults,
-        onSelectVaultListEntity = viewModel::selectVaultListEntity,
+        onSelectVault = viewModel::selectVault,
+        onSelectFolder = viewModel::selectFolder,
         onCreateNewVault = viewModel::addVault,
         onImportVaultClick = viewModel::importVault,
         onShareVaultQr = viewModel::shareVaultQr,
@@ -73,7 +73,8 @@ private fun HomeScreen(
     onEdit: () -> Unit = {},
     isEditMode: Boolean,
     onToggleVaults: () -> Unit = {},
-    onSelectVaultListEntity: (vaultListEntity: VaultListEntity) -> Unit = {},
+    onSelectVault: (vaultId: String) -> Unit = {},
+    onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
     onShareVaultQr: () -> Unit = {},
@@ -183,7 +184,8 @@ private fun HomeScreen(
                 exit = slideOutVertically(targetOffsetY = { height -> -height })
             ) {
                 VaultListScreen(
-                    onSelect = onSelectVaultListEntity,
+                    onSelectVault = onSelectVault,
+                    onSelectFolder = onSelectFolder,
                     onCreateNewVault = onCreateNewVault,
                     onImportVaultClick = onImportVaultClick,
                     isRearrangeMode = state.isVaultRearrangeMode,

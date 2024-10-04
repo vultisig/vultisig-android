@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.repositories.order
 
-import com.vultisig.wallet.data.db.BaseOrderDao
+import com.vultisig.wallet.data.db.dao.BaseOrderDao
 import com.vultisig.wallet.data.db.models.BaseOrderEntity
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
