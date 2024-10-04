@@ -12,6 +12,10 @@ import javax.inject.Inject
 
 interface FeatureFlagApi {
     suspend fun isFeatureEnabled(feature: String): Boolean
+
+    companion object {
+        const val FEATURE_ENCRYPT_GCM = "encrypt-gcm"
+    }
 }
 
 internal class FeatureFlagApiImpl @Inject constructor(
