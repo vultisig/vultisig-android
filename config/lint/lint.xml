@@ -15,7 +15,7 @@
     <issue id="InvalidPackage" severity="warning" />
     <issue id="KotlinPropertyAccess" severity="warning" />
     <issue id="ModifierParameter" severity="warning" />
-    <issue id="NewerVersionAvailable" severity="error" />
+    <issue id="NewerVersionAvailable" severity="warning" />
     <issue id="ObsoleteSdkInt" severity="warning" />
     <issue id="OldTargetApi" severity="warning" />
     <issue id="Overdraw" severity="warning" />
