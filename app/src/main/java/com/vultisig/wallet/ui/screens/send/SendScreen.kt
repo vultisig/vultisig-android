@@ -40,6 +40,9 @@ internal fun SendScreen(
 ) {
     val context = LocalContext.current
 
+    val keysignShareViewModel: KeysignShareViewModel =
+        hiltViewModel(context as MainActivity)
+
     val sendNav = rememberNavController()
 
     LaunchedEffect(Unit) {
@@ -83,7 +86,7 @@ internal fun SendScreen(
         endIcon = qr?.let { R.drawable.qr_share },
         onEndIconClick = qr?.let {
             {
-                viewModel.shareQRCode(context)
+                keysignShareViewModel.shareQRCode(context)
             }
         } ?: {},
         onStartIconClick = { viewModel.navigateToHome(useMainNavigator) },
@@ -124,9 +127,6 @@ internal fun SendScreen(
             ) { entry ->
                 val transactionId = entry.arguments
                     ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-
-                val keysignShareViewModel: KeysignShareViewModel =
-                    hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadTransaction(transactionId)
 
                 KeysignFlowView(

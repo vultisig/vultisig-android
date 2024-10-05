@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens
 
 import android.content.res.Configuration
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -19,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +37,7 @@ import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.models.keygen.components.DeviceInfo
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.utils.extractBitmap
 
 @Composable
 internal fun PeerDiscoveryView(
@@ -40,11 +45,12 @@ internal fun PeerDiscoveryView(
     hasNetworkPrompt: Boolean,
     selectionState: List<String>,
     participants: List<String>,
-    keygenPayloadState: String,
+    bitmapPainter: BitmapPainter?,
     networkPromptOption: NetworkPromptOption,
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
+    extractBitmap: (Bitmap) -> Unit = {},
 ) {
     val textColor = Theme.colors.neutral0
     val configuration = LocalConfiguration.current
@@ -53,13 +59,14 @@ internal fun PeerDiscoveryView(
             HorizontalView(
                 modifier,
                 textColor,
-                keygenPayloadState,
+                bitmapPainter,
                 networkPromptOption,
                 onChangeNetwork,
                 participants,
                 selectionState,
                 onAddParticipant,
-                onRemoveParticipant
+                onRemoveParticipant,
+                extractBitmap
             )
         }
 
@@ -67,14 +74,15 @@ internal fun PeerDiscoveryView(
             VerticalView(
                 modifier = modifier,
                 textColor = textColor,
-                keygenPayloadState = keygenPayloadState,
+                bitmapPainter = bitmapPainter,
                 networkPromptOption = networkPromptOption,
                 hasNetworkPrompt = hasNetworkPrompt,
                 onChangeNetwork = onChangeNetwork,
                 participants = participants,
                 selectionState = selectionState,
                 onAddParticipant = onAddParticipant,
-                onRemoveParticipant = onRemoveParticipant
+                onRemoveParticipant = onRemoveParticipant,
+                extractBitmap = extractBitmap
             )
         }
     }
@@ -86,13 +94,14 @@ internal fun PeerDiscoveryView(
 private fun HorizontalView(
     modifier: Modifier,
     textColor: Color,
-    keygenPayloadState: String,
+    bitmapPainter: BitmapPainter?,
     networkPromptOption: NetworkPromptOption,
     onChangeNetwork: (NetworkPromptOption) -> Unit,
     participants: List<String>,
     selectionState: List<String>,
     onAddParticipant: (String) -> Unit,
-    onRemoveParticipant: (String) -> Unit
+    onRemoveParticipant: (String) -> Unit,
+    extractBitmap: (Bitmap) -> Unit,
 ) {
     Row(
         modifier.padding(16.dp)
@@ -103,21 +112,20 @@ private fun HorizontalView(
                 color = textColor,
                 style = Theme.montserrat.subtitle1
             )
-
-            if (keygenPayloadState.isNotEmpty()) {
-                QRCodeKeyGenImage(
-                    keygenPayloadState,
-                    modifier = Modifier
-                        .padding(
-                            top = 32.dp,
-                            start = 32.dp,
-                            end = 32.dp,
-                            bottom = 20.dp
-                        )
-                        .aspectRatio(1f),
-                )
-
-            }
+            QRCodeKeyGenImage(
+                bitmapPainter = bitmapPainter,
+                modifier = Modifier
+                    .padding(
+                        top = 32.dp,
+                        start = 32.dp,
+                        end = 32.dp,
+                        bottom = 20.dp
+                    )
+                    .aspectRatio(1f)
+                    .extractBitmap {
+                        extractBitmap(it)
+                    }
+            )
         }
 
         Column(
@@ -188,14 +196,15 @@ private fun HorizontalView(
 private fun VerticalView(
     modifier: Modifier,
     textColor: Color,
-    keygenPayloadState: String,
+    bitmapPainter: BitmapPainter?,
     networkPromptOption: NetworkPromptOption,
     hasNetworkPrompt: Boolean,
     onChangeNetwork: (NetworkPromptOption) -> Unit,
     participants: List<String>,
     selectionState: List<String>,
     onAddParticipant: (String) -> Unit,
-    onRemoveParticipant: (String) -> Unit
+    onRemoveParticipant: (String) -> Unit,
+    extractBitmap: (Bitmap) -> Unit
 ) {
     Column(
         modifier.verticalScroll(rememberScrollState()),
@@ -208,18 +217,18 @@ private fun VerticalView(
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
-
-        if (keygenPayloadState.isNotEmpty()) {
-            QRCodeKeyGenImage(
-                keygenPayloadState,
-                modifier = Modifier
-                    .padding(
-                        vertical = 24.dp,
-                        horizontal = 32.dp,
-                    )
-                    .fillMaxWidth(),
-            )
-        }
+        QRCodeKeyGenImage(
+            bitmapPainter = bitmapPainter,
+            modifier = Modifier
+                .padding(
+                    vertical = 24.dp,
+                    horizontal = 32.dp,
+                )
+                .fillMaxWidth()
+                .extractBitmap {
+                    extractBitmap(it)
+                }
+        )
 
         if (participants.isNotEmpty()) {
             FlowRow(
@@ -291,7 +300,10 @@ private fun PeerDiscoveryPreview() {
     PeerDiscoveryView(
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
-        keygenPayloadState = "keygen payload",
+        bitmapPainter = BitmapPainter(
+            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
+            filterQuality = FilterQuality.None
+        ),
         networkPromptOption = NetworkPromptOption.LOCAL,
         hasNetworkPrompt = true,
         modifier = Modifier,

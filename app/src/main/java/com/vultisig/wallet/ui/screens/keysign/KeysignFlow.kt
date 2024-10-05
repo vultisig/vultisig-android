@@ -31,8 +31,6 @@ fun KeysignFlowView(
     when (viewModel.currentState.collectAsState().value) {
         KeysignFlowState.PEER_DISCOVERY -> {
             KeysignPeerDiscovery(
-                sharedViewModel.vault!!,
-                sharedViewModel.keysignPayload!!,
                 viewModel
             )
         }
