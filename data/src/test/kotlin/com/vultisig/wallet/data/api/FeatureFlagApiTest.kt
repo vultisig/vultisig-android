@@ -33,7 +33,7 @@ class FeatureFlagApiTest {
         }
 
         val featureFlagApi = FeatureFlagApiImpl(httpClient)
-        val isEnabled = featureFlagApi.isFeatureEnabled("encrypt-gcm")
-        assertEquals(true, isEnabled)
+        val featureFlagJson = featureFlagApi.getFeatureFlag()
+        assertEquals(true, featureFlagJson.isEncryptGcmEnabled)
     }
 }
