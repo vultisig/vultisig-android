@@ -16,7 +16,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,9 +29,14 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormCard
+import com.vultisig.wallet.ui.components.library.form.FormDetails
+import com.vultisig.wallet.ui.models.TransactionUiModel
+import com.vultisig.wallet.ui.screens.send.AddressField
+import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -36,7 +44,8 @@ internal fun TransactionDoneScreen(
     navController: NavController,
     transactionHash: String,
     transactionLink: String,
-    isThorChainSwap: Boolean
+    isThorChainSwap: Boolean,
+    transaction: TransactionUiModel?,
 ) {
     UiBarContainer(
         navController = navController,
@@ -46,7 +55,8 @@ internal fun TransactionDoneScreen(
             transactionHash = transactionHash,
             transactionLink = transactionLink,
             onComplete = navController::popBackStack,
-            isThorChainSwap = isThorChainSwap
+            isThorChainSwap = isThorChainSwap,
+            transaction = transaction
         )
     }
 }
@@ -56,11 +66,12 @@ internal fun TransactionDoneView(
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
-    isThorChainSwap : Boolean = false,
+    isThorChainSwap: Boolean = false,
     onBack: () -> Unit = {},
+    transaction: TransactionUiModel?,
 ) {
     val uriHandler = LocalUriHandler.current
-    val context= LocalContext.current
+    val context = LocalContext.current
     BackHandler(onBack = onBack)
     Column(
         modifier = Modifier
@@ -130,11 +141,77 @@ internal fun TransactionDoneView(
                             lineHeight = 22.sp
                         ),
 
+                        )
+                }
+                if (transaction != null) {
+
+                    UiSpacer(size = 12.dp)
+                    UiHorizontalDivider()
+
+                    AddressField(
+                        title = stringResource(R.string.verify_transaction_to_title),
+                        address = transaction.dstAddress
                     )
+
+                    if (!transaction.memo.isNullOrEmpty())
+                        OtherField(
+                            title = stringResource(R.string.verify_transaction_memo_title),
+                            value = transaction.memo
+                        )
+
+                    OtherField(
+                        title = stringResource(R.string.verify_transaction_amount_title),
+                        value = transaction.tokenValue,
+                    )
+
+                    OtherField(
+                        title = stringResource(R.string.verify_transaction_value),
+                        value = transaction.fiatValue,
+                    )
+
+                    FormDetails(modifier = Modifier
+                        .padding(
+                            vertical = 12.dp,
+                        )
+                        .fillMaxWidth(),
+                        title = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = 14.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+
+                                    )
+                            ) {
+                                append(stringResource(R.string.verify_transaction_network_fee))
+                            }
+                        },
+                        value = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = 14.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                )
+                            ) {
+                                append(transaction.totalGas)
+                            }
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral400,
+                                    fontSize = 14.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                )
+                            ) {
+                                append(" (~${transaction.estimatedFee})")
+                            }
+                        })
                 }
             }
         }
-
         UiSpacer(weight = 1f)
 
         MultiColorButton(
@@ -155,6 +232,17 @@ private fun TransactionDoneScreenPreview() {
         navController = rememberNavController(),
         transactionHash = "0x1234567890",
         transactionLink = "",
-        isThorChainSwap = true
+        isThorChainSwap = true,
+        transaction = TransactionUiModel(
+            srcAddress = "0x1234567890",
+            dstAddress = "0x1234567890",
+            tokenValue = "1.1",
+            fiatValue = "1.1",
+            fiatCurrency = "USD",
+            gasFeeValue = "1.1",
+            memo = "some memo",
+            estimatedFee = "0.75 USd",
+            totalGas = "0.00031361"
+        )
     )
 }

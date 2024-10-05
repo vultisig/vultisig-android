@@ -7,13 +7,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
 import android.os.Build
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -132,6 +130,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         mutableStateOf(NetworkPromptOption.INTERNET)
 
     val password = savedStateHandle.get<String?>(SendDst.ARG_PASSWORD)
+    val transactionId = savedStateHandle.get<String>(SendDst.ARG_TRANSACTION_ID)
 
     val isFastSign: Boolean
         get() = password != null
@@ -161,6 +160,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
             navigator = navigator,
+            transactionId = transactionId
         )
 
     init {

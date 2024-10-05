@@ -164,7 +164,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private var isNavigateToHome: Boolean = false
 
-    val keysignPayload: KeysignPayload?
+    private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -186,6 +186,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
             navigator = navigator,
+            transactionId = null,
         )
 
     val verifyUiModel =
@@ -220,7 +221,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 Timber.d("Mapped proto to KeysignMessage: $payload")
 
                 if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-                    val matchingVault = vaultRepository.getAll().firstOrNull() {
+                    val matchingVault = vaultRepository.getAll().firstOrNull {
                         it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
                     }
                     matchingVault?.let {
@@ -404,7 +405,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     )
 
                     val gasFee = gasFeeRepository.getGasFee(chain, address)
-                    var totalGasAndFee = gasFeeToEstimatedFee(
+                    val totalGasAndFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = if (chain.standard == TokenStandard.EVM) {
                                 (payload.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit

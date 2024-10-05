@@ -79,8 +79,8 @@ internal class KeysignViewModel(
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
-
-    ) : ViewModel() {
+    val transactionId: String?,
+) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private val tssMessenger: TssMessenger =
         TssMessenger(serverAddress, sessionId, encryptionKeyHex, sessionApi, viewModelScope)
