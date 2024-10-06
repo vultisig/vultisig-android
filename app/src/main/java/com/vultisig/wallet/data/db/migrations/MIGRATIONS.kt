@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.db.migrations
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.vultisig.wallet.data.models.Chain
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -230,6 +231,17 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
 val MIGRATION_13_14=object :Migration(13,14){
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coin_vaultId` ON `coin` (`vaultId`)")
+    }
+}
+val MIGRATION_14_15=object :Migration(14,15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            UPDATE coin SET  ticker="ETH"  and logo="eth"  and contractAddress  = "
+                "0x2170ed0880ac9a755fd29b2688956bd959f933f8"
+            WHERE ticker = "WETH" and chain = "${Chain.BscChain}"
+        """.trimIndent()
+        )
     }
 }
 

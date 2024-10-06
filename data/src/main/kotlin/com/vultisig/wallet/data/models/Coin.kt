@@ -560,8 +560,8 @@ object Coins {
         ),
         Coin(
             chain = Chain.BscChain,
-            ticker = "WETH",
-            logo = "weth",
+            ticker = "ETH",
+            logo = "eth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
