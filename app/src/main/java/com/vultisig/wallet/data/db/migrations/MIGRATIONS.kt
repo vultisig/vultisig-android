@@ -237,7 +237,7 @@ val MIGRATION_14_15=object :Migration(14,15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
-            UPDATE coin SET  ticker="ETH"  and logo="eth"  and contractAddress  = "
+            UPDATE coin SET  ticker="ETH"  and logo="eth"  and contractAddress  = 
                 "0x2170ed0880ac9a755fd29b2688956bd959f933f8"
             WHERE ticker = "WETH" and chain = "${Chain.BscChain}"
         """.trimIndent()
