@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.deposit
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.DepositMemo
+import com.vultisig.wallet.data.models.DepositMemo.Bond
+import com.vultisig.wallet.data.models.DepositMemo.Unbond
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -16,6 +19,9 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.utils.TextFieldUtils
+import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.ui.models.deposit.DepositChain.Maya
+import com.vultisig.wallet.ui.models.deposit.DepositChain.Thor
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -29,6 +35,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
 
@@ -41,11 +48,24 @@ internal enum class DepositOption {
     Custom,
 }
 
+internal enum class DepositChain {
+    Maya, Thor;
+
+    companion object {
+        fun from(chain: Chain) = when (chain) {
+            Chain.MayaChain -> Maya
+            Chain.ThorChain -> Thor
+            else -> error("chain is invalid")
+        }
+    }
+}
+
 @Immutable
 internal data class DepositFormUiModel(
     val depositMessage: UiText = UiText.Empty,
     val depositOption: DepositOption = DepositOption.Bond,
     val depositOptions: List<DepositOption> = emptyList(),
+    val depositChain: DepositChain? = null,
     val errorText: UiText? = null,
     val tokenAmountError: UiText? = null,
     val nodeAddressError: UiText? = null,
@@ -53,6 +73,8 @@ internal data class DepositFormUiModel(
     val operatorFeeError: UiText? = null,
     val customMemoError: UiText? = null,
     val basisPointsError: UiText? = null,
+    val assetsError: UiText? = null,
+    val lpUnitsError: UiText? = null,
 )
 
 @HiltViewModel
@@ -65,6 +87,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -76,6 +99,8 @@ internal class DepositFormViewModel @Inject constructor(
     val operatorFeeFieldState = TextFieldState()
     val customMemoFieldState = TextFieldState()
     val basisPointsFieldState = TextFieldState()
+    val lpUnitsFieldState = TextFieldState()
+    val assetsFieldState = TextFieldState()
 
     val state = MutableStateFlow(DepositFormUiModel())
 
@@ -98,14 +123,27 @@ internal class DepositFormViewModel @Inject constructor(
             it.copy(
                 depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw),
                 depositOptions = depositOptions,
+                depositChain = DepositChain.from(chain)
             )
         }
     }
 
     fun selectDepositOption(option: DepositOption) {
+        resetTextFields()
         state.update {
             it.copy(depositOption = option)
         }
+    }
+
+    private fun resetTextFields() {
+        tokenAmountFieldState.clearText()
+        nodeAddressFieldState.clearText()
+        providerFieldState.clearText()
+        operatorFeeFieldState.clearText()
+        customMemoFieldState.clearText()
+        basisPointsFieldState.clearText()
+        lpUnitsFieldState.clearText()
+        assetsFieldState.clearText()
     }
 
     fun validateNodeAddress() {
@@ -208,6 +246,8 @@ internal class DepositFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
+        val depositChain = state.value.depositChain
+
         val nodeAddress = nodeAddressFieldState.text.toString()
 
         if (nodeAddress.isBlank() ||
@@ -222,9 +262,25 @@ internal class DepositFormViewModel @Inject constructor(
             .toString()
             .toBigDecimalOrNull()
 
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+        if (depositChain == Thor && (tokenAmount == null || tokenAmount <= BigDecimal.ZERO)) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val assets = assetsFieldState.text.toString()
+
+        if (depositChain == Maya && !isAssetsValid(assets)) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_assets)
+            )
+        }
+
+        val lpUnits = lpUnitsFieldState.text.toString()
+
+        if (depositChain == Maya && !isLpUnitsValid(lpUnits)) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_lpunits)
             )
         }
 
@@ -239,11 +295,11 @@ internal class DepositFormViewModel @Inject constructor(
 
         val tokenAmountInt =
             tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
+                ?.movePointRight(selectedToken.decimal)
+                ?.toBigInteger() ?: BigInteger.ONE
 
         val operatorFeeValue = operatorFeeAmount
-            ?.movePointRight(2)
+            ?.movePointRight(if (depositChain == Thor) 2 else 0)
             ?.toInt()
 
         val srcAddress = selectedToken.address
@@ -253,11 +309,29 @@ internal class DepositFormViewModel @Inject constructor(
         val providerText = providerFieldState.text.toString()
         val provider = providerText.ifBlank { null }
 
-        val memo = DepositMemo.Bond(
-            nodeAddress = nodeAddress,
-            providerAddress = provider,
-            operatorFee = operatorFeeValue,
-        )
+        if (!isAssetsAndLpUnitsValid(assets, lpUnits)) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_assets_and_lpunits)
+            )
+        }
+
+        val memo = when (depositChain) {
+            Maya -> Bond.Maya(
+                nodeAddress = nodeAddress,
+                providerAddress = provider,
+                lpUnits = lpUnits.toIntOrNull(),
+                assets = assets,
+                operatorFee = operatorFeeValue
+            )
+
+            Thor -> Bond.Thor(
+                nodeAddress = nodeAddress,
+                providerAddress = provider,
+                operatorFee = operatorFeeValue,
+            )
+
+            else -> error("chain is invalid")
+        }
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -294,6 +368,8 @@ internal class DepositFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
+        val depositChain = state.value.depositChain
+
         val nodeAddress = nodeAddressFieldState.text.toString()
 
         if (nodeAddress.isBlank() ||
@@ -304,11 +380,14 @@ internal class DepositFormViewModel @Inject constructor(
             )
         }
 
+        val assets = assetsFieldState.text.toString()
+        val lpUnits = lpUnitsFieldState.text.toString()
+
         val tokenAmount = tokenAmountFieldState.text
             .toString()
             .toBigDecimalOrNull()
 
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+        if (depositChain == Thor && (tokenAmount == null || tokenAmount <= BigDecimal.ZERO)) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)
             )
@@ -321,8 +400,8 @@ internal class DepositFormViewModel @Inject constructor(
 
         val tokenAmountInt =
             tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
+                ?.movePointRight(selectedToken.decimal)
+                ?.toBigInteger() ?: BigInteger.ONE
 
         val srcAddress = selectedToken.address
 
@@ -331,14 +410,31 @@ internal class DepositFormViewModel @Inject constructor(
         val providerText = providerFieldState.text.toString()
         val provider = providerText.ifBlank { null }
 
-        val memo = DepositMemo.Unbond(
-            nodeAddress = nodeAddress,
-            srcTokenValue = TokenValue(
-                value = tokenAmountInt,
-                token = selectedToken,
-            ),
-            providerAddress = provider,
-        )
+        if (!isAssetsAndLpUnitsValid(assets, lpUnits)) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_assets_and_lpunits)
+            )
+        }
+
+        val memo = when (state.value.depositChain) {
+            Maya -> Unbond.Maya(
+                nodeAddress = nodeAddress,
+                providerAddress = provider,
+                assets = assets,
+                lpUnits = lpUnits.toIntOrNull(),
+            )
+
+            Thor -> Unbond.Thor(
+                nodeAddress = nodeAddress,
+                srcTokenValue = TokenValue(
+                    value = tokenAmountInt,
+                    token = selectedToken,
+                ),
+                providerAddress = provider,
+            )
+
+            null -> error("chain is invalid")
+        }
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -639,6 +735,42 @@ internal class DepositFormViewModel @Inject constructor(
         }
         return null
     }
+
+    fun validateAssets() {
+        val assets = assetsFieldState.text.toString()
+        state.update {
+            it.copy(
+                assetsError = if (!isAssetsValid(assets))
+                    UiText.StringResource(R.string.deposit_error_invalid_assets)
+                else null
+            )
+        }
+    }
+
+    fun validateLpUnits() {
+        val lpUnits = lpUnitsFieldState.text.toString()
+        state.update {
+            it.copy(
+                lpUnitsError = if (!isLpUnitsValid(lpUnits))
+                    UiText.StringResource(R.string.deposit_error_invalid_lpunits)
+                else null
+            )
+        }
+    }
+
+    private fun isAssetsAndLpUnitsValid(assets: String, lpUnits: String): Boolean =
+        assets.isBlank() && lpUnits.isBlank() ||
+                isAssetCharsValid(assets) && isLpUnitCharsValid(lpUnits)
+
+    private fun isLpUnitsValid(lpUnits: String) = lpUnits.isBlank() || isLpUnitCharsValid(lpUnits)
+
+    private fun isAssetsValid(assets: String) = assets.isBlank() || isAssetCharsValid(assets)
+
+    private fun isLpUnitCharsValid(lpUnits: String) =
+        lpUnits.toIntOrNull() != null &&
+                lpUnits.all { it.isDigit() } &&
+                lpUnits.toInt() > 0
+
 
 }
 
