@@ -1,5 +1,6 @@
 [versions]
 compileSdk = "34"
+ktorClientMock = "2.0.0"
 minSdk = "26"
 
 accompanistPermissions = "0.34.0"
@@ -44,7 +45,6 @@ protobuf = "0.9.4"
 rive = "8.7.0"
 update = "2.1.0"
 review = "2.0.1"
-material = "1.10.0"
 hiltWork = "1.2.0"
 hiltCompiler = "1.2.0"
 
@@ -97,6 +97,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorClientMock" }
 lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelComposeVersion" }
 mlkit-barcode = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
