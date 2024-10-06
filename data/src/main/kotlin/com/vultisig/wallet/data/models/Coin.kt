@@ -566,7 +566,7 @@ object Coins {
             decimal = 18,
             hexPublicKey = "",
             priceProviderID = "",
-            contractAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            contractAddress = "0x4db5a66e937a9f4473fa95b1caf1d1e1d62e29ea",
             isNativeToken = false,
         ),
         Coin(
