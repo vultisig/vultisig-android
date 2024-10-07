@@ -199,6 +199,7 @@ internal fun ScanQrScreen(
                         content = {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 UiIcon(
                                     modifier = Modifier

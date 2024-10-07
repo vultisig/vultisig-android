@@ -81,8 +81,10 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.apache.compress)
     implementation(libs.apache.compress.xz)
+    implementation(libs.core.zxing)
 
     // test
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     androidTestImplementation(libs.junit)

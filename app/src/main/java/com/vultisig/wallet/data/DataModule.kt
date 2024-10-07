@@ -7,6 +7,7 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.utils.BigDecimalSerializer
 import com.vultisig.wallet.data.utils.BigIntegerSerializer
+import com.vultisig.wallet.data.utils.KeysignResponseSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -80,6 +81,7 @@ internal interface DataModule {
         fun provideSerializersModule(
             bigDecimalSerializer: BigDecimalSerializer,
             bigIntegerSerializer: BigIntegerSerializer,
+            keysignResponseSerializer: KeysignResponseSerializer,
         ) = SerializersModule {
             contextual(
                 BigDecimal::class,
@@ -88,6 +90,10 @@ internal interface DataModule {
             contextual(
                 BigInteger::class,
                 bigIntegerSerializer
+            )
+            contextual(
+                tss.KeysignResponse::class,
+                keysignResponseSerializer
             )
         }
 
@@ -98,6 +104,10 @@ internal interface DataModule {
         @Provides
         @Singleton
         fun provideBigIntegerSerializer() = BigIntegerSerializer
+
+        @Provides
+        @Singleton
+        fun provideKeysignResponseSerializer() = KeysignResponseSerializer
 
         @Singleton
         @Provides

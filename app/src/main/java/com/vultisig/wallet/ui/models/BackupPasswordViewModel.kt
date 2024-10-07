@@ -4,8 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,7 +13,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
@@ -37,8 +35,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
 import javax.inject.Inject
 
 internal data class BackupPasswordState(
@@ -51,7 +47,6 @@ internal data class BackupPasswordState(
 )
 
 @HiltViewModel
-@OptIn(ExperimentalFoundationApi::class)
 internal class BackupPasswordViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
