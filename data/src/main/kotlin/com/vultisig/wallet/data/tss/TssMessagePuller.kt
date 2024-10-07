@@ -56,11 +56,13 @@ class TssMessagePuller(
                 }
                 cache.put(key, msg)
                 val decryptedBody = if (isEncryptionGCM) {
+                    Timber.d("decrypting message with AES+GCM")
                     encryption.decrypt(
                         Base64.decode(msg.body, Base64.DEFAULT),
                         Numeric.hexStringToByteArray(hexEncryptionKey)
                     )
                 } else {
+                    Timber.d("decrypting message with AES+CBC")
                     msg.body.decrypt(hexEncryptionKey).toByteArray(Charsets.UTF_8)
                 }
                 if (decryptedBody == null) {

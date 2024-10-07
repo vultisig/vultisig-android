@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
@@ -79,6 +80,9 @@ import vultisig.keysign.v1.UtxoInfo
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
+import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+
 
 enum class KeysignFlowState {
     PEER_DISCOVERY, KEYSIGN, ERROR,

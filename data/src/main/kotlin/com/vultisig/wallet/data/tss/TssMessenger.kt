@@ -32,9 +32,11 @@ class TssMessenger(
     override fun send(from: String, to: String, body: String) {
         var encryptedBody: ByteArray
         if (isEncryptionGCM) {
+            Timber.d("encrypting message with AES+GCM")
             encryptedBody =
                 encryption.encrypt(body.toByteArray(), Numeric.hexStringToByteArray(encryptionHex))
         } else {
+            Timber.d("encrypting message with AES+CBC")
             encryptedBody = body.encryptNoEncode(encryptionHex)
         }
         val message = Message(

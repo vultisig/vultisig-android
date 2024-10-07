@@ -64,7 +64,8 @@ import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
-
+import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
+import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 enum class KeygenFlowState {
     PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
 }
