@@ -14,6 +14,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 
+private const val DEFAULT_WIDTH = 500f
 
 enum class ShareType {
     SEND, SWAP, KEYGEN, RESHARE, TOKENADDRESS
@@ -24,7 +25,11 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
         val cachePath = File(cacheDir, "images")
         cachePath.mkdirs()
         FileOutputStream("$cachePath/${fileName}").use { stream ->
-            val resizedBitmap = bitmap.getResizedBitmap(500f, 500f)
+            val resizedBitmap = if (bitmap.width < DEFAULT_WIDTH) {
+                val scaleFactor = DEFAULT_WIDTH / bitmap.width
+                bitmap.getResizedBitmap(DEFAULT_WIDTH, bitmap.height * scaleFactor)
+            } else bitmap
+
             resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         }
         val imagePath = File(cacheDir, "images")

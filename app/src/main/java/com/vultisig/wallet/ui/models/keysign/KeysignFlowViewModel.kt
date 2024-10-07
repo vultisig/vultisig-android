@@ -9,6 +9,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
@@ -27,7 +29,6 @@ import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.data.common.VultisigRelay
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TssKeyType
@@ -37,9 +38,6 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.models.proto.v1.CoinProto
-import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
-import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
@@ -87,8 +85,7 @@ enum class KeysignFlowState {
 
 @HiltViewModel
 internal class KeysignFlowViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
-    private val vultisigRelay: VultisigRelay,
+    savedStateHandle: SavedStateHandle,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
@@ -99,7 +96,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val polkadotApi: PolkadotApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
-    @ApplicationContext  private val context: Context,
+    @ApplicationContext private val context: Context,
     private val compressQr: CompressQrUseCase,
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
@@ -124,18 +121,21 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = _currentVault?.localPartyID
     val keysignMessage: MutableState<String>
         get() = _keysignMessage
+
     val participants: MutableLiveData<List<String>>
         get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
 
-    val networkOption: MutableState<NetworkPromptOption> = mutableStateOf(NetworkPromptOption.LOCAL)
+    val networkOption: MutableState<NetworkPromptOption> =
+        mutableStateOf(NetworkPromptOption.INTERNET)
 
     val password = savedStateHandle.get<String?>(SendDst.ARG_PASSWORD)
 
     val isFastSign: Boolean
         get() = password != null
 
-    private val isRelayEnabled: Boolean
-        get() = vultisigRelay.isRelayEnabled || isFastSign
+    private val isRelayEnabled by derivedStateOf {
+        networkOption.value == NetworkPromptOption.INTERNET || isFastSign
+    }
 
 
     val keysignViewModel: KeysignViewModel
@@ -179,10 +179,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             vault = _currentVault!!,
         )
         this.selection.value = listOf(vault.localPartyID)
-        if (isRelayEnabled) {
-            _serverAddress = Endpoints.VULTISIG_RELAY
-            networkOption.value = NetworkPromptOption.INTERNET
-        }
+        _serverAddress = Endpoints.VULTISIG_RELAY
         updateKeysignPayload(context)
     }
 
@@ -407,7 +404,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         filter.addAction(MediatorService.SERVICE_ACTION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
-        }else{
+        } else {
             //Todo Handle older Android versions if needed
             context.registerReceiver(serviceStartedReceiver, filter)
         }
@@ -476,24 +473,21 @@ internal class KeysignFlowViewModel @Inject constructor(
         _participantDiscovery?.stop()
     }
 
-    private fun cleanQrAddress(){
+    private fun cleanQrAddress() {
         addressProvider.clean()
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (networkOption.value == option) return
-        when (option) {
+        networkOption.value = option
+        _serverAddress = when (option) {
             NetworkPromptOption.LOCAL -> {
-                vultisigRelay.isRelayEnabled = false
-                _serverAddress = "http://127.0.0.1:18080"
-                networkOption.value = option
+                "http://127.0.0.1:18080"
             }
 
             NetworkPromptOption.INTERNET -> {
-                vultisigRelay.isRelayEnabled = true
-                _serverAddress = Endpoints.VULTISIG_RELAY
-                networkOption.value = option
+                Endpoints.VULTISIG_RELAY
             }
         }
 
@@ -537,5 +531,4 @@ internal class KeysignFlowViewModel @Inject constructor(
             navigator.navigate(Destination.Back)
         }
     }
-
 }

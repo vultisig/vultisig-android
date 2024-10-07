@@ -33,4 +33,16 @@ internal interface DataUsecasesModule {
     fun bindIsVaultNameValid(
         impl: IsVaultNameValidImpl
     ): IsVaultNameValid
+
+    @Binds
+    @Singleton
+    fun bindMakeQrCodeBitmapShareFormat(
+        impl: MakeQrCodeBitmapShareFormatImpl,
+    ): MakeQrCodeBitmapShareFormat
+
+    @Binds
+    @Singleton
+    fun bindGenerateQrCodeBitmap(
+        impl: GenerateQrBitmapImpl,
+    ): GenerateQrBitmap
 }

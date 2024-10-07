@@ -28,13 +28,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.draw
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -53,6 +48,7 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.models.ShareVaultQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.WriteFilePermissionHandler
+import com.vultisig.wallet.ui.utils.extractBitmap
 
 
 @Composable
@@ -72,7 +68,7 @@ internal fun ShareVaultQrScreen(
     )
 
     LaunchedEffect(state.shareVaultQrString) {
-        viewModel.loadQrCode(
+        viewModel.loadQrCodePainter(
             mainColor = mainColor,
             backgroundColor = backgroundColor,
             logo = BitmapFactory.decodeResource(
@@ -169,28 +165,11 @@ internal fun ShareVaultQrScreen(
                 horizontal = 32.dp,
                 vertical = 4.dp
             )
-            .drawWithCache {
-                val width = this.size.width.toInt()
-                val height = this.size.height.toInt()
-                onDrawWithContent {
-                    val tempBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    val pictureCanvas = Canvas(android.graphics.Canvas(tempBitmap))
-                    draw(this, this.layoutDirection, pictureCanvas, this.size) {
-                        this@onDrawWithContent.drawContent()
-                    }
-                    drawIntoCanvas { canvas ->
-                        canvas.nativeCanvas.drawBitmap(
-                            tempBitmap,
-                            0f,
-                            0f,
-                            null
-                        )
-                    }
-                    if (qrBitmapPainter != null) {
-                        saveShareQrBitmap(tempBitmap)
-                    } else {
-                        tempBitmap.recycle()
-                    }
+            .extractBitmap { bitmap ->
+                if (qrBitmapPainter != null) {
+                    saveShareQrBitmap(bitmap)
+                } else {
+                    bitmap.recycle()
                 }
             }
 

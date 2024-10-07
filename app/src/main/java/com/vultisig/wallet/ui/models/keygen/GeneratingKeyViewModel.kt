@@ -176,11 +176,18 @@ internal class GeneratingKeyViewModel(
                 sessionApi.markLocalPartyComplete(serverAddress, sessionId, listOf(vault.localPartyID))
                 Timber.d("Local party ${vault.localPartyID} marked as complete")
                 var counter = 0
+                var isSuccess = false
                 while (counter < 60){
                     val serverCompletedParties = sessionApi.getCompletedParties(serverAddress, sessionId)
-                    if (!serverCompletedParties.containsAll(keygenCommittee)) break
+                    if (serverCompletedParties.containsAll(keygenCommittee)) {
+                        isSuccess = true
+                        break // this means all parties have completed the key generation process
+                    }
                     delay(1000)
                     counter++
+                }
+                if (isSuccess.not()) {
+                    throw Exception("Timeout waiting for all parties to complete the key generation process")
                 }
                 Timber.d("All parties have completed the key generation process")
 

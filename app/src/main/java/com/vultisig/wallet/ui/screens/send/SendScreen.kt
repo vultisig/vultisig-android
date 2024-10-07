@@ -15,13 +15,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
-import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
+import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
+import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
@@ -39,6 +39,9 @@ internal fun SendScreen(
     viewModel: SendViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+
+    val keysignShareViewModel: KeysignShareViewModel =
+        hiltViewModel(context as MainActivity)
 
     val sendNav = rememberNavController()
 
@@ -83,7 +86,7 @@ internal fun SendScreen(
         endIcon = qr?.let { R.drawable.qr_share },
         onEndIconClick = qr?.let {
             {
-                viewModel.shareQRCode(context)
+                keysignShareViewModel.shareQRCode(context)
             }
         } ?: {},
         onStartIconClick = { viewModel.navigateToHome(useMainNavigator) },
@@ -124,9 +127,6 @@ internal fun SendScreen(
             ) { entry ->
                 val transactionId = entry.arguments
                     ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-
-                val keysignShareViewModel: KeysignShareViewModel =
-                    hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadTransaction(transactionId)
 
                 KeysignFlowView(
