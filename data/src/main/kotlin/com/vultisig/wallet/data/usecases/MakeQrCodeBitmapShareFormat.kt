@@ -29,7 +29,11 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         val descLines = description?.split("\n")
         val scaledLogo = logo.scale(logoWidth, logoWidth)
         val textColor = Color.WHITE
-        logo.recycle()
+        if (!logo.isRecycled) {
+            logo.recycle()
+        }
+
+
 
         var finalHeight = height + 2 * padding
         finalHeight += (textSize * 2).toInt()
@@ -86,7 +90,9 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
             paint
         )
 
-        qrCodeBitmap.recycle()
+        if (!qrCodeBitmap.isRecycled) {
+            qrCodeBitmap.recycle()
+        }
         return bitmap
     }
 }

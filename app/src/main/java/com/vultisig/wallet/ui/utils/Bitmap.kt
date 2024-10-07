@@ -38,7 +38,10 @@ internal fun Bitmap.addWhiteBorder(borderSize: Float): Bitmap {
     val canvas = android.graphics.Canvas(bmpWithBorder)
     canvas.drawColor(Color.WHITE)
     canvas.drawBitmap(this, borderSize, borderSize, null)
-    this.recycle()
+    if (!this.isRecycled) {
+        this.recycle()
+    }
+
     return bmpWithBorder
 }
 

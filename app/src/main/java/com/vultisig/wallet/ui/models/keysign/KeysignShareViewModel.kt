@@ -204,7 +204,9 @@ internal class KeysignShareViewModel @Inject constructor(
         val qrBitmap = withContext(Dispatchers.IO) {
             makeQrCodeBitmapShareFormat(bitmap, color, logo, title, description)
         }
-        shareQrBitmap.value?.recycle()
+        if (shareQrBitmap.value != null && shareQrBitmap.value?.isRecycled != true) {
+            shareQrBitmap.value?.recycle()
+        }
         shareQrBitmap.value = qrBitmap
     }
 

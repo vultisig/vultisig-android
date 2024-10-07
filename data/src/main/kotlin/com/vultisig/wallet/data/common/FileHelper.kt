@@ -120,7 +120,10 @@ internal fun Context.saveBitmapToDownloadsDirAtLeastQ(bitmap: Bitmap, fileName: 
         resolver.openOutputStream(downloadUri).use { bitmapStream ->
             if (bitmapStream != null) {
                 bitmap.compressPng(bitmapStream)
-                bitmap.recycle()
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
+
                 downloadUri
             } else {
                 null
@@ -146,7 +149,9 @@ internal fun Context.saveBitmapToDownloadsDirLegacy(bitmap: Bitmap, fileName: St
             FileOutputStream(file).use {
                 bitmap.compressPng(it)
             }
-            bitmap.recycle()
+            if (!bitmap.isRecycled) {
+                bitmap.recycle()
+            }
             FileProvider.getUriForFile(
                 this, "$packageName.provider", file
             )

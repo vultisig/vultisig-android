@@ -169,7 +169,10 @@ internal fun ShareVaultQrScreen(
                 if (qrBitmapPainter != null) {
                     saveShareQrBitmap(bitmap)
                 } else {
-                    bitmap.recycle()
+                    if (!bitmap.isRecycled) {
+                        bitmap.recycle()
+                    }
+
                 }
             }
 

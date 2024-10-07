@@ -75,7 +75,9 @@ internal fun KeygenPeerDiscovery(
                     )
                 )
             } else {
-                bitmap.recycle()
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
             }
         },
         onStopParticipantDiscovery = {

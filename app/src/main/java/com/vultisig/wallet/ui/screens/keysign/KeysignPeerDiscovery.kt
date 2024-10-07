@@ -127,7 +127,9 @@ internal fun KeysignPeerDiscovery(
                     )
                 )
             } else {
-                bitmap.recycle()
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
             }
         }
     )

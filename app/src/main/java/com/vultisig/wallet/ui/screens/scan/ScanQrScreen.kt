@@ -134,7 +134,9 @@ internal fun ScanQrScreen(
                         .addWhiteBorder(2F)
                     val inputImage = InputImage.fromBitmap(bitmap, 0)
                     val resultBarcodes = scanImage(inputImage)
-                    bitmap.recycle()
+                    if (!bitmap.isRecycled) {
+                        bitmap.recycle()
+                    }
                     resultBarcodes
                 } else result
                 onSuccess(barcodes)
