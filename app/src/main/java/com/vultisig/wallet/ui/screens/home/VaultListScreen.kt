@@ -121,20 +121,7 @@ private fun VaultListScreen(
                         vertical = 12.dp,
                     ),
             ) {
-                if (isRearrangeMode) {
-                    MultiColorButton(
-                        text = stringResource(R.string.create_folder),
-                        backgroundColor = Theme.colors.oxfordBlue800,
-                        textColor = Theme.colors.turquoise800,
-                        iconColor = Theme.colors.oxfordBlue800,
-                        borderSize = 1.dp,
-                        textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = onCreateNewFolder,
-                    )
-
-                    UiSpacer(size = 12.dp)
-                } else {
+                if (!isRearrangeMode) {
                     MultiColorButton(
                         text = stringResource(R.string.home_screen_add_new_vault),
                         backgroundColor = Theme.colors.turquoise800,
@@ -157,6 +144,19 @@ private fun VaultListScreen(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = onImportVaultClick,
                     )
+                } else if (vaults.isNotEmpty()) {
+                    MultiColorButton(
+                        text = stringResource(R.string.create_folder),
+                        backgroundColor = Theme.colors.oxfordBlue800,
+                        textColor = Theme.colors.turquoise800,
+                        iconColor = Theme.colors.oxfordBlue800,
+                        borderSize = 1.dp,
+                        textStyle = Theme.montserrat.subtitle1,
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = onCreateNewFolder,
+                    )
+
+                    UiSpacer(size = 12.dp)
                 }
             }
         },

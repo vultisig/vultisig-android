@@ -49,6 +49,7 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
             val j = to.index - before
             onMoveT(i, j)
         })
+
     val stateR = rememberReorderableLazyListState(
         lazyListState = lazyListState,
         onMove = { from, to ->
@@ -61,6 +62,7 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
             val j = to.index - before
             onMoveR(i, j)
         })
+
     LazyColumn(
         verticalArrangement = verticalArrangement,
         state = lazyListState,

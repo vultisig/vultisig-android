@@ -29,7 +29,8 @@ internal data class CreateFolderState(
     val folderNames: List<String> = emptyList(),
     val vaults: Map<Vault, Boolean> = emptyMap(),
 ){
-    val isButtonEnabled: Boolean = errorText == null
+    val isButtonEnabled: Boolean =
+        errorText == null && vaults.any { it.value }
 }
 
 @HiltViewModel
