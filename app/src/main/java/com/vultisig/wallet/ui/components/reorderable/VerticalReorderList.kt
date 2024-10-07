@@ -44,17 +44,21 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
     val stateT = rememberReorderableLazyListState(
         lazyListState = lazyListState,
         onMove = { from, to ->
-            val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-            val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-
+            val before = beforeContents?.size?: 0
+            val i = from.index - before
+            val j = to.index - before
             onMoveT(i, j)
         })
     val stateR = rememberReorderableLazyListState(
         lazyListState = lazyListState,
         onMove = { from, to ->
-            val i = from.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-            val j = to.index + (beforeContents?.let { it.lastIndex - 1 } ?: 0)
-
+            val before =
+                if (dataT.isEmpty())
+                    midContents?.size?: 0
+                else
+                    (beforeContents?.size?: 0) + dataT.size + (midContents?.size?: 0)
+            val i = from.index - before
+            val j = to.index - before
             onMoveR(i, j)
         })
     LazyColumn(
@@ -75,16 +79,20 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
                 content = contentT,
             )
         }
-        midContents?.forEach { content ->
-            item(content = content)
+
+        if (dataT.isNotEmpty() && dataR.isNotEmpty()) {
+            midContents?.forEach { content ->
+                item(content = content)
+            }
+            reorderableList(
+                data = dataR,
+                key = keyR,
+                state = stateR,
+                isDraggingEnabled = isDraggingEnabled,
+                content = contentR,
+            )
         }
-        reorderableList(
-            data = dataR,
-            key = keyR,
-            state = stateR,
-            isDraggingEnabled = isDraggingEnabled,
-            content = contentR,
-        )
+
         afterContents?.forEach { content ->
             item(content = content)
         }

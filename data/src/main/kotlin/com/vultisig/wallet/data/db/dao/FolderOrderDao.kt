@@ -9,6 +9,6 @@ import kotlinx.coroutines.flow.Flow
 abstract class FolderOrderDao : BaseOrderDao<FolderOrderEntity>("folderOrder") {
     override fun loadOrders(parentId: String?): Flow<List<FolderOrderEntity>> = loadOrders()
 
-    @Query("SELECT * FROM vaultOrder ORDER BY `order` DESC")
+    @Query("SELECT * FROM folderOrder ORDER BY `order` DESC")
     abstract fun loadOrders(): Flow<List<FolderOrderEntity>>
 }

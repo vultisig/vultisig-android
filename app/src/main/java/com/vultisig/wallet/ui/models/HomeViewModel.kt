@@ -87,6 +87,12 @@ internal class HomeViewModel @Inject constructor(
         }
     }
 
+    fun addFolder() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.CreateFolder)
+        }
+    }
+
     fun importVault() {
         viewModelScope.launch {
             hideVaultList()

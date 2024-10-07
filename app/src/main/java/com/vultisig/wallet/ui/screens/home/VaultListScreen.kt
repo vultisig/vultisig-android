@@ -30,6 +30,7 @@ internal fun VaultListScreen(
     onSelectVault: (vaultId: String) -> Unit = {},
     onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
+    onCreateNewFolder: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
     viewModel: VaultListViewModel = hiltViewModel(),
     isRearrangeMode: Boolean,
@@ -46,7 +47,7 @@ internal fun VaultListScreen(
         onSelectFolder = onSelectFolder,
         onCreateNewVault = onCreateNewVault,
         onImportVaultClick = onImportVaultClick,
-        onCreateNewFolder = viewModel::onCreateNewFolder,
+        onCreateNewFolder = onCreateNewFolder,
     )
 }
 

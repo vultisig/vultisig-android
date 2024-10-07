@@ -45,6 +45,14 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
         deleteAllQuery(query)
     }
 
+    suspend fun updateList(parentId: String?, values: List<String>) {
+        val valuesStr = values.joinToString("','", "'", "'")
+        val query = SimpleSQLiteQuery(
+            "UPDATE $tableName SET `parentId` = '$parentId' WHERE `value` IN ($valuesStr)"
+        )
+        executeQuery(query)
+    }
+
     @Update
     abstract suspend fun update(value: T)
 
@@ -59,6 +67,9 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
 
     @RawQuery
     protected abstract suspend fun deleteAllQuery(query: SupportSQLiteQuery): Int
+
+    @RawQuery
+    protected abstract suspend fun executeQuery(query: SupportSQLiteQuery): Int
 
     private fun includeParentId(parentId: String?, hasAnd: Boolean) =
         if (parentId != null) (if (hasAnd) " AND " else " WHERE ") +

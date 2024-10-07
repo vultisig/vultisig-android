@@ -58,6 +58,7 @@ internal fun HomeScreen(
         onSelectVault = viewModel::selectVault,
         onSelectFolder = viewModel::selectFolder,
         onCreateNewVault = viewModel::addVault,
+        onCreateNewFolder = viewModel::addFolder,
         onImportVaultClick = viewModel::importVault,
         onShareVaultQr = viewModel::shareVaultQr,
         isEditMode = viewModel.isEditMode
@@ -76,6 +77,7 @@ private fun HomeScreen(
     onSelectVault: (vaultId: String) -> Unit = {},
     onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
+    onCreateNewFolder: () -> Unit = {},
     onImportVaultClick: () -> Unit = {},
     onShareVaultQr: () -> Unit = {},
 ) {
@@ -187,6 +189,7 @@ private fun HomeScreen(
                     onSelectVault = onSelectVault,
                     onSelectFolder = onSelectFolder,
                     onCreateNewVault = onCreateNewVault,
+                    onCreateNewFolder = onCreateNewFolder,
                     onImportVaultClick = onImportVaultClick,
                     isRearrangeMode = state.isVaultRearrangeMode,
                 )

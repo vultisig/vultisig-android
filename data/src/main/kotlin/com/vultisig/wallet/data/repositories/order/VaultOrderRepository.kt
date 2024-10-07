@@ -10,8 +10,8 @@ class VaultOrderRepository @Inject constructor(vaultOrderDao: VaultOrderDao) :
     override fun defaultOrder(parentId: String?): VaultOrderEntity
         = VaultOrderEntity(order = 0f)
 
-    override fun generateNewOrder(value: String, order: Float, parentId:String?): VaultOrderEntity =
-        VaultOrderEntity(value, order)
+    override fun generateNewOrder(value: String, order: Float, parentId: String?): VaultOrderEntity =
+        VaultOrderEntity(value, order, parentId)
 
     override fun VaultOrderEntity.generateUpdatedOrder(order: Float): VaultOrderEntity =
         copy(order = order)

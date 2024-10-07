@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.repositories.FolderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
+import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -25,43 +26,39 @@ internal data class VaultListUiModel(
 
 @HiltViewModel
 internal class VaultListViewModel @Inject constructor(
-    private val vaultRepository: VaultRepository,
     private val vaultOrderRepository: VaultOrderRepository,
     private val folderRepository: FolderRepository,
-    private val folderOrderRepository: FolderOrderRepository
+    private val folderOrderRepository: FolderOrderRepository,
+    private val getOrderedVaults: GetOrderedVaults,
 ) : ViewModel() {
     val state = MutableStateFlow(VaultListUiModel())
     private var reIndexJob: Job? = null
 
     init {
-        viewModelScope.launch {
-            vaultOrderRepository.loadOrders(null).map { orders ->
-                val addressAndOrderMap = mutableMapOf<Vault, Float>()
-                vaultRepository.getAll().forEach { eachVault ->
-                    addressAndOrderMap[eachVault] =
-                        orders.find { it.value == eachVault.id }?.order
-                            ?: vaultOrderRepository.insert(null,eachVault.id)
-                }
-                addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
-            }.collect { orderedVaults ->
-                state.update { it.copy(vaults = orderedVaults) }
-            }
+        collectFolders()
+        collectVaults()
+    }
+
+    private fun collectVaults() = viewModelScope.launch {
+        getOrderedVaults(null, false).collect { orderedVaults ->
+            state.update { it.copy(vaults = orderedVaults) }
         }
-        viewModelScope.launch {
+    }
+
+    private fun collectFolders() = viewModelScope.launch {
+        combine(
+            folderOrderRepository.loadOrders(null),
+            folderRepository.getAll()
+        ) { orders, folders ->
             val addressAndOrderMap = mutableMapOf<FolderEntity, Float>()
-            combine(
-                folderOrderRepository.loadOrders(null),
-                folderRepository.getAll()
-            ) { orders, folders ->
-                folders.forEach { eachFolder ->
-                    addressAndOrderMap[eachFolder] =
-                        orders.find { it.value == eachFolder.id.toString() }?.order
-                            ?: folderOrderRepository.insert(null,eachFolder.id.toString())
-                }
-                addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
-            }.collect { orderedFolders ->
-                state.update { it.copy(folders = orderedFolders) }
+            folders.forEach { eachFolder ->
+                addressAndOrderMap[eachFolder] =
+                    orders.find { it.value == eachFolder.id.toString() }?.order
+                        ?: folderOrderRepository.insert(null,eachFolder.id.toString())
             }
+            addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
+        }.collect { orderedFolders ->
+            state.update { it.copy(folders = orderedFolders) }
         }
     }
 
@@ -80,10 +77,7 @@ internal class VaultListViewModel @Inject constructor(
         }
     }
 
-    fun onMoveVaults(absoluteOldOrder: Int, absoluteNewOrder: Int) {
-        val foldersSize = state.value.folders.size
-        val oldOrder = absoluteOldOrder - (foldersSize + 1)
-        val newOrder = absoluteNewOrder - (foldersSize + 1)
+    fun onMoveVaults(oldOrder: Int, newOrder: Int) {
         val updatedPositionsList = state.value.vaults.toMutableList().apply {
             add(newOrder, removeAt(oldOrder))
         }
@@ -96,9 +90,5 @@ internal class VaultListViewModel @Inject constructor(
             val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id
             vaultOrderRepository.updateItemOrder(null,upperOrder, midOrder, lowerOrder)
         }
-    }
-
-    fun onCreateNewFolder() = viewModelScope.launch {
-        folderRepository.insertFolder("New Folder")
     }
 }

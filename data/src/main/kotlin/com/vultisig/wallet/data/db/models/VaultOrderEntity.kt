@@ -13,8 +13,7 @@ data class VaultOrderEntity(
 
     @ColumnInfo(name = "order")
     override val order: Float,
-) : BaseOrderEntity() {
 
-    @Ignore
+    @ColumnInfo(name = "parentId")
     override val parentId: String? = null
-}
+) : BaseOrderEntity()

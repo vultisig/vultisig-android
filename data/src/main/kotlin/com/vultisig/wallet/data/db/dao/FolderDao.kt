@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FolderDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertFolder(folder: FolderEntity)
+    suspend fun insertFolder(folder: FolderEntity) : Long
 
     @Query("SELECT * FROM vaultFolder")
     fun getAll(): Flow<List<FolderEntity>>

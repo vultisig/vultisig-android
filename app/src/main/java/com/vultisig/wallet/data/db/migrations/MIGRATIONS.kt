@@ -237,15 +237,6 @@ val MIGRATION_14_15 = object : Migration(14, 15){
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
-            CREATE TABLE IF NOT EXISTS `vaultFolderRecord` (
-                `vaultId` TEXT NOT NULL,
-                `folderId` INTEGER NOT NULL,
-                PRIMARY KEY(`vaultId`, `folderId`)
-            )
-            """.trimMargin()
-        )
-        db.execSQL(
-            """
             CREATE TABLE IF NOT EXISTS `vaultFolder` (
                 `id` INTEGER NOT NULL,
                 `name` TEXT NOT NULL,
@@ -258,6 +249,11 @@ val MIGRATION_14_15 = object : Migration(14, 15){
             CREATE TABLE IF NOT EXISTS `folderOrder` (
             `value` TEXT PRIMARY KEY NOT NULL,
             `order` REAL NOT NULL)
+            """.trimMargin()
+        )
+        db.execSQL(
+            """
+            ALTER TABLE `vaultOrder` ADD COLUMN `parentId` TEXT
             """.trimMargin()
         )
     }
