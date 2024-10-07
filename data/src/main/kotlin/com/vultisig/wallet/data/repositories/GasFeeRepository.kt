@@ -36,7 +36,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
         TokenStandard.EVM -> {
             val evmApi = evmApiFactory.createEvmApi(chain)
             TokenValue(
-                evmApi.getGasPrice().multiply(BigInteger("3")).divide(BigInteger("2")),
+                evmApi.getGasPrice().multiply(BigInteger("5")).divide(BigInteger("2")),
                 chain.feeUnit,
                 9
             )
@@ -46,7 +46,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             val gas = blockChairApi.getBlockChairStats(chain)
             val nativeToken = tokenRepository.getNativeToken(chain.id)
             TokenValue(
-                gas.multiply(BigInteger("3")).divide(BigInteger("2")),
+                gas.multiply(BigInteger("5")).divide(BigInteger("2")),
                 chain.feeUnit,
                 nativeToken.decimal
             )
