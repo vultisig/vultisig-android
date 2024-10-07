@@ -103,14 +103,9 @@ internal class KeysignViewModel(
         SharingStarted.WhileSubscribed(),
         ""
     )
-    private var featureFlag: FeatureFlagJson = FeatureFlagJson()
+    private var featureFlag: FeatureFlagJson? = null
     private var isNavigateToHome: Boolean = false
 
-    init {
-        viewModelScope.launch {
-            featureFlag = featureFlagApi.getFeatureFlag()
-        }
-    }
     fun startKeysign() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -124,6 +119,7 @@ internal class KeysignViewModel(
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
         try {
+            this.featureFlag = featureFlagApi.getFeatureFlag()
             this.tssMessenger = TssMessenger(
                 serverAddress,
                 sessionId,

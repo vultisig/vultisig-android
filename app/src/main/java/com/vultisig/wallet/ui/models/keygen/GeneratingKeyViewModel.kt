@@ -69,11 +69,10 @@ internal class GeneratingKeyViewModel(
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
     private var _messagePuller: TssMessagePuller? = null
-    private var featureFlag: FeatureFlagJson = FeatureFlagJson()
+    private var featureFlag: FeatureFlagJson? = null
     init {
         viewModelScope.launch {
             collectCurrentState()
-            featureFlag = featureFlagApi.getFeatureFlag()
         }
     }
 
@@ -98,8 +97,10 @@ internal class GeneratingKeyViewModel(
 
         try {
             withContext(Dispatchers.IO) {
+                featureFlag = featureFlagApi.getFeatureFlag()
                 createInstance()
             }
+
             this.tssInstance?.let {
                 keygenWithRetry(it, 1)
             }
@@ -129,7 +130,7 @@ internal class GeneratingKeyViewModel(
                 sessionId,
                 sessionApi,
                 encryption,
-                featureFlag.isEncryptGcmEnabled
+                featureFlag?.isEncryptGcmEnabled == true
             )
             _messagePuller?.pullMessages(null)
             when (this.action) {
@@ -210,7 +211,7 @@ internal class GeneratingKeyViewModel(
             sessionApi = sessionApi,
             coroutineScope = viewModelScope,
             encryption = encryption,
-            isEncryptionGCM = this.featureFlag.isEncryptGcmEnabled,
+            isEncryptionGCM = this.featureFlag?.isEncryptGcmEnabled == true,
         )
         this.tssMessenger?.let { messenger ->
             // this will take a while
