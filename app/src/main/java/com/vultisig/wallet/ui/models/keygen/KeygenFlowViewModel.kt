@@ -17,6 +17,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -110,6 +111,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
     private val generateQrBitmap: GenerateQrBitmap,
     private val encryption: Encryption,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -166,6 +168,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             sessionApi = sessionApi,
             isReshareMode = uiState.value.isReshareMode,
             encryption = encryption,
+            featureFlagApi = featureFlagApi,
         )
 
     init {

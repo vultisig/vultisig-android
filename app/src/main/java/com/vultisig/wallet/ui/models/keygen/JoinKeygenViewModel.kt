@@ -14,6 +14,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -78,6 +79,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val encryption: Encryption,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -129,7 +131,8 @@ internal class JoinKeygenViewModel @Inject constructor(
             context = context,
             sessionApi = sessionApi,
             isReshareMode = operationMode.value.isReshare(),
-            encryption = encryption
+            encryption = encryption,
+            featureFlagApi = featureFlagApi
         )
 
     @OptIn(ExperimentalEncodingApi::class)

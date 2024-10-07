@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.PolkadotApi
@@ -102,6 +103,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val vultiSignerRepository: VultiSignerRepository,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -159,6 +161,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             sessionApi = sessionApi,
             navigator = navigator,
             encryption = encryption,
+            featureFlagApi = featureFlagApi,
         )
 
     init {

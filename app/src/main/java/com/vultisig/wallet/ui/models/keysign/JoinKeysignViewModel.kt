@@ -12,6 +12,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
@@ -140,6 +141,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -185,6 +187,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             sessionApi = sessionApi,
             navigator = navigator,
             encryption = encryption,
+            featureFlagApi = featureFlagApi,
         )
 
     val verifyUiModel =

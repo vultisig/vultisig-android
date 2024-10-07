@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.tss
 
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.common.encryptNoEncode
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.mediator.Message
 import com.vultisig.wallet.data.usecases.Encryption
@@ -19,6 +20,7 @@ class TssMessenger(
     private val sessionApi: SessionApi,
     private val coroutineScope: CoroutineScope,
     private val encryption: Encryption,
+    private val isEncryptionGCM: Boolean,
 ) : tss.Messenger {
     private val serverUrl = "$serverAddress/message/$sessionID"
     private var messageID: String? = null
@@ -28,8 +30,13 @@ class TssMessenger(
     }
 
     override fun send(from: String, to: String, body: String) {
-        val encryptedBody =
-            encryption.encrypt(body.toByteArray(), Numeric.hexStringToByteArray(encryptionHex))
+        var encryptedBody: ByteArray
+        if (isEncryptionGCM) {
+            encryptedBody =
+                encryption.encrypt(body.toByteArray(), Numeric.hexStringToByteArray(encryptionHex))
+        } else {
+            encryptedBody = body.encryptNoEncode(encryptionHex)
+        }
         val message = Message(
             sessionID, from, listOf(to), Base64.encode(encryptedBody), body.md5(), counter++
         )

@@ -7,12 +7,14 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
@@ -81,17 +83,10 @@ internal class KeysignViewModel(
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
+    private val featureFlagApi: FeatureFlagApi,
     ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
-    private val tssMessenger: TssMessenger =
-        TssMessenger(
-            serverAddress,
-            sessionId,
-            encryptionKeyHex,
-            sessionApi,
-            viewModelScope,
-            encryption
-        )
+    private var tssMessenger: TssMessenger? = null
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     var isThorChainSwap =
         keysignPayload.swapPayload is SwapPayload.ThorChain
@@ -108,8 +103,14 @@ internal class KeysignViewModel(
         SharingStarted.WhileSubscribed(),
         ""
     )
+    private var featureFlag: FeatureFlagJson = FeatureFlagJson()
     private var isNavigateToHome: Boolean = false
 
+    init {
+        viewModelScope.launch {
+            featureFlag = featureFlagApi.getFeatureFlag()
+        }
+    }
     fun startKeysign() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -123,6 +124,15 @@ internal class KeysignViewModel(
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
         try {
+            this.tssMessenger = TssMessenger(
+                serverAddress,
+                sessionId,
+                encryptionKeyHex,
+                sessionApi,
+                viewModelScope,
+                encryption,
+                featureFlag?.isEncryptGcmEnabled == true,
+            )
             this.tssInstance = Tss.newService(this.tssMessenger, this.localStateAccessor, false)
             this.tssInstance ?: run {
                 throw Exception("Failed to create TSS instance")
@@ -134,7 +144,8 @@ internal class KeysignViewModel(
                 localPartyKey = vault.localPartyID,
                 sessionApi = sessionApi,
                 sessionID = sessionId,
-                encryption = encryption
+                encryption = encryption,
+                isEncryptionGCM = featureFlag?.isEncryptGcmEnabled == true,
             )
             this.messagesToSign.forEach { message ->
                 Timber.d("signing message: $message")
@@ -156,7 +167,7 @@ internal class KeysignViewModel(
         try {
             Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()
-            this.tssMessenger.setMessageID(msgHash)
+            this.tssMessenger?.setMessageID(msgHash)
             Timber.d("signMessageWithRetry: msgHash: $msgHash")
             this._messagePuller?.pullMessages(msgHash)
             val keysignReq = tss.KeysignRequest()

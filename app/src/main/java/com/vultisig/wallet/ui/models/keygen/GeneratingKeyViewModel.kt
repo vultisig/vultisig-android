@@ -6,7 +6,9 @@ import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.TssKeyType
@@ -59,24 +61,19 @@ internal class GeneratingKeyViewModel(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     internal val isReshareMode: Boolean,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
-    private val tssMessenger: TssMessenger =
-        TssMessenger(
-            serverAddress,
-            sessionId,
-            encryptionKeyHex,
-            sessionApi = sessionApi,
-            coroutineScope = viewModelScope,
-            encryption = encryption
-        )
+    private var tssMessenger: TssMessenger? = null
+
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeygenState> = MutableStateFlow(KeygenState.CreatingInstance)
     private var _messagePuller: TssMessagePuller? = null
-
+    private var featureFlag: FeatureFlagJson = FeatureFlagJson()
     init {
         viewModelScope.launch {
             collectCurrentState()
+            featureFlag = featureFlagApi.getFeatureFlag()
         }
     }
 
@@ -132,6 +129,7 @@ internal class GeneratingKeyViewModel(
                 sessionId,
                 sessionApi,
                 encryption,
+                featureFlag.isEncryptGcmEnabled
             )
             _messagePuller?.pullMessages(null)
             when (this.action) {
@@ -205,8 +203,20 @@ internal class GeneratingKeyViewModel(
     }
 
     private fun createInstance() {
-        // this will take a while
-        this.tssInstance = Tss.newService(this.tssMessenger, this.localStateAccessor, true)
+        this.tssMessenger = TssMessenger(
+            serverAddress,
+            sessionId,
+            encryptionKeyHex,
+            sessionApi = sessionApi,
+            coroutineScope = viewModelScope,
+            encryption = encryption,
+            isEncryptionGCM = this.featureFlag.isEncryptGcmEnabled,
+        )
+        this.tssMessenger?.let { messenger ->
+            // this will take a while
+            this.tssInstance = Tss.newService(messenger, this.localStateAccessor, true)
+        }
+
     }
 
     private suspend fun tssKeygen(
