@@ -161,7 +161,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
     }
 
     internal fun saveShareQrBitmap(bitmap: Bitmap) {
-        if (shareQrBitmap.value != null && shareQrBitmap.value?.isRecycled == true) {
+        if (shareQrBitmap.value?.isRecycled == false) {
             shareQrBitmap.value?.recycle()
         }
         shareQrBitmap.value = bitmap
@@ -181,7 +181,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
                 requireNotNull(shareQrBitmap.value),
                 requireNotNull(state.value.fileName)
             )
-            if (shareQrBitmap.value != null && shareQrBitmap.value?.isRecycled != true) {
+             if (shareQrBitmap.value?.isRecycled == false) {
                 shareQrBitmap.value?.recycle()
             }
             if (toShare) {
