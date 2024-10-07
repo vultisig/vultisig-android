@@ -237,25 +237,19 @@ val MIGRATION_14_15=object :Migration(14,15) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
-            UPDATE `coin` SET `ticker` = 'ETH', `logo` = 'eth', 
-            `contractAddress` =  '0x2170ed0880ac9a755fd29b2688956bd959f933f8'
-            WHERE `ticker` = 'WETH' AND `chain` = 'BSC'
+update tokenvalue set ticker = "ETH" where chain = "BSC" and address = "0x14F6Ed6CBb27b607b0E2A48551A988F1a19c89B6" and ticker = "WETH"
             """.trimIndent()
         )
         db.execSQL(
             """
-            INSERT INTO `tokenValue` (`chain`, `address`, `ticker`, `tokenValue`)
-            SELECT 'BSC', 'new_address', 'ETH', 'new_token_value'
-            WHERE NOT EXISTS (
-                SELECT 1 FROM `tokenValue`
-                WHERE `ticker` = 'WETH' AND `chain` = 'BSC'
-            )
+           UPDATE coin SET ticker = 'ETH', logo = 'eth',  id = 'ETH-BSC',
+            contractAddress =  '0x2170ed0880ac9a755fd29b2688956bd959f933f8'
+            WHERE id = 'WETH-BSC'
              """.trimIndent()
         )
         db.execSQL(
             """
-            DELETE FROM `tokenValue`
-            WHERE `ticker` = 'WETH' AND `chain` = 'BSC';
+           update tokenprice set tokenId = "ETH-BSC" where tokenId = "WETH-BSC"
             """.trimIndent()
         )
 
