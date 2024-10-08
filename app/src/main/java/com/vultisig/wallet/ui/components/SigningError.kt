@@ -75,11 +75,9 @@ internal fun SigningError(navController: NavHostController) {
                     horizontal = 16.dp,
                 ),
             onClick = {
+
             }
-        ) {
-
-        }
-
+        )
     }
 }
 
