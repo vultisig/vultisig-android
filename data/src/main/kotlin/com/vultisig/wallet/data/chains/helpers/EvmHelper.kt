@@ -2,6 +2,9 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.common.toByteString
+import com.vultisig.wallet.data.common.toByteStringOrHex
+import com.vultisig.wallet.data.common.toHexByteArray
+import com.vultisig.wallet.data.common.toHexBytesInByteString
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -83,7 +86,7 @@ class EvmHelper(
                 transfer = Ethereum.Transaction.Transfer.newBuilder().apply {
                     amount = ByteString.copyFrom(keysignPayload.toAmount.toByteArray())
                     keysignPayload.memo?.let {
-                        data = it.toByteString()
+                        data = it.toByteStringOrHex()
                     }
                 }.build()
             }.build()
