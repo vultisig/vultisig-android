@@ -172,7 +172,7 @@ internal fun FolderScreen(
                 vault = vault,
                 isInEditMode = state.isEditMode,
                 onSelect = viewModel::selectVault,
-                trailingContent = if (state.isEditMode) trailingContent else null,
+                trailingIcon = if (state.isEditMode) trailingContent else null,
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +34,8 @@ internal fun VaultCeil(
     vault: Vault? = null,
     isInEditMode: Boolean,
     onSelect: (id: String) -> Unit,
-    trailingContent: @Composable (() -> Unit)? = null,
+    @SuppressLint("ComposableLambdaParameterNaming")
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     val isFolder = when {
         folder != null -> true
@@ -103,8 +105,8 @@ internal fun VaultCeil(
                         color = Theme.colors.body,
                     )
                 }
-                if (trailingContent != null) {
-                    trailingContent()
+                if (trailingIcon != null) {
+                    trailingIcon()
                 } else {
                     UiIcon(
                         R.drawable.caret_right, size = 20.dp
