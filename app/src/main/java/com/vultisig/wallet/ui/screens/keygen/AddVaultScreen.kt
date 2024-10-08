@@ -99,7 +99,7 @@ private fun AddVaultScreen(
                             end = 16.dp,
                             bottom = 16.dp,
                         ),
-                    onClick = clickOnce { navController.navigate(Destination.ImportVault.route) }
+                    onClick = { navController.navigate(Destination.ImportVault.route) }
                 )
             }
         }
