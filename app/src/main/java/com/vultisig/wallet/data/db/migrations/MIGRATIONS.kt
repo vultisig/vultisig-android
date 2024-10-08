@@ -240,37 +240,16 @@ val MIGRATION_14_15=object :Migration(14,15) {
             """
             DELETE FROM tokenvalue 
             WHERE chain = "BSC" 
-            AND address = "0x14F6Ed6CBb27b607b0E2A48551A988F1a19c89B6" 
             AND ticker = "WETH"
-    """.trimIndent()
-        )
-        db.execSQL(
-            """
-            DELETE FROM tokenvalue 
-            WHERE chain = "BSC" 
-            AND address = "0x14F6Ed6CBb27b607b0E2A48551A988F1a19c89B6" 
-            AND ticker = "ETH"
-    """.trimIndent()
-        )
-        db.execSQL(
-            """
-            INSERT INTO tokenvalue (chain, address, ticker)
-            VALUES ("BSC", "0x14F6Ed6CBb27b607b0E2A48551A988F1a19c89B6", "ETH")
-            """.trimIndent()
-        )
-        db.execSQL(
-            """
-           UPDATE coin SET ticker = 'ETH', logo = 'eth',  id = 'ETH-BSC',
-            contractAddress =  '0x2170ed0880ac9a755fd29b2688956bd959f933f8'
-            WHERE id = 'WETH-BSC'
-             """.trimIndent()
-        )
-        db.execSQL(
-            """
-           update tokenprice set tokenId = "ETH-BSC" where tokenId = "WETH-BSC"
             """.trimIndent()
         )
 
+        db.execSQL(
+            """
+            DELETE FROM coin
+            WHERE id = 'WETH-BSC'
+            """.trimIndent()
+        )
     }
 }
 
