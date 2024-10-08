@@ -137,13 +137,12 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             contractAddress,
             currency
         )
-        priceAndContract?.let {
+        if (!priceAndContract.isNullOrEmpty()) {
             savePrices(
-                mapOf(contractAddress to it),
+                mapOf(contractAddress to priceAndContract),
                 currency
             )
-            val price = it.values.first()
-            return price
+            return priceAndContract.values.first()
         }
         return BigDecimal.ZERO
     }
