@@ -11,11 +11,6 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.drawscope.draw
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.core.graphics.scale
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
 import java.io.FileDescriptor
 import java.io.IOException
 
@@ -38,7 +33,6 @@ internal fun Bitmap.addWhiteBorder(borderSize: Float): Bitmap {
     val canvas = android.graphics.Canvas(bmpWithBorder)
     canvas.drawColor(Color.WHITE)
     canvas.drawBitmap(this, borderSize, borderSize, null)
-    this.recycle()
     return bmpWithBorder
 }
 

@@ -18,7 +18,16 @@ fun String.toByteString(): ByteString {
 fun String.toHexBytesInByteString(): ByteString {
     return ByteString.copyFrom(this.toHexBytes())
 }
-
+fun String.isHex(): Boolean {
+    return this.matches(Regex("^(0x)?[0-9A-Fa-f]+$"))
+}
+fun String.toByteStringOrHex(): ByteString {
+    return if (this.isHex()) {
+        this.toHexBytesInByteString()
+    } else {
+        this.toByteString()
+    }
+}
 internal fun String.stripHexPrefix(): String {
     return if (startsWith("0x")) {
         substring(2)

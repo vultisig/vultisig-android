@@ -1,9 +1,12 @@
 package com.vultisig.wallet.data.tss
 
+import android.util.Base64
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.decrypt
+import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -19,6 +22,8 @@ class TssMessagePuller(
     private val localPartyKey: String,
     private val sessionID: String,
     private val sessionApi: SessionApi,
+    private val encryption: Encryption,
+    private val isEncryptionGCM: Boolean,
 ) {
     private val serverURL = "$serverAddress/message/$sessionID/$localPartyKey"
     private var job: Job? = null
@@ -50,9 +55,23 @@ class TssMessagePuller(
                     continue
                 }
                 cache.put(key, msg)
-                val decryptedBody = msg.body.decrypt(hexEncryptionKey)
-                Timber.d("apply message to TSS: hash: " + msg.hash + ", messageID: " + key)
-                this.service.applyData(decryptedBody)
+                val decryptedBody = if (isEncryptionGCM) {
+                    Timber.d("decrypting message with AES+GCM")
+                    encryption.decrypt(
+                        Base64.decode(msg.body, Base64.DEFAULT),
+                        Numeric.hexStringToByteArray(hexEncryptionKey)
+                    )
+                } else {
+                    Timber.d("decrypting message with AES+CBC")
+                    msg.body.decrypt(hexEncryptionKey).toByteArray(Charsets.UTF_8)
+                }
+                if (decryptedBody == null) {
+                    Timber.tag("TssMessagePuller")
+                        .e("fail to decrypt message: $key")
+                    continue
+                }
+                Timber.d("apply message to TSS: hash: %s, messageID: %s", msg.hash, key)
+                this.service.applyData(String(decryptedBody, Charsets.UTF_8))
                 deleteMessageFromServer(msg.hash, messageID)
             }
         } catch (e: Exception) {
