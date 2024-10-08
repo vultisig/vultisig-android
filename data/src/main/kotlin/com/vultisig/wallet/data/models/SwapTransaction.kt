@@ -36,7 +36,7 @@ sealed interface SwapTransaction {
 
     data class EthToCacaoSwapTransaction(
         val swapTransaction: SwapTransaction,
-     ) : SwapTransaction by swapTransaction
+    ) : SwapTransaction by swapTransaction
 
     companion object {
         val maxAllowance: BigInteger

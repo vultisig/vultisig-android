@@ -10,13 +10,13 @@ private const val SHARE_QR_CODE_REGULAR_TEXT_SIZE_WIDTH_SCALE = 0.06f
 private const val SHARE_QR_CODE_LOGO_SCALE_SCALE = 0.4f
 private const val VULTISIG_ADDRESS = "vultisig.com"
 
-interface MakeQrCodeBitmapShareFormat: (Bitmap, Int, Bitmap, String, String?) -> Bitmap
+interface MakeQrCodeBitmapShareFormat : (Bitmap, Int, Bitmap, String, String?) -> Bitmap
 
 internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCodeBitmapShareFormat {
     override fun invoke(
         qrCodeBitmap: Bitmap,
         color: Int,
-        logo : Bitmap,
+        logo: Bitmap,
         title: String,
         description: String?,
     ): Bitmap {

@@ -19,7 +19,7 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         qrCodeContent: String,
         mainColor: Color,
         backgroundColor: Color,
-        logo: Bitmap?
+        logo: Bitmap?,
     ): Bitmap {
         val hintMap = mapOf(EncodeHintType.MARGIN to 0)
 

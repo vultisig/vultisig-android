@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
+import com.vultisig.wallet.ui.models.deposit.DepositChain
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
@@ -57,6 +58,10 @@ internal fun DepositFormScreen(
         providerFieldState = model.providerFieldState,
         operatorFeeFieldState = model.operatorFeeFieldState,
         customMemoFieldState = model.customMemoFieldState,
+        assetsFieldState = model.assetsFieldState,
+        lpUnitsFieldState = model.lpUnitsFieldState,
+        onAssetsLostFocus = model::validateAssets,
+        onLpUnitsLostFocus = model::validateLpUnits,
         onTokenAmountLostFocus = model::validateTokenAmount,
         onNodeAddressLostFocus = model::validateNodeAddress,
         onProviderLostFocus = model::validateProvider,
@@ -81,7 +86,11 @@ internal fun DepositFormScreen(
     providerFieldState: TextFieldState,
     operatorFeeFieldState: TextFieldState,
     customMemoFieldState: TextFieldState,
+    assetsFieldState: TextFieldState,
+    lpUnitsFieldState: TextFieldState,
     onTokenAmountLostFocus: () -> Unit = {},
+    onAssetsLostFocus: () -> Unit = {},
+    onLpUnitsLostFocus: () -> Unit = {},
     onNodeAddressLostFocus: () -> Unit = {},
     onProviderLostFocus: () -> Unit = {},
     onOperatorFeeLostFocus: () -> Unit = {},
@@ -97,6 +106,7 @@ internal fun DepositFormScreen(
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
+    val depositChain = state.depositChain
     if (errorText != null) {
         UiAlertDialog(
             title = stringResource(R.string.dialog_default_error_title),
@@ -125,8 +135,7 @@ internal fun DepositFormScreen(
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 48.dp)
                         .padding(
-                            horizontal = 12.dp,
-                            vertical = 16.dp
+                            horizontal = 12.dp, vertical = 16.dp
                         ),
                 )
             }
@@ -171,7 +180,9 @@ internal fun DepositFormScreen(
                 }
 
                 else -> {
-                    if (depositOption != DepositOption.Leave) {
+                    if (depositOption != DepositOption.Leave && depositChain == DepositChain.Thor ||
+                        depositOption == DepositOption.Custom && depositChain == DepositChain.Maya
+                    ) {
                         FormTextFieldCard(
                             title = stringResource(R.string.deposit_form_amount_title),
                             hint = stringResource(R.string.send_amount_currency_hint),
@@ -240,8 +251,29 @@ internal fun DepositFormScreen(
 //                    onClick = onScan,
 //                )
                         }
-                    }
 
+                        if (depositChain == DepositChain.Maya) {
+
+                            FormTextFieldCard(
+                                title = stringResource(R.string.deposit_form_screen_assets),
+                                hint = "Enter Assets",
+                                keyboardType = KeyboardType.Text,
+                                textFieldState = assetsFieldState,
+                                onLostFocus = onAssetsLostFocus,
+                                error = state.assetsError,
+                            )
+
+                            FormTextFieldCard(
+                                title = stringResource(R.string.deposit_form_screen_lpunits),
+                                hint = "LP units",
+                                keyboardType = KeyboardType.Number,
+                                textFieldState = lpUnitsFieldState,
+                                onLostFocus = onLpUnitsLostFocus,
+                                error = state.lpUnitsError,
+                            )
+                        }
+                    }
+ 
                     if (depositOption == DepositOption.Bond) {
                         FormTextFieldCard(
                             title = stringResource(R.string.deposit_form_operator_fee_title),
@@ -297,5 +329,7 @@ internal fun DepositFormScreenPreview() {
         operatorFeeFieldState = TextFieldState(),
         customMemoFieldState = TextFieldState(),
         basisPointsFieldState = TextFieldState(),
+        lpUnitsFieldState = TextFieldState(),
+        assetsFieldState = TextFieldState(),
     )
 }

@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.core.zxing)
 
     // test
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     androidTestImplementation(libs.junit)

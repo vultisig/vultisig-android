@@ -86,4 +86,10 @@ internal interface ApiModule {
     fun bindBlowfishApi(
         impl: BlowfishApiImpl
     ): BlowfishApi
+
+    @Binds
+    @Singleton
+    fun bindFeatureFlagApi(
+        impl: FeatureFlagApiImpl,
+    ): FeatureFlagApi
 }

@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.PolkadotApi
@@ -39,11 +40,10 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
-import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
-import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
+import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -80,6 +80,9 @@ import vultisig.keysign.v1.UtxoInfo
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
+import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+
 
 enum class KeysignFlowState {
     PEER_DISCOVERY, KEYSIGN, ERROR,
@@ -103,6 +106,8 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
     private val sessionApi: SessionApi,
+    private val encryption: Encryption,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -160,6 +165,8 @@ internal class KeysignFlowViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
             navigator = navigator,
+            encryption = encryption,
+            featureFlagApi = featureFlagApi,
             transactionId = transactionId
         )
 
