@@ -30,6 +30,38 @@ data class RpcResponse(
 )
 
 @Serializable
+data class EvmFeeHistoryJson(
+    @SerialName("reward")
+    val reward: List<List<String>>,
+)
+
+@Serializable
+data class EvmFeeHistoryResponseJson(
+    @SerialName("id")
+    val id: Int,
+    @SerialName("result")
+    val result: EvmFeeHistoryJson,
+    @SerialName("error")
+    val error: RpcError?,
+)
+
+@Serializable
+data class EvmBaseFeeJson(
+    @SerialName("baseFeePerGas")
+    val baseFeePerGas: String,
+)
+
+@Serializable
+data class EvmRpcResponseJson<T>(
+    @SerialName("id")
+    val id: Int,
+    @SerialName("result")
+    val result: T,
+    @SerialName("error")
+    val error: RpcError?,
+)
+
+@Serializable
 data class RpcResponseJson(
     @SerialName("id")
     val id: Int,

@@ -418,4 +418,9 @@
     <string name="deposit_error_invalid_assets"  translatable="false">Assets is invalid</string>
     <string name="deposit_form_screen_assets" translatable="false">Assets</string>
     <string name="deposit_form_screen_lpunits" translatable="false">LP units</string>
+    <string name="eth_gas_settings_title">Advanced</string>
+    <string name="eth_gas_settings_base_fee_title">Current Base Fee (Gwei)</string>
+    <string name="eth_gas_settings_gas_limit_title">Gas Limit</string>
+    <string name="eth_gas_settings_priority_title">Priority</string>
+    <string name="eth_gas_setting_total_fee_title">Total Fee (Gwei)</string>
 </resources>

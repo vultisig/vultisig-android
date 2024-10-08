@@ -558,8 +558,11 @@ internal fun FormCard(
 internal fun FormDetails(
     title: String,
     value: String,
+    modifier: Modifier = Modifier,
 ) {
-    Row {
+    Row(
+        modifier = modifier,
+    ) {
         Text(
             text = title,
             color = Theme.colors.neutral100,
