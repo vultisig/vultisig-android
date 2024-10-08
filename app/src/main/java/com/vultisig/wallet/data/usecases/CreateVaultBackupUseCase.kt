@@ -25,7 +25,7 @@ internal class CreateVaultBackupUseCaseImpl @Inject constructor(
 
         val contentBytes = if (password != null) {
             try {
-                encryption.encrypt(vaultBytes, password)
+                encryption.encrypt(vaultBytes, password.toByteArray())
             } catch (e: Exception) {
                 return null
             }

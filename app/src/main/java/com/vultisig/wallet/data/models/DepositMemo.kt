@@ -2,43 +2,100 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 
-internal sealed class DepositMemo {
+internal interface DepositMemo {
 
-    data class Bond(
-        val nodeAddress: String,
-        val providerAddress: String?,
-        val operatorFee: Int?,
-    ) : DepositMemo() {
+    sealed interface Bond : DepositMemo {
+        data class Maya(
+            val nodeAddress: String,
+            val lpUnits: Int?,
+            val assets: String,
+            val providerAddress: String?,
+            val operatorFee: Int?,
+        ) : Bond {
 
-        override fun toString(): String = buildString {
-            append("BOND:")
-            append(nodeAddress)
-            if (!providerAddress.isNullOrBlank()) {
+            override fun toString(): String = buildString {
+                append("BOND")
                 append(":")
-                append(providerAddress)
-            }
-            if (operatorFee != null) {
+                append(assets)
                 append(":")
-                append(operatorFee)
+                append(lpUnits ?: "")
+                append(":")
+                append(nodeAddress)
+                if (!providerAddress.isNullOrBlank()) {
+                    append(":")
+                    append(providerAddress)
+                }
+                if (operatorFee != null) {
+                    append(":")
+                    append(operatorFee)
+                }
             }
+
         }
 
+        data class Thor(
+            val nodeAddress: String,
+            val providerAddress: String?,
+            val operatorFee: Int?,
+        ) : Bond {
+
+            override fun toString(): String = buildString {
+                append("BOND:")
+                append(nodeAddress)
+                if (!providerAddress.isNullOrBlank()) {
+                    append(":")
+                    append(providerAddress)
+                }
+                if (operatorFee != null) {
+                    append(":")
+                    append(operatorFee)
+                }
+            }
+
+        }
     }
 
-    data class Unbond(
-        val nodeAddress: String,
-        val srcTokenValue: TokenValue,
-        val providerAddress: String?,
-    ) : DepositMemo() {
+    sealed interface Unbond : DepositMemo {
 
-        override fun toString(): String = buildString {
-            append("UNBOND:")
-            append(nodeAddress)
-            append(":")
-            append(srcTokenValue.value)
-            if (!providerAddress.isNullOrBlank()) {
+        data class Maya(
+            val nodeAddress: String,
+            val providerAddress: String?,
+            val assets: String,
+            val lpUnits: Int?,
+        ) : Unbond {
+
+            override fun toString(): String = buildString {
+                append("UNBOND")
                 append(":")
-                append(providerAddress)
+                append(assets)
+                append(":")
+                append(lpUnits ?: "")
+                append(":")
+                append(nodeAddress)
+                if (!providerAddress.isNullOrBlank()) {
+                    append(":")
+                    append(providerAddress)
+                }
+            }
+
+        }
+
+        data class Thor(
+            val nodeAddress: String,
+            val srcTokenValue: TokenValue,
+            val providerAddress: String?,
+        ) : Unbond {
+
+            override fun toString(): String = buildString {
+                append("UNBOND:")
+                append(nodeAddress)
+                append(":")
+                append(srcTokenValue.value)
+                if (!providerAddress.isNullOrBlank()) {
+                    append(":")
+                    append(providerAddress)
+                }
+
             }
         }
 
@@ -46,7 +103,7 @@ internal sealed class DepositMemo {
 
     data class Leave(
         val nodeAddress: String,
-    ) : DepositMemo() {
+    ) : DepositMemo {
 
         override fun toString(): String = buildString {
             append("LEAVE:")
@@ -55,7 +112,7 @@ internal sealed class DepositMemo {
 
     }
 
-    data object DepositPool : DepositMemo() {
+    data object DepositPool : DepositMemo {
 
         override fun toString(): String = "POOL+"
 
@@ -63,7 +120,7 @@ internal sealed class DepositMemo {
 
     data class WithdrawPool(
         val basisPoints: Int,
-    ) : DepositMemo() {
+    ) : DepositMemo {
 
         override fun toString(): String = buildString {
             append("POOL-:")
@@ -79,10 +136,8 @@ internal sealed class DepositMemo {
 
     data class Custom(
         val memo: String,
-    ) : DepositMemo() {
-
+    ) : DepositMemo {
         override fun toString(): String = memo
-
     }
 
 }

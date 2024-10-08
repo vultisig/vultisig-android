@@ -204,7 +204,7 @@ private fun VerticalView(
     selectionState: List<String>,
     onAddParticipant: (String) -> Unit,
     onRemoveParticipant: (String) -> Unit,
-    extractBitmap: (Bitmap) -> Unit
+    extractBitmap: (Bitmap) -> Unit,
 ) {
     Column(
         modifier.verticalScroll(rememberScrollState()),

@@ -83,8 +83,10 @@ internal fun QRCodeKeyGenImage(
 @Preview
 @Composable
 private fun QRCodeKeyGenImagePreview() {
-    QRCodeKeyGenImage(bitmapPainter = BitmapPainter(
-        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
-        filterQuality = FilterQuality.None
-    ))
+    QRCodeKeyGenImage(
+        bitmapPainter = BitmapPainter(
+            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
+            filterQuality = FilterQuality.None
+        )
+    )
 }

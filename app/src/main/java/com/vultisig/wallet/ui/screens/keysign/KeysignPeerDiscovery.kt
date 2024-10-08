@@ -27,7 +27,6 @@ import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.data.models.getSignersExceptLocalParty
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
@@ -36,7 +35,6 @@ import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.screens.keygen.FastPeerDiscovery
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
-import com.vultisig.wallet.ui.utils.groupByTwoButKeepFirstElement
 import com.vultisig.wallet.ui.utils.forCanvasMinify
 import timber.log.Timber
 
@@ -59,7 +57,8 @@ internal fun KeysignPeerDiscovery(
         stringResource(R.string.qr_title_join_keysign)
 
     val qrShareBackground = Theme.colors.oxfordBlue800
-    val qrShareDescription = stringResource(R.string.qr_title_join_keysign_description,
+    val qrShareDescription = stringResource(
+        R.string.qr_title_join_keysign_description,
         vault.name.forCanvasMinify(),
         amount.forCanvasMinify(),
         keysignPayload.toAddress.forCanvasMinify()
