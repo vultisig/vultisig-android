@@ -235,9 +235,19 @@ val MIGRATION_13_14=object :Migration(13,14){
 }
 val MIGRATION_14_15=object :Migration(14,15) {
     override fun migrate(db: SupportSQLiteDatabase) {
+
         db.execSQL(
             """
-update tokenvalue set ticker = "ETH" where chain = "BSC" and address = "0x14F6Ed6CBb27b607b0E2A48551A988F1a19c89B6" and ticker = "WETH"
+            DELETE FROM tokenvalue 
+            WHERE chain = "BSC" 
+            AND address = "0x14F6Ed6CBb27b607b0E2A48551A988F1a19c89B6" 
+            AND ticker = "WETH"
+    """.trimIndent()
+        )
+        db.execSQL(
+            """
+            INSERT INTO tokenvalue (chain, address, ticker, tokenValue)
+            VALUES ("BSC", "0x14F6Ed6CBb27b607b0E2A48551A988F1a19c89B6", "ETH", "0")
             """.trimIndent()
         )
         db.execSQL(
