@@ -10,7 +10,6 @@ internal interface DepositMemo {
             val lpUnits: Int?,
             val assets: String,
             val providerAddress: String?,
-            val operatorFee: Int?,
         ) : Bond {
 
             override fun toString(): String = buildString {
@@ -24,10 +23,6 @@ internal interface DepositMemo {
                 if (!providerAddress.isNullOrBlank()) {
                     append(":")
                     append(providerAddress)
-                }
-                if (operatorFee != null) {
-                    append(":")
-                    append(operatorFee)
                 }
             }
 
