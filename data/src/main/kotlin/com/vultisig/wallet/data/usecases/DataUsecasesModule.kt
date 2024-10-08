@@ -37,13 +37,13 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindMakeQrCodeBitmapShareFormat(
-        impl: MakeQrCodeBitmapShareFormatImpl
+        impl: MakeQrCodeBitmapShareFormatImpl,
     ): MakeQrCodeBitmapShareFormat
 
     @Binds
     @Singleton
     fun bindGenerateQrCodeBitmap(
-        impl: GenerateQrBitmapImpl
+        impl: GenerateQrBitmapImpl,
     ): GenerateQrBitmap
 
     @Binds

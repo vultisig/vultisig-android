@@ -55,7 +55,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         isSwap: Boolean,
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
-        gasLimit: BigInteger?
+        gasLimit: BigInteger?,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {

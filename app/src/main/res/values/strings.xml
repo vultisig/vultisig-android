@@ -421,5 +421,8 @@
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
     <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultisigner</string>
-
+    <string name="deposit_error_invalid_lpunits"  translatable="false">LP units is invalid</string>
+    <string name="deposit_error_invalid_assets"  translatable="false">Assets is invalid</string>
+    <string name="deposit_form_screen_assets" translatable="false">Assets</string>
+    <string name="deposit_form_screen_lpunits" translatable="false">LP units</string>
 </resources>

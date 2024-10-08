@@ -14,6 +14,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -29,6 +30,7 @@ import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -76,6 +78,8 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val sessionApi: SessionApi,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
+    private val encryption: Encryption,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -126,7 +130,9 @@ internal class JoinKeygenViewModel @Inject constructor(
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
             sessionApi = sessionApi,
-            isReshareMode = operationMode.value.isReshare()
+            isReshareMode = operationMode.value.isReshare(),
+            encryption = encryption,
+            featureFlagApi = featureFlagApi
         )
 
     @OptIn(ExperimentalEncodingApi::class)

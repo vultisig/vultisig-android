@@ -19,7 +19,7 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         qrCodeContent: String,
         mainColor: Color,
         backgroundColor: Color,
-        logo: Bitmap?
+        logo: Bitmap?,
     ): Bitmap {
         val hintMap = mapOf(EncodeHintType.MARGIN to 0)
 
@@ -67,10 +67,13 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         val yLogo = (scaledBitmap.height - scaledLogo.height) / 2f
 
         canvas.drawBitmap(scaledLogo, xLogo, yLogo, null)
-        if (bitmap != scaledBitmap)
+        if (bitmap != scaledBitmap) {
             bitmap.recycle()
+        }
 
-        scaledLogo.recycle()
+        if (scaledLogo != logo) {
+            scaledLogo.recycle()
+        }
 
         return scaledBitmap
     }

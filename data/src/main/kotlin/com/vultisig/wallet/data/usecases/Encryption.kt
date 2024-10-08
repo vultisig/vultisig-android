@@ -9,12 +9,11 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
-import kotlin.text.Charsets.UTF_8
 
 
 interface Encryption {
-    fun encrypt(data: ByteArray, password: String): ByteArray
-    fun decrypt(data: ByteArray, password: String): ByteArray?
+    fun encrypt(data: ByteArray, password: ByteArray): ByteArray
+    fun decrypt(data: ByteArray, password: ByteArray): ByteArray?
 }
 
 internal class AesEncryption @Inject constructor() : Encryption {
@@ -24,8 +23,8 @@ internal class AesEncryption @Inject constructor() : Encryption {
     private val algorithm = "AES"
     private val random = SecureRandom()
 
-    override fun encrypt(data: ByteArray, password: String): ByteArray {
-        val keyBytes = messageDigest.digest(password.toByteArray(UTF_8))
+    override fun encrypt(data: ByteArray, password: ByteArray): ByteArray {
+        val keyBytes = messageDigest.digest(password)
         val keySpec = SecretKeySpec(
             keyBytes,
             algorithm
@@ -46,9 +45,9 @@ internal class AesEncryption @Inject constructor() : Encryption {
         return combined
     }
 
-    override fun decrypt(data: ByteArray, password: String): ByteArray? {
+    override fun decrypt(data: ByteArray, password: ByteArray): ByteArray? {
         try {
-            val keyBytes = messageDigest.digest(password.toByteArray(UTF_8))
+            val keyBytes = messageDigest.digest(password)
             val keySpec = SecretKeySpec(
                 keyBytes,
                 algorithm
@@ -83,7 +82,7 @@ internal class AesEncryption @Inject constructor() : Encryption {
     }
 
 
-    private fun decryptOldVersion(data: ByteArray, password: String): ByteArray? {
+    private fun decryptOldVersion(data: ByteArray, password: ByteArray): ByteArray? {
         try {
             val oldCipher = Cipher.getInstance("AES/CBC/PKCS7PADDING")
             oldCipher.init(
@@ -102,9 +101,9 @@ internal class AesEncryption @Inject constructor() : Encryption {
         }
     }
 
-    private fun generateKey(password: String): SecretKeySpec {
+    private fun generateKey(password: ByteArray): SecretKeySpec {
         val digest: MessageDigest = MessageDigest.getInstance("SHA-256")
-        val bytes = password.toByteArray()
+        val bytes = password
         digest.update(
             bytes,
             0,

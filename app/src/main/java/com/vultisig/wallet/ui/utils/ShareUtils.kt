@@ -28,8 +28,7 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
             val resizedBitmap = if (bitmap.width < DEFAULT_WIDTH) {
                 val scaleFactor = DEFAULT_WIDTH / bitmap.width
                 bitmap.getResizedBitmap(DEFAULT_WIDTH, bitmap.height * scaleFactor)
-            }
-            else bitmap
+            } else bitmap
 
             resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
         }

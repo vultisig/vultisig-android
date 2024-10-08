@@ -395,8 +395,17 @@ class EvmApiImp(
     }
 
 
-    private fun String?.convertToBigIntegerOrZero(): BigInteger =
-        BigInteger(this?.removePrefix("0x") ?: "0", 16)
+    private fun String?.convertToBigIntegerOrZero(): BigInteger {
+        val cleanedInput = this?.removePrefix("0x")
+        return if (cleanedInput.isNullOrEmpty()) {
+            BigInteger.ZERO
+        } else {
+            BigInteger(
+                cleanedInput,
+                16
+            )
+        }
+    }
 
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2
