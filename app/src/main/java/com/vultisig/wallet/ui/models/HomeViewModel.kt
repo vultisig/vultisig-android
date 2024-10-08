@@ -77,7 +77,10 @@ internal class HomeViewModel @Inject constructor(
     }
 
     fun selectFolder(folderId: String) {
-
+        viewModelScope.launch {
+            hideVaultList()
+            navigator.navigate(Destination.Folder(folderId))
+        }
     }
 
     fun addVault() {
@@ -134,6 +137,7 @@ internal class HomeViewModel @Inject constructor(
                     } ?: vaultRepository.getAll().firstOrNull()
                 }.collect { vault ->
                     if (vault != null) {
+                        hideVaultList()
                         uiState.update {
                             it.copy(
                                 vaultName = vault.name,

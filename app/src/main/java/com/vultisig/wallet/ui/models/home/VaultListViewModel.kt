@@ -40,7 +40,7 @@ internal class VaultListViewModel @Inject constructor(
     }
 
     private fun collectVaults() = viewModelScope.launch {
-        getOrderedVaults(null, false).collect { orderedVaults ->
+        getOrderedVaults(null).collect { orderedVaults ->
             state.update { it.copy(vaults = orderedVaults) }
         }
     }

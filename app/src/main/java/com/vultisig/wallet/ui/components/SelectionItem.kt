@@ -34,8 +34,8 @@ internal fun SelectionItem(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(all = 12.dp)
-                .clickable { onCheckedChange?.invoke(!isChecked) },
+                .clickable { onCheckedChange?.invoke(!isChecked) }
+                .padding(all = 12.dp),
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.weight(1f)

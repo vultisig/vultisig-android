@@ -33,6 +33,7 @@ internal fun VaultCeil(
     vault: Vault? = null,
     isInEditMode: Boolean,
     onSelect: (id: String) -> Unit,
+    trailingContent: @Composable (() -> Unit)? = null,
 ) {
     val isFolder = when {
         folder != null -> true
@@ -102,10 +103,13 @@ internal fun VaultCeil(
                         color = Theme.colors.body,
                     )
                 }
-
-                UiIcon(
-                    R.drawable.caret_right, size = 20.dp
-                )
+                if (trailingContent != null) {
+                    trailingContent()
+                } else {
+                    UiIcon(
+                        R.drawable.caret_right, size = 20.dp
+                    )
+                }
             }
         }
     }

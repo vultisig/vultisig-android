@@ -82,7 +82,7 @@ internal fun <T: Any ,R : Any> VerticalDoubleReorderList(
             )
         }
 
-        if (dataT.isNotEmpty() && dataR.isNotEmpty()) {
+        if (dataR.isNotEmpty()) {
             midContents?.forEach { content ->
                 item(content = content)
             }

@@ -371,6 +371,8 @@
     <string name="create_folder_title" translatable="false">Create Folder</string>
     <string name="create_folder_name" translatable="false">Folder Name</string>
     <string name="create_folder_create" translatable="false">Create</string>
+    <string name="delete_folder" translatable="false">Delete Folder</string>
+    <string name="select_vaults_to_add_to_the_folder" translatable="false">Select Vaults to add to the folder.</string>
     <string name="create_folder_placeholder" translatable="false">Savings</string>
     <string name="create_folder_list_title" translatable="false">Select Vaults to add to the folder.</string>
     <string name="generating_key_retry" translatable="false">Retry</string>

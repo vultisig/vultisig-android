@@ -21,6 +21,7 @@ interface OrderRepository<T : BaseOrderEntity> {
     suspend fun find(parentId: String?, name: String): T?
     suspend fun insert(parentId: String?, name: String): Float
     suspend fun updateList(parentId: String?, names: List<String>)
+    suspend fun updateList(parentId: String?)
 }
 
 
@@ -82,6 +83,10 @@ abstract class OrderRepositoryImpl<T : BaseOrderEntity>(
 
     override suspend fun updateList(parentId: String?, names: List<String>) {
         baseOrderDao.updateList(parentId, names)
+    }
+
+    override suspend fun updateList(parentId: String?) {
+        baseOrderDao.updateList(parentId)
     }
 
     protected abstract fun defaultOrder(parentId: String?): T

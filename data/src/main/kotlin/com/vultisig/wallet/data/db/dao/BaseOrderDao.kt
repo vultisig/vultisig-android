@@ -47,8 +47,18 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
 
     suspend fun updateList(parentId: String?, values: List<String>) {
         val valuesStr = values.joinToString("','", "'", "'")
+        val parentIdStr =
+            if (parentId != null)"'$parentId'"
+            else "NULL"
         val query = SimpleSQLiteQuery(
-            "UPDATE $tableName SET `parentId` = '$parentId' WHERE `value` IN ($valuesStr)"
+            "UPDATE $tableName SET `parentId` = $parentIdStr WHERE `value` IN ($valuesStr)"
+        )
+        executeQuery(query)
+    }
+
+    suspend fun updateList(parentId: String?) {
+        val query = SimpleSQLiteQuery(
+            "UPDATE $tableName SET `parentId` = NULL WHERE `parentId` = '$parentId'"
         )
         executeQuery(query)
     }

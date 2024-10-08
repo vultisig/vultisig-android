@@ -20,7 +20,6 @@ import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.db.models.VaultEntity
-import com.vultisig.wallet.data.db.models.VaultFolderRef
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 
 @Database(
@@ -34,7 +33,6 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         TokenPriceEntity::class,
         AddressBookEntryEntity::class,
         AddressBookOrderEntity::class,
-        VaultFolderRef::class,
         FolderEntity::class,
         FolderOrderEntity::class,
     ],

@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
@@ -63,7 +64,7 @@ internal class CreateFolderViewModel @Inject constructor(
     }
 
     private fun getVaults() = viewModelScope.launch {
-        getOrderedVaults(null, false).collectLatest { vaults ->
+        getOrderedVaults(null).collectLatest { vaults ->
             state.update { it.copy(vaults = vaults.associateWith { false } ) }
         }
     }
@@ -105,7 +106,10 @@ internal class CreateFolderViewModel @Inject constructor(
             state.value.vaults.filterValues { it }.keys.map { it.id }
         )
 
-        navigator.navigate(Destination.Back)
+        navigator.navigate(
+            Destination.Folder(folderId.toString()),
+            NavigationOptions(popUpTo = Destination.Home().route),
+        )
     }
 
 }

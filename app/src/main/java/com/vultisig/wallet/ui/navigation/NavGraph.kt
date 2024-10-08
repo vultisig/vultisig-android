@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.WelcomeScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
+import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
@@ -201,8 +202,16 @@ internal fun SetupNavGraph(
         composable(route = Destination.ImportVault.route) {
             ImportFileScreen(navController)
         }
-        composable( route = Destination.CreateFolder.route) {
-           CreateFolderScreen(navController)
+        composable(route = Destination.CreateFolder.route) {
+            CreateFolderScreen(navController)
+        }
+        composable(
+            route = Destination.Folder.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(Destination.Folder.ARG_FOLDER_ID) { type = NavType.StringType }
+            )
+        ) {
+            FolderScreen()
         }
         composable(
             route = AddChainAccount.route,

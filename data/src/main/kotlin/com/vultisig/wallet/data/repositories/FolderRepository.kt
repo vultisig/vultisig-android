@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 interface FolderRepository {
+    suspend fun getFolder(id: String): FolderEntity
+    suspend fun deleteFolder(id: String)
     suspend fun insertFolder(name: String): Int
     fun getAll(): Flow<List<FolderEntity>>
 }
@@ -13,6 +15,13 @@ interface FolderRepository {
 internal class FolderRepositoryImpl @Inject constructor(
     private val folderDao: FolderDao
 ): FolderRepository {
+    override suspend fun getFolder(id: String): FolderEntity =
+        folderDao.getFolder(id)
+
+    override suspend fun deleteFolder(id: String) {
+        folderDao.deleteFolder(id)
+    }
+
     override suspend fun insertFolder(name: String): Int =
         folderDao.insertFolder(FolderEntity(name = name)).toInt()
 
