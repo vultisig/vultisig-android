@@ -29,7 +29,6 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         val descLines = description?.split("\n")
         val scaledLogo = logo.scale(logoWidth, logoWidth)
         val textColor = Color.WHITE
-        logo.recycle()
 
         var finalHeight = height + 2 * padding
         finalHeight += (textSize * 2).toInt()

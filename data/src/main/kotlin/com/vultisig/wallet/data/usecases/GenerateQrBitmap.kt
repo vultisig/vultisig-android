@@ -67,10 +67,13 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
         val yLogo = (scaledBitmap.height - scaledLogo.height) / 2f
 
         canvas.drawBitmap(scaledLogo, xLogo, yLogo, null)
-        if (bitmap != scaledBitmap)
+        if (bitmap != scaledBitmap) {
             bitmap.recycle()
+        }
 
-        scaledLogo.recycle()
+        if (scaledLogo != logo) {
+            scaledLogo.recycle()
+        }
 
         return scaledBitmap
     }
