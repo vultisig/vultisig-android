@@ -40,6 +40,10 @@ internal fun CreateFolderScreen(
     val textFieldState = viewModel.textFieldState.collectAsState()
     val placeholder = stringResource(id = R.string.create_folder_placeholder)
 
+    LaunchedEffect(Unit) {
+        viewModel.loadPlaceholder(placeholder)
+    }
+
     Scaffold(
         bottomBar = {
             Box(Modifier.imePadding()) {
