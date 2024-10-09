@@ -53,7 +53,7 @@ internal fun RegisterVaultScreen(
             )
         }
     ) {
-        Box(Modifier.padding(it)) {
+        Box(modifier = Modifier.padding(it)) {
             RegisterVaultScreen {
                 uriHandler.openUri("https://web.vultisig.com/")
             }
@@ -80,23 +80,23 @@ private fun RegisterVaultScreen(
             modifier = Modifier.fillMaxWidth(0.7f)
         )
         UiSpacer(size = 32.dp)
-        FormCard(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
+        FormCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    stringResource(R.string.register_vault_screen_step_1),
+                    text = stringResource(R.string.register_vault_screen_step_1),
                     color = colors.neutral0,
                     style = montserrat.body2,
                 )
                 UiSpacer(size = 4.dp)
                 Text(
-                    "(Top right of this screen)",
+                    text = stringResource(R.string.register_vault_screen_step_1_top_right),
                     color = colors.neutral0,
                     style = montserrat.body1,
                 )
             }
         }
         UiSpacer(size = 16.dp)
-        FormCard(Modifier.fillMaxWidth()) {
+        FormCard(modifier = Modifier.fillMaxWidth()) {
             Text(
                 modifier = Modifier.padding(16.dp),
                 text = buildAnnotatedString {
@@ -125,7 +125,7 @@ private fun RegisterVaultScreen(
 
         }
         UiSpacer(size = 16.dp)
-        FormCard(Modifier.fillMaxWidth()) {
+        FormCard(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = stringResource(R.string.register_vault_screen_step_3),
                 modifier = Modifier.padding(16.dp),
@@ -134,9 +134,9 @@ private fun RegisterVaultScreen(
             )
         }
         UiSpacer(size = 16.dp)
-        FormCard(Modifier.fillMaxWidth()) {
+        FormCard(modifier = Modifier.fillMaxWidth()) {
             Text(
-                stringResource(R.string.register_vault_screen_step_4),
+                text = stringResource(R.string.register_vault_screen_step_4),
                 modifier = Modifier.padding(16.dp),
                 color = colors.neutral0,
                 style = montserrat.body2,

@@ -430,4 +430,5 @@
     <string name="register_vault_screen_step_4" translatable="false">4. Track your VULTIES (Vault Points) !</string>
     <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
+    <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
 </resources>
