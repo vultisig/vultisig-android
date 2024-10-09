@@ -31,10 +31,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -135,6 +137,16 @@ fun SettingsScreen(navController: NavHostController) {
 
             AppSettingItem(
                 R.drawable.settings_logo,
+                stringResource(R.string.settings_screen_register_your_vaults),
+                backgroundColor = colors.turquoise600Main,
+                textColor = colors.oxfordBlue600Main,
+                style = Theme.montserrat.caption
+            ) {
+                viewModel.navigateTo(Destination.RegisterVault(viewModel.vaultId))
+            }
+
+            AppSettingItem(
+                R.drawable.settings_logo,
                 stringResource(R.string.settings_screen_vtx_token)
             ) {
                 viewModel.navigateTo(Destination.VultisigToken)
@@ -222,6 +234,9 @@ private fun AppSettingItem(
     @DrawableRes logo: Int,
     title: String,
     currentValue: String? = null,
+    backgroundColor: Color = Theme.colors.oxfordBlue600Main,
+    textColor: Color = Theme.colors.neutral0,
+    style: TextStyle = Theme.montserrat.body2,
     onClick: () -> Unit = {},
 ) {
     val colors = Theme.colors
@@ -231,13 +246,12 @@ private fun AppSettingItem(
                 onClick = onClick
             )
             .padding(
-                horizontal = 12.dp,
-                vertical = 8.dp
+                horizontal = 12.dp, vertical = 8.dp
             )
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = colors.oxfordBlue600Main
+            containerColor = backgroundColor
         )
     ) {
         Row(
@@ -256,8 +270,8 @@ private fun AppSettingItem(
             )
             Text(
                 text = title,
-                color = colors.neutral0,
-                style = Theme.montserrat.body2,
+                color = textColor,
+                style = style,
             )
 
             Spacer(modifier = Modifier.weight(1f))
