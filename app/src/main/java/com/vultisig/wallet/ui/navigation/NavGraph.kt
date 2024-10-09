@@ -56,6 +56,7 @@ import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
+import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
@@ -539,6 +540,17 @@ internal fun SetupNavGraph(
             )
         ) {
             ReshareStartScreen(navController)
+        }
+
+        composable(
+            route = Destination.RegisterVault.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            RegisterVaultScreen(navController)
         }
     }
 }
