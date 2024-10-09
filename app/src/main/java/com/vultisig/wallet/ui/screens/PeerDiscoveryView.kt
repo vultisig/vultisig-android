@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.ui.components.NetworkPrompts
 import com.vultisig.wallet.ui.components.QRCodeKeyGenImage
 import com.vultisig.wallet.ui.components.UiIcon
@@ -242,9 +243,15 @@ private fun VerticalView(
             ) {
                 participants.forEach { participant ->
                     val isSelected = selectionState.contains(participant)
+                    val icon = when {
+                        participant.startsWith(LOCAL_PARTY_ID_PREFIX) ->
+                            R.drawable.vultiserver
+
+                        else -> R.drawable.ipad
+                    }
                     DeviceInfo(
-                        R.drawable.ipad,
-                        participant,
+                        icon = icon,
+                        name = participant,
                         isSelected = isSelected
                     ) { isChecked ->
                         if (isChecked) {
