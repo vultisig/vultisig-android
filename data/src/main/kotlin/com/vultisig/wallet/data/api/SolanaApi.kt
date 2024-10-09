@@ -134,7 +134,7 @@ internal class SolanaApiImp @Inject constructor(
                 params = buildJsonArray {
                     add(tx)
                     addJsonObject {
-                        put("maxRetries",3) }
+                        put("maxRetries",10) }
                 },
                 id = 1,
             )
