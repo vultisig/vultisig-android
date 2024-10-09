@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.components
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,36 +20,34 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Folder
-import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.getVaultPart
-import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.theme.Theme
 
+internal data class VaultCeilUiModel(
+    val id: String,
+    val name: String,
+    val isFolder: Boolean,
+    val isFastVault: Boolean = false,
+    val vaultPart: Int = 0,
+    val signersSize: Int = 0,
+)
+
+
 @Composable
 internal fun VaultCeil(
-    folder: Folder? = null,
-    vault: Vault? = null,
+    model: VaultCeilUiModel,
     isInEditMode: Boolean,
     onSelect: (id: String) -> Unit,
-    @SuppressLint("ComposableLambdaParameterNaming")
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
-    val isFolder = when {
-        folder != null -> true
-        vault != null -> false
-        else -> throw IllegalArgumentException("Either folderEntity or vault must be provided")
-    }
-    val id = (if (isFolder) folder?.id.toString() else vault?.id) ?: ""
-    val name = (if (isFolder) folder?.name else vault?.name) ?: ""
+
     FormCard {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickOnce(onClick = { onSelect(id) })
+                .clickOnce(onClick = { onSelect(model.id) })
                 .padding(all = 14.dp)
         ) {
             if (isInEditMode) {
@@ -60,7 +57,7 @@ internal fun VaultCeil(
                     modifier = Modifier.width(16.dp)
                 )
             }
-            if (isFolder) {
+            if (model.isFolder) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_folder),
                     contentDescription = "draggable item",
@@ -68,7 +65,7 @@ internal fun VaultCeil(
                 )
             }
             Text(
-                text = name,
+                text = model.name,
                 style = Theme.menlo.body3,
                 color = Theme.colors.neutral0,
                 fontSize = 16.sp,
@@ -79,8 +76,8 @@ internal fun VaultCeil(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (!isFolder) {
-                    if (vault?.isFastVault() == true) {
+                if (!model.isFolder) {
+                    if (model.isFastVault) {
                         Card(
                             colors = CardDefaults.cardColors(
                                 containerColor = Theme.colors.oxfordBlue200,
@@ -98,8 +95,8 @@ internal fun VaultCeil(
                     Text(
                         text = stringResource(
                             id = R.string.vault_list_part_n_of_t,
-                            vault?.getVaultPart() ?: "",
-                            vault?.signers?.size ?: 0
+                            model.vaultPart,
+                            model.signersSize
                         ),
                         style = Theme.menlo.body2,
                         color = Theme.colors.body,
@@ -123,38 +120,43 @@ internal fun VaultCeil(
 private fun VaultCeilPreview() {
     Column {
         VaultCeil(
-            vault = Vault(
+            model = VaultCeilUiModel(
                 id = "1",
                 name = "Vault 1",
+                isFolder = false,
             ),
             isInEditMode = true,
             onSelect = {}
         )
 
         VaultCeil(
-            vault = Vault(
+            model = VaultCeilUiModel(
                 id = "2",
-                localPartyID = "1",
-                signers = listOf("1", "server-2", "3"),
                 name = "Vault 2",
+                isFolder = false,
+                isFastVault = true,
+                vaultPart = 2,
+                signersSize = 3,
             ),
             isInEditMode = false,
             onSelect = {}
         )
 
         VaultCeil(
-            folder = Folder(
-                id = 1,
+            model = VaultCeilUiModel(
+                id = "1",
                 name = "Folder 1",
+                isFolder = true,
             ),
             isInEditMode = false,
             onSelect = {}
         )
 
         VaultCeil(
-            folder = Folder(
-                id = 2,
+            model = VaultCeilUiModel(
+                id = "2",
                 name = "Folder 2",
+                isFolder = true,
             ),
             isInEditMode = true,
             onSelect = {}

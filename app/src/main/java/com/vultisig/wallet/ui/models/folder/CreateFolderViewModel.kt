@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.folder
 
+import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +18,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
@@ -24,7 +26,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class CreateFolderUiModel(
-    val placeholder: String = "",
     val errorText: UiText? = null,
     val folderNames: List<String> = emptyList(),
     val checkedVaults: Map<Vault, Boolean> = emptyMap(),
@@ -35,6 +36,7 @@ internal data class CreateFolderUiModel(
 
 @HiltViewModel
 internal class CreateFolderViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val folderRepository: FolderRepository,
     private val vaultOrderRepository: VaultOrderRepository,
@@ -44,7 +46,7 @@ internal class CreateFolderViewModel @Inject constructor(
 ) : ViewModel() {
     val state = MutableStateFlow(CreateFolderUiModel())
 
-    val textFieldState = MutableStateFlow(TextFieldState())
+    val textFieldState = TextFieldState()
 
     init {
         getFolderNames()
@@ -59,7 +61,7 @@ internal class CreateFolderViewModel @Inject constructor(
     }
 
     private fun validateEachTextChange() = viewModelScope.launch {
-        textFieldState.value.textAsFlow().collectLatest {
+        textFieldState.textAsFlow().collectLatest {
             validate()
         }
     }
@@ -70,12 +72,8 @@ internal class CreateFolderViewModel @Inject constructor(
         }
     }
 
-    fun loadPlaceholder(placeholder: String) {
-        state.value = state.value.copy(placeholder = placeholder)
-    }
-
     private fun validate() = viewModelScope.launch {
-        val name = textFieldState.value.text.toString()
+        val name = textFieldState.text.toString()
         val errorMessage = if (!isNameLengthValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
@@ -93,7 +91,8 @@ internal class CreateFolderViewModel @Inject constructor(
         if (currntState.errorText != null)
             return@launch
         val name = generateUniqueName(
-            textFieldState.value.text.toString().ifEmpty { currntState.placeholder },
+            textFieldState.text.toString()
+                .ifEmpty { context.getString(R.string.create_folder_placeholder) },
             currntState.folderNames
         )
         val folderId = folderRepository.insertFolder(name)

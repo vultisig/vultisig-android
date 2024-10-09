@@ -28,10 +28,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.getVaultPart
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.SelectionItem
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
+import com.vultisig.wallet.ui.components.VaultCeilUiModel
 import com.vultisig.wallet.ui.components.VaultSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
@@ -169,7 +172,14 @@ internal fun FolderScreen(
             }
 
             VaultCeil(
-                vault = vault,
+                model = VaultCeilUiModel(
+                    id = vault.id,
+                    name = vault.name,
+                    isFolder = false,
+                    isFastVault = vault.isFastVault(),
+                    vaultPart = vault.getVaultPart(),
+                    signersSize = vault.signers.size,
+                ),
                 isInEditMode = state.isEditMode,
                 onSelect = viewModel::selectVault,
                 trailingIcon = if (state.isEditMode) trailingContent else null,

@@ -18,9 +18,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
+import com.vultisig.wallet.ui.components.VaultCeilUiModel
 import com.vultisig.wallet.ui.components.reorderable.VerticalDoubleReorderList
 import com.vultisig.wallet.ui.models.home.VaultListViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -97,14 +99,25 @@ private fun VaultListScreen(
                 modifier = Modifier.padding(contentPadding),
                 contentR = { vault ->
                 VaultCeil(
-                    vault = vault,
+                    model = VaultCeilUiModel(
+                        id = vault.id,
+                        name = vault.name,
+                        isFolder = false,
+                        isFastVault = vault.isFastVault(),
+                        vaultPart = vault.signers.size,
+                        signersSize = vault.signers.size,
+                    ),
                     isInEditMode = isRearrangeMode,
                     onSelect = onSelectVault,
                 )
             },
                 contentT = { folder ->
                     VaultCeil(
-                        folder = folder,
+                        model = VaultCeilUiModel(
+                            id = folder.id.toString(),
+                            name = folder.name,
+                            isFolder = true,
+                        ),
                         isInEditMode = isRearrangeMode,
                         onSelect = onSelectFolder,
                     )

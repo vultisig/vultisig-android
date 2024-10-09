@@ -37,12 +37,7 @@ internal fun CreateFolderScreen(
     viewModel: CreateFolderViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val textFieldState = viewModel.textFieldState.collectAsState()
-    val placeholder = stringResource(id = R.string.create_folder_placeholder)
-
-    LaunchedEffect(Unit) {
-        viewModel.loadPlaceholder(placeholder)
-    }
+    val textFieldState = viewModel.textFieldState
 
     Scaffold(
         bottomBar = {
@@ -83,10 +78,10 @@ internal fun CreateFolderScreen(
         ) {
             FormTextFieldCard(
                 title = stringResource(id = R.string.create_folder_name),
-                hint = placeholder,
+                hint = stringResource(id = R.string.create_folder_placeholder),
                 error = state.errorText,
                 keyboardType = KeyboardType.Text,
-                textFieldState = textFieldState.value,
+                textFieldState = textFieldState,
             )
             UiSpacer(size = 14.dp)
             Text(
