@@ -5,15 +5,16 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "vaultOrder")
-data class VaultOrderEntity(
+@Entity(tableName = "folderOrder")
+data class FolderOrderEntity(
     @PrimaryKey
     @ColumnInfo(name = "value")
     override val value: String = "",
 
     @ColumnInfo(name = "order")
     override val order: Float,
+) : BaseOrderEntity() {
 
-    @ColumnInfo(name = "parentId")
+    @Ignore
     override val parentId: String? = null
-) : BaseOrderEntity()
+}

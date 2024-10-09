@@ -368,11 +368,19 @@
     <string name="reshare_start" translatable="false">Start</string>
     <string name="threshold_error" translatable="false">Threshold not reached\nMissing enough initial devices</string>
     <string name="generating_key_renew" translatable="false">Renew</string>
+    <string name="create_folder_title" translatable="false">Create Folder</string>
+    <string name="create_folder_name" translatable="false">Folder Name</string>
+    <string name="create_folder_create" translatable="false">Create</string>
+    <string name="delete_folder" translatable="false">Delete Folder</string>
+    <string name="select_vaults_to_add_to_the_folder" translatable="false">Select Vaults to add to the folder.</string>
+    <string name="create_folder_placeholder" translatable="false">Savings</string>
+    <string name="create_folder_list_title" translatable="false">Select Vaults to add to the folder.</string>
     <string name="generating_key_retry" translatable="false">Retry</string>
     <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>
     <string name="join_keygen_screen_renew" translatable="false">Renew</string>
 
     <string name="select_vault_type_fast_title" translatable="false">FAST</string>
+    <string name="folders_list_title" translatable="false">Folders</string>
     <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>
     <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>
     <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>
@@ -383,6 +391,7 @@
     <string name="keygen_email_continue_button" translatable="false">Continue</string>
     <string name="keygen_email_caption" translatable="false">Enter your email to receive your backup</string>
     <string name="keygen_email_input_hint" translatable="false">Email</string>
+    <string name="create_folder" translatable="false">Create Folder</string>
     <string name="keygen_verify_email_hint" translatable="false">Verify Email</string>
     <string name="keygen_invalid_email_error" translatable="false">Invalid email</string>
     <string name="keygen_email_dont_match" translatable="false">Emails do not match</string>

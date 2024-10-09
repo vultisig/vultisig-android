@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.db
+package com.vultisig.wallet.data.db.dao
 
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -45,6 +45,24 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
         deleteAllQuery(query)
     }
 
+    suspend fun removeParentId(parentId: String?, values: List<String>) {
+        val valuesStr = values.joinToString("','", "'", "'")
+        val parentIdStr =
+            if (parentId != null)"'$parentId'"
+            else "NULL"
+        val query = SimpleSQLiteQuery(
+            "UPDATE $tableName SET `parentId` = $parentIdStr WHERE `value` IN ($valuesStr)"
+        )
+        executeQuery(query)
+    }
+
+    suspend fun removeParentId(parentId: String?) {
+        val query = SimpleSQLiteQuery(
+            "UPDATE $tableName SET `parentId` = NULL WHERE `parentId` = '$parentId'"
+        )
+        executeQuery(query)
+    }
+
     @Update
     abstract suspend fun update(value: T)
 
@@ -59,6 +77,9 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
 
     @RawQuery
     protected abstract suspend fun deleteAllQuery(query: SupportSQLiteQuery): Int
+
+    @RawQuery
+    protected abstract suspend fun executeQuery(query: SupportSQLiteQuery): Int
 
     private fun includeParentId(parentId: String?, hasAnd: Boolean) =
         if (parentId != null) (if (hasAnd) " AND " else " WHERE ") +

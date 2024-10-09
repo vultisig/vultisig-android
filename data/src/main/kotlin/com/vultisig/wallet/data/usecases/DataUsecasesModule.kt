@@ -48,6 +48,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindGetOrderedVaults(
+        impl: GetOrderedVaultsImpl
+    ): GetOrderedVaults
+
+    @Binds
+    @Singleton
     fun bindConvertWeiToGwei(
         impl: ConvertWeiToGweiUseCaseImpl
     ): ConvertWeiToGweiUseCase

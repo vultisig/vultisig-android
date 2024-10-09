@@ -400,6 +400,15 @@ internal sealed class Destination(
 
     data object ImportVault : Destination(route = "import_file")
 
+    data object CreateFolder : Destination(route = "create_folder")
+
+    data class Folder(val folderId: String): Destination(route = "folder/$folderId") {
+        companion object {
+            const val ARG_FOLDER_ID = "folder_id"
+            const val STATIC_ROUTE = "folder/{$ARG_FOLDER_ID}"
+        }
+    }
+
     data class AddChainAccount(val vaultId: String) :
         Destination(route = "vault_detail/$vaultId/add_account")
 
