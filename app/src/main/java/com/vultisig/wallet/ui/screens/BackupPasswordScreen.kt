@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.components.GradientInfoCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
@@ -110,10 +111,9 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             start = 16.dp,
                             end = 16.dp,
                             bottom = 16.dp,
-                        )
-                ) {
-                    viewModel.backupUnencryptedVault()
-                }
+                        ),
+                    onClick = { viewModel.backupUnencryptedVault() }
+                )
             }
         },
         topBar = {

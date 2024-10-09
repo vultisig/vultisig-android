@@ -250,9 +250,9 @@ internal fun FormTextField(
     hint: String,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
-    content: (@Composable RowScope.() -> Unit)? = null,
     hintColor: Color = Theme.colors.neutral100,
     onLostFocus: () -> Unit,
+    content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -453,8 +453,8 @@ internal fun FormTitleCollapsibleTextField(
     hint: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     textFieldState: TextFieldState,
-    content: (@Composable RowScope.() -> Unit)? = null,
     onLostFocus: () -> Unit,
+    content: (@Composable RowScope.() -> Unit)? = null,
 ) {
     var isExpanded by remember {
         mutableStateOf(isFormVisible)
@@ -558,8 +558,11 @@ internal fun FormCard(
 internal fun FormDetails(
     title: String,
     value: String,
+    modifier: Modifier = Modifier,
 ) {
-    Row {
+    Row(
+        modifier = modifier,
+    ) {
         Text(
             text = title,
             color = Theme.colors.neutral100,
