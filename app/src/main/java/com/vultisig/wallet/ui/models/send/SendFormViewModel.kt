@@ -4,10 +4,11 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
- import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -32,6 +33,7 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -40,7 +42,6 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
-import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -87,11 +88,18 @@ internal data class SendFormUiModel(
     val dstAddressError: UiText? = null,
     val tokenAmountError: UiText? = null,
     val hasMemo: Boolean = false,
+    val showGasSettings: Boolean = false,
+    val specific: BlockChainSpecificAndUtxo? = null,
 )
 
 internal data class SendSrc(
     val address: Address,
     val account: Account,
+)
+
+internal data class EthGasSettings(
+    val priorityFee: BigInteger,
+    val gasLimit: BigInteger,
 )
 
 internal data class InvalidTransactionDataException(
@@ -114,6 +122,7 @@ internal class SendFormViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
     private val addressParserRepository: AddressParserRepository,
+    private val evmApiFactory: EvmApiFactory,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val gasFeeToEstimatedFee : GasFeeToEstimatedFeeUseCase
     ) : ViewModel() {
@@ -153,6 +162,8 @@ internal class SendFormViewModel @Inject constructor(
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
+    private var ethGasSettings = MutableStateFlow<EthGasSettings?>(null)
+
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
     private var maxAmount = BigDecimal.ZERO
 
@@ -175,6 +186,12 @@ internal class SendFormViewModel @Inject constructor(
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
+
+        viewModelScope.launch {
+            val result = evmApiFactory.createEvmApi(Chain.Ethereum)
+                .getBaseFee()
+            Timber.d("log $result")
+        }
     }
 
     fun loadData(
@@ -279,6 +296,20 @@ internal class SendFormViewModel @Inject constructor(
             maxAmount = max
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max.toPlainString())
         }
+    }
+
+    fun openGasSettings() {
+        if (selectedAccount?.token?.chain?.standard == TokenStandard.EVM) {
+            uiState.update { it.copy(showGasSettings = true) }
+        }
+    }
+
+    fun dismissGasSettings() {
+        uiState.update { it.copy(showGasSettings = false) }
+    }
+
+    fun saveGasSettings(settings: EthGasSettings) {
+        ethGasSettings.value = settings
     }
 
     fun choosePercentageAmount(percentage: Float) {
@@ -395,6 +426,23 @@ internal class SendFormViewModel @Inject constructor(
                         isMaxAmountEnabled = isMaxAmount,
                         isDeposit = false,
                     )
+                    .let {
+                        val ethSettings = ethGasSettings.value
+                        if (ethSettings != null) {
+                            val spec = it.blockChainSpecific
+                            if (spec is BlockChainSpecific.Ethereum) {
+                                it.copy(
+                                    blockChainSpecific = spec
+                                        .copy(
+                                            priorityFeeWei = ethSettings.priorityFee,
+                                            gasLimit = ethSettings.gasLimit,
+                                        )
+                                )
+                            } else it
+                        } else {
+                            it
+                        }
+                    }
 
                 val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
@@ -520,7 +568,7 @@ internal class SendFormViewModel @Inject constructor(
                 val selectedToken = selectedAccount.token
                 val srcAddress = selectedAccount.token.address
                 try {
-                    specific.value = blockChainSpecificRepository.getSpecific(
+                    val spec = blockChainSpecificRepository.getSpecific(
                         chain,
                         srcAddress,
                         selectedToken,
@@ -529,6 +577,12 @@ internal class SendFormViewModel @Inject constructor(
                         isMaxAmountEnabled = false,
                         isDeposit = false,
                     )
+                    specific.value = spec
+                    uiState.update {
+                        it.copy(
+                            specific = spec
+                        )
+                    }
 
                     val estimatedFee = gasFeeToEstimatedFee(
                         GasFeeParams(

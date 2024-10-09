@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -65,6 +66,19 @@ internal fun SendFormScreen(
         viewModel.setAddressFromQrCode(qrCodeResult)
     }
 
+    val selectedChain = state.selectedCoin?.model?.address?.chain
+    val specific = state.specific
+
+    if (state.showGasSettings && selectedChain != null && specific != null) {
+        EthGasSettingsScreen(
+            navController = rememberNavController(),
+            chain = selectedChain,
+            specific = specific,
+            onSaveGasSettings = viewModel::saveGasSettings,
+            onDismissGasSettings = viewModel::dismissGasSettings,
+        )
+    }
+
     SendFormScreen(
         state = state,
         addressFieldState = viewModel.addressFieldState,
@@ -78,6 +92,7 @@ internal fun SendFormScreen(
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onChoosePercentageAmount = viewModel::choosePercentageAmount,
+        onChangeGasClick = viewModel::openGasSettings,
         onScan = viewModel::scanAddress,
         onAddressBookClick = viewModel::openAddressBook,
         onSend = viewModel::send,
@@ -100,6 +115,7 @@ internal fun SendFormScreen(
     onChooseMaxTokenAmount: () -> Unit = {},
     onChoosePercentageAmount: (Float) -> Unit = {},
     onAddressBookClick: () -> Unit = {},
+    onChangeGasClick: () -> Unit = {},
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
 ) {
@@ -220,7 +236,8 @@ internal fun SendFormScreen(
             if (state.showGasFee) {
                 FormDetails(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .clickable(onClick = onChangeGasClick),
                     title = buildAnnotatedString {
                         withStyle(
                             style = SpanStyle(

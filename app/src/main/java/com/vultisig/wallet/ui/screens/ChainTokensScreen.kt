@@ -60,6 +60,7 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiPlusButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultActionButton
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
@@ -254,7 +255,7 @@ private fun ChainTokensScreen(
                                     fiatBalance = token.fiatBalance,
                                     tokenLogo = token.tokenLogo,
                                     chainLogo = token.chainLogo,
-                                    onClick = { onTokenClick(token) },
+                                    onClick = clickOnce { onTokenClick(token) },
                                 )
                             }
                         }
