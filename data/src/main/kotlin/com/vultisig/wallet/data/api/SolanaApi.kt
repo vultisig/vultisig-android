@@ -147,7 +147,7 @@ internal class SolanaApiImp @Inject constructor(
                 Timber.tag("SolanaApiImp").d("Error broadcasting transaction: $responseRawString")
                 error(error.message)
             }
-            return result.result
+            return result.result ?: error("broadcastTransaction error")
         } catch (e: Exception) {
             Timber.tag("SolanaApiImp").e("Error broadcasting transaction: ${e.message}")
             throw e
