@@ -40,7 +40,7 @@
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_send">SEND</string>
     <string name="chain_account_view_swap">SWAP</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_deposit">FUNCTION</string>
     <string name="chain_account_buy_wewe">BUY $WEWE</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
@@ -257,7 +257,7 @@
     <string name="verify_swap_agree_allowance">I agree with providing unlimited ERC20 allowance</string>
     <string name="backup_suggestion_text">Each device has its own unique share.\n\nPlease Backup all of your Vault Shares now.</string>
     <string name="backup_now">Backup your vault now!</string>
-    <string name="deposit_screen_title">Deposit</string>
+    <string name="deposit_screen_title">Function</string>
     <string name="deposit_screen_amount_title">Amount</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Node Address</string>
