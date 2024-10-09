@@ -143,9 +143,9 @@ internal class SolanaApiImp @Inject constructor(
             val result = response.body<BroadcastTransactionRespJson>()
             result.error?.let { error ->
                 Timber.tag("SolanaApiImp").d("Error broadcasting transaction: $responseRawString")
-                error(error["message"].toString())
+                error(error.message)
             }
-            return result.result ?: error("broadcastTransaction error")
+            return result.result
         } catch (e: Exception) {
             Timber.tag("SolanaApiImp").e("Error broadcasting transaction: ${e.message}")
             throw e
