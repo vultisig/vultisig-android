@@ -2,7 +2,7 @@ package com.vultisig.wallet.ui.models.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.db.models.FolderEntity
+import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.FolderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 internal data class VaultListUiModel(
     val vaults: List<Vault> = emptyList(),
-    val folders: List<FolderEntity> = emptyList()
+    val folders: List<Folder> = emptyList()
 )
 
 @HiltViewModel
@@ -48,7 +48,7 @@ internal class VaultListViewModel @Inject constructor(
             folderOrderRepository.loadOrders(null),
             folderRepository.getAll()
         ) { orders, folders ->
-            val addressAndOrderMap = mutableMapOf<FolderEntity, Float>()
+            val addressAndOrderMap = mutableMapOf<Folder, Float>()
             folders.forEach { eachFolder ->
                 addressAndOrderMap[eachFolder] =
                     orders.find { it.value == eachFolder.id.toString() }?.order

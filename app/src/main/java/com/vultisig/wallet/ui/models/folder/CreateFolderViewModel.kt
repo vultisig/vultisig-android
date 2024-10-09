@@ -23,15 +23,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class CreateFolderState(
+internal data class CreateFolderUiModel(
     val placeholder: String = "",
-    val textField: TextFieldState = TextFieldState(),
     val errorText: UiText? = null,
     val folderNames: List<String> = emptyList(),
-    val vaults: Map<Vault, Boolean> = emptyMap(),
+    val checkedVaults: Map<Vault, Boolean> = emptyMap(),
 ){
-    val isButtonEnabled: Boolean =
-        errorText == null && vaults.any { it.value }
+    val isCreateButtonEnabled: Boolean =
+        errorText == null && checkedVaults.any { it.value }
 }
 
 @HiltViewModel
@@ -39,11 +38,13 @@ internal class CreateFolderViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val folderRepository: FolderRepository,
     private val vaultOrderRepository: VaultOrderRepository,
-    private val uniqueName: GenerateUniqueName,
+    private val generateUniqueName: GenerateUniqueName,
     private val isNameLengthValid: IsVaultNameValid,
     private val getOrderedVaults: GetOrderedVaults,
 ) : ViewModel() {
-    val state = MutableStateFlow(CreateFolderState())
+    val state = MutableStateFlow(CreateFolderUiModel())
+
+    val textFieldState = MutableStateFlow(TextFieldState())
 
     init {
         getFolderNames()
@@ -58,23 +59,23 @@ internal class CreateFolderViewModel @Inject constructor(
     }
 
     private fun validateEachTextChange() = viewModelScope.launch {
-        state.value.textField.textAsFlow().collectLatest {
+        textFieldState.value.textAsFlow().collectLatest {
             validate()
         }
     }
 
     private fun getVaults() = viewModelScope.launch {
         getOrderedVaults(null).collectLatest { vaults ->
-            state.update { it.copy(vaults = vaults.associateWith { false } ) }
+            state.update { it.copy(checkedVaults = vaults.associateWith { false } ) }
         }
     }
 
-    fun loadPlaceholder(placeHolder: String) {
-        state.value = state.value.copy(placeholder = placeHolder)
+    fun loadPlaceholder(placeholder: String) {
+        state.value = state.value.copy(placeholder = placeholder)
     }
 
     private fun validate() = viewModelScope.launch {
-        val name = state.value.textField.text.toString()
+        val name = textFieldState.value.text.toString()
         val errorMessage = if (!isNameLengthValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
@@ -83,27 +84,22 @@ internal class CreateFolderViewModel @Inject constructor(
 
     fun checkVault(vault: Vault, checked: Boolean) {
         state.update {
-            it.copy(
-                vaults = mutableMapOf<Vault, Boolean>()
-                    .apply {
-                        putAll(it.vaults)
-                        put(vault, checked)
-                    }
-                )
+            it.copy(checkedVaults = it.checkedVaults + (vault to checked) )
         }
     }
 
     fun createFolder() = viewModelScope.launch {
-        if (state.value.errorText != null)
+        val currntState = state.value
+        if (currntState.errorText != null)
             return@launch
-        val name = uniqueName(
-            state.value.textField.text.toString().ifEmpty { state.value.placeholder },
-            state.value.folderNames
+        val name = generateUniqueName(
+            textFieldState.value.text.toString().ifEmpty { currntState.placeholder },
+            currntState.folderNames
         )
         val folderId = folderRepository.insertFolder(name)
         vaultOrderRepository.updateList(
             folderId.toString(),
-            state.value.vaults.filterValues { it }.keys.map { it.id }
+            currntState.checkedVaults.filterValues { it }.keys.map { it.id }
         )
 
         navigator.navigate(

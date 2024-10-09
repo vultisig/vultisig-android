@@ -11,14 +11,4 @@ abstract class VaultOrderDao : BaseOrderDao<VaultOrderEntity>("vaultOrder") {
 
     @Query("SELECT * FROM vaultOrder ORDER BY `order` DESC")
     abstract fun loadOrders(): Flow<List<VaultOrderEntity>>
-//    override fun loadOrders(parentId: String?): Flow<List<VaultOrderEntity>> =
-//        if (parentId == null) loadOrders()
-//    else
-//        loadOrdersWithParentId(parentId)
-//
-//    @Query("SELECT * FROM vaultOrder WHERE `parentId` IS NULL ORDER BY `order` DESC")
-//    abstract fun loadOrders(): Flow<List<VaultOrderEntity>>
-//
-//    @Query("SELECT * FROM vaultOrder WHERE `parentId` = :parentId ORDER BY `order` DESC")
-//    abstract fun loadOrdersWithParentId(parentId: String?): Flow<List<VaultOrderEntity>>
 }

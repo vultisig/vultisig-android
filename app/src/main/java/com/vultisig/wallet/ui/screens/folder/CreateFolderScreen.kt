@@ -23,10 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.SelectionItem
-import com.vultisig.wallet.ui.components.TokenSelectionItem
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
@@ -39,11 +37,8 @@ internal fun CreateFolderScreen(
     viewModel: CreateFolderViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val textFieldState = viewModel.textFieldState.collectAsState()
     val placeholder = stringResource(id = R.string.create_folder_placeholder)
-
-    LaunchedEffect(Unit) {
-        viewModel.loadPlaceholder(placeholder)
-    }
 
     Scaffold(
         bottomBar = {
@@ -61,7 +56,7 @@ internal fun CreateFolderScreen(
                             bottom = 16.dp,
                         ),
                     text = stringResource(id = R.string.create_folder_create),
-                    disabled = !state.isButtonEnabled,
+                    disabled = !state.isCreateButtonEnabled,
                     onClick = {
                         viewModel.createFolder()
                     },
@@ -87,7 +82,7 @@ internal fun CreateFolderScreen(
                 hint = placeholder,
                 error = state.errorText,
                 keyboardType = KeyboardType.Text,
-                textFieldState = state.textField,
+                textFieldState = textFieldState.value,
             )
             UiSpacer(size = 14.dp)
             Text(
@@ -101,7 +96,7 @@ internal fun CreateFolderScreen(
                 contentPadding = PaddingValues(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                items(state.vaults.toList()) { vaultPair ->
+                items(state.checkedVaults.toList()) { vaultPair ->
                     val vault = vaultPair.first
                     SelectionItem(
                         title = vault.name,

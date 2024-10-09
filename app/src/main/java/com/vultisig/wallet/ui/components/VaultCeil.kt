@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.db.models.FolderEntity
+import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun VaultCeil(
-    folder: FolderEntity? = null,
+    folder: Folder? = null,
     vault: Vault? = null,
     isInEditMode: Boolean,
     onSelect: (id: String) -> Unit,
@@ -143,7 +143,7 @@ private fun VaultCeilPreview() {
         )
 
         VaultCeil(
-            folder = FolderEntity(
+            folder = Folder(
                 id = 1,
                 name = "Folder 1",
             ),
@@ -152,7 +152,7 @@ private fun VaultCeilPreview() {
         )
 
         VaultCeil(
-            folder = FolderEntity(
+            folder = Folder(
                 id = 2,
                 name = "Folder 2",
             ),

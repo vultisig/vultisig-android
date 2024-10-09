@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.db.models.FolderEntity
+import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -55,7 +55,7 @@ internal fun VaultListScreen(
 private fun VaultListScreen(
     isRearrangeMode: Boolean,
     vaults: List<Vault>,
-    folders: List<FolderEntity>,
+    folders: List<Folder>,
     onSelectVault: (vaultId: String) -> Unit = {},
     onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
@@ -181,9 +181,9 @@ private fun VaultListScreenPreview() {
             )
         ),
         folders = listOf(
-            FolderEntity(id = 1, name = "Folder 1"),
-            FolderEntity(id = 2, name = "Folder 2"),
-            FolderEntity(id = 3, name = "Folder 3"),
+            Folder(id = 1, name = "Folder 1"),
+            Folder(id = 2, name = "Folder 2"),
+            Folder(id = 3, name = "Folder 3"),
         ),
     )
 }

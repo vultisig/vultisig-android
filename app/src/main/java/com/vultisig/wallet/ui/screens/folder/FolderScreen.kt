@@ -83,7 +83,7 @@ internal fun FolderScreen(
                     titleContentColor = Theme.colors.neutral0,
                 ),
                 navigationIcon = {
-                    IconButton(onClick = clickOnce(viewModel::onBack)) {
+                    IconButton(onClick = clickOnce(viewModel::back)) {
                         Image(
                             painter = painterResource(id = R.drawable.caret_left),
                             contentDescription = "",
@@ -98,7 +98,7 @@ internal fun FolderScreen(
                             style = Theme.menlo.subtitle1,
                             fontWeight = FontWeight.Bold,
                             color = Theme.colors.neutral0,
-                            modifier = modifier.clickOnce(onClick = viewModel::onEdit)
+                            modifier = modifier.clickOnce(onClick = viewModel::edit)
                         )
                     }
                     else {
@@ -106,7 +106,7 @@ internal fun FolderScreen(
                             painter = painterResource(id = R.drawable.baseline_edit_square_24),
                             contentDescription = "edit",
                             tint = Theme.colors.neutral0,
-                            modifier = modifier.clickOnce(onClick = viewModel::onEdit)
+                            modifier = modifier.clickOnce(onClick = viewModel::edit)
                         )
                     }
                 }

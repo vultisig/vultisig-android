@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models.folder
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.db.models.FolderEntity
+import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.FolderRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class FolderState(
-    val folder: FolderEntity? = null,
+internal data class FolderUiModel(
+    val folder: Folder? = null,
     val isEditMode: Boolean = false,
     val vaults: List<Vault> = emptyList(),
     val availableVaults: List<Vault> = emptyList(),
@@ -37,7 +37,7 @@ internal class  FolderViewModel @Inject constructor(
 ): ViewModel() {
     private val folderId: String =
         requireNotNull(savedStateHandle[Destination.Folder.ARG_FOLDER_ID])
-    val state = MutableStateFlow(FolderState())
+    val state = MutableStateFlow(FolderUiModel())
 
     private var reIndexJob: Job? = null
 
@@ -70,16 +70,16 @@ internal class  FolderViewModel @Inject constructor(
     }
 
     fun deleteFolder() = viewModelScope.launch {
-        vaultOrderRepository.updateList(folderId)
+        vaultOrderRepository.removeParentId(folderId)
         folderRepository.deleteFolder(folderId)
         navigator.navigate(Destination.Back)
     }
 
-    fun onBack() = viewModelScope.launch {
+    fun back() = viewModelScope.launch {
         navigator.navigate(Destination.Back)
     }
 
-    fun onEdit() = viewModelScope.launch {
+    fun edit() = viewModelScope.launch {
         state.update { it.copy(isEditMode = !it.isEditMode) }
     }
 
