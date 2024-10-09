@@ -24,6 +24,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.InformationNote
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -90,9 +91,8 @@ fun KeyGenErrorScreen(
                         vertical = 16.dp,
                         horizontal = 16.dp,
                     ),
-            ) {
-                navController.navigate(Destination.AddVault.route)
-            }
+                onClick = { navController.navigate(Destination.AddVault.route) }
+            )
         }
     }
 }

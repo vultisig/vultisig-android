@@ -14,10 +14,10 @@ internal fun VaultSwitch(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
-    content: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     colors: SwitchColors = SwitchDefaults.colors(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    content: (@Composable () -> Unit)? = null,
 ){
     Switch(
         checked = checked,

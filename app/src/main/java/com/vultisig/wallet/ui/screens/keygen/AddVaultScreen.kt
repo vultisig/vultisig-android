@@ -29,6 +29,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -81,10 +82,9 @@ private fun AddVaultScreen(
                             start = 16.dp,
                             end = 16.dp,
                             bottom = 12.dp,
-                        )
-                ) {
-                    navController.navigate(route = Destination.SelectVaultType.route)
-                }
+                        ),
+                    onClick = { navController.navigate(route = Destination.SelectVaultType.route) }
+                )
                 MultiColorButton(
                     text = stringResource(R.string.home_screen_import_vault),
                     backgroundColor = Theme.colors.oxfordBlue800,
@@ -98,10 +98,9 @@ private fun AddVaultScreen(
                             start = 16.dp,
                             end = 16.dp,
                             bottom = 16.dp,
-                        )
-                ) {
-                    navController.navigate(Destination.ImportVault.route)
-                }
+                        ),
+                    onClick = { navController.navigate(Destination.ImportVault.route) }
+                )
             }
         }
     ) { padding ->
