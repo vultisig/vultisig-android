@@ -42,7 +42,7 @@ internal class ReshareStartViewModel @Inject constructor(
                 Destination.KeygenEmail(
                     vaultId = vaultId,
                     name = null,
-                    setupType = VaultSetupType.SECURE,
+                    setupType = VaultSetupType.ACTIVE,
                 )
             )
         }
