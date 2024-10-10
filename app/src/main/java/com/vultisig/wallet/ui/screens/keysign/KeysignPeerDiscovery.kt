@@ -89,7 +89,7 @@ internal fun KeysignPeerDiscovery(
         viewModel.setData(vault, context, keysignPayload)
     }
 
-    LaunchedEffect(viewModel.keysignMessage) {
+    LaunchedEffect(viewModel.keysignMessage.value) {
         sharedViewModel.loadQrPainter(viewModel.keysignMessage.value)
     }
 
