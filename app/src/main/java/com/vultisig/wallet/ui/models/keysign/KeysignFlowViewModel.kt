@@ -40,11 +40,18 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.SwapTransactionRepository
+import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.ui.models.AddressProvider
+import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -57,6 +64,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -81,7 +89,6 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
-import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 
 
 enum class KeysignFlowState {
@@ -108,6 +115,12 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
+    private val transactionRepository: TransactionRepository,
+    private val depositTransactionRepository: DepositTransactionRepository,
+    private val swapTransactionRepository: SwapTransactionRepository,
+    private val mapTransactionToUiModel: TransactionToUiModelMapper,
+    private val mapDepositTransactionUiModel: DepositTransactionToUiModelMapper,
+    private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
@@ -144,6 +157,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value == NetworkPromptOption.INTERNET || isFastSign
     }
 
+    private var transitionTypeUiModel: TransitionTypeUiModel? = null
+
 
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -167,7 +182,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
-            transactionId = transactionId
+            transitionTypeUiModel = transitionTypeUiModel
         )
 
     init {
@@ -190,6 +205,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         this.selection.value = listOf(vault.localPartyID)
         _serverAddress = Endpoints.VULTISIG_RELAY
         updateKeysignPayload(context)
+        updateTransactionUiModel(keysignPayload)
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
@@ -374,6 +390,42 @@ internal class KeysignFlowViewModel @Inject constructor(
                 startSession(_serverAddress, _sessionID, vault.localPartyID)
             }
             _participantDiscovery?.discoveryParticipants()
+        }
+    }
+
+    private fun updateTransactionUiModel(
+        keysignPayload: KeysignPayload,
+    ) {
+        transactionId?.let {
+            val isSwap = keysignPayload.swapPayload != null
+            val isDeposit = when (val specific = keysignPayload.blockChainSpecific) {
+                is BlockChainSpecific.MayaChain -> specific.isDeposit
+                is BlockChainSpecific.THORChain -> specific.isDeposit
+                else -> false
+            }
+            viewModelScope.launch {
+                transitionTypeUiModel = when {
+                    isSwap -> TransitionTypeUiModel.Swap(
+                        mapSwapTransactionToUiModel(
+                            swapTransactionRepository.getTransaction(transactionId)
+                        )
+                    )
+
+                    isDeposit -> TransitionTypeUiModel.Deposit(
+                        mapDepositTransactionUiModel(
+                            depositTransactionRepository.getTransaction(transactionId)
+                        )
+                    )
+
+                    else -> TransitionTypeUiModel.Send(
+                        mapTransactionToUiModel(
+                            transactionRepository.getTransaction(
+                                transactionId
+                            ).first()
+                        )
+                    )
+                }
+            }
         }
     }
 

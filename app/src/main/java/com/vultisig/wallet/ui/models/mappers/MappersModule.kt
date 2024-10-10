@@ -64,4 +64,18 @@ internal interface MappersModule {
         impl: DurationToUiStringMapperImpl
     ): DurationToUiStringMapper
 
+
+    @Binds
+    @Singleton
+    fun bindDepositTransactionUiModelToUiModelMapper(
+        impl: DepositTransactionUiModelMapperImpl
+    ): DepositTransactionToUiModelMapper
+
+
+    @Binds
+    @Singleton
+    fun bindSwapTransactionToUiModelMapper(
+        impl: SwapTransactionToUiModelMapperImpl
+    ): SwapTransactionToUiModelMapper
+
 }

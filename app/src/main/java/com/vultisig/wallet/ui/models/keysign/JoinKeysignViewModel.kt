@@ -47,12 +47,14 @@ import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel.Companion.AFFILIATE_FEE_USD_THRESHOLD
+import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -165,8 +167,9 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var messagesToSign: List<String> = emptyList()
 
     private var _jobWaitingForKeysignStart: Job? = null
-
     private var isNavigateToHome: Boolean = false
+
+    private var transitionTypeUiModel: TransitionTypeUiModel? = null
 
     private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
@@ -190,9 +193,9 @@ internal class JoinKeysignViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
             navigator = navigator,
+            transitionTypeUiModel = transitionTypeUiModel,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
-            transactionId = null,
         )
 
     val verifyUiModel =
@@ -290,18 +293,24 @@ internal class JoinKeysignViewModel @Inject constructor(
                             token = nativeToken
                         )
 
+                        val swapTransaction = SwapTransactionUiModel(
+                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            estimatedFees = fiatValueToStringMapper.map(
+                                convertTokenValueToFiat(
+                                    nativeToken,
+                                    estimatedTokenFees,
+                                    currency
+                                )
+                            ),
+                        )
+
+                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransaction)
+
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
                                 provider = R.string.swap_for_provider_1inch.asUiText(),
-                                srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                                dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
-                                estimatedFees = fiatValueToStringMapper.map(
-                                    convertTokenValueToFiat(
-                                        nativeToken,
-                                        estimatedTokenFees,
-                                        currency
-                                    )
-                                ),
+                                swapTransactionUiModel = swapTransaction
                             )
                         )
                     }
@@ -322,14 +331,18 @@ internal class JoinKeysignViewModel @Inject constructor(
                             isAffiliate = isAffiliate,
                         )
 
+                        val swapTransactionUiModel = SwapTransactionUiModel(
+                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            estimatedFees = fiatValueToStringMapper.map(
+                                convertTokenValueToFiat(dstToken, quote.fees, currency)
+                            ),
+                        )
+                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
                                 provider = R.string.swap_form_provider_thorchain.asUiText(),
-                                srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                                dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
-                                estimatedFees = fiatValueToStringMapper.map(
-                                    convertTokenValueToFiat(dstToken, quote.fees, currency)
-                                ),
+                                swapTransactionUiModel = swapTransactionUiModel
                             )
                         )
                     }
@@ -351,14 +364,18 @@ internal class JoinKeysignViewModel @Inject constructor(
                             isAffiliate = isAffiliate
                         )
 
+                        val swapTransactionUiModel = SwapTransactionUiModel(
+                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
+                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            estimatedFees = fiatValueToStringMapper.map(
+                                convertTokenValueToFiat(nativeToken, quote.fees, currency)
+                            ),
+                        )
+                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
                                 provider = R.string.swap_form_provider_mayachain.asUiText(),
-                                srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                                dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
-                                estimatedFees = fiatValueToStringMapper.map(
-                                    convertTokenValueToFiat(nativeToken, quote.fees, currency)
-                                ),
+                                swapTransactionUiModel = swapTransactionUiModel
                             )
                         )
                     }
@@ -378,25 +395,29 @@ internal class JoinKeysignViewModel @Inject constructor(
                         else -> error("BlockChainSpecific $specific is not supported")
                     }
 
+                    val depositTransactionUiModel = DepositTransactionUiModel(
+                        fromAddress = payload.coin.address,
+                        // TODO toAddress is empty on ios, get node address from memo
+                        nodeAddress = payload.toAddress,
+                        srcTokenValue = mapTokenValueToStringWithUnit(
+                            TokenValue(
+                                value = payload.toAmount,
+                                token = payload.coin,
+                            )
+
+                        ),
+                        estimatedFees = mapTokenValueToStringWithUnit(
+                            TokenValue(
+                                value = fee,
+                                token = payload.coin,
+                            )
+                        ),
+                        memo = payload.memo ?: "",
+                    )
+                    transitionTypeUiModel = TransitionTypeUiModel.Deposit(depositTransactionUiModel)
                     verifyUiModel.value = VerifyUiModel.Deposit(
                         VerifyDepositUiModel(
-                            fromAddress = payload.coin.address,
-                            // TODO toAddress is empty on ios, get node address from memo
-                            nodeAddress = payload.toAddress,
-                            srcTokenValue = mapTokenValueToStringWithUnit(
-                                TokenValue(
-                                    value = payload.toAmount,
-                                    token = payload.coin,
-                                )
-
-                            ),
-                            estimatedFees = mapTokenValueToStringWithUnit(
-                                TokenValue(
-                                    value = fee,
-                                    token = payload.coin,
-                                )
-                            ),
-                            memo = payload.memo ?: "",
+                            depositTransactionUiModel
                         )
                     )
                 } else {
@@ -444,9 +465,11 @@ internal class JoinKeysignViewModel @Inject constructor(
                         totalGass = totalGasAndFee.second
                     )
 
+                    val transactionToUiModel = mapTransactionToUiModel(transaction)
+                    transitionTypeUiModel = TransitionTypeUiModel.Send(transactionToUiModel)
                     verifyUiModel.value = VerifyUiModel.Send(
                         VerifyTransactionUiModel(
-                            transaction = mapTransactionToUiModel(transaction),
+                            transaction = transactionToUiModel,
                         )
                     )
                     blowfishTransactionScan(transaction)
@@ -543,10 +566,10 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
         return false
     }
-
     fun enableNavigationToHome() {
         isNavigateToHome = true
     }
+
     fun navigateToHome() {
         viewModelScope.launch {
             if (isNavigateToHome) {

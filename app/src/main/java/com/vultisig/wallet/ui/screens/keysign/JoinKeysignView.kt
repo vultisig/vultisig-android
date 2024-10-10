@@ -132,7 +132,8 @@ internal fun JoinKeysignView(
                     onComplete = {
                         navController.navigate(Destination.Home().route)
                     },
-                    onBack = keysignViewModel::navigateToHome
+                    onBack = keysignViewModel::navigateToHome,
+                    transitionTypeUiModel = keysignViewModel.transitionTypeUiModel
                 )
             }
 

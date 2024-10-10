@@ -18,15 +18,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.KeepScreenOn
-import com.vultisig.wallet.ui.models.keysign.KeysignState
-import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
+import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.TransactionUiModel
+import com.vultisig.wallet.ui.models.keysign.KeysignState
+import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
+import com.vultisig.wallet.ui.models.keysign.TransitionTypeUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.showReviewPopUp
@@ -58,7 +59,7 @@ internal fun Keysign(
     }
     KeysignScreen(
         state = state,
-        transactionUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
+        transitionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
         errorMessage = keysignViewModel.errorMessage.value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
@@ -77,9 +78,9 @@ internal fun KeysignScreen(
     transactionLink: String,
     errorMessage: String,
     onComplete: () -> Unit,
-    onBack:() -> Unit = {},
+    onBack: () -> Unit = {},
     isThorChainSwap: Boolean = false,
-    transactionUiModel:TransactionUiModel? = null,
+    transitionTypeUiModel: TransitionTypeUiModel?
 ) {
     KeepScreenOn()
     val text = when (state) {
@@ -104,7 +105,7 @@ internal fun KeysignScreen(
                 onComplete = onComplete,
                 isThorChainSwap = isThorChainSwap,
                 onBack = onBack,
-                transaction = transactionUiModel,
+                transitionTypeUiModel = transitionTypeUiModel,
             )
         } else {
             UiSpacer(weight = 1f)
@@ -140,6 +141,19 @@ private fun KeysignPreview() {
         errorMessage = "Error",
         txHash = "0x1234567890",
         transactionLink = "",
+        transitionTypeUiModel = TransitionTypeUiModel.Send(
+            TransactionUiModel(
+                srcAddress = "0x1234567890",
+                dstAddress = "0x1234567890",
+                tokenValue = "1.1",
+                fiatValue = "1.1",
+                fiatCurrency = "USD",
+                gasFeeValue = "1.1",
+                memo = "some memo",
+                estimatedFee = "0.75 USd",
+                totalGas = "0.00031361"
+            )
+        ),
         onComplete = {},
     )
 }
