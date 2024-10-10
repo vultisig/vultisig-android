@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.db.migrations
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.work.impl.Migration_15_16
+import com.vultisig.wallet.data.models.Chain
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -255,6 +257,26 @@ val MIGRATION_14_15 = object : Migration(14, 15){
             """
             ALTER TABLE `vaultOrder` ADD COLUMN `parentId` TEXT
             """.trimMargin()
+        )
+    }
+}
+
+val MIGRATION_15_16=object :Migration(15,16) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL(
+            """
+            DELETE FROM tokenvalue 
+            WHERE chain = "BSC" 
+            AND ticker = "WETH"
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            DELETE FROM coin
+            WHERE id = 'WETH-BSC'
+            """.trimIndent()
         )
     }
 }
