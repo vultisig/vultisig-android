@@ -115,8 +115,6 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
-
-
     private val transactionRepository: TransactionRepository,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val swapTransactionRepository: SwapTransactionRepository,

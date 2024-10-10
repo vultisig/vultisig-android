@@ -167,7 +167,6 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var messagesToSign: List<String> = emptyList()
 
     private var _jobWaitingForKeysignStart: Job? = null
-
     private var isNavigateToHome: Boolean = false
 
     private var transitionTypeUiModel: TransitionTypeUiModel? = null
@@ -382,7 +381,6 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
                 }
             }
-
             else -> {
                 val isDeposit = when (val specific = payload.blockChainSpecific) {
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
@@ -568,7 +566,6 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
         return false
     }
-
     fun enableNavigationToHome() {
         isNavigateToHome = true
     }
