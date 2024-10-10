@@ -52,10 +52,34 @@ data class SolanaFeeObjectRespJson(
 
 
 @Serializable
+data class SolanaRpcError(
+    @SerialName("code")
+    val code: Int,
+    @SerialName("message")
+    val message: String,
+    @SerialName("data")
+    val data: RpcErrorData,
+)
+@Serializable
+data class RpcErrorData(
+    @SerialName("accounts")
+    val accounts: String?,
+    @SerialName("err")
+    val err: String,
+    @SerialName("innerInstructions")
+    val innerInstructions: String?,
+    @SerialName("logs")
+    val logs: List<String>,
+    @SerialName("returnData")
+    val returnData: String?,
+    @SerialName("unitsConsumed")
+    val unitsConsumed: Int,
+)
+@Serializable
 data class BroadcastTransactionRespJson(
     @SerialName("error")
     @Serializable
-    val error: JsonObject?,
+    val error: SolanaRpcError?,
     @SerialName("result")
     val result: String?,
 )
