@@ -4,12 +4,18 @@ import android.content.Context
 import androidx.room.Room
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
+import com.vultisig.wallet.data.db.dao.FolderDao
+import com.vultisig.wallet.data.db.dao.FolderOrderDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
+import com.vultisig.wallet.data.db.dao.VaultDao
+import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.migrations.MIGRATION_10_11
 import com.vultisig.wallet.data.db.migrations.MIGRATION_11_12
 import com.vultisig.wallet.data.db.migrations.MIGRATION_12_13
 import com.vultisig.wallet.data.db.migrations.MIGRATION_13_14
+import com.vultisig.wallet.data.db.migrations.MIGRATION_14_15
+import com.vultisig.wallet.data.db.migrations.MIGRATION_15_16
 import com.vultisig.wallet.data.db.migrations.MIGRATION_1_2
 import com.vultisig.wallet.data.db.migrations.MIGRATION_2_3
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
@@ -56,7 +62,9 @@ internal interface DatabaseModule {
                     MIGRATION_10_11,
                     MIGRATION_11_12,
                     MIGRATION_12_13,
-                    MIGRATION_13_14
+                    MIGRATION_13_14,
+                    MIGRATION_14_15,
+                    MIGRATION_15_16,
                 )
                 .build()
 
@@ -76,6 +84,12 @@ internal interface DatabaseModule {
 
         @Provides
         @Singleton
+        fun provideFolderOrderDao(
+            appDatabase: AppDatabase,
+        ): FolderOrderDao = appDatabase.folderOrderDao()
+
+        @Provides
+        @Singleton
         fun provideTokenValueDao(
             appDatabase: AppDatabase,
         ): TokenValueDao = appDatabase.tokenValueDao()
@@ -85,6 +99,12 @@ internal interface DatabaseModule {
         fun provideTokenPriceDao(
             appDatabase: AppDatabase,
         ): TokenPriceDao = appDatabase.tokenPriceDao()
+
+        @Provides
+        @Singleton
+        fun provideFolderDao(
+            appDatabase: AppDatabase,
+        ): FolderDao = appDatabase.folderDao()
 
         @Provides
         @Singleton

@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormCard
+import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.AddressField
@@ -69,12 +70,9 @@ internal fun VerifySwapScreen(
 ) {
     VerifySwapScreen(
         provider = state.provider.asString(),
-        srcTokenValue = state.srcTokenValue,
-        dstTokenValue = state.dstTokenValue,
-        estimatedFees = state.estimatedFees,
+        swapTransactionUiModel = state.swapTransactionUiModel,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
-        hasConsentAllowance = state.hasConsentAllowance,
         consentAllowance = state.consentAllowance,
         confirmTitle = confirmTitle,
         isConsentsEnabled = isConsentsEnabled,
@@ -90,12 +88,9 @@ internal fun VerifySwapScreen(
 @Composable
 private fun VerifySwapScreen(
     provider: String,
-    srcTokenValue: String,
-    dstTokenValue: String,
-    estimatedFees: String,
+    swapTransactionUiModel: SwapTransactionUiModel,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
-    hasConsentAllowance: Boolean,
     consentAllowance: Boolean,
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
@@ -167,15 +162,15 @@ private fun VerifySwapScreen(
                 ) {
                     AddressField(
                         title = stringResource(R.string.verify_transaction_from_title),
-                        address = srcTokenValue,
+                        address = swapTransactionUiModel.srcTokenValue,
                     )
 
                     AddressField(
                         title = stringResource(R.string.verify_transaction_to_title),
-                        address = dstTokenValue
+                        address = swapTransactionUiModel.dstTokenValue
                     )
 
-                    if (hasConsentAllowance) {
+                    if (swapTransactionUiModel.hasConsentAllowance) {
                         AddressField(
                             title = stringResource(R.string.verify_approve_amount_title),
                             address = stringResource(R.string.verify_approve_amount_unlimited),
@@ -184,7 +179,7 @@ private fun VerifySwapScreen(
 
                     OtherField(
                         title = stringResource(R.string.verify_swap_screen_estimated_fees),
-                        value = estimatedFees,
+                        value = swapTransactionUiModel.estimatedFees,
                         divider = false,
                     )
                 }
@@ -206,7 +201,7 @@ private fun VerifySwapScreen(
                         onCheckedChange = onConsentReceiveAmount,
                     )
 
-                    if (hasConsentAllowance) {
+                    if (swapTransactionUiModel.hasConsentAllowance) {
                         CheckField(
                             title = stringResource(R.string.verify_swap_agree_allowance),
                             isChecked = consentAllowance,
@@ -225,12 +220,14 @@ private fun VerifySwapScreen(
 private fun VerifySwapScreenPreview() {
     VerifySwapScreen(
         provider = "THORChain",
-        srcTokenValue = "1 RUNE",
-        dstTokenValue = "1 ETH",
-        estimatedFees = "1.00$",
         consentAmount = true,
         consentReceiveAmount = false,
-        hasConsentAllowance = true,
+        swapTransactionUiModel = SwapTransactionUiModel(
+            srcTokenValue = "1 RUNE",
+            dstTokenValue = "1 ETH",
+            estimatedFees = "1.00$",
+            hasConsentAllowance = true,
+        ),
         consentAllowance = true,
         confirmTitle = "Sign",
         hasFastSign = false,

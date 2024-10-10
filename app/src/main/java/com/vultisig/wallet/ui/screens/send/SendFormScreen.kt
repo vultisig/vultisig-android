@@ -21,10 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -39,6 +44,7 @@ import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 
@@ -60,6 +66,19 @@ internal fun SendFormScreen(
         viewModel.setAddressFromQrCode(qrCodeResult)
     }
 
+    val selectedChain = state.selectedCoin?.model?.address?.chain
+    val specific = state.specific
+
+    if (state.showGasSettings && selectedChain != null && specific != null) {
+        EthGasSettingsScreen(
+            navController = rememberNavController(),
+            chain = selectedChain,
+            specific = specific,
+            onSaveGasSettings = viewModel::saveGasSettings,
+            onDismissGasSettings = viewModel::dismissGasSettings,
+        )
+    }
+
     SendFormScreen(
         state = state,
         addressFieldState = viewModel.addressFieldState,
@@ -73,6 +92,7 @@ internal fun SendFormScreen(
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onChoosePercentageAmount = viewModel::choosePercentageAmount,
+        onChangeGasClick = viewModel::openGasSettings,
         onScan = viewModel::scanAddress,
         onAddressBookClick = viewModel::openAddressBook,
         onSend = viewModel::send,
@@ -95,6 +115,7 @@ internal fun SendFormScreen(
     onChooseMaxTokenAmount: () -> Unit = {},
     onChoosePercentageAmount: (Float) -> Unit = {},
     onAddressBookClick: () -> Unit = {},
+    onChangeGasClick: () -> Unit = {},
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
 ) {
@@ -214,13 +235,48 @@ internal fun SendFormScreen(
             )
             if (state.showGasFee) {
                 FormDetails(
-                    title = stringResource(R.string.send_gas_title),
-                    value = state.fee ?: "",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onChangeGasClick),
+                    title = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral100,
+                                fontSize = Theme.menlo.body1.fontSize,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                                fontWeight = Theme.menlo.body1.fontWeight,
+
+                                )
+                        ) {
+                            append(stringResource(R.string.send_form_network_fee))
+                        }
+                    },
+                    value = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral100,
+                                fontSize = Theme.menlo.body1.fontSize,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                            )
+                        ) {
+                            append(state.totalGas.asString())
+                        }
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral400,
+                                fontSize = Theme.menlo.body1.fontSize,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                            )
+                        ) {
+                            append(" (~${state.estimatedFee.asString()})")
+                        }
+                    }
                 )
             }
             UiSpacer(size = 80.dp)
 
         }
+
 
         MultiColorButton(
             text = stringResource(R.string.send_continue_button),
@@ -245,7 +301,11 @@ internal fun SendFormScreen(
 @Composable
 private fun SendFormScreenPreview() {
     SendFormScreen(
-        state = SendFormUiModel(),
+        state = SendFormUiModel(
+            totalGas = UiText.DynamicString("12.5 Eth"),
+            showGasFee = true,
+            estimatedFee = UiText.DynamicString("$3.4"),
+        ),
         addressFieldState = TextFieldState(),
         tokenAmountFieldState = TextFieldState(),
         fiatAmountFieldState = TextFieldState(),

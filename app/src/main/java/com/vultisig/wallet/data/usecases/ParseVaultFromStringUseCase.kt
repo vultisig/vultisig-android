@@ -48,7 +48,7 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
 
         val vaultBytes = if (containerProto.isEncrypted) {
             if (password != null) {
-                encryption.decrypt(possiblyEncryptedVaultBytes, password)
+                encryption.decrypt(possiblyEncryptedVaultBytes, password.toByteArray())
                     ?: error("Failed to decrypt the vault")
             } else {
                 error("Vault is encrypted, but no password provided")
@@ -85,7 +85,7 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
         val fromJson = try {
             val hexToPlainString = mapHexToPlainString(
                 if (password != null) {
-                    encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password)
+                    encryption.decrypt(Base64.decode(input, Base64.DEFAULT), password.toByteArray())
                         ?.decodeToString()
                         ?: error("Failed to decrypt the old vault")
                 } else {

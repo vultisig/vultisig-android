@@ -560,13 +560,13 @@ object Coins {
         ),
         Coin(
             chain = Chain.BscChain,
-            ticker = "WETH",
-            logo = "weth",
+            ticker = "ETH",
+            logo = "eth",
             address = "",
             decimal = 18,
             hexPublicKey = "",
             priceProviderID = "",
-            contractAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            contractAddress = "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
             isNativeToken = false,
         ),
         Coin(

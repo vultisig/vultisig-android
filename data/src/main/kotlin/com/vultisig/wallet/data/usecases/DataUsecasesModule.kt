@@ -37,12 +37,31 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindMakeQrCodeBitmapShareFormat(
-        impl: MakeQrCodeBitmapShareFormatImpl
+        impl: MakeQrCodeBitmapShareFormatImpl,
     ): MakeQrCodeBitmapShareFormat
 
     @Binds
     @Singleton
     fun bindGenerateQrCodeBitmap(
-        impl: GenerateQrBitmapImpl
+        impl: GenerateQrBitmapImpl,
     ): GenerateQrBitmap
+
+    @Binds
+    @Singleton
+    fun bindGetOrderedVaults(
+        impl: GetOrderedVaultsImpl
+    ): GetOrderedVaults
+
+    @Binds
+    @Singleton
+    fun bindConvertWeiToGwei(
+        impl: ConvertWeiToGweiUseCaseImpl
+    ): ConvertWeiToGweiUseCase
+
+    @Binds
+    @Singleton
+    fun bindConvertGweiToWei(
+        impl: ConvertGweiToWeiUseCaseImpl
+    ): ConvertGweiToWeiUseCase
+
 }

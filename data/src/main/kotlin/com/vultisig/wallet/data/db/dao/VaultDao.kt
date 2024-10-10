@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.db
+package com.vultisig.wallet.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Insert

@@ -36,12 +36,21 @@ internal class ConvertTokenValueToFiatUseCaseImpl @Inject constructor(
             priceDraft
         }
 
-        val decimal = tokenValue.decimal
+        val decimal = if (tokenValue.unit == GWEI_UNIT) {
+            tokenValue.decimal.divide(ONE_GWEI)
+        } else {
+            tokenValue.decimal
+        }
 
         return FiatValue(
             value = decimal * price,
             currency = appCurrency.ticker,
         )
+    }
+
+    companion object {
+        private val ONE_GWEI = BigDecimal.valueOf(1_000_000_000L)
+        private const val GWEI_UNIT = "Gwei"
     }
 
 }

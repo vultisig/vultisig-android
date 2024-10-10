@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.CustomTokenResponse
+import com.vultisig.wallet.data.api.models.EvmBaseFeeJson
+import com.vultisig.wallet.data.api.models.EvmFeeHistoryResponseJson
+import com.vultisig.wallet.data.api.models.EvmRpcResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.RpcResponse
 import com.vultisig.wallet.data.api.models.RpcResponseJson
@@ -18,6 +21,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add
+import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
@@ -36,6 +40,8 @@ interface EvmApi {
     suspend fun getGasPrice(): BigInteger
     suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse>
     suspend fun resolveENS(namehash: String): String
+    suspend fun getBaseFee(): BigInteger
+    suspend fun getFeeHistory(): List<BigInteger>
     suspend fun zkEstimateFee(srcAddress: String, dstAddress: String, data: String): ZkGasFee
 }
 
@@ -294,6 +300,36 @@ class EvmApiImp(
         )
     }
 
+    override suspend fun getBaseFee(): BigInteger {
+        val response = fetch<EvmRpcResponseJson<EvmBaseFeeJson>>(
+            method = "eth_getBlockByNumber",
+            params = buildJsonArray {
+                add("latest")
+                add(true)
+            }
+        )
+        return response.result.baseFeePerGas.convertToBigIntegerOrZero()
+    }
+
+    override suspend fun getFeeHistory(): List<BigInteger> {
+        val response = fetch<EvmFeeHistoryResponseJson>(
+            method = "eth_feeHistory",
+            params = buildJsonArray {
+                add(10)
+                add("latest")
+                addJsonArray {
+                    add(5)
+                }
+            }
+        )
+
+        val rewards = response.result.reward
+
+        return rewards.mapNotNull { it.firstOrNull() }
+            .map { it.convertToBigIntegerOrZero() }
+            .sorted()
+    }
+
     override suspend fun zkEstimateFee(
         srcAddress: String,
         dstAddress: String,
@@ -395,8 +431,17 @@ class EvmApiImp(
     }
 
 
-    private fun String?.convertToBigIntegerOrZero(): BigInteger =
-        BigInteger(this?.removePrefix("0x") ?: "0", 16)
+    private fun String?.convertToBigIntegerOrZero(): BigInteger {
+        val cleanedInput = this?.removePrefix("0x")
+        return if (cleanedInput.isNullOrEmpty()) {
+            BigInteger.ZERO
+        } else {
+            BigInteger(
+                cleanedInput,
+                16
+            )
+        }
+    }
 
     companion object {
         private const val CUSTOM_TOKEN_RESPONSE_TICKER_ID = 2

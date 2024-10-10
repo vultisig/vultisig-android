@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.repositories.order
 
-import com.vultisig.wallet.data.db.BaseOrderDao
+import com.vultisig.wallet.data.db.dao.BaseOrderDao
 import com.vultisig.wallet.data.db.models.BaseOrderEntity
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +20,8 @@ interface OrderRepository<T : BaseOrderEntity> {
     suspend fun deleteAll(parentId: String?)
     suspend fun find(parentId: String?, name: String): T?
     suspend fun insert(parentId: String?, name: String): Float
+    suspend fun updateList(parentId: String?, names: List<String>)
+    suspend fun removeParentId(parentId: String?)
 }
 
 
@@ -77,6 +79,14 @@ abstract class OrderRepositoryImpl<T : BaseOrderEntity>(
 
     override suspend fun deleteAll(parentId: String?)  = withContext(IO){
         baseOrderDao.deleteAll(parentId)
+    }
+
+    override suspend fun updateList(parentId: String?, names: List<String>) {
+        baseOrderDao.removeParentId(parentId, names)
+    }
+
+    override suspend fun removeParentId(parentId: String?) {
+        baseOrderDao.removeParentId(parentId)
     }
 
     protected abstract fun defaultOrder(parentId: String?): T

@@ -58,4 +58,15 @@ internal interface UseCasesModule {
         impl: EnableTokenUseCaseImpl
     ): EnableTokenUseCase
 
+    @Binds
+    @Singleton
+    fun bindIsAssetsValidUseCase(
+        impl: DepositMemoAssetsValidatorUseCaseImpl
+    ): DepositMemoAssetsValidatorUseCase
+
+    @Binds
+    @Singleton
+    fun bindGasFeeToEstimatedFeeUseCase(
+        impl: GasFeeToEstimatedFeeUseCaseImpl,
+    ): GasFeeToEstimatedFeeUseCase
 }

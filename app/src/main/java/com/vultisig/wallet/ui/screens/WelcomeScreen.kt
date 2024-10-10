@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.PagerCircleIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.UiEvent
 import com.vultisig.wallet.ui.models.WelcomeViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -95,9 +96,8 @@ internal fun WelcomeScreen(
                     vertical = 16.dp,
                     horizontal = 16.dp,
                 ),
-        ) {
-            viewModel.scrollToNextPage()
-        }
+            onClick = { viewModel.scrollToNextPage() }
+        )
         Spacer(
             modifier = Modifier
                 .weight(0.3f)

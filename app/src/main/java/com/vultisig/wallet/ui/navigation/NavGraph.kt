@@ -37,6 +37,8 @@ import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.WelcomeScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
+import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
+import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
@@ -54,6 +56,7 @@ import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
 import com.vultisig.wallet.ui.screens.settings.FAQSettingScreen
 import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
+import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
@@ -199,6 +202,17 @@ internal fun SetupNavGraph(
 
         composable(route = Destination.ImportVault.route) {
             ImportFileScreen(navController)
+        }
+        composable(route = Destination.CreateFolder.route) {
+            CreateFolderScreen(navController)
+        }
+        composable(
+            route = Destination.Folder.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(Destination.Folder.ARG_FOLDER_ID) { type = NavType.StringType }
+            )
+        ) {
+            FolderScreen()
         }
         composable(
             route = AddChainAccount.route,
@@ -526,6 +540,17 @@ internal fun SetupNavGraph(
             )
         ) {
             ReshareStartScreen(navController)
+        }
+
+        composable(
+            route = Destination.RegisterVault.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            RegisterVaultScreen(navController)
         }
     }
 }
