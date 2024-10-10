@@ -631,7 +631,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
-                value = 1.toBigInteger(),
+                value = BigInteger.ZERO,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
