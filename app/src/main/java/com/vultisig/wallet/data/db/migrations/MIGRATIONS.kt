@@ -234,27 +234,8 @@ val MIGRATION_13_14 = object : Migration(13, 14){
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_coin_vaultId` ON `coin` (`vaultId`)")
     }
 }
-val MIGRATION_14_15=object :Migration(14,15) {
-    override fun migrate(db: SupportSQLiteDatabase) {
 
-        db.execSQL(
-            """
-            DELETE FROM tokenvalue 
-            WHERE chain = "BSC" 
-            AND ticker = "WETH"
-            """.trimIndent()
-        )
-
-        db.execSQL(
-            """
-            DELETE FROM coin
-            WHERE id = 'WETH-BSC'
-            """.trimIndent()
-        )
-    }
-}
-
-val MIGRATION_15_16 = object : Migration(15, 16){
+val MIGRATION_14_15 = object : Migration(15, 16){
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
@@ -276,6 +257,26 @@ val MIGRATION_15_16 = object : Migration(15, 16){
             """
             ALTER TABLE `vaultOrder` ADD COLUMN `parentId` TEXT
             """.trimMargin()
+        )
+    }
+}
+
+val MIGRATION_15_16=object :Migration(14,15) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+
+        db.execSQL(
+            """
+            DELETE FROM tokenvalue 
+            WHERE chain = "BSC" 
+            AND ticker = "WETH"
+            """.trimIndent()
+        )
+
+        db.execSQL(
+            """
+            DELETE FROM coin
+            WHERE id = 'WETH-BSC'
+            """.trimIndent()
         )
     }
 }
