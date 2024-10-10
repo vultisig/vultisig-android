@@ -4,7 +4,7 @@ ktorClientMock = "2.0.0"
 minSdk = "26"
 
 accompanistPermissions = "0.36.0"
-agp = "8.10.0"
+agp = "8.10"
 apache-compress = "1.27.1"
 apache-compress-xz = "1.10"
 barcodeScanning = "17.3.0"
