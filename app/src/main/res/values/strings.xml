@@ -279,7 +279,6 @@
     <string name="share_vault_qr_title" >Share Vault QR</string>
     <string name="share_vault_qr_save" >Save</string>
     <string name="share_vault_qr_share" >Share</string>
-    <string name="share_vault_qr_card_keys">ECDSA Key: %1$s EdDSA Key: %2$s</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
@@ -418,6 +417,8 @@
     <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
     <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>
     <string name="naming_vault_placeholder_secure_vault" translatable="false">Secure Vault</string>
+    <string name="share_vault_qr_uid" translatable="false">UID: %s</string>
+    <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>

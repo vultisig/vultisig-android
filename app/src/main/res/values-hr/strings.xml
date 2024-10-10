@@ -291,7 +291,6 @@
     <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
     <string name="settings_screen_tos">Uvjeti usluge</string>
-    <string name="share_vault_qr_card_keys">ECDSA ključ: %1$s EdDSA ključ: %2$s</string>
     <string name="import_file_not_supported">Vrsta datoteke nije podržana</string>
     <string name="failed_to_resolve_address">Neuspjelo rješavanje adrese</string>
     <string name="join_keygen_invalid_qr_code">Analiza QR koda nije uspjela</string>

@@ -291,7 +291,6 @@
     <string name="settings_screen_legal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
     <string name="settings_screen_tos">Servicebedingungen</string>
-    <string name="share_vault_qr_card_keys">ECDSA-Schlüssel: %1$s EdDSA-Schlüssel: %2$s</string>
     <string name="import_file_not_supported">Der Dateityp wird nicht unterstützt</string>
     <string name="join_keygen_invalid_qr_code">QR-Code konnte nicht analysiert werden</string>
     <string name="join_keygen_failed">Beitritt zum %1$s fehlgeschlagen</string>
