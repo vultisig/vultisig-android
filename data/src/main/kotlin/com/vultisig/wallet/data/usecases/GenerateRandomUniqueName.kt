@@ -1,16 +1,16 @@
 package com.vultisig.wallet.data.usecases
 
-import jakarta.inject.Inject
+import javax.inject.Inject
 
-interface GenerateUniqueName : (String, List<String>) -> String
+interface GenerateRandomUniqueName : (String, List<String>) -> String
 
-internal class GenerateUniqueNameImpl @Inject constructor() : GenerateUniqueName {
+internal class GenerateRandomUniqueNameImpl @Inject constructor() : GenerateRandomUniqueName {
     override fun invoke(targetName: String, takenNames: List<String>): String {
         var newName = targetName
-        var i = 1
+        var i = (0..1000).random()
         while (takenNames.contains(newName)) {
             newName = "$targetName #$i"
-            i++
+            i = (0..1000).random()
         }
         return newName
     }
