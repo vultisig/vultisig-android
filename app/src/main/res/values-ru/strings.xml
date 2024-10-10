@@ -262,7 +262,6 @@
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save" >Сохранить</string>
     <string name="share_vault_qr_share" >Поделиться</string>
-    <string name="share_vault_qr_card_keys">Ключ ECDSA: %1$s Ключ EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>
     <string name="deposit_form_provider_hint">Провайдер</string>

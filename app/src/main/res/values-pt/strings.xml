@@ -258,7 +258,6 @@
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartilhar</string>
-    <string name="share_vault_qr_card_keys">Chave ECDSA: %1$s Chave EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>
     <string name="deposit_form_provider_hint">Provedor</string>

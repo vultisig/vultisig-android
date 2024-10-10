@@ -302,7 +302,6 @@
     <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>
-    <string name="share_vault_qr_card_keys">ECDSA-sleutel: %1$s EdDSA-sleutel: %2$s</string>
     <string name="import_file_not_supported">Bestandstype wordt niet ondersteund</string>
     <string name="failed_to_resolve_address">Mislukt om adres op te lossen</string>
     <string name="join_keygen_invalid_qr_code">Het is niet gelukt om de QR-code te parseren</string>
