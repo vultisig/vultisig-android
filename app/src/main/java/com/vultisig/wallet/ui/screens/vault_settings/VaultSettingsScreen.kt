@@ -41,6 +41,7 @@ internal fun VaultSettingsScreen(
         navController = navController,
         onBackupClick = viewModel::navigateToBackupPasswordScreen,
         onReshareClick = viewModel::navigateToReshareStartScreen,
+        onBiometricsClick = viewModel::navigateToBiometricsScreen,
         onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
     )
 }
@@ -52,6 +53,7 @@ private fun VaultSettingsScreen(
     navController: NavController,
     onBackupClick: () -> Unit = {},
     onReshareClick: () -> Unit = {},
+    onBiometricsClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
 ) {
     Scaffold(
@@ -109,6 +111,15 @@ private fun VaultSettingsScreen(
                 icon = R.drawable.share,
                 onClick = onReshareClick
             )
+
+            if (uiModel.hasFastSign) {
+                SettingsItem(
+                    title = stringResource(R.string.vault_settings_biometrics_title),
+                    subtitle = stringResource(R.string.vault_settings_biometrics_description),
+                    icon = R.drawable.ic_biometric,
+                    onClick = onBiometricsClick,
+                )
+            }
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_delete_title),

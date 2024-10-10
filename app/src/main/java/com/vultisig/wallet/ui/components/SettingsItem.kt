@@ -52,8 +52,7 @@ internal fun SettingsItem(
                     .padding(
                         end = 12.dp,
                     )
-                    .size(20.dp)
-                    .clip(CircleShape),
+                    .size(20.dp),
                 painter = painterResource(id = icon),
                 contentDescription = stringResource(R.string.token_logo),
                 tint = colorTint ?: Theme.colors.neutral100,

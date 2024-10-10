@@ -256,6 +256,7 @@
     <string name="deposit_form_amount_title">Cantidad</string>
     <string name="share_vault_qr_title">Compartir Bóveda QR</string>
     <string name="share_vault_qr_save" >Guardar</string>
+    <string name="vault_settings_enable_biometrics_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartir</string>
     <string name="share_vault_qr_card_keys">Clave ECDSA: %1$s Clave EdDSA: %2$s</string>
     <string name="deposit_form_node_address_title">Dirección del nodo</string>
