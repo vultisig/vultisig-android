@@ -37,6 +37,9 @@ import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.wallet.OneInchSwap
+import com.vultisig.wallet.ui.models.TransactionUiModel
+import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
+import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -63,6 +66,13 @@ enum class KeysignState {
     ERROR
 }
 
+
+internal sealed interface TransitionTypeUiModel {
+    data class Send(val transactionUiModel: TransactionUiModel) : TransitionTypeUiModel
+    data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransitionTypeUiModel
+    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransitionTypeUiModel
+}
+
 internal class KeysignViewModel(
     val vault: Vault,
     private val keysignCommittee: List<String>,
@@ -84,7 +94,7 @@ internal class KeysignViewModel(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
-    val transactionId: String?,
+    val transitionTypeUiModel: TransitionTypeUiModel?,
 ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -273,12 +283,22 @@ internal class KeysignViewModel(
             when (swapPayload) {
                 is SwapPayload.ThorChain -> {
                     return THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
+                        .getSignedTransaction(
+                            swapPayload.data,
+                            keysignPayload,
+                            signatures,
+                            nonceAcc
+                        )
                 }
 
                 is SwapPayload.OneInch -> {
-                    return  OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
-                        .getSignedTransaction(swapPayload.data, keysignPayload, signatures, nonceAcc)
+                    return OneInchSwap(vault.pubKeyECDSA, vault.hexChainCode)
+                        .getSignedTransaction(
+                            swapPayload.data,
+                            keysignPayload,
+                            signatures,
+                            nonceAcc
+                        )
                 }
 
                 else -> {}

@@ -5,13 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
-import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
-import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.SendDst.Companion.ARG_TRANSACTION_ID
@@ -19,20 +16,22 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
-internal data class VerifySwapUiModel(
-    val provider: UiText = UiText.Empty,
+internal data class SwapTransactionUiModel(
     val srcTokenValue: String = "",
     val dstTokenValue: String = "",
     val estimatedFees: String = "",
+    val hasConsentAllowance: Boolean = false,
+)
+
+internal data class VerifySwapUiModel(
+    val swapTransactionUiModel: SwapTransactionUiModel = SwapTransactionUiModel(),
+    val provider: UiText = UiText.Empty,
     val consentAmount: Boolean = false,
     val consentReceiveAmount: Boolean = false,
-    val hasConsentAllowance: Boolean = false,
     val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
@@ -42,12 +41,10 @@ internal data class VerifySwapUiModel(
 internal class VerifySwapViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val sendNavigator: Navigator<SendDst>,
-    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
-    private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
+    private val mapTransactionToUiModel: SwapTransactionToUiModelMapper,
 
     private val swapTransactionRepository: SwapTransactionRepository,
-    private val appCurrencyRepository: AppCurrencyRepository,
+
     private val vaultRepository: VaultRepository,
     private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
@@ -59,30 +56,18 @@ internal class VerifySwapViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val currency = appCurrencyRepository.currency.first()
             val transaction = swapTransactionRepository.getTransaction(transactionId)
-
-            val fiatFees = convertTokenValueToFiat(
-                transaction.dstToken,
-                transaction.estimatedFees, currency
-            )
-
             val providerText = when (transaction.payload) {
                 is SwapPayload.OneInch -> R.string.swap_for_provider_1inch.asUiText()
                 is SwapPayload.ThorChain -> R.string.swap_form_provider_thorchain.asUiText()
                 is SwapPayload.MayaChain -> R.string.swap_form_provider_mayachain.asUiText()
             }
-
             val consentAllowance = !transaction.isApprovalRequired
-
             state.update {
                 it.copy(
                     provider = providerText,
-                    srcTokenValue = mapTokenValueToStringWithUnit(transaction.srcTokenValue),
-                    dstTokenValue = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue),
-                    hasConsentAllowance = transaction.isApprovalRequired,
                     consentAllowance = consentAllowance,
-                    estimatedFees = fiatValueToStringMapper.map(fiatFees),
+                    swapTransactionUiModel = mapTransactionToUiModel(transaction)
                 )
             }
         }

@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
-import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
+import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
@@ -16,12 +16,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class VerifyDepositUiModel(
+internal data class DepositTransactionUiModel(
     val fromAddress: String = "",
     val srcTokenValue: String = "",
     val estimatedFees: String = "",
     val memo: String = "",
     val nodeAddress: String = "",
+)
+
+internal data class VerifyDepositUiModel(
+    val depositTransactionUiModel: DepositTransactionUiModel = DepositTransactionUiModel(),
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
 )
@@ -30,7 +34,7 @@ internal data class VerifyDepositUiModel(
 internal class VerifyDepositViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val sendNavigator: Navigator<SendDst>,
-    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
+    private val mapTransactionToUiModel: DepositTransactionToUiModelMapper,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val vaultRepository: VaultRepository,
     private val vultiSignerRepository: VultiSignerRepository,
@@ -47,11 +51,7 @@ internal class VerifyDepositViewModel @Inject constructor(
 
             state.update {
                 it.copy(
-                    fromAddress = transaction.srcAddress,
-                    srcTokenValue = mapTokenValueToStringWithUnit(transaction.srcTokenValue),
-                    estimatedFees = mapTokenValueToStringWithUnit(transaction.estimatedFees),
-                    memo = transaction.memo,
-                    nodeAddress = transaction.dstAddress,
+                    depositTransactionUiModel = mapTransactionToUiModel(transaction)
                 )
             }
         }

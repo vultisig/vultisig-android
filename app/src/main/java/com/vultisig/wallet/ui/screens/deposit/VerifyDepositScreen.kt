@@ -59,12 +59,13 @@ internal fun VerifyDepositScreen(
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
 ) {
+    val transactionUiModel = state.depositTransactionUiModel
     VerifyDepositScreen(
-        fromAddress = state.fromAddress,
-        srcTokenValue = state.srcTokenValue,
-        estimatedFees = state.estimatedFees,
-        memo = state.memo,
-        nodeAddress = state.nodeAddress,
+        fromAddress = transactionUiModel.fromAddress,
+        srcTokenValue = transactionUiModel.srcTokenValue,
+        estimatedFees = transactionUiModel.estimatedFees,
+        memo = transactionUiModel.memo,
+        nodeAddress = transactionUiModel.nodeAddress,
         confirmTitle = confirmTitle,
         hasFastSign = state.hasFastSign,
         onFastSignClick = onFastSignClick,
