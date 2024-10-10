@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.db.migrations
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.work.impl.Migration_15_16
 import com.vultisig.wallet.data.models.Chain
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -253,7 +254,7 @@ val MIGRATION_14_15=object :Migration(14,15) {
     }
 }
 
-val MIGRATION_14_15 = object : Migration(14, 15){
+val MIGRATION_15_16 = object : Migration(15, 16){
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
             """
