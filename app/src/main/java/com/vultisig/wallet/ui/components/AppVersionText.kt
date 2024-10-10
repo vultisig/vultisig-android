@@ -12,10 +12,10 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun AppVersionText(
-    modifier: Modifier = Modifier.padding(12.dp)
+    modifier: Modifier = Modifier,
 ) {
     Text(
-        modifier = modifier,
+        modifier = modifier.padding(12.dp),
         text = stringResource(
             R.string.vultisig_app_version,
             "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"

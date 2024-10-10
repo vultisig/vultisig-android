@@ -14,7 +14,7 @@
     <issue id="ImplicitSamInstance" severity="error" />
     <issue id="InvalidPackage" severity="warning" />
     <issue id="KotlinPropertyAccess" severity="warning" />
-    <issue id="ModifierParameter" severity="warning" />
+    <issue id="ModifierParameter" severity="error" />
     <issue id="NewerVersionAvailable" severity="warning" />
     <issue id="ObsoleteSdkInt" severity="warning" />
     <issue id="OldTargetApi" severity="warning" />
