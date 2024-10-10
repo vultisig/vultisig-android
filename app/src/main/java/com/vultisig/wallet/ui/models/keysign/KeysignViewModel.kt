@@ -84,7 +84,8 @@ internal class KeysignViewModel(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
-    ) : ViewModel() {
+    val transactionId: String?,
+) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)

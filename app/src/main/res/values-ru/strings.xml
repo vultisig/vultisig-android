@@ -35,8 +35,8 @@
     <string name="send_amount_hint">Введите сумму</string>
     <string name="send_amount_currency">Сумма (в %s)</string>
     <string name="send_amount_currency_hint">Введите сумму</string>
-    <string name="send_gas_title">Газ (авто)</string>
     <string name="send_continue_button">Продолжить</string>
+    <string name="send_form_network_fee">Сетевой сбор</string>
     <string name="chain_account_view_send">ОТПРАВИТЬ</string>
     <string name="chain_account_view_swap">ОБМЕН</string>
     <string name="chain_account_view_deposit">ДЕПОЗИТ</string>
@@ -71,8 +71,7 @@
     <string name="verify_transaction_from_title">От</string>
     <string name="verify_transaction_to_title">Кому</string>
     <string name="verify_transaction_amount_title">Сумма</string>
-    <string name="verify_transaction_fiat_amount_title">Сумма в (%s)</string>
-    <string name="verify_transaction_gas_title">Газ</string>
+    <string name="verify_transaction_value">Ценить</string>
     <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
@@ -310,5 +309,6 @@
     <string name="join_keygen_failed">Не удалось присоединиться к %1$s</string>
     <string name="join_keygen_screen_reshare">Повторное совместное использование</string>
     <string name="join_keygen_screen_keygen">Генерация ключа</string>
+    <string name="verify_transaction_network_fee">Сетевой сбор (авто)</string>
 
 </resources>

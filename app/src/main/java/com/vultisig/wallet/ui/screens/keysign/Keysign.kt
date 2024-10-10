@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
+import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.showReviewPopUp
@@ -52,10 +53,12 @@ internal fun Keysign(
         if (state == KeysignState.KeysignFinished) {
             onKeysignFinished?.invoke()
             reviewManager.showReviewPopUp(context)
+            wrapperViewModel.loadTransaction()
         }
     }
     KeysignScreen(
         state = state,
+        transactionUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
         errorMessage = keysignViewModel.errorMessage.value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
@@ -76,6 +79,7 @@ internal fun KeysignScreen(
     onComplete: () -> Unit,
     onBack:() -> Unit = {},
     isThorChainSwap: Boolean = false,
+    transactionUiModel:TransactionUiModel? = null,
 ) {
     KeepScreenOn()
     val text = when (state) {
@@ -99,7 +103,8 @@ internal fun KeysignScreen(
                 transactionLink = transactionLink,
                 onComplete = onComplete,
                 isThorChainSwap = isThorChainSwap,
-                onBack = onBack
+                onBack = onBack,
+                transaction = transactionUiModel,
             )
         } else {
             UiSpacer(weight = 1f)

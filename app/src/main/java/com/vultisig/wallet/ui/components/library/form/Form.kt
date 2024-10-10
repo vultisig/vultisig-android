@@ -45,10 +45,12 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.PercentText
@@ -569,6 +571,30 @@ internal fun FormDetails(
             style = Theme.montserrat.body1,
         )
         UiSpacer(weight = 1f)
+        Text(
+            text = value,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body1
+        )
+    }
+}
+
+@Composable
+internal fun FormDetails(
+    title: AnnotatedString,
+    value: AnnotatedString,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            color = Theme.colors.neutral100,
+            style = Theme.montserrat.body1,
+        )
         Text(
             text = value,
             color = Theme.colors.neutral100,

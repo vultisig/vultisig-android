@@ -24,6 +24,8 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
+import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TssKeyType
@@ -42,6 +44,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -72,6 +75,7 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.KeysignMessage
+import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -127,7 +131,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val blowfishRepository: BlowfishRepository,
     private val vaultRepository: VaultRepository,
-
+    private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
@@ -164,7 +168,7 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private var isNavigateToHome: Boolean = false
 
-    val keysignPayload: KeysignPayload?
+    private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -188,6 +192,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
+            transactionId = null,
         )
 
     val verifyUiModel =
@@ -222,7 +227,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 Timber.d("Mapped proto to KeysignMessage: $payload")
 
                 if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-                    val matchingVault = vaultRepository.getAll().firstOrNull() {
+                    val matchingVault = vaultRepository.getAll().firstOrNull {
                         it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
                     }
                     matchingVault?.let {
@@ -406,6 +411,17 @@ internal class JoinKeysignViewModel @Inject constructor(
                     )
 
                     val gasFee = gasFeeRepository.getGasFee(chain, address)
+                    val totalGasAndFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                (payload.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                            } else {
+                                BigInteger.valueOf(1)
+                            },
+                            gasFee = gasFee,
+                            selectedToken = payload.coin,
+                        )
+                    )
 
                     val transaction = Transaction(
                         id = UUID.randomUUID().toString(),
@@ -423,8 +439,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         gasFee = gasFee,
                         memo = payload.memo,
-
+                        estimatedFee = totalGasAndFee.first,
                         blockChainSpecific = payload.blockChainSpecific,
+                        totalGass = totalGasAndFee.second
                     )
 
                     verifyUiModel.value = VerifyUiModel.Send(

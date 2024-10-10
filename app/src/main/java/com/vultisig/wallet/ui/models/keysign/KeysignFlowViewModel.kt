@@ -135,6 +135,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         mutableStateOf(NetworkPromptOption.INTERNET)
 
     val password = savedStateHandle.get<String?>(SendDst.ARG_PASSWORD)
+    val transactionId = savedStateHandle.get<String>(SendDst.ARG_TRANSACTION_ID)
 
     val isFastSign: Boolean
         get() = password != null
@@ -166,6 +167,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
+            transactionId = transactionId
         )
 
     init {

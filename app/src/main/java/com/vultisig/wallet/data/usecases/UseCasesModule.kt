@@ -64,4 +64,9 @@ internal interface UseCasesModule {
         impl: DepositMemoAssetsValidatorUseCaseImpl
     ): DepositMemoAssetsValidatorUseCase
 
+    @Binds
+    @Singleton
+    fun bindGasFeeToEstimatedFeeUseCase(
+        impl: GasFeeToEstimatedFeeUseCaseImpl,
+    ): GasFeeToEstimatedFeeUseCase
 }

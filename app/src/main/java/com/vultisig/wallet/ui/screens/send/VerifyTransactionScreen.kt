@@ -17,9 +17,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BlowfishMessage
@@ -29,6 +33,7 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCheckbox
 import com.vultisig.wallet.ui.components.library.form.FormCard
+import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
@@ -155,19 +160,51 @@ internal fun VerifyTransactionScreen(
                     )
 
                     OtherField(
-                        title = stringResource(
-                            R.string.verify_transaction_fiat_amount_title,
-                            state.transaction.fiatCurrency
-                        ),
+                        title = stringResource(R.string.verify_transaction_value),
                         value = state.transaction.fiatValue,
                     )
-                    if (state.transaction.showGasField) {
-                        OtherField(
-                            title = stringResource(R.string.verify_transaction_gas_title),
-                            value = state.transaction.gasValue,
-                            divider = false
+
+                    FormDetails(modifier = Modifier
+                        .padding(
+                            vertical = 12.dp,
                         )
-                    }
+                        .fillMaxWidth(),
+                        title = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = 14.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+
+                                    )
+                            ) {
+                                append(stringResource(R.string.verify_transaction_network_fee))
+                            }
+                        },
+                        value = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = 14.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                )
+                            ) {
+                                append(state.transaction.totalGas.toString())
+                            }
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral400,
+                                    fontSize = 14.sp,
+                                    fontFamily = Theme.montserrat.subtitle1.fontFamily,
+                                    fontWeight = Theme.montserrat.subtitle1.fontWeight,
+                                )
+                            ) {
+                                append(" (~${state.transaction.estimatedFee.toString()})")
+                            }
+                        }
+                    )
                 }
             }
 
@@ -270,6 +307,10 @@ internal fun OtherField(
     }
 }
 
+
+
+
+
 @Composable
 internal fun CheckField(
     title: String,
@@ -285,7 +326,8 @@ internal fun CheckField(
                 vertical = 8.dp,
             )
             .toggleable(
-                value = isChecked, onValueChange = { checked ->
+                value = isChecked,
+                onValueChange = { checked ->
                     onCheckedChange(checked)
                 }
             )
@@ -316,8 +358,10 @@ private fun VerifyTransactionScreenPreview() {
                 tokenValue = "1.1",
                 fiatValue = "1.1",
                 fiatCurrency = "USD",
-                gasValue = "1.1",
+                gasFeeValue = "1.1",
                 memo = "some memo",
+                estimatedFee = "0.75 USd",
+                totalGas = "0.00031361"
             ),
             blowfishShow = true,
             hasFastSign = true,

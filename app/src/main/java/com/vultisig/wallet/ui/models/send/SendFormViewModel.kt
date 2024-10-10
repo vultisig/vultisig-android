@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -31,8 +32,10 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
+import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc
 import com.vultisig.wallet.ui.navigation.Destination
@@ -77,7 +80,9 @@ internal data class SendFormUiModel(
     val selectedCoin: TokenBalanceUiModel? = null,
     val from: String = "",
     val fiatCurrency: String = "",
-    val fee: String? = null,
+    val gasFee: UiText = UiText.Empty,
+    val totalGas: UiText = UiText.Empty,
+    val estimatedFee: UiText = UiText.Empty,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
     val dstAddressError: UiText? = null,
@@ -108,7 +113,6 @@ internal class SendFormViewModel @Inject constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
-
     private val accountsRepository: AccountsRepository,
     appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -119,7 +123,9 @@ internal class SendFormViewModel @Inject constructor(
     private val requestResultRepository: RequestResultRepository,
     private val addressParserRepository: AddressParserRepository,
     private val evmApiFactory: EvmApiFactory,
-) : ViewModel() {
+    private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val gasFeeToEstimatedFee : GasFeeToEstimatedFeeUseCase
+    ) : ViewModel() {
 
     private var vaultId: String? = null
 
@@ -438,6 +444,18 @@ internal class SendFormViewModel @Inject constructor(
                         }
                     }
 
+                val totalGasAndFee = gasFeeToEstimatedFee(
+                    GasFeeParams(
+                        gasLimit = if (chain.standard == TokenStandard.EVM) {
+                            (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                        } else {
+                            BigInteger.valueOf(1)
+                        },
+                        gasFee = gasFee,
+                        selectedToken = selectedToken,
+                    )
+                )
+
                 val transaction = Transaction(
                     id = UUID.randomUUID().toString(),
                     vaultId = vaultId,
@@ -460,6 +478,8 @@ internal class SendFormViewModel @Inject constructor(
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
+                    estimatedFee =totalGasAndFee.first,
+                    totalGass =totalGasAndFee.second,
                 )
 
                 Timber.d("Transaction: $transaction")
@@ -530,9 +550,9 @@ internal class SendFormViewModel @Inject constructor(
                 .collect { gasFee ->
                     this@SendFormViewModel.gasFee.value = gasFee
 
-                    uiState.update {
-                        it.copy(fee = mapGasFeeToString(gasFee))
-                    }
+//                    uiState.update {
+//                        it.copy(gasFee = mapGasFeeToString(gasFee))
+//                    }
                 }
         }
     }
@@ -563,6 +583,25 @@ internal class SendFormViewModel @Inject constructor(
                             specific = spec
                         )
                     }
+
+                    val estimatedFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                            } else {
+                                BigInteger.valueOf(1)
+                            },
+                            gasFee = gasFee,
+                            selectedToken = selectedToken,
+                        )
+                    )
+
+                    uiState.update {
+                        it.copy(
+                            estimatedFee = UiText.DynamicString(estimatedFee.first),
+                            totalGas = UiText.DynamicString(estimatedFee.second)
+                        )
+                    }
                 } catch (e: Exception) {
                     // todo handle errors
                     Timber.e(e)
@@ -575,7 +614,7 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             appCurrency.collect { appCurrency ->
                 uiState.update {
-                    it.copy(fiatCurrency = appCurrency.ticker)
+                    it.copy(fiatCurrency =appCurrency.ticker)
                 }
             }
         }
