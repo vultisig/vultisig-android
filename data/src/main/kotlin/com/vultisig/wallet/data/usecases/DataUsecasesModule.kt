@@ -45,4 +45,23 @@ internal interface DataUsecasesModule {
     fun bindGenerateQrCodeBitmap(
         impl: GenerateQrBitmapImpl,
     ): GenerateQrBitmap
+
+    @Binds
+    @Singleton
+    fun bindGetOrderedVaults(
+        impl: GetOrderedVaultsImpl
+    ): GetOrderedVaults
+
+    @Binds
+    @Singleton
+    fun bindConvertWeiToGwei(
+        impl: ConvertWeiToGweiUseCaseImpl
+    ): ConvertWeiToGweiUseCase
+
+    @Binds
+    @Singleton
+    fun bindConvertGweiToWei(
+        impl: ConvertGweiToWeiUseCaseImpl
+    ): ConvertGweiToWeiUseCase
+
 }

@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.db.VaultDao
+import com.vultisig.wallet.data.db.dao.VaultDao
 import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
 import com.vultisig.wallet.data.db.models.SignerEntity

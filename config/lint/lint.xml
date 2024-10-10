@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
     <issue id="AndroidGradlePluginVersion" severity="warning" />
-    <issue id="ComposableLambdaParameterNaming" severity="error" />
-    <issue id="ComposableLambdaParameterPosition" severity="warning" />
+    <issue id="ComposableLambdaParameterNaming" severity="warning" />
+    <issue id="ComposableLambdaParameterPosition" severity="error" />
     <issue id="DuplicateStrings" severity="ignore" />
     <issue id="EasterEgg" severity="error" />
     <issue id="ExpensiveAssertion" severity="error" />

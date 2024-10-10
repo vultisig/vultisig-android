@@ -40,7 +40,7 @@
     <string name="send_percent" translatable="false">%d%%</string>
     <string name="chain_account_view_send">SEND</string>
     <string name="chain_account_view_swap">SWAP</string>
-    <string name="chain_account_view_deposit">DEPOSIT</string>
+    <string name="chain_account_view_deposit">FUNCTION</string>
     <string name="chain_account_buy_wewe">BUY $WEWE</string>
     <string name="vault_settings_error_backup_file">an error occurred</string>
     <string name="vault_settings_success_backup_file">file saved in Downloads/%1$s</string>
@@ -257,7 +257,7 @@
     <string name="verify_swap_agree_allowance">I agree with providing unlimited ERC20 allowance</string>
     <string name="backup_suggestion_text">Each device has its own unique share.\n\nPlease Backup all of your Vault Shares now.</string>
     <string name="backup_now">Backup your vault now!</string>
-    <string name="deposit_screen_title">Deposit</string>
+    <string name="deposit_screen_title">Function</string>
     <string name="deposit_screen_amount_title">Amount</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Node Address</string>
@@ -368,11 +368,19 @@
     <string name="reshare_start" translatable="false">Start</string>
     <string name="threshold_error" translatable="false">Threshold not reached\nMissing enough initial devices</string>
     <string name="generating_key_renew" translatable="false">Renew</string>
+    <string name="create_folder_title" translatable="false">Create Folder</string>
+    <string name="create_folder_name" translatable="false">Folder Name</string>
+    <string name="create_folder_create" translatable="false">Create</string>
+    <string name="delete_folder" translatable="false">Delete Folder</string>
+    <string name="select_vaults_to_add_to_the_folder" translatable="false">Select Vaults to add to the folder.</string>
+    <string name="create_folder_placeholder" translatable="false">Savings</string>
+    <string name="create_folder_list_title" translatable="false">Select Vaults to add to the folder.</string>
     <string name="generating_key_retry" translatable="false">Retry</string>
     <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>
     <string name="join_keygen_screen_renew" translatable="false">Renew</string>
 
     <string name="select_vault_type_fast_title" translatable="false">FAST</string>
+    <string name="folders_list_title" translatable="false">Folders</string>
     <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>
     <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>
     <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>
@@ -383,6 +391,7 @@
     <string name="keygen_email_continue_button" translatable="false">Continue</string>
     <string name="keygen_email_caption" translatable="false">Enter your email to receive your backup</string>
     <string name="keygen_email_input_hint" translatable="false">Email</string>
+    <string name="create_folder" translatable="false">Create Folder</string>
     <string name="keygen_verify_email_hint" translatable="false">Verify Email</string>
     <string name="keygen_invalid_email_error" translatable="false">Invalid email</string>
     <string name="keygen_email_dont_match" translatable="false">Emails do not match</string>
@@ -416,7 +425,19 @@
     <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultisigner</string>
     <string name="deposit_error_invalid_lpunits"  translatable="false">LP units is invalid</string>
     <string name="deposit_error_invalid_assets"  translatable="false">Assets is invalid</string>
-    <string name="deposit_error_invalid_assets_and_lpunits" translatable="false">Either leave Assets and LP units fields empty or fill in both valid values</string>
-    <string name="deposit_form_screen_assets" translatable="false">Assets (optional)</string>
-    <string name="deposit_form_screen_lpunits" translatable="false">LP units (optional)</string>
+    <string name="deposit_form_screen_assets" translatable="false">Assets</string>
+    <string name="deposit_form_screen_lpunits" translatable="false">LP units</string>
+    <string name="eth_gas_settings_title" translatable="false">Advanced</string>
+    <string name="eth_gas_settings_base_fee_title" translatable="false">Current Base Fee (Gwei)</string>
+    <string name="eth_gas_settings_gas_limit_title" translatable="false">Gas Limit</string>
+    <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
+    <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
+    <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
+    <string name="register_vault_screen_title" translatable="false">Register Vault</string>
+    <string name="register_vault_screen_step_1" translatable="false">1. Save your Vault QR Code</string>
+    <string name="register_vault_screen_step_3" translatable="false">3. Upload your Vault QR Code</string>
+    <string name="register_vault_screen_step_4" translatable="false">4. Track your VULTIES (Vault Points) !</string>
+    <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
+    <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
+    <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
 </resources>

@@ -118,9 +118,8 @@ internal fun GeneratingKey(
                         textStyle = Theme.montserrat.subtitle1,
                         modifier = Modifier
                             .fillMaxWidth(),
-                    ) {
-                        navController.popBackStack()
-                    }
+                        onClick = { navController.popBackStack() }
+                    )
                 }
                 else {
                     DevicesOnSameNetworkHint(

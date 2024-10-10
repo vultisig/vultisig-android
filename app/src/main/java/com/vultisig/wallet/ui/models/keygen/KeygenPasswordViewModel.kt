@@ -86,19 +86,21 @@ internal class KeygenPasswordViewModel @Inject constructor(
                 if (vaultId != null) {
                     // reshare, check password
                     val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-                    if (!vultiSignerRepository.isPasswordValid(
-                            publicKeyEcdsa = vault.pubKeyECDSA,
-                            password = password
-                        )
-                    ) {
-                        state.update {
-                            it.copy(
-                                passwordError = UiText.StringResource(
-                                    R.string.keysign_password_incorrect_password
-                                )
+                    if (vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)) {
+                        if (!vultiSignerRepository.isPasswordValid(
+                                publicKeyEcdsa = vault.pubKeyECDSA,
+                                password = password
                             )
+                        ) {
+                            state.update {
+                                it.copy(
+                                    passwordError = UiText.StringResource(
+                                        R.string.keysign_password_incorrect_password
+                                    )
+                                )
+                            }
+                            return@launch
                         }
-                        return@launch
                     }
                 }
 

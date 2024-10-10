@@ -270,7 +270,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val assets = assetsFieldState.text.toString()
 
-        if (depositChain == Maya && !isAssetsValid(assets)) {
+        if (depositChain == Maya && !isAssetCharsValid(assets)) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.deposit_error_invalid_assets)
             )
@@ -278,7 +278,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val lpUnits = lpUnitsFieldState.text.toString()
 
-        if (depositChain == Maya && !isLpUnitsValid(lpUnits)) {
+        if (depositChain == Maya && !isLpUnitCharsValid(lpUnits)) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.deposit_error_invalid_lpunits)
             )
@@ -309,19 +309,12 @@ internal class DepositFormViewModel @Inject constructor(
         val providerText = providerFieldState.text.toString()
         val provider = providerText.ifBlank { null }
 
-        if (!isAssetsAndLpUnitsValid(assets, lpUnits)) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.deposit_error_invalid_assets_and_lpunits)
-            )
-        }
-
         val memo = when (depositChain) {
             Maya -> Bond.Maya(
                 nodeAddress = nodeAddress,
                 providerAddress = provider,
                 lpUnits = lpUnits.toIntOrNull(),
-                assets = assets,
-                operatorFee = operatorFeeValue
+                assets = assets
             )
 
             Thor -> Bond.Thor(
@@ -381,7 +374,20 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         val assets = assetsFieldState.text.toString()
+
+        if (depositChain == Maya && !isAssetCharsValid(assets)) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_assets)
+            )
+        }
+
         val lpUnits = lpUnitsFieldState.text.toString()
+
+        if (depositChain == Maya && !isLpUnitCharsValid(lpUnits)) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.deposit_error_invalid_lpunits)
+            )
+        }
 
         val tokenAmount = tokenAmountFieldState.text
             .toString()
@@ -409,12 +415,6 @@ internal class DepositFormViewModel @Inject constructor(
 
         val providerText = providerFieldState.text.toString()
         val provider = providerText.ifBlank { null }
-
-        if (!isAssetsAndLpUnitsValid(assets, lpUnits)) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.deposit_error_invalid_assets_and_lpunits)
-            )
-        }
 
         val memo = when (state.value.depositChain) {
             Maya -> Unbond.Maya(
@@ -740,7 +740,7 @@ internal class DepositFormViewModel @Inject constructor(
         val assets = assetsFieldState.text.toString()
         state.update {
             it.copy(
-                assetsError = if (!isAssetsValid(assets))
+                assetsError = if (!isAssetCharsValid(assets))
                     UiText.StringResource(R.string.deposit_error_invalid_assets)
                 else null
             )
@@ -751,20 +751,12 @@ internal class DepositFormViewModel @Inject constructor(
         val lpUnits = lpUnitsFieldState.text.toString()
         state.update {
             it.copy(
-                lpUnitsError = if (!isLpUnitsValid(lpUnits))
+                lpUnitsError = if (!isLpUnitCharsValid(lpUnits))
                     UiText.StringResource(R.string.deposit_error_invalid_lpunits)
                 else null
             )
         }
     }
-
-    private fun isAssetsAndLpUnitsValid(assets: String, lpUnits: String): Boolean =
-        assets.isBlank() && lpUnits.isBlank() ||
-                isAssetCharsValid(assets) && isLpUnitCharsValid(lpUnits)
-
-    private fun isLpUnitsValid(lpUnits: String) = lpUnits.isBlank() || isLpUnitCharsValid(lpUnits)
-
-    private fun isAssetsValid(assets: String) = assets.isBlank() || isAssetCharsValid(assets)
 
     private fun isLpUnitCharsValid(lpUnits: String) =
         lpUnits.toIntOrNull() != null &&

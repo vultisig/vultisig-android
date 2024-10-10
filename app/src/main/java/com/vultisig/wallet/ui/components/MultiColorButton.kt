@@ -36,8 +36,8 @@ internal fun MultiColorButton(
     textStyle: TextStyle? = null,
     textColor: Color? = null,
     modifier: Modifier,
-    content : (@Composable ()->Unit)? = null,
     onClick: () -> Unit,
+    content : (@Composable ()->Unit)? = null,
 ) {
     val emptyClickAction: () -> Unit = {}
     var innerModifier = modifier

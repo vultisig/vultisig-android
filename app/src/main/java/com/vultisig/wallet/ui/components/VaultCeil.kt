@@ -20,75 +20,95 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.getVaultPart
-import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.theme.Theme
 
+internal data class VaultCeilUiModel(
+    val id: String,
+    val name: String,
+    val isFolder: Boolean,
+    val isFastVault: Boolean = false,
+    val vaultPart: Int = 0,
+    val signersSize: Int = 0,
+)
+
+
 @Composable
 internal fun VaultCeil(
-    vault: Vault,
+    model: VaultCeilUiModel,
     isInEditMode: Boolean,
-    onSelectVault: (vaultId: String) -> Unit,
+    onSelect: (id: String) -> Unit,
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
+
     FormCard {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickOnce(onClick = { onSelectVault(vault.id) })
+                .clickOnce(onClick = { onSelect(model.id) })
                 .padding(all = 14.dp)
         ) {
             if (isInEditMode) {
                 Icon(
                     painter = painterResource(id = R.drawable.hamburger_menu),
-                    contentDescription = "draggable item", modifier = Modifier.width(16.dp)
+                    contentDescription = "draggable item",
+                    modifier = Modifier.width(16.dp)
+                )
+            }
+            if (model.isFolder) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_folder),
+                    contentDescription = "draggable item",
+                    modifier = Modifier.width(16.dp)
                 )
             }
             Text(
-                text = vault.name,
+                text = model.name,
                 style = Theme.menlo.body3,
                 color = Theme.colors.neutral0,
                 fontSize = 16.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.weight(1f),
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (vault.isFastVault()) {
-                    Card (
-                        colors =  CardDefaults.cardColors(
-                            containerColor = Theme.colors.oxfordBlue200,
-                        ),
-                    ){
-                        Text(
-                            modifier = Modifier.padding(4.dp),
-                            text = stringResource(id = R.string.vault_list_fast_badge),
-                            style = Theme.menlo.body2,
-                            color = Theme.colors.body,
-                        )
+                if (!model.isFolder) {
+                    if (model.isFastVault) {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = Theme.colors.oxfordBlue200,
+                            ),
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(4.dp),
+                                text = stringResource(id = R.string.vault_list_fast_badge),
+                                style = Theme.menlo.body2,
+                                color = Theme.colors.body,
+                            )
+                        }
+                        UiSpacer(size = 4.dp)
                     }
-                    UiSpacer(size = 4.dp)
+                    Text(
+                        text = stringResource(
+                            id = R.string.vault_list_part_n_of_t,
+                            model.vaultPart,
+                            model.signersSize
+                        ),
+                        style = Theme.menlo.body2,
+                        color = Theme.colors.body,
+                    )
                 }
-                Text(
-                    text = stringResource(
-                        id = R.string.vault_list_part_n_of_t,
-                        vault.getVaultPart(),
-                        vault.signers.size
-                    ),
-                    style = Theme.menlo.body2,
-                    color = Theme.colors.body,
-                )
-
-                UiIcon(
-                    R.drawable.caret_right,
-                    size = 20.dp
-                )
+                if (trailingIcon != null) {
+                    trailingIcon()
+                } else {
+                    UiIcon(
+                        R.drawable.caret_right, size = 20.dp
+                    )
+                }
             }
         }
     }
@@ -100,23 +120,46 @@ internal fun VaultCeil(
 private fun VaultCeilPreview() {
     Column {
         VaultCeil(
-            vault = Vault(
-                id = "",
+            model = VaultCeilUiModel(
+                id = "1",
                 name = "Vault 1",
+                isFolder = false,
             ),
             isInEditMode = true,
-            onSelectVault = {}
+            onSelect = {}
         )
 
         VaultCeil(
-            vault = Vault(
-                id = "",
-                localPartyID = "1",
-                signers = listOf("1", "server-2", "3"),
+            model = VaultCeilUiModel(
+                id = "2",
                 name = "Vault 2",
+                isFolder = false,
+                isFastVault = true,
+                vaultPart = 2,
+                signersSize = 3,
             ),
             isInEditMode = false,
-            onSelectVault = {}
+            onSelect = {}
+        )
+
+        VaultCeil(
+            model = VaultCeilUiModel(
+                id = "1",
+                name = "Folder 1",
+                isFolder = true,
+            ),
+            isInEditMode = false,
+            onSelect = {}
+        )
+
+        VaultCeil(
+            model = VaultCeilUiModel(
+                id = "2",
+                name = "Folder 2",
+                isFolder = true,
+            ),
+            isInEditMode = true,
+            onSelect = {}
         )
     }
 }
