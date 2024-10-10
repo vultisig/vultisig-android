@@ -8,9 +8,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositMemo.Bond
+import com.vultisig.wallet.data.models.DepositMemo.Custom
+import com.vultisig.wallet.data.models.DepositMemo.DepositPool
+import com.vultisig.wallet.data.models.DepositMemo.Leave
 import com.vultisig.wallet.data.models.DepositMemo.Unbond
+import com.vultisig.wallet.data.models.DepositMemo.WithdrawPool
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -18,8 +21,8 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
-import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.deposit.DepositChain.Maya
 import com.vultisig.wallet.ui.models.deposit.DepositChain.Thor
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
@@ -490,7 +493,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
-        val memo = DepositMemo.Leave(
+        val memo = Leave(
             nodeAddress = nodeAddress,
         )
 
@@ -553,7 +556,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
-        val memo = DepositMemo.DepositPool
+        val memo = DepositPool
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -606,7 +609,7 @@ internal class DepositFormViewModel @Inject constructor(
             throw InvalidTransactionDataException(it)
         }
 
-        val memo = DepositMemo.WithdrawPool(
+        val memo = WithdrawPool(
             basisPoints = basisPoints!! * 100, // 10000 BP = 100%; basisPoints in 0..100
         )
 
@@ -631,7 +634,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
-                value = BigInteger.ZERO,
+                value = 1.toBigInteger(),
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
@@ -654,7 +657,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
 
-        val memo = DepositMemo.Custom(
+        val memo = Custom(
             memo = customMemoFieldState.text.toString(),
         )
 

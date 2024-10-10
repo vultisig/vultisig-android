@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 
-internal interface DepositMemo {
+interface DepositMemo {
 
     sealed interface Bond : DepositMemo {
         data class Maya(
@@ -118,12 +118,16 @@ internal interface DepositMemo {
     ) : DepositMemo {
 
         override fun toString(): String = buildString {
-            append("POOL-:")
+            append(ACTION)
             append(basisPoints)
             append(":")
             append(THORChainSwaps.AFFILIATE_FEE_ADDRESS)
             append(":")
             append(THORChainSwaps.AFFILIATE_FEE_RATE)
+        }
+
+        companion object {
+            const val ACTION = "POOL-:"
         }
 
     }

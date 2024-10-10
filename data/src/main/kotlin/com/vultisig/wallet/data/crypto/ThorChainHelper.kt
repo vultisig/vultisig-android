@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.crypto
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.chains.helpers.PublicKeyHelper
 import com.vultisig.wallet.data.models.CosmoSignature
+import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -121,7 +122,10 @@ class ThorChainHelper(
                 thorchainDepositMessage = Cosmos.Message.THORChainDeposit.newBuilder().apply {
                     this.signer = ByteString.copyFrom(fromAddress)
                     this.memo = memo
-                    this.addCoins(coin)
+                    // if it's withdraw from pool, we shouldn't add coins
+                    if (memo?.startsWith(DepositMemo.WithdrawPool.ACTION) != true) {
+                        this.addCoins(coin)
+                    }
                 }.build()
             }.build()
         } else {
