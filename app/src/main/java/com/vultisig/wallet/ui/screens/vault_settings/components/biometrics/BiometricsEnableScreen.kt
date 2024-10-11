@@ -112,8 +112,8 @@ private fun BiometricsEnableScreen(
                             contentDescription = "toggle password visibility"
                         )
                     }
-                })
+                }
+            )
         }
-
     }
 }

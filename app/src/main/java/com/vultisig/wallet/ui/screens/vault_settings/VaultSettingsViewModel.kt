@@ -63,6 +63,4 @@ internal open class VaultSettingsViewModel @Inject constructor(
             navigator.navigate(Destination.BiometricsEnable(vaultId))
         }
     }
-
-
 }
