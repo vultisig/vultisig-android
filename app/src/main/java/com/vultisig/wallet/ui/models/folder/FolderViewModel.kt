@@ -124,7 +124,7 @@ internal class  FolderViewModel @Inject constructor(
         }
     }
 
-    fun showEmptyFolderError() = viewModelScope.launch {
+    private fun showEmptyFolderError() = viewModelScope.launch {
         state.update {
             it.copy(
                 error = UiText.StringResource(R.string.error_folder_must_have_at_least_one_vault)
