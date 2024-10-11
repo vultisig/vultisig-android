@@ -101,10 +101,6 @@ internal class CreateFolderViewModel @Inject constructor(
             currntState.checkedVaults.filterValues { it }.keys.map { it.id }
         )
 
-        navigator.navigate(
-            Destination.Folder(folderId.toString()),
-            NavigationOptions(popUpTo = Destination.Home().route),
-        )
+        navigator.navigate(Destination.Back)
     }
-
 }
