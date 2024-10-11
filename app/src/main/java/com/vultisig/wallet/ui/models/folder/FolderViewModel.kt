@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.folder
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.FolderRepository
@@ -11,6 +12,7 @@ import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,6 +26,7 @@ internal data class FolderUiModel(
     val isEditMode: Boolean = false,
     val vaults: List<Vault> = emptyList(),
     val availableVaults: List<Vault> = emptyList(),
+    val error: UiText? = null,
 )
 
 @HiltViewModel
@@ -98,8 +101,38 @@ internal class  FolderViewModel @Inject constructor(
         }
     }
 
-    fun checkVault(check: Boolean, vaultId: String) = viewModelScope.launch {
+    fun tryToCheckVault(check: Boolean, vaultId: String): Boolean {
+        if (isAbleCheck(check)) {
+            writeCheckVaultChanges(check, vaultId)
+            return check
+        } else {
+            showEmptyFolderError()
+            return !check
+        }
+    }
+
+    private fun writeCheckVaultChanges(check: Boolean, vaultId: String) = viewModelScope.launch {
         val folderId = if (check) folderId else null
         vaultOrderRepository.insert(folderId, vaultId)
+    }
+
+    private fun isAbleCheck(check: Boolean): Boolean {
+        return when {
+            check -> true
+            state.value.vaults.size > 1 -> true
+            else -> false
+        }
+    }
+
+    fun showEmptyFolderError() = viewModelScope.launch {
+        state.update {
+            it.copy(
+                error = UiText.StringResource(R.string.error_folder_must_have_at_least_one_vault)
+            )
+        }
+    }
+
+    fun hideError() = viewModelScope.launch {
+        state.update { it.copy(error = null) }
     }
 }

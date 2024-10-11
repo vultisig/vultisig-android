@@ -32,6 +32,7 @@ import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.SelectionItem
+import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.VaultCeilUiModel
@@ -40,6 +41,7 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.folder.FolderViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,6 +118,16 @@ internal fun FolderScreen(
             )
         },
     ) { contentPadding ->
+        val errorText = state.error
+        if (errorText != null) {
+            UiAlertDialog(
+                title = stringResource(R.string.dialog_default_error_title),
+                text = errorText.asString(),
+                confirmTitle = stringResource(R.string.try_again),
+                onDismiss = viewModel::hideError,
+            )
+        }
+
         val bottomContent = listOf<@Composable LazyItemScope.() -> Unit> @Composable {
             UiSpacer(size = 20.dp)
             Text(
@@ -131,13 +143,13 @@ internal fun FolderScreen(
                     title = vault.name,
                     isChecked = check.value,
                     onCheckedChange = {
-                        check.value = it
-                        viewModel.checkVault(it, vault.id)
+                        check.value = viewModel.tryToCheckVault(it, vault.id)
                     },
                 )
                 UiSpacer(size = 16.dp)
             }
         }
+
         VerticalReorderList(
             onMove = viewModel::onMoveVaults,
             data = state.vaults,
@@ -165,8 +177,7 @@ internal fun FolderScreen(
                     ),
                     checked = check.value,
                     onCheckedChange = {
-                        check.value = it
-                        viewModel.checkVault(it, vault.id)
+                        check.value = viewModel.tryToCheckVault(it, vault.id)
                     },
                 )
             }
