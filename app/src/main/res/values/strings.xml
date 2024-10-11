@@ -435,10 +435,12 @@
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
     <string name="register_vault_screen_title" translatable="false">Register Vault</string>
-    <string name="register_vault_screen_step_1" translatable="false">1. Save your Vault QR Code</string>
     <string name="register_vault_screen_step_3" translatable="false">3. Upload your Vault QR Code</string>
     <string name="register_vault_screen_step_4" translatable="false">4. Track your VULTIES (Vault Points) !</string>
     <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
     <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
+    <string name="register_vault_screen_step_1_number_1" translatable="false">"1. "</string>
+    <string name="register_vault_screen_step_1_your_vault_qr" translatable="false">Your Vault Qr</string>
+    <string name="register_vault_screen_step_1_save" translatable="false">Save</string>
 </resources>
