@@ -93,7 +93,7 @@ internal fun RegisterVaultScreen(
         Box(modifier = Modifier.padding(it)) {
             RegisterVaultScreen(
                 onVultisigLinkClick = {
-                    uriHandler.openUri("https://web.vultisig.com/")
+                    uriHandler.openUri("https://airdrop.vultisig.com")
                 },
                 onSaveVaultClick = viewModel::saveBitmap
             )
