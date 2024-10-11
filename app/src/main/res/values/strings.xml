@@ -413,6 +413,8 @@
     <string name="qr_title_join_swap_keysign" translatable="false">Join Swap</string>
     <string name="qr_title_join_keygen_description" translatable="false">Scan with devices to join the\nvault generation</string>
     <string name="qr_title_join_keysign_description" translatable="false">Vault: %s\nAmount: %s\n To: %s</string>
+    <string name="qr_title_join_keysign_swap_description" translatable="false">Vault: %s\nFrom: %s\n To: %s</string>
+
 
     <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
     <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>
