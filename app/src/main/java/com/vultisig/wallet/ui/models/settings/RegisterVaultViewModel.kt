@@ -72,7 +72,8 @@ internal class RegisterVaultViewModel @Inject constructor(
 
                 uiModel.update {
                     it.copy(
-                        shareVaultQrString = json.encodeToString(shareVaultQrModel)
+                        shareVaultQrString = json.encodeToString(shareVaultQrModel),
+                        fileName = "VultisigQR-${vault.name}-${shareVaultQrModel.uid.takeLast(3)}.png"
                     )
                 }
 
@@ -117,7 +118,7 @@ internal class RegisterVaultViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val uri = context.saveBitmapToDownloads(
                 requireNotNull(uiModel.value.bitmap),
-                requireNotNull(uiModel.value.fileName)
+                requireNotNull(uiModel.value.fileName.takeIf { it.isNotEmpty() })
             )
             uiModel.value.bitmap?.recycle()
             if (uri != null) {

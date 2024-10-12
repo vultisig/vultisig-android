@@ -4,13 +4,13 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,16 +26,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withLink
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -88,15 +84,30 @@ internal fun RegisterVaultScreen(
                 centerText = stringResource(R.string.register_vault_screen_title),
                 startIcon = R.drawable.caret_left,
             )
+        },
+        bottomBar = {
+            MultiColorButton(
+                backgroundColor = colors.turquoise800,
+                textColor = colors.oxfordBlue800,
+                iconColor = colors.turquoise800,
+                textStyle = montserrat.subtitle1,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp,
+                    ),
+                text = stringResource(R.string.register_vault_screen_save_qr_code),
+                onClick = viewModel::saveBitmap,
+            )
         }
     ) {
         Box(modifier = Modifier.padding(it)) {
-            RegisterVaultScreen(
-                onVultisigLinkClick = {
-                    uriHandler.openUri("https://airdrop.vultisig.com")
-                },
-                onSaveVaultClick = viewModel::saveBitmap
-            )
+            RegisterVaultScreen {
+                uriHandler.openUri("https://airdrop.vultisig.com")
+            }
+
         }
     }
 }
@@ -105,7 +116,6 @@ internal fun RegisterVaultScreen(
 @Composable
 private fun RegisterVaultScreen(
     onVultisigLinkClick: () -> Unit,
-    onSaveVaultClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -113,12 +123,11 @@ private fun RegisterVaultScreen(
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        UiSpacer(weight = 1f)
         Image(
             painter = painterResource(id = R.drawable.vultisig),
             contentDescription = "Vultisig logo",
             contentScale = ContentScale.FillWidth,
-            modifier = Modifier.fillMaxWidth(0.7f)
+            modifier = Modifier.width(256.dp),
         )
         UiSpacer(size = 32.dp)
         FormCard(
@@ -126,69 +135,36 @@ private fun RegisterVaultScreen(
                 .fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.register_vault_screen_step_1_number_1),
-                        color = colors.neutral0,
-                        style = montserrat.body2,
-                    )
-                    Text(
-                        text = stringResource(R.string.register_vault_screen_step_1_save),
-                        color = colors.oxfordBlue600Main,
-                        style = montserrat.subtitle2,
-                        modifier = Modifier
-                            .clip(shape = RoundedCornerShape(8.dp))
-                            .clickOnce(onClick = onSaveVaultClick)
-                            .background(color = colors.turquoise600Main)
-                            .padding(
-                                vertical = 4.dp,
-                                horizontal = 8.dp
-                            )
-                    )
-                    Text(
-                        text = stringResource(R.string.register_vault_screen_step_1_your_vault_qr),
-                        color = colors.neutral0,
-                        style = montserrat.body2,
-                    )
-                }
-                UiSpacer(size = 6.dp)
                 Text(
-                    text = stringResource(R.string.register_vault_screen_step_1_top_right),
+                    text = stringResource(R.string.register_vault_screen_step_1),
                     color = colors.neutral0,
-                    style = montserrat.body1,
+                    style = montserrat.body2,
                 )
             }
         }
         UiSpacer(size = 16.dp)
         FormCard(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                modifier = Modifier.padding(16.dp),
-                text = buildAnnotatedString {
-                    append(stringResource(R.string.register_vault_screen_step_2_go_to))
-                    withLink(
-                        link = LinkAnnotation.Clickable(
-                            tag = "Vultisig Web tag",
-                            linkInteractionListener = {
-                                onVultisigLinkClick()
-                            },
-                        ),
-                    ) {
-                        withStyle(
-                            style = SpanStyle(
-                                color = colors.turquoise600Main,
-                            )
-                        ) {
-                            append(" ")
-                            append(stringResource(R.string.register_vault_screen_step_2_vultisig_web))
-                        }
-                    }
-                },
-                color = colors.neutral0,
-                style = montserrat.body2,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
+                    text = stringResource(R.string.register_vault_screen_step_2_go_to),
+                    color = colors.neutral0,
+                    style = montserrat.body2,
+                )
+
+                Text(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickOnce(onClick = onVultisigLinkClick)
+                        .background(colors.oxfordBlue400)
+                        .padding(vertical = 8.dp, horizontal = 30.dp),
+                    text = stringResource(R.string.register_vault_screen_step_2_vultisig_web),
+                    style = montserrat.body2,
+                    color = colors.turquoise600Main,
+                )
+
+            }
 
         }
         UiSpacer(size = 16.dp)
@@ -209,13 +185,12 @@ private fun RegisterVaultScreen(
                 style = montserrat.body2,
             )
         }
-        UiSpacer(weight = 1f)
     }
 }
 
 @Preview
 @Composable
 private fun RegisterVaultScreenPreview() {
-    RegisterVaultScreen({}, {})
+    RegisterVaultScreen {}
 }
 
