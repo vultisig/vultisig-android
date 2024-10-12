@@ -1,6 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
     <issue id="AndroidGradlePluginVersion" severity="warning" />
+    <issue id="AndroidGradlePluginVersion" severity="warning" />
+    <issue id="AaptCrash" severity="warning" />
+    <issue id="AccessibilityFocus" severity="warning" />
+    <issue id="AccessibilityScrollActions" severity="warning" />
+    <issue id="AcceptsUserCertificates" severity="warning" />
+    <issue id="AccessibilityWindowStateChangedEvent" severity="warning" />
+    <issue id="AccidentalOctal" severity="warning" />
+    <issue id="AdapterViewChildren" severity="warning" />
+    <issue id="ActivityIconColor" severity="warning" />
+    <issue id="AddJavascriptInterface" severity="warning" />
+    <issue id="AllCaps" severity="warning" />
+    <issue id="AllowAllHostnameVerifier" severity="warning" />
+    <issue id="AlwaysShowAction" severity="warning" />
+    <issue id="AnimatorKeep" severity="warning" />
+    <issue id="AnnotateVersionCheck" severity="warning" />
+    <issue id="AnnotationProcessorOnCompilePath" severity="warning" />
+    <issue id="AppBundleLocaleChanges" severity="warning" />
+    <issue id="AppCompatCustomView" severity="warning" />
+    <issue id="AppCompatMethod" severity="warning" />
+    <issue id="AppCompatResource" severity="warning" />
+    <issue id="AppIndexingService" severity="warning" />
+    <issue id="AppLinksAutoVerify" severity="warning" />
+    <issue id="AppLinkUrlError" severity="warning" />
+    <issue id="ApplySharedPref" severity="warning" />
+    <issue id="AssertionSideEffect" severity="warning" />
+    <issue id="AuthLeak" severity="warning" />
+    <issue id="Autofill" severity="warning" />
+    <issue id="BackButton" severity="warning" />
+    <issue id="BadHostnameVerifier" severity="warning" />
+    <issue id="BatteryLife" severity="warning" />
+    <issue id="BidiSpoofing" severity="warning" />
+    <issue id="BinderGetCallingInMainThread" severity="warning" />
+    <issue id="BottomAppBar" severity="warning" />
+    <issue id="BomWithoutPlatform" severity="warning" />
+    <issue id="BlockedPrivateApi" severity="warning" />
+    <issue id="BrokenIterator" severity="warning" />
+    <issue id="BuildListAdds" severity="warning" />
+    <issue id="ButtonCase" severity="warning" />
+    <issue id="ButtonOrder" severity="warning" />
+    <issue id="ButtonStyle" severity="warning" />
     <issue id="ComposableLambdaParameterNaming" severity="warning" />
     <issue id="ComposableLambdaParameterPosition" severity="error" />
     <issue id="DuplicateStrings" severity="ignore" />
