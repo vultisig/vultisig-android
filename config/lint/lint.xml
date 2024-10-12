@@ -41,6 +41,26 @@
     <issue id="ButtonCase" severity="warning" />
     <issue id="ButtonOrder" severity="warning" />
     <issue id="ButtonStyle" severity="warning" />
+    <issue id="CanvasSize" severity="warning" />
+    <issue id="CheckResult" severity="warning" />
+    <issue id="ChildInNonViewGroup" severity="warning" />
+    <issue id="ChromeOsAbiSupport" severity="warning" />
+    <issue id="ChromeOsOnConfigurationChanged" severity="warning" />
+    <issue id="ClickableViewAccessibility" severity="warning" />
+    <issue id="CoarseFineLocation" severity="warning" />
+    <issue id="CommitPrefEdits" severity="warning" />
+    <issue id="CommitTransaction" severity="warning" />
+    <issue id="CommitPrefEdits" severity="warning" />
+    <issue id="ConstantLocale" severity="warning" />
+    <issue id="ConvertToWebp" severity="warning" />
+    <issue id="CredentialDependency" severity="warning" />
+    <issue id="CredentialManagerSignInWithGoogle" severity="warning" />
+    <issue id="CredManMissingDal" severity="warning" />
+    <issue id="CustomPermissionTypo" severity="warning" />
+    <issue id="CustomSplashScreen" severity="warning" />
+    <issue id="CustomViewStyleable" severity="warning" />
+    <issue id="CustomX509TrustManager" severity="warning" />
+    <issue id="CutPasteId" severity="warning" />
     <issue id="ComposableLambdaParameterNaming" severity="warning" />
     <issue id="ComposableLambdaParameterPosition" severity="error" />
     <issue id="DuplicateStrings" severity="ignore" />
