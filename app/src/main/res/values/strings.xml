@@ -442,4 +442,5 @@
     <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
     <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
+    <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
 </resources>
