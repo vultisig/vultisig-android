@@ -51,6 +51,8 @@
     <issue id="CommitPrefEdits" severity="warning" />
     <issue id="CommitTransaction" severity="warning" />
     <issue id="CommitPrefEdits" severity="warning" />
+    <issue id="ComposableLambdaParameterNaming" severity="warning" />
+    <issue id="ComposableLambdaParameterPosition" severity="error" />
     <issue id="ConstantLocale" severity="warning" />
     <issue id="ConvertToWebp" severity="warning" />
     <issue id="CredentialDependency" severity="warning" />
@@ -61,9 +63,34 @@
     <issue id="CustomViewStyleable" severity="warning" />
     <issue id="CustomX509TrustManager" severity="warning" />
     <issue id="CutPasteId" severity="warning" />
-    <issue id="ComposableLambdaParameterNaming" severity="warning" />
-    <issue id="ComposableLambdaParameterPosition" severity="error" />
+
+
+    <issue id="DalvikOverride" severity="warning" />
+    <issue id="DataBindingWithoutKapt" severity="warning" />
+    <issue id="DataExtractionRules" severity="warning" />
+    <issue id="DefaultEncoding" severity="warning" />
+    <issue id="DefaultLocale" severity="warning" />
+    <issue id="DeletedProvider" severity="warning" />
+    <issue id="Deprecated" severity="warning" />
+    <issue id="DeprecatedSinceApi" severity="warning" />
+    <issue id="DeviceAdmin" severity="warning" />
+    <issue id="DevModeObsolete" severity="warning" />
+    <issue id="DefaultEncoding" severity="warning" />
+    <issue id="DiffUtilEquals" severity="warning" />
+    <issue id="DisableBaselineAlignment" severity="warning" />
+    <issue id="DiscouragedPrivateApi" severity="warning" />
+    <issue id="DiscouragedApi" severity="warning" />
+    <issue id="DrawAllocation" severity="warning" />
+    <issue id="DuplicateActivity" severity="warning" />
     <issue id="DuplicateStrings" severity="ignore" />
+    <issue id="DuplicateDefinition" severity="warning" />
+    <issue id="DuplicateDivider" severity="warning" />
+    <issue id="DuplicateIds" severity="warning" />
+    <issue id="DuplicateIncludedIds" severity="warning" />
+    <issue id="DuplicatePlatformClasses" severity="warning" />
+    <issue id="DuplicateUsesFeature" severity="warning" />
+
+
     <issue id="EasterEgg" severity="error" />
     <issue id="ExpensiveAssertion" severity="error" />
     <issue id="GradleDependency" severity="warning" />
