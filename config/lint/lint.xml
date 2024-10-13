@@ -89,11 +89,49 @@
     <issue id="DuplicateIncludedIds" severity="warning" />
     <issue id="DuplicatePlatformClasses" severity="warning" />
     <issue id="DuplicateUsesFeature" severity="warning" />
-
-
     <issue id="EasterEgg" severity="error" />
+
+    <issue id="EditedTargetSdkVersion" severity="warning" />
+    <issue id="EllipsizeMaxLines" severity="warning" />
+    <issue id="EmptySuperCall" severity="warning" />
+    <issue id="EnforceUTF8" severity="warning" />
+    <issue id="EnqueueWork" severity="warning" />
+    <issue id="ExactAlarm" severity="warning" />
+    <issue id="ExifInterface" severity="warning" />
     <issue id="ExpensiveAssertion" severity="error" />
+    <issue id="ExpiredTargetSdkVersion" severity="warning" />
+    <issue id="ExpiringTargetSdkVersion" severity="warning" />
+    <issue id="ExportedContentProvider" severity="warning" />
+    <issue id="ExportedPreferenceActivity" severity="warning" />
+    <issue id="ExportedReceiver" severity="warning" />
+    <issue id="ExportedService" severity="warning" />
+    <issue id="ExtraText" severity="warning" />
+    <issue id="ExtraTranslation" severity="warning" />
+    <issue id="FileEndsWithExt" severity="warning" />
+    <issue id="FindViewByIdCast" severity="warning" />
+    <issue id="FontValidation" severity="warning" />
+    <issue id="ForegroundServicePermission" severity="warning" />
+    <issue id="ForegroundServiceType" severity="warning" />
+    <issue id="FullBackupContent" severity="warning" />
+    <issue id="FullBackupContent" severity="warning" />
+    <issue id="GestureBackNavigation" severity="warning" />
+    <issue id="GetContentDescriptionOverride" severity="warning" />
+    <issue id="GetInstance" severity="warning" />
+    <issue id="GetLocales" severity="warning" />
+    <issue id="GifUsage" severity="warning" />
+    <issue id="GradleCompatible" severity="warning" />
     <issue id="GradleDependency" severity="warning" />
+    <issue id="GradleDeprecated" severity="warning" />
+    <issue id="GradleDeprecatedConfiguration" severity="warning" />
+    <issue id="GradleDynamicVersion" severity="warning" />
+    <issue id="GradleGetter" severity="warning" />
+    <issue id="GradleIdeError" severity="warning" />
+    <issue id="GradleOverrides" severity="warning" />
+    <issue id="GradlePath" severity="warning" />
+    <issue id="GradlePluginVersion" severity="warning" />
+    <issue id="GrantAllUris" severity="warning" />
+    <issue id="GridLayout" severity="warning" />
+
     <issue id="HardwareIds" severity="warning" />
     <issue id="IconLocation" severity="ignore" />
     <issue id="IconMissingDensityFolder" severity="ignore" />
