@@ -16,8 +16,6 @@ import javax.inject.Inject
 internal class ReshareStartViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val vaultRepository: VaultRepository,
-    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
 
     private val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
