@@ -7,5 +7,5 @@ enum class TokenStandard {
     COSMOS,
     SOL,
     SUBSTRATE,
-    POLKADOT,
+    SUI,
 }

@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper.Companion.DefaultFeeInLamports
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.Chain
@@ -27,6 +28,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
     private val solanaApi: SolanaApi,
     private val tokenRepository: TokenRepository,
     private val thorChainApi: ThorChainApi,
+    private val suiApi: SuiApi,
 ) : GasFeeRepository {
 
     override suspend fun getGasFee(
@@ -104,6 +106,15 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = 0.toBigInteger(),
+                    unit = chain.feeUnit,
+                    decimals = nativeToken.decimal,
+                )
+            }
+
+            Chain.Sui -> {
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
+                TokenValue(
+                    value = suiApi.getReferenceGasPrice(),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

@@ -4,7 +4,7 @@ import com.vultisig.wallet.data.models.KeygenMessage
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import javax.inject.Inject
 
-internal interface KeygenMessageFromProtoMapper : MapperFunc<KeygenMessageProto, KeygenMessage>
+interface KeygenMessageFromProtoMapper : MapperFunc<KeygenMessageProto, KeygenMessage>
 
 internal class KeygenMessageFromProtoMapperImpl @Inject constructor() :
     KeygenMessageFromProtoMapper {

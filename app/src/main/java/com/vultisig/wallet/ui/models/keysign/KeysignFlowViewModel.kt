@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -40,6 +41,7 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -81,6 +83,7 @@ import vultisig.keysign.v1.OneInchSwapPayload
 import vultisig.keysign.v1.OneInchTransaction
 import vultisig.keysign.v1.PolkadotSpecific
 import vultisig.keysign.v1.SolanaSpecific
+import vultisig.keysign.v1.SuiSpecific
 import vultisig.keysign.v1.THORChainSpecific
 import vultisig.keysign.v1.THORChainSwapPayload
 import vultisig.keysign.v1.UTXOSpecific
@@ -88,7 +91,6 @@ import vultisig.keysign.v1.UtxoInfo
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
-import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 
 
 enum class KeysignFlowState {
@@ -106,6 +108,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
+    private val suiApi: SuiApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
     @ApplicationContext private val context: Context,
@@ -179,6 +182,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
+            suiApi = suiApi,
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
@@ -302,7 +306,12 @@ internal class KeysignFlowViewModel @Inject constructor(
                             genesisHash = specific.genesisHash,
                         )
                     } else null,
-                    suicheSpecific = null, // TODO add sui chain
+                    suicheSpecific = if (specific is BlockChainSpecific.Sui) {
+                        SuiSpecific(
+                            referenceGasPrice = specific.referenceGasPrice.toString(),
+                            coins = specific.coins,
+                        )
+                    } else null,
                     thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {
                         val from = swapPayload.data
                         THORChainSwapPayload(

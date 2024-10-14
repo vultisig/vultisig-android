@@ -37,7 +37,8 @@ enum class Chain(
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
-    Polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT");
+    Polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT"),
+    Sui("Sui", TokenStandard.SUI, "SUI");
 
     val id: String
         get() = raw
@@ -72,11 +73,12 @@ val Chain.coinType: CoinType
         Chain.Polkadot -> CoinType.POLKADOT
         Chain.Dydx -> CoinType.DYDX
         Chain.ZkSync -> CoinType.ZKSYNC
+        Chain.Sui -> CoinType.SUI
     }
 
 val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
-        Chain.Solana, Chain.Polkadot -> TssKeyType.EDDSA
+        Chain.Solana, Chain.Polkadot, Chain.Sui -> TssKeyType.EDDSA
         else -> TssKeyType.ECDSA
     }
 
