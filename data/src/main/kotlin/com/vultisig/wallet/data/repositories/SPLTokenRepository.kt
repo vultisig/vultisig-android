@@ -78,7 +78,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
             ticker = tokenResponse.tokenList.ticker,
             logo = tokenResponse.tokenList.logo,
             decimal = tokenResponse.decimals,
-            priceProviderID = tokenResponse.tokenList.extensions.coingeckoId,
+            priceProviderID = tokenResponse.tokenList.extensions?.coingeckoId ?: "0",
             contractAddress = contractAddress,
             isNativeToken = false,
             address = "",

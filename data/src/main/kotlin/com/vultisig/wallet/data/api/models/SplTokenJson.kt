@@ -86,7 +86,7 @@ data class SplTokenListJson(
     @SerialName("image")
     val logo: String,
     @SerialName("extensions")
-    val extensions: SplExtensionsJson,
+    val extensions: SplExtensionsJson?,
 )
 
 @Serializable
