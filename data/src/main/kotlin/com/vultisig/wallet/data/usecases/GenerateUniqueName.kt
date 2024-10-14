@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
-import jakarta.inject.Inject
+import javax.inject.Inject
 
 interface GenerateUniqueName : (String, List<String>) -> String
 
