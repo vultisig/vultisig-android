@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.FilterQuality
@@ -113,8 +112,8 @@ internal fun KeygenPeerDiscoveryScreen(
                 R.string.keygen_peer_discovery_keygen,
                 vaultSetupType
             ),
-        endIcon = R.drawable.qr_share,
-        onEndIconClick = onQrAddressClick
+        endIcon = R.drawable.qr_share.takeIf { !isLookingForVultiServer },
+        onEndIconClick = onQrAddressClick.takeIf { !isLookingForVultiServer } ?: {},
     ) {
         if (isLookingForVultiServer) {
             FastPeerDiscovery()
@@ -161,7 +160,7 @@ internal fun KeygenPeerDiscoveryScreen(
 internal fun FastPeerDiscovery() {
     Column(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = CenterHorizontally,
     ) {
         UiSpacer(size = 74.dp)
 
@@ -178,6 +177,12 @@ internal fun FastPeerDiscovery() {
         UiSpacer(size = 48.dp)
 
         UiCirclesLoader()
+        UiSpacer(size = 48.dp)
+        Text(
+            text = stringResource(R.string.keygen_vultiserver_peer_discovery_please_wait),
+            color = Theme.colors.neutral0,
+            style = Theme.montserrat.body2
+        )
     }
 }
 
