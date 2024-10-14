@@ -102,7 +102,7 @@ internal class  FolderViewModel @Inject constructor(
     }
 
     fun tryToCheckVault(check: Boolean, vaultId: String): Boolean {
-        if (isAbleCheck(check)) {
+        if (canRemoveVaultFromFolder(check)) {
             writeCheckVaultChanges(check, vaultId)
             return check
         } else {
@@ -116,7 +116,7 @@ internal class  FolderViewModel @Inject constructor(
         vaultOrderRepository.insert(folderId, vaultId)
     }
 
-    private fun isAbleCheck(check: Boolean): Boolean {
+    private fun canRemoveVaultFromFolder(check: Boolean): Boolean {
         return when {
             check -> true
             state.value.vaults.size > 1 -> true
