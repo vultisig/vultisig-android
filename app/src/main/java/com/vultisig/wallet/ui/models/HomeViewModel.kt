@@ -78,7 +78,6 @@ internal class HomeViewModel @Inject constructor(
 
     fun selectFolder(folderId: String) {
         viewModelScope.launch {
-            hideVaultList()
             navigator.navigate(Destination.Folder(folderId))
         }
     }
