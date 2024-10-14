@@ -266,20 +266,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     )
     private val thorBscTokens = listOf("BNB", "USDT", "USDC")
     private val thorAvaxTokens = listOf("AVAX", "USDC", "USDT", "SOL")
-    private val mayaEthTokens = listOf("USDT", "WSTETH", "PEPE", "ETH", "USDC")
+    private val mayaEthTokens = listOf("ETH")
     private val mayaArbTokens = listOf(
-        "GLD",
-        "PEPE",
-        "USDT",
         "ETH",
-        "WBTC",
-        "WSTETH",
-        "USDC",
-        "ARB",
-        "TGT",
-        "LINK",
-        "DAI",
-        "LEO",
     )
 
     private val Coin.swapProviders: Set<SwapProvider>
