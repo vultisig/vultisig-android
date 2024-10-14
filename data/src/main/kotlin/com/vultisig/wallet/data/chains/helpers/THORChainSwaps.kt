@@ -46,10 +46,7 @@ class THORChainSwaps(
             ).let {
                 if (swapPayload.isAffiliate) {
                     it.setAffiliateFeeAddress(AFFILIATE_FEE_ADDRESS)
-                        .setAffiliateFeeRateBp(
-                            //if (BuildConfig.DEBUG) "0" else AFFILIATE_FEE_RATE //TODO provide BuildConfig
-                            "0"
-                        )
+                        .setAffiliateFeeRateBp(AFFILIATE_FEE_RATE)
                 } else {
                     it
                 }
