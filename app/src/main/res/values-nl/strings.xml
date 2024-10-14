@@ -71,7 +71,7 @@
     <string name="verify_transaction_from_title">Van</string>
     <string name="verify_transaction_to_title">Aan</string>
     <string name="verify_transaction_amount_title">Bedrag</string>
-    <string name="verify_transaction_value">Bedrag in (%s)</string>
+    <string name="verify_transaction_value">Waarde</string>
     <string name="verify_transaction_join_keysign">Doe mee met Keysign</string>
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
