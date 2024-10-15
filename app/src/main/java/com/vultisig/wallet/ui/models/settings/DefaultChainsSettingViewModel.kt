@@ -87,5 +87,6 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
             Chain.Polkadot -> "DOT"
             Chain.Dydx -> "DYDX"
             Chain.ZkSync -> "ZK"
+            Chain.Sui -> "SUI"
         }
 }

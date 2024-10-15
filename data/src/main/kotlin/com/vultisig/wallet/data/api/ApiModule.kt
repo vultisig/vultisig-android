@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.SuiApiImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -92,4 +94,11 @@ internal interface ApiModule {
     fun bindFeatureFlagApi(
         impl: FeatureFlagApiImpl,
     ): FeatureFlagApi
+
+    @Binds
+    @Singleton
+    fun bindSuiApi(
+        impl: SuiApiImpl
+    ): SuiApi
+
 }

@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
@@ -45,6 +46,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
     private val polkadotApi: PolkadotApi,
+    private val suiApi: SuiApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -141,6 +143,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 )
             }
         }
+
         TokenStandard.UTXO -> {
             val utxos = blockChairApi.getAddressInfo(chain, address)
 
@@ -203,8 +206,17 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 error("Unsupported chain: $chain")
             }
         }
-        else -> {
-            error("Unsupported chain: $chain")
+
+        TokenStandard.SUI -> {
+            suiApi.getAllCoins(address)
+
+            BlockChainSpecificAndUtxo(
+                BlockChainSpecific.Sui(
+                    referenceGasPrice = gasFee.value,
+                    coins = suiApi.getAllCoins(address),
+                ),
+                utxos = emptyList(),
+            )
         }
     }
 

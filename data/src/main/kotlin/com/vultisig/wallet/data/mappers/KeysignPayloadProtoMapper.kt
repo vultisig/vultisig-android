@@ -18,7 +18,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
-internal interface KeysignPayloadProtoMapper :
+interface KeysignPayloadProtoMapper :
     MapperFunc<KeysignPayloadProto, KeysignPayload>
 
 internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayloadProtoMapper {
@@ -155,7 +155,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 from.suicheSpecific != null -> from.suicheSpecific.let {
                     BlockChainSpecific.Sui(
                         referenceGasPrice = BigInteger(it.referenceGasPrice),
-                        coins = TODO("Sui is not implemented") // TODO
+                        coins = it.coins.filterNotNull(),
                     )
                 }
 

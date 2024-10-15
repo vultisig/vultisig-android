@@ -35,8 +35,8 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         get() = when (this) {
             Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
             Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
-            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync,
-            ->
+            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync, Chain.Sui,
+            Chain.Dydx ->
                 "${explorerUrl}tx/"
 
             Chain.Bitcoin, Chain.BitcoinCash, Chain.Dash, Chain.Litecoin ->
@@ -45,11 +45,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Kujira ->
                 "https://finder.kujira.network/kaiyo-1/tx/"
 
-            Chain.Dydx ->
-                "https://www.mintscan.io/dydx/tx/"
-
-            // TODO: Add support for these later
-            // Chain.sui -> "https://suiscan.xyz/mainnet/tx/"
             Chain.Polkadot -> "https://polkadot.subscan.io/extrinsic/"
         }
 
@@ -80,6 +75,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.ThorChain -> "https://thorchain.net/"
             Chain.Polkadot -> "https://polkadot.subscan.io/account/"
             Chain.ZkSync -> "https://explorer.zksync.io/"
+            Chain.Sui -> "https://suiscan.xyz/mainnet/"
         }
 
 }

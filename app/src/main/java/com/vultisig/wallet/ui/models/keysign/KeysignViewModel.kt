@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -24,6 +25,7 @@ import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
+import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -89,6 +91,7 @@ internal class KeysignViewModel(
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
+    private val suiApi: SuiApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
@@ -252,6 +255,13 @@ internal class KeysignViewModel(
                 polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
                     ?: signedTransaction.transactionHash
             }
+
+            Chain.Sui -> {
+                suiApi.executeTransactionBlock(
+                    signedTransaction.rawTransaction,
+                    signedTransaction.signature ?: ""
+                )
+            }
         }
         Timber.d("transaction hash: $txHash")
         if (txHash != null) {
@@ -374,6 +384,13 @@ internal class KeysignViewModel(
             Chain.Polkadot -> {
                 val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
                 return dotHelper.getSignedTransaction(keysignPayload, signatures)
+            }
+
+            Chain.Sui -> {
+                return SuiHelper.getSignedTransaction(
+                    vault.pubKeyEDDSA,
+                    keysignPayload, signatures
+                )
             }
         }
     }

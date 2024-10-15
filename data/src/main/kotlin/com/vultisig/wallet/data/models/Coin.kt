@@ -1404,6 +1404,17 @@ object Coins {
             priceProviderID = "ethereum",
             contractAddress = "",
             isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Sui,
+            ticker = "Sui",
+            logo = "sui",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "sui",
+            contractAddress = "",
+            isNativeToken = true,
         )
     )
 

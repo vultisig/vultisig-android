@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
@@ -44,8 +45,8 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -143,6 +144,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
+    private val suiApi: SuiApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
@@ -192,6 +194,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
+            suiApi = suiApi,
             navigator = navigator,
             transitionTypeUiModel = transitionTypeUiModel,
             encryption = encryption,

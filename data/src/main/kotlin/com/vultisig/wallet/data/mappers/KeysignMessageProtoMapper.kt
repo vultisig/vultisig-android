@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.mappers
 
-import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.KeysignMessage
+import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import javax.inject.Inject
 
-internal interface KeysignMessageFromProtoMapper : SuspendMapperFunc<KeysignMessageProto, KeysignMessage>
+interface KeysignMessageFromProtoMapper : SuspendMapperFunc<KeysignMessageProto, KeysignMessage>
 
 internal class KeysignMessageFromProtoMapperImpl @Inject constructor(
     private val mapKeysignPayload: KeysignPayloadProtoMapper,
