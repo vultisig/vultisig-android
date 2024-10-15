@@ -70,4 +70,10 @@ internal interface DataUsecasesModule {
         impl: ConvertGweiToWeiUseCaseImpl
     ): ConvertGweiToWeiUseCase
 
+    @Binds
+    @Singleton
+    fun bindAvailableTokenBalanceUseCase(
+        impl: AvailableTokenBalanceUseCaseImpl
+    ): AvailableTokenBalanceUseCase
+
 }
