@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.GenerateUniqueName
+import com.vultisig.wallet.data.usecases.GenerateRandomUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
@@ -34,7 +34,7 @@ internal class NamingVaultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
-    private val uniqueName: GenerateUniqueName,
+    private val uniqueName: GenerateRandomUniqueName,
     private val isNameLengthValid: IsVaultNameValid,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
