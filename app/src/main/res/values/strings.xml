@@ -377,6 +377,7 @@
     <string name="vault_settings_biometrics_screen_password_placeholder" translatable="false">Type here</string>
     <string name="vault_settings_biometrics_screen_snackbar_enabled" translatable="false">Biometrics for Fast Signing is enabled</string>
     <string name="vault_settings_biometrics_screen_snackbar_disabled" translatable="false">Biometrics for Fast Signing is disabled</string>
+    <string name="biometry_keysign_login_button" translatable="false">Fast Sign with biometry</string>
     <string name="delete_folder" translatable="false">Delete Folder</string>
     <string name="select_vaults_to_add_to_the_folder" translatable="false">Select Vaults to add to the folder.</string>
     <string name="create_folder_placeholder" translatable="false">Savings</string>

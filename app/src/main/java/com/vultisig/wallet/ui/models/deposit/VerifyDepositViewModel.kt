@@ -3,15 +3,20 @@ package com.vultisig.wallet.ui.models.deposit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.ui.models.keysign.KeysignType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,6 +33,7 @@ internal data class VerifyDepositUiModel(
     val depositTransactionUiModel: DepositTransactionUiModel = DepositTransactionUiModel(),
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
+    val password: String? = null,
 )
 
 @HiltViewModel
@@ -38,7 +44,8 @@ internal class VerifyDepositViewModel @Inject constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val vaultRepository: VaultRepository,
     private val vultiSignerRepository: VultiSignerRepository,
-) : ViewModel() {
+    private val vaultPasswordRepository: VaultPasswordRepository,
+    ) : ViewModel() {
 
     val state = MutableStateFlow(VerifyDepositUiModel())
 
@@ -57,6 +64,7 @@ internal class VerifyDepositViewModel @Inject constructor(
         }
 
         loadFastSign()
+        loadPassword()
     }
 
     fun dismissError() {
@@ -64,31 +72,66 @@ internal class VerifyDepositViewModel @Inject constructor(
     }
 
     fun confirm() {
-        keysign(false)
+        keysign(KeysignType.NORMAL)
     }
 
-    fun fastSign() {
-        keysign(true)
+    fun authFastSign() {
+        keysign(KeysignType.AUTH)
+    }
+
+    fun tryToFastSignWithPassword(): Boolean {
+        if (state.value.password != null) {
+            return false
+        } else {
+            keysign(KeysignType.FAST)
+            return true
+        }
     }
 
     private fun keysign(
-        hasFastSign: Boolean,
+        signType: KeysignType,
     ) {
         viewModelScope.launch {
-            val transaction = depositTransactionRepository.getTransaction(transactionId)
 
-            if (hasFastSign) {
-                sendNavigator.navigate(
-                    SendDst.Password(
-                        transactionId = transaction.id,
+            when (signType) {
+                KeysignType.AUTH -> {
+                    sendNavigator.navigate(
+                        SendDst.Keysign(
+                            transactionId = transactionId,
+                            password = state.value.password,
+                        )
                     )
-                )
-            } else {
-                sendNavigator.navigate(
-                    SendDst.Keysign(
-                        transactionId = transaction.id,
-                        password = null,
+                }
+                KeysignType.FAST -> {
+                    sendNavigator.navigate(
+                        SendDst.Password(
+                            transactionId = transactionId,
+                        )
                     )
+                }
+                KeysignType.NORMAL -> {
+                    sendNavigator.navigate(
+                        SendDst.Keysign(
+                            transactionId = transactionId,
+                            password = null,
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    private fun loadPassword() {
+        viewModelScope.launch {
+
+            val password = if (vaultId == null)
+                null
+            else
+                vaultPasswordRepository.getPassword(vaultId)
+
+            state.update {
+                it.copy(
+                    password = password
                 )
             }
         }
