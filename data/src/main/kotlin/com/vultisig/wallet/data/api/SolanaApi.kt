@@ -44,7 +44,8 @@ internal class SolanaApiImp @Inject constructor(
     private val splTokenSerializer: SplTokenResponseJsonSerializer,
 ) : SolanaApi {
 
-    private val rpcEndpoint = "https://solana-rpc.publicnode.com"
+    private val rpcEndpoint = "https://api.mainnet-beta.solana.com"
+    private val rpcEndpoint2 = "https://solana-rpc.publicnode.com"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     override suspend fun getBalance(address: String): BigInteger {
         val payload = RpcPayload(
@@ -193,7 +194,7 @@ internal class SolanaApiImp @Inject constructor(
                 },
                 id = 1,
             )
-            val response = httpClient.post(rpcEndpoint) {
+            val response = httpClient.post(rpcEndpoint2) {
                 setBody(payload)
             }
             val responseContent = response.bodyAsText()
@@ -227,7 +228,7 @@ internal class SolanaApiImp @Inject constructor(
                 },
                 id = 1,
             )
-            val response = httpClient.post(rpcEndpoint) {
+            val response = httpClient.post(rpcEndpoint2) {
                 setBody(payload)
             }
             val responseContent = response.bodyAsText()
