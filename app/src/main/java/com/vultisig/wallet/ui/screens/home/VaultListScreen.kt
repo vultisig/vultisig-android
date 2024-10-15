@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -104,7 +105,7 @@ private fun VaultListScreen(
                         name = vault.name,
                         isFolder = false,
                         isFastVault = vault.isFastVault(),
-                        vaultPart = vault.signers.size,
+                        vaultPart = vault.getVaultPart(),
                         signersSize = vault.signers.size,
                     ),
                     isInEditMode = isRearrangeMode,
