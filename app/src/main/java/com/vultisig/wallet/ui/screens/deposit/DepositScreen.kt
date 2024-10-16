@@ -145,7 +145,7 @@ private fun DepositScreen(
                 KeysignFlowView(
                     navController = mainNavController,
                     onComplete = {
-                        mainNavController.navigate(Destination.Home().route)
+                        onKeysignFinished()
                     },
                     onKeysignFinished = enableNavigationToHome,
                 )

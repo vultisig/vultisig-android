@@ -132,7 +132,7 @@ internal fun SendScreen(
                 KeysignFlowView(
                     navController = navController,
                     onComplete = {
-                        navController.navigate(Destination.Home().route)
+                        viewModel.navigateToHome(useMainNavigator)
                     },
                     onKeysignFinished = {
                         viewModel.enableNavigationToHome()

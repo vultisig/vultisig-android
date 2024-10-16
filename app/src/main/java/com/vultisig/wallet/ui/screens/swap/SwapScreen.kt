@@ -88,6 +88,7 @@ internal fun SwapScreen(
         progress = progress,
         qrCodeResult = viewModel.addressProvider.address.collectAsState().value,
         onKeysignFinished = onKeysignFinished,
+        navigateToHome = viewModel::navigateToHome,
         enableNavigationToHome = viewModel::enableNavigationToHome,
     )
 }
@@ -105,6 +106,7 @@ private fun SwapScreen(
     dstTokenId: String?,
     qrCodeResult: String?,
     onKeysignFinished: (() -> Unit)? = null,
+    navigateToHome: () -> Unit = {},
     enableNavigationToHome: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -163,9 +165,7 @@ private fun SwapScreen(
 
                 KeysignFlowView(
                     navController = mainNavController,
-                    onComplete = {
-                        mainNavController.navigate(Destination.Home().route)
-                    },
+                    onComplete = navigateToHome,
                     onKeysignFinished = enableNavigationToHome,
                 )
             }
