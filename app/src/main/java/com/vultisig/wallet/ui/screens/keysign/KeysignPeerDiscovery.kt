@@ -99,7 +99,9 @@ internal fun KeysignPeerDiscovery(
     }
 
     LaunchedEffect(viewModel.keysignMessage.value) {
-        sharedViewModel.loadQrPainter(viewModel.keysignMessage.value)
+        if (viewModel.keysignMessage.value.isNotEmpty()) {
+            sharedViewModel.loadQrPainter(viewModel.keysignMessage.value)
+        }
     }
 
     DisposableEffect(Unit) {
