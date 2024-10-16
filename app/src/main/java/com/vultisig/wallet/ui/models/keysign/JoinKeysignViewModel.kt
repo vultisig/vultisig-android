@@ -463,9 +463,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         gasFee = gasFee,
                         memo = payload.memo,
-                        estimatedFee = totalGasAndFee.first,
+                        estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
-                        totalGass = totalGasAndFee.second
+                        totalGass = totalGasAndFee.formattedTokenValue
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

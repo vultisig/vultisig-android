@@ -200,16 +200,22 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
-        _currentVault = vault
-        _keysignPayload = keysignPayload
-        messagesToSign = SigningHelper.getKeysignMessages(
-            payload = _keysignPayload!!,
-            vault = _currentVault!!,
-        )
-        this.selection.value = listOf(vault.localPartyID)
-        _serverAddress = Endpoints.VULTISIG_RELAY
-        updateKeysignPayload(context)
-        updateTransactionUiModel(keysignPayload)
+        try {
+            _currentVault = vault
+            _keysignPayload = keysignPayload
+            messagesToSign = SigningHelper.getKeysignMessages(
+                payload = _keysignPayload!!,
+                vault = _currentVault!!,
+            )
+            this.selection.value = listOf(vault.localPartyID)
+            _serverAddress = Endpoints.VULTISIG_RELAY
+            updateKeysignPayload(context)
+            updateTransactionUiModel(keysignPayload)
+        } catch (e: Exception) {
+            Timber.e(e)
+            errorMessage.value = e.message.toString()
+            moveToState(KeysignFlowState.ERROR)
+        }
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")

@@ -98,18 +98,6 @@ internal class KeysignShareViewModel @Inject constructor(
             toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
 
             keysignPayload = when (transaction) {
-                is SwapTransaction.EthToCacaoSwapTransaction -> {
-                    KeysignPayload(
-                        coin = srcToken,
-                        toAddress = transaction.dstAddress,
-                        toAmount = transaction.srcTokenValue.value,
-                        blockChainSpecific = transaction.blockChainSpecific.blockChainSpecific,
-                        memo = transaction.memo,
-                        vaultPublicKeyECDSA = pubKeyECDSA,
-                        utxos = emptyList(),
-                        vaultLocalPartyID = vault.localPartyID,
-                    )
-                }
 
                 is SwapTransaction.RegularSwapTransaction -> {
                     var swapPayload: SwapPayload = transaction.payload

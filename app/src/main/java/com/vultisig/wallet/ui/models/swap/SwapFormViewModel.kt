@@ -10,13 +10,17 @@ import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
-import com.vultisig.wallet.data.models.SwapTransaction.*
+import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -30,6 +34,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -54,7 +59,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -74,6 +81,8 @@ internal data class SwapFormUiModel(
     val provider: UiText = UiText.Empty,
     val minimumAmount: String = BigInteger.ZERO.toString(),
     val gas: String = "",
+    val fiatGas: String = "",
+    val totalFee: String = "0",
     val fee: String = "",
     val error: UiText? = null,
     val formError: UiText? = null,
@@ -101,6 +110,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
@@ -121,6 +131,8 @@ internal class SwapFormViewModel @Inject constructor(
     private val selectedDstId = MutableStateFlow<String?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
+    private val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
+    private val gasFeeFiat = MutableStateFlow<FiatValue?>(null)
 
     private val addresses = MutableStateFlow<List<Address>>(emptyList())
 
@@ -132,6 +144,7 @@ internal class SwapFormViewModel @Inject constructor(
 
         calculateGas()
         calculateFees()
+        collectTotalFee()
     }
 
     fun swap() {
@@ -194,12 +207,11 @@ internal class SwapFormViewModel @Inject constructor(
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
-                val isEthToCacaoSwapTransaction =
+                val isEVMSwap =
                     srcToken.isNativeToken &&
-                            srcToken.chain in listOf(Chain.Ethereum, Chain.Arbitrum) &&
-                            dstToken.chain == Chain.MayaChain
+                            srcToken.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
 
-                val gasLimit = if (isEthToCacaoSwapTransaction)
+                val gasLimit = if (isEVMSwap)
                     BigInteger.valueOf(
                         if (srcToken.chain == Chain.Ethereum)
                             ETH_GAS_LIMIT else ARB_GAS_LIMIT
@@ -269,10 +281,7 @@ internal class SwapFormViewModel @Inject constructor(
                     }
 
                     is SwapQuote.MayaChain -> {
-                        val address = if (isEthToCacaoSwapTransaction)
-                            quote.data.inboundAddress else
-                            quote.data.router ?: quote.data.inboundAddress
-
+                        val address = quote.data.inboundAddress
                         val dstAddress = address ?: srcAddress
 
                         val allowance = allowanceRepository.getAllowance(
@@ -322,11 +331,7 @@ internal class SwapFormViewModel @Inject constructor(
                             )
                         )
 
-                        if (isEthToCacaoSwapTransaction) {
-                            EthToCacaoSwapTransaction(
-                                regularSwapTransaction,
-                            )
-                        } else regularSwapTransaction
+                        regularSwapTransaction
                     }
 
                     is SwapQuote.OneInch -> {
@@ -497,23 +502,63 @@ internal class SwapFormViewModel @Inject constructor(
     private fun calculateGas() {
         viewModelScope.launch {
             selectedSrc
-                .map { it?.address }
                 .filterNotNull()
                 .map {
-                    gasFeeRepository.getGasFee(it.chain, it.address)
+                    it to gasFeeRepository.getGasFee(it.address.chain, it.address.address)
                 }
                 .catch {
                     // TODO handle error when querying gas fee
                     Timber.e(it)
                 }
-                .collect { gasFee ->
+                .collect { (selectedSrc, gasFee) ->
                     this@SwapFormViewModel.gasFee.value = gasFee
+                    val selectedAccount = selectedSrc.account
+                    val chain = selectedAccount.token.chain
+                    val selectedToken = selectedAccount.token
+                    val srcAddress = selectedAccount.token.address
+
+                    val spec = blockChainSpecificRepository.getSpecific(
+                        chain,
+                        srcAddress,
+                        selectedToken,
+                        gasFee,
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                    )
+
+                    val estimatedFee = gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                            } else {
+                                BigInteger.valueOf(1)
+                            },
+                            gasFee = gasFee,
+                            selectedToken = selectedToken,
+                        )
+                    )
+
+                    gasFeeFiat.value = estimatedFee.fiatValue
 
                     uiState.update {
-                        it.copy(gas = mapTokenValueToString(gasFee))
+                        it.copy(
+                            gas = estimatedFee.formattedTokenValue,
+                            fiatGas = estimatedFee.formattedFiatValue,
+                        )
                     }
                 }
         }
+    }
+
+    private fun collectTotalFee() {
+        gasFeeFiat.filterNotNull().combine(swapFeeFiat.filterNotNull()) { a, b ->
+            a + b
+        }.onEach { totalFee ->
+            uiState.update {
+                it.copy(totalFee = fiatValueToString.map(totalFee))
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun calculateFees() {
@@ -617,6 +662,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                                 val fiatFees =
                                     convertTokenValueToFiat(dstToken, quote.fees, currency)
+                                swapFeeFiat.value = fiatFees
 
                                 val estimatedDstTokenValue = if (hasUserSetTokenValue) {
                                     mapTokenValueToDecimalUiString(
@@ -683,6 +729,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                                 val fiatFees =
                                     convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
+                                swapFeeFiat.value = fiatFees
 
                                 val estimatedDstTokenValue = if (hasUserSetTokenValue) {
                                     mapTokenValueToDecimalUiString(expectedDstValue)
@@ -737,7 +784,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                                 val fiatFees =
                                     convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
-
+                                swapFeeFiat.value = fiatFees
                                 val estimatedDstTokenValue = if (hasUserSetTokenValue) {
                                     mapTokenValueToDecimalUiString(expectedDstValue)
                                 } else ""

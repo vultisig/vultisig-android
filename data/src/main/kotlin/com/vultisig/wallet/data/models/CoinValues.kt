@@ -37,4 +37,11 @@ data class TokenValue(
 data class FiatValue(
     val value: BigDecimal,
     val currency: String,
-)
+) {
+    operator fun plus(other: FiatValue): FiatValue {
+        return FiatValue(
+            value = value + other.value,
+            currency = currency
+        )
+    }
+}

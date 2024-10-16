@@ -107,7 +107,8 @@
     <string name="swap_form_src_amount_hint">Menge eingeben</string>
     <string name="swap_form_dst_token_title">Zu</string>
     <string name="swap_screen_title">Tauschen</string>
-    <string name="swap_form_gas_title">Gas (auto)</string>
+    <string name="swap_form_gas_title">Netzwerkgebühr</string>
+    <string name="swap_form_total_fees_title">Gesamtgebühren</string>
     <string name="home_scree_done">fertig</string>
     <string name="verify_swap_sign_button">Unterschreiben</string>
     <string name="swap_error_no_amount">Die Menge muss eine positive Zahl sein</string>
@@ -163,7 +164,7 @@
     <string name="verify_swap_agree_receive_amount">Ich bin mit dem Betrag einverstanden, den ich nach dem Tausch erhalte</string>
     <string name="vault_settings_success_backup_file">Datei gespeichert in Downloads/%1$s</string>
     <string name="failed_to_start_error">Start fehlgeschlagen, Fehler: %1$s</string>
-    <string name="swap_form_estimated_fees_title">Geschätzte Gebühren</string>
+    <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
     <string name="verify_swap_screen_estimated_fees">Geschätzte Gebühren</string>
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>

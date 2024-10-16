@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -7,12 +8,11 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import kotlinx.coroutines.flow.first
-import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
 internal interface GasFeeToEstimatedFeeUseCase :
-    suspend (GasFeeParams) -> Pair<String, String>
+    suspend (GasFeeParams) -> EstimatedGasFee
 
 internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
@@ -22,7 +22,7 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
     private val convertTokenValueToString: TokenValueToStringWithUnitMapper,
     ) : GasFeeToEstimatedFeeUseCase {
 
-    override suspend fun invoke(from: GasFeeParams): Pair<String, String> {
+    override suspend fun invoke(from: GasFeeParams): EstimatedGasFee {
         val appCurrency = appCurrencyRepository.currency.first()
 
         val nativeToken = tokenRepository.getNativeToken(from.selectedToken.chain.id)
@@ -50,10 +50,10 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
             decimals =tokenValue.decimals
         )
 
-
-        return Pair(
-            fiatValueToStringMapper.map(fiatFees),
-            convertTokenValueToString(tokenValue)
+        return EstimatedGasFee(
+            formattedFiatValue = fiatValueToStringMapper.map(fiatFees),
+            formattedTokenValue = convertTokenValueToString(tokenValue),
+            fiatValue = fiatFees,
         )
     }
 }

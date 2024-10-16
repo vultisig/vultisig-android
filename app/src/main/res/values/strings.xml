@@ -185,10 +185,11 @@
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_src_amount_hint">Enter Amount</string>
-    <string name="swap_form_estimated_fees_title">Estimated Fees</string>
+    <string name="swap_form_estimated_fees_title">Swap fees</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="swap_screen_title">Swap</string>
-    <string name="swap_form_gas_title">Gas (auto)</string>
+    <string name="swap_form_gas_title">Network fee</string>
+    <string name="swap_form_total_fees_title">Total fees</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="verify_swap_screen_estimated_fees">Estimated Fees</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
@@ -444,4 +445,5 @@
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
     <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
+    <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
 </resources>
