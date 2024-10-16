@@ -18,7 +18,6 @@ import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
@@ -132,7 +131,7 @@ internal fun SendScreen(
                 KeysignFlowView(
                     navController = navController,
                     onComplete = {
-                        navController.navigate(Destination.Home().route)
+                        viewModel.navigateToHome(useMainNavigator)
                     },
                     onKeysignFinished = {
                         viewModel.enableNavigationToHome()

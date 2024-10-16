@@ -19,7 +19,6 @@ import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.deposit.DepositViewModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
@@ -145,7 +144,7 @@ private fun DepositScreen(
                 KeysignFlowView(
                     navController = mainNavController,
                     onComplete = {
-                        mainNavController.navigate(Destination.Home().route)
+                        onKeysignFinished()
                     },
                     onKeysignFinished = enableNavigationToHome,
                 )
