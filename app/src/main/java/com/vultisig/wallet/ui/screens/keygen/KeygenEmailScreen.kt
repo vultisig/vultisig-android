@@ -21,6 +21,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.GradientInfoCard
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -137,20 +138,21 @@ private fun KeygenEmailScreen(
             Column(
                 Modifier
                     .imePadding()
-                    .padding(horizontal = 16.dp)
+                    .padding(
+                        all = 16.dp,
+                    )
             ) {
+                GradientInfoCard(
+                    text = stringResource(R.string.keygen_fast_vault_email_hint)
+                )
+
                 MultiColorButton(
                     backgroundColor = Theme.colors.turquoise800,
                     textColor = Theme.colors.oxfordBlue800,
                     iconColor = Theme.colors.turquoise800,
                     textStyle = Theme.montserrat.subtitle1,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                        ),
+                        .fillMaxWidth(),
                     text = stringResource(R.string.keygen_email_continue_button),
                     onClick = onContinueClick,
                 )
