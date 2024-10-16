@@ -110,7 +110,8 @@
     <string name="swap_form_src_amount_hint">Inserir Quantidade</string>
     <string name="swap_form_dst_token_title">Para</string>
     <string name="swap_screen_title">Trocar</string>
-    <string name="swap_form_gas_title">Gás (auto)</string>
+    <string name="swap_form_gas_title">Taxa de rede</string>
+    <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="home_scree_done">Concluído</string>
     <string name="verify_swap_sign_button">Sign</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
@@ -163,7 +164,7 @@
     <string name="verify_swap_agree_receive_amount">Concordo com o valor que receberei após a troca</string>
     <string name="vault_settings_success_backup_file">arquivo salvo em Downloads/%1$s</string>
     <string name="failed_to_start_error">Falha ao iniciar, erro: %1$s</string>
-    <string name="swap_form_estimated_fees_title">Taxas estimadas</string>
+    <string name="swap_form_estimated_fees_title">Taxa de swap</string>
     <string name="verify_swap_screen_estimated_fees">Taxas estimadas</string>
     <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>

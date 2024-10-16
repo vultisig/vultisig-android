@@ -22,7 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,7 +46,6 @@ import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import java.math.BigInteger
-
 
 
 @Composable
@@ -185,13 +187,51 @@ internal fun SwapFormScreen(
                 )
 
                 FormDetails(
-                    title = stringResource(R.string.swap_form_gas_title),
-                    value = state.gas,
+                    title = stringResource(R.string.swap_form_estimated_fees_title),
+                    value = state.fee
                 )
 
                 FormDetails(
-                    title = stringResource(R.string.swap_form_estimated_fees_title),
-                    value = state.fee
+                    modifier = Modifier.fillMaxWidth(),
+                    title = buildAnnotatedString {
+                        withStyle(
+                            SpanStyle(
+                                color = Theme.colors.neutral200,
+                            )
+                        ) {
+                            append(stringResource(R.string.swap_form_gas_title))
+                        }
+                    },
+                    value = buildAnnotatedString {
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral100,
+                                fontSize = Theme.menlo.body1.fontSize,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                            )
+                        ) {
+                            append(state.gas)
+                        }
+                        append(" ")
+                        withStyle(
+                            style = SpanStyle(
+                                color = Theme.colors.neutral400,
+                                fontSize = Theme.menlo.body1.fontSize,
+                                fontFamily = Theme.menlo.body1.fontFamily,
+                            )
+                        ) {
+                            append(
+                                if (state.fiatGas.isNotEmpty())
+                                    "(~${state.fiatGas})"
+                                else ""
+                            )
+                        }
+                    }
+                )
+
+                FormDetails(
+                    title = stringResource(R.string.swap_form_total_fees_title),
+                    value = state.totalFee
                 )
             }
             when {
@@ -200,6 +240,7 @@ internal fun SwapFormScreen(
                         errorMessage = state.formError.asString()
                     )
                 }
+
                 state.minimumAmount != BigInteger.ZERO.toString() -> {
                     FormError(
                         errorMessage = stringResource(
