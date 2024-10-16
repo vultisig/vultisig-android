@@ -194,12 +194,11 @@ internal class SwapFormViewModel @Inject constructor(
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
-                val isEthToCacaoSwapTransaction =
+                val isEVMSwap =
                     srcToken.isNativeToken &&
-                            srcToken.chain in listOf(Chain.Ethereum, Chain.Arbitrum) &&
-                            dstToken.chain == Chain.MayaChain
+                            srcToken.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
 
-                val gasLimit = if (isEthToCacaoSwapTransaction)
+                val gasLimit = if (isEVMSwap)
                     BigInteger.valueOf(
                         if (srcToken.chain == Chain.Ethereum)
                             ETH_GAS_LIMIT else ARB_GAS_LIMIT
@@ -269,10 +268,7 @@ internal class SwapFormViewModel @Inject constructor(
                     }
 
                     is SwapQuote.MayaChain -> {
-                        val address = if (isEthToCacaoSwapTransaction)
-                            quote.data.inboundAddress else
-                            quote.data.router ?: quote.data.inboundAddress
-
+                        val address = quote.data.inboundAddress
                         val dstAddress = address ?: srcAddress
 
                         val allowance = allowanceRepository.getAllowance(
@@ -322,11 +318,7 @@ internal class SwapFormViewModel @Inject constructor(
                             )
                         )
 
-                        if (isEthToCacaoSwapTransaction) {
-                            EthToCacaoSwapTransaction(
-                                regularSwapTransaction,
-                            )
-                        } else regularSwapTransaction
+                        regularSwapTransaction
                     }
 
                     is SwapQuote.OneInch -> {
