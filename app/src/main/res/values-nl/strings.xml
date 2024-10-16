@@ -182,10 +182,11 @@
     <string name="biometry_auth_login_button">Inloggen met biometrie</string>
     <string name="swap_form_from_title">Van</string>
     <string name="swap_form_src_amount_hint">Voer bedrag in</string>
-    <string name="swap_form_estimated_fees_title">Geschatte kosten</string>
+    <string name="swap_form_estimated_fees_title">Wisselkosten</string>
     <string name="swap_form_dst_token_title">Aan</string>
     <string name="swap_screen_title">Wisselen</string>
-    <string name="swap_form_gas_title">Gas (auto)</string>
+    <string name="swap_form_gas_title">Netwerkkosten</string>
+    <string name="swap_form_total_fees_title">Totale kosten</string>
     <string name="share_qr_utils_choose_an_app">Kies een app</string>
     <string name="verify_swap_screen_estimated_fees">Geschatte kosten</string>
     <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het bedrag dat ik na de wissel zal ontvangen</string>
