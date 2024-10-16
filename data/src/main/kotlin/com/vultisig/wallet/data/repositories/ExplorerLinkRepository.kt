@@ -36,10 +36,10 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
             Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
             Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync, Chain.Sui,
-            Chain.Dydx ->
+            Chain.Dydx, Chain.Bitcoin ->
                 "${explorerUrl}tx/"
 
-            Chain.Bitcoin, Chain.BitcoinCash, Chain.Dash, Chain.Litecoin ->
+            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin ->
                 "${explorerUrl}transaction/"
 
             Chain.Kujira ->
@@ -56,7 +56,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Arbitrum -> "https://arbiscan.io/"
             Chain.Avalanche -> "https://snowtrace.io/"
             Chain.Base -> "https://basescan.org/"
-            Chain.Bitcoin -> "https://blockchair.com/bitcoin/"
+            Chain.Bitcoin -> "https://mempool.space/"
             Chain.BitcoinCash -> "https://blockchair.com/bitcoin-cash/"
             Chain.Blast -> "https://blastscan.io/"
             Chain.BscChain -> "https://bscscan.com/"
