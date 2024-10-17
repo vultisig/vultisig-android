@@ -55,7 +55,7 @@ internal class VerifySwapViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
-    val password = MutableStateFlow<String?>(null)
+    private val password = MutableStateFlow<String?>(null)
 
     private val transactionId: String = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
     private val vaultId: String? = savedStateHandle["vault_id"]

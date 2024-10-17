@@ -80,7 +80,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         )
 
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
-    val password = MutableStateFlow<String?>(null)
+    private val password = MutableStateFlow<String?>(null)
 
     init {
         loadFastSign()
