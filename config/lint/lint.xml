@@ -1,137 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
     <issue id="AndroidGradlePluginVersion" severity="warning" />
-    <issue id="AndroidGradlePluginVersion" severity="warning" />
-    <issue id="AaptCrash" severity="warning" />
-    <issue id="AccessibilityFocus" severity="warning" />
-    <issue id="AccessibilityScrollActions" severity="warning" />
-    <issue id="AcceptsUserCertificates" severity="warning" />
-    <issue id="AccessibilityWindowStateChangedEvent" severity="warning" />
-    <issue id="AccidentalOctal" severity="warning" />
-    <issue id="AdapterViewChildren" severity="warning" />
-    <issue id="ActivityIconColor" severity="warning" />
-    <issue id="AddJavascriptInterface" severity="warning" />
-    <issue id="AllCaps" severity="warning" />
-    <issue id="AllowAllHostnameVerifier" severity="warning" />
-    <issue id="AlwaysShowAction" severity="warning" />
-    <issue id="AnimatorKeep" severity="warning" />
-    <issue id="AnnotateVersionCheck" severity="warning" />
-    <issue id="AnnotationProcessorOnCompilePath" severity="warning" />
-    <issue id="AppBundleLocaleChanges" severity="warning" />
-    <issue id="AppCompatCustomView" severity="warning" />
-    <issue id="AppCompatMethod" severity="warning" />
-    <issue id="AppCompatResource" severity="warning" />
-    <issue id="AppIndexingService" severity="warning" />
-    <issue id="AppLinksAutoVerify" severity="warning" />
-    <issue id="AppLinkUrlError" severity="warning" />
-    <issue id="ApplySharedPref" severity="warning" />
-    <issue id="AssertionSideEffect" severity="warning" />
-    <issue id="AuthLeak" severity="warning" />
-    <issue id="Autofill" severity="warning" />
-    <issue id="BackButton" severity="warning" />
-    <issue id="BadHostnameVerifier" severity="warning" />
-    <issue id="BatteryLife" severity="warning" />
-    <issue id="BidiSpoofing" severity="warning" />
-    <issue id="BinderGetCallingInMainThread" severity="warning" />
-    <issue id="BottomAppBar" severity="warning" />
-    <issue id="BomWithoutPlatform" severity="warning" />
-    <issue id="BlockedPrivateApi" severity="warning" />
-    <issue id="BrokenIterator" severity="warning" />
-    <issue id="BuildListAdds" severity="warning" />
-    <issue id="ButtonCase" severity="warning" />
-    <issue id="ButtonOrder" severity="warning" />
-    <issue id="ButtonStyle" severity="warning" />
-    <issue id="CanvasSize" severity="warning" />
-    <issue id="CheckResult" severity="warning" />
-    <issue id="ChildInNonViewGroup" severity="warning" />
-    <issue id="ChromeOsAbiSupport" severity="warning" />
-    <issue id="ChromeOsOnConfigurationChanged" severity="warning" />
-    <issue id="ClickableViewAccessibility" severity="warning" />
-    <issue id="CoarseFineLocation" severity="warning" />
-    <issue id="CommitPrefEdits" severity="warning" />
-    <issue id="CommitTransaction" severity="warning" />
-    <issue id="CommitPrefEdits" severity="warning" />
+    <issue id="InvalidColorHexValue" severity="warning" />
+    <issue id="MissingColorAlphaChannel" severity="warning" />
     <issue id="ComposableLambdaParameterNaming" severity="warning" />
     <issue id="ComposableLambdaParameterPosition" severity="error" />
-    <issue id="ConstantLocale" severity="warning" />
-    <issue id="ConvertToWebp" severity="warning" />
-    <issue id="CredentialDependency" severity="warning" />
-    <issue id="CredentialManagerSignInWithGoogle" severity="warning" />
-    <issue id="CredManMissingDal" severity="warning" />
-    <issue id="CustomPermissionTypo" severity="warning" />
-    <issue id="CustomSplashScreen" severity="warning" />
-    <issue id="CustomViewStyleable" severity="warning" />
-    <issue id="CustomX509TrustManager" severity="warning" />
-    <issue id="CutPasteId" severity="warning" />
-
-
-    <issue id="DalvikOverride" severity="warning" />
-    <issue id="DataBindingWithoutKapt" severity="warning" />
-    <issue id="DataExtractionRules" severity="warning" />
-    <issue id="DefaultEncoding" severity="warning" />
-    <issue id="DefaultLocale" severity="warning" />
-    <issue id="DeletedProvider" severity="warning" />
-    <issue id="Deprecated" severity="warning" />
-    <issue id="DeprecatedSinceApi" severity="warning" />
-    <issue id="DeviceAdmin" severity="warning" />
-    <issue id="DevModeObsolete" severity="warning" />
-    <issue id="DefaultEncoding" severity="warning" />
-    <issue id="DiffUtilEquals" severity="warning" />
-    <issue id="DisableBaselineAlignment" severity="warning" />
-    <issue id="DiscouragedPrivateApi" severity="warning" />
-    <issue id="DiscouragedApi" severity="warning" />
-    <issue id="DrawAllocation" severity="warning" />
-    <issue id="DuplicateActivity" severity="warning" />
+    <issue id="ComposableModifierFactory" severity="error" />
+    <issue id="ComposableNaming" severity="warning" />
+    <issue id="CompositionLocalNaming" severity="warning" />
     <issue id="DuplicateStrings" severity="ignore" />
-    <issue id="DuplicateDefinition" severity="warning" />
-    <issue id="DuplicateDivider" severity="warning" />
-    <issue id="DuplicateIds" severity="warning" />
-    <issue id="DuplicateIncludedIds" severity="warning" />
-    <issue id="DuplicatePlatformClasses" severity="warning" />
-    <issue id="DuplicateUsesFeature" severity="warning" />
     <issue id="EasterEgg" severity="error" />
-
-    <issue id="EditedTargetSdkVersion" severity="warning" />
-    <issue id="EllipsizeMaxLines" severity="warning" />
-    <issue id="EmptySuperCall" severity="warning" />
-    <issue id="EnforceUTF8" severity="warning" />
-    <issue id="EnqueueWork" severity="warning" />
-    <issue id="ExactAlarm" severity="warning" />
-    <issue id="ExifInterface" severity="warning" />
     <issue id="ExpensiveAssertion" severity="error" />
-    <issue id="ExpiredTargetSdkVersion" severity="warning" />
-    <issue id="ExpiringTargetSdkVersion" severity="warning" />
-    <issue id="ExportedContentProvider" severity="warning" />
-    <issue id="ExportedPreferenceActivity" severity="warning" />
-    <issue id="ExportedReceiver" severity="warning" />
-    <issue id="ExportedService" severity="warning" />
-    <issue id="ExtraText" severity="warning" />
-    <issue id="ExtraTranslation" severity="warning" />
-    <issue id="FileEndsWithExt" severity="warning" />
-    <issue id="FindViewByIdCast" severity="warning" />
-    <issue id="FontValidation" severity="warning" />
-    <issue id="ForegroundServicePermission" severity="warning" />
-    <issue id="ForegroundServiceType" severity="warning" />
-    <issue id="FullBackupContent" severity="warning" />
-    <issue id="FullBackupContent" severity="warning" />
-    <issue id="GestureBackNavigation" severity="warning" />
-    <issue id="GetContentDescriptionOverride" severity="warning" />
-    <issue id="GetInstance" severity="warning" />
-    <issue id="GetLocales" severity="warning" />
-    <issue id="GifUsage" severity="warning" />
-    <issue id="GradleCompatible" severity="warning" />
     <issue id="GradleDependency" severity="warning" />
-    <issue id="GradleDeprecated" severity="warning" />
-    <issue id="GradleDeprecatedConfiguration" severity="warning" />
-    <issue id="GradleDynamicVersion" severity="warning" />
-    <issue id="GradleGetter" severity="warning" />
-    <issue id="GradleIdeError" severity="warning" />
-    <issue id="GradleOverrides" severity="warning" />
-    <issue id="GradlePath" severity="warning" />
-    <issue id="GradlePluginVersion" severity="warning" />
-    <issue id="GrantAllUris" severity="warning" />
-    <issue id="GridLayout" severity="warning" />
-
     <issue id="HardwareIds" severity="warning" />
     <issue id="IconLocation" severity="ignore" />
     <issue id="IconMissingDensityFolder" severity="ignore" />
@@ -139,7 +19,10 @@
     <issue id="ImplicitSamInstance" severity="error" />
     <issue id="InvalidPackage" severity="warning" />
     <issue id="KotlinPropertyAccess" severity="warning" />
+    <issue id="ModifierFactoryReturnType" severity="error" />
+    <issue id="ModifierFactoryExtensionFunction" severity="error" />
     <issue id="ModifierParameter" severity="error" />
+    <issue id="MutableCollectionMutableState" severity="error" />
     <issue id="NewerVersionAvailable" severity="warning" />
     <issue id="ObsoleteSdkInt" severity="warning" />
     <issue id="OldTargetApi" severity="warning" />
@@ -154,7 +37,7 @@
     <issue id="SpUsage" severity="warning" />
     <issue id="StaticFieldLeak" severity="warning" />
     <issue id="StopShip" severity="warning" />
-    <issue id="StringFormatMatches" severity="warning" />
+    <issue id="StringFormatMatches" severity="error" />
     <issue id="StringFormatTrivial" severity="error" />
     <issue id="TypographyDashes" severity="warning" />
     <issue id="TypographyEllipsis" severity="warning" />
@@ -171,4 +54,5 @@
     <issue id="UnusedTranslation" severity="warning" />
     <issue id="UnknownNullness" severity="fatal" />
     <issue id="VectorPath" severity="ignore" />
+
 </lint>
