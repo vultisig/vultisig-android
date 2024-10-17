@@ -13,11 +13,62 @@
     <issue id="ExpensiveAssertion" severity="error" />
     <issue id="GradleDependency" severity="warning" />
     <issue id="HardwareIds" severity="warning" />
+    <issue id="HalfFloat" severity="warning" />
+    <issue id="HandlerLeak" severity="warning" />
+    <issue id="HardcodedDebugMode" severity="warning" />
+    <issue id="HardcodedText" severity="warning" />
+    <issue id="HighAppVersionCode" severity="warning" />
+    <issue id="HighSamplingRate" severity="warning" />
     <issue id="IconLocation" severity="ignore" />
     <issue id="IconMissingDensityFolder" severity="ignore" />
     <issue id="IconXmlAndPng" severity="ignore" />
     <issue id="ImplicitSamInstance" severity="error" />
     <issue id="InvalidPackage" severity="warning" />
+    <issue id="IconColors" severity="warning" />
+    <issue id="IconDensities" severity="warning" />
+    <issue id="IconDipSize" severity="warning" />
+    <issue id="IconDuplicates" severity="warning" />
+    <issue id="IconDuplicatesConfig" severity="warning" />
+    <issue id="IconExpectedSize" severity="warning" />
+    <issue id="IconDuplicatesConfig" severity="warning" />
+    <issue id="IconLocation" severity="warning" />
+    <issue id="IconMissingDensityFolder" severity="warning" />
+    <issue id="IconMixedNinePatch" severity="warning" />
+    <issue id="IconNoDpi" severity="warning" />
+    <issue id="IconXmlAndPng" severity="warning" />
+    <issue id="IllegalResourceRef" severity="warning" />
+    <issue id="ImplicitSamInstance" severity="warning" />
+    <issue id="ImpliedQuantity" severity="warning" />
+    <issue id="ImpliedTouchscreenHardware" severity="warning" />
+    <issue id="IncludeLayoutParam" severity="warning" />
+    <issue id="IncompatibleMediaBrowserServiceCompatVersion" severity="warning" />
+    <issue id="InconsistentArrays" severity="warning" />
+    <issue id="InconsistentLayout" severity="warning" />
+    <issue id="InefficientWeight" severity="warning" />
+    <issue id="InflateParams" severity="warning" />
+    <issue id="InlinedApi" severity="warning" />
+    <issue id="InnerclassSeparator" severity="warning" />
+    <issue id="InOrMmUsage" severity="warning" />
+    <issue id="InsecureBaseConfiguration" severity="warning" />
+    <issue id="InstantApps" severity="warning" />
+    <issue id="Instantiatable" severity="warning" />
+    <issue id="IntentFilterExportedReceiver" severity="warning" />
+    <issue id="IntentFilterUniqueDataAttributes" severity="warning" />
+    <issue id="IntentReset" severity="warning" />
+    <issue id="IntentWithNullActionLaunch" severity="warning" />
+    <issue id="InternalInsetResource" severity="warning" />
+    <issue id="InvalidAnalyticsName" severity="warning" />
+    <issue id="InvalidId" severity="warning" />
+    <issue id="InvalidImeActionId" severity="warning" />
+    <issue id="InvalidNavigation" severity="warning" />
+    <issue id="InvalidPackage" severity="warning" />
+    <issue id="InvalidPermission" severity="warning" />
+    <issue id="InvalidResourceFolder" severity="warning" />
+    <issue id="InvalidUsesTagAttribute" severity="warning" />
+    <issue id="InvalidAnalyticsName" severity="warning" />
+    <issue id="InvalidVectorPath" severity="warning" />
+    <issue id="InvalidWearFeatureAttribute" severity="warning" />
+    <issue id="InvalidWakeLockTag" severity="warning" />
     <issue id="KotlinPropertyAccess" severity="warning" />
     <issue id="ModifierFactoryReturnType" severity="error" />
     <issue id="ModifierFactoryExtensionFunction" severity="error" />
