@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data
 
 import android.content.Context
+import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import com.vultisig.wallet.data.sources.AppDataStore
 import dagger.Module
 import dagger.Provides
@@ -26,6 +29,20 @@ internal interface MainDataModule {
         @Singleton
         fun provideCompressorStreamProvider(): CompressorStreamProvider =
             CompressorStreamFactory()
+
+        @Singleton
+        @Provides
+        fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
+            val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+
+            return EncryptedSharedPreferences.create(
+                "token_encrypted_prefs",
+                masterKey,
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
     }
 
 }

@@ -279,6 +279,7 @@
     <string name="deposit_form_amount_title" >Amount</string>
     <string name="share_vault_qr_title" >Share Vault QR</string>
     <string name="share_vault_qr_save" >Save</string>
+    <string name="vault_settings_enable_biometrics_save" >Save</string>
     <string name="share_vault_qr_share" >Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
@@ -352,7 +353,7 @@
     <string name="token_selection_selected_tokens_title">Selected</string>
     <string name="failed_to_resolve_address">Failed to resolve address</string>
     <string name="vault_settings_success_backup_message" translatable="false">File saved successfully</string>
-    <string name="vault_settings_error_extension_backup_file" translatable="false">Supported file extensions are: %s</string>
+    <string name="vault_settings_error_extension_backup_file" translatable="false">Extension not supported. Backup failed. Supported file extensions are: %s</string>
     <string name="default_error"  translatable="false">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
     <string name="join_keygen_failed">Failed to join %1$s</string>
@@ -371,9 +372,17 @@
     <string name="create_folder_title" translatable="false">Create Folder</string>
     <string name="create_folder_name" translatable="false">Folder Name</string>
     <string name="create_folder_create" translatable="false">Create</string>
+    <string name="vault_settings_biometrics_screen_title" translatable="false">Enable Biometrics</string>
+    <string name="vault_settings_biometrics_screen_description" translatable="false">Enter Password for Fast Signing</string>
+    <string name="vault_settings_biometrics_screen_password_placeholder" translatable="false">Type here</string>
+    <string name="vault_settings_biometrics_screen_snackbar_enabled" translatable="false">Biometrics for Fast Signing is enabled</string>
+    <string name="vault_settings_biometrics_screen_snackbar_disabled" translatable="false">Biometrics for Fast Signing is disabled</string>
+    <string name="biometry_keysign_login_button" translatable="false">Fast Sign with biometry</string>
     <string name="delete_folder" translatable="false">Delete Folder</string>
     <string name="select_vaults_to_add_to_the_folder" translatable="false">Select Vaults to add to the folder.</string>
     <string name="create_folder_placeholder" translatable="false">Savings</string>
+    <string name="vault_settings_biometrics_title"  translatable="false">Biometrics for Fast Sign</string>
+    <string name="vault_settings_biometrics_description"  translatable="false">Enable Biometrics for Fast Sign</string>
     <string name="create_folder_list_title" translatable="false">Select Vaults to add to the folder.</string>
     <string name="generating_key_retry" translatable="false">Retry</string>
     <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>

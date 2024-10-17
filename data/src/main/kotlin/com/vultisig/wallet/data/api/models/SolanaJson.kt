@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api.models
 
 import com.vultisig.wallet.data.utils.BigIntegerSerializer
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -13,6 +14,13 @@ data class SolanaBalanceJson(
     val error: String?,
     @SerialName("result")
     val result: SolanaBalanceResultJson?,
+)
+
+@Serializable
+data class SolanaMinimumBalanceForRentExemptionJson(
+    @SerialName("result")
+    @Contextual
+    val result: BigInteger,
 )
 
 @Serializable

@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +44,8 @@ internal data class BackupPasswordState(
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val disableEncryption: Boolean = false,
-    val backupContent: String = ""
+    val backupContent: String = "",
+    val error: UiText? = null,
 )
 
 @HiltViewModel
@@ -105,6 +107,10 @@ internal class BackupPasswordViewModel @Inject constructor(
                 data = backup,
             )
         } else null
+    }
+
+    fun dismissError() {
+        uiState.update { it.copy(error = null) }
     }
 
     fun backupEncryptedVault() {
@@ -184,19 +190,23 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     fun saveContentToUriResult(uri: Uri, content: String) {
-        if (!isFileExtensionValid(uri)) {
+        if (isFileExtensionValid(uri)) {
+            val isSuccess = context.saveContentToUri(uri, content)
+            completeBackupVault(isSuccess)
+        } else {
             viewModelScope.launch {
-                snackbarFlow.showMessage(
-                    context.getString(
-                        R.string.vault_settings_error_extension_backup_file,
-                        FILE_ALLOWED_EXTENSIONS.joinToString(",")
+                DocumentsContract.deleteDocument(context.contentResolver, uri)
+
+                uiState.update {
+                    it.copy(
+                        error = UiText.FormattedText(
+                            R.string.vault_settings_error_extension_backup_file,
+                            listOf(FILE_ALLOWED_EXTENSIONS.joinToString(", "))
+                        )
                     )
-                )
+                }
             }
-            return
         }
-        val isSuccess = context.saveContentToUri(uri, content)
-        completeBackupVault(isSuccess)
     }
 
     private fun isFileExtensionValid(uri: Uri) =
