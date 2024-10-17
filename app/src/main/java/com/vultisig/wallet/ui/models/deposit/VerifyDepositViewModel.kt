@@ -4,8 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
+import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -38,9 +41,12 @@ internal class VerifyDepositViewModel @Inject constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val vaultRepository: VaultRepository,
     private val vultiSignerRepository: VultiSignerRepository,
-) : ViewModel() {
+    private val vaultPasswordRepository: VaultPasswordRepository,
+    private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    ) : ViewModel() {
 
     val state = MutableStateFlow(VerifyDepositUiModel())
+    private val password = MutableStateFlow<String?>(null)
 
     private val transactionId: String = requireNotNull(savedStateHandle[SendDst.ARG_TRANSACTION_ID])
     private val vaultId: String? = savedStateHandle["vault_id"]
@@ -57,6 +63,7 @@ internal class VerifyDepositViewModel @Inject constructor(
         }
 
         loadFastSign()
+        loadPassword()
     }
 
     fun dismissError() {
@@ -64,33 +71,39 @@ internal class VerifyDepositViewModel @Inject constructor(
     }
 
     fun confirm() {
-        keysign(false)
+        keysign(KeysignInitType.QR_CODE)
     }
 
-    fun fastSign() {
-        keysign(true)
+    fun authFastSign() {
+        keysign(KeysignInitType.BIOMETRY)
+    }
+
+    fun tryToFastSignWithPassword(): Boolean {
+        if (password.value != null) {
+            return false
+        } else {
+            keysign(KeysignInitType.PASSWORD)
+            return true
+        }
     }
 
     private fun keysign(
-        hasFastSign: Boolean,
+        keysignInitType: KeysignInitType,
     ) {
         viewModelScope.launch {
-            val transaction = depositTransactionRepository.getTransaction(transactionId)
 
-            if (hasFastSign) {
-                sendNavigator.navigate(
-                    SendDst.Password(
-                        transactionId = transaction.id,
-                    )
-                )
-            } else {
-                sendNavigator.navigate(
-                    SendDst.Keysign(
-                        transactionId = transaction.id,
-                        password = null,
-                    )
-                )
-            }
+            sendNavigator.navigate (
+                getSendDstByKeysignInitType(keysignInitType, transactionId, password.value)
+            )
+        }
+    }
+
+    private fun loadPassword() {
+        viewModelScope.launch {
+            password.value = if (vaultId == null)
+                null
+            else
+                vaultPasswordRepository.getPassword(vaultId)
         }
     }
 

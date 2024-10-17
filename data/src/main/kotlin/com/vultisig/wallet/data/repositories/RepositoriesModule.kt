@@ -202,4 +202,10 @@ internal interface RepositoriesModule {
     fun bindFolderRepository(
         impl: FolderRepositoryImpl,
     ): FolderRepository
+
+    @Singleton
+    @Binds
+    fun bindVaultPasswordRepository(
+        impl: VaultPasswordRepositoryImpl,
+    ): VaultPasswordRepository
 }

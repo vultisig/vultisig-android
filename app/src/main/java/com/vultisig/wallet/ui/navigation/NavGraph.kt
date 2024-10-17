@@ -63,7 +63,8 @@ import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
-import com.vultisig.wallet.ui.screens.vault_settings.components.ConfirmDeleteScreen
+import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
+import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -540,6 +541,17 @@ internal fun SetupNavGraph(
             )
         ) {
             ReshareStartScreen(navController)
+        }
+
+        composable(
+            route = Destination.BiometricsEnable.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            BiometricsEnableScreen(navController)
         }
 
         composable(

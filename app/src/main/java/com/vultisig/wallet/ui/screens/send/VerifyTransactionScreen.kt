@@ -14,8 +14,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -31,6 +33,7 @@ import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiCheckbox
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
@@ -45,6 +48,9 @@ internal fun VerifyTransactionScreen(
     viewModel: VerifyTransactionViewModel = hiltViewModel(),
 ) {
     val state = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
+    val promptTitle = stringResource(R.string.biometry_keysign_login_button)
+
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -54,6 +60,14 @@ internal fun VerifyTransactionScreen(
             onDismiss = viewModel::dismissError,
         )
     }
+    val authorize: () -> Unit = remember(context) {
+        {
+            context.launchBiometricPrompt(
+                promptTitle = promptTitle,
+                onAuthorizationSuccess =  viewModel::authFastSign,
+            )
+        }
+    }
 
     VerifyTransactionScreen(
         state = state,
@@ -62,8 +76,12 @@ internal fun VerifyTransactionScreen(
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
-        onFastSignClick = viewModel::fastSign,
         onConfirm = viewModel::joinKeysign,
+        onFastSignClick = {
+            if (!viewModel.tryToFastSignWithPassword()) {
+                authorize()
+            }
+        },
     )
 }
 

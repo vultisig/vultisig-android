@@ -12,7 +12,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,6 +23,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositViewModel
@@ -34,6 +37,17 @@ internal fun VerifyDepositScreen(
     viewModel: VerifyDepositViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val promptTitle = stringResource(R.string.biometry_keysign_login_button)
+
+    val authorize: () -> Unit = remember(context) {
+        {
+            context.launchBiometricPrompt(
+                promptTitle = promptTitle,
+                onAuthorizationSuccess =  viewModel::authFastSign,
+            )
+        }
+    }
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -47,8 +61,12 @@ internal fun VerifyDepositScreen(
     VerifyDepositScreen(
         state = state,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
-        onFastSignClick = viewModel::fastSign,
         onConfirm = viewModel::confirm,
+        onFastSignClick = {
+            if (!viewModel.tryToFastSignWithPassword()) {
+                authorize()
+            }
+        },
     )
 }
 

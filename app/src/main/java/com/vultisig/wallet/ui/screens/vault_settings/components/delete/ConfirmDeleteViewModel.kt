@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.vault_settings.components
+package com.vultisig.wallet.ui.screens.vault_settings.components.delete
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -41,7 +41,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val vaultId: String =
-        savedStateHandle.get<String>(Destination.ConfirmDelete.ARG_VAULT_ID)!!
+        requireNotNull(savedStateHandle.get<String>(Destination.ConfirmDelete.ARG_VAULT_ID))
 
     val uiModel = MutableStateFlow(
         ConfirmDeleteVaultState(
