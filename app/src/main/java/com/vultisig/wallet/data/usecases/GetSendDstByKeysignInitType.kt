@@ -2,10 +2,11 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.navigation.SendDst
+import javax.inject.Inject
 
 internal interface GetSendDstByKeysignInitType : suspend (KeysignInitType, String, String?) -> SendDst
 
-internal class GetSendDstByKeysignInitTypeImpl : GetSendDstByKeysignInitType {
+internal class GetSendDstByKeysignInitTypeImpl @Inject constructor(): GetSendDstByKeysignInitType {
     override suspend fun invoke(
         keysignInitType: KeysignInitType,
         transactionId: String,
