@@ -501,8 +501,8 @@ internal class SendFormViewModel @Inject constructor(
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
-                    estimatedFee = totalGasAndFee.first,
-                    totalGass = totalGasAndFee.second,
+                    estimatedFee =totalGasAndFee.formattedFiatValue,
+                    totalGass =totalGasAndFee.formattedTokenValue,
                 )
 
                 Timber.d("Transaction: $transaction")
@@ -621,8 +621,8 @@ internal class SendFormViewModel @Inject constructor(
 
                     uiState.update {
                         it.copy(
-                            estimatedFee = UiText.DynamicString(estimatedFee.first),
-                            totalGas = UiText.DynamicString(estimatedFee.second)
+                            estimatedFee = UiText.DynamicString(estimatedFee.formattedFiatValue),
+                            totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue)
                         )
                     }
                 } catch (e: Exception) {
