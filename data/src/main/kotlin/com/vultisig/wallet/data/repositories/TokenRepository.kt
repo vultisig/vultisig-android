@@ -101,6 +101,8 @@ internal class TokenRepositoryImpl @Inject constructor(
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
         // cant get this for non EVM chains right now
         if (chain.standard != TokenStandard.EVM) return emptyList()
+        // 1inch api does not support cronos chain and blast chain
+        if (chain in listOf<Chain>(Chain.CronosChain, Chain.Blast)) return emptyList()
 
         Timber.d("getTokensWithBalance(chain = $chain, address = $address)")
         val contractsWithBalance = oneInchApi.getContractsWithBalance(chain, address)
