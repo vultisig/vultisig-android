@@ -78,7 +78,7 @@ internal fun VerifyTransactionScreen(
         onConsentDst = viewModel::checkConsentDst,
         onConfirm = viewModel::joinKeysign,
         onFastSignClick = {
-            if (viewModel.tryToFastSignWithPassword().not()) {
+            if (!viewModel.tryToFastSignWithPassword()) {
                 authorize()
             }
         },

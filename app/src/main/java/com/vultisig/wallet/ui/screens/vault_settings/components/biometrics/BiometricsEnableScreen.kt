@@ -30,8 +30,10 @@ import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun BiometricsEnableScreen(navController: NavController) {
-    val viewModel: BiometricsEnableViewModel = hiltViewModel()
+internal fun BiometricsEnableScreen(
+    navController: NavController,
+    viewModel: BiometricsEnableViewModel = hiltViewModel()
+) {
     val uiModel by viewModel.uiModel.collectAsState()
     BiometricsEnableScreen(
         uiModel = uiModel,

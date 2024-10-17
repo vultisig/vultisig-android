@@ -11,7 +11,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
-import com.vultisig.wallet.ui.models.keysign.KeysignType
+import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -52,7 +52,6 @@ internal data class VerifyTransactionUiModel(
     val blowfishShow: Boolean = false,
     val blowfishWarnings: List<String> = emptyList(),
     val hasFastSign: Boolean = false,
-    val password: String? = null,
 )
 
 @HiltViewModel
@@ -79,6 +78,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         )
 
     val uiState = MutableStateFlow(VerifyTransactionUiModel())
+    val password = MutableStateFlow<String?>(null)
 
     init {
         loadFastSign()
@@ -106,20 +106,20 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     fun authFastSign() {
-        keysign(KeysignType.AUTH)
+        keysign(KeysignInitType.BIOMETRY)
     }
 
     fun tryToFastSignWithPassword(): Boolean {
-        if (uiState.value.password != null) {
+        if (password.value != null) {
             return false
         } else {
-            keysign(KeysignType.FAST)
+            keysign(KeysignInitType.PASSWORD)
             return true
         }
     }
 
     fun joinKeysign() {
-        keysign(KeysignType.NORMAL)
+        keysign(KeysignInitType.QR_CODE)
     }
 
     fun dismissError() {
@@ -127,7 +127,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     }
 
     private fun keysign(
-        signType: KeysignType,
+        keysignInitType: KeysignInitType,
     ) {
         val hasAllConsents = uiState.value.let {
             it.consentAddress && it.consentAmount && it.consentDst
@@ -137,23 +137,23 @@ internal class VerifyTransactionViewModel @Inject constructor(
             viewModelScope.launch {
                 val transaction = transaction.filterNotNull().first()
 
-                when (signType) {
-                    KeysignType.AUTH -> {
+                when (keysignInitType) {
+                    KeysignInitType.BIOMETRY -> {
                         navigator.navigate(
                             SendDst.Keysign(
                                 transactionId = transaction.id,
-                                password = uiState.value.password,
+                                password = password.value,
                             )
                         )
                     }
-                    KeysignType.FAST -> {
+                    KeysignInitType.PASSWORD -> {
                         navigator.navigate(
                             SendDst.Password(
                                 transactionId = transaction.id,
                             )
                         )
                     }
-                    KeysignType.NORMAL -> {
+                    KeysignInitType.QR_CODE -> {
                         navigator.navigate(
                             SendDst.Keysign(
                                 transactionId = transaction.id,
@@ -176,17 +176,10 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     private fun loadPassword() {
         viewModelScope.launch {
-
-            val password = if (vaultId == null)
+            password.value = if (vaultId == null)
                 null
             else
                 vaultPasswordRepository.getPassword(vaultId)
-
-            uiState.update {
-                it.copy(
-                    password = password
-                )
-            }
         }
     }
 

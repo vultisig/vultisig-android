@@ -63,7 +63,7 @@ internal fun VerifyDepositScreen(
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConfirm = viewModel::confirm,
         onFastSignClick = {
-            if (viewModel.tryToFastSignWithPassword().not()) {
+            if (!viewModel.tryToFastSignWithPassword()) {
                 authorize()
             }
         },

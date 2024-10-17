@@ -9,7 +9,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
-import com.vultisig.wallet.ui.models.keysign.KeysignType
+import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
@@ -96,24 +96,24 @@ internal class VerifySwapViewModel @Inject constructor(
     }
 
     fun confirm() {
-        keysign(KeysignType.NORMAL)
+        keysign(KeysignInitType.QR_CODE)
     }
 
     fun authFastSign() {
-        keysign(KeysignType.AUTH)
+        keysign(KeysignInitType.BIOMETRY)
     }
 
     fun tryToFastSignWithPassword(): Boolean {
         if (state.value.password != null) {
             return false
         } else {
-            keysign(KeysignType.FAST)
+            keysign(KeysignInitType.PASSWORD)
             return true
         }
     }
 
     private fun keysign(
-        signType: KeysignType,
+        keysignInitType: KeysignInitType,
     ) {
         val hasAllConsents = state.value.let {
             it.consentReceiveAmount && it.consentAmount && it.consentAllowance
@@ -121,8 +121,8 @@ internal class VerifySwapViewModel @Inject constructor(
 
         if (hasAllConsents) {
             viewModelScope.launch {
-                when (signType) {
-                    KeysignType.AUTH -> {
+                when (keysignInitType) {
+                    KeysignInitType.BIOMETRY -> {
                         sendNavigator.navigate(
                             SendDst.Keysign(
                                 transactionId = transactionId,
@@ -130,14 +130,14 @@ internal class VerifySwapViewModel @Inject constructor(
                             )
                         )
                     }
-                    KeysignType.FAST -> {
+                    KeysignInitType.PASSWORD -> {
                         sendNavigator.navigate(
                             SendDst.Password(
                                 transactionId = transactionId,
                             )
                         )
                     }
-                    KeysignType.NORMAL -> {
+                    KeysignInitType.QR_CODE -> {
                         sendNavigator.navigate(
                             SendDst.Keysign(
                                 transactionId = transactionId,

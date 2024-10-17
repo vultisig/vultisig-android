@@ -68,7 +68,7 @@ internal fun VerifySwapScreen(
         onConfirm = viewModel::confirm,
         onConsentAllowance = viewModel::consentAllowance,
         onFastSignClick = {
-            if (viewModel.tryToFastSignWithPassword().not()) {
+            if (!viewModel.tryToFastSignWithPassword()) {
                 authorize()
             }
         },

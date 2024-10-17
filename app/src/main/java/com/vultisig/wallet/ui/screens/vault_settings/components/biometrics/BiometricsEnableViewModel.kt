@@ -62,11 +62,7 @@ internal class BiometricsEnableViewModel @Inject constructor(
 
     private fun validateEachTextChange() = viewModelScope.launch {
         passwordTextFieldState.textAsFlow().collectLatest { text ->
-            if (text.isEmpty()) {
-                uiModel.update { it.copy(isSaveEnabled = false) }
-            } else {
-                uiModel.update { it.copy(isSaveEnabled = true) }
-            }
+            uiModel.update { it.copy(isSaveEnabled = text.isNotEmpty()) }
         }
     }
 
