@@ -353,7 +353,7 @@
     <string name="token_selection_selected_tokens_title">Selected</string>
     <string name="failed_to_resolve_address">Failed to resolve address</string>
     <string name="vault_settings_success_backup_message" translatable="false">File saved successfully</string>
-    <string name="vault_settings_error_extension_backup_file" translatable="false">Supported file extensions are: %s</string>
+    <string name="vault_settings_error_extension_backup_file" translatable="false">Extension not supported. Backup failed. Supported file extensions are: %s</string>
     <string name="default_error"  translatable="false">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
     <string name="join_keygen_failed">Failed to join %1$s</string>
