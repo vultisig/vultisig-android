@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -37,7 +38,6 @@ internal data class VerifySwapUiModel(
     val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
-    val password: String? = null,
 )
 
 @HiltViewModel
@@ -51,9 +51,11 @@ internal class VerifySwapViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val vultiSignerRepository: VultiSignerRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
+    val password = MutableStateFlow<String?>(null)
 
     private val transactionId: String = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
     private val vaultId: String? = savedStateHandle["vault_id"]
@@ -104,7 +106,7 @@ internal class VerifySwapViewModel @Inject constructor(
     }
 
     fun tryToFastSignWithPassword(): Boolean {
-        if (state.value.password != null) {
+        if (password.value != null) {
             return false
         } else {
             keysign(KeysignInitType.PASSWORD)
@@ -121,31 +123,9 @@ internal class VerifySwapViewModel @Inject constructor(
 
         if (hasAllConsents) {
             viewModelScope.launch {
-                when (keysignInitType) {
-                    KeysignInitType.BIOMETRY -> {
-                        sendNavigator.navigate(
-                            SendDst.Keysign(
-                                transactionId = transactionId,
-                                password = state.value.password,
-                            )
-                        )
-                    }
-                    KeysignInitType.PASSWORD -> {
-                        sendNavigator.navigate(
-                            SendDst.Password(
-                                transactionId = transactionId,
-                            )
-                        )
-                    }
-                    KeysignInitType.QR_CODE -> {
-                        sendNavigator.navigate(
-                            SendDst.Keysign(
-                                transactionId = transactionId,
-                                password = null,
-                            )
-                        )
-                    }
-                }
+                sendNavigator.navigate (
+                    getSendDstByKeysignInitType(keysignInitType, transactionId, password.value)
+                )
             }
         } else {
             state.update {
@@ -160,17 +140,10 @@ internal class VerifySwapViewModel @Inject constructor(
 
     private fun loadPassword() {
         viewModelScope.launch {
-
-            val password = if (vaultId == null)
+            password.value = if (vaultId == null)
                 null
             else
                 vaultPasswordRepository.getPassword(vaultId)
-
-            state.update {
-                it.copy(
-                    password = password
-                )
-            }
         }
     }
 

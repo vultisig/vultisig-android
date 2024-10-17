@@ -69,4 +69,10 @@ internal interface UseCasesModule {
     fun bindGasFeeToEstimatedFeeUseCase(
         impl: GasFeeToEstimatedFeeUseCaseImpl,
     ): GasFeeToEstimatedFeeUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetSendDstByKeysignInitType(
+        impl: GetSendDstByKeysignInitTypeImpl
+    ): GetSendDstByKeysignInitType
 }

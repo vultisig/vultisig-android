@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -65,6 +66,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val blowfishRepository: BlowfishRepository,
     private val vultiSignerRepository: VultiSignerRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
@@ -136,32 +138,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
         if (hasAllConsents) {
             viewModelScope.launch {
                 val transaction = transaction.filterNotNull().first()
-
-                when (keysignInitType) {
-                    KeysignInitType.BIOMETRY -> {
-                        navigator.navigate(
-                            SendDst.Keysign(
-                                transactionId = transaction.id,
-                                password = password.value,
-                            )
-                        )
-                    }
-                    KeysignInitType.PASSWORD -> {
-                        navigator.navigate(
-                            SendDst.Password(
-                                transactionId = transaction.id,
-                            )
-                        )
-                    }
-                    KeysignInitType.QR_CODE -> {
-                        navigator.navigate(
-                            SendDst.Keysign(
-                                transactionId = transaction.id,
-                                password = null,
-                            )
-                        )
-                    }
-                }
+                navigator.navigate (
+                    getSendDstByKeysignInitType(keysignInitType, transaction.id, password.value)
+                )
             }
         } else {
             uiState.update {
