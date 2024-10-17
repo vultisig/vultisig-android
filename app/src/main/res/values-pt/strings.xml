@@ -258,7 +258,6 @@
     <string name="deposit_form_amount_title">Montante</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save" >Guardar</string>
-    <string name="vault_settings_enable_biometrics_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartilhar</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>

@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
 import com.vultisig.wallet.data.api.models.SplResponseAccountJson
 import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
+import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import io.ktor.client.HttpClient
@@ -24,7 +25,6 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
@@ -47,8 +47,7 @@ internal class SolanaApiImp @Inject constructor(
     private val splTokenSerializer: SplTokenResponseJsonSerializer,
 ) : SolanaApi {
 
-    private val rpcEndpoint = "https://api.mainnet-beta.solana.com"
-    private val rpcEndpoint2 = "https://solana-rpc.publicnode.com"
+    private val rpcEndpoint = "https://solana-rpc.publicnode.com"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
     override suspend fun getBalance(address: String): BigInteger {
@@ -75,24 +74,13 @@ internal class SolanaApiImp @Inject constructor(
     }
 
     override suspend fun getMinimumBalanceForRentExemption(): BigInteger = try {
-        val response = httpClient.post(solanaRentExemptionEndpoint) {
-            setBody(
-                buildJsonObject {
-                    put("jsonrpc", "2.0")
-                    put("id", 1)
-                    put("method", "getMinimumBalanceForRentExemption")
-                    put("params",
-                        buildJsonArray {
-                            add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
-                        }
-                    )
-                }
-            )
-        }
-        val responseContent = response.bodyAsText()
-        Timber.d(responseContent)
-        val rpcResp = response.body<SolanaMinimumBalanceForRentExemptionJson>()
-        rpcResp.result
+        httpClient.postRpc<SolanaMinimumBalanceForRentExemptionJson>(
+            solanaRentExemptionEndpoint,
+            "getMinimumBalanceForRentExemption",
+            params = buildJsonArray {
+                add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
+            },
+        ).result
     } catch (e: Exception) {
         Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
         BigInteger.ZERO
@@ -222,7 +210,7 @@ internal class SolanaApiImp @Inject constructor(
                 },
                 id = 1,
             )
-            val response = httpClient.post(rpcEndpoint2) {
+            val response = httpClient.post(rpcEndpoint) {
                 setBody(payload)
             }
             val responseContent = response.bodyAsText()
@@ -256,7 +244,7 @@ internal class SolanaApiImp @Inject constructor(
                 },
                 id = 1,
             )
-            val response = httpClient.post(rpcEndpoint2) {
+            val response = httpClient.post(rpcEndpoint) {
                 setBody(payload)
             }
             val responseContent = response.bodyAsText()

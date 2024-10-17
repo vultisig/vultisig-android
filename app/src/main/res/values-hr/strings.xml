@@ -257,7 +257,6 @@
     <string name="deposit_form_amount_title">Iznositi</string>
     <string name="share_vault_qr_title">Podijelite Vault QR</string>
     <string name="share_vault_qr_save" >Spremi</string>
-    <string name="vault_settings_enable_biometrics_save" >Spremi</string>
     <string name="share_vault_qr_share" >Podijeli</string>
     <string name="deposit_form_node_address_title">Adresa čvora</string>
     <string name="deposit_form_provider_title">Davatelj (neobavezno)</string>

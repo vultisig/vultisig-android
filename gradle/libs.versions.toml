@@ -47,7 +47,6 @@ update = "2.1.0"
 review = "2.0.1"
 hiltWork = "1.2.0"
 hiltCompiler = "1.2.0"
-security = "1.0.0"
 
 [libraries]
 accompanist-permissions = {module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -68,7 +67,6 @@ hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hi
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltCompiler" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
-androidx-security = { module = "androidx.security:security-crypto", version.ref = "security" }
 
 apache-compress = { module="org.apache.commons:commons-compress", version.ref ="apache-compress" }
 apache-compress-xz = { module="org.tukaani:xz", version.ref ="apache-compress-xz" }

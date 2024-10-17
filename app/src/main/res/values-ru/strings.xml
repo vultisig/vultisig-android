@@ -262,7 +262,6 @@
     <string name="deposit_form_amount_title">Количество</string>
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save" >Сохранить</string>
-    <string name="vault_settings_enable_biometrics_save" >Сохранить</string>
     <string name="share_vault_qr_share" >Поделиться</string>
     <string name="deposit_form_node_address_title">Адрес узла</string>
     <string name="deposit_form_provider_title">Поставщик (необязательно)</string>

@@ -3,6 +3,8 @@ package com.vultisig.wallet.ui.models.reshare
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -14,6 +16,8 @@ import javax.inject.Inject
 internal class ReshareStartViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val vaultRepository: VaultRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
 
     private val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])

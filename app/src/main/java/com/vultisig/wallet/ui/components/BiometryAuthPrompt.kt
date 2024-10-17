@@ -126,10 +126,10 @@ private fun BiometryAuthView(
     }
 }
 
-internal fun Context.canAuthenticateBiometric(): Boolean = BiometricManager.from(this)
+private fun Context.canAuthenticateBiometric(): Boolean = BiometricManager.from(this)
     .canAuthenticate(allowedAuthenticatorTypes) == BIOMETRIC_SUCCESS
 
-internal fun Context.launchBiometricPrompt(
+private fun Context.launchBiometricPrompt(
     promptTitle: String,
     onAuthorizationSuccess: () -> Unit,
 ) {

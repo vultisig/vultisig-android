@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 interface AvailableTokenBalanceUseCase : suspend (Account, BigInteger) -> TokenValue?
 
-class AvailableTokenBalanceUseCaseImpl @Inject constructor(
+internal class AvailableTokenBalanceUseCaseImpl @Inject constructor(
     private val solanaApi: SolanaApi,
 ) : AvailableTokenBalanceUseCase {
 
@@ -25,11 +25,8 @@ class AvailableTokenBalanceUseCaseImpl @Inject constructor(
         }
         return if (token.isNativeToken) {
             tokenValue?.copy(
-                value = maxOf(
-                    BigInteger.ZERO,
-                    getModifiedToken(account)?.value?.minus(gasCost)
-                        ?: BigInteger.ZERO
-                ),
+                value = getModifiedToken(tokenValue).value.minus(gasCost)
+                    .coerceAtLeast(BigInteger.ZERO),
             )
         } else {
             tokenValue
@@ -38,28 +35,23 @@ class AvailableTokenBalanceUseCaseImpl @Inject constructor(
 
 }
 
-private interface TokenBalanceModifier : suspend (Account) -> TokenValue?
+private interface TokenBalanceModifier : suspend (TokenValue) -> TokenValue
 
 private class DefaultBalanceModifier : TokenBalanceModifier {
-    override suspend fun invoke(account: Account): TokenValue? {
-        return account.tokenValue
-    }
+    override suspend fun invoke(tokenValue: TokenValue) = tokenValue
 }
 
 private class SolanaBalanceModifier(
     private val solanaApi: SolanaApi,
 ) : TokenBalanceModifier {
 
-    override suspend fun invoke(account: Account): TokenValue? {
-        val tokenValue = account.tokenValue
-        val adjustedValue = tokenValue?.value.takeIf { !account.token.isNativeToken }
-            ?: calculateAvailableValue(tokenValue)
-        return tokenValue?.copy(value = adjustedValue)
+    override suspend fun invoke(tokenValue: TokenValue): TokenValue {
+        val availableTokenValue = calculateAvailableValue(tokenValue)
+        return tokenValue.copy(value = availableTokenValue)
     }
 
-    private suspend fun calculateAvailableValue(tokenValue: TokenValue?): BigInteger {
+    private suspend fun calculateAvailableValue(tokenValue: TokenValue): BigInteger {
         val rentExemption = solanaApi.getMinimumBalanceForRentExemption()
-        return if (tokenValue == null) BigInteger.ZERO
-        else maxOf(BigInteger.ZERO, tokenValue.value - rentExemption)
+        return (tokenValue.value - rentExemption).coerceAtLeast(BigInteger.ZERO)
     }
 }

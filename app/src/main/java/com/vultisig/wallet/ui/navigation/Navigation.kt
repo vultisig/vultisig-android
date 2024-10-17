@@ -427,13 +427,6 @@ internal sealed class Destination(
         }
     }
 
-    data class BiometricsEnable(val vaultId: String) :
-        Destination(route = "biometrics/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "biometrics/{$ARG_VAULT_ID}"
-        }
-    }
-
     internal data class CustomToken(val chainId: String) :
         Destination(route = "custom_token/$chainId") {
         companion object {

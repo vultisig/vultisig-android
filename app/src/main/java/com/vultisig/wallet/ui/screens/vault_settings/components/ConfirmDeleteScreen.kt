@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens.vault_settings.components.delete
+package com.vultisig.wallet.ui.screens.vault_settings.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

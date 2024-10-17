@@ -257,7 +257,6 @@
     <string name="deposit_form_amount_title">Quantità</string>
     <string name="share_vault_qr_title">Condividi Vault QR</string>
     <string name="share_vault_qr_save" >Salva</string>
-    <string name="vault_settings_enable_biometrics_save" >Salva</string>
     <string name="share_vault_qr_share" >Condividi</string>
     <string name="deposit_form_node_address_title">Indirizzo del nodo</string>
     <string name="deposit_form_provider_title">Fornitore (facoltativo)</string>
