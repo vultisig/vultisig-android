@@ -17,6 +17,40 @@
     <issue id="IconMissingDensityFolder" severity="ignore" />
     <issue id="IconXmlAndPng" severity="ignore" />
     <issue id="ImplicitSamInstance" severity="error" />
+    <issue id="JavaPluginLanguageLevel" severity="warning" />
+    <issue id="JavascriptInterface" severity="warning" />
+    <issue id="JcenterRepositoryObsolete" severity="warning" />
+    <issue id="JobSchedulerService" severity="warning" />
+    <issue id="KaptUsageInsteadOfKsp" severity="warning" />
+    <issue id="KeyboardInaccessibleWidget" severity="warning" />
+    <issue id="KnownPermissionError" severity="warning" />
+    <issue id="KotlincFE10" severity="warning" />
+    <issue id="KotlinNullnessAnnotation" severity="warning" />
+    <issue id="KotlinPropertyAccess" severity="warning" />
+    <issue id="KtxExtensionAvailable" severity="warning" />
+    <issue id="LabelFor" severity="warning" />
+    <issue id="LambdaLast" severity="warning" />
+    <issue id="LaunchActivityFromNotification" severity="warning" />
+    <issue id="LeanbackUsesWifi" severity="warning" />
+    <issue id="LibraryCustomView" severity="warning" />
+    <issue id="LifecycleAnnotationProcessorWithJava8" severity="warning" />
+    <issue id="LintDocExample" severity="warning" />
+    <issue id="LintImplBadUrl" severity="warning" />
+    <issue id="LintImplDollarEscapes" severity="warning" />
+    <issue id="LintImplIdFormat" severity="warning" />
+    <issue id="LintImplPsiEquals" severity="warning" />
+    <issue id="LintImplTextFormat" severity="warning" />
+    <issue id="LintImplUseUast" severity="warning" />
+    <issue id="LintImplTrimIndent" severity="warning" />
+    <issue id="LifecycleAnnotationProcessorWithJava8" severity="warning" />
+    <issue id="LibraryCustomView" severity="warning" />
+    <issue id="LintImplUnexpectedDomain" severity="warning" />
+    <issue id="LogConditional" severity="warning" />
+    <issue id="LocaleFolder" severity="warning" />
+    <issue id="LocalSuppress" severity="warning" />
+    <issue id="LogTagMismatch" severity="warning" />
+    <issue id="LongLogTag" severity="warning" />
+
     <issue id="InvalidPackage" severity="warning" />
     <issue id="KotlinPropertyAccess" severity="warning" />
     <issue id="ModifierFactoryReturnType" severity="error" />
