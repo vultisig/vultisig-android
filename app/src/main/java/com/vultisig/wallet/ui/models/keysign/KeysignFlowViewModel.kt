@@ -92,9 +92,10 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
 
-
-enum class KeysignFlowState {
-    PEER_DISCOVERY, KEYSIGN, ERROR,
+internal sealed class KeysignFlowState {
+    data object PeerDiscovery : KeysignFlowState()
+    data object Keysign : KeysignFlowState()
+    data class Error (val errorMessage: String) : KeysignFlowState()
 }
 
 @HiltViewModel
@@ -136,7 +137,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private var messagesToSign = emptyList<String>()
 
     var currentState: MutableStateFlow<KeysignFlowState> =
-        MutableStateFlow(KeysignFlowState.PEER_DISCOVERY)
+        MutableStateFlow(KeysignFlowState.PeerDiscovery)
     var errorMessage: MutableState<String> = mutableStateOf("")
     val selection = MutableLiveData<List<String>>()
     val localPartyID: String?
@@ -192,7 +193,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             currentState.collect { state ->
-                if (state == KeysignFlowState.KEYSIGN) {
+                if (state == KeysignFlowState.Keysign) {
                     startKeysign()
                 }
             }
@@ -213,8 +214,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             updateTransactionUiModel(keysignPayload)
         } catch (e: Exception) {
             Timber.e(e)
-            errorMessage.value = e.message.toString()
-            moveToState(KeysignFlowState.ERROR)
+            moveToState(KeysignFlowState.Error(e.message.toString()))
         }
     }
 
@@ -222,8 +222,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private suspend fun updateKeysignPayload(context: Context) {
         stopParticipantDiscovery()
         _currentVault ?: run {
-            errorMessage.value = "Vault is not set"
-            moveToState(KeysignFlowState.ERROR)
+            moveToState(KeysignFlowState.Error("Vault is not set"))
             return
         }
         val vault = _currentVault!!
@@ -451,8 +450,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             if (intent.action == MediatorService.SERVICE_ACTION) {
                 Timber.tag("KeysignFlowViewModel").d("onReceive: Mediator service started")
                 if (_currentVault == null) {
-                    errorMessage.value = "Vault is not set"
-                    moveToState(KeysignFlowState.ERROR)
+                    moveToState(KeysignFlowState.Error("Vault is not set"))
                     return
                 }
                 // send a request to local mediator server to start the session
@@ -535,13 +533,12 @@ internal class KeysignFlowViewModel @Inject constructor(
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun moveToState(nextState: KeysignFlowState) {
         try {
-            if (nextState == KeysignFlowState.KEYSIGN) {
+            if (nextState == KeysignFlowState.Keysign) {
                 cleanQrAddress()
             }
             currentState.update { nextState }
         } catch (e: Exception) {
-            errorMessage.value = e.message.toString()
-            moveToState(KeysignFlowState.ERROR)
+            moveToState(KeysignFlowState.Error(e.message.toString()))
         }
     }
 

@@ -410,6 +410,7 @@
     <string name="keygen_password_warning_caption" translatable="false">Do not forget your password.</string>
     <string name="keygen_passwords_dont_match" translatable="false">Passwords should match</string>
     <string name="password_should_not_be_empty" translatable="false">Password should not be empty</string>
+    <string name="signing_error_insufficient_funds_swap" translatable="false">Insufficient funds to execute the swap. Please fund the wallet.</string>
     <string name="verify_transaction_fast_sign_btn_title" translatable="false">Fast Sign</string>
     <string name="keysign_paired_sign_title" translatable="false">Paired Sign</string>
     <string name="keysign_password_title" translatable="false">Password</string>

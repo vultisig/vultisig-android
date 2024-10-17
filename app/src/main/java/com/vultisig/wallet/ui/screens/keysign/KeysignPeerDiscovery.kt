@@ -89,7 +89,7 @@ internal fun KeysignPeerDiscovery(
             }
             if (newList.size >= Utils.getThreshold(vault.signers.size)) {
                 // automatically kickoff keysign
-                viewModel.moveToState(KeysignFlowState.KEYSIGN)
+                viewModel.moveToState(KeysignFlowState.Keysign)
             }
         }
     }
@@ -123,7 +123,7 @@ internal fun KeysignPeerDiscovery(
         onRemoveParticipant = { viewModel.removeParticipant(it) },
         onStopParticipantDiscovery = {
             viewModel.stopParticipantDiscovery()
-            viewModel.moveToState(KeysignFlowState.KEYSIGN)
+            viewModel.moveToState(KeysignFlowState.Keysign)
         },
         extractBitmap = { bitmap ->
             if (bitmapPainter != null) {
