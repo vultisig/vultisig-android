@@ -142,7 +142,6 @@ private fun DepositScreen(
                 keysignShareViewModel.loadDepositTransaction(transactionId)
 
                 KeysignFlowView(
-                    navController = mainNavController,
                     onComplete = {
                         onKeysignFinished()
                     },

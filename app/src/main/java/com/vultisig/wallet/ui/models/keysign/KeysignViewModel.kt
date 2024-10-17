@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.models.keysign
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.BlockChairApi
@@ -60,12 +58,12 @@ import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.Base64
 
-enum class KeysignState {
-    CreatingInstance,
-    KeysignECDSA,
-    KeysignEdDSA,
-    KeysignFinished,
-    ERROR
+internal sealed class KeysignState {
+    data object CreatingInstance : KeysignState()
+    data object KeysignECDSA : KeysignState()
+    data object KeysignEdDSA : KeysignState()
+    data object KeysignFinished : KeysignState()
+    data class Error(val errorMessage: String) : KeysignState()
 }
 
 
@@ -106,7 +104,6 @@ internal class KeysignViewModel(
         keysignPayload.swapPayload is SwapPayload.ThorChain
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
-    val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
     private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
     val txHash = MutableStateFlow("")
@@ -167,8 +164,7 @@ internal class KeysignViewModel(
             this._messagePuller?.stop()
         } catch (e: Exception) {
             Timber.e(e)
-            currentState.value = KeysignState.ERROR
-            errorMessage.value = e.message ?: "Unknown error"
+            currentState.value = KeysignState.Error( e.message ?: "Unknown error")
         }
     }
 

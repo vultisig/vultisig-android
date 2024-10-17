@@ -163,7 +163,6 @@ private fun SwapScreen(
                 keysignShareViewModel.loadSwapTransaction(transactionId)
 
                 KeysignFlowView(
-                    navController = mainNavController,
                     onComplete = navigateToHome,
                     onKeysignFinished = enableNavigationToHome,
                 )
