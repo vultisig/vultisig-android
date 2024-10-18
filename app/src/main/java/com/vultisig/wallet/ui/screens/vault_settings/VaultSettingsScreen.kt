@@ -41,6 +41,7 @@ internal fun VaultSettingsScreen(
         uiModel = uiModel,
         snackBarHostState = snackBarHostState,
         navController = navController,
+        onDetailsClick = viewModel::openDetails,
         onBackupClick = viewModel::navigateToBackupPasswordScreen,
         onReshareClick = viewModel::navigateToReshareStartScreen,
         onBiometricsClick = viewModel::navigateToBiometricsScreen,
@@ -53,6 +54,7 @@ private fun VaultSettingsScreen(
     uiModel: VaultSettingsState,
     snackBarHostState: SnackbarHostState,
     navController: NavController,
+    onDetailsClick: () -> Unit = {},
     onBackupClick: () -> Unit = {},
     onReshareClick: () -> Unit = {},
     onBiometricsClick: () -> Unit = {},
@@ -87,11 +89,8 @@ private fun VaultSettingsScreen(
                 title = stringResource(R.string.vault_settings_details_title),
                 subtitle = stringResource(R.string.vault_settings_details_subtitle),
                 icon = android.R.drawable.ic_menu_info_details,
-            ) {
-                uiModel.id.let { vaultName ->
-                    navController.navigate(Destination.Details(vaultName).route)
-                }
-            }
+                onClick = onDetailsClick,
+            )
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_backup_title),

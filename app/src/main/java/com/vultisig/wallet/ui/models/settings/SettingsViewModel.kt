@@ -37,6 +37,7 @@ internal class SettingsViewModel @Inject constructor(
 
     val state = MutableStateFlow(SettingsUiModel())
     val vaultId = savedStateHandle.get<String>(Destination.Settings.ARG_VAULT_ID)!!
+
     fun loadSettings() {
         viewModelScope.launch {
             loadCurrency()

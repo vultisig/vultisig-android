@@ -6,12 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.navigation.Destination.VaultSettings.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -30,12 +31,13 @@ internal class VaultDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val vaultId: String =
-        savedStateHandle.get<String>(ARG_VAULT_ID)!!
+        requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
     val uiModel = MutableStateFlow(VaultDetailUiModel())
 
     init {
         viewModelScope.launch {
+            Timber.d("loadVaultDetail($vaultId)")
             vaultRepository.get(vaultId)?.let { vault ->
                 uiModel.update { it ->
                     it.copy(

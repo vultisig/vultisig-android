@@ -228,7 +228,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.VaultSettings.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(Destination.VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
             VaultSettingsScreen(
@@ -238,7 +238,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.Details.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(Destination.VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
             VaultDetailScreen(navController)
@@ -247,7 +247,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.Rename.STATIC_ROUTE,
             arguments = listOf(
-                navArgument(Destination.VaultSettings.ARG_VAULT_ID) { type = NavType.StringType }
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
             )
         ) {
             VaultRenameScreen(navController)
@@ -444,6 +444,9 @@ internal fun SetupNavGraph(
 
         composable(
             route = Destination.Settings.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType }
+            )
         ) {
             SettingsScreen(navController = navController)
         }

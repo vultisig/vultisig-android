@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.navigation
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import timber.log.Timber
 import javax.inject.Inject
 
 internal interface Navigator<Dest> {
@@ -30,10 +31,12 @@ internal class NavigatorImpl<Dst> @Inject constructor() : Navigator<Dst> {
     override val destination = MutableSharedFlow<NavigateAction<Dst>>()
 
     override suspend fun navigate(destination: Dst) {
+        Timber.d("navigate($destination)")
         this.destination.emit(NavigateAction(destination))
     }
 
     override suspend fun navigate(dst: Dst, opts: NavigationOptions) {
+        Timber.d("navigate($destination, $opts)")
         this.destination.emit(NavigateAction(dst, opts))
     }
 

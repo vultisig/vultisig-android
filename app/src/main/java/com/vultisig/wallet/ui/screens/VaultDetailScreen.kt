@@ -29,7 +29,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun VaultDetailScreen(
     navHostController: NavHostController,
-    model: VaultDetailViewModel = hiltViewModel<VaultDetailViewModel>()
+    model: VaultDetailViewModel = hiltViewModel()
 ) {
     val state by model.uiModel.collectAsState()
 
