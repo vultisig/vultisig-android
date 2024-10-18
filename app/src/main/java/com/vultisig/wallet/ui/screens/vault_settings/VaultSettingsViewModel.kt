@@ -34,7 +34,6 @@ internal open class VaultSettingsViewModel @Inject constructor(
             val hasFastSign = vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
             uiModel.update {
                 it.copy(
-                    id = vaultId,
                     hasFastSign = hasFastSign
                 )
             }
@@ -44,6 +43,12 @@ internal open class VaultSettingsViewModel @Inject constructor(
     fun openDetails() {
         viewModelScope.launch {
             navigator.navigate(Destination.Details(vaultId))
+        }
+    }
+
+    fun openRename() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Rename(vaultId))
         }
     }
 
