@@ -138,7 +138,6 @@ internal class KeysignFlowViewModel @Inject constructor(
 
     var currentState: MutableStateFlow<KeysignFlowState> =
         MutableStateFlow(KeysignFlowState.PeerDiscovery)
-    var errorMessage: MutableState<String> = mutableStateOf("")
     val selection = MutableLiveData<List<String>>()
     val localPartyID: String?
         get() = _currentVault?.localPartyID

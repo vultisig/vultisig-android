@@ -13,17 +13,17 @@ internal fun KeysignErrorScreen(
     isSwap: Boolean = false,
     tryAgain: () -> Unit,
 ) {
-    val errorLabel = when {
-        errorMessage.contains("insufficient funds") && isSwap ->
-            stringResource(R.string.signing_error_insufficient_funds_swap)
-        else ->
-            stringResource(R.string.signing_error_please_try_again_s, errorMessage)
-    }
-    val infoText = when {
-        errorMessage.contains("insufficient funds", true) && isSwap ->
-            null
-        else ->
-            stringResource(R.string.bottom_warning_msg_keygen_error_screen)
+    val errorLabel: String
+    val infoText: String?
+    when {
+        errorMessage.contains("insufficient funds") && isSwap ->{
+            errorLabel = stringResource(R.string.signing_error_insufficient_funds_swap)
+            infoText = null
+        }
+        else -> {
+            errorLabel = stringResource(R.string.signing_error_please_try_again_s, errorMessage)
+            infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)
+        }
     }
 
     ErrorView(

@@ -60,7 +60,7 @@ internal fun Keysign(
                 reviewManager.showReviewPopUp(context)
                 wrapperViewModel.loadTransaction()
             }
-            else -> {}
+            else -> Unit
         }
     }
     KeysignScreen(

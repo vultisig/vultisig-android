@@ -25,7 +25,7 @@ fun KeysignFlowView(
     val keysignFlowState by viewModel.currentState.collectAsState()
     if (sharedViewModel.vault == null || sharedViewModel.keysignPayload == null) {
         // information is not available, go back
-        viewModel.moveToState(KeysignFlowState.Error(""))
+        viewModel.moveToState(KeysignFlowState.Error("Keysign information not available"))
     }
 
     when (keysignFlowState) {
