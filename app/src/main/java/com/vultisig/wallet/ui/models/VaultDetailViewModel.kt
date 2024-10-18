@@ -23,7 +23,7 @@ internal data class VaultDetailUiModel(
 )
 
 @HiltViewModel
-internal class VaultDetailViewmodel @Inject constructor(
+internal class VaultDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     @ApplicationContext private val context: Context,
@@ -33,7 +33,8 @@ internal class VaultDetailViewmodel @Inject constructor(
         savedStateHandle.get<String>(ARG_VAULT_ID)!!
 
     val uiModel = MutableStateFlow(VaultDetailUiModel())
-    fun loadData() {
+
+    init {
         viewModelScope.launch {
             vaultRepository.get(vaultId)?.let { vault ->
                 uiModel.update { it ->
