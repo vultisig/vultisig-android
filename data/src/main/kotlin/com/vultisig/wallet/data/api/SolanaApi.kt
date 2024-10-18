@@ -13,13 +13,18 @@ import com.vultisig.wallet.data.api.models.SplResponseAccountJson
 import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -38,6 +43,7 @@ interface SolanaApi {
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>?
     suspend fun getSPLTokensInfo(tokens: List<String>): List<SplTokenJson>
+    suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
 }
 
@@ -50,8 +56,10 @@ internal class SolanaApiImp @Inject constructor(
     private val rpcEndpoint = "https://api.mainnet-beta.solana.com"
     private val rpcEndpoint2 = "https://solana-rpc.publicnode.com"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
+    private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
     private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
     override suspend fun getBalance(address: String): BigInteger {
+
         val payload = RpcPayload(
             jsonrpc = "2.0",
             method = "getBalance",
@@ -193,6 +201,20 @@ internal class SolanaApiImp @Inject constructor(
             Timber.tag("SolanaApiImp").e("Error getting spl tokens: ${e.message}")
             return emptyList()
         }
+    }
+
+    override suspend fun getSPLTokensInfo2(tokens: List<String>) = coroutineScope {
+        tokens.map { token ->
+            async {
+                try {
+                    httpClient.get("$splTokensInfoEndpoint2/$token").body<SplTokenInfo>()
+                } catch (e: Exception) {
+                    Timber.tag("SolanaApiImp")
+                        .e("Error getting spl token for $token message : ${e.message}")
+                    null
+                }
+            }
+        }.awaitAll().filterNotNull()
     }
 
     override suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>? {

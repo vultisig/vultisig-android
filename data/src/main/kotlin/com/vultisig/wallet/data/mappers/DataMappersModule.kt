@@ -45,5 +45,11 @@ internal interface DataMappersModule {
     fun bindKeysignPayloadProtoMapper(
         impl: KeysignPayloadProtoMapperImpl
     ): KeysignPayloadProtoMapper
-    
+
+    @Binds
+    @Singleton
+    fun bindSplTokenJsonFromSplTokenInfoMapper(
+        impl: SplTokenJsonFromSplTokenInfoImpl
+    ): SplTokenJsonFromSplTokenInfoMapper
+
 }

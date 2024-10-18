@@ -44,7 +44,7 @@ object BigIntegerSerializer : KSerializer<BigInteger> {
         encoder.encodeString(value.toString())
 
     override fun deserialize(decoder: Decoder): BigInteger =
-        BigInteger(decoder.decodeInt().toString())
+        BigInteger.valueOf(decoder.decodeLong())
 }
 
 @Singleton
