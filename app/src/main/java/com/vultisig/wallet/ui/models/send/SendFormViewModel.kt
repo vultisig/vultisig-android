@@ -8,7 +8,6 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -122,7 +121,6 @@ internal class SendFormViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
     private val addressParserRepository: AddressParserRepository,
-    private val evmApiFactory: EvmApiFactory,
     private val getAvailableTokenBalance: AvailableTokenBalanceUseCase,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
 ) : ViewModel() {
@@ -186,12 +184,6 @@ internal class SendFormViewModel @Inject constructor(
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
-
-        viewModelScope.launch {
-            val result = evmApiFactory.createEvmApi(Chain.Ethereum)
-                .getBaseFee()
-            Timber.d("log $result")
-        }
     }
 
     fun loadData(

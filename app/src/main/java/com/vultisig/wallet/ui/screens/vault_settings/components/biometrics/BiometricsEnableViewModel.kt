@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
@@ -43,7 +44,7 @@ internal class BiometricsEnableViewModel @Inject constructor(
     val uiModel = MutableStateFlow(BiometricsEnableUiModel())
 
     private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.VaultSettings.ARG_VAULT_ID))
+        requireNotNull(savedStateHandle.get<String>(ARG_VAULT_ID))
 
     val passwordTextFieldState = TextFieldState()
 

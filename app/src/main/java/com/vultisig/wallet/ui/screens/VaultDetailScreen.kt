@@ -11,7 +11,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,17 +23,15 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.models.VaultDetailViewmodel
+import com.vultisig.wallet.ui.models.VaultDetailViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun VaultDetailScreen(navHostController: NavHostController) {
-    val viewmodel = hiltViewModel<VaultDetailViewmodel>()
-    val uiModel by viewmodel.uiModel.collectAsState()
-
-    LaunchedEffect(key1 = Unit) {
-        viewmodel.loadData()
-    }
+internal fun VaultDetailScreen(
+    navHostController: NavHostController,
+    model: VaultDetailViewModel = hiltViewModel()
+) {
+    val state by model.uiModel.collectAsState()
 
     Column(
         modifier = Modifier
@@ -55,28 +52,28 @@ internal fun VaultDetailScreen(navHostController: NavHostController) {
         ) {
             VaultDetailScreenItem(
                 stringResource(R.string.vault_detail_screen_vault_name),
-                uiModel.name
+                state.name
             )
             VaultDetailScreenItem(
                 stringResource(R.string.vault_detail_screen_ecdsa),
-                uiModel.pubKeyECDSA
+                state.pubKeyECDSA
             )
             VaultDetailScreenItem(
                 stringResource(R.string.vault_detail_screen_eddsa),
-                uiModel.pubKeyEDDSA
+                state.pubKeyEDDSA
             )
             Text(
                 text = String.format(
                     stringResource(id = R.string.s_of_s_vault),
-                    Utils.getThreshold(uiModel.deviceList.size),
-                    uiModel.deviceList.size.toString()
+                    Utils.getThreshold(state.deviceList.size),
+                    state.deviceList.size.toString()
                 ),
                 color = Theme.colors.neutral100,
                 modifier = Modifier.fillMaxWidth(),
                 style = Theme.montserrat.subtitle2.copy(textAlign = TextAlign.Center),
             )
 
-            uiModel.deviceList.map {
+            state.deviceList.map {
                 VaultDetailScreenItem(it)
             }
         }
