@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -109,6 +110,7 @@ private fun BiometricsEnableScreen(
                 content = {
                     IconButton(onClick = togglePasswordVisibility) {
                         Icon(
+                            modifier = Modifier.size(24.dp),
                             painter = painterResource(
                                 id = if (uiModel.isPasswordVisible)
                                     R.drawable.hidden else R.drawable.visible
