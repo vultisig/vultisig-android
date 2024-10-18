@@ -3,9 +3,9 @@ package com.vultisig.wallet.ui.screens.keysign
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
@@ -15,7 +15,6 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 @Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 fun KeysignFlowView(
-    navController: NavController,
     onComplete: () -> Unit,
     onKeysignFinished: (() -> Unit)? = null,
 ) {
@@ -23,19 +22,20 @@ fun KeysignFlowView(
 
     val viewModel: KeysignFlowViewModel = hiltViewModel()
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
+    val keysignFlowState by viewModel.currentState.collectAsState()
     if (sharedViewModel.vault == null || sharedViewModel.keysignPayload == null) {
         // information is not available, go back
-        viewModel.moveToState(KeysignFlowState.ERROR)
+        viewModel.moveToState(KeysignFlowState.Error("Keysign information not available"))
     }
-    
-    when (viewModel.currentState.collectAsState().value) {
-        KeysignFlowState.PEER_DISCOVERY -> {
+
+    when (keysignFlowState) {
+        is KeysignFlowState.PeerDiscovery -> {
             KeysignPeerDiscovery(
                 viewModel
             )
         }
 
-        KeysignFlowState.KEYSIGN -> {
+        is KeysignFlowState.Keysign -> {
             LaunchedEffect(key1 = Unit) {
                 // TODO this breaks the navigation, and introduces issue with multiple
                 //   keysignViewModels being created
@@ -44,17 +44,18 @@ fun KeysignFlowView(
 
             Keysign(
                 viewModel = viewModel.keysignViewModel,
+                onError = { viewModel.moveToState(KeysignFlowState.Error(it)) },
                 onComplete = onComplete,
                 onKeysignFinished = onKeysignFinished,
             )
         }
 
-        KeysignFlowState.ERROR -> {
+        is KeysignFlowState.Error -> {
             KeysignErrorScreen(
-                errorMessage = viewModel.errorMessage.value,
+                errorMessage = (keysignFlowState as? KeysignFlowState.Error)?.errorMessage?:  "",
+                isSwap = sharedViewModel.keysignPayload?.swapPayload != null,
                 tryAgain = viewModel::tryAgain,
             )
         }
-
     }
 }

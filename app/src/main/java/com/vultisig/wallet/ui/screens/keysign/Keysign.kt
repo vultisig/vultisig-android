@@ -35,6 +35,7 @@ import com.vultisig.wallet.ui.utils.showReviewPopUp
 @Composable
 internal fun Keysign(
     viewModel: KeysignViewModel,
+    onError: (String) -> Unit,
     onComplete: () -> Unit,
     onKeysignFinished: (() -> Unit)? = null,
 ) {
@@ -51,16 +52,20 @@ internal fun Keysign(
 
     val state: KeysignState = keysignViewModel.currentState.collectAsState().value
     LaunchedEffect(state) {
-        if (state == KeysignState.KeysignFinished) {
-            onKeysignFinished?.invoke()
-            reviewManager.showReviewPopUp(context)
-            wrapperViewModel.loadTransaction()
+        when (state) {
+
+            is KeysignState.Error -> onError(state.errorMessage)
+            is KeysignState.KeysignFinished -> {
+                onKeysignFinished?.invoke()
+                reviewManager.showReviewPopUp(context)
+                wrapperViewModel.loadTransaction()
+            }
+            else -> Unit
         }
     }
     KeysignScreen(
         state = state,
         transitionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
-        errorMessage = keysignViewModel.errorMessage.value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
         onComplete = onComplete,
@@ -76,7 +81,6 @@ internal fun KeysignScreen(
     state: KeysignState,
     txHash: String,
     transactionLink: String,
-    errorMessage: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
     isThorChainSwap: Boolean = false,
@@ -84,13 +88,13 @@ internal fun KeysignScreen(
 ) {
     KeepScreenOn()
     val text = when (state) {
-        KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
-        KeysignState.KeysignECDSA -> stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
-        KeysignState.KeysignEdDSA -> stringResource(id = R.string.keysign_screen_signing_with_eddsa)
-        KeysignState.KeysignFinished -> stringResource(id = R.string.keysign_screen_keysign_finished)
-        KeysignState.ERROR -> stringResource(
+        is KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
+        is KeysignState.KeysignECDSA -> stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
+        is KeysignState.KeysignEdDSA -> stringResource(id = R.string.keysign_screen_signing_with_eddsa)
+        is KeysignState.KeysignFinished -> stringResource(id = R.string.keysign_screen_keysign_finished)
+        is KeysignState.Error -> stringResource(
             id = R.string.keysign_screen_error_please_try_again,
-            errorMessage
+            state.errorMessage,
         )
     }
 
@@ -138,7 +142,6 @@ internal fun KeysignScreen(
 private fun KeysignPreview() {
     KeysignScreen(
         state = KeysignState.CreatingInstance,
-        errorMessage = "Error",
         txHash = "0x1234567890",
         transactionLink = "",
         transitionTypeUiModel = TransitionTypeUiModel.Send(

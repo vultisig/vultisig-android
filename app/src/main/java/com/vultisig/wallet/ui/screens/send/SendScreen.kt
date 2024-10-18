@@ -129,7 +129,6 @@ internal fun SendScreen(
                 keysignShareViewModel.loadTransaction(transactionId)
 
                 KeysignFlowView(
-                    navController = navController,
                     onComplete = {
                         viewModel.navigateToHome(useMainNavigator)
                     },
