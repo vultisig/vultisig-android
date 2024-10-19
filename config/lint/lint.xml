@@ -23,10 +23,36 @@
     <issue id="ModifierFactoryExtensionFunction" severity="error" />
     <issue id="ModifierParameter" severity="error" />
     <issue id="MutableCollectionMutableState" severity="error" />
+    <issue id="MultipleUsesSdk" severity="error" />
+    <issue id="ManifestTypo" severity="error" />
+    <issue id="MangledCRLF" severity="error" />
+    <issue id="ManifestOrder" severity="error" />
+    <issue id="ManifestResource" severity="error" />
+    <issue id="MergeMarker" severity="error" />
+    <issue id="MergeRootFrame" severity="error" />
+    <issue id="MinSdkTooLow" severity="error" />
+    <issue id="MissingBackupPin" severity="error" />
+    <issue id="MissingLeanbackLauncher" severity="error" />
+    <issue id="MissingOnPlayFromSearch" severity="error" />
+    <issue id="MissingPrefix" severity="error" />
+    <issue id="MissingQuantity" severity="error" />
     <issue id="NewerVersionAvailable" severity="warning" />
+    <issue id="NamespaceTypo" severity="warning" />
+    <issue id="NestedScrolling" severity="warning" />
+    <issue id="NetworkSecurityConfig" severity="warning" />
+    <issue id="NestedWeights" severity="warning" />
+    <issue id="NewApi" severity="warning" />
+    <issue id="NoHardKeywords" severity="warning" />
+    <issue id="NonConstantResourceId" severity="warning" />
+    <issue id="NoOp" severity="warning" />
+    <issue id="NotSibling" severity="warning" />
     <issue id="ObsoleteSdkInt" severity="warning" />
     <issue id="OldTargetApi" severity="warning" />
     <issue id="Overdraw" severity="warning" />
+    <issue id="ObsoleteLayoutParam" severity="warning" />
+    <issue id="OldTargetApi" severity="warning" />
+    <issue id="OpenForTesting" severity="warning" />
+    <issue id="OutdatedLibrary" severity="warning" />
     <issue id="PluralsCandidate" severity="warning" />
     <issue id="Proguard" severity="warning" />
     <issue id="ReferenceType" severity="warning" />
