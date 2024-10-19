@@ -66,8 +66,6 @@ internal fun Keysign(
     KeysignScreen(
         state = state,
         transactionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
-        errorMessage = keysignViewModel.errorMessage.value,
-        transitionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
         onComplete = onComplete,
@@ -145,7 +143,6 @@ private fun KeysignPreview() {
     KeysignScreen(
         state = KeysignState.CreatingInstance,
         progressLink = null,
-        errorMessage = "Error",
         txHash = "0x1234567890",
         transactionLink = "",
         transactionTypeUiModel = TransactionTypeUiModel.Send(
