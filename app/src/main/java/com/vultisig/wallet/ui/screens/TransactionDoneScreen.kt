@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -48,7 +47,6 @@ internal fun TransactionDoneScreen(
     navController: NavController,
     transactionHash: String,
     transactionLink: String,
-    isThorChainSwap: Boolean,
     progressLink:String?,
     transactionTypeUiModel: TransactionTypeUiModel,
 ) {
@@ -71,13 +69,11 @@ internal fun TransactionDoneView(
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
-    isThorChainSwap: Boolean = false,
     progressLink: String?,
     onBack: () -> Unit = {},
     transactionTypeUiModel: TransactionTypeUiModel?,
 ) {
     val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
     BackHandler(onBack = onBack)
     Column(
         modifier = Modifier
@@ -128,27 +124,6 @@ internal fun TransactionDoneView(
                     color = Theme.colors.turquoise800,
                     style = Theme.menlo.subtitle3,
                 )
-                if (isThorChainSwap) {
-                    Text(
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .clickOnce {
-                                uriHandler.openUri(
-                                    context.getString(
-                                        R.string.transaction_done_track_ninerealms,
-                                        transactionHash
-                                    )
-                                )
-                            },
-                        text = stringResource(R.string.transaction_swap_tracking_link),
-                        color = Theme.colors.turquoise800,
-                        style = Theme.montserrat.body3.copy(
-                            textDecoration = TextDecoration.Underline,
-                            lineHeight = 22.sp
-                        ),
-
-                    )
-                }
 
                 when (transactionTypeUiModel) {
                     is TransactionTypeUiModel.Deposit ->
@@ -339,7 +314,6 @@ private fun TransactionDoneScreenPreview() {
         navController = rememberNavController(),
         transactionHash = "0x1234567890",
         transactionLink = "",
-        isThorChainSwap = true,
         progressLink = "https://track.ninerealms.com/",
         transactionTypeUiModel = TransactionTypeUiModel.Send(
             TransactionUiModel(

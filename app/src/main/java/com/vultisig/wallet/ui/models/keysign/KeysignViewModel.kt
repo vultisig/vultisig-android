@@ -99,8 +99,6 @@ internal class KeysignViewModel(
 ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
-    var isThorChainSwap =
-        keysignPayload.swapPayload is SwapPayload.ThorChain
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
