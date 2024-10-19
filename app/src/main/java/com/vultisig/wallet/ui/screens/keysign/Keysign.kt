@@ -69,6 +69,7 @@ internal fun Keysign(
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
         onComplete = onComplete,
+        isThorChainSwap = viewModel.isThorChainSwap,
         progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
         onBack = {
             viewModel.navigateToHome()
@@ -83,6 +84,7 @@ internal fun KeysignScreen(
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
+    isThorChainSwap: Boolean = false,
     progressLink:String?,
     transactionTypeUiModel: TransactionTypeUiModel?
 ) {
@@ -107,6 +109,7 @@ internal fun KeysignScreen(
                 transactionHash = txHash,
                 transactionLink = transactionLink,
                 onComplete = onComplete,
+                isThorChainSwap = isThorChainSwap,
                 progressLink = progressLink,
                 onBack = onBack,
                 transactionTypeUiModel = transactionTypeUiModel,
