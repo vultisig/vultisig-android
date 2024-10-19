@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
+import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -51,7 +52,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -123,6 +126,7 @@ internal class SendFormViewModel @Inject constructor(
     private val addressParserRepository: AddressParserRepository,
     private val getAvailableTokenBalance: AvailableTokenBalanceUseCase,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val advanceGasUiRepository: AdvanceGasUiRepository,
 ) : ViewModel() {
 
     private var vaultId: String? = null
@@ -184,6 +188,7 @@ internal class SendFormViewModel @Inject constructor(
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
+        collectAdvanceGasUi()
     }
 
     fun loadData(
@@ -279,15 +284,8 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-
-    fun openGasSettings() {
-        if (selectedAccount?.token?.chain?.standard == TokenStandard.EVM) {
-            uiState.update { it.copy(showGasSettings = true) }
-        }
-    }
-
     fun dismissGasSettings() {
-        uiState.update { it.copy(showGasSettings = false) }
+        advanceGasUiRepository.hideSettings()
     }
 
     fun saveGasSettings(settings: EthGasSettings) {
@@ -493,14 +491,14 @@ internal class SendFormViewModel @Inject constructor(
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
-                    estimatedFee =totalGasAndFee.formattedFiatValue,
-                    totalGass =totalGasAndFee.formattedTokenValue,
+                    estimatedFee = totalGasAndFee.formattedFiatValue,
+                    totalGass = totalGasAndFee.formattedTokenValue,
                 )
 
                 Timber.d("Transaction: $transaction")
 
                 transactionRepository.addTransaction(transaction)
-
+                advanceGasUiRepository.hideIcon()
                 sendNavigator.navigate(
                     SendDst.VerifyTransaction(
                         transactionId = transaction.id,
@@ -582,6 +580,9 @@ internal class SendFormViewModel @Inject constructor(
                 val chain = selectedAccount.token.chain
                 val selectedToken = selectedAccount.token
                 val srcAddress = selectedAccount.token.address
+                advanceGasUiRepository.updateTokenStandard(
+                    selectedToken.chain.standard
+                )
                 try {
                     val spec = blockChainSpecificRepository.getSpecific(
                         chain,
@@ -593,6 +594,9 @@ internal class SendFormViewModel @Inject constructor(
                         isDeposit = false,
                     )
                     specific.value = spec
+                    advanceGasUiRepository.updateBlockChainSpecific(
+                        spec.blockChainSpecific,
+                    )
                     uiState.update {
                         it.copy(
                             specific = spec
@@ -635,6 +639,14 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
+    private fun collectAdvanceGasUi() {
+        advanceGasUiRepository.showSettings.onEach { showGasSettings ->
+            uiState.update {
+                it.copy(showGasSettings = showGasSettings)
+            }
+        }.launchIn(viewModelScope)
+    }
+
     private fun collectSelectedAccount() {
         viewModelScope.launch {
             selectedSrc
@@ -644,6 +656,7 @@ internal class SendFormViewModel @Inject constructor(
                     val uiModel = accountToTokenBalanceUiModelMapper.map(src)
                     val showGasFee = (selectedAccount?.token?.allowZeroGas() == false)
                     val hasMemo = src.account.token.isNativeToken
+                    advanceGasUiRepository.updateTokenStandard(src.account.token.chain.standard)
                     uiState.update {
                         it.copy(
                             from = address,
@@ -742,6 +755,10 @@ internal class SendFormViewModel @Inject constructor(
             return UiText.StringResource(R.string.send_error_no_amount)
         }
         return null
+    }
+
+    fun enableAdvanceGasUi() {
+        advanceGasUiRepository.showIcon()
     }
 
     companion object {
