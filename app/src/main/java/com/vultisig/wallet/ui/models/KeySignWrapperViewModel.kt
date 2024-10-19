@@ -2,7 +2,7 @@ package com.vultisig.wallet.ui.models
 
 import androidx.lifecycle.ViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
-import com.vultisig.wallet.ui.models.keysign.TransitionTypeUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -15,7 +15,7 @@ internal class KeySignWrapperViewModel @AssistedInject constructor(
     @Assisted val viewModel: KeysignViewModel,
 ) : ViewModel() {
 
-    val transactionUiModel = MutableStateFlow<TransitionTypeUiModel?>(null)
+    val transactionUiModel = MutableStateFlow<TransactionTypeUiModel?>(null)
 
     @AssistedFactory
     interface Factory {
@@ -27,7 +27,7 @@ internal class KeySignWrapperViewModel @AssistedInject constructor(
     }
 
     fun loadTransaction() {
-        viewModel.transitionTypeUiModel?.let { transactionUiType ->
+        viewModel.transactionTypeUiModel?.let { transactionUiType ->
             transactionUiModel.update { transactionUiType }
         }
     }

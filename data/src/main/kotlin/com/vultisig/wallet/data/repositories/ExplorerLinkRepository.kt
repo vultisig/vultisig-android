@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import javax.inject.Inject
 
 interface ExplorerLinkRepository {
@@ -15,6 +16,10 @@ interface ExplorerLinkRepository {
         address: String,
     ): String
 
+    fun getSwapProgressLink(
+        tx: String,
+        payload: SwapPayload?,
+    ): String?
 }
 
 internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRepository {
@@ -30,6 +35,16 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     override fun getAddressLink(chain: Chain, address: String): String =
         "${chain.blockExplorerUrl}$address"
+
+
+    override fun getSwapProgressLink(
+        tx: String,
+        payload: SwapPayload?,
+    ): String? = when (payload) {
+        is SwapPayload.ThorChain -> "https://track.ninerealms.com/$tx"
+        is SwapPayload.MayaChain -> "https://www.xscanner.org/tx/$tx"
+        else -> null
+    }
 
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {

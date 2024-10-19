@@ -171,7 +171,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var _jobWaitingForKeysignStart: Job? = null
     private var isNavigateToHome: Boolean = false
 
-    private var transitionTypeUiModel: TransitionTypeUiModel? = null
+    private var transactionTypeUiModel: TransactionTypeUiModel? = null
 
     private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
@@ -196,7 +196,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             sessionApi = sessionApi,
             suiApi = suiApi,
             navigator = navigator,
-            transitionTypeUiModel = transitionTypeUiModel,
+            transactionTypeUiModel = transactionTypeUiModel,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
         )
@@ -308,7 +308,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             ),
                         )
 
-                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransaction)
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
@@ -341,7 +341,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 convertTokenValueToFiat(dstToken, quote.fees, currency)
                             ),
                         )
-                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
                                 provider = R.string.swap_form_provider_thorchain.asUiText(),
@@ -374,7 +374,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 convertTokenValueToFiat(nativeToken, quote.fees, currency)
                             ),
                         )
-                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
                                 provider = R.string.swap_form_provider_mayachain.asUiText(),
@@ -417,7 +417,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         memo = payload.memo ?: "",
                     )
-                    transitionTypeUiModel = TransitionTypeUiModel.Deposit(depositTransactionUiModel)
+                    transactionTypeUiModel = TransactionTypeUiModel.Deposit(depositTransactionUiModel)
                     verifyUiModel.value = VerifyUiModel.Deposit(
                         VerifyDepositUiModel(
                             depositTransactionUiModel
@@ -469,7 +469,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
-                    transitionTypeUiModel = TransitionTypeUiModel.Send(transactionToUiModel)
+                    transactionTypeUiModel = TransactionTypeUiModel.Send(transactionToUiModel)
                     verifyUiModel.value = VerifyUiModel.Send(
                         VerifyTransactionUiModel(
                             transaction = transactionToUiModel,

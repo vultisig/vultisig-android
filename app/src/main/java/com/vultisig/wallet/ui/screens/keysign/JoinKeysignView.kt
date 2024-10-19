@@ -127,12 +127,12 @@ internal fun JoinKeysignView(
                     state = kState,
                     txHash = keysignViewModel.txHash.collectAsState().value,
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
-                    isThorChainSwap = keysignViewModel.isThorChainSwap,
+                    progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
                     onComplete = {
                         navController.navigate(Destination.Home().route)
                     },
                     onBack = keysignViewModel::navigateToHome,
-                    transitionTypeUiModel = keysignViewModel.transitionTypeUiModel
+                    transactionTypeUiModel = keysignViewModel.transactionTypeUiModel
                 )
             }
 

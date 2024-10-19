@@ -160,7 +160,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value == NetworkPromptOption.INTERNET || isFastSign
     }
 
-    private var transitionTypeUiModel: TransitionTypeUiModel? = null
+    private var transactionTypeUiModel: TransactionTypeUiModel? = null
 
 
     val keysignViewModel: KeysignViewModel
@@ -186,7 +186,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
-            transitionTypeUiModel = transitionTypeUiModel
+            transactionTypeUiModel = transactionTypeUiModel
         )
 
     init {
@@ -417,20 +417,20 @@ internal class KeysignFlowViewModel @Inject constructor(
                 else -> false
             }
             viewModelScope.launch {
-                transitionTypeUiModel = when {
-                    isSwap -> TransitionTypeUiModel.Swap(
+                transactionTypeUiModel = when {
+                    isSwap -> TransactionTypeUiModel.Swap(
                         mapSwapTransactionToUiModel(
                             swapTransactionRepository.getTransaction(transactionId)
                         )
                     )
 
-                    isDeposit -> TransitionTypeUiModel.Deposit(
+                    isDeposit -> TransactionTypeUiModel.Deposit(
                         mapDepositTransactionUiModel(
                             depositTransactionRepository.getTransaction(transactionId)
                         )
                     )
 
-                    else -> TransitionTypeUiModel.Send(
+                    else -> TransactionTypeUiModel.Send(
                         mapTransactionToUiModel(
                             transactionRepository.getTransaction(
                                 transactionId
