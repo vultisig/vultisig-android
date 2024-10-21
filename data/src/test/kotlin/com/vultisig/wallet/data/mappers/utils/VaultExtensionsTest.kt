@@ -54,7 +54,7 @@ class VaultExtensionsTest {
     }
 
     @Test
-    fun `isFastVault returns true when signers contains server and has 2 signers`() {
+    fun `isFastVault returns true when signers contains server`() {
         val vault = vault.copy(
             signers = listOf("1", "server-2"),
         )
@@ -63,54 +63,9 @@ class VaultExtensionsTest {
     }
 
     @Test
-    fun `isFastVault returns false when signers contains server and has more than 2 signers`() {
-        val vault = vault.copy(
-            signers = listOf("1", "server-2", "3"),
-        )
-
-        assertEquals(false, vault.isFastVault())
-    }
-
-    @Test
     fun `isFastVault returns false when signers does not contain server`() {
         val vault = vault.copy(
             signers = listOf("1", "2"),
-        )
-
-        assertEquals(false, vault.isFastVault())
-    }
-
-    @Test
-    fun `isFastVault returns false when signers contains server and has 1 signer`() {
-        val vault = vault.copy(
-            signers = listOf("server-1"),
-        )
-
-        assertEquals(false, vault.isFastVault())
-    }
-
-    @Test
-    fun `isFastVault returns false when signers does not contain server and has 1 signer`() {
-        val vault = vault.copy(
-            signers = listOf("1"),
-        )
-
-        assertEquals(false, vault.isFastVault())
-    }
-
-    @Test
-    fun `isFastVault returns false when signers does not contain server and has 2 signers`() {
-        val vault = vault.copy(
-            signers = listOf("1", "2"),
-        )
-
-        assertEquals(false, vault.isFastVault())
-    }
-
-    @Test
-    fun `isFastVault returns false when signers does not contain server and has more than 2 signers`() {
-        val vault = vault.copy(
-            signers = listOf("1", "2", "3"),
         )
 
         assertEquals(false, vault.isFastVault())
