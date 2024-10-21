@@ -15,11 +15,11 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun CheckField(
+    modifier: Modifier = Modifier,
     title: String,
     textStyle: TextStyle = Theme.menlo.body2,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
