@@ -159,6 +159,8 @@ internal class SolanaApiImp @Inject constructor(
                 method = "sendTransaction",
                 params = buildJsonArray {
                     add(tx)
+                    addJsonObject {
+                        put("maxRetries",10) }
                 },
                 id = 1,
             )
@@ -169,7 +171,7 @@ internal class SolanaApiImp @Inject constructor(
             val result = response.body<BroadcastTransactionRespJson>()
             result.error?.let { error ->
                 Timber.tag("SolanaApiImp").d("Error broadcasting transaction: $responseRawString")
-                error(error["message"].toString())
+                error(error.message)
             }
             return result.result ?: error("broadcastTransaction error")
         } catch (e: Exception) {
