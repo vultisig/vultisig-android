@@ -27,7 +27,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
@@ -66,6 +65,10 @@ internal fun SendFormScreen(
         viewModel.setAddressFromQrCode(qrCodeResult)
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.enableAdvanceGasUi()
+    }
+
     val selectedChain = state.selectedCoin?.model?.address?.chain
     val specific = state.specific
 
@@ -92,7 +95,6 @@ internal fun SendFormScreen(
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onChoosePercentageAmount = viewModel::choosePercentageAmount,
-        onChangeGasClick = viewModel::openGasSettings,
         onScan = viewModel::scanAddress,
         onAddressBookClick = viewModel::openAddressBook,
         onSend = viewModel::send,
@@ -115,7 +117,6 @@ internal fun SendFormScreen(
     onChooseMaxTokenAmount: () -> Unit = {},
     onChoosePercentageAmount: (Float) -> Unit = {},
     onAddressBookClick: () -> Unit = {},
-    onChangeGasClick: () -> Unit = {},
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
 ) {
@@ -236,8 +237,7 @@ internal fun SendFormScreen(
             if (state.showGasFee) {
                 FormDetails(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onChangeGasClick),
+                        .fillMaxWidth(),
                     title = buildAnnotatedString {
                         withStyle(
                             style = SpanStyle(
@@ -294,7 +294,6 @@ internal fun SendFormScreen(
     }
 
 }
-
 
 
 @Preview
