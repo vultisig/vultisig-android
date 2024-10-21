@@ -67,10 +67,10 @@ internal sealed class KeysignState {
 }
 
 
-internal sealed interface TransitionTypeUiModel {
-    data class Send(val transactionUiModel: TransactionUiModel) : TransitionTypeUiModel
-    data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransitionTypeUiModel
-    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransitionTypeUiModel
+internal sealed interface TransactionTypeUiModel {
+    data class Send(val transactionUiModel: TransactionUiModel) : TransactionTypeUiModel
+    data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
+    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransactionTypeUiModel
 }
 
 internal class KeysignViewModel(
@@ -95,13 +95,11 @@ internal class KeysignViewModel(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
-    val transitionTypeUiModel: TransitionTypeUiModel?,
+    val transactionTypeUiModel: TransactionTypeUiModel?,
 ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
-    var isThorChainSwap =
-        keysignPayload.swapPayload is SwapPayload.ThorChain
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
     private var _messagePuller: TssMessagePuller? = null
@@ -116,6 +114,12 @@ internal class KeysignViewModel(
     )
     private var featureFlag: FeatureFlagJson? = null
     private var isNavigateToHome: Boolean = false
+
+    val swapProgressLink = txHash.map {
+        explorerLinkRepository.getSwapProgressLink(it, keysignPayload.swapPayload)
+    }.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(), null
+    )
 
     fun startKeysign() {
         viewModelScope.launch {

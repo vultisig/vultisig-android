@@ -289,7 +289,6 @@
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="transaction_swap_tracking_link">Swap tracking link</string>
-    <string name="transaction_done_track_ninerealms" translatable="false">https://track.ninerealms.com/%1$s</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
     <string name="address_book_toolbar_title">Address Book</string>
     <string name="address_book_settings_title">Address Book</string>

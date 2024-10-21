@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
-import com.vultisig.wallet.ui.models.keysign.TransitionTypeUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.showReviewPopUp
@@ -65,11 +65,11 @@ internal fun Keysign(
     }
     KeysignScreen(
         state = state,
-        transitionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
+        transactionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
         txHash = keysignViewModel.txHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
         onComplete = onComplete,
-        isThorChainSwap = viewModel.isThorChainSwap,
+        progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
         onBack = {
             viewModel.navigateToHome()
         }
@@ -83,8 +83,8 @@ internal fun KeysignScreen(
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
-    isThorChainSwap: Boolean = false,
-    transitionTypeUiModel: TransitionTypeUiModel?
+    progressLink:String?,
+    transactionTypeUiModel: TransactionTypeUiModel?
 ) {
     KeepScreenOn()
     val text = when (state) {
@@ -107,9 +107,9 @@ internal fun KeysignScreen(
                 transactionHash = txHash,
                 transactionLink = transactionLink,
                 onComplete = onComplete,
-                isThorChainSwap = isThorChainSwap,
+                progressLink = progressLink,
                 onBack = onBack,
-                transitionTypeUiModel = transitionTypeUiModel,
+                transactionTypeUiModel = transactionTypeUiModel,
             )
         } else {
             UiSpacer(weight = 1f)
@@ -142,9 +142,10 @@ internal fun KeysignScreen(
 private fun KeysignPreview() {
     KeysignScreen(
         state = KeysignState.CreatingInstance,
+        progressLink = null,
         txHash = "0x1234567890",
         transactionLink = "",
-        transitionTypeUiModel = TransitionTypeUiModel.Send(
+        transactionTypeUiModel = TransactionTypeUiModel.Send(
             TransactionUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",
