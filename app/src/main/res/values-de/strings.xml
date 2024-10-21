@@ -235,7 +235,6 @@
     <string name="token_selection_tokens_title">Token</string>
     <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
-    <string name="backup_suggestion_text">Jedes Gerät hat seine eigene, eindeutige Freigabe.</string>
     <string name="backup_now">Sichern Sie jetzt Ihren Tresor!</string>
     <string name="deposit_screen_title">Bitte sichern Sie jetzt alle Ihre Vault-Freigaben.</string>
     <string name="deposit_screen_amount_title">Sichern Sie jetzt Ihren Tresor!</string>

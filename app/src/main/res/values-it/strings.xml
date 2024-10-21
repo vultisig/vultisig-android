@@ -235,7 +235,6 @@
     <string name="token_selection_tokens_title">Gettoni</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\’accordo con la fornitura di un\’indennità ERC20 illimitata</string>
-    <string name="backup_suggestion_text">Ogni dispositivo ha la sua condivisione univoca.</string>
     <string name="backup_now">Esegui subito il backup del tuo caveau!</string>
     <string name="deposit_screen_title">Depositare</string>
     <string name="deposit_screen_amount_title">Quantità</string>

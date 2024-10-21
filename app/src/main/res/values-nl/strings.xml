@@ -246,7 +246,6 @@
     <string name="token_selection_tokens_title">Tokens</string>
     <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
-    <string name="backup_suggestion_text">Elk apparaat heeft zijn eigen unieke share.  Maak nu een backup van al uw Vault Shares.</string>
     <string name="backup_now">Maak nu een back-up van uw kluis!</string>
     <string name="deposit_screen_title">Borg</string>
     <string name="deposit_screen_amount_title">Hoeveelheid</string>
