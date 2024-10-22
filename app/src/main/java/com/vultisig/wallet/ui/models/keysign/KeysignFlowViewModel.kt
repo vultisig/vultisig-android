@@ -552,12 +552,13 @@ internal class KeysignFlowViewModel @Inject constructor(
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (networkOption.value == option) return
+        var newOption = option
         // when fastvault / active vault , network option is always internet
         if (!password.isNullOrEmpty()) {
-            networkOption.value = NetworkPromptOption.INTERNET
+            newOption = NetworkPromptOption.INTERNET
         }
-        networkOption.value = option
-        _serverAddress = when (option) {
+        networkOption.value = newOption
+        _serverAddress = when (newOption) {
             NetworkPromptOption.LOCAL -> {
                 "http://127.0.0.1:18080"
             }
