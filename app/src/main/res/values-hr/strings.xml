@@ -235,7 +235,6 @@
     <string name="token_selection_tokens_title">Tokeni</string>
     <string name="token_selection_search_hint">Pretraživanje…</string>
     <string name="verify_swap_agree_allowance">Slažem se s pružanjem neograničenog ERC20 dodatka</string>
-    <string name="backup_suggestion_text">Svaki uređaj ima svoj jedinstveni udio.  Sada napravite sigurnosnu kopiju svih svojih Vault dijeljenja.</string>
     <string name="backup_now">Sigurnosno kopirajte svoj trezor sada!</string>
     <string name="deposit_screen_title">Polog</string>
     <string name="deposit_screen_amount_title">Iznositi</string>

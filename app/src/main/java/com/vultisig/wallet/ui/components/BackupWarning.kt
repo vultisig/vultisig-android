@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
@@ -20,8 +23,34 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun BackupWarning(onWarningClick: () -> Unit) {
+    WarningCard (
+        onClick = onWarningClick,
+    ){
+        Text(
+            text = stringResource(id = R.string.backup_now),
+            style = Theme.montserrat.body2.copy(
+                fontSize = 16.sp,
+            ),
+            color = Theme.colors.neutral100,
+        )
+    }
+
+}
+
+@Composable
+internal fun WarningCard(
+    onClick: () -> Unit = {},
+    @DrawableRes startIcon: Int = R.drawable.ic_warning,
+    startIconTint: Color = Theme.colors.alert,
+    startIconSize: Dp = 24.dp,
+    @DrawableRes endIcon: Int = R.drawable.caret_right,
+    endIconTint: Color = Theme.colors.neutral100,
+    endIconSize: Dp = 18.dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp),
         shape = RoundedCornerShape(12.dp),
@@ -29,7 +58,7 @@ internal fun BackupWarning(onWarningClick: () -> Unit) {
         colors = CardDefaults.cardColors(
             containerColor = Theme.colors.alertBackground
         ),
-        onClick = onWarningClick
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -37,21 +66,16 @@ internal fun BackupWarning(onWarningClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             UiIcon(
-                drawableResId = R.drawable.ic_warning,
-                size = 24.dp,
-                tint = Theme.colors.alert,
+                drawableResId = startIcon,
+                size = startIconSize,
+                tint = startIconTint,
                 modifier = Modifier.padding(16.dp),
             )
-            Text(
-                text = stringResource(id = R.string.backup_now),
-                style = Theme.montserrat.body2.copy(
-                    fontSize = 16.sp,
-                ),
-                color = Theme.colors.neutral100,
-            )
+            content()
             UiIcon(
-                drawableResId = R.drawable.caret_right,
-                size = 18.dp,
+                drawableResId = endIcon,
+                tint = endIconTint,
+                size = endIconSize,
                 modifier = Modifier.padding(16.dp),
             )
         }
