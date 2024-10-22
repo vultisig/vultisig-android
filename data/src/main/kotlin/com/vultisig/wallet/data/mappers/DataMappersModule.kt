@@ -23,4 +23,33 @@ internal interface DataMappersModule {
         impl: ChainAndTokensToAddressMapperImpl
     ): ChainAndTokensToAddressMapper
 
+    @Binds
+    @Singleton
+    fun bindKeygenMessageFromProtoMapper(
+        impl: KeygenMessageFromProtoMapperImpl
+    ): KeygenMessageFromProtoMapper
+
+    @Binds
+    @Singleton
+    fun bindKeygenMessageToProtoMapper(
+        impl: KeygenMessageToProtoMapperImpl
+    ): KeygenMessageToProtoMapper
+    @Binds
+    @Singleton
+    fun bindKeysignMessageFromProtoMapper(
+        impl: KeysignMessageFromProtoMapperImpl
+    ): KeysignMessageFromProtoMapper
+
+    @Binds
+    @Singleton
+    fun bindKeysignPayloadProtoMapper(
+        impl: KeysignPayloadProtoMapperImpl
+    ): KeysignPayloadProtoMapper
+
+    @Binds
+    @Singleton
+    fun bindSplTokenJsonFromSplTokenInfoMapper(
+        impl: SplTokenJsonFromSplTokenInfoImpl
+    ): SplTokenJsonFromSplTokenInfoMapper
+
 }

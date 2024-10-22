@@ -1,6 +1,3 @@
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.proto
-
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -10,7 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serialization)
-    alias(libs.plugins.protobuf)
+
 }
 android {
     namespace = "com.vultisig.wallet"
@@ -20,8 +17,8 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 34
-        versionCode = 27
-        versionName = "1.0.27"
+        versionCode = 30
+        versionName = "1.0.30"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -56,11 +53,6 @@ android {
         }
     }
 
-    sourceSets.getByName("main") {
-        proto {
-            srcDir("${project.rootProject.rootDir}/commondata/proto")
-        }
-    }
     tasks.withType<Test> {
         useJUnitPlatform()
     }
@@ -68,26 +60,6 @@ android {
         abortOnError = true
         absolutePaths = false
         lintConfig = file("$rootDir/config/lint/lint.xml")
-    }
-}
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.23.4"
-    }
-
-    plugins {
-        id("kotlinx-protobuf-gen") {
-            artifact = "io.github.dogacel:kotlinx-protobuf-gen:0.0.1:jvm8@jar"
-        }
-    }
-
-    generateProtoTasks {
-        all().forEach {
-            it.plugins {
-                id("kotlinx-protobuf-gen") {}
-            }
-        }
     }
 }
 

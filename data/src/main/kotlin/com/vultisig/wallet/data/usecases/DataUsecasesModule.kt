@@ -24,6 +24,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindGenerateRandomName(
+        impl: GenerateRandomUniqueNameImpl
+    ): GenerateRandomUniqueName
+
+    @Binds
+    @Singleton
     fun bindGenerateUniqueName(
         impl: GenerateUniqueNameImpl
     ): GenerateUniqueName
@@ -63,5 +69,11 @@ internal interface DataUsecasesModule {
     fun bindConvertGweiToWei(
         impl: ConvertGweiToWeiUseCaseImpl
     ): ConvertGweiToWeiUseCase
+
+    @Binds
+    @Singleton
+    fun bindAvailableTokenBalanceUseCase(
+        impl: AvailableTokenBalanceUseCaseImpl
+    ): AvailableTokenBalanceUseCase
 
 }

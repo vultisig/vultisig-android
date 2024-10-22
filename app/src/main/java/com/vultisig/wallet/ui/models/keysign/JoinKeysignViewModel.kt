@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
@@ -44,8 +45,8 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -143,6 +144,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
+    private val suiApi: SuiApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
@@ -169,7 +171,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var _jobWaitingForKeysignStart: Job? = null
     private var isNavigateToHome: Boolean = false
 
-    private var transitionTypeUiModel: TransitionTypeUiModel? = null
+    private var transactionTypeUiModel: TransactionTypeUiModel? = null
 
     private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
@@ -192,8 +194,9 @@ internal class JoinKeysignViewModel @Inject constructor(
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
+            suiApi = suiApi,
             navigator = navigator,
-            transitionTypeUiModel = transitionTypeUiModel,
+            transactionTypeUiModel = transactionTypeUiModel,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
         )
@@ -305,7 +308,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             ),
                         )
 
-                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransaction)
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransaction)
 
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
@@ -338,7 +341,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 convertTokenValueToFiat(dstToken, quote.fees, currency)
                             ),
                         )
-                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
                                 provider = R.string.swap_form_provider_thorchain.asUiText(),
@@ -371,7 +374,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                                 convertTokenValueToFiat(nativeToken, quote.fees, currency)
                             ),
                         )
-                        transitionTypeUiModel = TransitionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         verifyUiModel.value = VerifyUiModel.Swap(
                             VerifySwapUiModel(
                                 provider = R.string.swap_form_provider_mayachain.asUiText(),
@@ -414,7 +417,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         memo = payload.memo ?: "",
                     )
-                    transitionTypeUiModel = TransitionTypeUiModel.Deposit(depositTransactionUiModel)
+                    transactionTypeUiModel = TransactionTypeUiModel.Deposit(depositTransactionUiModel)
                     verifyUiModel.value = VerifyUiModel.Deposit(
                         VerifyDepositUiModel(
                             depositTransactionUiModel
@@ -460,13 +463,13 @@ internal class JoinKeysignViewModel @Inject constructor(
                         ),
                         gasFee = gasFee,
                         memo = payload.memo,
-                        estimatedFee = totalGasAndFee.first,
+                        estimatedFee = totalGasAndFee.formattedFiatValue,
                         blockChainSpecific = payload.blockChainSpecific,
-                        totalGass = totalGasAndFee.second
+                        totalGass = totalGasAndFee.formattedTokenValue
                     )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
-                    transitionTypeUiModel = TransitionTypeUiModel.Send(transactionToUiModel)
+                    transactionTypeUiModel = TransactionTypeUiModel.Send(transactionToUiModel)
                     verifyUiModel.value = VerifyUiModel.Send(
                         VerifyTransactionUiModel(
                             transaction = transactionToUiModel,

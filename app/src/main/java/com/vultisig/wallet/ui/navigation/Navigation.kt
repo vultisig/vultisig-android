@@ -195,7 +195,6 @@ internal sealed class Destination(
         Destination(route = "vault_detail/$vaultId/settings") {
 
         companion object {
-            const val ARG_VAULT_ID = "vault_id"
             const val STATIC_ROUTE = "vault_detail/{vault_id}/settings"
         }
     }
@@ -424,6 +423,13 @@ internal sealed class Destination(
         Destination(route = "reshare_start_screen/$vaultId") {
         companion object {
             const val STATIC_ROUTE = "reshare_start_screen/{$ARG_VAULT_ID}"
+        }
+    }
+
+    data class BiometricsEnable(val vaultId: String) :
+        Destination(route = "biometrics/$vaultId") {
+        companion object {
+            const val STATIC_ROUTE = "biometrics/{$ARG_VAULT_ID}"
         }
     }
 

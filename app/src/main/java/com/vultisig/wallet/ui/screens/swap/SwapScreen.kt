@@ -19,7 +19,6 @@ import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.swap.SwapViewModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
@@ -88,6 +87,7 @@ internal fun SwapScreen(
         progress = progress,
         qrCodeResult = viewModel.addressProvider.address.collectAsState().value,
         onKeysignFinished = onKeysignFinished,
+        navigateToHome = viewModel::navigateToHome,
         enableNavigationToHome = viewModel::enableNavigationToHome,
     )
 }
@@ -105,6 +105,7 @@ private fun SwapScreen(
     dstTokenId: String?,
     qrCodeResult: String?,
     onKeysignFinished: (() -> Unit)? = null,
+    navigateToHome: () -> Unit = {},
     enableNavigationToHome: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
@@ -162,10 +163,7 @@ private fun SwapScreen(
                 keysignShareViewModel.loadSwapTransaction(transactionId)
 
                 KeysignFlowView(
-                    navController = mainNavController,
-                    onComplete = {
-                        mainNavController.navigate(Destination.Home().route)
-                    },
+                    onComplete = navigateToHome,
                     onKeysignFinished = enableNavigationToHome,
                 )
             }

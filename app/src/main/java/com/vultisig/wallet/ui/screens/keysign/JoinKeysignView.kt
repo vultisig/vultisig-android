@@ -46,9 +46,9 @@ internal fun JoinKeysignView(
 
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
-    var keysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
+    var keysignState: KeysignState  by remember { mutableStateOf(KeysignState.CreatingInstance) }
 
-    if (keysignState == KeysignState.KeysignFinished) {
+    if (keysignState is KeysignState.KeysignFinished) {
         viewModel.enableNavigationToHome()
     }
     JoinKeysignScreen(
@@ -125,15 +125,14 @@ internal fun JoinKeysignView(
                 keysignState = kState
                 KeysignScreen(
                     state = kState,
-                    errorMessage = keysignViewModel.errorMessage.value,
                     txHash = keysignViewModel.txHash.collectAsState().value,
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
-                    isThorChainSwap = keysignViewModel.isThorChainSwap,
+                    progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
                     onComplete = {
                         navController.navigate(Destination.Home().route)
                     },
                     onBack = keysignViewModel::navigateToHome,
-                    transitionTypeUiModel = keysignViewModel.transitionTypeUiModel
+                    transactionTypeUiModel = keysignViewModel.transactionTypeUiModel
                 )
             }
 

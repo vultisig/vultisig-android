@@ -1,8 +1,11 @@
 package com.vultisig.wallet.ui.navigation
 
 import androidx.navigation.NavController
+import timber.log.Timber
 
 internal fun NavController.route(route: String, opts: NavigationOptions? = null) {
+    Timber.d("route($route, $opts)")
+
     if (route == Destination.Back.route) {
         popBackStack()
     } else {

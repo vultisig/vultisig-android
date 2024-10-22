@@ -37,7 +37,8 @@ enum class Chain(
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
-    Polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT");
+    Polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT"),
+    Sui("Sui", TokenStandard.SUI, "SUI");
 
     val id: String
         get() = raw
@@ -72,11 +73,12 @@ val Chain.coinType: CoinType
         Chain.Polkadot -> CoinType.POLKADOT
         Chain.Dydx -> CoinType.DYDX
         Chain.ZkSync -> CoinType.ZKSYNC
+        Chain.Sui -> CoinType.SUI
     }
 
 val Chain.TssKeysignType: TssKeyType
     get() = when (this) {
-        Chain.Solana, Chain.Polkadot -> TssKeyType.EDDSA
+        Chain.Solana, Chain.Polkadot, Chain.Sui -> TssKeyType.EDDSA
         else -> TssKeyType.ECDSA
     }
 
@@ -118,12 +120,12 @@ fun Chain.oneInchChainId(): Int =
         Chain.Ethereum -> 1
         Chain.Avalanche -> 43114
         Chain.Base -> 8453
-        Chain.Blast -> 81457
+        //Chain.Blast -> 81457
         Chain.Arbitrum -> 42161
         Chain.Polygon -> 137
         Chain.Optimism -> 10
         Chain.BscChain -> 56
-        Chain.CronosChain -> 25
+        // Chain.CronosChain -> 25
         Chain.ZkSync -> 324
         else -> error("Chain $this is not supported by 1inch API")
     }

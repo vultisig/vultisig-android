@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -36,7 +36,7 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
-import com.vultisig.wallet.ui.models.keysign.TransitionTypeUiModel
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
@@ -47,8 +47,8 @@ internal fun TransactionDoneScreen(
     navController: NavController,
     transactionHash: String,
     transactionLink: String,
-    isThorChainSwap: Boolean,
-    transitionTypeUiModel: TransitionTypeUiModel,
+    progressLink:String?,
+    transactionTypeUiModel: TransactionTypeUiModel,
 ) {
     UiBarContainer(
         navController = navController,
@@ -58,8 +58,8 @@ internal fun TransactionDoneScreen(
             transactionHash = transactionHash,
             transactionLink = transactionLink,
             onComplete = navController::popBackStack,
-            isThorChainSwap = isThorChainSwap,
-            transitionTypeUiModel = transitionTypeUiModel,
+            progressLink = progressLink,
+            transactionTypeUiModel = transactionTypeUiModel,
         )
     }
 }
@@ -69,12 +69,11 @@ internal fun TransactionDoneView(
     transactionHash: String,
     transactionLink: String,
     onComplete: () -> Unit,
-    isThorChainSwap: Boolean = false,
+    progressLink: String?,
     onBack: () -> Unit = {},
-    transitionTypeUiModel: TransitionTypeUiModel?,
+    transactionTypeUiModel: TransactionTypeUiModel?,
 ) {
     val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
     BackHandler(onBack = onBack)
     Column(
         modifier = Modifier
@@ -125,39 +124,20 @@ internal fun TransactionDoneView(
                     color = Theme.colors.turquoise800,
                     style = Theme.menlo.subtitle3,
                 )
-                if (isThorChainSwap) {
-                    Text(
-                        modifier = Modifier
-                            .align(Alignment.End)
-                            .clickOnce {
-                                uriHandler.openUri(
-                                    context.getString(
-                                        R.string.transaction_done_track_ninerealms,
-                                        transactionHash
-                                    )
-                                )
-                            },
-                        text = stringResource(R.string.transaction_swap_tracking_link),
-                        color = Theme.colors.turquoise800,
-                        style = Theme.montserrat.body3.copy(
-                            textDecoration = TextDecoration.Underline,
-                            lineHeight = 22.sp
-                        ),
 
-                        )
-                }
+                when (transactionTypeUiModel) {
+                    is TransactionTypeUiModel.Deposit ->
+                        DepositTransactionDetail(transactionTypeUiModel.depositTransactionUiModel)
 
-                when (transitionTypeUiModel) {
-                    is TransitionTypeUiModel.Deposit ->
-                        DepositTransactionDetail(transitionTypeUiModel.depositTransactionUiModel)
+                    is TransactionTypeUiModel.Send ->
+                        TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
 
-                    is TransitionTypeUiModel.Send ->
-                        TransactionDetail(transaction = transitionTypeUiModel.transactionUiModel)
-
-                    is TransitionTypeUiModel.Swap -> SwapTransactionDetail(
-                        swapTransaction =
-                        transitionTypeUiModel.swapTransactionUiModel
-                    )
+                    is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
+                        swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
+                        progressLink = progressLink,
+                    ) { progressLink ->
+                        uriHandler.openUri(progressLink)
+                    }
                     else -> Unit
                 }
 
@@ -209,7 +189,11 @@ private fun DepositTransactionDetail(depositTransaction: DepositTransactionUiMod
 }
 
 @Composable
-private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel?) {
+private fun ColumnScope.SwapTransactionDetail(
+    swapTransaction: SwapTransactionUiModel?,
+    progressLink: String?,
+    onProgressLinkClick: (String) -> Unit,
+) {
     if (swapTransaction != null) {
         AddressField(
             title = stringResource(R.string.verify_transaction_from_title),
@@ -231,8 +215,24 @@ private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel?) {
         OtherField(
             title = stringResource(R.string.verify_swap_screen_estimated_fees),
             value = swapTransaction.estimatedFees,
-            divider = false,
         )
+
+        if (progressLink != null) {
+            Text(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .align(Alignment.End)
+                    .clickOnce(onClick = {
+                        onProgressLinkClick(progressLink)
+                    }),
+                text = stringResource(R.string.transaction_swap_tracking_link),
+                color = Theme.colors.turquoise800,
+                style = Theme.montserrat.body3.copy(
+                    textDecoration = TextDecoration.Underline,
+                    lineHeight = 22.sp
+                ),
+            )
+        }
     }
 }
 
@@ -314,8 +314,8 @@ private fun TransactionDoneScreenPreview() {
         navController = rememberNavController(),
         transactionHash = "0x1234567890",
         transactionLink = "",
-        isThorChainSwap = true,
-        transitionTypeUiModel = TransitionTypeUiModel.Send(
+        progressLink = "https://track.ninerealms.com/",
+        transactionTypeUiModel = TransactionTypeUiModel.Send(
             TransactionUiModel(
                 srcAddress = "0x1234567890",
                 dstAddress = "0x1234567890",

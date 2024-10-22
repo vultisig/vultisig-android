@@ -110,7 +110,8 @@
     <string name="swap_form_src_amount_hint">Inserir Quantidade</string>
     <string name="swap_form_dst_token_title">Para</string>
     <string name="swap_screen_title">Trocar</string>
-    <string name="swap_form_gas_title">Gás (auto)</string>
+    <string name="swap_form_gas_title">Taxa de rede</string>
+    <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="home_scree_done">Concluído</string>
     <string name="verify_swap_sign_button">Sign</string>
     <string name="swap_error_no_amount">A quantidade deve ser um número positivo.</string>
@@ -163,7 +164,7 @@
     <string name="verify_swap_agree_receive_amount">Concordo com o valor que receberei após a troca</string>
     <string name="vault_settings_success_backup_file">arquivo salvo em Downloads/%1$s</string>
     <string name="failed_to_start_error">Falha ao iniciar, erro: %1$s</string>
-    <string name="swap_form_estimated_fees_title">Taxas estimadas</string>
+    <string name="swap_form_estimated_fees_title">Taxa de swap</string>
     <string name="verify_swap_screen_estimated_fees">Taxas estimadas</string>
     <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
@@ -187,7 +188,7 @@
     <string name="camera_bind_error">Erro de vinculação da câmera %1$s</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="camera_permission_denied">Permissão de câmera não concedida. Por favor, habilite-a nas configurações.</string>
-    <string name="verify_transaction_value">Valore</string>
+    <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">Endereço inválido</string>
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>
     <string name="chain_account_buy_wewe">COMPRE $VULT</string>
@@ -235,7 +236,6 @@
     <string name="token_selection_tokens_title">Fichas</string>
     <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
-    <string name="backup_suggestion_text">Cada dispositivo tem a sua própria partilha exclusiva.</string>
     <string name="backup_now">Faça já o backup do seu cofre!</string>
     <string name="deposit_screen_title">Depósito</string>
     <string name="deposit_screen_amount_title">Montante</string>
@@ -257,6 +257,7 @@
     <string name="deposit_form_amount_title">Montante</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save" >Guardar</string>
+    <string name="vault_settings_enable_biometrics_save" >Guardar</string>
     <string name="share_vault_qr_share" >Compartilhar</string>
     <string name="deposit_form_node_address_title">Endereço do nó</string>
     <string name="deposit_form_provider_title">Fornecedor (opcional)</string>

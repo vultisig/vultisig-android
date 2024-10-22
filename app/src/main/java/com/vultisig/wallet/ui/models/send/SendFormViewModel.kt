@@ -8,7 +8,6 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -24,6 +23,7 @@ import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
+import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
@@ -32,10 +32,10 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.usecases.AvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
-import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.swap.updateSrc
 import com.vultisig.wallet.ui.navigation.Destination
@@ -52,7 +52,9 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -122,10 +124,10 @@ internal class SendFormViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
     private val addressParserRepository: AddressParserRepository,
-    private val evmApiFactory: EvmApiFactory,
-    private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val gasFeeToEstimatedFee : GasFeeToEstimatedFeeUseCase
-    ) : ViewModel() {
+    private val getAvailableTokenBalance: AvailableTokenBalanceUseCase,
+    private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val advanceGasUiRepository: AdvanceGasUiRepository,
+) : ViewModel() {
 
     private var vaultId: String? = null
 
@@ -186,12 +188,7 @@ internal class SendFormViewModel @Inject constructor(
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
-
-        viewModelScope.launch {
-            val result = evmApiFactory.createEvmApi(Chain.Ethereum)
-                .getBaseFee()
-            Timber.d("log $result")
-        }
+        collectAdvanceGasUi()
     }
 
     fun loadData(
@@ -270,42 +267,25 @@ internal class SendFormViewModel @Inject constructor(
 
     fun chooseMaxTokenAmount() {
         val selectedAccount = selectedAccount ?: return
-        val selectedTokenValue = selectedAccount.tokenValue ?: return
         val gasFee = gasFee.value ?: return
         val chain = selectedAccount.token.chain
         val specific = specific.value?.blockChainSpecific
 
         viewModelScope.launch {
-            val max = if (selectedAccount.token.isNativeToken) {
-                val gasLimit = if (chain.standard == TokenStandard.EVM && specific != null) {
-                    (specific as BlockChainSpecific.Ethereum).gasLimit
-                } else {
-                    BigInteger.valueOf(1)
-                }
-                TokenValue(
-                    value = maxOf(
-                        BigInteger.ZERO,
-                        selectedTokenValue.value - gasFee.value.multiply(gasLimit)
-                    ),
-                    unit = selectedTokenValue.unit,
-                    decimals = selectedTokenValue.decimals,
-                )
-            } else {
-                selectedTokenValue
-            }.decimal
+            val gasLimit = calculateGasLimit(chain, specific)
+
+            val max = getAvailableTokenBalance(
+                selectedAccount,
+                gasFee.value.multiply(gasLimit)
+            )?.decimal ?: BigDecimal.ZERO
+
             maxAmount = max
             tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max.toPlainString())
         }
     }
 
-    fun openGasSettings() {
-        if (selectedAccount?.token?.chain?.standard == TokenStandard.EVM) {
-            uiState.update { it.copy(showGasSettings = true) }
-        }
-    }
-
     fun dismissGasSettings() {
-        uiState.update { it.copy(showGasSettings = false) }
+        advanceGasUiRepository.hideSettings()
     }
 
     fun saveGasSettings(settings: EthGasSettings) {
@@ -313,12 +293,37 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun choosePercentageAmount(percentage: Float) {
-        val selectedTokenValue = selectedAccount?.tokenValue ?: return
+        val selectedAccount = selectedAccount ?: return
+        val gasFee = gasFee.value ?: return
+        val chain = selectedAccount.token.chain
 
-        val tokenValue = selectedTokenValue.copy(
-            value = (BigDecimal(selectedTokenValue.value) * percentage.toBigDecimal()).toBigInteger(),
-        )
-        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue.decimal.toPlainString())
+        val specific = specific.value?.blockChainSpecific
+
+        viewModelScope.launch {
+            val gasLimit = calculateGasLimit(chain, specific)
+            val availableTokenBalance = getAvailableTokenBalance(
+                selectedAccount,
+                gasFee.value.multiply(gasLimit)
+            )
+
+            val tokenValue = availableTokenBalance?.copy(
+                value = (BigDecimal(availableTokenBalance.value) * percentage.toBigDecimal()).toBigInteger()
+            )
+
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
+                tokenValue?.decimal?.toPlainString() ?: ""
+            )
+        }
+
+    }
+
+    private fun calculateGasLimit(
+        chain: Chain,
+        specific: BlockChainSpecific?,
+    ): BigInteger = if (chain.standard == TokenStandard.EVM && specific != null) {
+        (specific as BlockChainSpecific.Ethereum).gasLimit
+    } else {
+        BigInteger.valueOf(1)
     }
 
     fun dismissError() {
@@ -390,29 +395,6 @@ internal class SendFormViewModel @Inject constructor(
                         .movePointRight(selectedToken.decimal)
                         .toBigInteger()
 
-                if (selectedToken.isNativeToken) {
-                    if (tokenAmountInt + gasFee.value > selectedTokenValue.value) {
-                        throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_insufficient_balance)
-                        )
-                    }
-                } else {
-                    val nativeTokenAccount = selectedSrc.value?.address?.accounts
-                        ?.find { it.token.isNativeToken }
-                    val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
-                        ?: throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_token)
-                        )
-
-                    if (selectedTokenValue.value < tokenAmountInt
-                        || nativeTokenValue < gasFee.value
-                    ) {
-                        throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_insufficient_balance)
-                        )
-                    }
-                }
-
                 val srcAddress = selectedToken.address
                 val isMaxAmount = tokenAmount == maxAmount
 
@@ -443,6 +425,37 @@ internal class SendFormViewModel @Inject constructor(
                             it
                         }
                     }
+
+                if (selectedToken.isNativeToken) {
+                    val availableTokenBalance = getAvailableTokenBalance(
+                        selectedAccount,
+                        gasFee.value.multiply(
+                            calculateGasLimit(chain, specific.blockChainSpecific)
+                        )
+                    )?.value ?: BigInteger.ZERO
+
+                    if (tokenAmountInt > availableTokenBalance) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    }
+                } else {
+                    val nativeTokenAccount = selectedSrc.value?.address?.accounts
+                        ?.find { it.token.isNativeToken }
+                    val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_token)
+                        )
+
+                    if (selectedTokenValue.value < tokenAmountInt
+                        || nativeTokenValue < gasFee.value
+                    ) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    }
+                }
+
 
                 val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
@@ -478,14 +491,14 @@ internal class SendFormViewModel @Inject constructor(
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
                     memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
-                    estimatedFee =totalGasAndFee.first,
-                    totalGass =totalGasAndFee.second,
+                    estimatedFee = totalGasAndFee.formattedFiatValue,
+                    totalGass = totalGasAndFee.formattedTokenValue,
                 )
 
                 Timber.d("Transaction: $transaction")
 
                 transactionRepository.addTransaction(transaction)
-
+                advanceGasUiRepository.hideIcon()
                 sendNavigator.navigate(
                     SendDst.VerifyTransaction(
                         transactionId = transaction.id,
@@ -567,6 +580,9 @@ internal class SendFormViewModel @Inject constructor(
                 val chain = selectedAccount.token.chain
                 val selectedToken = selectedAccount.token
                 val srcAddress = selectedAccount.token.address
+                advanceGasUiRepository.updateTokenStandard(
+                    selectedToken.chain.standard
+                )
                 try {
                     val spec = blockChainSpecificRepository.getSpecific(
                         chain,
@@ -578,6 +594,9 @@ internal class SendFormViewModel @Inject constructor(
                         isDeposit = false,
                     )
                     specific.value = spec
+                    advanceGasUiRepository.updateBlockChainSpecific(
+                        spec.blockChainSpecific,
+                    )
                     uiState.update {
                         it.copy(
                             specific = spec
@@ -598,8 +617,8 @@ internal class SendFormViewModel @Inject constructor(
 
                     uiState.update {
                         it.copy(
-                            estimatedFee = UiText.DynamicString(estimatedFee.first),
-                            totalGas = UiText.DynamicString(estimatedFee.second)
+                            estimatedFee = UiText.DynamicString(estimatedFee.formattedFiatValue),
+                            totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue)
                         )
                     }
                 } catch (e: Exception) {
@@ -614,10 +633,18 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             appCurrency.collect { appCurrency ->
                 uiState.update {
-                    it.copy(fiatCurrency =appCurrency.ticker)
+                    it.copy(fiatCurrency = appCurrency.ticker)
                 }
             }
         }
+    }
+
+    private fun collectAdvanceGasUi() {
+        advanceGasUiRepository.showSettings.onEach { showGasSettings ->
+            uiState.update {
+                it.copy(showGasSettings = showGasSettings)
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun collectSelectedAccount() {
@@ -629,6 +656,7 @@ internal class SendFormViewModel @Inject constructor(
                     val uiModel = accountToTokenBalanceUiModelMapper.map(src)
                     val showGasFee = (selectedAccount?.token?.allowZeroGas() == false)
                     val hasMemo = src.account.token.isNativeToken
+                    advanceGasUiRepository.updateTokenStandard(src.account.token.chain.standard)
                     uiState.update {
                         it.copy(
                             from = address,
@@ -727,6 +755,10 @@ internal class SendFormViewModel @Inject constructor(
             return UiText.StringResource(R.string.send_error_no_amount)
         }
         return null
+    }
+
+    fun enableAdvanceGasUi() {
+        advanceGasUiRepository.showIcon()
     }
 
     companion object {

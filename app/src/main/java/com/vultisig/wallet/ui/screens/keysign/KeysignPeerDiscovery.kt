@@ -50,6 +50,7 @@ internal fun KeysignPeerDiscovery(
     val keysignPayload = sharedViewModel.keysignPayload ?: return
     val isSwap = sharedViewModel.keysignPayload?.swapPayload != null
     val amount by sharedViewModel.amount.collectAsState()
+    val toAmount by sharedViewModel.toAmount.collectAsState()
     val bitmapPainter by sharedViewModel.qrBitmapPainter.collectAsState()
     val qrShareTitle = if (isSwap)
         stringResource(R.string.qr_title_join_swap_keysign)
@@ -57,12 +58,20 @@ internal fun KeysignPeerDiscovery(
         stringResource(R.string.qr_title_join_keysign)
 
     val qrShareBackground = Theme.colors.oxfordBlue800
-    val qrShareDescription = stringResource(
-        R.string.qr_title_join_keysign_description,
-        vault.name.forCanvasMinify(),
-        amount.forCanvasMinify(),
-        keysignPayload.toAddress.forCanvasMinify()
-    )
+
+    val qrShareDescription = if (isSwap)
+        stringResource(
+            R.string.qr_title_join_keysign_swap_description,
+            vault.name.forCanvasMinify(),
+            amount.forCanvasMinify(),
+            toAmount.forCanvasMinify(),
+        ) else
+        stringResource(
+            R.string.qr_title_join_keysign_description,
+            vault.name.forCanvasMinify(),
+            amount.forCanvasMinify(),
+            keysignPayload.toAddress.forCanvasMinify(),
+        )
 
     LaunchedEffect(key1 = viewModel.participants) {
         viewModel.participants.asFlow().collect { newList ->
@@ -80,7 +89,7 @@ internal fun KeysignPeerDiscovery(
             }
             if (newList.size >= Utils.getThreshold(vault.signers.size)) {
                 // automatically kickoff keysign
-                viewModel.moveToState(KeysignFlowState.KEYSIGN)
+                viewModel.moveToState(KeysignFlowState.Keysign)
             }
         }
     }
@@ -90,7 +99,9 @@ internal fun KeysignPeerDiscovery(
     }
 
     LaunchedEffect(viewModel.keysignMessage.value) {
-        sharedViewModel.loadQrPainter(viewModel.keysignMessage.value)
+        if (viewModel.keysignMessage.value.isNotEmpty()) {
+            sharedViewModel.loadQrPainter(viewModel.keysignMessage.value)
+        }
     }
 
     DisposableEffect(Unit) {
@@ -112,7 +123,7 @@ internal fun KeysignPeerDiscovery(
         onRemoveParticipant = { viewModel.removeParticipant(it) },
         onStopParticipantDiscovery = {
             viewModel.stopParticipantDiscovery()
-            viewModel.moveToState(KeysignFlowState.KEYSIGN)
+            viewModel.moveToState(KeysignFlowState.Keysign)
         },
         extractBitmap = { bitmap ->
             if (bitmapPainter != null) {

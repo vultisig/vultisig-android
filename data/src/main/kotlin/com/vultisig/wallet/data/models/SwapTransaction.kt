@@ -33,11 +33,6 @@ sealed interface SwapTransaction {
         override val isApprovalRequired: Boolean,
     ) : SwapTransaction
 
-
-    data class EthToCacaoSwapTransaction(
-        val swapTransaction: SwapTransaction,
-    ) : SwapTransaction by swapTransaction
-
     companion object {
         val maxAllowance: BigInteger
             get() = BigInteger("2".repeat(64), 16)

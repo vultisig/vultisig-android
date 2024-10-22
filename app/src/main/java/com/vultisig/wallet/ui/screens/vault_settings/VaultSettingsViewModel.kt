@@ -3,7 +3,10 @@ package com.vultisig.wallet.ui.screens.vault_settings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,19 +18,37 @@ import javax.inject.Inject
 internal open class VaultSettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val vaultRepository: VaultRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
 
 
     val uiModel = MutableStateFlow(VaultSettingsState())
 
     private val vaultId: String =
-        savedStateHandle.get<String>(Destination.VaultSettings.ARG_VAULT_ID)!!
+        savedStateHandle.get<String>(ARG_VAULT_ID)!!
 
     init {
         viewModelScope.launch {
+            val vault = requireNotNull(vaultRepository.get(vaultId))
+            val hasFastSign = vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
             uiModel.update {
-                it.copy(id = vaultId)
+                it.copy(
+                    hasFastSign = hasFastSign
+                )
             }
+        }
+    }
+
+    fun openDetails() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Details(vaultId))
+        }
+    }
+
+    fun openRename() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Rename(vaultId))
         }
     }
 
@@ -49,5 +70,9 @@ internal open class VaultSettingsViewModel @Inject constructor(
         }
     }
 
-
+    fun navigateToBiometricsScreen() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.BiometricsEnable(vaultId))
+        }
+    }
 }

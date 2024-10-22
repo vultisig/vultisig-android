@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -40,6 +41,7 @@ import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -81,6 +83,7 @@ import vultisig.keysign.v1.OneInchSwapPayload
 import vultisig.keysign.v1.OneInchTransaction
 import vultisig.keysign.v1.PolkadotSpecific
 import vultisig.keysign.v1.SolanaSpecific
+import vultisig.keysign.v1.SuiSpecific
 import vultisig.keysign.v1.THORChainSpecific
 import vultisig.keysign.v1.THORChainSwapPayload
 import vultisig.keysign.v1.UTXOSpecific
@@ -88,11 +91,11 @@ import vultisig.keysign.v1.UtxoInfo
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
-import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 
-
-enum class KeysignFlowState {
-    PEER_DISCOVERY, KEYSIGN, ERROR,
+internal sealed class KeysignFlowState {
+    data object PeerDiscovery : KeysignFlowState()
+    data object Keysign : KeysignFlowState()
+    data class Error (val errorMessage: String) : KeysignFlowState()
 }
 
 @HiltViewModel
@@ -106,6 +109,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
+    private val suiApi: SuiApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
     @ApplicationContext private val context: Context,
@@ -133,8 +137,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private var messagesToSign = emptyList<String>()
 
     var currentState: MutableStateFlow<KeysignFlowState> =
-        MutableStateFlow(KeysignFlowState.PEER_DISCOVERY)
-    var errorMessage: MutableState<String> = mutableStateOf("")
+        MutableStateFlow(KeysignFlowState.PeerDiscovery)
     val selection = MutableLiveData<List<String>>()
     val localPartyID: String?
         get() = _currentVault?.localPartyID
@@ -157,7 +160,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value == NetworkPromptOption.INTERNET || isFastSign
     }
 
-    private var transitionTypeUiModel: TransitionTypeUiModel? = null
+    private var transactionTypeUiModel: TransactionTypeUiModel? = null
 
 
     val keysignViewModel: KeysignViewModel
@@ -179,16 +182,17 @@ internal class KeysignFlowViewModel @Inject constructor(
             polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
+            suiApi = suiApi,
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
-            transitionTypeUiModel = transitionTypeUiModel
+            transactionTypeUiModel = transactionTypeUiModel
         )
 
     init {
         viewModelScope.launch {
             currentState.collect { state ->
-                if (state == KeysignFlowState.KEYSIGN) {
+                if (state == KeysignFlowState.Keysign) {
                     startKeysign()
                 }
             }
@@ -196,24 +200,28 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     suspend fun setData(vault: Vault, context: Context, keysignPayload: KeysignPayload) {
-        _currentVault = vault
-        _keysignPayload = keysignPayload
-        messagesToSign = SigningHelper.getKeysignMessages(
-            payload = _keysignPayload!!,
-            vault = _currentVault!!,
-        )
-        this.selection.value = listOf(vault.localPartyID)
-        _serverAddress = Endpoints.VULTISIG_RELAY
-        updateKeysignPayload(context)
-        updateTransactionUiModel(keysignPayload)
+        try {
+            _currentVault = vault
+            _keysignPayload = keysignPayload
+            messagesToSign = SigningHelper.getKeysignMessages(
+                payload = _keysignPayload!!,
+                vault = _currentVault!!,
+            )
+            this.selection.value = listOf(vault.localPartyID)
+            _serverAddress = Endpoints.VULTISIG_RELAY
+            updateKeysignPayload(context)
+            updateTransactionUiModel(keysignPayload)
+        } catch (e: Exception) {
+            Timber.e(e)
+            moveToState(KeysignFlowState.Error(e.message.toString()))
+        }
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun updateKeysignPayload(context: Context) {
         stopParticipantDiscovery()
         _currentVault ?: run {
-            errorMessage.value = "Vault is not set"
-            moveToState(KeysignFlowState.ERROR)
+            moveToState(KeysignFlowState.Error("Vault is not set"))
             return
         }
         val vault = _currentVault!!
@@ -302,7 +310,12 @@ internal class KeysignFlowViewModel @Inject constructor(
                             genesisHash = specific.genesisHash,
                         )
                     } else null,
-                    suicheSpecific = null, // TODO add sui chain
+                    suicheSpecific = if (specific is BlockChainSpecific.Sui) {
+                        SuiSpecific(
+                            referenceGasPrice = specific.referenceGasPrice.toString(),
+                            coins = specific.coins,
+                        )
+                    } else null,
                     thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {
                         val from = swapPayload.data
                         THORChainSwapPayload(
@@ -404,20 +417,20 @@ internal class KeysignFlowViewModel @Inject constructor(
                 else -> false
             }
             viewModelScope.launch {
-                transitionTypeUiModel = when {
-                    isSwap -> TransitionTypeUiModel.Swap(
+                transactionTypeUiModel = when {
+                    isSwap -> TransactionTypeUiModel.Swap(
                         mapSwapTransactionToUiModel(
                             swapTransactionRepository.getTransaction(transactionId)
                         )
                     )
 
-                    isDeposit -> TransitionTypeUiModel.Deposit(
+                    isDeposit -> TransactionTypeUiModel.Deposit(
                         mapDepositTransactionUiModel(
                             depositTransactionRepository.getTransaction(transactionId)
                         )
                     )
 
-                    else -> TransitionTypeUiModel.Send(
+                    else -> TransactionTypeUiModel.Send(
                         mapTransactionToUiModel(
                             transactionRepository.getTransaction(
                                 transactionId
@@ -436,8 +449,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             if (intent.action == MediatorService.SERVICE_ACTION) {
                 Timber.tag("KeysignFlowViewModel").d("onReceive: Mediator service started")
                 if (_currentVault == null) {
-                    errorMessage.value = "Vault is not set"
-                    moveToState(KeysignFlowState.ERROR)
+                    moveToState(KeysignFlowState.Error("Vault is not set"))
                     return
                 }
                 // send a request to local mediator server to start the session
@@ -520,13 +532,12 @@ internal class KeysignFlowViewModel @Inject constructor(
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun moveToState(nextState: KeysignFlowState) {
         try {
-            if (nextState == KeysignFlowState.KEYSIGN) {
+            if (nextState == KeysignFlowState.Keysign) {
                 cleanQrAddress()
             }
             currentState.update { nextState }
         } catch (e: Exception) {
-            errorMessage.value = e.message.toString()
-            moveToState(KeysignFlowState.ERROR)
+            moveToState(KeysignFlowState.Error(e.message.toString()))
         }
     }
 

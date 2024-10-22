@@ -1,3 +1,6 @@
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.proto
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -5,6 +8,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
     kotlin("kapt")
+    alias(libs.plugins.protobuf)
 }
 
 android {
@@ -33,6 +37,31 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
+    }
+    sourceSets.getByName("main") {
+        proto {
+            srcDir("${project.rootProject.rootDir}/commondata/proto")
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.23.4"
+    }
+
+    plugins {
+        id("kotlinx-protobuf-gen") {
+            artifact = "io.github.dogacel:kotlinx-protobuf-gen:0.0.1:jvm8@jar"
+        }
+    }
+
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                id("kotlinx-protobuf-gen") {}
+            }
+        }
     }
 }
 
@@ -82,6 +111,7 @@ dependencies {
     implementation(libs.apache.compress)
     implementation(libs.apache.compress.xz)
     implementation(libs.core.zxing)
+    implementation(libs.androidx.security)
 
     // test
     testImplementation(libs.ktor.client.mock)

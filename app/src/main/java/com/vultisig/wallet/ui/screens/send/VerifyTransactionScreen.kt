@@ -8,14 +8,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -27,11 +28,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.BlowfishMessage
+import com.vultisig.wallet.ui.components.CheckField
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.library.UiCheckbox
+import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.models.TransactionUiModel
@@ -45,6 +47,9 @@ internal fun VerifyTransactionScreen(
     viewModel: VerifyTransactionViewModel = hiltViewModel(),
 ) {
     val state = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
+    val promptTitle = stringResource(R.string.biometry_keysign_login_button)
+
 
     val errorText = state.errorText
     if (errorText != null) {
@@ -54,6 +59,14 @@ internal fun VerifyTransactionScreen(
             onDismiss = viewModel::dismissError,
         )
     }
+    val authorize: () -> Unit = remember(context) {
+        {
+            context.launchBiometricPrompt(
+                promptTitle = promptTitle,
+                onAuthorizationSuccess =  viewModel::authFastSign,
+            )
+        }
+    }
 
     VerifyTransactionScreen(
         state = state,
@@ -62,8 +75,12 @@ internal fun VerifyTransactionScreen(
         onConsentAddress = viewModel::checkConsentAddress,
         onConsentAmount = viewModel::checkConsentAmount,
         onConsentDst = viewModel::checkConsentDst,
-        onFastSignClick = viewModel::fastSign,
         onConfirm = viewModel::joinKeysign,
+        onFastSignClick = {
+            if (!viewModel.tryToFastSignWithPassword()) {
+                authorize()
+            }
+        },
     )
 }
 
@@ -304,46 +321,6 @@ internal fun OtherField(
         if (divider) {
             UiHorizontalDivider()
         }
-    }
-}
-
-
-
-
-
-@Composable
-internal fun CheckField(
-    title: String,
-    isChecked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 4.dp,
-                vertical = 8.dp,
-            )
-            .toggleable(
-                value = isChecked,
-                onValueChange = { checked ->
-                    onCheckedChange(checked)
-                }
-            )
-    ) {
-        UiCheckbox(
-            checked = isChecked,
-            onCheckedChange = onCheckedChange
-        )
-
-        UiSpacer(size = 8.dp)
-
-        Text(
-            text = title,
-            color = Theme.colors.neutral100,
-            style = Theme.menlo.body2,
-        )
     }
 }
 

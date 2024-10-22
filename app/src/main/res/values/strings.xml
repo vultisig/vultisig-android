@@ -185,10 +185,11 @@
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_src_amount_hint">Enter Amount</string>
-    <string name="swap_form_estimated_fees_title">Estimated Fees</string>
+    <string name="swap_form_estimated_fees_title">Swap fees</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="swap_screen_title">Swap</string>
-    <string name="swap_form_gas_title">Gas (auto)</string>
+    <string name="swap_form_gas_title">Network fee</string>
+    <string name="swap_form_total_fees_title">Total fees</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
     <string name="verify_swap_screen_estimated_fees">Estimated Fees</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
@@ -255,7 +256,6 @@
     <string name="token_selection_tokens_title">Tokens</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing unlimited ERC20 allowance</string>
-    <string name="backup_suggestion_text">Each device has its own unique share.\n\nPlease Backup all of your Vault Shares now.</string>
     <string name="backup_now">Backup your vault now!</string>
     <string name="deposit_screen_title">Function</string>
     <string name="deposit_screen_amount_title">Amount</string>
@@ -278,6 +278,7 @@
     <string name="deposit_form_amount_title" >Amount</string>
     <string name="share_vault_qr_title" >Share Vault QR</string>
     <string name="share_vault_qr_save" >Save</string>
+    <string name="vault_settings_enable_biometrics_save" >Save</string>
     <string name="share_vault_qr_share" >Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
@@ -287,7 +288,6 @@
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="transaction_swap_tracking_link">Swap tracking link</string>
-    <string name="transaction_done_track_ninerealms" translatable="false">https://track.ninerealms.com/%1$s</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
     <string name="address_book_toolbar_title">Address Book</string>
     <string name="address_book_settings_title">Address Book</string>
@@ -351,7 +351,7 @@
     <string name="token_selection_selected_tokens_title">Selected</string>
     <string name="failed_to_resolve_address">Failed to resolve address</string>
     <string name="vault_settings_success_backup_message" translatable="false">File saved successfully</string>
-    <string name="vault_settings_error_extension_backup_file" translatable="false">Supported file extensions are: %s</string>
+    <string name="vault_settings_error_extension_backup_file" translatable="false">Extension not supported. Backup failed. Supported file extensions are: %s</string>
     <string name="default_error"  translatable="false">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
     <string name="join_keygen_failed">Failed to join %1$s</string>
@@ -370,9 +370,17 @@
     <string name="create_folder_title" translatable="false">Create Folder</string>
     <string name="create_folder_name" translatable="false">Folder Name</string>
     <string name="create_folder_create" translatable="false">Create</string>
+    <string name="vault_settings_biometrics_screen_title" translatable="false">Enable Biometrics</string>
+    <string name="vault_settings_biometrics_screen_description" translatable="false">Enter Password for Fast Signing</string>
+    <string name="vault_settings_biometrics_screen_password_placeholder" translatable="false">Type here</string>
+    <string name="vault_settings_biometrics_screen_snackbar_enabled" translatable="false">Biometrics for Fast Signing is enabled</string>
+    <string name="vault_settings_biometrics_screen_snackbar_disabled" translatable="false">Biometrics for Fast Signing is disabled</string>
+    <string name="biometry_keysign_login_button" translatable="false">Fast Sign with biometry</string>
     <string name="delete_folder" translatable="false">Delete Folder</string>
     <string name="select_vaults_to_add_to_the_folder" translatable="false">Select Vaults to add to the folder.</string>
     <string name="create_folder_placeholder" translatable="false">Savings</string>
+    <string name="vault_settings_biometrics_title"  translatable="false">Biometrics for Fast Sign</string>
+    <string name="vault_settings_biometrics_description"  translatable="false">Enable Biometrics for Fast Sign</string>
     <string name="create_folder_list_title" translatable="false">Select Vaults to add to the folder.</string>
     <string name="generating_key_retry" translatable="false">Retry</string>
     <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>
@@ -400,6 +408,7 @@
     <string name="keygen_password_warning_caption" translatable="false">Do not forget your password.</string>
     <string name="keygen_passwords_dont_match" translatable="false">Passwords should match</string>
     <string name="password_should_not_be_empty" translatable="false">Password should not be empty</string>
+    <string name="signing_error_insufficient_funds_swap" translatable="false">Insufficient funds to execute the swap. Please fund the wallet.</string>
     <string name="verify_transaction_fast_sign_btn_title" translatable="false">Fast Sign</string>
     <string name="keysign_paired_sign_title" translatable="false">Paired Sign</string>
     <string name="keysign_password_title" translatable="false">Password</string>
@@ -411,8 +420,15 @@
     <string name="qr_title_join_keygen" translatable="false">Join Keygen</string>
     <string name="qr_title_join_keysign" translatable="false">Join Keysign</string>
     <string name="qr_title_join_swap_keysign" translatable="false">Join Swap</string>
+    <string name="backup_suggestion_header" translatable="false">Backups need to be done on every device in Vultisig</string>
+    <string name="backup_suggestion_body" translatable="false">Each device has its own unique vault share, which are needed for recovery</string>
+    <string name="backup_suggestion_warning" translatable="false">Back up your vault on every device individually!</string>
+    <string name="backup_suggestion_skip_backup" translatable="false">Skip Backup</string>
+    <string name="backup_suggestion_skip_consent" translatable="false">I understand that by skipping the backup I may lose access to my funds.</string>
     <string name="qr_title_join_keygen_description" translatable="false">Scan with devices to join the\nvault generation</string>
     <string name="qr_title_join_keysign_description" translatable="false">Vault: %s\nAmount: %s\n To: %s</string>
+    <string name="qr_title_join_keysign_swap_description" translatable="false">Vault: %s\nFrom: %s\n To: %s</string>
+    <string name="error_folder_must_have_at_least_one_vault" translatable="false">Folder needs at least one selected vault</string>
 
     <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
     <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>
@@ -439,6 +455,8 @@
     <string name="register_vault_screen_step_4" translatable="false">4. Track your VULTIES (Vault Points) !</string>
     <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
-    <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
+    <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
+    <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
+    <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
     <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
 </resources>

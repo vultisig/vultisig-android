@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
@@ -108,6 +109,10 @@ object SigningHelper {
                 Chain.Polkadot -> {
                     val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
                     dotHelper.getPreSignedImageHash(payload)
+                }
+
+                Chain.Sui -> {
+                    SuiHelper.getPreSignedImageHash(payload)
                 }
             }
         }

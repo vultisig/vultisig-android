@@ -49,6 +49,7 @@ internal class KeysignShareViewModel @Inject constructor(
     var keysignPayload: KeysignPayload? = null
 
     val amount = MutableStateFlow("")
+    val toAmount = MutableStateFlow("")
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
@@ -94,20 +95,9 @@ internal class KeysignShareViewModel @Inject constructor(
             this@KeysignShareViewModel.vault = vault
 
             amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
+            toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
 
             keysignPayload = when (transaction) {
-                is SwapTransaction.EthToCacaoSwapTransaction -> {
-                    KeysignPayload(
-                        coin = srcToken,
-                        toAddress = transaction.dstAddress,
-                        toAmount = transaction.srcTokenValue.value,
-                        blockChainSpecific = transaction.blockChainSpecific.blockChainSpecific,
-                        memo = transaction.memo,
-                        vaultPublicKeyECDSA = pubKeyECDSA,
-                        utxos = emptyList(),
-                        vaultLocalPartyID = vault.localPartyID,
-                    )
-                }
 
                 is SwapTransaction.RegularSwapTransaction -> {
                     var swapPayload: SwapPayload = transaction.payload

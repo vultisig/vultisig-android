@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import javax.inject.Inject
 
 interface ExplorerLinkRepository {
@@ -15,6 +16,10 @@ interface ExplorerLinkRepository {
         address: String,
     ): String
 
+    fun getSwapProgressLink(
+        tx: String,
+        payload: SwapPayload?,
+    ): String?
 }
 
 internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRepository {
@@ -31,25 +36,30 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
     override fun getAddressLink(chain: Chain, address: String): String =
         "${chain.blockExplorerUrl}$address"
 
+
+    override fun getSwapProgressLink(
+        tx: String,
+        payload: SwapPayload?,
+    ): String? = when (payload) {
+        is SwapPayload.ThorChain -> "https://track.ninerealms.com/$tx"
+        is SwapPayload.MayaChain -> "https://www.xscanner.org/tx/$tx"
+        else -> null
+    }
+
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {
             Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
             Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
-            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync,
-            ->
+            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync, Chain.Sui,
+            Chain.Dydx, Chain.Bitcoin ->
                 "${explorerUrl}tx/"
 
-            Chain.Bitcoin, Chain.BitcoinCash, Chain.Dash, Chain.Litecoin ->
+            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin ->
                 "${explorerUrl}transaction/"
 
             Chain.Kujira ->
                 "https://finder.kujira.network/kaiyo-1/tx/"
 
-            Chain.Dydx ->
-                "https://www.mintscan.io/dydx/tx/"
-
-            // TODO: Add support for these later
-            // Chain.sui -> "https://suiscan.xyz/mainnet/tx/"
             Chain.Polkadot -> "https://polkadot.subscan.io/extrinsic/"
         }
 
@@ -61,7 +71,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Arbitrum -> "https://arbiscan.io/"
             Chain.Avalanche -> "https://snowtrace.io/"
             Chain.Base -> "https://basescan.org/"
-            Chain.Bitcoin -> "https://blockchair.com/bitcoin/"
+            Chain.Bitcoin -> "https://mempool.space/"
             Chain.BitcoinCash -> "https://blockchair.com/bitcoin-cash/"
             Chain.Blast -> "https://blastscan.io/"
             Chain.BscChain -> "https://bscscan.com/"
@@ -80,6 +90,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.ThorChain -> "https://thorchain.net/"
             Chain.Polkadot -> "https://polkadot.subscan.io/account/"
             Chain.ZkSync -> "https://explorer.zksync.io/"
+            Chain.Sui -> "https://suiscan.xyz/mainnet/"
         }
 
 }

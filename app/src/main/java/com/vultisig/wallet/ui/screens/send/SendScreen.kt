@@ -18,7 +18,6 @@ import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
-import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
@@ -79,12 +78,19 @@ internal fun SendScreen(
 
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
+    val isGasSettingsEnabled = viewModel.isGasSettingAvailable.collectAsState().value
     ProgressScreen(
         navController = progressNav,
         title = title,
         progress = progress,
-        endIcon = qr?.let { R.drawable.qr_share },
-        onEndIconClick = qr?.let {
+        endIcon = if (isGasSettingsEnabled) {
+            R.drawable.advance_gas_settings
+        } else {
+            qr?.let { R.drawable.qr_share }
+        },
+        onEndIconClick = if (isGasSettingsEnabled) {
+            viewModel::onGasSettingsClick
+        } else qr?.let {
             {
                 keysignShareViewModel.shareQRCode(context)
             }
@@ -130,9 +136,8 @@ internal fun SendScreen(
                 keysignShareViewModel.loadTransaction(transactionId)
 
                 KeysignFlowView(
-                    navController = navController,
                     onComplete = {
-                        navController.navigate(Destination.Home().route)
+                        viewModel.navigateToHome(useMainNavigator)
                     },
                     onKeysignFinished = {
                         viewModel.enableNavigationToHome()

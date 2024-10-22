@@ -27,6 +27,8 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
+import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -64,8 +66,7 @@ import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
-import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
-import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
+
 enum class KeygenFlowState {
     PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
 }
@@ -81,17 +82,21 @@ internal data class KeygenFlowUiModel(
     val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
 ) {
     val isContinueButtonEnabled =
-        when (vaultSetupType) {
-            VaultSetupType.FAST -> {
-                selection.size == 2
-            }
+        if (isReshareMode) {
+            selection.size >= 2
+        } else {
+            when (vaultSetupType) {
+                VaultSetupType.FAST -> {
+                    selection.size == 2
+                }
 
-            VaultSetupType.ACTIVE -> {
-                selection.size == 3
-            }
+                VaultSetupType.ACTIVE -> {
+                    selection.size == 3
+                }
 
-            VaultSetupType.SECURE -> {
-                selection.size >= 2
+                VaultSetupType.SECURE -> {
+                    selection.size >= 2
+                }
             }
         }
 }

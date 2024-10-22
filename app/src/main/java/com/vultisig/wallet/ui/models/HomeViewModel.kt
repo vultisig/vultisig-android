@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal data class HomeUiModel(
@@ -45,6 +46,7 @@ internal class HomeViewModel @Inject constructor(
         val selectedVaultId = uiState.value.selectedVaultId
         selectedVaultId?.let { vaultId ->
             viewModelScope.launch {
+                Timber.d("openSettings($vaultId)")
                 navigator.navigate(Destination.Settings(vaultId = vaultId))
             }
         }
@@ -78,7 +80,6 @@ internal class HomeViewModel @Inject constructor(
 
     fun selectFolder(folderId: String) {
         viewModelScope.launch {
-            hideVaultList()
             navigator.navigate(Destination.Folder(folderId))
         }
     }

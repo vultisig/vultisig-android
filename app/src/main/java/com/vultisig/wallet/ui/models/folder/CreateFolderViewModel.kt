@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
@@ -101,10 +100,6 @@ internal class CreateFolderViewModel @Inject constructor(
             currntState.checkedVaults.filterValues { it }.keys.map { it.id }
         )
 
-        navigator.navigate(
-            Destination.Folder(folderId.toString()),
-            NavigationOptions(popUpTo = Destination.Home().route),
-        )
+        navigator.navigate(Destination.Back)
     }
-
 }

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models.payload
 
+import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
 
 sealed class BlockChainSpecific {
@@ -43,7 +44,7 @@ sealed class BlockChainSpecific {
 
     data class Sui(
         val referenceGasPrice: BigInteger,
-        val coins: List<Map<String, String>>
+        val coins: List<SuiCoin>
     ) : BlockChainSpecific()
 
     data class Polkadot(

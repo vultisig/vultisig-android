@@ -80,19 +80,36 @@ data class SplTokenJson(
 )
 
 @Serializable
+data class SplTokenInfo(
+    @SerialName("address")
+    val address: String,
+    @SerialName("name")
+    val name: String,
+    @SerialName("symbol")
+    val symbol: String,
+    @SerialName("decimals")
+    val decimals: Int,
+    @SerialName("logoURI")
+    val logoURI: String,
+    @SerialName("extensions")
+    val extensions: SplExtensionsJson?,
+)
+
+
+@Serializable
 data class SplTokenListJson(
     @SerialName("symbol")
     val ticker: String,
     @SerialName("image")
-    val logo: String,
+    val logo: String?,
     @SerialName("extensions")
-    val extensions: SplExtensionsJson,
+    val extensions: SplExtensionsJson?,
 )
 
 @Serializable
 data class SplExtensionsJson(
     @SerialName("coingeckoId")
-    val coingeckoId: String,
+    val coingeckoId: String?,
 )
 
 

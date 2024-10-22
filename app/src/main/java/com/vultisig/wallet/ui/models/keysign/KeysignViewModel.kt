@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.models.keysign
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.BlockChairApi
@@ -14,6 +12,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -24,6 +23,7 @@ import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
+import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -58,19 +58,19 @@ import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.Base64
 
-enum class KeysignState {
-    CreatingInstance,
-    KeysignECDSA,
-    KeysignEdDSA,
-    KeysignFinished,
-    ERROR
+internal sealed class KeysignState {
+    data object CreatingInstance : KeysignState()
+    data object KeysignECDSA : KeysignState()
+    data object KeysignEdDSA : KeysignState()
+    data object KeysignFinished : KeysignState()
+    data class Error(val errorMessage: String) : KeysignState()
 }
 
 
-internal sealed interface TransitionTypeUiModel {
-    data class Send(val transactionUiModel: TransactionUiModel) : TransitionTypeUiModel
-    data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransitionTypeUiModel
-    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransitionTypeUiModel
+internal sealed interface TransactionTypeUiModel {
+    data class Send(val transactionUiModel: TransactionUiModel) : TransactionTypeUiModel
+    data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
+    data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) : TransactionTypeUiModel
 }
 
 internal class KeysignViewModel(
@@ -89,21 +89,19 @@ internal class KeysignViewModel(
     private val cosmosApiFactory: CosmosApiFactory,
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
+    private val suiApi: SuiApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
-    val transitionTypeUiModel: TransitionTypeUiModel?,
+    val transactionTypeUiModel: TransactionTypeUiModel?,
 ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
     private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
-    var isThorChainSwap =
-        keysignPayload.swapPayload is SwapPayload.ThorChain
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
-    val errorMessage: MutableState<String> = mutableStateOf("")
     private var _messagePuller: TssMessagePuller? = null
     private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
     val txHash = MutableStateFlow("")
@@ -116,6 +114,12 @@ internal class KeysignViewModel(
     )
     private var featureFlag: FeatureFlagJson? = null
     private var isNavigateToHome: Boolean = false
+
+    val swapProgressLink = txHash.map {
+        explorerLinkRepository.getSwapProgressLink(it, keysignPayload.swapPayload)
+    }.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(), null
+    )
 
     fun startKeysign() {
         viewModelScope.launch {
@@ -164,8 +168,7 @@ internal class KeysignViewModel(
             this._messagePuller?.stop()
         } catch (e: Exception) {
             Timber.e(e)
-            currentState.value = KeysignState.ERROR
-            errorMessage.value = e.message ?: "Unknown error"
+            currentState.value = KeysignState.Error( e.message ?: "Unknown error")
         }
     }
 
@@ -251,6 +254,13 @@ internal class KeysignViewModel(
             Chain.Polkadot -> {
                 polkadotApi.broadcastTransaction(signedTransaction.rawTransaction)
                     ?: signedTransaction.transactionHash
+            }
+
+            Chain.Sui -> {
+                suiApi.executeTransactionBlock(
+                    signedTransaction.rawTransaction,
+                    signedTransaction.signature ?: ""
+                )
             }
         }
         Timber.d("transaction hash: $txHash")
@@ -374,6 +384,13 @@ internal class KeysignViewModel(
             Chain.Polkadot -> {
                 val dotHelper = PolkadotHelper(vault.pubKeyEDDSA)
                 return dotHelper.getSignedTransaction(keysignPayload, signatures)
+            }
+
+            Chain.Sui -> {
+                return SuiHelper.getSignedTransaction(
+                    vault.pubKeyEDDSA,
+                    keysignPayload, signatures
+                )
             }
         }
     }

@@ -10,12 +10,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
+import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.Destination.VaultSettings.Companion.ARG_VAULT_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
-import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.asString
@@ -24,7 +24,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 
 
 @HiltViewModel

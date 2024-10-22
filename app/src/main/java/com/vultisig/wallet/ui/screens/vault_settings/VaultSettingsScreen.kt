@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,7 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.SettingsItem
 import com.vultisig.wallet.ui.components.TopBar
-import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -39,8 +40,11 @@ internal fun VaultSettingsScreen(
         uiModel = uiModel,
         snackBarHostState = snackBarHostState,
         navController = navController,
+        onDetailsClick = viewModel::openDetails,
+        onRenameClick = viewModel::openRename,
         onBackupClick = viewModel::navigateToBackupPasswordScreen,
         onReshareClick = viewModel::navigateToReshareStartScreen,
+        onBiometricsClick = viewModel::navigateToBiometricsScreen,
         onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
     )
 }
@@ -50,10 +54,16 @@ private fun VaultSettingsScreen(
     uiModel: VaultSettingsState,
     snackBarHostState: SnackbarHostState,
     navController: NavController,
+    onDetailsClick: () -> Unit = {},
+    onRenameClick: () -> Unit = {},
     onBackupClick: () -> Unit = {},
     onReshareClick: () -> Unit = {},
+    onBiometricsClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val canAuthenticateBiometric = remember { context.canAuthenticateBiometric() }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(snackBarHostState)
@@ -80,11 +90,8 @@ private fun VaultSettingsScreen(
                 title = stringResource(R.string.vault_settings_details_title),
                 subtitle = stringResource(R.string.vault_settings_details_subtitle),
                 icon = android.R.drawable.ic_menu_info_details,
-            ) {
-                uiModel.id.let { vaultName ->
-                    navController.navigate(Destination.Details(vaultName).route)
-                }
-            }
+                onClick = onDetailsClick,
+            )
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_backup_title),
@@ -96,12 +103,9 @@ private fun VaultSettingsScreen(
             SettingsItem(
                 title = stringResource(R.string.vault_settings_rename_title),
                 subtitle = stringResource(R.string.vault_settings_rename_subtitle),
-                icon = R.drawable.pencil
-            ) {
-                uiModel.id.let { vaultName ->
-                    navController.navigate(Destination.Rename(vaultName).route)
-                }
-            }
+                icon = R.drawable.pencil,
+                onClick = onRenameClick,
+            )
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_reshare_title),
@@ -109,6 +113,15 @@ private fun VaultSettingsScreen(
                 icon = R.drawable.share,
                 onClick = onReshareClick
             )
+
+            if (uiModel.hasFastSign && canAuthenticateBiometric) {
+                SettingsItem(
+                    title = stringResource(R.string.vault_settings_biometrics_title),
+                    subtitle = stringResource(R.string.vault_settings_biometrics_description),
+                    icon = R.drawable.ic_biometric,
+                    onClick = onBiometricsClick,
+                )
+            }
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_delete_title),

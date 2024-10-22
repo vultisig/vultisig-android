@@ -13,6 +13,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
+import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -36,20 +37,25 @@ internal class PolkadotApiImp @Inject constructor(
 
 
     override suspend fun getBalance(address: String): BigInteger {
-        val bodyMap = mapOf(
-            "key" to address
-        )
-        val response = httpClient
-            .post(polkadotBalanceApiUrl) {
-                setBody(bodyMap)
+        try {
+            val bodyMap = mapOf(
+                "key" to address
+            )
+            val response = httpClient
+                .post(polkadotBalanceApiUrl) {
+                    setBody(bodyMap)
+                }
+            val rpcResp = response.body<PolkadotResponseJson>()
+            val respCode = rpcResp.code
+            if (respCode == 10004) {
+                return BigInteger.ZERO
             }
-        val rpcResp = response.body<PolkadotResponseJson>()
-        val respCode = rpcResp.code
-        if (respCode == 10004) {
+            val balance = BigDecimal(rpcResp.data.account.balance)
+            return balance.multiply(BigDecimal(10000000000)).toBigInteger()
+        } catch (e: Exception) {
+            Timber.e("Error fetching Polkadot balance: ${e.message}")
             return BigInteger.ZERO
         }
-        val balance = BigDecimal(rpcResp.data.account.balance)
-        return balance.multiply(BigDecimal(10000000000)).toBigInteger()
     }
 
     override suspend fun getNonce(address: String): BigInteger {

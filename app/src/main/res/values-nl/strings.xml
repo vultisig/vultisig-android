@@ -71,7 +71,7 @@
     <string name="verify_transaction_from_title">Van</string>
     <string name="verify_transaction_to_title">Aan</string>
     <string name="verify_transaction_amount_title">Bedrag</string>
-    <string name="verify_transaction_value">Bedrag in (%s)</string>
+    <string name="verify_transaction_value">Waarde</string>
     <string name="verify_transaction_join_keysign">Doe mee met Keysign</string>
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
@@ -182,10 +182,11 @@
     <string name="biometry_auth_login_button">Inloggen met biometrie</string>
     <string name="swap_form_from_title">Van</string>
     <string name="swap_form_src_amount_hint">Voer bedrag in</string>
-    <string name="swap_form_estimated_fees_title">Geschatte kosten</string>
+    <string name="swap_form_estimated_fees_title">Wisselkosten</string>
     <string name="swap_form_dst_token_title">Aan</string>
     <string name="swap_screen_title">Wisselen</string>
-    <string name="swap_form_gas_title">Gas (auto)</string>
+    <string name="swap_form_gas_title">Netwerkkosten</string>
+    <string name="swap_form_total_fees_title">Totale kosten</string>
     <string name="share_qr_utils_choose_an_app">Kies een app</string>
     <string name="verify_swap_screen_estimated_fees">Geschatte kosten</string>
     <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het bedrag dat ik na de wissel zal ontvangen</string>
@@ -245,7 +246,6 @@
     <string name="token_selection_tokens_title">Tokens</string>
     <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
-    <string name="backup_suggestion_text">Elk apparaat heeft zijn eigen unieke share.  Maak nu een backup van al uw Vault Shares.</string>
     <string name="backup_now">Maak nu een back-up van uw kluis!</string>
     <string name="deposit_screen_title">Borg</string>
     <string name="deposit_screen_amount_title">Hoeveelheid</string>
@@ -267,6 +267,7 @@
     <string name="deposit_form_amount_title">Hoeveelheid</string>
     <string name="share_vault_qr_title">Deel Vault QR</string>
     <string name="share_vault_qr_save" >Opslaan</string>
+    <string name="vault_settings_enable_biometrics_save" >Opslaan</string>
     <string name="share_vault_qr_share" >Delen</string>
     <string name="deposit_form_node_address_title">Knooppuntadres</string>
     <string name="deposit_form_provider_title">Provider (optioneel)</string>
