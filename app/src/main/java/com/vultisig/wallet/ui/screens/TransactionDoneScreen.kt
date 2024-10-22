@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -75,85 +78,95 @@ internal fun TransactionDoneView(
 ) {
     val uriHandler = LocalUriHandler.current
     BackHandler(onBack = onBack)
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(all = 16.dp),
-    ) {
-        FormCard {
-            Column(
+
+    Scaffold(
+        containerColor = Theme.colors.oxfordBlue800,
+        content = { contentPadding ->
+            FormCard(
                 modifier = Modifier
-                    .padding(all = 12.dp)
-                    .fillMaxWidth(),
+                    .padding(contentPadding)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .padding(all = 12.dp)
+                        .fillMaxWidth(),
                 ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.transaction_done_form_title),
+                            color = Theme.colors.neutral0,
+                            style = Theme.montserrat.heading5,
+                        )
+
+
+                        val clipboard = LocalClipboardManager.current
+
+                        UiIcon(
+                            drawableResId = R.drawable.copy,
+                            size = 20.dp,
+                            onClick = {
+                                clipboard.setText(AnnotatedString(transactionLink))
+                            }
+                        )
+
+
+                        UiIcon(
+                            drawableResId = R.drawable.ic_link,
+                            size = 20.dp,
+                            onClick = {
+                                uriHandler.openUri(transactionLink)
+                            }
+                        )
+                    }
+
+                    UiSpacer(size = 16.dp)
+
                     Text(
-                        text = stringResource(R.string.transaction_done_form_title),
-                        color = Theme.colors.neutral0,
-                        style = Theme.montserrat.heading5,
+                        text = transactionHash,
+                        color = Theme.colors.turquoise800,
+                        style = Theme.menlo.subtitle3,
                     )
 
 
-                    val clipboard = LocalClipboardManager.current
-
-                    UiIcon(
-                        drawableResId = R.drawable.copy,
-                        size = 20.dp,
-                        onClick = {
-                            clipboard.setText(AnnotatedString(transactionLink))
-                        }
-                    )
-
-
-                    UiIcon(
-                        drawableResId = R.drawable.ic_link,
-                        size = 20.dp,
-                        onClick = {
-                            uriHandler.openUri(transactionLink)
-                        }
-                    )
-                }
-
-                UiSpacer(size = 16.dp)
-
-                Text(
-                    text = transactionHash,
-                    color = Theme.colors.turquoise800,
-                    style = Theme.menlo.subtitle3,
-                )
-
-                when (transactionTypeUiModel) {
+                            when (transactionTypeUiModel) {
                     is TransactionTypeUiModel.Deposit ->
                         DepositTransactionDetail(transactionTypeUiModel.depositTransactionUiModel)
 
-                    is TransactionTypeUiModel.Send ->
-                        TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
 
-                    is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
-                        swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
-                        progressLink = progressLink,
+                        is TransactionTypeUiModel.Send ->
+                            TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
+
+                        is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
+                            swapTransaction =transactionTypeUiModel.swapTransactionUiModel,
+                            progressLink = progressLink,
                     ) { progressLink ->
                         uriHandler.openUri(progressLink)
+                        }
+
+                        else -> Unit
                     }
-                    else -> Unit
+
                 }
-
             }
-        }
-        UiSpacer(weight = 1f)
-
-        MultiColorButton(
-            text = stringResource(R.string.transaction_done_complete),
-            textColor = Theme.colors.oxfordBlue800,
-            minHeight = 44.dp,
-            modifier = Modifier
-                .fillMaxWidth(),
-            onClick = onComplete,
-        )
-    }
+        },
+        bottomBar = {
+            MultiColorButton(
+                text = stringResource(R.string.transaction_done_complete),
+                textColor = Theme.colors.oxfordBlue800,
+                minHeight = 44.dp,
+                modifier = Modifier
+                    .fillMaxWidth(),
+                onClick = onComplete,
+            )
+        },
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(all = 16.dp),
+    )
 }
 
 @Composable
