@@ -291,7 +291,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         loadQrPainter(keygenPayload)
 
-        if (!isRelayEnabled)
+        if (!isRelayEnabled && password.isNullOrEmpty())
         // when relay is disabled, start the mediator service
             startMediatorService(context)
         else {
@@ -455,8 +455,12 @@ internal class KeygenFlowViewModel @Inject constructor(
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (uiState.value.networkOption == option) return
-        uiState.update { it.copy(networkOption = option) }
-        serverAddress = when (option) {
+        var newOption = option
+        if (!password.isNullOrEmpty()) {
+            newOption = NetworkPromptOption.INTERNET
+        }
+        uiState.update { it.copy(networkOption = newOption) }
+        serverAddress = when (newOption) {
             NetworkPromptOption.LOCAL -> {
                 "http://127.0.0.1:18080"
             }

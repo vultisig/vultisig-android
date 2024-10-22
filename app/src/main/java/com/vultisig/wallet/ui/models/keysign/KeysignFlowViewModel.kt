@@ -395,7 +395,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 
 
         addressProvider.update(_keysignMessage.value)
-        if (!isRelayEnabled) {
+        if (!isRelayEnabled && password.isNullOrEmpty()) {
             startMediatorService(context)
         } else {
             _serverAddress = Endpoints.VULTISIG_RELAY
@@ -552,6 +552,10 @@ internal class KeysignFlowViewModel @Inject constructor(
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (networkOption.value == option) return
+        // when fastvault / active vault , network option is always internet
+        if (!password.isNullOrEmpty()) {
+            networkOption.value = NetworkPromptOption.INTERNET
+        }
         networkOption.value = option
         _serverAddress = when (option) {
             NetworkPromptOption.LOCAL -> {
