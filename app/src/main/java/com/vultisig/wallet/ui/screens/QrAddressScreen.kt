@@ -60,6 +60,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
+                modifier = Modifier.padding(horizontal = 16.dp),
                 text = address ?: "",
                 style = Theme.menlo.body1
             )
