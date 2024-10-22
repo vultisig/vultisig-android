@@ -172,7 +172,7 @@ internal class SwapFormViewModel @Inject constructor(
                 ?.toBigInteger()
 
             val selectedSrcBalance = selectedSrc.account.tokenValue?.value ?: return
-
+            if (srcAmountInt == BigInteger.ZERO) return
             val srcTokenValue = srcAmountInt
                 ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
                 ?: return
@@ -423,7 +423,6 @@ internal class SwapFormViewModel @Inject constructor(
             val buffer = selectedSrc.value
             selectedSrc.value = selectedDst.value
             selectedDst.value = buffer
-            srcAmountState.setTextAndPlaceCursorAtEnd("0")
         }
 
     }
@@ -582,6 +581,9 @@ internal class SwapFormViewModel @Inject constructor(
                         ?.toBigInteger()
 
                     try {
+                        if (srcTokenValue == null || srcTokenValue <= BigInteger.ZERO) {
+                            throw SwapException.AmountCannotBeZero("Amount must be positive")
+                        }
                         if (srcToken == dstToken) {
                             throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
                         }
