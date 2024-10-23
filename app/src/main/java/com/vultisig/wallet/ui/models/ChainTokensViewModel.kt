@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
@@ -69,6 +70,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
+    private val discoverTokenUseCase: DiscoverTokenUseCase,
 
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val accountsRepository: AccountsRepository,
@@ -182,6 +184,8 @@ internal class ChainTokensViewModel @Inject constructor(
     }
 
     private fun loadData() {
+        discoverTokenUseCase(vaultId, chainRaw)
+
         loadDataJob?.cancel()
         loadDataJob = viewModelScope.launch {
             updateRefreshing(true)
