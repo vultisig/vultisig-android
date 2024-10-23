@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,9 +51,13 @@ internal fun VaultDetailScreen(
                 .padding(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            VaultDetailScreenItem(
+            VaultDetailMainScreenItem(
                 stringResource(R.string.vault_detail_screen_vault_name),
                 state.name
+            )
+            VaultDetailMainScreenItem(
+                stringResource(R.string.vault_details_screen_vault_part),
+                stringResource(R.string.vault_details_screen_vault_part_desc, state.vaultPart, state.vaultSize),
             )
             VaultDetailScreenItem(
                 stringResource(R.string.vault_detail_screen_ecdsa),
@@ -73,8 +78,10 @@ internal fun VaultDetailScreen(
                 style = Theme.montserrat.subtitle2.copy(textAlign = TextAlign.Center),
             )
 
-            state.deviceList.map {
-                VaultDetailScreenItem(it)
+            state.deviceList.forEachIndexed { index, it ->
+                VaultDetailScreenItem(
+                    propValue = stringResource(R.string.vault_details_screen_signer, index, it),
+                )
             }
         }
     }
@@ -82,7 +89,21 @@ internal fun VaultDetailScreen(
 }
 
 @Composable
-private fun VaultDetailScreenItem(propName: String, propValue: String? = null) {
+private fun VaultDetailMainScreenItem(propName: String? = null, propValue: String? = null) =
+    VaultDetailScreenItem(
+        propName,
+        propValue,
+        Theme.montserrat.heading5,
+        Theme.montserrat.subtitle1,
+    )
+
+@Composable
+private fun VaultDetailScreenItem(
+    propName: String? = null,
+    propValue: String? = null,
+    nameStyle: TextStyle = Theme.menlo.body2,
+    valueStyle: TextStyle = Theme.menlo.overline2,
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -96,17 +117,18 @@ private fun VaultDetailScreenItem(propName: String, propValue: String? = null) {
             modifier = Modifier.padding(all = if (propValue != null) 12.dp else 18.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-
-            Text(
-                text = propName,
-                color = Theme.colors.neutral100,
-                style = Theme.montserrat.subtitle2,
-            )
+            propName?.let {
+                Text(
+                    text = propName,
+                    color = Theme.colors.neutral0,
+                    style = nameStyle,
+                )
+            }
             propValue?.let {
                 Text(
                     text = propValue,
-                    color = Theme.colors.neutral100,
-                    style = Theme.menlo.overline2,
+                    color = Theme.colors.neutral300,
+                    style = valueStyle,
                 )
             }
         }

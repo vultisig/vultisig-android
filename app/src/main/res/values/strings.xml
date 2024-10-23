@@ -126,8 +126,8 @@
     <string name="signing_error_signing_error_please_try_again">Signing Error. Please try again.</string>
     <string name="signing_error_try_again">Try Again</string>
     <string name="vault_detail_screen_vault_name">Vault Name</string>
-    <string name="vault_detail_screen_ecdsa">ECDSA</string>
-    <string name="vault_detail_screen_eddsa">EDDSA</string>
+    <string name="vault_detail_screen_ecdsa">ECDSA Key</string>
+    <string name="vault_detail_screen_eddsa">EDDSA Key</string>
     <string name="welcome_screen_next">Next</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
@@ -162,7 +162,7 @@
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>
-    <string name="s_of_s_vault">%1$s of %2$s vault</string>
+    <string name="s_of_s_vault">%1$s of %2$s Vault Setup</string>
     <string name="scan_qr_screen_return_vault">Return Vault</string>
     <string name="naming_vault_screen_continue">Continue</string>
     <string name="naming_vault_screen_setup">Setup</string>
@@ -449,6 +449,9 @@
     <string name="eth_gas_settings_gas_limit_title" translatable="false">Gas Limit</string>
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
+    <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
+    <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
+    <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
     <string name="register_vault_screen_title" translatable="false">Register Vault</string>
     <string name="register_vault_screen_step_1" translatable="false">1. Save your Vault QR Code</string>
