@@ -208,7 +208,7 @@ private fun ColumnScope.SwapTransactionDetail(
         if (swapTransaction.hasConsentAllowance) {
             AddressField(
                 title = stringResource(R.string.verify_approve_amount_title),
-                address = stringResource(R.string.verify_approve_amount_unlimited),
+                address = swapTransaction.srcTokenValue,
             )
         }
 

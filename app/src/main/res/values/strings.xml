@@ -255,7 +255,7 @@
     <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_tokens_title">Tokens</string>
     <string name="token_selection_search_hint">Search…</string>
-    <string name="verify_swap_agree_allowance">I agree with providing unlimited ERC20 allowance</string>
+    <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
     <string name="backup_now">Backup your vault now!</string>
     <string name="deposit_screen_title">Function</string>
     <string name="deposit_screen_amount_title">Amount</string>
