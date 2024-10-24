@@ -112,7 +112,7 @@ internal class VaultRepositoryImpl @Inject constructor(
             pubKeyEDDSA = vault.vault.pubKeyEddsa,
             hexChainCode = vault.vault.hexChainCode,
             localPartyID = vault.vault.localPartyID,
-            signers = vault.signers.map { it.title },
+            signers = vault.signers.sortedBy { it.index }.map { it.title },
             resharePrefix = vault.vault.resharePrefix,
             keyshares = vault.keyShares.map {
                 KeyShare(
@@ -157,10 +157,11 @@ internal class VaultRepositoryImpl @Inject constructor(
                     keyShare = it.keyShare,
                 )
             },
-            signers = vault.signers.map {
+            signers = vault.signers.mapIndexed { index, signer ->
                 SignerEntity(
+                    index = index,
                     vaultId = vaultId,
-                    title = it
+                    title = signer,
                 )
             },
             coins = vault.coins.map {

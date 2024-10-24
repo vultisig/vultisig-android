@@ -36,7 +36,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         FolderEntity::class,
         FolderOrderEntity::class,
     ],
-    version = 16,
+    version = 17,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
