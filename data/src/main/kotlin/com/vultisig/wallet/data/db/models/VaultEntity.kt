@@ -67,6 +67,9 @@ data class KeyShareEntity(
     ]
 )
 data class SignerEntity(
+    @ColumnInfo("index")
+    val index: Int,
+
     @ColumnInfo("vaultId")
     val vaultId: String,
 
