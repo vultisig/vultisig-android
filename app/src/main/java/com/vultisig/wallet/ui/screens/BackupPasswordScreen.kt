@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -33,6 +36,7 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
+import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.vultiGradient
 import com.vultisig.wallet.ui.models.BackupPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -139,6 +143,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         horizontal = 12.dp,
                         vertical = 16.dp,
@@ -189,6 +194,16 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             )
                         }
                     })
+                UiSpacer(size = 12.dp)
+                FormTextFieldCard(
+                    title = stringResource(
+                        R.string.backup_password_optional_password_protection_hint
+                    ),
+                    hint = stringResource(R.string.backup_password_screen_hint_field),
+                    error = uiState.hintPasswordErrorMessage,
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = viewModel.hintPasswordTextFieldState,
+                )
             }
         }
     }
