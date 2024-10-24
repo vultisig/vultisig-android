@@ -454,12 +454,12 @@
     <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
     <string name="register_vault_screen_title" translatable="false">Register Vault</string>
-    <string name="register_vault_screen_step_1" translatable="false">1. Save your Vault QR Code</string>
     <string name="register_vault_screen_step_3" translatable="false">3. Upload your Vault QR Code</string>
     <string name="register_vault_screen_step_4" translatable="false">4. Track your VULTIES (Vault Points) !</string>
     <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
-    <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
+    <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
+    <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
 </resources>
