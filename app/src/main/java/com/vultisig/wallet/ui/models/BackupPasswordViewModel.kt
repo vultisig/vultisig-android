@@ -41,6 +41,7 @@ import javax.inject.Inject
 internal data class BackupPasswordState(
     val confirmPasswordErrorMessage: UiText? = null,
     val passwordErrorMessage: UiText? = null,
+    val hintPasswordErrorMessage: UiText? = null,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val disableEncryption: Boolean = false,
@@ -62,6 +63,7 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     val passwordTextFieldState = TextFieldState()
     val confirmPasswordTextFieldState = TextFieldState()
+    val hintPasswordTextFieldState = TextFieldState()
 
     private val vaultId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.BackupPassword.ARG_VAULT_ID))
@@ -192,6 +194,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     fun saveContentToUriResult(uri: Uri, content: String) {
         if (isFileExtensionValid(uri)) {
             val isSuccess = context.saveContentToUri(uri, content)
+            if (isSuccess) saveHintToDataStore(uri)
             completeBackupVault(isSuccess)
         } else {
             viewModelScope.launch {
@@ -206,6 +209,16 @@ internal class BackupPasswordViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private fun saveHintToDataStore(uri: Uri) = viewModelScope.launch {
+        if (hintPasswordTextFieldState.text.isNotEmpty() && passwordTextFieldState.text.isNotEmpty()) {
+            val fileName = uri.fileName(context)
+            vaultDataStoreRepository.setBackupHint(
+                fileName,
+                hintPasswordTextFieldState.text.toString().substring(0, 50)
+            )
         }
     }
 
