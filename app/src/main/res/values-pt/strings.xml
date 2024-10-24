@@ -216,7 +216,6 @@
     <string name="swap_screen_provider_title">Provedor</string>
     <string name="swap_form_minimum_amount">Valor de swap muito pequeno. Quantidade recomendada %1$s %2$s</string>
     <string name="verify_approve_amount_title">Valor a aprovar</string>
-    <string name="verify_approve_amount_unlimited">ILIMITADO</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_not_supported">O tipo de ficheiro não é compatível</string>
     <string name="backup_password_screen_confirm_password_error_message">Certifique-se de que as suas palavras-passe correspondem</string>

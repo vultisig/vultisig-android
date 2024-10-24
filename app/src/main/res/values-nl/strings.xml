@@ -227,7 +227,6 @@
     <string name="swap_screen_provider_title">Leverancier</string>
     <string name="swap_form_minimum_amount">ProvideraSwap bedrag te klein. Aanbevolen bedrag %1$s %2$s</string>
     <string name="verify_approve_amount_title">Bedrag om goed te keuren</string>
-    <string name="verify_approve_amount_unlimited">ONBEPERKT</string>
     <string name="backup_password_screen_title">Back-up</string>
     <string name="backup_password_screen_confirm_password_error_message">Zorg ervoor dat uw wachtwoorden overeenkomen</string>
     <string name="import_file_screen_password_error">Wachtwoord is niet correct.</string>

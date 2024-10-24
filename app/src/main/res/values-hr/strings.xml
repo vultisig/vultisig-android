@@ -216,7 +216,6 @@
     <string name="swap_screen_provider_title">Davatelj</string>
     <string name="swap_form_minimum_amount">Iznos zamjene premali. Preporučena količina %1$s %2$s</string>
     <string name="verify_approve_amount_title">Iznos za odobrenje</string>
-    <string name="verify_approve_amount_unlimited">NEOGRANIČEN</string>
     <string name="backup_password_screen_title">Sigurnosna kopija</string>
     <string name="backup_password_screen_confirm_password_error_message">Provjerite podudaraju li se vaše lozinke</string>
     <string name="import_file_screen_password_error">Lozinka nije ispravna.</string>
