@@ -216,7 +216,6 @@
     <string name="swap_screen_provider_title">Fornitrice</string>
     <string name="swap_form_minimum_amount">Importo dello swap troppo piccolo. Importo consigliato %1$s %2$s</string>
     <string name="verify_approve_amount_title">Importo da approvare</string>
-    <string name="verify_approve_amount_unlimited">ILLIMITATA</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="backup_password_screen_confirm_password_error_message">Assicurati che le tue password corrispondano</string>
     <string name="import_file_screen_password_error">La password non è corretta.</string>

@@ -227,7 +227,6 @@
     <string name="swap_screen_provider_title">Провайдер</string>
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
     <string name="verify_approve_amount_title">Сумма для утверждения</string>
-    <string name="verify_approve_amount_unlimited">НЕОГРАНИЧЕННЫЙ</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
     <string name="import_file_not_supported">Тип файла не поддерживается.</string>
     <string name="backup_password_screen_confirm_password_error_message">Пожалуйста, убедитесь, что ваши пароли совпадают.</string>
