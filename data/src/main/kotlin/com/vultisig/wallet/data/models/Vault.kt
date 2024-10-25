@@ -28,5 +28,5 @@ fun Vault.containsServerSigner(): Boolean {
 }
 
 fun Vault.isFastVault(): Boolean {
-    return containsServerSigner() && signers.size == 2
+    return containsServerSigner()
 }

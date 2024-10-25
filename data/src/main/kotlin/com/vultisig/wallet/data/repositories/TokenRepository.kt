@@ -2,12 +2,15 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
+import com.vultisig.wallet.data.api.ThorBalanceApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
+import com.vultisig.wallet.data.api.models.ThorBalancesResponseJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.Coins.SupportedCoins
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.oneInchChainId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -40,6 +43,7 @@ interface TokenRepository {
 internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
+    private val balanceApi: ThorBalanceApi,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
         builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
@@ -99,21 +103,68 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
-        // cant get this for non EVM chains right now
-        if (chain.standard != TokenStandard.EVM) return emptyList()
-        // 1inch api does not support cronos chain and blast chain
-        if (chain in listOf<Chain>(Chain.CronosChain, Chain.Blast)) return emptyList()
+        return when (chain) {
+            Chain.BscChain, Chain.Avalanche -> getBalanceByRoute(chain, address)
+            Chain.Solana -> getBalanceByRoute(chain, address)
 
-        Timber.d("getTokensWithBalance(chain = $chain, address = $address)")
-        val contractsWithBalance = oneInchApi.getContractsWithBalance(chain, address)
-        if (contractsWithBalance.isEmpty()) return emptyList()
+            Chain.Ethereum -> balanceApi.getEthBalances(null, address)
+                .toCoins(chain)
+            Chain.Arbitrum -> balanceApi.getEthBalances(chain.oneInchChainId(), address)
+                .toCoins(chain)
 
-        delay(1000) //TODO remove when we will use api without rate limit
+            else -> {
+                // cant get this for non EVM chains right now
+                if (chain.standard != TokenStandard.EVM) return emptyList()
+                // 1inch api does not support cronos chain and blast chain
+                if (chain in listOf(Chain.CronosChain, Chain.Blast)) return emptyList()
 
-        val oneInchTokensWithBalance = oneInchApi.getTokensByContracts(chain, contractsWithBalance)
-        return oneInchTokensWithBalance
-            .toCoins(chain)
+                Timber.d("getTokensWithBalance(chain = $chain, address = $address)")
+                val contractsWithBalance = oneInchApi.getContractsWithBalance(chain, address)
+                if (contractsWithBalance.isEmpty()) return emptyList()
+
+                delay(1000) //TODO remove when we will use api without rate limit
+
+                val oneInchTokensWithBalance =
+                    oneInchApi.getTokensByContracts(chain, contractsWithBalance)
+                return oneInchTokensWithBalance
+                    .toCoins(chain)
+            }
+        }
     }
+
+    private suspend fun getBalanceByRoute(
+        chain: Chain,
+        address: String,
+    ): List<Coin> =
+        balanceApi.getBalances(chain.toThorWalletChainName(), address)
+            .toCoins(chain)
+
+    private fun Chain.toThorWalletChainName(): String = when (this) {
+        Chain.BscChain -> "bsc"
+        Chain.Avalanche -> "avalanche"
+        Chain.Solana -> "solana"
+        Chain.Sui -> "sui"
+        else -> error("Chain $this is not supported by ThorWallet API")
+    }
+
+    private fun ThorBalancesResponseJson.toCoins(chain: Chain): List<Coin> =
+        balances.map {
+                val asset = it.asset
+                val supportedCoin = SupportedCoins.firstOrNull { coin ->
+                    coin.id == "${asset.symbol}-${chain.id}"
+                }
+                Coin(
+                    contractAddress = asset.contractAddress,
+                    chain = chain,
+                    ticker = asset.ticker,
+                    logo = asset.icon ?: "",
+                    decimal = asset.decimals,
+                    isNativeToken = supportedCoin?.isNativeToken?: false,
+                    priceProviderID = "",
+                    address = "",
+                    hexPublicKey = "",
+                )
+            }
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
 

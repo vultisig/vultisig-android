@@ -216,7 +216,6 @@
     <string name="swap_screen_provider_title">Anbieterin</string>
     <string name="swap_form_minimum_amount">Swap-Betrag zu klein. Empfohlener Betrag %1$s %2$s</string>
     <string name="verify_approve_amount_title">Zu genehmigender Betrag</string>
-    <string name="verify_approve_amount_unlimited">UNBEGRENZT</string>
     <string name="backup_password_screen_title">Sicherung</string>
     <string name="backup_password_screen_confirm_password_error_message">Bitte stellen Sie sicher, dass Ihre Passwörter übereinstimmen</string>
     <string name="import_file_screen_password_error">Das Passwort ist nicht korrekt.</string>
@@ -235,7 +234,6 @@
     <string name="token_selection_tokens_title">Token</string>
     <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
-    <string name="backup_suggestion_text">Jedes Gerät hat seine eigene, eindeutige Freigabe.</string>
     <string name="backup_now">Sichern Sie jetzt Ihren Tresor!</string>
     <string name="deposit_screen_title">Bitte sichern Sie jetzt alle Ihre Vault-Freigaben.</string>
     <string name="deposit_screen_amount_title">Sichern Sie jetzt Ihren Tresor!</string>

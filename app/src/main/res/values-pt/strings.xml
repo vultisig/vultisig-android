@@ -216,7 +216,6 @@
     <string name="swap_screen_provider_title">Provedor</string>
     <string name="swap_form_minimum_amount">Valor de swap muito pequeno. Quantidade recomendada %1$s %2$s</string>
     <string name="verify_approve_amount_title">Valor a aprovar</string>
-    <string name="verify_approve_amount_unlimited">ILIMITADO</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_not_supported">O tipo de ficheiro não é compatível</string>
     <string name="backup_password_screen_confirm_password_error_message">Certifique-se de que as suas palavras-passe correspondem</string>
@@ -236,7 +235,6 @@
     <string name="token_selection_tokens_title">Fichas</string>
     <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
-    <string name="backup_suggestion_text">Cada dispositivo tem a sua própria partilha exclusiva.</string>
     <string name="backup_now">Faça já o backup do seu cofre!</string>
     <string name="deposit_screen_title">Depósito</string>
     <string name="deposit_screen_amount_title">Montante</string>

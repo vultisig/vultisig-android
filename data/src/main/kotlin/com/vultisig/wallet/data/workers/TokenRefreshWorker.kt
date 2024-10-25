@@ -58,7 +58,8 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                         } catch (e: Exception) {
                             Timber.e(e)
                         }
-                        delay(1000) //TODO remove when we will use api without rate limit
+                        if (chains.size > 1 && vaults.size > 1)
+                            delay(1000) //TODO remove when we will use api without rate limit
                     }
                 }
             return Result.success()

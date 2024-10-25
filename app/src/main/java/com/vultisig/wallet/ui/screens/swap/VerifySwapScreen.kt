@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.CheckField
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -29,7 +30,6 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
 import com.vultisig.wallet.ui.screens.send.AddressField
-import com.vultisig.wallet.ui.screens.send.CheckField
 import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -191,7 +191,7 @@ private fun VerifySwapScreen(
                     if (swapTransactionUiModel.hasConsentAllowance) {
                         AddressField(
                             title = stringResource(R.string.verify_approve_amount_title),
-                            address = stringResource(R.string.verify_approve_amount_unlimited),
+                            address = swapTransactionUiModel.srcTokenValue,
                         )
                     }
 

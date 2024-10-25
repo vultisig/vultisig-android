@@ -119,7 +119,7 @@ internal class KeysignShareViewModel @Inject constructor(
                         vaultLocalPartyID = vault.localPartyID,
                         memo = transaction.memo,
                         approvePayload = if (transaction.isApprovalRequired) ERC20ApprovePayload(
-                            amount = SwapTransaction.maxAllowance,
+                            amount = transaction.srcTokenValue.value,
                             spender = transaction.dstAddress,
                         )
                         else null,

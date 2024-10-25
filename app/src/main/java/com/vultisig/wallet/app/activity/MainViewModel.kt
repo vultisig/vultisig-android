@@ -49,7 +49,6 @@ internal class MainViewModel @Inject constructor(
             if (vaultRepository.hasVaults()) {
                 _startDestination.value = Destination.Home().route
                 _isLoading.value = false
-                discoverToken(null ,null)
             } else {
                 val isUserPassedOnboarding = repository.readOnBoardingState()
                     .first()

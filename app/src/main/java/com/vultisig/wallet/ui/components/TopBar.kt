@@ -22,7 +22,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.closestActivityOrNull
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun TopBar(
     navController: NavController,
@@ -34,6 +33,30 @@ internal fun TopBar(
     onEndIconClick: () -> Unit = {},
 ) {
     val activity = LocalContext.current.closestActivityOrNull()
+    val navStartIconClick = onStartIconClick?: {
+        if (!navController.popBackStack())
+            activity?.finish()
+    }
+    TopBarWithoutNav(
+        centerText = centerText,
+        modifier = modifier,
+        startIcon = startIcon,
+        endIcon = endIcon,
+        onStartIconClick = navStartIconClick,
+        onEndIconClick = onEndIconClick,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun TopBarWithoutNav(
+    centerText: String,
+    modifier: Modifier = Modifier,
+    @DrawableRes startIcon: Int? = null,
+    @DrawableRes endIcon: Int? = null,
+    onStartIconClick: () -> Unit = {},
+    onEndIconClick: () -> Unit = {},
+) {
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -52,10 +75,7 @@ internal fun TopBar(
             startIcon?.let {
                 IconButton(
                     onClick = clickOnce {
-                        onStartIconClick?.invoke() ?: run {
-                            if (!navController.popBackStack())
-                                activity?.finish()
-                        }
+                        onStartIconClick.invoke()
                     }
                 ) {
                     Icon(

@@ -216,7 +216,6 @@
     <string name="swap_screen_provider_title">Proveedora</string>
     <string name="swap_form_minimum_amount">El monto de intercambio es demasiado pequeño. El monto recomendado es %1$s %2$s</string>
     <string name="verify_approve_amount_title">Monto a aprobar</string>
-    <string name="verify_approve_amount_unlimited">ILIMITADA</string>
     <string name="backup_password_screen_title">Respaldo</string>
     <string name="import_file_not_supported">El tipo de archivo no es compatible</string>
     <string name="backup_password_screen_confirm_password_error_message">Asegúrese de que sus contraseñas coincidan</string>
@@ -236,7 +235,6 @@
     <string name="token_selection_tokens_title">Fichas</string>
     <string name="token_selection_search_hint">Buscar…</string>
     <string name="verify_swap_agree_allowance">Estoy de acuerdo con proporcionar una asignación ilimitada de ERC20</string>
-    <string name="backup_suggestion_text">Cada dispositivo tiene su propio recurso compartido exclusivo. Realice una copia de seguridad de todos sus recursos compartidos de Vault ahora.</string>
     <string name="backup_now">¡Haga una copia de seguridad de su bóveda ahora!</string>
     <string name="deposit_screen_title">Depósito</string>
     <string name="deposit_screen_amount_title">Cantidad</string>

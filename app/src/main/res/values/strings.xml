@@ -126,8 +126,8 @@
     <string name="signing_error_signing_error_please_try_again">Signing Error. Please try again.</string>
     <string name="signing_error_try_again">Try Again</string>
     <string name="vault_detail_screen_vault_name">Vault Name</string>
-    <string name="vault_detail_screen_ecdsa">ECDSA</string>
-    <string name="vault_detail_screen_eddsa">EDDSA</string>
+    <string name="vault_detail_screen_ecdsa">ECDSA Key</string>
+    <string name="vault_detail_screen_eddsa">EDDSA Key</string>
     <string name="welcome_screen_next">Next</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
@@ -162,7 +162,7 @@
     <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>
-    <string name="s_of_s_vault">%1$s of %2$s vault</string>
+    <string name="s_of_s_vault">%1$s of %2$s Vault Setup</string>
     <string name="scan_qr_screen_return_vault">Return Vault</string>
     <string name="naming_vault_screen_continue">Continue</string>
     <string name="naming_vault_screen_setup">Setup</string>
@@ -239,7 +239,6 @@
     <string name="swap_for_provider_1inch" translatable="false">1Inch</string>
     <string name="swap_for_provider_li_fi" translatable="false">LI.FI</string>
     <string name="verify_approve_amount_title">Amount to approve</string>
-    <string name="verify_approve_amount_unlimited">UNLIMITED</string>
     <string name="backup_password_screen_title">Backup</string>
     <string name="import_file_screen_password_error">Password is not correct.</string>
     <string name="backup_password_optional_password_protection">Optional password protection of your Vault</string>
@@ -255,8 +254,7 @@
     <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_tokens_title">Tokens</string>
     <string name="token_selection_search_hint">Search…</string>
-    <string name="verify_swap_agree_allowance">I agree with providing unlimited ERC20 allowance</string>
-    <string name="backup_suggestion_text">Each device has its own unique share.\n\nPlease Backup all of your Vault Shares now.</string>
+    <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
     <string name="backup_now">Backup your vault now!</string>
     <string name="deposit_screen_title">Function</string>
     <string name="deposit_screen_amount_title">Amount</string>
@@ -289,7 +287,6 @@
     <string name="deposit_message_deposit_title">%s message deposit</string>
     <string name="deposit_form_custom_memo_title">Custom memo</string>
     <string name="transaction_swap_tracking_link">Swap tracking link</string>
-    <string name="transaction_done_track_ninerealms" translatable="false">https://track.ninerealms.com/%1$s</string>
     <string name="swap_screen_same_asset_error_message">Source and destination assets cannot be the same. </string>
     <string name="address_book_toolbar_title">Address Book</string>
     <string name="address_book_settings_title">Address Book</string>
@@ -422,6 +419,11 @@
     <string name="qr_title_join_keygen" translatable="false">Join Keygen</string>
     <string name="qr_title_join_keysign" translatable="false">Join Keysign</string>
     <string name="qr_title_join_swap_keysign" translatable="false">Join Swap</string>
+    <string name="backup_suggestion_header" translatable="false">Backups need to be done on every device in Vultisig</string>
+    <string name="backup_suggestion_body" translatable="false">Each device has its own unique vault share, which are needed for recovery</string>
+    <string name="backup_suggestion_warning" translatable="false">Back up your vault on every device individually!</string>
+    <string name="backup_suggestion_skip_backup" translatable="false">Skip Backup</string>
+    <string name="backup_suggestion_skip_consent" translatable="false">I understand that by skipping the backup I may lose access to my funds.</string>
     <string name="qr_title_join_keygen_description" translatable="false">Scan with devices to join the\nvault generation</string>
     <string name="qr_title_join_keysign_description" translatable="false">Vault: %s\nAmount: %s\n To: %s</string>
     <string name="qr_title_join_keysign_swap_description" translatable="false">Vault: %s\nFrom: %s\n To: %s</string>
@@ -446,14 +448,17 @@
     <string name="eth_gas_settings_gas_limit_title" translatable="false">Gas Limit</string>
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
+    <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
+    <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
+    <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
     <string name="register_vault_screen_title" translatable="false">Register Vault</string>
-    <string name="register_vault_screen_step_1" translatable="false">1. Save your Vault QR Code</string>
     <string name="register_vault_screen_step_3" translatable="false">3. Upload your Vault QR Code</string>
     <string name="register_vault_screen_step_4" translatable="false">4. Track your VULTIES (Vault Points) !</string>
     <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
-    <string name="register_vault_screen_step_1_top_right" translatable="false">(Top right of this screen)</string>
+    <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
+    <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
 </resources>

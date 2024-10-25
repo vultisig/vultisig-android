@@ -227,7 +227,6 @@
     <string name="swap_screen_provider_title">Провайдер</string>
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
     <string name="verify_approve_amount_title">Сумма для утверждения</string>
-    <string name="verify_approve_amount_unlimited">НЕОГРАНИЧЕННЫЙ</string>
     <string name="backup_password_screen_title">Резервное копирование</string>
     <string name="import_file_not_supported">Тип файла не поддерживается.</string>
     <string name="backup_password_screen_confirm_password_error_message">Пожалуйста, убедитесь, что ваши пароли совпадают.</string>
@@ -247,7 +246,6 @@
     <string name="token_selection_tokens_title">Жетоны</string>
     <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я согласен с предоставлением неограниченного лимита ERC20</string>
-    <string name="backup_suggestion_text">У каждого устройства есть свой уникальный ресурс.</string>
     <string name="backup_now">Сделайте резервную копию своего хранилища прямо сейчас!</string>
     <string name="deposit_screen_title">Депозит</string>
     <string name="deposit_screen_amount_title">Количество</string>

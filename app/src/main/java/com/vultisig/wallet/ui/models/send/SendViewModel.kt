@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
@@ -13,6 +14,8 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -23,10 +26,13 @@ internal class SendViewModel @Inject constructor(
     val addressProvider: AddressProvider,
     private val savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
+    private val advanceGasUiRepository: AdvanceGasUiRepository,
 ) : ViewModel() {
     val dst = sendNavigator.destination
     private var isNavigateToHome: Boolean = false
     val currentVault: MutableState<Vault?> = mutableStateOf(null)
+    val isGasSettingAvailable = advanceGasUiRepository.shouldShowAdvanceGasSettingsIcon
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(),false)
 
     init {
         viewModelScope.launch {
@@ -39,6 +45,12 @@ internal class SendViewModel @Inject constructor(
 
     fun enableNavigationToHome() {
         isNavigateToHome = true
+    }
+
+    fun onGasSettingsClick() {
+        viewModelScope.launch {
+            advanceGasUiRepository.showSettings()
+        }
     }
 
     fun navigateToHome(useMainNavigator: Boolean) {

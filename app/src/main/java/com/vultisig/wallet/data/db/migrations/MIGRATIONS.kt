@@ -2,8 +2,6 @@ package com.vultisig.wallet.data.db.migrations
 
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import androidx.work.impl.Migration_15_16
-import com.vultisig.wallet.data.models.Chain
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
@@ -278,6 +276,33 @@ val MIGRATION_15_16=object :Migration(15,16) {
             WHERE id = 'WETH-BSC'
             """.trimIndent()
         )
+    }
+}
+
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `signer_new` (
+                `index` INT NOT NULL,
+                `vaultId` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                PRIMARY KEY(`vaultId`, `title`),
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            )
+        """.trimIndent())
+
+        db.execSQL("""
+            INSERT INTO signer_new (`index`, vaultId, title)
+            SELECT 0 AS `index`, vaultId, title FROM signer
+        """.trimIndent())
+
+        db.execSQL("""
+            DROP TABLE signer
+        """.trimIndent())
+
+        db.execSQL("""
+            ALTER TABLE signer_new RENAME TO signer
+        """.trimIndent())
     }
 }
 
