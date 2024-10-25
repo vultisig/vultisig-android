@@ -137,13 +137,28 @@ internal fun JoinKeysignView(
             }
 
             is Error -> {
+                val errorLabel: String
+                val buttonText: String
+                val infoText: String?
+                when(state.errorType) {
+                    is JoinKeysignError.WrongVaultShare -> {
+                        errorLabel = state.errorType.message.asString()
+                        buttonText = stringResource(R.string.join_keysign_error_wrong_vault_share_try_again_button)
+                        infoText = null
+                    }
+                    else -> {
+                        errorLabel = stringResource(
+                            R.string.signing_error_please_try_again_s,
+                            state.errorType.message.asString()
+                        )
+                        buttonText = stringResource(R.string.try_again)
+                        infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)
+                    }
+                }
                 ErrorView(
-                    errorLabel = stringResource(
-                        R.string.signing_error_please_try_again_s,
-                        state.errorType.message.asString()
-                    ),
-                    buttonText = stringResource(R.string.try_again),
-                    infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
+                    errorLabel = errorLabel,
+                    buttonText = buttonText,
+                    infoText = infoText,
                     onButtonClick = viewModel::tryAgain,
                 )
             }

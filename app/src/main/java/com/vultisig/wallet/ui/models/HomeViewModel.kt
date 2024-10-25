@@ -138,7 +138,6 @@ internal class HomeViewModel @Inject constructor(
                     } ?: vaultRepository.getAll().firstOrNull()
                 }.collect { vault ->
                     if (vault != null) {
-                        hideVaultList()
                         uiState.update {
                             it.copy(
                                 vaultName = vault.name,
