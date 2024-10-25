@@ -8,15 +8,14 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
-import kotlinx.datetime.Clock
-import timber.log.Timber
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -36,6 +35,7 @@ interface BlockChainSpecificRepository {
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
         gasLimit: BigInteger? = null,
+        dstAddress: String? = null,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -49,7 +49,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val blockChairApi: BlockChairApi,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
-    private val tonApi: TonApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -61,6 +60,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
         gasLimit: BigInteger?,
+        dstAddress: String?,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {
@@ -165,13 +165,22 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             )
         }
 
-        TokenStandard.SOL -> {
-            val blockHash = solanaApi.getRecentBlockHash()
-            Timber.d("solana blockhash: $blockHash")
+        TokenStandard.SOL -> coroutineScope {
+            val blockHash = async {
+                solanaApi.getRecentBlockHash()
+            }
+
+            val tokenAccountExists = async {
+                dstAddress?.let {
+                    solanaApi.doesTokenAccountExist(dstAddress, token.contractAddress)
+                }
+            }
+
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Solana(
-                    recentBlockHash = blockHash,
-                    priorityFee = gasFee.value
+                    recentBlockHash = blockHash.await(),
+                    tokenAccountExists = tokenAccountExists.await(),
+                    priorityFee = gasFee.value,
                 )
             )
         }
@@ -211,24 +220,14 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.SUI -> {
+            suiApi.getAllCoins(address)
+
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
-                    referenceGasPrice = suiApi.getReferenceGasPrice(),
+                    referenceGasPrice = gasFee.value,
                     coins = suiApi.getAllCoins(address),
                 ),
                 utxos = emptyList(),
-            )
-        }
-
-        TokenStandard.TON -> {
-            BlockChainSpecificAndUtxo(
-                blockChainSpecific = BlockChainSpecific.Ton(
-                    sequenceNumber = tonApi.getSpecificTransactionInfo(address)
-                        .toString().toULong(),
-                    expireAt = (Clock.System.now()
-                        .epochSeconds + 600L).toULong(),
-                    bounceable = false,
-                ),
             )
         }
     }

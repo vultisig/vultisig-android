@@ -302,6 +302,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                             priorityFee = specific.priorityFee.toString(),
                             toTokenAssociatedAddress = specific.toAddressPubKey,
                             fromTokenAssociatedAddress = specific.fromAddressPubKey,
+                            tokenAccountExists = specific.tokenAccountExists,
                         )
                     } else null,
                     polkadotSpecific = if (specific is BlockChainSpecific.Polkadot) {

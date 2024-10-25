@@ -60,41 +60,39 @@ class SolanaHelper(
                 .build()
                 .toByteArray()
         } else {
-            if (solanaSpecific.fromAddressPubKey != null && solanaSpecific.toAddressPubKey!= null) {
-                val transfer = Solana.TokenTransfer.newBuilder()
+            val fromAddress = AnyAddress(keysignPayload.coin.address, coinType)
+            val senderAddress = SolanaAddress(fromAddress.description())
+            val receiverAddress = SolanaAddress(toAddress.description())
+            val generatedSenderAssociatedAddress = senderAddress.defaultTokenAddress(
+                keysignPayload.coin.contractAddress
+            )
+            val generatedRecipientAssociatedAddress = receiverAddress.defaultTokenAddress(
+                keysignPayload.coin.contractAddress
+            )
+            val tokenAccountExists = keysignPayload.blockChainSpecific.tokenAccountExists
+            return if (tokenAccountExists == true) {
+                val transferTokenMessage = Solana.TokenTransfer.newBuilder()
                     .setTokenMintAddress(keysignPayload.coin.contractAddress)
-                    .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
-                    .setRecipientTokenAddress(solanaSpecific.toAddressPubKey)
+                    .setRecipientTokenAddress(generatedRecipientAssociatedAddress)
+                    .setSenderTokenAddress(generatedSenderAssociatedAddress)
                     .setAmount(keysignPayload.toAmount.toLong())
                     .setDecimals(keysignPayload.coin.decimal)
 
-                return input
-                    .setTokenTransferTransaction(transfer.build())
-                    .build()
-                    .toByteArray()
+                input.setTokenTransferTransaction(transferTokenMessage.build())
             } else {
-                val fromAddress = AnyAddress(keysignPayload.coin.address, coinType)
-                val senderAddress = SolanaAddress(fromAddress.description())
-                val receiverAddress = SolanaAddress(toAddress.description())
-                val generatedSenderAssociatedAddress = senderAddress.defaultTokenAddress(
-                    keysignPayload.coin.contractAddress
-                )
-                val generatedRecipientAssociatedAddress = receiverAddress.defaultTokenAddress(
-                    keysignPayload.coin.contractAddress
-                )
-                val transferTokenMessage =
-                    Solana.TokenTransfer.newBuilder()
-                        .setTokenMintAddress(keysignPayload.coin.contractAddress)
-                        .setRecipientTokenAddress(generatedRecipientAssociatedAddress)
-                        .setSenderTokenAddress(generatedSenderAssociatedAddress)
-                        .setAmount(keysignPayload.toAmount.toLong())
-                        .setDecimals(keysignPayload.coin.decimal)
+                val createAndTransferTokenMessage = Solana.CreateAndTransferToken.newBuilder()
+                    .setTokenMintAddress(keysignPayload.coin.contractAddress)
+                    .setRecipientTokenAddress(generatedRecipientAssociatedAddress)
+                    .setSenderTokenAddress(generatedSenderAssociatedAddress)
+                    .setAmount(keysignPayload.toAmount.toLong())
+                    .setDecimals(keysignPayload.coin.decimal)
+                    .setTokenProgramId(Solana.TokenProgramId.TokenProgram)
+                    .setRecipientMainAddress(toAddress.description())
 
-                return input
-                    .setTokenTransferTransaction(transferTokenMessage.build())
-                    .build()
-                    .toByteArray()
+                input.setCreateAndTransferTokenTransaction(createAndTransferTokenMessage.build())
             }
+                .build()
+                .toByteArray()
         }
     }
 

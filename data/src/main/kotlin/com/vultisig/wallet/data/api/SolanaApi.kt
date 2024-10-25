@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
+import com.vultisig.wallet.data.api.models.SolanaAccountExistResponseJson
 import com.vultisig.wallet.data.api.models.SolanaBalanceJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectJson
 import com.vultisig.wallet.data.api.models.SolanaFeeObjectRespJson
@@ -45,6 +46,7 @@ interface SolanaApi {
     suspend fun getSPLTokensInfo(tokens: List<String>): List<SplTokenJson>
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
+    suspend fun doesTokenAccountExist(address: String, mint: String): Boolean
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -57,7 +59,6 @@ internal class SolanaApiImp @Inject constructor(
     private val rpcEndpoint2 = "https://solana-rpc.publicnode.com"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
-    private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
     override suspend fun getBalance(address: String): BigInteger {
 
         val payload = RpcPayload(
@@ -84,7 +85,7 @@ internal class SolanaApiImp @Inject constructor(
 
     override suspend fun getMinimumBalanceForRentExemption(): BigInteger = try {
         httpClient.postRpc<SolanaMinimumBalanceForRentExemptionJson>(
-            solanaRentExemptionEndpoint,
+            rpcEndpoint,
             "getMinimumBalanceForRentExemption",
             params = buildJsonArray {
                 add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
@@ -152,7 +153,7 @@ internal class SolanaApiImp @Inject constructor(
         return "0"
     }
 
-    override suspend fun broadcastTransaction(tx: String): String? {
+    override suspend fun broadcastTransaction(tx: String): String {
         try {
             val requestBody = RpcPayload(
                 jsonrpc = "2.0",
@@ -285,6 +286,22 @@ internal class SolanaApiImp @Inject constructor(
             return null
         }
     }
+
+    override suspend fun doesTokenAccountExist(address: String, mint: String): Boolean =
+        httpClient.postRpc<SolanaAccountExistResponseJson>(
+            rpcEndpoint,
+            "getTokenAccountsByOwner",
+            params = buildJsonArray {
+                add(address)
+                addJsonObject {
+                    put("mint", mint)
+                }
+                addJsonObject {
+                    put("encoding", "jsonParsed")
+                }
+            },
+        ).result.values.isNotEmpty()
+
 
 
     companion object {

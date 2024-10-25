@@ -407,6 +407,7 @@ internal class SendFormViewModel @Inject constructor(
                         isSwap = false,
                         isMaxAmountEnabled = isMaxAmount,
                         isDeposit = false,
+                        dstAddress = dstAddress
                     )
                     .let {
                         val ethSettings = ethGasSettings.value
