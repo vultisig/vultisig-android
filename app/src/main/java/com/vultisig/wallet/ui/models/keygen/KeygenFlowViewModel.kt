@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
@@ -118,6 +119,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val generateQrBitmap: GenerateQrBitmap,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
+    private val vaultPasswordRepository: VaultPasswordRepository,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -166,6 +168,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             sessionID,
             _encryptionKeyHex,
             _oldResharePrefix,
+            password,
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
@@ -175,6 +178,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             isReshareMode = uiState.value.isReshareMode,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
+            vaultPasswordRepository = vaultPasswordRepository,
         )
 
     init {

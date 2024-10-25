@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
@@ -80,6 +81,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
+    private val vaultPasswordRepository: VaultPasswordRepository,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -132,7 +134,8 @@ internal class JoinKeygenViewModel @Inject constructor(
             sessionApi = sessionApi,
             isReshareMode = operationMode.value.isReshare(),
             encryption = encryption,
-            featureFlagApi = featureFlagApi
+            featureFlagApi = featureFlagApi,
+            vaultPasswordRepository = vaultPasswordRepository,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
