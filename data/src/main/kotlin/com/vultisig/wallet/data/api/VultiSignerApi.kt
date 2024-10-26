@@ -10,6 +10,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 
 internal interface VultiSignerApi {
@@ -70,7 +71,7 @@ internal class VultiSignerApiImpl @Inject constructor(
         password: String,
     ) {
         http.get("https://api.vultisig.com/vault/get/$publicKeyEcdsa") {
-            header("x-password", URLEncoder.encode(password, Charsets.UTF_8))
+            header("x-password", URLEncoder.encode(password, StandardCharsets.UTF_8.toString()))
         }.throwIfUnsuccessful()
     }
 
