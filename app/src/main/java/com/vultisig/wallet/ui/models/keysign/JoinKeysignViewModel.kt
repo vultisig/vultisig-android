@@ -89,6 +89,7 @@ sealed class JoinKeysignError(val message: UiText) {
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
     data object WrongVault : JoinKeysignError(R.string.join_keysign_wrong_vault.asUiText())
+    data object WrongVaultShare : JoinKeysignError(R.string.join_keysign_error_wrong_vault_share.asUiText())
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
     data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
@@ -243,6 +244,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                         currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
                         return@launch
                     }
+                }
+                if (payload.payload.vaultLocalPartyID == _localPartyID) {
+                    currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
+                    return@launch
                 }
                 val deepLink = DeepLinkHelper(content)
                 if (deepLink.hasResharePrefix()) {
@@ -518,7 +523,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         viewModelScope.launch {
             val keysignError = currentState.value as JoinKeysignState.Error
             when (keysignError.errorType) {
-                JoinKeysignError.WrongVault -> navigator.navigate(
+                JoinKeysignError.WrongVault, JoinKeysignError.WrongVaultShare -> navigator.navigate(
                     Destination.Home(showVaultList = true),
                     opts = NavigationOptions(clearBackStack = true)
                 )
