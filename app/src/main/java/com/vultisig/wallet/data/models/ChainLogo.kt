@@ -27,4 +27,5 @@ internal val Chain.logo: Int
         Chain.Dydx -> R.drawable.dydx
         Chain.ZkSync -> R.drawable.zksync
         Chain.Sui -> R.drawable.sui
+        Chain.Ton -> R.drawable.ton
     }

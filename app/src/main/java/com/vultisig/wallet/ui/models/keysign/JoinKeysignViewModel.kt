@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
@@ -145,6 +146,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
+    private val tonApi: TonApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
@@ -195,6 +197,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
             suiApi = suiApi,
+            tonApi = tonApi,
             navigator = navigator,
             transactionTypeUiModel = transactionTypeUiModel,
             encryption = encryption,

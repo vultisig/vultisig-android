@@ -1415,6 +1415,17 @@ object Coins {
             priceProviderID = "sui",
             contractAddress = "",
             isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Ton,
+            ticker = "TON",
+            logo = "ton",
+            address = "",
+            decimal = 9,
+            hexPublicKey = "",
+            priceProviderID = "the-open-network",
+            contractAddress = "",
+            isNativeToken = true,
         )
     )
 

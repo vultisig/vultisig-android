@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.TssKeyType
@@ -90,6 +92,7 @@ internal class KeysignViewModel(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
+    private val tonApi: TonApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
@@ -262,6 +265,10 @@ internal class KeysignViewModel(
                     signedTransaction.signature ?: ""
                 )
             }
+
+            Chain.Ton -> {
+                tonApi.broadcastTransaction(signedTransaction.rawTransaction)
+            }
         }
         Timber.d("transaction hash: $txHash")
         if (txHash != null) {
@@ -390,6 +397,14 @@ internal class KeysignViewModel(
                 return SuiHelper.getSignedTransaction(
                     vault.pubKeyEDDSA,
                     keysignPayload, signatures
+                )
+            }
+
+            Chain.Ton -> {
+                return TonHelper.getSignedTransaction(
+                    vaultHexPublicKey = vault.pubKeyEDDSA,
+                    payload = keysignPayload,
+                    signatures = signatures,
                 )
             }
         }

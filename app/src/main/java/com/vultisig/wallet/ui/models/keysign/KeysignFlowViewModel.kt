@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -86,6 +87,7 @@ import vultisig.keysign.v1.SolanaSpecific
 import vultisig.keysign.v1.SuiSpecific
 import vultisig.keysign.v1.THORChainSpecific
 import vultisig.keysign.v1.THORChainSwapPayload
+import vultisig.keysign.v1.TonSpecific
 import vultisig.keysign.v1.UTXOSpecific
 import vultisig.keysign.v1.UtxoInfo
 import java.util.UUID
@@ -110,6 +112,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
+    private val tonApi: TonApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
     @ApplicationContext private val context: Context,
@@ -183,6 +186,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
             suiApi = suiApi,
+            tonApi = tonApi,
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
@@ -314,6 +318,13 @@ internal class KeysignFlowViewModel @Inject constructor(
                         SuiSpecific(
                             referenceGasPrice = specific.referenceGasPrice.toString(),
                             coins = specific.coins,
+                        )
+                    } else null,
+                    tonSpecific = if (specific is BlockChainSpecific.Ton) {
+                        TonSpecific(
+                            sequenceNumber = specific.sequenceNumber,
+                            expireAt = specific.expireAt,
+                            bounceable = specific.bounceable,
                         )
                     } else null,
                     thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {

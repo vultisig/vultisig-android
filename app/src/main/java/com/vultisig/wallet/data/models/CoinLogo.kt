@@ -75,6 +75,7 @@ internal fun Coins.getCoinLogo(logoName: String): ImageModel {
         "zero" -> R.drawable.zero
         "zksync" -> R.drawable.zksync
         "sui" -> R.drawable.sui
+        "ton" -> R.drawable.ton
 
         else -> logoName
     }
