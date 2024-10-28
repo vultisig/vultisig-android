@@ -188,7 +188,6 @@
     <string name="swap_form_gas_title">Netwerkkosten</string>
     <string name="swap_form_total_fees_title">Totale kosten</string>
     <string name="share_qr_utils_choose_an_app">Kies een app</string>
-    <string name="verify_swap_screen_estimated_fees">Geschatte kosten</string>
     <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het bedrag dat ik na de wissel zal ontvangen</string>
     <string name="verify_swap_consent_amount">Het wisselbedrag is correct</string>
     <string name="chain_token_screen_address_copied">%1$s gekopieerd naar klembord</string>

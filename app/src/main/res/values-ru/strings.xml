@@ -188,7 +188,6 @@
     <string name="swap_form_gas_title">Сетевой сбор</string>
     <string name="swap_form_total_fees_title">Общая сумма сборов</string>
     <string name="share_qr_utils_choose_an_app">Выберите приложение</string>
-    <string name="verify_swap_screen_estimated_fees">Ориентировочные сборы</string>
     <string name="verify_swap_agree_receive_amount">Я согласен с суммой, которую получу после обмена</string>
     <string name="verify_swap_consent_amount">Сумма обмена корректна</string>
     <string name="chain_token_screen_address_copied">%1$s скопировано в буфер обмена</string>
