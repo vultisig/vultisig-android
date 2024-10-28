@@ -217,7 +217,7 @@ internal class BackupPasswordViewModel @Inject constructor(
             val fileName = uri.fileName(context)
             vaultDataStoreRepository.setBackupHint(
                 fileName,
-                hintPasswordTextFieldState.text.toString().substring(0, 50)
+                hintPasswordTextFieldState.text.toString().take(50)
             )
         }
     }
