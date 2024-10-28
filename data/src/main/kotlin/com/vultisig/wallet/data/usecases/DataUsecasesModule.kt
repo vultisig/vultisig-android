@@ -76,4 +76,10 @@ internal interface DataUsecasesModule {
         impl: AvailableTokenBalanceUseCaseImpl
     ): AvailableTokenBalanceUseCase
 
+    @Binds
+    @Singleton
+    fun bindSearchTokenUseCase(
+        impl: SearchTokenUseCaseImpl
+    ): SearchTokenUseCase
+
 }

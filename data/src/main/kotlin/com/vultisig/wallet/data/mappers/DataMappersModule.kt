@@ -52,4 +52,10 @@ internal interface DataMappersModule {
         impl: SplTokenJsonFromSplTokenInfoImpl
     ): SplTokenJsonFromSplTokenInfoMapper
 
+    @Binds
+    @Singleton
+    fun bindSplResponseAccountJsonMapper(
+        impl: SplResponseAccountJsonMapperImpl
+    ): SplResponseAccountJsonMapper
+
 }

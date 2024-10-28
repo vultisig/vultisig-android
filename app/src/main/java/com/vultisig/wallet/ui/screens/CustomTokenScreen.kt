@@ -71,9 +71,8 @@ internal fun CustomTokenScreen(
             viewModel.pasteToSearchField(clipboardManager.getText()?.text ?: "")
         },
         onSearchClick = viewModel::searchCustomToken,
-        onAddTokenClick = {
-            viewModel.addCoinToTempRepo(onAddCompleted = navController::popBackStack)
-        })
+        onAddTokenClick = viewModel::addCoinToTempRepo
+    )
 }
 
 @Composable

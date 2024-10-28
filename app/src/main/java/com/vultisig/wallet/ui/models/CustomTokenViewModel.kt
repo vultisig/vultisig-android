@@ -11,19 +11,16 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.data.repositories.TokenPriceRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 internal data class CustomTokenUiModel(
@@ -37,11 +34,10 @@ internal data class CustomTokenUiModel(
 
 @HiltViewModel
 internal class CustomTokenViewModel @Inject constructor(
-    private val tokenRepository: TokenRepository,
-    private val tokenPriceRepository: TokenPriceRepository,
+    private val searchToken: SearchTokenUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
-    private val appCurrencyRepository: AppCurrencyRepository,
     private val requestResultRepository: RequestResultRepository,
+    private val navigator: Navigator<Destination>,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val searchFieldState: TextFieldState = TextFieldState()
@@ -53,9 +49,8 @@ internal class CustomTokenViewModel @Inject constructor(
     fun searchCustomToken() {
         viewModelScope.launch {
             showLoading()
-
-            val searchedToken =
-                tokenRepository.getTokenByContract(
+            val searchedToken: Pair<Coin, FiatValue>? =
+                searchToken(
                     chainId,
                     searchFieldState.text.toString()
                 )
@@ -63,30 +58,18 @@ internal class CustomTokenViewModel @Inject constructor(
             if (searchedToken == null) {
                 showError()
             } else {
-                val rawPrice = calculatePrice(searchedToken)
-                val currency = appCurrencyRepository.currency.first()
-                val tokenFiatValue = FiatValue(
-                    rawPrice,
-                    currency.ticker
-                )
-                val price = fiatValueToStringMapper.map(tokenFiatValue)
+                val price = fiatValueToStringMapper.map(searchedToken.second)
                 uiModel.update {
                     it.copy(
                         isLoading = false,
                         hasError = false,
-                        token = searchedToken,
+                        token = searchedToken.first,
                         price = price
                     )
                 }
             }
         }
     }
-
-    private suspend fun calculatePrice(result: Coin): BigDecimal =
-        tokenPriceRepository.getPriceByContactAddress(
-            chainId,
-            result.contractAddress
-        )
 
     private fun showError() {
         uiModel.update {
@@ -115,11 +98,11 @@ internal class CustomTokenViewModel @Inject constructor(
         searchFieldState.setTextAndPlaceCursorAtEnd(data)
     }
 
-    fun addCoinToTempRepo(onAddCompleted: () -> Unit) {
+    fun addCoinToTempRepo() {
         viewModelScope.launch {
             val foundCoin = uiModel.value.token ?: return@launch
             requestResultRepository.respond(REQUEST_SEARCHED_TOKEN_ID, foundCoin)
-            onAddCompleted()
+            navigator.navigate(Destination.Back)
         }
     }
 }
