@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -39,7 +38,6 @@ import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.ZeroValueCurrencyToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -94,7 +92,6 @@ internal class SwapFormViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
-    private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
     private val zeroValueCurrencyToString: ZeroValueCurrencyToStringMapper,
@@ -155,6 +152,7 @@ internal class SwapFormViewModel @Inject constructor(
             val selectedDst = selectedDst.value ?: return
 
             val gasFee = gasFee.value ?: return
+            val gasFeeFiatValue = gasFeeFiat.value ?: return
 
             val srcToken = selectedSrc.account.token
             val dstToken = selectedDst.account.token
@@ -260,6 +258,7 @@ internal class SwapFormViewModel @Inject constructor(
                             estimatedFees = quote.fees,
                             isApprovalRequired = isApprovalRequired,
                             memo = null,
+                            gasFeeFiatValue = gasFeeFiatValue,
                             payload = SwapPayload.ThorChain(
                                 THORChainSwapPayload(
                                     fromAddress = srcAddress,
@@ -312,6 +311,7 @@ internal class SwapFormViewModel @Inject constructor(
                             estimatedFees = quote.fees,
                             memo = quote.data.memo,
                             isApprovalRequired = isApprovalRequired,
+                            gasFeeFiatValue = gasFeeFiatValue,
                             payload = SwapPayload.MayaChain(
                                 THORChainSwapPayload(
                                     fromAddress = srcAddress,
@@ -358,6 +358,7 @@ internal class SwapFormViewModel @Inject constructor(
                             estimatedFees = quote.fees,
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
+                            gasFeeFiatValue = gasFeeFiatValue,
                             payload = SwapPayload.OneInch(
                                 OneInchSwapPayloadJson(
                                     fromCoin = srcToken,

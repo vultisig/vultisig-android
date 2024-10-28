@@ -28,7 +28,7 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             srcTokenValue = mapTokenValueToStringWithUnit(from.srcTokenValue),
             dstTokenValue = mapTokenValueToStringWithUnit(from.expectedDstTokenValue),
             hasConsentAllowance = from.isApprovalRequired,
-            estimatedFees = fiatValueToStringMapper.map(fiatFees),
+            totalFee = fiatValueToStringMapper.map(fiatFees + from.gasFeeFiatValue)
         )
     }
 
