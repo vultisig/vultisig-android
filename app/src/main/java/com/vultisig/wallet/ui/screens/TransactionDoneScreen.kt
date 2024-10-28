@@ -141,7 +141,7 @@ internal fun TransactionDoneView(
                             TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
 
                         is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
-                            swapTransaction =transactionTypeUiModel.swapTransactionUiModel,
+                            swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
                             progressLink = progressLink,
                     ) { progressLink ->
                         uriHandler.openUri(progressLink)
