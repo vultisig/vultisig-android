@@ -73,7 +73,7 @@ internal class VultiSignerApiImpl @Inject constructor(
         publicKeyEcdsa: String,
         password: String,
     ) {
-        http.get("http://api.vultisig.com/vault/get/$publicKeyEcdsa") {
+        http.get("https://api.vultisig.com/vault/get/$publicKeyEcdsa") {
             header("x-password", Base64.encode(password.toByteArray(StandardCharsets.UTF_8)))
         }.throwIfUnsuccessful()
     }
