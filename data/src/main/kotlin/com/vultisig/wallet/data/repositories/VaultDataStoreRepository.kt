@@ -39,7 +39,7 @@ internal class VaultDataStoreRepositoryImpl @Inject constructor(
 
     private companion object PreferencesKey {
         fun onVaultBackupStatusKey(vaultId: String) = booleanPreferencesKey(name = "vault_backup/$vaultId")
-        fun onVaultBackupHintKey(vaultId: String) = stringPreferencesKey(name = "vault_backup_hint/$vaultId")
+        fun onVaultBackupHintKey(vaultFileName: String) = stringPreferencesKey(name = "vault_backup_hint/$vaultFileName")
     }
 }
 
