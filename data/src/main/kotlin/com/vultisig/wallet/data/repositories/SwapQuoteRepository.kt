@@ -339,8 +339,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             Chain.Blast -> setOf(SwapProvider.LIFI)
 
             Chain.Solana, Chain.Polkadot, Chain.Dydx,
-            Chain.CronosChain, Chain.ZkSync, Chain.Sui
-                -> emptySet()
+            Chain.CronosChain, Chain.ZkSync, Chain.Sui,
+            Chain.Ton -> emptySet()
         }
 
 
@@ -377,5 +377,6 @@ private fun Chain.swapAssetName(): String {
         Chain.Dydx -> "DYDX"
         Chain.ZkSync -> "ZK"
         Chain.Sui -> "SUI"
+        Chain.Ton -> "TON"
     }
 }

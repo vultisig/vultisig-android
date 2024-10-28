@@ -69,6 +69,7 @@ dependencies {
 
     // core
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.datetime)
 
     // worker
     implementation(libs.androidx.work)
