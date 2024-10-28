@@ -49,6 +49,8 @@ internal data class BackupPasswordState(
     val error: UiText? = null,
 )
 
+private const val HINT_MAX_LENGTH = 50
+
 @HiltViewModel
 internal class BackupPasswordViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -117,7 +119,7 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     fun backupEncryptedVault() {
         if (shouldEnableEncryption()) {
-            if (validateConfirmPassword()) {
+            if (validateConfirmPassword() && validateHint()) {
                 val password = passwordTextFieldState.text.toString()
                 backupVault(password)
             }
@@ -159,6 +161,18 @@ internal class BackupPasswordViewModel @Inject constructor(
 
         uiState.update {
             it.copy(confirmPasswordErrorMessage = errorMessage)
+        }
+        return errorMessage == null
+    }
+
+    fun validateHint(): Boolean {
+        val errorMessage =
+            if (hintPasswordTextFieldState.text.length > HINT_MAX_LENGTH)
+                UiText.StringResource(R.string.vault_backup_hint_to_long)
+            else null
+
+        uiState.update {
+            it.copy(hintPasswordErrorMessage = errorMessage)
         }
         return errorMessage == null
     }
@@ -217,7 +231,7 @@ internal class BackupPasswordViewModel @Inject constructor(
             val fileName = uri.fileName(context)
             vaultDataStoreRepository.setBackupHint(
                 fileName,
-                hintPasswordTextFieldState.text.toString().take(50)
+                hintPasswordTextFieldState.text.toString()
             )
         }
     }
