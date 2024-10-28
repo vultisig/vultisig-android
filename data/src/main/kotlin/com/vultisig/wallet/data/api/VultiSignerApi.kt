@@ -9,7 +9,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
