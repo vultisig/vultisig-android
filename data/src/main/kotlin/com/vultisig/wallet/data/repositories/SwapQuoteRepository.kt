@@ -370,7 +370,7 @@ private fun Chain.swapAssetName(): String {
         Chain.Arbitrum -> "ARB"
         Chain.Base -> "BASE"
         Chain.Optimism -> "OP"
-        Chain.Polygon -> "MATIC"
+        Chain.Polygon -> "POL"
         Chain.Blast -> "BLAST"
         Chain.CronosChain -> "CRO"
         Chain.Polkadot -> "DOT"
