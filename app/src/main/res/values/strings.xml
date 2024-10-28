@@ -365,7 +365,7 @@
     <string name="reshare_device_list_of_vault" translatable="false">%1$s of %2$s</string>
     <string name="reshare_start" translatable="false">Start</string>
     <string name="threshold_error" translatable="false">Threshold not reached\nMissing enough initial devices</string>
-    <string name="generating_key_renew" translatable="false">Renew</string>
+    <string name="generating_key_renew" translatable="false">Reshare</string>
     <string name="create_folder_title" translatable="false">Create Folder</string>
     <string name="create_folder_name" translatable="false">Folder Name</string>
     <string name="create_folder_create" translatable="false">Create</string>

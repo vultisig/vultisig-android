@@ -295,5 +295,8 @@ internal class GeneratingKeyViewModel(
     }
 
     private fun checkIsThresholdError(errorMessage: Exception) =
-         errorMessage.message?.contains("threshold") == true
+        errorMessage.message?.let { message ->
+            message.contains("threshold") ||
+                    message.contains("failed to update from bytes to new local party")
+        } ?: false
 }
