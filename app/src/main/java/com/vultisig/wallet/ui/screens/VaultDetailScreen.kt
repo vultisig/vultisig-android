@@ -80,7 +80,7 @@ internal fun VaultDetailScreen(
 
             state.deviceList.forEachIndexed { index, it ->
                 VaultDetailScreenItem(
-                    propValue = stringResource(R.string.vault_details_screen_signer, index, it),
+                    propValue = stringResource(R.string.vault_details_screen_signer, index + 1, it),
                 )
             }
         }
