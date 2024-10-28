@@ -165,7 +165,7 @@ internal class BackupPasswordViewModel @Inject constructor(
         return errorMessage == null
     }
 
-    fun validateHint(): Boolean {
+    private fun validateHint(): Boolean {
         val errorMessage =
             if (hintPasswordTextFieldState.text.length > HINT_MAX_LENGTH)
                 UiText.StringResource(R.string.vault_backup_hint_to_long)
