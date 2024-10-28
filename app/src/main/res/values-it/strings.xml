@@ -12,7 +12,6 @@
     <string name="vault_settings_reshare_title">Ricondividi</string>
     <string name="vault_settings_reshare_subtitle">Ricondividi la cassaforte con un nuovo comitato</string>
     <string name="vault_settings_delete_title">Elimina</string>
-    <string name="join_keysign_wrong_vault">Non hai il vault richiesto per Keysign</string>
     <string name="choose_tokens">Scegli Token</string>
     <string name="send_screen_title">Invia</string>
     <string name="send_from_address">Da</string>

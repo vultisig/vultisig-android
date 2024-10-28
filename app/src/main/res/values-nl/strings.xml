@@ -23,7 +23,6 @@
     <string name="vault_settings_reshare_subtitle">Deel de kluis opnieuw met een nieuwe commissie</string>
     <string name="vault_settings_delete_title">Verwijderen</string>
     <string name="vault_settings_delete_subtitle">Verwijder uw kluis permanent</string>
-    <string name="join_keysign_wrong_vault">U beschikt niet over de vereiste kluis voor Keysign</string>
     <string name="join_keysign_discovery_service">Service ontdekken</string>
     <string name="join_keysign_waiting_keysign_start">Wachten op het starten van Keysign.</string>
     <string name="choose_tokens">Kies Tokens</string>
