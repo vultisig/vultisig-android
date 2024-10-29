@@ -90,6 +90,7 @@ internal class TokenDetailViewModel @Inject constructor(
                 Destination.Swap(
                     vaultId = vaultId,
                     chainId = chainRaw,
+                    srcTokenId = tokenId,
                 )
             )
         }

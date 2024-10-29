@@ -430,9 +430,14 @@ internal class SwapFormViewModel @Inject constructor(
     fun loadData(
         vaultId: String,
         chainId: String?,
+        srcTokenId: String?,
         dstTokenId: String?,
     ) {
         this.chain = chainId?.let(Chain::fromRaw)
+
+        if (srcTokenId != null && this.selectedSrcId.value == null) {
+            selectedSrcId.value = srcTokenId
+        }
 
         if (dstTokenId != null && this.selectedDstId.value == null) {
             selectedDstId.value = dstTokenId

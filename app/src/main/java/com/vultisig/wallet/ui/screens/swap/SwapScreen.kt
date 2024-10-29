@@ -33,6 +33,7 @@ internal fun SwapScreen(
     navController: NavController,
     vaultId: String,
     chainId: String?,
+    srcTokenId: String? = null,
     dstTokenId: String? = null,
     viewModel: SwapViewModel = hiltViewModel(),
 ) {
@@ -82,6 +83,7 @@ internal fun SwapScreen(
         navHostController = swapNavHostController,
         vaultId = vaultId,
         chainId = chainId,
+        srcTokenId = srcTokenId,
         dstTokenId = dstTokenId,
         title = title,
         progress = progress,
@@ -102,6 +104,7 @@ private fun SwapScreen(
     progress: Float,
     vaultId: String,
     chainId: String?,
+    srcTokenId: String?,
     dstTokenId: String?,
     qrCodeResult: String?,
     onKeysignFinished: (() -> Unit)? = null,
@@ -139,6 +142,7 @@ private fun SwapScreen(
                 SwapFormScreen(
                     vaultId = vaultId,
                     chainId = chainId,
+                    srcTokenId = srcTokenId,
                     dstTokenId = dstTokenId,
                 )
             }
@@ -180,6 +184,7 @@ internal fun SwapScreenPreview() {
         navHostController = rememberNavController(),
         vaultId = "",
         chainId = null,
+        srcTokenId = null,
         dstTokenId = null,
         title = stringResource(id = R.string.swap_screen_title),
         progress = 0.35f,
