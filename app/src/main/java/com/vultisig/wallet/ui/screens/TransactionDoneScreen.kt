@@ -50,7 +50,7 @@ internal fun TransactionDoneScreen(
     navController: NavController,
     transactionHash: String,
     transactionLink: String,
-    progressLink:String?,
+    progressLink: String?,
     transactionTypeUiModel: TransactionTypeUiModel,
 ) {
     UiBarContainer(
@@ -132,9 +132,9 @@ internal fun TransactionDoneView(
                     )
 
 
-                            when (transactionTypeUiModel) {
-                    is TransactionTypeUiModel.Deposit ->
-                        DepositTransactionDetail(transactionTypeUiModel.depositTransactionUiModel)
+                    when (transactionTypeUiModel) {
+                        is TransactionTypeUiModel.Deposit ->
+                            DepositTransactionDetail(transactionTypeUiModel.depositTransactionUiModel)
 
 
                         is TransactionTypeUiModel.Send ->
@@ -143,8 +143,8 @@ internal fun TransactionDoneView(
                         is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
                             swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
                             progressLink = progressLink,
-                    ) { progressLink ->
-                        uriHandler.openUri(progressLink)
+                        ) { progressLink ->
+                            uriHandler.openUri(progressLink)
                         }
 
                         else -> Unit
@@ -226,8 +226,8 @@ private fun ColumnScope.SwapTransactionDetail(
         }
 
         OtherField(
-            title = stringResource(R.string.verify_swap_screen_estimated_fees),
-            value = swapTransaction.estimatedFees,
+            title = stringResource(R.string.verify_swap_screen_total_fees),
+            value = swapTransaction.totalFee,
         )
 
         if (progressLink != null) {

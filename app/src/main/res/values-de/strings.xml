@@ -165,7 +165,6 @@
     <string name="vault_settings_success_backup_file">Datei gespeichert in Downloads/%1$s</string>
     <string name="failed_to_start_error">Start fehlgeschlagen, Fehler: %1$s</string>
     <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
-    <string name="verify_swap_screen_estimated_fees">Geschätzte Gebühren</string>
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_key_gen_screen_discovering_session_id">Sitzungs-ID ermitteln</string>

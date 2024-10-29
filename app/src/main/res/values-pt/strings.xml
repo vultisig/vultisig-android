@@ -165,7 +165,6 @@
     <string name="vault_settings_success_backup_file">arquivo salvo em Downloads/%1$s</string>
     <string name="failed_to_start_error">Falha ao iniciar, erro: %1$s</string>
     <string name="swap_form_estimated_fees_title">Taxa de swap</string>
-    <string name="verify_swap_screen_estimated_fees">Taxas estimadas</string>
     <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
     <string name="join_key_gen_screen_discovering_session_id">Descobrindo o ID da sessão</string>
