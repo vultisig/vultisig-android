@@ -201,6 +201,9 @@ internal class KeysignViewModel(
                     service.keysignEdDSA(keysignReq)
                 }
             }
+            if (keysignResp.r.isNullOrEmpty() || keysignResp.s.isNullOrEmpty()) {
+                throw Exception("Failed to sign message")
+            }
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
             this._messagePuller?.stop()
