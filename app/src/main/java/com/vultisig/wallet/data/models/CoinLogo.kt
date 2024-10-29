@@ -18,7 +18,7 @@ internal fun Coins.getCoinLogo(logoName: String): ImageModel {
         "usdt" -> R.drawable.usdt
         "link" -> R.drawable.link
         "uni" -> R.drawable.uni
-        "matic" -> R.drawable.polygon
+        "pol" -> R.drawable.polygon
         "wbtc" -> R.drawable.wbtc
         "flip" -> R.drawable.chainflip
         "avax" -> R.drawable.avax
