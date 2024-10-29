@@ -435,6 +435,9 @@
     <string name="share_vault_qr_uid" translatable="false">UID: %s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
+    <string name="backup_password_optional_password_protection_hint" translatable="false">Optional: Password hint</string>
+    <string name="backup_password_screen_hint_field" translatable="false">Enter a hint</string>
+    <string name="import_file_password_hint_text" translatable="false">Hint: %s</string>
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
@@ -451,6 +454,7 @@
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
     <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
+    <string name="vault_backup_hint_to_long" translatable="false">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
     <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
