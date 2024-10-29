@@ -121,8 +121,9 @@ internal class VaultRepositoryImpl @Inject constructor(
                 )
             },
             coins = vault.coins.map { it ->
+                val chain = Chain.fromRaw(it.chain)
                 Coin(
-                    chain = Chain.fromRaw(it.chain),
+                    chain = chain,
                     ticker = it.ticker,
                     logo = it.logo.takeIf { it.isNotBlank() }
                         ?: tokenRepository.getToken(it.id)?.logo ?: "",
@@ -131,7 +132,10 @@ internal class VaultRepositoryImpl @Inject constructor(
                     hexPublicKey = it.hexPublicKey,
                     priceProviderID = it.priceProviderID,
                     contractAddress = it.contractAddress,
-                    isNativeToken = it.contractAddress.isBlank(),
+                    isNativeToken = when (chain) {
+                        Chain.MayaChain -> it.ticker == "CACAO"
+                        else -> it.contractAddress.isBlank()
+                    },
                 )
             },
         )
