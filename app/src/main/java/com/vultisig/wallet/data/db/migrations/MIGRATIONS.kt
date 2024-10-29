@@ -314,6 +314,13 @@ val MIGRATION_17_18 = object : Migration(17, 18) {
             WHERE chain = 'Polygon' and ticker='MATIC'
             """.trimIndent()
         )
+        db.execSQL(
+            """
+            UPDATE coin 
+            SET ticker = 'POL' , logo = 'pol'
+            WHERE chain = 'Ethereum' and ticker='MATIC'
+            """.trimIndent()
+        )
     }
 }
 

@@ -185,8 +185,8 @@ object Coins {
         ),
         Coin(
             chain = Chain.Ethereum,
-            ticker = "MATIC",
-            logo = "matic",
+            ticker = "POL",
+            logo = "pol",
             address = "",
             decimal = 18,
             hexPublicKey = "",
