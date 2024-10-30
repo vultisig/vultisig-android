@@ -39,6 +39,8 @@ internal fun SwapScreen(
 ) {
     val swapNavHostController = rememberNavController()
 
+    val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel.dst.collect {
             swapNavHostController.route(it.dst.route, it.opts)
@@ -49,37 +51,44 @@ internal fun SwapScreen(
 
     val route = navBackStackEntry?.destination?.route
 
-    val progress = when (route) {
-        SendDst.Send.route -> 0.25f
-        SendDst.VerifyTransaction.staticRoute -> 0.5f
-        SendDst.Password.staticRoute -> 0.65f
-        SendDst.Keysign.staticRoute -> 0.75f
-        else -> 0.0f
-    }
-
     val topBarNavController = if (route == SendDst.Send.route) {
         navController
     } else {
         swapNavHostController
     }
 
-    val title = when (route) {
-        SendDst.Send.route -> stringResource(R.string.swap_screen_title)
-        SendDst.VerifyTransaction.staticRoute -> stringResource(R.string.verify_transaction_screen_title)
-        SendDst.Password.staticRoute -> stringResource(id = R.string.keysign_password_title)
-        SendDst.Keysign.staticRoute -> stringResource(R.string.keysign)
-        else -> stringResource(R.string.swap_screen_title)
-    }
+    val progress: Float
+    val title: String
 
-    val onKeysignFinished = if (viewModel.isNavigateToHome()) {
-        viewModel::navigateToHome
-    } else {
-        null
+    when {
+        route == SendDst.Send.route -> {
+            progress = 0.25f
+            title = stringResource(R.string.swap_screen_title)
+        }
+        route == SendDst.VerifyTransaction.staticRoute -> {
+            progress = 0.5f
+            title = stringResource(R.string.verify_transaction_screen_title)
+        }
+        route == SendDst.Password.staticRoute -> {
+            progress = 0.65f
+            title = stringResource(id = R.string.keygen_password_title)
+        }
+        route == SendDst.Keysign.staticRoute && isKeysignFinished -> {
+            progress = 1f
+            title = stringResource(R.string.transaction_complete_screen_title)
+        }
+        route == SendDst.Keysign.staticRoute -> {
+            progress = 0.75f
+            title = stringResource(R.string.keysign)
+        }
+        else -> {
+            progress = 0.0f
+            title = stringResource(R.string.swap_screen_title)
+        }
     }
 
     SwapScreen(
         topBarNavController = topBarNavController,
-        mainNavController = navController,
         navHostController = swapNavHostController,
         vaultId = vaultId,
         chainId = chainId,
@@ -88,9 +97,8 @@ internal fun SwapScreen(
         title = title,
         progress = progress,
         qrCodeResult = viewModel.addressProvider.address.collectAsState().value,
-        onKeysignFinished = onKeysignFinished,
         navigateToHome = viewModel::navigateToHome,
-        enableNavigationToHome = viewModel::enableNavigationToHome,
+        finishKeysign = viewModel::finishKeysign,
     )
 }
 
@@ -98,7 +106,6 @@ internal fun SwapScreen(
 @Composable
 private fun SwapScreen(
     topBarNavController: NavController,
-    mainNavController: NavController,
     navHostController: NavHostController,
     title: String,
     progress: Float,
@@ -107,9 +114,8 @@ private fun SwapScreen(
     srcTokenId: String?,
     dstTokenId: String?,
     qrCodeResult: String?,
-    onKeysignFinished: (() -> Unit)? = null,
     navigateToHome: () -> Unit = {},
-    enableNavigationToHome: (() -> Unit)? = null,
+    finishKeysign: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
 
@@ -121,7 +127,7 @@ private fun SwapScreen(
         title = title,
         progress = progress,
         endIcon = qrCodeResult?.takeIf { it.isNotEmpty() }?.let { R.drawable.qr_share },
-        onStartIconClick = onKeysignFinished,
+        onStartIconClick = navigateToHome,
         onEndIconClick = qrCodeResult?.let {
             {
                 keysignShareViewModel.shareQRCode(context)
@@ -168,7 +174,7 @@ private fun SwapScreen(
 
                 KeysignFlowView(
                     onComplete = navigateToHome,
-                    onKeysignFinished = enableNavigationToHome,
+                    onKeysignFinished = finishKeysign,
                 )
             }
         }
@@ -180,7 +186,6 @@ private fun SwapScreen(
 internal fun SwapScreenPreview() {
     SwapScreen(
         topBarNavController = rememberNavController(),
-        mainNavController = rememberNavController(),
         navHostController = rememberNavController(),
         vaultId = "",
         chainId = null,

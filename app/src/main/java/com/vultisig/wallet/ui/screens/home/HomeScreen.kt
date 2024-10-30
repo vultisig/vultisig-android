@@ -138,7 +138,7 @@ private fun HomeScreen(
                 },
                 actions = {
                     val modifier = remember { Modifier.padding(horizontal = 16.dp) }
-                    when{
+                    when {
                         state.showVaultList && isEditMode -> {
                             Text(
                                 text = stringResource(id = R.string.home_scree_done),
