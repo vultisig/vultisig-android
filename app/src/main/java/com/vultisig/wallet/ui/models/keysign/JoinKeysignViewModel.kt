@@ -627,23 +627,5 @@ internal class JoinKeysignViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private fun transactionScan(transaction: Transaction) {
-//        viewModelScope.launch {
-//            val vault = requireNotNull(vaultRepository.get(vaultId))
-//
-//            try {
-//                val result = blowfishRepository.scanBlowfishTransaction(vault, transaction)
-//                verifyUiModel.update { state ->
-//                    (state as VerifyUiModel.Send).copy(
-//                        model = state.model.copy(
-//                            blowfishShow = result.first,
-//                            blowfishWarnings = result.second
-//                        )
-//                    )
-//                }
-//            } catch (e: Exception) {
-//                Timber.e(e)
-//            }
-//        }
-    }
+    private fun transactionScan(transaction: Transaction) {}
 }
