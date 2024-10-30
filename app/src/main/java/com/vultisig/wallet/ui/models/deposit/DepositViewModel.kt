@@ -7,6 +7,7 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,13 +17,16 @@ internal class DepositViewModel @Inject constructor(
     private val mainNavigator: Navigator<Destination>,
     ) : ViewModel() {
     val dst = sendNavigator.destination
-    private var isNavigateToHome: Boolean = false
-    fun enableNavigationToHome() {
-        isNavigateToHome = true
+
+    val isKeysignFinished = MutableStateFlow(false)
+
+    fun finishKeysign() {
+        isKeysignFinished.value = true
     }
+
     fun navigateToHome(useMainNavigator: Boolean) {
         viewModelScope.launch {
-            if (isNavigateToHome) {
+            if (isKeysignFinished.value) {
                 mainNavigator.navigate(
                     Destination.Home(),
                     NavigationOptions(

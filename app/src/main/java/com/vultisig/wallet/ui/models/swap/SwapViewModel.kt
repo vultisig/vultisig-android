@@ -13,6 +13,7 @@ import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,6 +28,7 @@ internal class SwapViewModel @Inject constructor(
 
     val dst = sendNavigator.destination
     val currentVault: MutableState<Vault?> = mutableStateOf(null)
+    val isKeysignFinished = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
@@ -36,13 +38,9 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-
-    private var isNavigateToHome: Boolean = false
-    fun enableNavigationToHome() {
-        isNavigateToHome = true
+    fun finishKeysign() {
+        isKeysignFinished.value = true
     }
-
-    fun isNavigateToHome() = isNavigateToHome
 
     fun navigateToHome() {
         viewModelScope.launch {
