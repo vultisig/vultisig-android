@@ -89,5 +89,6 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
             Chain.ZkSync -> "ZK"
             Chain.Sui -> "SUI"
             Chain.Ton -> "TON"
+            Chain.Osmosis -> "OSMO"
         }
 }

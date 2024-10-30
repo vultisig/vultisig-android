@@ -37,6 +37,7 @@ enum class Chain(
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
+    Osmosis("Osmosis", COSMOS, "uosmo"),
     Polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT"),
     Sui("Sui", TokenStandard.SUI, "SUI"),
     Ton("Ton", TokenStandard.TON, "TON");
@@ -76,6 +77,7 @@ val Chain.coinType: CoinType
         Chain.ZkSync -> CoinType.ZKSYNC
         Chain.Sui -> CoinType.SUI
         Chain.Ton -> CoinType.TON
+        Chain.Osmosis -> CoinType.OSMOSIS
     }
 
 val Chain.TssKeysignType: TssKeyType
