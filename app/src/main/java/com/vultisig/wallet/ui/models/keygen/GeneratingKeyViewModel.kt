@@ -15,11 +15,13 @@ import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -53,6 +55,7 @@ internal class GeneratingKeyViewModel(
     private val sessionId: String,
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
+    private val password: String? = null,
     @SuppressLint("StaticFieldLeak") private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
@@ -62,6 +65,7 @@ internal class GeneratingKeyViewModel(
     private val encryption: Encryption,
     internal val isReshareMode: Boolean,
     private val featureFlagApi: FeatureFlagApi,
+    private val vaultPasswordRepository: VaultPasswordRepository,
 ) : ViewModel(){
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -270,6 +274,10 @@ internal class GeneratingKeyViewModel(
 
         lastOpenedVaultRepository.setLastOpenedVaultId(vault.id)
 
+        if (password?.isNotEmpty() == true && context.canAuthenticateBiometric()) {
+            vaultPasswordRepository.savePassword(vault.id, password)
+        }
+
         navigator.navigate(
             Destination.BackupSuggestion(
                 vaultId = vault.id
@@ -287,5 +295,8 @@ internal class GeneratingKeyViewModel(
     }
 
     private fun checkIsThresholdError(errorMessage: Exception) =
-         errorMessage.message?.contains("threshold") == true
+        errorMessage.message?.let { message ->
+            message.contains("threshold") ||
+                    message.contains("failed to update from bytes to new local party")
+        } ?: false
 }

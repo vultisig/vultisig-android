@@ -224,13 +224,13 @@ internal fun GeneratingKey(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = CenterHorizontally
                         ) {
-                            if (keygenState.isThresholdError) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.danger),
-                                    contentDescription = stringResource(R.string.danger_icon),
-                                    alignment = Center
-                                )
-                            } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.danger),
+                                contentDescription = stringResource(R.string.danger_icon),
+                                alignment = Center
+                            )
+
+                            if (!keygenState.isThresholdError) {
                                 Text(
                                     text = if (isReshare) {
                                         stringResource(R.string.generating_key_screen_reshare_failed)
@@ -241,7 +241,9 @@ internal fun GeneratingKey(
                                     style = Theme.menlo.heading5
                                 )
                             }
+
                             Spacer(modifier = Modifier.height(10.dp))
+
                             Text(
                                 text = keygenState.errorMessage.asString(),
                                 color = textColor,

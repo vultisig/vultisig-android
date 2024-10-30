@@ -165,7 +165,6 @@
     <string name="vault_settings_success_backup_file">datoteka spremljena u Downloads/%1$s</string>
     <string name="failed_to_start_error">Pokretanje nije uspjelo, pogreška: %1$s</string>
     <string name="swap_form_estimated_fees_title">Naknada za zamjenu</string>
-    <string name="verify_swap_screen_estimated_fees">Procijenjene naknade</string>
     <string name="keysign_screen_error_please_try_again">Greška! Molim te pokušaj ponovno. %1$s</string>
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_key_gen_screen_discovering_session_id">Otkrivanje ID-a sesije</string>

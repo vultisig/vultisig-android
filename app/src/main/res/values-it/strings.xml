@@ -165,7 +165,6 @@
     <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="failed_to_start_error">Impossibile avviare, errore: %1$s</string>
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
-    <string name="verify_swap_screen_estimated_fees">Tariffe stimate</string>
     <string name="keysign_screen_error_please_try_again">Errore! Riprova. %1$s</string>
     <string name="join_keysign_discovering_session_id">Individuazione dell\’ID sessione</string>
     <string name="join_key_gen_screen_discovering_session_id">Individuazione dell\’ID sessione</string>

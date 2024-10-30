@@ -41,12 +41,15 @@ import javax.inject.Inject
 internal data class BackupPasswordState(
     val confirmPasswordErrorMessage: UiText? = null,
     val passwordErrorMessage: UiText? = null,
+    val hintPasswordErrorMessage: UiText? = null,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val disableEncryption: Boolean = false,
     val backupContent: String = "",
     val error: UiText? = null,
 )
+
+private const val HINT_MAX_LENGTH = 50
 
 @HiltViewModel
 internal class BackupPasswordViewModel @Inject constructor(
@@ -62,6 +65,7 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     val passwordTextFieldState = TextFieldState()
     val confirmPasswordTextFieldState = TextFieldState()
+    val hintPasswordTextFieldState = TextFieldState()
 
     private val vaultId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.BackupPassword.ARG_VAULT_ID))
@@ -115,7 +119,7 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     fun backupEncryptedVault() {
         if (shouldEnableEncryption()) {
-            if (validateConfirmPassword()) {
+            if (validateConfirmPassword() && validateHint()) {
                 val password = passwordTextFieldState.text.toString()
                 backupVault(password)
             }
@@ -161,6 +165,18 @@ internal class BackupPasswordViewModel @Inject constructor(
         return errorMessage == null
     }
 
+    private fun validateHint(): Boolean {
+        val errorMessage =
+            if (hintPasswordTextFieldState.text.length > HINT_MAX_LENGTH)
+                UiText.StringResource(R.string.vault_backup_hint_to_long)
+            else null
+
+        uiState.update {
+            it.copy(hintPasswordErrorMessage = errorMessage)
+        }
+        return errorMessage == null
+    }
+
     fun togglePasswordVisibility() {
         val isPasswordVisible = !uiState.value.isPasswordVisible
         uiState.update {
@@ -192,6 +208,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     fun saveContentToUriResult(uri: Uri, content: String) {
         if (isFileExtensionValid(uri)) {
             val isSuccess = context.saveContentToUri(uri, content)
+            if (isSuccess) saveHintToDataStore(uri)
             completeBackupVault(isSuccess)
         } else {
             viewModelScope.launch {
@@ -206,6 +223,16 @@ internal class BackupPasswordViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private fun saveHintToDataStore(uri: Uri) = viewModelScope.launch {
+        if (hintPasswordTextFieldState.text.isNotEmpty() && passwordTextFieldState.text.isNotEmpty()) {
+            val fileName = uri.fileName(context)
+            vaultDataStoreRepository.setBackupHint(
+                fileName,
+                hintPasswordTextFieldState.text.toString()
+            )
         }
     }
 

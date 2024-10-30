@@ -26,7 +26,7 @@ import javax.inject.Inject
 internal data class SwapTransactionUiModel(
     val srcTokenValue: String = "",
     val dstTokenValue: String = "",
-    val estimatedFees: String = "",
+    val totalFee: String = "",
     val hasConsentAllowance: Boolean = false,
 )
 
@@ -123,7 +123,7 @@ internal class VerifySwapViewModel @Inject constructor(
 
         if (hasAllConsents) {
             viewModelScope.launch {
-                sendNavigator.navigate (
+                sendNavigator.navigate(
                     getSendDstByKeysignInitType(keysignInitType, transactionId, password.value)
                 )
             }

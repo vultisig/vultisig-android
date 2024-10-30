@@ -83,7 +83,7 @@ internal fun KeysignScreen(
     transactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
-    progressLink:String?,
+    progressLink: String?,
     transactionTypeUiModel: TransactionTypeUiModel?
 ) {
     KeepScreenOn()

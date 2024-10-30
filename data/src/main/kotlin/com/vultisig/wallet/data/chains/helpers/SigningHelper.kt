@@ -2,12 +2,13 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.wallet.OneInchSwap
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 
 object SigningHelper {
@@ -43,7 +44,8 @@ object SigningHelper {
                 else -> Unit
             }
         } else {
-            messages += when (payload.coin.chain) {
+            val chain = payload.coin.chain
+            messages += when (chain) {
                 Chain.ThorChain -> {
                     val thorHelper = ThorChainHelper.thor(vault.pubKeyECDSA, vault.hexChainCode)
                     thorHelper.getPreSignedImageHash(payload)
@@ -77,28 +79,11 @@ object SigningHelper {
                     utxo.getPreSignedImageHash(payload)
                 }
 
-                Chain.GaiaChain -> {
-                    val atomHelper = CosmosHelper(
-                        coinType = CoinType.COSMOS,
-                        denom = CosmosHelper.ATOM_DENOM,
-                    )
-                    atomHelper.getPreSignedImageHash(payload)
-                }
-
-                Chain.Dydx -> {
-                    val dydxHelper = CosmosHelper(
-                        coinType = CoinType.DYDX,
-                        denom = CosmosHelper.DYDX_DENOM,
-                    )
-                    dydxHelper.getPreSignedImageHash(payload)
-                }
-
-                Chain.Kujira -> {
-                    val kujiraHelper = CosmosHelper(
-                        coinType = CoinType.KUJIRA,
-                        denom = CosmosHelper.KUJI_DENOM,
-                    )
-                    kujiraHelper.getPreSignedImageHash(payload)
+                Chain.GaiaChain, Chain.Dydx, Chain.Kujira, Chain.Osmosis -> {
+                    CosmosHelper(
+                        coinType = chain.coinType,
+                        denom = chain.feeUnit
+                    ).getPreSignedImageHash(payload)
                 }
 
                 Chain.MayaChain -> {
@@ -113,6 +98,10 @@ object SigningHelper {
 
                 Chain.Sui -> {
                     SuiHelper.getPreSignedImageHash(payload)
+                }
+
+                Chain.Ton -> {
+                    TonHelper.getPreSignedImageHash(payload)
                 }
             }
         }

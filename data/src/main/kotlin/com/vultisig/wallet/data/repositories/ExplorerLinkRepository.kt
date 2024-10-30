@@ -42,7 +42,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         payload: SwapPayload?,
     ): String? = when (payload) {
         is SwapPayload.ThorChain -> "https://track.ninerealms.com/$tx"
-        is SwapPayload.MayaChain -> "https://www.xscanner.org/tx/$tx"
+        is SwapPayload.MayaChain -> "https://www.xscanner.org/tx/${tx.removePrefix("0x")}"
         else -> null
     }
 
@@ -51,7 +51,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
             Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
             Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync, Chain.Sui,
-            Chain.Dydx, Chain.Bitcoin ->
+            Chain.Dydx, Chain.Bitcoin, Chain.Ton, Chain.Osmosis ->
                 "${explorerUrl}tx/"
 
             Chain.BitcoinCash, Chain.Dash, Chain.Litecoin ->
@@ -91,6 +91,8 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Polkadot -> "https://polkadot.subscan.io/account/"
             Chain.ZkSync -> "https://explorer.zksync.io/"
             Chain.Sui -> "https://suiscan.xyz/mainnet/"
+            Chain.Ton -> "https://tonscan.org/"
+            Chain.Osmosis -> "https://www.mintscan.io/osmosis/"
         }
 
 }

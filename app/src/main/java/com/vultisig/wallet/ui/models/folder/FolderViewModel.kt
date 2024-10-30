@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -69,7 +70,9 @@ internal class  FolderViewModel @Inject constructor(
 
     fun selectVault(vaultId: String) = viewModelScope.launch {
         lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
-        navigator.navigate(Destination.Back)
+        navigator.navigate(Destination.Home(vaultId),
+            opts = NavigationOptions(clearBackStack = true)
+        )
     }
 
     fun deleteFolder() = viewModelScope.launch {
