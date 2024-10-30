@@ -85,7 +85,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     init {
         loadFastSign()
         loadTransaction()
-        blowfishTransactionScan()
+        transactionScan()
         loadPassword()
     }
 
@@ -187,24 +187,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun blowfishTransactionScan() {
-        viewModelScope.launch {
-            val transaction = transaction.filterNotNull().first()
-            if (vaultId == null) return@launch
-            val vault = requireNotNull(vaultRepository.get(vaultId))
-            try {
-                val result = blowfishRepository.scanBlowfishTransaction(vault, transaction)
-                uiState.update { state ->
-                    state.copy(
-                        blowfishShow = result.first,
-                        blowfishWarnings = result.second
-                    )
-                }
-            } catch (e: Exception) {
-                Timber.e(e)
-            }
-        }
-    }
+    private fun transactionScan() {}
 }
 
 
