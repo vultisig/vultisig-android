@@ -1426,6 +1426,17 @@ object Coins {
             priceProviderID = "the-open-network",
             contractAddress = "",
             isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Osmosis,
+            ticker = "OSMO",
+            logo = "osmo",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "osmosis",
+            contractAddress = "",
+            isNativeToken = true,
         )
     )
 
