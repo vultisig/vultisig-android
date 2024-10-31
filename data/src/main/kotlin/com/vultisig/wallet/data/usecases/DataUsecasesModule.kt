@@ -94,4 +94,10 @@ internal interface DataUsecasesModule {
         impl: SearchEvmTokenUseCaseImpl
     ): SearchEvmTokenUseCase
 
+    @Binds
+    @Singleton
+    fun bindInitializeThorChainNetworkIdUseCase(
+        impl: InitializeThorChainNetworkIdUseCaseImpl
+    ): InitializeThorChainNetworkIdUseCase
+
 }

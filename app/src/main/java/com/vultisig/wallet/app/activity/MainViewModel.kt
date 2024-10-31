@@ -12,6 +12,7 @@ import com.google.android.play.core.install.model.UpdateAvailability
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -31,7 +32,8 @@ internal class MainViewModel @Inject constructor(
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
     private val discoverToken: DiscoverTokenUseCase,
-    private val appUpdateManager: AppUpdateManager
+    private val appUpdateManager: AppUpdateManager,
+    private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
 ) : ViewModel() {
 
     private val _isLoading: MutableState<Boolean> = mutableStateOf(true)
@@ -65,6 +67,10 @@ internal class MainViewModel @Inject constructor(
             snackbarFlow.collectMessage {
                 snakeBarHostState.showSnackbar(it)
             }
+        }
+
+        viewModelScope.launch {
+            initializeThorChainNetworkId()
         }
     }
 
