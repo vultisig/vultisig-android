@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,15 +26,19 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun BackupWarning(onWarningClick: () -> Unit) {
-    WarningCard (
+    WarningCard(
         onClick = onWarningClick,
-    ){
+    ) {
         Text(
             text = stringResource(id = R.string.backup_now),
+            textAlign = TextAlign.Center,
             style = Theme.montserrat.body2.copy(
                 fontSize = 16.sp,
             ),
             color = Theme.colors.neutral100,
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .weight(1f),
         )
     }
 
@@ -47,7 +54,7 @@ internal fun WarningCard(
     endIconTint: Color = Theme.colors.neutral100,
     endIconSize: Dp = 18.dp,
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
+    content: @Composable RowScope.() -> Unit,
 ) {
     Card(
         modifier = modifier
@@ -80,4 +87,10 @@ internal fun WarningCard(
             )
         }
     }
+}
+
+@Preview
+@Composable
+private fun BackupWarningPreview() {
+    BackupWarning {}
 }

@@ -42,6 +42,8 @@ internal fun SendScreen(
     val keysignShareViewModel: KeysignShareViewModel =
         hiltViewModel(context as MainActivity)
 
+    val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
+
     val sendNav = rememberNavController()
 
     LaunchedEffect(Unit) {
@@ -54,13 +56,6 @@ internal fun SendScreen(
 
     val route = navBackStackEntry?.destination?.route
 
-    val progress = when (route) {
-        SendDst.Send.route -> 0.35f
-        SendDst.VerifyTransaction.staticRoute -> 0.5f
-        SendDst.Password.staticRoute -> 0.65f
-        SendDst.Keysign.staticRoute -> 0.75f
-        else -> 0.0f
-    }
     val useMainNavigator = route == SendDst.Send.route
     val progressNav = if (useMainNavigator) {
         navController
@@ -68,21 +63,44 @@ internal fun SendScreen(
         sendNav
     }
 
-    val title = when (route) {
-        SendDst.Send.route -> stringResource(R.string.send_screen_title)
-        SendDst.VerifyTransaction.staticRoute -> stringResource(R.string.verify_transaction_screen_title)
-        SendDst.Password.staticRoute -> stringResource(R.string.keysign_password_title)
-        SendDst.Keysign.staticRoute -> stringResource(R.string.keysign)
-        else -> stringResource(R.string.send_screen_title)
+    val progress: Float
+    val title : String
+
+    when {
+        route == SendDst.Send.route -> {
+            progress = 0.25f
+            title = stringResource(R.string.send_screen_title)
+        }
+        route == SendDst.VerifyTransaction.staticRoute -> {
+            progress = 0.5f
+            title = stringResource(R.string.verify_transaction_screen_title)
+        }
+        route == SendDst.Password.staticRoute -> {
+            progress = 0.65f
+            title = stringResource(R.string.keysign_password_title)
+        }
+        route == SendDst.Keysign.staticRoute && isKeysignFinished -> {
+            progress = 1f
+            title = stringResource(R.string.transaction_complete_screen_title)
+        }
+        route == SendDst.Keysign.staticRoute -> {
+            progress = 0.75f
+            title = stringResource(R.string.keysign)
+        }
+        else -> {
+            progress = 0.0f
+            title = stringResource(R.string.send_screen_title)
+        }
     }
 
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
-    val isGasSettingsEnabled = viewModel.isGasSettingAvailable.collectAsState().value
+    val isGasSettingsEnabled by viewModel.isGasSettingAvailable.collectAsState()
     ProgressScreen(
         navController = progressNav,
         title = title,
         progress = progress,
+        showStartIcon = !isKeysignFinished,
         endIcon = if (isGasSettingsEnabled) {
             R.drawable.advance_gas_settings
         } else {
@@ -140,7 +158,7 @@ internal fun SendScreen(
                         viewModel.navigateToHome(useMainNavigator)
                     },
                     onKeysignFinished = {
-                        viewModel.enableNavigationToHome()
+                        viewModel.finishKeysign()
                     }
                 )
             }

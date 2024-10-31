@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.deposit
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -36,6 +37,8 @@ internal fun DepositScreen(
 ) {
     val depositNavHostController = rememberNavController()
 
+    val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel.dst.collect {
             depositNavHostController.route(it.dst.route, it.opts)
@@ -46,14 +49,6 @@ internal fun DepositScreen(
 
     val route = navBackStackEntry?.destination?.route
 
-    val progress = when (route) {
-        SendDst.Send.route -> 0.25f
-        SendDst.VerifyTransaction.staticRoute -> 0.5f
-        SendDst.Password.staticRoute -> 0.65f
-        SendDst.Keysign.staticRoute -> 0.75f
-        else -> 0.0f
-    }
-
     val shouldUseMainNavigator = route == SendDst.Send.route
     val topBarNavController = if (shouldUseMainNavigator) {
         navController
@@ -61,24 +56,46 @@ internal fun DepositScreen(
         depositNavHostController
     }
 
-    val title = when (route) {
-        SendDst.Send.route -> stringResource(R.string.deposit_screen_title)
-        SendDst.VerifyTransaction.staticRoute -> stringResource(R.string.verify_transaction_screen_title)
-        SendDst.Password.staticRoute -> stringResource(id = R.string.keygen_password_title)
-        SendDst.Keysign.staticRoute -> stringResource(R.string.keysign)
-        else -> stringResource(R.string.deposit_screen_title)
+    val progress: Float
+    val title: String
+
+    when {
+        route == SendDst.Send.route -> {
+            progress = 0.25f
+            title = stringResource(R.string.deposit_screen_title)
+        }
+        route == SendDst.VerifyTransaction.staticRoute -> {
+            progress = 0.5f
+            title = stringResource(R.string.verify_transaction_screen_title)
+        }
+        route == SendDst.Password.staticRoute -> {
+            progress = 0.65f
+            title = stringResource(id = R.string.keygen_password_title)
+        }
+        route == SendDst.Keysign.staticRoute && isKeysignFinished -> {
+            progress = 1f
+            title = stringResource(R.string.transaction_complete_screen_title)
+        }
+        route == SendDst.Keysign.staticRoute -> {
+            progress = 0.75f
+            title = stringResource(R.string.keysign)
+        }
+        else -> {
+            progress = 0.0f
+            title = stringResource(R.string.deposit_screen_title)
+        }
     }
 
     DepositScreen(
         topBarNavController = topBarNavController,
-        mainNavController = navController,
         navHostController = depositNavHostController,
         vaultId = vaultId,
         chainId = chainId,
         title = title,
         progress = progress,
+        showStartIcon = !isKeysignFinished,
         onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
-        enableNavigationToHome = viewModel::enableNavigationToHome,
+        finishKeysign = viewModel::finishKeysign,
     )
 }
 
@@ -86,20 +103,21 @@ internal fun DepositScreen(
 @Composable
 private fun DepositScreen(
     topBarNavController: NavController,
-    mainNavController: NavController,
     navHostController: NavHostController,
     title: String,
     progress: Float,
     vaultId: String,
     chainId: String,
+    showStartIcon: Boolean,
     onKeysignFinished: () -> Unit = {},
-    enableNavigationToHome:() -> Unit = {},
+    finishKeysign:() -> Unit = {},
 ) {
     val context = LocalContext.current
     ProgressScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
+        showStartIcon = showStartIcon,
         onStartIconClick = onKeysignFinished,
     ) {
         NavHost(
@@ -145,7 +163,7 @@ private fun DepositScreen(
                     onComplete = {
                         onKeysignFinished()
                     },
-                    onKeysignFinished = enableNavigationToHome,
+                    onKeysignFinished = finishKeysign,
                 )
             }
         }
@@ -157,10 +175,10 @@ private fun DepositScreen(
 internal fun DepositScreenPreview() {
     DepositScreen(
         topBarNavController = rememberNavController(),
-        mainNavController = rememberNavController(),
         navHostController = rememberNavController(),
         vaultId = "",
         chainId = "",
+        showStartIcon = true,
         title = stringResource(id = R.string.deposit_screen_title),
         progress = 0.35f,
     )

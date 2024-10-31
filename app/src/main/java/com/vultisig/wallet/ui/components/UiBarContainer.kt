@@ -15,11 +15,13 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun UiBarContainer(
     navController: NavController,
     title: String,
+    showStartIcon: Boolean = true,
     @DrawableRes endIcon: Int? = null,
     onEndIconClick: () -> Unit = {},
     onStartIconClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val startIcon = if (showStartIcon) R.drawable.caret_left else null
     Column(
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
@@ -27,7 +29,7 @@ internal fun UiBarContainer(
     ) {
         TopBar(
             centerText = title,
-            startIcon = R.drawable.caret_left,
+            startIcon = startIcon,
             endIcon = endIcon,
             onEndIconClick = onEndIconClick,
             onStartIconClick = onStartIconClick,

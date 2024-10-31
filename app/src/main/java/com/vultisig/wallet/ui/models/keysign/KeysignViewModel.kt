@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
@@ -25,10 +26,12 @@ import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -54,7 +57,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
 import tss.Tss
-import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.Base64
 
@@ -90,6 +92,7 @@ internal class KeysignViewModel(
     private val solanaApi: SolanaApi,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
+    private val tonApi: TonApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
@@ -198,6 +201,9 @@ internal class KeysignViewModel(
                     service.keysignEdDSA(keysignReq)
                 }
             }
+            if (keysignResp.r.isNullOrEmpty() || keysignResp.s.isNullOrEmpty()) {
+                throw Exception("Failed to sign message")
+            }
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
             this._messagePuller?.stop()
@@ -242,7 +248,7 @@ internal class KeysignViewModel(
                 solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Dydx -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
                 cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
@@ -261,6 +267,10 @@ internal class KeysignViewModel(
                     signedTransaction.rawTransaction,
                     signedTransaction.signature ?: ""
                 )
+            }
+
+            Chain.Ton -> {
+                tonApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
         }
         Timber.d("transaction hash: $txHash")
@@ -315,6 +325,7 @@ internal class KeysignViewModel(
             }
         }
 
+        val chain = keysignPayload.coin.chain
         // we could define an interface to make the following more simpler,but I will leave it for later
         when (keysignPayload.coin.chain) {
             Chain.Bitcoin, Chain.Dash, Chain.BitcoinCash, Chain.Dogecoin, Chain.Litecoin -> {
@@ -327,28 +338,11 @@ internal class KeysignViewModel(
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.GaiaChain -> {
-                val atomHelper = CosmosHelper(
-                    coinType = CoinType.COSMOS,
-                    denom = CosmosHelper.ATOM_DENOM,
-                )
-                return atomHelper.getSignedTransaction(keysignPayload, signatures)
-            }
-
-            Chain.Kujira -> {
-                val kujiraHelper = CosmosHelper(
-                    coinType = CoinType.KUJIRA,
-                    denom = CosmosHelper.KUJI_DENOM,
-                )
-                return kujiraHelper.getSignedTransaction(keysignPayload, signatures)
-            }
-
-            Chain.Dydx -> {
-                val dydxHelper = CosmosHelper(
-                    coinType = CoinType.DYDX,
-                    denom = CosmosHelper.DYDX_DENOM,
-                )
-                return dydxHelper.getSignedTransaction(keysignPayload, signatures)
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis -> {
+                return CosmosHelper(
+                    coinType = chain.coinType,
+                    denom = chain.feeUnit,
+                ).getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.Solana -> {
@@ -390,6 +384,14 @@ internal class KeysignViewModel(
                 return SuiHelper.getSignedTransaction(
                     vault.pubKeyEDDSA,
                     keysignPayload, signatures
+                )
+            }
+
+            Chain.Ton -> {
+                return TonHelper.getSignedTransaction(
+                    vaultHexPublicKey = vault.pubKeyEDDSA,
+                    payload = keysignPayload,
+                    signatures = signatures,
                 )
             }
         }

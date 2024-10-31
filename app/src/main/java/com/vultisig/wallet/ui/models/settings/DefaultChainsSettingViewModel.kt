@@ -72,7 +72,7 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
             Chain.Base -> "BASE"
             Chain.Blast -> "BLAST"
             Chain.Arbitrum -> "ARB"
-            Chain.Polygon -> "MATIC"
+            Chain.Polygon -> "POL"
             Chain.Optimism -> "OP"
             Chain.BscChain -> "BNB"
             Chain.Bitcoin -> "BTC"
@@ -88,5 +88,7 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
             Chain.Dydx -> "DYDX"
             Chain.ZkSync -> "ZK"
             Chain.Sui -> "SUI"
+            Chain.Ton -> "TON"
+            Chain.Osmosis -> "OSMO"
         }
 }

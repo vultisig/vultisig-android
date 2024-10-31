@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Chain.Arbitrum
@@ -27,11 +28,13 @@ import com.vultisig.wallet.data.models.Chain.Kujira
 import com.vultisig.wallet.data.models.Chain.Litecoin
 import com.vultisig.wallet.data.models.Chain.MayaChain
 import com.vultisig.wallet.data.models.Chain.Optimism
+import com.vultisig.wallet.data.models.Chain.Osmosis
 import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
 import com.vultisig.wallet.data.models.Chain.Solana
 import com.vultisig.wallet.data.models.Chain.Sui
 import com.vultisig.wallet.data.models.Chain.ThorChain
+import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -85,6 +88,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
+    private val tonApi: TonApi,
 
     private val tokenValueDao: TokenValueDao,
 ) : BalanceRepository {
@@ -223,7 +227,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
-            GaiaChain, Kujira, Dydx -> {
+            GaiaChain, Kujira, Dydx, Osmosis -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
                 val listCosmosBalance = cosmosApi.getBalance(address)
                 val balance = listCosmosBalance
@@ -250,6 +254,8 @@ internal class BalanceRepositoryImpl @Inject constructor(
             Polkadot -> polkadotApi.getBalance(address)
 
             Sui -> suiApi.getBalance(address)
+
+            Ton -> tonApi.getBalance(address)
 
         }, coin.ticker, coin.decimal))
     }.onEach { tokenValue ->

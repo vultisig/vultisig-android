@@ -159,6 +159,14 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     )
                 }
 
+                from.tonSpecific != null -> from.tonSpecific.let {
+                    BlockChainSpecific.Ton(
+                        sequenceNumber = it.sequenceNumber,
+                        expireAt = it.expireAt,
+                        bounceable = it.bounceable,
+                    )
+                }
+
                 else -> error("No supported BlockChainSpecific in proto $from")
             },
         )

@@ -9,7 +9,10 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 internal interface VultiSignerApi {
 
@@ -64,12 +67,13 @@ internal class VultiSignerApiImpl @Inject constructor(
         }.throwIfUnsuccessful()
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
     override suspend fun get(
         publicKeyEcdsa: String,
         password: String,
     ) {
         http.get("https://api.vultisig.com/vault/get/$publicKeyEcdsa") {
-            header("x-password", password)
+            header("x-password", Base64.encode(password.toByteArray(StandardCharsets.UTF_8)))
         }.throwIfUnsuccessful()
     }
 

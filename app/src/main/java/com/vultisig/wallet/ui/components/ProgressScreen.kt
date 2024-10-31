@@ -20,6 +20,7 @@ import androidx.navigation.compose.rememberNavController
 internal fun ProgressScreen(
     navController: NavController,
     title: String,
+    showStartIcon: Boolean = true,
     @DrawableRes endIcon: Int? = null,
     onEndIconClick: () -> Unit = {},
     onStartIconClick: (() -> Unit)? = null,
@@ -28,6 +29,7 @@ internal fun ProgressScreen(
 ) {
     UiBarContainer(
         navController = navController,
+        showStartIcon = showStartIcon,
         endIcon = endIcon,
         onEndIconClick = onEndIconClick,
         onStartIconClick = onStartIconClick,

@@ -8,4 +8,5 @@ enum class TokenStandard {
     SOL,
     SUBSTRATE,
     SUI,
+    TON,
 }
