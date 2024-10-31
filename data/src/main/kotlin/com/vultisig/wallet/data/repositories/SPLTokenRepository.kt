@@ -23,6 +23,7 @@ interface SplTokenRepository {
     suspend fun getCachedBalance(coin: Coin): BigInteger
     suspend fun getBalance(coin: Coin): BigInteger?
     suspend fun getTokenByContract(contractAddress: String): Coin?
+    suspend fun getTokens(address: String): List<Coin>
 }
 
 internal class SplTokenRepositoryImpl @Inject constructor(
@@ -33,19 +34,29 @@ internal class SplTokenRepositoryImpl @Inject constructor(
     private val mapSplAccountJsonToSplToken: SplResponseAccountJsonMapper,
 ) : SplTokenRepository {
 
-    override suspend fun getTokens(address: String, vault: Vault): List<Coin> {
+    override suspend fun getTokens(address: String, vault: Vault) =
+        fetchTokens(address)
+            .filterNotNull()
+            .map { (key, coin) ->
+                createCoin(coin, vault).apply {
+                    saveTokenValueToDatabase(this, key)
+                }
+            }
+
+    override suspend fun getTokens(address: String) = fetchTokens(address)
+        .filterNotNull()
+        .map { it.second }
+
+    private suspend fun fetchTokens(address: String): List<Pair<SplTokenResponse, Coin>?> {
         val rawSPLTokens = solanaApi.getSPLTokens(address) ?: return emptyList()
         val splTokenResponse = rawSPLTokens.map(mapSplAccountJsonToSplToken)
         val result = getSplTokensByContractAddress(splTokenResponse.map { it.mint })
-        return splTokenResponse.mapNotNull { key ->
+        return splTokenResponse.map { key ->
             result.firstOrNull { resultItem -> resultItem.mint == key.mint }
                 ?.let { matchingResult ->
-                    createCoin(matchingResult, key.mint, vault).apply {
-                        saveToDatabase(this, key)
-                    }
+                    key to initCoinData(matchingResult, key.mint)
                 }
         }
-
     }
 
     private suspend fun getSplTokensByContractAddress(contractAddresses: List<String>): List<SplTokenJson> {
@@ -64,7 +75,7 @@ internal class SplTokenRepositoryImpl @Inject constructor(
         return result
     }
 
-    private suspend fun saveToDatabase(
+    private suspend fun saveTokenValueToDatabase(
         coin: Coin,
         splTokenData: SplTokenResponse,
     ) {
@@ -104,14 +115,12 @@ internal class SplTokenRepositoryImpl @Inject constructor(
     }
 
     private suspend fun createCoin(
-        tokenResponse: SplTokenJson,
-        contractAddress: String,
+        initialCoin: Coin,
         vault: Vault
     ): Coin {
-        val coin = initCoinData(tokenResponse, contractAddress)
         val (derivedAddress, derivedPublicKey) = chainAccountAddressRepository
-            .getAddress(coin, vault)
-        return coin.copy(address = derivedAddress, hexPublicKey = derivedPublicKey)
+            .getAddress(initialCoin, vault)
+        return initialCoin.copy(address = derivedAddress, hexPublicKey = derivedPublicKey)
     }
 
     private fun initCoinData(

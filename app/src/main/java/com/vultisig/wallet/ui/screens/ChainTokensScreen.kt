@@ -91,7 +91,6 @@ internal fun ChainTokensScreen(
         onSwap = viewModel::swap,
         onDeposit = viewModel::deposit,
         onSelectTokens = viewModel::selectTokens,
-        onCustomTokenClick = viewModel::openCustomTokenScreen,
         onTokenClick = viewModel::openToken,
         onBuyWeweClick = viewModel::buyWewe,
         onQrBtnClick = viewModel::navigateToQrAddressScreen,
@@ -110,7 +109,6 @@ private fun ChainTokensScreen(
     onSwap: () -> Unit = {},
     onDeposit: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
-    onCustomTokenClick: () -> Unit = {},
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
     onBuyWeweClick: () -> Unit = {},
     onQrBtnClick: () -> Unit = {},
@@ -272,14 +270,6 @@ private fun ChainTokensScreen(
                         )
                     }
 
-                    if (uiModel.enableCustomToken) {
-                        UiPlusButton(
-                            title = stringResource(R.string.chain_tokens_screen_custom_token),
-                            onClick = onCustomTokenClick,
-                            modifier = Modifier
-                                .padding(vertical = 16.dp),
-                        )
-                    }
                 }
             }
         }

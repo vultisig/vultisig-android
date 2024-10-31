@@ -9,9 +9,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.usecases.CoinAndFiatValue
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -49,7 +49,7 @@ internal class CustomTokenViewModel @Inject constructor(
     fun searchCustomToken() {
         viewModelScope.launch {
             showLoading()
-            val searchedToken: Pair<Coin, FiatValue>? =
+            val searchedToken: CoinAndFiatValue? =
                 searchToken(
                     chainId,
                     searchFieldState.text.toString()
@@ -58,12 +58,12 @@ internal class CustomTokenViewModel @Inject constructor(
             if (searchedToken == null) {
                 showError()
             } else {
-                val price = fiatValueToStringMapper.map(searchedToken.second)
+                val price = fiatValueToStringMapper.map(searchedToken.fiatValue)
                 uiModel.update {
                     it.copy(
                         isLoading = false,
                         hasError = false,
-                        token = searchedToken.first,
+                        token = searchedToken.coin,
                         price = price
                     )
                 }

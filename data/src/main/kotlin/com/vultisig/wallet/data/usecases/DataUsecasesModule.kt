@@ -82,4 +82,16 @@ internal interface DataUsecasesModule {
         impl: SearchTokenUseCaseImpl
     ): SearchTokenUseCase
 
+    @Binds
+    @Singleton
+    fun bindSearchSolTokenUseCase(
+        impl: SearchSolTokenUseCaseImpl
+    ): SearchSolTokenUseCase
+
+    @Binds
+    @Singleton
+    fun bindSearchEvmTokenUseCase(
+        impl: SearchEvmTokenUseCaseImpl
+    ): SearchEvmTokenUseCase
+
 }

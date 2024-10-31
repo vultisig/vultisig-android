@@ -18,11 +18,8 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
-import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
-import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REQUEST_SEARCHED_TOKEN_ID
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -53,7 +50,6 @@ internal data class ChainTokensUiModel(
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
     val isBuyWeweVisible: Boolean = false,
-    val enableCustomToken: Boolean = false,
 )
 
 @Immutable
@@ -78,8 +74,6 @@ internal class ChainTokensViewModel @Inject constructor(
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
-    private val requestResultRepository: RequestResultRepository,
-    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
     private val chainRaw: String =
@@ -87,11 +81,7 @@ internal class ChainTokensViewModel @Inject constructor(
     private val vaultId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.ARG_VAULT_ID))
 
-    val uiState = MutableStateFlow(
-        ChainTokensUiModel(
-            enableCustomToken = Chain.fromRaw(chainRaw) == Chain.Solana
-        )
-    )
+    val uiState = MutableStateFlow(ChainTokensUiModel())
 
     private var loadDataJob: Job? = null
 
@@ -161,18 +151,6 @@ internal class ChainTokensViewModel @Inject constructor(
                     chainId = chainRaw,
                 )
             )
-        }
-    }
-
-    fun openCustomTokenScreen() {
-        viewModelScope.launch {
-            navigator.navigate(
-                Destination.CustomToken(
-                    chainId = chainRaw
-                )
-            )
-            val searchedCoin = requestResultRepository.request<Coin>(REQUEST_SEARCHED_TOKEN_ID)
-            vaultRepository.addTokenToVault(vaultId, searchedCoin)
         }
     }
 

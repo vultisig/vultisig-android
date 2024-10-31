@@ -3,52 +3,48 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.TokenStandard.EVM
+import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
-import com.vultisig.wallet.data.repositories.SplTokenRepository
-import com.vultisig.wallet.data.repositories.TokenPriceRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
 import kotlinx.coroutines.flow.first
+import java.math.BigDecimal
 import javax.inject.Inject
 
-interface SearchTokenUseCase : suspend (String, String) -> Pair<Coin, FiatValue>?
+data class CoinAndPrice(
+    val coin: Coin,
+    val price: BigDecimal
+)
+
+data class CoinAndFiatValue(
+    val coin: Coin,
+    val fiatValue: FiatValue
+)
+
+interface SearchTokenUseCase : suspend (String, String) -> CoinAndFiatValue?
 
 internal class SearchTokenUseCaseImpl @Inject constructor(
-    private val tokenRepository: TokenRepository,
-    private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
-    private val splTokenRepository: SplTokenRepository,
+    private val searchEvmToken: SearchEvmTokenUseCase,
+    private val searchSolToken: SearchSolTokenUseCase,
 ) : SearchTokenUseCase {
     override suspend fun invoke(
         chainId: String,
         contractAddress: String
-    ): Pair<Coin, FiatValue>? {
+    ): CoinAndFiatValue? {
         val chain = Chain.fromRaw(chainId)
-        val searchedToken = when (chain) {
-            Chain.Ethereum -> tokenRepository
-                .getTokenByContract(
-                    chainId, contractAddress
-                )
-
-            Chain.Solana -> splTokenRepository
-                .getTokenByContract(contractAddress)
-
-            else -> null
+        val searchedToken = when (chain.standard) {
+            EVM -> searchEvmToken(chainId, contractAddress)
+            SOL -> searchSolToken(contractAddress)
+            else -> error("search token not supported for ${chain.standard}")
         } ?: return null
 
-        val rawPrice = calculatePrice(chainId, searchedToken.contractAddress)
+        val rawPrice = searchedToken.price
+
         val currency = appCurrencyRepository.currency.first()
         val tokenFiatValue = FiatValue(
             rawPrice,
             currency.ticker
         )
-        return Pair(searchedToken, tokenFiatValue)
+        return CoinAndFiatValue(searchedToken.coin, tokenFiatValue)
     }
-
-    private suspend fun calculatePrice(
-        chainId: String,
-        contractAddress: String
-    ) = tokenPriceRepository.getPriceByContactAddress(
-        chainId,
-        contractAddress
-    )
 }

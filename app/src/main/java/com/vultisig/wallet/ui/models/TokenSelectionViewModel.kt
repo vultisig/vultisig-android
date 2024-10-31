@@ -55,11 +55,10 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val chainId: String =
         requireNotNull(savedStateHandle[ARG_CHAIN_ID])
 
-    private val enabledTokens = MutableStateFlow(emptySet<String>())
+    private val enabledTokenIds = MutableStateFlow(emptySet<String>())
 
-    private val selectedTokens = MutableStateFlow(emptyList<Coin>())
-    private val allTokens = MutableStateFlow(emptyList<Coin>())
-    private val builtInTokens = MutableStateFlow(emptyList<Coin>())
+    private val enabledTokens = MutableStateFlow(emptyList<Coin>())
+    private val disabledTokens = MutableStateFlow(emptyList<Coin>())
 
     val uiState = MutableStateFlow(TokenSelectionUiModel())
 
@@ -80,14 +79,14 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     fun enableToken(coin: Coin) = viewModelScope.launch {
         enableTokenUseCase(vaultId, coin)?.let { updatedCoinId ->
-            enabledTokens.update { it + updatedCoinId }
+            enabledTokenIds.update { it + updatedCoinId }
         }
     }
 
     fun disableToken(coin: Coin) {
         viewModelScope.launch {
             vaultRepository.deleteTokenFromVault(vaultId, coin.id)
-            enabledTokens.update { it - coin.id }
+            enabledTokenIds.update { it - coin.id }
         }
     }
 
@@ -101,28 +100,25 @@ internal class TokenSelectionViewModel @Inject constructor(
         val chain = Chain.fromRaw(chainId)
 
         viewModelScope.launch {
-            val enabled = vaultRepository
+            val enabledTokens = vaultRepository
                 .getEnabledTokens(vaultId)
                 .first()
                 .filter { !it.isNativeToken && it.chain == chain }
 
-            selectedTokens.value = enabled
+            this@TokenSelectionViewModel.enabledTokens.value = enabledTokens
 
-            val enabledTokenIds = enabled.map { it.id }.toSet()
-            enabledTokens.value = enabledTokenIds
-
-            builtInTokens.value = tokenRepository.builtInTokens.first()
-                .asSequence()
-                .filter { it.chain == chain && !it.isNativeToken }
-                .filter { it.id !in enabledTokenIds }
-                .toList()
+            val enabledTokenIds = enabledTokens.map { it.id }.toSet()
+            this@TokenSelectionViewModel.enabledTokenIds.value = enabledTokenIds
 
             try {
-                val tokens = tokenRepository.getChainTokens(chain)
+                val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
+                val enabledCoins = vault.coins.filter { it.chain == chain }
+                val address = enabledCoins.first().address
+                val allChainTokens = tokenRepository.getChainTokens(chain, address)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
                     .first()
 
-                allTokens.value = tokens.filter { it.id !in enabledTokenIds }
+                disabledTokens.value = allChainTokens.filter { it.id !in enabledTokenIds }
             } catch (e: Exception) {
                 // todo handle error
                 Timber.e(e)
@@ -132,22 +128,21 @@ internal class TokenSelectionViewModel @Inject constructor(
 
     private fun collectTokens() {
         combine(
+            enabledTokenIds,
             enabledTokens,
-            selectedTokens,
-            allTokens,
-            builtInTokens,
+            disabledTokens,
             searchTextFieldState.textAsFlow()
                 .map { it.toString() },
-        ) { enabled, selected, all, builtIn, query ->
-            val selectedUiTokens = selected
+        ) { enabledTokenIds, enabledTokens, disabledTokens, query ->
+            val selectedUiTokens = enabledTokens
                 .filter { it.ticker.contains(query, ignoreCase = true) }
-                .asUiTokens(enabled)
+                .asUiTokens(enabledTokenIds)
 
             val otherUiTokens = if (query.isNotBlank()) {
-                all.filter { it.ticker.contains(query, ignoreCase = true) }
+                disabledTokens.filter { it.ticker.contains(query, ignoreCase = true) }
             } else {
-                builtIn
-            }.asUiTokens(enabled)
+                enabledTokens + disabledTokens
+            }.asUiTokens(enabledTokenIds)
 
             uiState.update {
                 it.copy(
@@ -170,7 +165,7 @@ internal class TokenSelectionViewModel @Inject constructor(
     private fun enableSearchedToken(coin: Coin) {
         viewModelScope.launch {
             coin.apply {
-                if (enabledTokens.value.contains(id))
+                if (enabledTokenIds.value.contains(id))
                     return@apply
                 enableToken(this).join()
                 loadTokens()

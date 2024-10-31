@@ -26,7 +26,7 @@ interface TokenRepository {
 
     suspend fun getToken(tokenId: String): Coin?
 
-    fun getChainTokens(chain: Chain): Flow<List<Coin>>
+    fun getChainTokens(chain: Chain, address: String): Flow<List<Coin>>
 
     suspend fun getNativeToken(chainId: String): Coin
 
@@ -44,30 +44,38 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
     private val balanceApi: ThorBalanceApi,
+    private val splTokenRepository: SplTokenRepository,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
         builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 
-    override fun getChainTokens(chain: Chain): Flow<List<Coin>> =
-        if (chain.standard == TokenStandard.EVM) {
-            flow {
-                val tokens = oneInchApi.getTokens(chain)
-                val allTokens = builtInTokens.first().filter { it.chain == chain }
+    override fun getChainTokens(chain: Chain, address: String): Flow<List<Coin>> =
+        when (chain.standard) {
+            TokenStandard.EVM -> flow {
+                val builtInTokens = builtInTokens.first().filter { it.chain == chain }
+                emit(builtInTokens)
+                val oneInchTokens = oneInchApi.getTokens(chain)
                 emit(
-                    allTokens +
-                            tokens.tokens.toCoins(chain)
+                    builtInTokens +
+                            oneInchTokens.tokens.toCoins(chain)
                                 .filter { newCoin ->
-                                    allTokens.none {
+                                    builtInTokens.none {
                                         it.chain == newCoin.chain
                                                 && it.ticker == newCoin.ticker
                                     }
                                 }
                 )
             }
-        } else {
-            builtInTokens.map { allTokens ->
-                allTokens.filter { it.chain.id == chain.id }
+
+            TokenStandard.SOL -> flow {
+                val tokens = splTokenRepository.getTokens(address)
+                emit(tokens)
             }
+
+            else ->
+                builtInTokens.map { allTokens ->
+                    allTokens.filter { it.chain.id == chain.id }
+                }
         }
 
     override suspend fun getNativeToken(chainId: String): Coin =
