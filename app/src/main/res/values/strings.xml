@@ -468,4 +468,5 @@
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
     <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
     <string name="verify_swap_screen_total_fees" translatable="false">Total Fees</string>
+    <string name="chain_tokens_screen_custom_token" translatable="false">Custom Token</string>
 </resources>
