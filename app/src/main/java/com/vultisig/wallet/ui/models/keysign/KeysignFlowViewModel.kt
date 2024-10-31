@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_ADDRESS
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Coin
@@ -51,6 +52,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -92,7 +94,6 @@ import vultisig.keysign.v1.UTXOSpecific
 import vultisig.keysign.v1.UtxoInfo
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.random.Random
 
 internal sealed class KeysignFlowState {
     data object PeerDiscovery : KeysignFlowState()
@@ -128,10 +129,11 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val mapDepositTransactionUiModel: DepositTransactionToUiModelMapper,
     private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
+    private val generateServiceName: GenerateServiceName,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
-    private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
-    private var _serverAddress: String = "http://127.0.0.1:18080" // local mediator server
+    private val _serviceName: String = generateServiceName()
+    private var _serverAddress: String = LOCAL_MEDIATOR_SERVER_ADDRESS
     private var _participantDiscovery: ParticipantDiscovery? = null
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _currentVault: Vault? = null
@@ -566,7 +568,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value = option
         _serverAddress = when (option) {
             NetworkPromptOption.LOCAL -> {
-                "http://127.0.0.1:18080"
+                LOCAL_MEDIATOR_SERVER_ADDRESS
             }
 
             NetworkPromptOption.INTERNET -> {

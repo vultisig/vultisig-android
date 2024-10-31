@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 @HiltViewModel(assistedFactory = GeneratingKeyWrapperViewModel.Factory::class)
 internal class GeneratingKeyWrapperViewModel @AssistedInject constructor(
     @Assisted val viewModel: GeneratingKeyViewModel,
-    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     @AssistedFactory
@@ -29,7 +28,7 @@ internal class GeneratingKeyWrapperViewModel @AssistedInject constructor(
     }
 
     override fun onCleared() {
-        viewModel.stopService(context)
+        viewModel.stopService()
         super.onCleared()
     }
 }

@@ -94,4 +94,15 @@ internal interface DataUsecasesModule {
         impl: SearchEvmTokenUseCaseImpl
     ): SearchEvmTokenUseCase
 
+    @Binds
+    @Singleton
+    fun bindGenerateServerPartyId(
+        impl: GenerateServerPartyIdImpl
+    ): GenerateServerPartyId
+
+    @Binds
+    @Singleton
+    fun bindGenerateServiceName(
+        impl: GenerateServiceNameImpl
+    ): GenerateServiceName
 }

@@ -78,7 +78,6 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
     @ApplicationContext private val context: Context,
-    savedStateHandle: SavedStateHandle,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
