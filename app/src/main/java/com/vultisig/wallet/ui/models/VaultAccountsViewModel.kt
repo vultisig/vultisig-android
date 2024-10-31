@@ -32,6 +32,7 @@ import javax.inject.Inject
 internal data class VaultAccountsUiModel(
     val vaultName: String = "",
     val showBackupWarning: Boolean = false,
+    val showMonthlyBackupReminder: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
@@ -202,6 +203,16 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun backupVault() {
         viewModelScope.launch {
             navigator.navigate(Destination.BackupPassword(vaultId!!))
+        }
+    }
+
+    fun dismissBackupReminder() {
+        uiState.update { it.copy(showMonthlyBackupReminder = false) }
+    }
+
+    fun doNotRemindBackup() {
+        viewModelScope.launch {
+            uiState.update { it.copy(showMonthlyBackupReminder = false) }
         }
     }
 

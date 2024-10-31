@@ -464,6 +464,8 @@
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
     <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
+    <string name="do_not_remind_me_again" translatable="false">Don\'t remind me again</string>
+    <string name="monthly_backup_reminder_title" translatable="false">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title" translatable="false">Transaction complete</string>
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
     <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
