@@ -40,6 +40,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlowfishRepository
+import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -156,6 +157,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
+    private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -296,10 +298,13 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val srcTokenValue = swapPayload.srcTokenValue
                 val dstTokenValue = swapPayload.dstTokenValue
 
-                val nativeToken = tokenRepository.getNativeToken(dstToken.chain.id)
+                val nativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
                 val chain = srcToken.chain
-                val gasFee = gasFeeRepository.getGasFee(chain, nativeToken.address)
+                val (nativeTokenAddress, _) = chainAccountAddressRepository.getAddress(
+                    nativeToken, _currentVault
+                )
+                val gasFee = gasFeeRepository.getGasFee(chain, nativeTokenAddress)
                 val estimatedGasFee: EstimatedGasFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
@@ -397,7 +402,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
 
                         val estimatedFee =
-                            convertTokenValueToFiat(nativeToken, quote.fees, currency)
+                            convertTokenValueToFiat(dstToken, quote.fees, currency)
                         val swapTransactionUiModel = SwapTransactionUiModel(
                             srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
                             dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
