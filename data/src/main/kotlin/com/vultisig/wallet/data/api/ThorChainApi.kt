@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
-import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
@@ -9,6 +7,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.common.Endpoints
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -19,6 +19,9 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -44,6 +47,8 @@ interface ThorChainApi {
 
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getTHORChainNativeTransactionFee(): BigInteger
+
+    suspend fun getNetworkChainId(): String
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -126,4 +131,16 @@ internal class ThorChainApiImpl @Inject constructor(
             throw e
         }
     }
+
+    override suspend fun getNetworkChainId(): String =
+        httpClient.get("https://rpc.ninerealms.com/status")
+            .body<JsonObject>()["result"]
+            ?.jsonObject
+            ?.get("node_info")
+            ?.jsonObject
+            ?.get("network")
+            ?.jsonPrimitive
+            ?.content
+            ?: error("Could't find network field in response for THORChain chain id")
+
 }

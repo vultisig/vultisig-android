@@ -34,7 +34,7 @@ class ThorChainHelper(
 
     companion object {
         const val THOR_CHAIN_GAS_UNIT: Long = 20000000
-        const val THORCHAIN_NETWORK_ID: String = "thorchain-1"
+        var THORCHAIN_NETWORK_ID: String = "thorchain-1"
 
         const val MAYA_CHAIN_GAS_UNIT: Long = 2000000000
 
