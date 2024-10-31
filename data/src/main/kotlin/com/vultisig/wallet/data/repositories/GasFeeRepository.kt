@@ -114,7 +114,7 @@ internal class GasFeeRepositoryImpl @Inject constructor(
             Chain.Sui -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
-                    value = suiApi.getReferenceGasPrice(),
+                    value = BigInteger("3000000"),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )
