@@ -17,8 +17,8 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 34
-        versionCode = 31
-        versionName = "1.0.31"
+        versionCode = 32
+        versionName = "1.0.32"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
