@@ -3,6 +3,9 @@ package com.vultisig.wallet.data.utils
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.*
 import kotlinx.serialization.KSerializer
@@ -88,5 +91,37 @@ object KeysignResponseSerializer : KSerializer<tss.KeysignResponse> {
     override fun deserialize(decoder: Decoder): tss.KeysignResponse {
         val surrogate: KeysignResponseSerializable = decoder.decodeSerializableValue(serializer)
         return surrogate.toOriginal()
+    }
+}
+
+
+@Singleton
+class CosmosTHORChainResponseSerializer @Inject constructor(
+    private val json: Json,
+) :
+    KSerializer<CosmosTHORChainAccountResponse> {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("SplTokenResponseJsonSerializer")
+
+    override fun deserialize(decoder: Decoder): CosmosTHORChainAccountResponse {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        val isErrorResponse = (jsonObject.containsKey("message")
+                && jsonObject.containsKey("code"))
+
+        return if (isErrorResponse) {
+            CosmosTHORChainAccountResponse.Error(
+                json.decodeFromJsonElement<THORChainAccountErrorJson>(jsonObject)
+            )
+        } else {
+            CosmosTHORChainAccountResponse.Success(
+                json.decodeFromJsonElement<THORChainAccountJson>(jsonObject)
+            )
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: CosmosTHORChainAccountResponse) {
+        throw UnsupportedOperationException("Serialization is not required")
     }
 }
