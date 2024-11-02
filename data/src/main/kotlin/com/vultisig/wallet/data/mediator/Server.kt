@@ -4,6 +4,7 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import com.vultisig.wallet.data.common.sha256
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -106,6 +107,58 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
                 "complete"
             )
         }
+        service.post("/payload/:hash") { request, response ->
+            postPayload(
+                request,
+                response
+            )
+        }
+        service.get("/payload/:hash") { request, response ->
+            getPayload(
+                request,
+                response
+            )
+        }
+    }
+
+    private fun getPayload(request: Request, response: Response) {
+        val hash = request.params(":hash")
+        if (hash.isNullOrEmpty()) {
+            response.body("hash is empty")
+            response.status(HttpStatusCode.BadRequest.value)
+            return
+        }
+        cache.getIfPresent(hash)?.let {
+            val content = it as? String
+            val contentHash = content?.sha256()
+            if (contentHash != hash) {
+                response.body("hash mismatch")
+                response.status(HttpStatusCode.BadRequest.value)
+                return
+            }
+            response.body(content)
+            response.status(HttpStatusCode.OK.value)
+        } ?: run {
+            response.status(HttpStatusCode.NotFound.value)
+        }
+    }
+
+    private fun postPayload(request: Request, response: Response) {
+        val hash = request.params(":hash")
+        if (hash.isNullOrEmpty()) {
+            response.body("hash is empty")
+            response.status(HttpStatusCode.BadRequest.value)
+            return
+        }
+        val body = request.body()
+        val bodyHash = body.sha256()
+        if (bodyHash != hash) {
+            response.body("hash mismatch")
+            response.status(HttpStatusCode.BadRequest.value)
+            return
+        }
+        cache.put(hash, request.body())
+        response.status(HttpStatusCode.OK.value)
     }
 
     private fun postStartKeygenOrKeysign(request: Request, response: Response): String {
