@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.api.models
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
 
 @Serializable
 data class SplTokenAmountJson(
@@ -148,6 +147,8 @@ data class SplAmountAccountJson(
 data class SplAmountValueJson(
     @SerialName("account")
     val account: SplAmountAccountJson,
+    @SerialName("pubkey")
+    val pubKey: String,
 )
 
 @Serializable
@@ -168,16 +169,4 @@ data class SplAmountRpcResponseResultJson(
 data class SPLTokenRequestJson(
     @SerialName("tokens")
     val tokens: List<String>,
-)
-
-@Serializable
-data class SolanaAccountExistResponseJson(
-    @SerialName("result")
-    val result: SolanaAccountExistResultJson,
-)
-
-@Serializable
-data class SolanaAccountExistResultJson(
-    @SerialName("value")
-    val values: JsonArray
 )

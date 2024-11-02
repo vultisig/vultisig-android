@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
@@ -16,6 +17,8 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.datetime.Clock
+import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -49,6 +52,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val blockChairApi: BlockChairApi,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
+    private val tonApi: TonApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -169,18 +173,30 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val blockHash = async {
                 solanaApi.getRecentBlockHash()
             }
-
-            val tokenAccountExists = async {
+            val fromAddressPubKey = async {
+                solanaApi.getTokenAssociatedAccountByOwner(
+                    token.address,
+                    token.contractAddress
+                ).takeIf { !token.isNativeToken }
+            }
+            val toAddressPubKey = async {
                 dstAddress?.let {
-                    solanaApi.doesTokenAccountExist(dstAddress, token.contractAddress)
+                    solanaApi.getTokenAssociatedAccountByOwner(
+                        dstAddress,
+                        token.contractAddress
+                    ).takeIf { !token.isNativeToken }
                 }
             }
-
+            val recentBlockHashResult = blockHash.await()
+            val fromAddressPubKeyResult = fromAddressPubKey.await()
+            val toAddressPubKeyResult = toAddressPubKey.await()
+            Timber.d("solana blockhash: $recentBlockHashResult")
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Solana(
-                    recentBlockHash = blockHash.await(),
-                    tokenAccountExists = tokenAccountExists.await(),
+                    recentBlockHash = recentBlockHashResult,
                     priorityFee = gasFee.value,
+                    fromAddressPubKey = fromAddressPubKeyResult,
+                    toAddressPubKey = toAddressPubKeyResult,
                 )
             )
         }
@@ -220,14 +236,24 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.SUI -> {
-            suiApi.getAllCoins(address)
-
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
-                    referenceGasPrice = gasFee.value,
+                    referenceGasPrice = suiApi.getReferenceGasPrice(),
                     coins = suiApi.getAllCoins(address),
                 ),
                 utxos = emptyList(),
+            )
+        }
+
+        TokenStandard.TON -> {
+            BlockChainSpecificAndUtxo(
+                blockChainSpecific = BlockChainSpecific.Ton(
+                    sequenceNumber = tonApi.getSpecificTransactionInfo(address)
+                        .toString().toULong(),
+                    expireAt = (Clock.System.now()
+                        .epochSeconds + 600L).toULong(),
+                    bounceable = false,
+                ),
             )
         }
     }

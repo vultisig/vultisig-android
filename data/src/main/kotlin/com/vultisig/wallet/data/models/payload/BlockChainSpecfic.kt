@@ -40,7 +40,6 @@ sealed class BlockChainSpecific {
         val priorityFee: BigInteger,
         val fromAddressPubKey: String? = null,
         val toAddressPubKey: String? = null,
-        val tokenAccountExists: Boolean? = null,
     ) : BlockChainSpecific()
 
     data class Sui(
