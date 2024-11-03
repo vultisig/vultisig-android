@@ -129,6 +129,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return
         }
         cache.getIfPresent(hash)?.let {
+
             val content = it as? String
             val contentHash = content?.sha256()
             if (contentHash != hash) {
@@ -137,6 +138,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
                 return
             }
             response.body(content)
+            Timber.d("return hash: %s", hash)
             response.status(HttpStatusCode.OK.value)
         } ?: run {
             response.status(HttpStatusCode.NotFound.value)
@@ -150,6 +152,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             response.status(HttpStatusCode.BadRequest.value)
             return
         }
+        Timber.d("upload hash: %s", hash)
         val body = request.body()
         val bodyHash = body.sha256()
         if (bodyHash != hash) {

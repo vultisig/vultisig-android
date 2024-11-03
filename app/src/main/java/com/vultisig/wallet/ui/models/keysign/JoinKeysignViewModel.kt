@@ -248,7 +248,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                         return@launch
                     }
                 }
-                _useVultisigRelay = payloadProto.useVultisigRelay
+                this@JoinKeysignViewModel._sessionID = payloadProto.sessionId
+                this@JoinKeysignViewModel._serviceName = payloadProto.serviceName
+                this@JoinKeysignViewModel._useVultisigRelay = payloadProto.useVultisigRelay
+                this@JoinKeysignViewModel._encryptionKeyHex = payloadProto.encryptionKeyHex
                 // when the payload is in the QRCode
                 if (payloadProto.keysignPayload != null && payloadProto.payloadId.isEmpty()) {
                     if (!loadKeysignMessage(payloadProto)) {
@@ -263,8 +266,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                     // when Payload is not in the QRCode
                     routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                         if (payload.isNotEmpty()) {
+                            val rawPayload = decompressQr(payload.decodeBase64Bytes())
                             val payloadProto =
-                                protoBuf.decodeFromByteArray<KeysignPayloadProto>(payload.decodeBase64Bytes())
+                                protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
                             val keysignMsgProto = KeysignMessageProto(
                                 keysignPayload = payloadProto,
                                 sessionId = tempKeysignMessageProto!!.sessionId,
@@ -288,7 +292,6 @@ internal class JoinKeysignViewModel @Inject constructor(
             }
         }
     }
-
     private suspend fun loadKeysignMessage(payloadProto: KeysignMessageProto): Boolean {
         val payload = mapKeysignMessageFromProto(payloadProto)
         Timber.d("Mapped proto to KeysignMessage: $payload")
@@ -312,10 +315,6 @@ internal class JoinKeysignViewModel @Inject constructor(
 
         val ksPayload = payload.payload
         this@JoinKeysignViewModel._keysignPayload = ksPayload
-        this@JoinKeysignViewModel._sessionID = payload.sessionID
-        this@JoinKeysignViewModel._serviceName = payload.serviceName
-        this@JoinKeysignViewModel._useVultisigRelay = payload.useVultisigRelay
-        this@JoinKeysignViewModel._encryptionKeyHex = payload.encryptionKeyHex
 
         loadTransaction(ksPayload)
         return true
@@ -560,8 +559,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                 // when Payload is not in the QRCode
                 routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                     if (payload.isNotEmpty()) {
+                        val rawPayload = decompressQr(payload.decodeBase64Bytes())
                         val payloadProto =
-                            protoBuf.decodeFromByteArray<KeysignPayloadProto>(payload.decodeBase64Bytes())
+                            protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
                         val keysignMsgProto = KeysignMessageProto(
                             keysignPayload = payloadProto,
                             sessionId = tempKeysignMessageProto!!.sessionId,
