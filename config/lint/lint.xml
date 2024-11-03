@@ -26,6 +26,106 @@
     <issue id="NewerVersionAvailable" severity="warning" />
     <issue id="ObsoleteSdkInt" severity="warning" />
     <issue id="OldTargetApi" severity="warning" />
+    <issue id="PackagedPrivateKey" severity="warning" />
+    <issue id="ParcelClassLoader" severity="warning" />
+    <issue id="ParcelCreator" severity="warning" />
+    <issue id="PendingBindings" severity="warning" />
+    <issue id="PermissionImpliesUnsupportedChromeOsHardware" severity="warning" />
+    <issue id="PermissionImpliesUnsupportedHardware" severity="warning" />
+    <issue id="PictureInPictureIssue" severity="warning" />
+    <issue id="PinSetExpiry" severity="warning" />
+    <issue id="PlaySdkIndexGenericIssues" severity="warning" />
+    <issue id="PluralsCandidate" severity="warning" />
+    <issue id="PrivateApi" severity="warning" />
+    <issue id="Proguard" severity="warning" />
+    <issue id="PropertyEscape" severity="warning" />
+    <issue id="ProtectedPermissions" severity="warning" />
+    <issue id="ProviderReadPermissionOnly" severity="warning" />
+    <issue id="ProxyPassword" severity="warning" />
+    <issue id="PublicKeyCredential" severity="warning" />
+    <issue id="PxUsage" severity="warning" />
+    <issue id="PrivateResource" severity="warning" />
+    <issue id="PermissionNamingConvention" severity="warning" />
+    <issue id="ProguardSplit" severity="warning" />
+
+
+
+    <issue id="Range" severity="warning" />
+    <issue id="Recycle" severity="warning" />
+    <issue id="RecyclerView" severity="warning" />
+    <issue id="RedundantLabel" severity="warning" />
+    <issue id="RedundantNamespace" severity="warning" />
+    <issue id="ReferenceType" severity="warning" />
+    <issue id="Registered" severity="warning" />
+    <issue id="RelativeOverlap" severity="warning" />
+    <issue id="RemoteViewLayout" severity="warning" />
+    <issue id="ReportShortcutUsage" severity="warning" />
+    <issue id="RequiredSize" severity="warning" />
+    <issue id="RequiresFeature" severity="warning" />
+    <issue id="ResAuto" severity="warning" />
+    <issue id="ReservedSystemPermission" severity="warning" />
+    <issue id="ResourceAsColor" severity="warning" />
+    <issue id="ResourceCycle" severity="warning" />
+    <issue id="ResourceName" severity="warning" />
+    <issue id="ResourceType" severity="warning" />
+    <issue id="RedundantNamespace" severity="warning" />
+    <issue id="RedundantLabel" severity="warning" />
+    <issue id="RtlSymmetry" severity="warning" />
+    <issue id="RtlHardcoded" severity="warning" />
+    <issue id="RtlEnabled" severity="warning" />
+    <issue id="RtlCompat" severity="warning" />
+    <issue id="RiskyLibrary" severity="warning" />
+    <issue id="ReturnThis" severity="warning" />
+    <issue id="RestrictedApi" severity="warning" />
+    <issue id="RelativeOverlap" severity="warning" />
+    <issue id="RequiresFeature" severity="warning" />
+
+
+
+    <issue id="ScopedStorage" severity="warning" />
+    <issue id="ScrollViewCount" severity="warning" />
+    <issue id="ScrollViewSize" severity="warning" />
+    <issue id="SdCardPath" severity="warning" />
+    <issue id="SecretInSource" severity="warning" />
+    <issue id="ScheduleExactAlarm" severity="warning" />
+    <issue id="SelectableText" severity="warning" />
+    <issue id="SecureRandom" severity="warning" />
+    <issue id="SelectedPhotoAccess" severity="warning" />
+    <issue id="ServiceCast" severity="warning" />
+    <issue id="SetAndClearCommunicationDevice" severity="warning" />
+    <issue id="SetJavaScriptEnabled" severity="warning" />
+    <issue id="SetWorldReadable" severity="warning" />
+    <issue id="SystemPermissionTypo" severity="warning" />
+    <issue id="SystemPermissionTypo" severity="warning" />
+    <issue id="SquareAndRoundTilePreviews" severity="warning" />
+    <issue id="SQLiteString" severity="warning" />
+    <issue id="SquareAndRoundTilePreviews" severity="warning" />
+    <issue id="SwitchIntDef" severity="warning" />
+    <issue id="SetTextI18n" severity="warning" />
+    <issue id="SetWorldWritable" severity="warning" />
+    <issue id="StringEscaping" severity="warning" />
+    <issue id="StringShouldBeInt" severity="warning" />
+    <issue id="SupportAnnotationUsage" severity="warning" />
+    <issue id="Suspicious0dp" severity="warning" />
+    <issue id="SuspiciousImport" severity="warning" />
+    <issue id="SuspiciousIndentation" severity="warning" />
+    <issue id="SignatureOrSystemPermissions" severity="warning" />
+    <issue id="SimilarGradleDependency" severity="warning" />
+    <issue id="SimpleDateFormat" severity="warning" />
+    <issue id="SoonBlockedPrivateApi" severity="warning" />
+    <issue id="SourceLockedOrientationActivity" severity="warning" />
+    <issue id="SpUsage" severity="warning" />
+    <issue id="ShiftFlags" severity="warning" />
+    <issue id="ShortAlarm" severity="warning" />
+    <issue id="ShowToast" severity="warning" />
+    <issue id="Slices" severity="warning" />
+    <issue id="ScrollViewSize" severity="warning" />
+    <issue id="ScrollViewCount" severity="warning" />
+    <issue id="SmallSp" severity="warning" />
+
+
+
+
     <issue id="Overdraw" severity="warning" />
     <issue id="PluralsCandidate" severity="warning" />
     <issue id="Proguard" severity="warning" />
