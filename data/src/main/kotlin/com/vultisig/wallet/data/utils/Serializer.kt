@@ -101,8 +101,8 @@ class CosmosTHORChainResponseSerializer @Inject constructor(
 ) :
     KSerializer<CosmosTHORChainAccountResponse> {
     override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("SplTokenResponseJsonSerializer")
-
+        buildClassSerialDescriptor("CosmosTHORChainResponseSerializer")
+    
     override fun deserialize(decoder: Decoder): CosmosTHORChainAccountResponse {
         val input = decoder as JsonDecoder
         val jsonObject = input.decodeJsonElement().jsonObject
