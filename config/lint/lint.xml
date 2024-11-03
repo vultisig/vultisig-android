@@ -44,6 +44,71 @@
     <issue id="TypographyFractions" severity="warning" />
     <issue id="TypographyOther" severity="warning" />
     <issue id="TypographyQuotes" severity="error" />
+
+    <issue id="TestAppLink" severity="warning" />
+    <issue id="TextFields" severity="warning" />
+    <issue id="TextViewEdits" severity="warning" />
+    <issue id="TilePreviewImageFormat" severity="warning" />
+    <issue id="TileProviderPermissions" severity="warning" />
+    <issue id="TooDeepLayout" severity="warning" />
+    <issue id="TooManyViews" severity="warning" />
+    <issue id="TranslucentOrientation" severity="warning" />
+    <issue id="TrulyRandom" severity="warning" />
+    <issue id="TrustAllX509TrustManager" severity="warning" />
+    <issue id="TypographyEllipsis" severity="warning" />
+    <issue id="TypographyDashes" severity="warning" />
+
+    <issue id="UastImplementation"  severity="error" />
+    <issue id="UsableSpace"  severity="error" />
+    <issue id="UseAlpha2"  severity="error" />
+    <issue id="UseCheckPermission"  severity="error" />
+    <issue id="UseCompoundDrawables"  severity="error" />
+    <issue id="UselessLeaf"  severity="error" />
+    <issue id="UselessParent"  severity="error" />
+    <issue id="UseOfBundledGooglePlayServices"  severity="error" />
+    <issue id="UseSdkSuppress"  severity="error" />
+    <issue id="UseSparseArrays"  severity="error" />
+    <issue id="UseTomlInstead"  severity="error" />
+    <issue id="UseValueOf"  severity="error" />
+    <issue id="UsingC2DM"  severity="error" />
+    <issue id="UsingHttp"  severity="error" />
+    <issue id="UnclosedTrace"  severity="error" />
+    <issue id="UniqueConstants"  severity="error" />
+    <issue id="UniquePermission"  severity="error" />
+    <issue id="UnknownId"  severity="error" />
+    <issue id="UnknownIdInLayout"  severity="error" />
+    <issue id="UnknownNullness"  severity="error" />
+    <issue id="UnlocalizedSms"  severity="error" />
+    <issue id="UnnecessaryRequiredFeature"  severity="error" />
+    <issue id="UnprotectedSMSBroadcastReceiver"  severity="error" />
+    <issue id="UnsafeDynamicallyLoadedCode"  severity="error" />
+    <issue id="UnsafeImplicitIntentLaunch"  severity="error" />
+    <issue id="UnsafeIntentLaunch"  severity="error" />
+    <issue id="UnsafeNativeCodeLocation"  severity="error" />
+    <issue id="UnsafeProtectedBroadcastReceiver"  severity="error" />
+
+
+
+    <issue id="VulnerableCordovaVersion"  severity="error" />
+    <issue id="ViewBindingType"  severity="error" />
+    <issue id="ViewHolder"  severity="error" />
+    <issue id="VisibleForTests"  severity="error" />
+    <issue id="ValidRestrictions"  severity="error" />
+    <issue id="WifiManagerLeak"  severity="error" />
+    <issue id="WifiManagerPotentialLeak"  severity="error" />
+    <issue id="WorldReadableFiles"  severity="error" />
+    <issue id="WorldWriteableFiles"  severity="error" />
+    <issue id="WrongCase"  severity="error" />
+    <issue id="WrongCommentType"  severity="error" />
+    <issue id="WrongConstant"  severity="error" />
+    <issue id="WrongFolder"  severity="error" />
+    <issue id="WrongManifestParent"  severity="error" />
+    <issue id="WrongThreadInterprocedural"  severity="error" />
+
+    
+
+
+
     <issue id="Typos" severity="warning" />
     <issue id="UnnecessaryComposedModifier" severity="warning" />
     <issue id="UnusedAttribute" severity="fatal" />
