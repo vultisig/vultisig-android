@@ -196,8 +196,8 @@ private fun VerifySwapScreen(
                     }
 
                     OtherField(
-                        title = stringResource(R.string.verify_swap_screen_estimated_fees),
-                        value = swapTransactionUiModel.estimatedFees,
+                        title = stringResource(R.string.verify_swap_screen_total_fees),
+                        value = swapTransactionUiModel.totalFee,
                         divider = false,
                     )
                 }
@@ -243,7 +243,7 @@ private fun VerifySwapScreenPreview() {
         swapTransactionUiModel = SwapTransactionUiModel(
             srcTokenValue = "1 RUNE",
             dstTokenValue = "1 ETH",
-            estimatedFees = "1.00$",
+            totalFee = "1.00$",
             hasConsentAllowance = true,
         ),
         consentAllowance = true,

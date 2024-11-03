@@ -8,12 +8,14 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
+import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import kotlinx.datetime.Clock
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
@@ -47,6 +49,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val blockChairApi: BlockChairApi,
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
+    private val tonApi: TonApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -208,14 +211,24 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.SUI -> {
-            suiApi.getAllCoins(address)
-
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
-                    referenceGasPrice = gasFee.value,
+                    referenceGasPrice = suiApi.getReferenceGasPrice(),
                     coins = suiApi.getAllCoins(address),
                 ),
                 utxos = emptyList(),
+            )
+        }
+
+        TokenStandard.TON -> {
+            BlockChainSpecificAndUtxo(
+                blockChainSpecific = BlockChainSpecific.Ton(
+                    sequenceNumber = tonApi.getSpecificTransactionInfo(address)
+                        .toString().toULong(),
+                    expireAt = (Clock.System.now()
+                        .epochSeconds + 600L).toULong(),
+                    bounceable = false,
+                ),
             )
         }
     }

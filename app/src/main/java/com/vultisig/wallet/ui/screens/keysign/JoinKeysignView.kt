@@ -173,24 +173,27 @@ private fun JoinKeysignScreen(
     keysignState: KeysignState,
     onBack: () -> Unit = {},
     content: @Composable BoxScope.(JoinKeysignState) -> Unit = {},
-
-    ) {
+) {
+    val progress = when {
+        state is DiscoveringSessionID -> 0.1f
+        state is DiscoverService -> 0.25f
+        state is JoinKeysign -> 0.5f
+        state is WaitingForKeysignStart -> 0.625f
+        state is Keysign && keysignState is KeysignState.KeysignFinished -> 1f
+        state is Keysign -> 0.75f
+        state is Error -> 0.0f
+        else -> 0.0f
+    }
     BackHandler(onBack = onBack)
     ProgressScreen(
         navController = navController,
+        showStartIcon = keysignState !is KeysignState.KeysignFinished,
         title = stringResource(
-            id = if (keysignState != KeysignState.KeysignFinished) R.string.keysign
-            else R.string.transaction_done_title
+            id = if (keysignState !is KeysignState.KeysignFinished) R.string.keysign
+            else R.string.transaction_complete_screen_title
         ),
         onStartIconClick = onBack,
-        progress = when (state) {
-            DiscoveringSessionID -> 0.1f
-            DiscoverService -> 0.25f
-            JoinKeysign -> 0.5f
-            WaitingForKeysignStart -> 0.625f
-            Keysign -> 0.75f
-            is Error -> 0.0f
-        },
+        progress = progress,
         content = { content(state) }
     )
 }

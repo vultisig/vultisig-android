@@ -35,5 +35,5 @@ pair device to access it , you will need to do the following
 
 3. Override service discovery address, when mediator start the service , it register itself, however
    the Ip it register is the emulator's local ip, which is `10.0.2.16`, so the pair device will only
-   find address as `10.0.2.16`, need to override it to your host machine's ip , in file https://github.com/vultisig-vault/vultisig-android/blob/main/app/src/main/java/com/vultisig/wallet/presenter/keygen/JoinKeygenViewModel.kt
+   find address as `10.0.2.16`, need to override it to your host machine's ip , in file https://github.com/vultisig/vultisig-android/blob/main/app/src/main/java/com/vultisig/wallet/ui/models/keygen/JoinKeygenViewModel.kt
   

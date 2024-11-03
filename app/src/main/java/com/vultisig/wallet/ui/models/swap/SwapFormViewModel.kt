@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -39,7 +38,6 @@ import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.ZeroValueCurrencyToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -94,7 +92,6 @@ internal class SwapFormViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
-    private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
     private val zeroValueCurrencyToString: ZeroValueCurrencyToStringMapper,
@@ -155,6 +152,7 @@ internal class SwapFormViewModel @Inject constructor(
             val selectedDst = selectedDst.value ?: return
 
             val gasFee = gasFee.value ?: return
+            val gasFeeFiatValue = gasFeeFiat.value ?: return
 
             val srcToken = selectedSrc.account.token
             val dstToken = selectedDst.account.token
@@ -207,26 +205,7 @@ internal class SwapFormViewModel @Inject constructor(
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
 
-                val isEVMSwap =
-                    srcToken.isNativeToken &&
-                            srcToken.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
-
-                val gasLimit = if (isEVMSwap)
-                    BigInteger.valueOf(
-                        if (srcToken.chain == Chain.Ethereum)
-                            ETH_GAS_LIMIT else ARB_GAS_LIMIT
-                    ) else null
-
-                val specificAndUtxo = blockChainSpecificRepository.getSpecific(
-                    srcToken.chain,
-                    srcAddress,
-                    srcToken,
-                    gasFee,
-                    isSwap = true,
-                    isMaxAmountEnabled = false,
-                    isDeposit = srcToken.chain == Chain.MayaChain,
-                    gasLimit = gasLimit,
-                )
+                val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
 
                 val transaction = when (quote) {
                     is SwapQuote.ThorChain -> {
@@ -260,6 +239,7 @@ internal class SwapFormViewModel @Inject constructor(
                             estimatedFees = quote.fees,
                             isApprovalRequired = isApprovalRequired,
                             memo = null,
+                            gasFeeFiatValue = gasFeeFiatValue,
                             payload = SwapPayload.ThorChain(
                                 THORChainSwapPayload(
                                     fromAddress = srcAddress,
@@ -312,6 +292,7 @@ internal class SwapFormViewModel @Inject constructor(
                             estimatedFees = quote.fees,
                             memo = quote.data.memo,
                             isApprovalRequired = isApprovalRequired,
+                            gasFeeFiatValue = gasFeeFiatValue,
                             payload = SwapPayload.MayaChain(
                                 THORChainSwapPayload(
                                     fromAddress = srcAddress,
@@ -358,6 +339,7 @@ internal class SwapFormViewModel @Inject constructor(
                             estimatedFees = quote.fees,
                             memo = null,
                             isApprovalRequired = isApprovalRequired,
+                            gasFeeFiatValue = gasFeeFiatValue,
                             payload = SwapPayload.OneInch(
                                 OneInchSwapPayloadJson(
                                     fromCoin = srcToken,
@@ -385,6 +367,22 @@ internal class SwapFormViewModel @Inject constructor(
             return
         }
     }
+
+    private suspend fun getSpecificAndUtxo(
+        srcToken: Coin,
+        srcAddress: String,
+        gasFee: TokenValue,
+    ) = blockChainSpecificRepository.getSpecific(
+        srcToken.chain,
+        srcAddress,
+        srcToken,
+        gasFee,
+        isSwap = true,
+        isMaxAmountEnabled = false,
+        isDeposit = srcToken.chain == Chain.MayaChain,
+        gasLimit = getGasLimit(srcToken),
+    )
+
 
     fun selectSrcToken() {
         navigateToSelectToken(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID)
@@ -430,9 +428,14 @@ internal class SwapFormViewModel @Inject constructor(
     fun loadData(
         vaultId: String,
         chainId: String?,
+        srcTokenId: String?,
         dstTokenId: String?,
     ) {
         this.chain = chainId?.let(Chain::fromRaw)
+
+        if (srcTokenId != null && this.selectedSrcId.value == null) {
+            selectedSrcId.value = srcTokenId
+        }
 
         if (dstTokenId != null && this.selectedDstId.value == null) {
             selectedDstId.value = dstTokenId
@@ -515,16 +518,7 @@ internal class SwapFormViewModel @Inject constructor(
                     val chain = selectedAccount.token.chain
                     val selectedToken = selectedAccount.token
                     val srcAddress = selectedAccount.token.address
-
-                    val spec = blockChainSpecificRepository.getSpecific(
-                        chain,
-                        srcAddress,
-                        selectedToken,
-                        gasFee,
-                        isSwap = false,
-                        isMaxAmountEnabled = false,
-                        isDeposit = false,
-                    )
+                    val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
 
                     val estimatedFee = gasFeeToEstimatedFee(
                         GasFeeParams(
@@ -863,6 +857,19 @@ internal class SwapFormViewModel @Inject constructor(
         uiState.update {
             it.copy(error = error)
         }
+    }
+
+    private fun getGasLimit(
+        token: Coin
+    ): BigInteger? {
+        val isEVMSwap =
+            token.isNativeToken &&
+                    token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
+        return if (isEVMSwap)
+            BigInteger.valueOf(
+                if (token.chain == Chain.Ethereum)
+                    ETH_GAS_LIMIT else ARB_GAS_LIMIT
+            ) else null
     }
 
     companion object {

@@ -76,4 +76,28 @@ internal interface DataUsecasesModule {
         impl: AvailableTokenBalanceUseCaseImpl
     ): AvailableTokenBalanceUseCase
 
+    @Binds
+    @Singleton
+    fun bindSearchTokenUseCase(
+        impl: SearchTokenUseCaseImpl
+    ): SearchTokenUseCase
+
+    @Binds
+    @Singleton
+    fun bindSearchSolTokenUseCase(
+        impl: SearchSolTokenUseCaseImpl
+    ): SearchSolTokenUseCase
+
+    @Binds
+    @Singleton
+    fun bindSearchEvmTokenUseCase(
+        impl: SearchEvmTokenUseCaseImpl
+    ): SearchEvmTokenUseCase
+
+    @Binds
+    @Singleton
+    fun bindInitializeThorChainNetworkIdUseCase(
+        impl: InitializeThorChainNetworkIdUseCaseImpl
+    ): InitializeThorChainNetworkIdUseCase
+
 }

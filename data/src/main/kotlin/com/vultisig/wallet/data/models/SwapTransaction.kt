@@ -17,6 +17,7 @@ sealed interface SwapTransaction {
     val memo: String?
     val payload: SwapPayload
     val isApprovalRequired: Boolean
+    val gasFeeFiatValue: FiatValue
 
     data class RegularSwapTransaction(
         override val id: TransactionId,
@@ -31,6 +32,7 @@ sealed interface SwapTransaction {
         override val memo: String?,
         override val payload: SwapPayload,
         override val isApprovalRequired: Boolean,
+        override val gasFeeFiatValue: FiatValue,
     ) : SwapTransaction
 
     companion object {

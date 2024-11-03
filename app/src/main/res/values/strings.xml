@@ -191,7 +191,6 @@
     <string name="swap_form_gas_title">Network fee</string>
     <string name="swap_form_total_fees_title">Total fees</string>
     <string name="share_qr_utils_choose_an_app">Choose an app</string>
-    <string name="verify_swap_screen_estimated_fees">Estimated Fees</string>
     <string name="verify_swap_agree_receive_amount">I agree with the amount I will receive after the swap</string>
     <string name="verify_swap_consent_amount">The swap amount is correct</string>
     <string name="chain_token_screen_address_copied">%1$s copied to clipboard</string>
@@ -255,7 +254,7 @@
     <string name="token_selection_tokens_title">Tokens</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
-    <string name="backup_now">Backup your vault now!</string>
+    <string name="backup_now">Back up your vault share of this device now!</string>
     <string name="deposit_screen_title">Function</string>
     <string name="deposit_screen_amount_title">Amount</string>
     <string name="verify_deposit_memo_title">Memo</string>
@@ -365,7 +364,7 @@
     <string name="reshare_device_list_of_vault" translatable="false">%1$s of %2$s</string>
     <string name="reshare_start" translatable="false">Start</string>
     <string name="threshold_error" translatable="false">Threshold not reached\nMissing enough initial devices</string>
-    <string name="generating_key_renew" translatable="false">Renew</string>
+    <string name="generating_key_renew" translatable="false">Reshare</string>
     <string name="create_folder_title" translatable="false">Create Folder</string>
     <string name="create_folder_name" translatable="false">Folder Name</string>
     <string name="create_folder_create" translatable="false">Create</string>
@@ -435,6 +434,9 @@
     <string name="share_vault_qr_uid" translatable="false">UID: %s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
+    <string name="backup_password_optional_password_protection_hint" translatable="false">Optional: Password hint</string>
+    <string name="backup_password_screen_hint_field" translatable="false">Enter a hint</string>
+    <string name="import_file_password_hint_text" translatable="false">Hint: %s</string>
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
@@ -451,6 +453,7 @@
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
     <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
+    <string name="vault_backup_hint_to_long" translatable="false">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
     <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
@@ -461,6 +464,8 @@
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
     <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
+    <string name="transaction_complete_screen_title" translatable="false">Transaction complete</string>
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
     <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
+    <string name="verify_swap_screen_total_fees" translatable="false">Total Fees</string>
 </resources>

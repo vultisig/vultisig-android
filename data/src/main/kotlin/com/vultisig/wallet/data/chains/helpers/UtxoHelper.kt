@@ -46,6 +46,7 @@ class UtxoHelper(
             throw Exception(preSigningOutput.errorMessage)
         }
         return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
+            .sorted()
     }
 
     @OptIn(ExperimentalStdlibApi::class)

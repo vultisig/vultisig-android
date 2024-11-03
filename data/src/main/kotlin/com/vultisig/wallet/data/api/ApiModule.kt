@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.SuiApiImpl
+import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.api.chains.TonApiImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -106,5 +108,11 @@ internal interface ApiModule {
     fun bindThorBalanceApi(
         impl: ThorBalanceApiImpl
     ): ThorBalanceApi
+
+    @Binds
+    @Singleton
+    fun bindTonApi(
+        impl: TonApiImpl
+    ): TonApi
 
 }

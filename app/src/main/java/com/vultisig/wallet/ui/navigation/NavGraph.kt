@@ -14,6 +14,7 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_SRC_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_NAME
@@ -414,6 +415,10 @@ internal fun SetupNavGraph(
                 navArgument(ARG_DST_TOKEN_ID) {
                     type = NavType.StringType
                     nullable = true
+                },
+                navArgument(ARG_SRC_TOKEN_ID) {
+                    type = NavType.StringType
+                    nullable = true
                 }
             )
         ) { entry ->
@@ -422,6 +427,7 @@ internal fun SetupNavGraph(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
+                srcTokenId = args.getString(ARG_SRC_TOKEN_ID),
                 dstTokenId = args.getString(ARG_DST_TOKEN_ID),
             )
         }

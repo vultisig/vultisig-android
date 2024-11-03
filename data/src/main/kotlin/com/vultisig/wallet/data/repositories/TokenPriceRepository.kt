@@ -41,6 +41,10 @@ interface TokenPriceRepository {
         chainId: String,
         contractAddress: String,
     ): BigDecimal
+
+    suspend fun getPriceByPriceProviderId(
+        priceProviderId: String
+    ): BigDecimal
 }
 
 
@@ -147,6 +151,12 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         return BigDecimal.ZERO
     }
 
+    override suspend fun getPriceByPriceProviderId(priceProviderId: String): BigDecimal {
+        val currency = appCurrencyRepository.currency.first().ticker.lowercase()
+        val cryptoPrices = coinGeckoApi.getCryptoPrices(listOf(priceProviderId), listOf(currency))
+        return cryptoPrices.values.firstOrNull()?.values?.firstOrNull() ?: BigDecimal.ZERO
+    }
+
     private suspend fun savePrices(
         tokenIdToPrices: Map<String, CurrencyToPrice>,
         currency: String,
@@ -171,7 +181,8 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         tokens: List<Coin>,
         currencies: List<String>,
     ): Map<String, CurrencyToPrice> =
-        coinGeckoApi.getContractsPrice(
+        if (chain == Chain.Solana) emptyMap()
+        else coinGeckoApi.getContractsPrice(
             chain = chain,
             contractAddresses = tokens.map { it.contractAddress },
             currencies = currencies,

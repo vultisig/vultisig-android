@@ -55,4 +55,11 @@ sealed class BlockChainSpecific {
         val transactionVersion: UInt,
         val genesisHash: String,
     ) : BlockChainSpecific()
+
+    data class Ton(
+        val sequenceNumber: ULong,
+        val expireAt: ULong,
+        val bounceable: Boolean,
+    ) : BlockChainSpecific()
+
 }

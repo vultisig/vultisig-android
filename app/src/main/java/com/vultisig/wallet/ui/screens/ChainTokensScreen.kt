@@ -93,7 +93,7 @@ internal fun ChainTokensScreen(
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
         onBuyWeweClick = viewModel::buyWewe,
-        onQrBtnClick = viewModel::navigatoToQrAddressScreen,
+        onQrBtnClick = viewModel::navigateToQrAddressScreen,
         onShowReviewPopUp = {
             reviewManager.showReviewPopUp(context)
         }
@@ -269,6 +269,7 @@ private fun ChainTokensScreen(
                                 .padding(vertical = 16.dp),
                         )
                     }
+
                 }
             }
         }

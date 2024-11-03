@@ -1,8 +1,11 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import kotlinx.coroutines.flow.first
@@ -16,19 +19,32 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val swapQuoteRepository: SwapQuoteRepository,
+    private val tokenRepository: TokenRepository,
 ) :
     SwapTransactionToUiModelMapper {
     override suspend fun invoke(from: SwapTransaction): SwapTransactionUiModel {
         val currency = appCurrencyRepository.currency.first()
+        val provider: SwapProvider = swapQuoteRepository
+            .resolveProvider(from.srcToken, from.dstToken) ?: error("provider not found")
+        val tokenValue = when (provider) {
+            SwapProvider.THORCHAIN, SwapProvider.MAYA ->
+                from.dstToken
+
+            SwapProvider.LIFI, SwapProvider.ONEINCH ->
+                tokenRepository.getNativeToken(from.srcToken.chain.id)
+        }
+
         val fiatFees = convertTokenValueToFiat(
-            from.dstToken,
-            from.estimatedFees, currency
+            tokenValue,
+            from.estimatedFees,
+            currency
         )
         return SwapTransactionUiModel(
             srcTokenValue = mapTokenValueToStringWithUnit(from.srcTokenValue),
             dstTokenValue = mapTokenValueToStringWithUnit(from.expectedDstTokenValue),
             hasConsentAllowance = from.isApprovalRequired,
-            estimatedFees = fiatValueToStringMapper.map(fiatFees),
+            totalFee = fiatValueToStringMapper.map(fiatFees + from.gasFeeFiatValue)
         )
     }
 

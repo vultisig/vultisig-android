@@ -132,7 +132,7 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-    internal fun navigatoToQrAddressScreen() {
+    internal fun navigateToQrAddressScreen() {
         viewModelScope.launch {
             navigator.navigate(
                 Destination.QrAddressScreen(
@@ -168,7 +168,7 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun buyWewe() {
         viewModelScope.launch {
-            if(!tokens.value.contains(Coins.wewe)){
+            if (!tokens.value.contains(Coins.wewe)) {
                 enableTokenUseCase(vaultId, Coins.wewe)
             }
             navigator.navigate(

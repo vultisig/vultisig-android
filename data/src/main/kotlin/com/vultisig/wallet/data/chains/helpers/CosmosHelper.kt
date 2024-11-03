@@ -29,8 +29,6 @@ class CosmosHelper(
         private const val GAS_LIMIT = 200000L
 
         const val ATOM_DENOM = "uatom"
-        const val KUJI_DENOM = "ukuji"
-        const val DYDX_DENOM = "adydx"
     }
 
     fun getSwapPreSignedInputData(

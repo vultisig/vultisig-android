@@ -16,6 +16,7 @@ internal sealed class Destination(
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_TOKEN_ID = "token_id"
+        const val ARG_SRC_TOKEN_ID = "src_token_id"
         const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
@@ -73,9 +74,10 @@ internal sealed class Destination(
     data class Swap(
         val vaultId: String,
         val chainId: String? = null,
+        val srcTokenId: String? = null,
         val dstTokenId: String? = null,
     ) : Destination(
-        route = buildRoute(vaultId, chainId, dstTokenId)
+        route = buildRoute(vaultId, chainId, srcTokenId, dstTokenId)
     ) {
         companion object {
             const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
@@ -84,11 +86,12 @@ internal sealed class Destination(
             val staticRoute = buildRoute(
                 "{$ARG_VAULT_ID}",
                 "{$ARG_CHAIN_ID}",
-                "{$ARG_DST_TOKEN_ID}"
+                "{$ARG_SRC_TOKEN_ID}",
+                "{$ARG_DST_TOKEN_ID}",
             )
 
-            fun buildRoute(vaultId: String, chainId: String?, dstTokenId: String?) =
-                "vault_detail/$vaultId/account/$chainId/swap?$ARG_DST_TOKEN_ID=$dstTokenId"
+            fun buildRoute(vaultId: String, chainId: String?,srcTokenId: String?, dstTokenId: String?) =
+                "vault_detail/$vaultId/account/$chainId/swap?$ARG_SRC_TOKEN_ID=$srcTokenId&$ARG_DST_TOKEN_ID=$dstTokenId"
         }
     }
 
