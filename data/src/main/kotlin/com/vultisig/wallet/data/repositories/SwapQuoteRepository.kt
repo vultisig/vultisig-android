@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
@@ -14,6 +15,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Inject
 
 interface SwapQuoteRepository {
@@ -78,7 +80,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        SwapException.handleSwapException(oneInchQuote.error)
+        oneInchQuote.error?.let { throw SwapException.handleSwapException(it) }
         return oneInchQuote
     }
 
@@ -100,7 +102,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        SwapException.handleSwapException(mayaQuote.error)
+        mayaQuote.error?.let { throw SwapException.handleSwapException(it) }
 
         val tokenFees = mayaQuote.fees.total
             .convertToTokenValue(dstToken)
@@ -138,22 +140,32 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        SwapException.handleSwapException(thorQuote.error)
+        when (thorQuote) {
+            is THORChainSwapQuoteDeserialized.Error -> {
+                throw SwapException.handleSwapException(thorQuote.error.message)
+            }
 
-        val tokenFees = thorQuote.fees.total
-            .convertToTokenValue(dstToken)
+            is THORChainSwapQuoteDeserialized.Result -> {
+                thorQuote.data.error?.let { throw SwapException.handleSwapException(it) }
+                val tokenFees = thorQuote.data.fees.total
+                    .convertToTokenValue(dstToken)
 
-        val expectedDstTokenValue = thorQuote.expectedAmountOut
-            .convertToTokenValue(dstToken)
+                val expectedDstTokenValue = thorQuote.data.expectedAmountOut
+                    .convertToTokenValue(dstToken)
 
-        val recommendedMinTokenValue = thorQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
+                val recommendedMinTokenValue = thorQuote.data.recommendedMinAmountIn.convertToTokenValue(srcToken)
 
-        return SwapQuote.ThorChain(
-            expectedDstValue = expectedDstTokenValue,
-            recommendedMinTokenValue = recommendedMinTokenValue,
-            fees = tokenFees,
-            data = thorQuote,
-        )
+                return SwapQuote.ThorChain(
+                    expectedDstValue = expectedDstTokenValue,
+                    recommendedMinTokenValue = recommendedMinTokenValue,
+                    fees = tokenFees,
+                    data = thorQuote.data,
+                )
+            }
+        }
+
+
+
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -180,7 +192,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAddress = srcAddress,
             toAddress = dstAddress,
         )
-        SwapException.handleSwapException(liFiQuote.message)
+        liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
 
         return OneInchSwapQuoteJson(
             dstAmount = liFiQuote.estimate.toAmount,
