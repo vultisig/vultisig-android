@@ -6,10 +6,8 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenBalance
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
@@ -19,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 
 interface AccountsRepository {
@@ -42,8 +39,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val chainAndTokensToAddressMapper: ChainAndTokensToAddressMapper,
     private val splTokenRepository: SplTokenRepository,
-    private val appCurrencyRepository :AppCurrencyRepository,
-    ) : AccountsRepository {
+) : AccountsRepository {
 
     private suspend fun getVault(vaultId: String): Vault =
         checkNotNull(vaultRepository.get(vaultId)) {
@@ -190,15 +186,9 @@ internal class AccountsRepositoryImpl @Inject constructor(
         ))
     }
 
-    private suspend fun Account.applyBalance(balance: TokenBalance): Account {
-        val currency = appCurrencyRepository.currency.first().ticker.lowercase()
-        return copy(
-            tokenValue = balance.tokenValue,
-            fiatValue = balance.fiatValue ?: FiatValue(
-                BigDecimal.ZERO,
-                currency
-            ),
-        )
-    }
+    private fun Account.applyBalance(balance: TokenBalance): Account = copy(
+        tokenValue = balance.tokenValue,
+        fiatValue = balance.fiatValue,
+    )
 
 }

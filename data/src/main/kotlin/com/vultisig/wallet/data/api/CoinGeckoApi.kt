@@ -7,6 +7,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import java.math.BigDecimal
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 typealias CurrencyToPrice = Map<String, BigDecimal>
@@ -60,23 +61,31 @@ internal class CoinGeckoApiImpl @Inject constructor(
     private suspend fun fetchPrices(
         coins: String,
         fiats: String,
-    ): Map<String, CurrencyToPrice> = http
-        .get("https://api.vultisig.com/coingeicko/api/v3/simple/price") {
-            parameter("ids", coins)
-            parameter("vs_currencies", fiats)
-            header("Content-Type", "application/json")
-        }.body()
+    ): Map<String, CurrencyToPrice> = try {
+        http
+            .get("https://api.vultisig.com/coingeicko/api/v3/simple/price") {
+                parameter("ids", coins)
+                parameter("vs_currencies", fiats)
+                header("Content-Type", "application/json")
+            }.body()
+    } catch (e: UnknownHostException) {
+        emptyMap()
+    }
 
     private suspend fun fetchContractPrices(
         chainId: String,
         coins: String,
         fiats: String,
-    ): Map<String, CurrencyToPrice> = http
-        .get("https://api.vultisig.com/coingeicko/api/v3/simple/token_price/${chainId}") {
-            parameter("contract_addresses", coins)
-            parameter("vs_currencies", fiats)
-            header("Content-Type", "application/json")
-        }.body()
+    ): Map<String, CurrencyToPrice> = try {
+        http
+            .get("https://api.vultisig.com/coingeicko/api/v3/simple/token_price/${chainId}") {
+                parameter("contract_addresses", coins)
+                parameter("vs_currencies", fiats)
+                header("Content-Type", "application/json")
+            }.body()
+    } catch (e: UnknownHostException) {
+        emptyMap()
+    }
 
     private val Chain.coinGeckoAssetId: String
         get() = when (this) {
