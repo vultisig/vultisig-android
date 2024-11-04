@@ -19,6 +19,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -49,6 +51,11 @@ interface ThorChainApi {
     suspend fun getTHORChainNativeTransactionFee(): BigInteger
 
     suspend fun getNetworkChainId(): String
+
+    suspend fun resolveName(
+        name: String,
+        chain: String
+    ): String?
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -143,4 +150,28 @@ internal class ThorChainApiImpl @Inject constructor(
             ?.content
             ?: error("Could't find network field in response for THORChain chain id")
 
+    override suspend fun resolveName(
+        name: String,
+        chain: String,
+    ): String? = httpClient
+        .get("https://midgard.ninerealms.com/v2/thorname/lookup/$name")
+        .body<ThorNameResponseJson>()
+        .entries
+        .find { it.chain == chain }
+        ?.address
+
 }
+
+@Serializable
+private data class ThorNameEntryJson(
+    @SerialName("chain")
+    val chain: String,
+    @SerialName("address")
+    val address: String,
+)
+
+@Serializable
+private data class ThorNameResponseJson(
+    @SerialName("entries")
+    val entries: List<ThorNameEntryJson>,
+)
