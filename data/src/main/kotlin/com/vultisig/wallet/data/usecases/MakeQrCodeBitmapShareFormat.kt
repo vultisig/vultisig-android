@@ -43,7 +43,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         val bitmap = Bitmap.createBitmap(
             finalWidth,
             finalHeight,
-            config ?: Bitmap.Config.RGB_565
+            config ?: Bitmap.Config.ARGB_8888
         )
         val canvas = android.graphics.Canvas(bitmap)
         canvas.drawColor(color)

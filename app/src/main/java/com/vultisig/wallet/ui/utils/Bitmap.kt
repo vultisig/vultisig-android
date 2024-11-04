@@ -29,7 +29,7 @@ internal fun uriToBitmap(contentResolver: ContentResolver, selectedFileUri: Uri)
 
 internal fun Bitmap.addWhiteBorder(borderSize: Float): Bitmap {
     val bmpWithBorder =
-        Bitmap.createBitmap(width + (borderSize * 2).toInt(), height + (borderSize * 2).toInt(), config?: Bitmap.Config.RGB_565)
+        Bitmap.createBitmap(width + (borderSize * 2).toInt(), height + (borderSize * 2).toInt(), config?: Bitmap.Config.ARGB_8888)
     val canvas = android.graphics.Canvas(bmpWithBorder)
     canvas.drawColor(Color.WHITE)
     canvas.drawBitmap(this, borderSize, borderSize, null)
