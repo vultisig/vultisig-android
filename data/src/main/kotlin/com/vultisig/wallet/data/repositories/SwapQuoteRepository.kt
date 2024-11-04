@@ -246,8 +246,17 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
         if (hasNotProvider(srcToken, dstToken)) return null
-        return srcToken.swapProviders.intersect(dstToken.swapProviders).firstOrNull()
+        return srcToken.swapProviders
+            .intersect(dstToken.swapProviders)
+            .firstOrNull {
+                if (isCrossChainSwap(srcToken, dstToken))
+                    it != SwapProvider.ONEINCH
+                else true
+            }
     }
+
+    private fun isCrossChainSwap(srcToken: Coin, dstToken: Coin) =
+        srcToken.chain != dstToken.chain
 
     private fun hasNotProvider(
         srcToken: Coin,

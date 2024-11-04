@@ -115,4 +115,9 @@ internal interface ApiModule {
         impl: TonApiImpl
     ): TonApi
 
+    @Binds
+    @Singleton
+    fun bindRouterApi(
+        impl: RouterApiImp,
+    ): RouterApi
 }
