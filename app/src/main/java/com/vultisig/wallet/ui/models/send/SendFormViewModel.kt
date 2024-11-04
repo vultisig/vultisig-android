@@ -448,10 +448,17 @@ internal class SendFormViewModel @Inject constructor(
                         )
 
                     if (selectedTokenValue.value < tokenAmountInt
-                        || nativeTokenValue < gasFee.value
                     ) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    } else if (nativeTokenValue < gasFee.value
+                    ) {
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(
+                                R.string.insufficient_native_token,
+                                listOf(nativeTokenAccount.token.ticker)
+                            )
                         )
                     }
                 }
