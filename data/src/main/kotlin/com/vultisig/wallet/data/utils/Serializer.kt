@@ -82,7 +82,7 @@ class SplTokenResponseJsonSerializer @Inject constructor(private val json: Json)
 class THORChainSwapQuoteResponseJsonSerializer @Inject constructor(private val json: Json) :
     KSerializer<THORChainSwapQuoteDeserialized> {
     override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("SplTokenResponseJsonSerializer")
+        buildClassSerialDescriptor("THORChainSwapQuoteResponseJsonSerializer")
 
     override fun deserialize(decoder: Decoder): THORChainSwapQuoteDeserialized {
         val input = decoder as JsonDecoder
