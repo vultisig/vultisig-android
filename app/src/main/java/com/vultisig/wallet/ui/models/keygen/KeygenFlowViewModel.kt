@@ -68,7 +68,6 @@ import timber.log.Timber
 import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.random.Random
 
 enum class KeygenFlowState {
     PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
