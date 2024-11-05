@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -535,7 +536,7 @@ internal class SendFormViewModel @Inject constructor(
     private fun collectSelectedToken() {
         viewModelScope.launch {
             combine(
-                addresses,
+                addresses.filter { it.isNotEmpty() },
                 selectedTokenId,
                 chain,
             ) { addresses, selectedTokenId, chain ->
