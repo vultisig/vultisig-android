@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
+import com.vultisig.wallet.data.models.swapAssetName
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -370,35 +371,4 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         private const val FIXED_MAYA_SWAP_DECIMALS = 8
     }
 
-}
-
-private fun Chain.swapAssetName(): String {
-    // TODO that seems to differ just for thorChain
-    return when (this) {
-        Chain.ThorChain -> "THOR"
-        Chain.Ethereum -> "ETH"
-        Chain.Avalanche -> "AVAX"
-        Chain.BscChain -> "BSC"
-        Chain.Bitcoin -> "BTC"
-        Chain.BitcoinCash -> "BCH"
-        Chain.Litecoin -> "LTC"
-        Chain.Dogecoin -> "DOGE"
-        Chain.GaiaChain -> "GAIA"
-        Chain.Kujira -> "KUJI"
-        Chain.Solana -> "SOL"
-        Chain.Dash -> "DASH"
-        Chain.MayaChain -> "MAYA"
-        Chain.Arbitrum -> "ARB"
-        Chain.Base -> "BASE"
-        Chain.Optimism -> "OP"
-        Chain.Polygon -> "POL"
-        Chain.Blast -> "BLAST"
-        Chain.CronosChain -> "CRO"
-        Chain.Polkadot -> "DOT"
-        Chain.Dydx -> "DYDX"
-        Chain.ZkSync -> "ZK"
-        Chain.Sui -> "SUI"
-        Chain.Ton -> "TON"
-        Chain.Osmosis -> "OSMO"
-    }
 }

@@ -465,6 +465,7 @@
     <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
     <string name="transaction_complete_screen_title" translatable="false">Transaction complete</string>
+    <string name="qr_address_screen_description" translatable="false">%s address:\n%s</string>
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
     <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
     <string name="verify_swap_screen_total_fees" translatable="false">Total Fees</string>
