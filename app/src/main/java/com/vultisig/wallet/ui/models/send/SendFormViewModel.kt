@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.GasFeeRefreshUiRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
@@ -127,6 +128,7 @@ internal class SendFormViewModel @Inject constructor(
     private val getAvailableTokenBalance: AvailableTokenBalanceUseCase,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val advanceGasUiRepository: AdvanceGasUiRepository,
+    private val gasFeeRefreshUiRepository: GasFeeRefreshUiRepository,
 ) : ViewModel() {
 
     private var vaultId: String? = null
@@ -189,6 +191,7 @@ internal class SendFormViewModel @Inject constructor(
         calculateGasFees()
         calculateSpecific()
         collectAdvanceGasUi()
+        collectRefreshedGasFee()
     }
 
     fun loadData(
@@ -561,6 +564,7 @@ internal class SendFormViewModel @Inject constructor(
                 .map { it?.address }
                 .filterNotNull()
                 .map {
+                    gasFeeRefreshUiRepository.updateAddress(it)
                     gasFeeRepository.getGasFee(it.chain, it.address)
                 }
                 .catch {
@@ -704,6 +708,14 @@ internal class SendFormViewModel @Inject constructor(
                     tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
                 }
             }.collect()
+        }
+    }
+
+    private fun collectRefreshedGasFee() {
+        viewModelScope.launch {
+            gasFeeRefreshUiRepository
+                .gasFee
+                .collect(this@SendFormViewModel.gasFee)
         }
     }
 
