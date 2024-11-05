@@ -448,10 +448,17 @@ internal class SendFormViewModel @Inject constructor(
                         )
 
                     if (selectedTokenValue.value < tokenAmountInt
-                        || nativeTokenValue < gasFee.value
                     ) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    } else if (nativeTokenValue < gasFee.value
+                    ) {
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(
+                                R.string.insufficient_native_token,
+                                listOf(nativeTokenAccount.token.ticker)
+                            )
                         )
                     }
                 }
@@ -734,15 +741,11 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private suspend fun validateDstAddress(dstAddress: String): UiText? {
+    private fun validateDstAddress(dstAddress: String): UiText? {
         val selectedAccount = selectedAccount
             ?: return UiText.StringResource(R.string.send_error_no_token)
         val chain = selectedAccount.token.chain
-        if (
-            dstAddress.isBlank() ||
-            !(chainAccountAddressRepository.isValid(chain, dstAddress) ||
-                    addressParserRepository.isEnsNameService(dstAddress))
-        )
+        if (dstAddress.isBlank())
             return UiText.StringResource(R.string.send_error_no_address)
         return null
     }

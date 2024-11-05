@@ -211,11 +211,9 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.SUI -> {
-            suiApi.getAllCoins(address)
-
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Sui(
-                    referenceGasPrice = gasFee.value,
+                    referenceGasPrice = suiApi.getReferenceGasPrice(),
                     coins = suiApi.getAllCoins(address),
                 ),
                 utxos = emptyList(),

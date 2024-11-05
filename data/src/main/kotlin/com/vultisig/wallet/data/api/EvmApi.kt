@@ -91,7 +91,7 @@ class EvmApiFactoryImp @Inject constructor(
 
             Chain.Base -> EvmApiImp(
                 httpClient,
-                "https://base-rpc.publicnode.com"
+                "https://api.vultisig.com/base/"
             )
 
             Chain.Arbitrum -> EvmApiImp(

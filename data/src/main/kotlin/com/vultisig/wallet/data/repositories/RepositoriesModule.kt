@@ -208,4 +208,11 @@ internal interface RepositoriesModule {
     fun bindVaultPasswordRepository(
         impl: VaultPasswordRepositoryImpl,
     ): VaultPasswordRepository
+
+    @Binds
+    @Singleton
+    fun bindThorChainRepository(
+        impl: ThorChainRepositoryImpl
+    ): ThorChainRepository
+
 }

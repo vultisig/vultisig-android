@@ -105,4 +105,10 @@ internal interface DataUsecasesModule {
     fun bindGenerateServiceName(
         impl: GenerateServiceNameImpl
     ): GenerateServiceName
+
+    @Binds
+    @Singleton
+    fun bindInitializeThorChainNetworkIdUseCase(
+        impl: InitializeThorChainNetworkIdUseCaseImpl
+    ): InitializeThorChainNetworkIdUseCase
 }
