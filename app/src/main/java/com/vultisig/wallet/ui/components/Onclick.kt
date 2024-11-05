@@ -11,23 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import kotlinx.coroutines.delay
 
-private const val COOL_DOWN_PERIOD = 800L
+private const val COOL_DOWN_PERIOD = 2000L
 private var lastClickTime = 0L
+private var lastHashCode = 0
 
-fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit): Modifier = this.composed {
-    var enableAgain by remember { mutableStateOf(true) }
-
-    LaunchedEffect(enableAgain) {
-        if (enableAgain) return@LaunchedEffect
-        delay(timeMillis = COOL_DOWN_PERIOD)
-        enableAgain = true
-    }
-
-    Modifier.clickable(enabled = enabled) {
+fun Modifier.clickOnce(onClick: () -> Unit): Modifier = this.composed {
+    Modifier.clickable() {
         val currentTime = System.currentTimeMillis()
-        if (enableAgain && currentTime - lastClickTime >= COOL_DOWN_PERIOD) {
+        if (lastHashCode != onClick.hashCode() || currentTime - lastClickTime > COOL_DOWN_PERIOD) {
+            lastHashCode = onClick.hashCode()
             lastClickTime = currentTime
-            enableAgain = false
             onClick()
         }
     }
@@ -37,7 +30,8 @@ fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit): Modifier =
 fun clickOnce(onClick: () -> Unit): () -> Unit {
     return {
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastClickTime >= COOL_DOWN_PERIOD) {
+        if (lastHashCode != onClick.hashCode() || currentTime - lastClickTime > COOL_DOWN_PERIOD) {
+            lastHashCode = onClick.hashCode()
             lastClickTime = currentTime
             onClick()
         }
