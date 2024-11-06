@@ -28,7 +28,8 @@ internal fun MultiColorButton(
     trailingIcon: Int? = null,
     iconColor: Color? = null,
     backgroundColor: Color? = null,
-    disabled: Boolean? = false,
+    isBusy: Boolean = false,
+    disabled: Boolean = false,
     iconSize: Dp? = null,
     borderSize: Dp? = null,
     minWidth: Dp? = null,
@@ -39,7 +40,6 @@ internal fun MultiColorButton(
     onClick: () -> Unit,
     content : (@Composable ()->Unit)? = null,
 ) {
-    val emptyClickAction: () -> Unit = {}
     var innerModifier = modifier
     val appColor = Theme.colors
     if (borderSize != null)
@@ -62,15 +62,16 @@ internal fun MultiColorButton(
         modifier = innerModifier
             .clip(shape = RoundedCornerShape(60.dp))
             .background(
-                color = if (disabled == true) appColor.neutral600 else backgroundColor
-                    ?: appColor.turquoise600Main
+                color = if (disabled) appColor.neutral600
+                else backgroundColor ?: appColor.turquoise600Main
             )
             .defaultMinSize(
                 minWidth = minWidth ?: 170.dp,
                 minHeight = minHeight ?: 44.dp
             )
             .clickOnce(
-                onClick = if (disabled == false) onClick else emptyClickAction
+                onClick = onClick,
+                enabled = !disabled && !isBusy,
             )
     ) {
         if (startIcon != null)
