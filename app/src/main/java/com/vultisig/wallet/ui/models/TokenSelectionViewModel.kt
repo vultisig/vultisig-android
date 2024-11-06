@@ -141,7 +141,7 @@ internal class TokenSelectionViewModel @Inject constructor(
             val otherUiTokens = if (query.isNotBlank()) {
                 disabledTokens.filter { it.ticker.contains(query, ignoreCase = true) }
             } else {
-                enabledTokens + disabledTokens
+                disabledTokens
             }.asUiTokens(enabledTokenIds)
 
             uiState.update {
