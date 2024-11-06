@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -83,12 +84,19 @@ internal fun MultiColorButton(
                 modifier = Modifier.size(iconSize ?: 15.dp)
             )
         else UiSpacer(iconSize ?: 25.dp)
-        content?.invoke() ?: Text(
-            text = text,
-            color = if (disabled == true) appColor.neutral800 else textColor
-                ?: appColor.oxfordBlue800,
-            style = textStyle ?: Theme.montserrat.subtitle1
-        )
+        when (isBusy) {
+            true -> UiCirclesLoader(
+                color1 = textColor ?: appColor.oxfordBlue800
+            )
+
+            false -> content?.invoke() ?: Text(
+                text = text,
+                color = if (disabled == true) appColor.neutral800 else textColor
+                    ?: appColor.oxfordBlue800,
+                style = textStyle ?: Theme.montserrat.subtitle1
+            )
+        }
+
         if (trailingIcon != null)
             Icon(
                 painter = painterResource(trailingIcon),
