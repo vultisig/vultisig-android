@@ -1,5 +1,7 @@
 package com.vultisig.wallet.ui.models.folder
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.insert
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,15 +11,20 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.FolderRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
+import com.vultisig.wallet.data.usecases.GenerateUniqueName
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
+import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.UiText.StringResource
+import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -27,7 +34,9 @@ internal data class FolderUiModel(
     val isEditMode: Boolean = false,
     val vaults: List<Vault> = emptyList(),
     val availableVaults: List<Vault> = emptyList(),
+    val folderNames: List<String> = emptyList(),
     val error: UiText? = null,
+    val nameError: UiText? = null,
 )
 
 @HiltViewModel
@@ -37,11 +46,14 @@ internal class  FolderViewModel @Inject constructor(
     private val folderRepository: FolderRepository,
     private val vaultOrderRepository: VaultOrderRepository,
     private val getOrderedVaults: GetOrderedVaults,
+    private val isNameLengthValid: IsVaultNameValid,
+    private val generateUniqueName: GenerateUniqueName,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
 ): ViewModel() {
     private val folderId: String =
         requireNotNull(savedStateHandle[Destination.Folder.ARG_FOLDER_ID])
     val state = MutableStateFlow(FolderUiModel())
+    val nameFieldState = TextFieldState()
 
     private var reIndexJob: Job? = null
 
@@ -49,11 +61,19 @@ internal class  FolderViewModel @Inject constructor(
         getFolder()
         collectVaults()
         collectAvailableVaults()
+        validateEachTextChange()
+        getFolderNames()
     }
 
     private fun collectVaults() = viewModelScope.launch {
         getOrderedVaults(folderId).collect { orderedVaults ->
             state.update { it.copy(vaults = orderedVaults) }
+        }
+    }
+
+    private fun getFolderNames() = viewModelScope.launch {
+        folderRepository.getAll().collectLatest { folders ->
+            state.update { it.copy(folderNames = folders.map { folder -> folder.name }) }
         }
     }
 
@@ -66,6 +86,21 @@ internal class  FolderViewModel @Inject constructor(
     private fun getFolder() = viewModelScope.launch {
         val folder = folderRepository.getFolder(folderId)
         state.update { it.copy(folder = folder) }
+        nameFieldState.edit { insert(0, folder.name) }
+    }
+
+    private fun validateEachTextChange() = viewModelScope.launch {
+        nameFieldState.textAsFlow().collectLatest {
+            validate()
+        }
+    }
+
+    private fun validate() = viewModelScope.launch {
+        val name = nameFieldState.text.toString()
+        val errorMessage = if (!isNameLengthValid(name))
+            StringResource(R.string.naming_vault_screen_invalid_name)
+        else null
+        state.update { it.copy(nameError = errorMessage) }
     }
 
     fun selectVault(vaultId: String) = viewModelScope.launch {
@@ -86,7 +121,32 @@ internal class  FolderViewModel @Inject constructor(
     }
 
     fun edit() = viewModelScope.launch {
-        state.update { it.copy(isEditMode = !it.isEditMode) }
+        if (state.value.isEditMode) {
+            changeFolderName()
+        } else {
+            state.update { it.copy(isEditMode = !it.isEditMode) }
+        }
+    }
+
+    private suspend fun changeFolderName() {
+        if (state.value.nameError != null)
+            return
+
+        val nameField = nameFieldState.text.toString()
+
+        if (nameField.isEmpty() || nameField == state.value.folder?.name) {
+            state.update { it.copy(isEditMode = false) }
+            return
+        }
+        val name = generateUniqueName(
+            nameField,
+            state.value.folderNames
+        )
+        folderRepository.updateFolderName(folderId, name)
+        state.update { it.copy(
+            isEditMode = false,
+            folder = state.value.folder?.copy(name = name),
+        ) }
     }
 
     fun onMoveVaults(oldOrder: Int, newOrder: Int) {
