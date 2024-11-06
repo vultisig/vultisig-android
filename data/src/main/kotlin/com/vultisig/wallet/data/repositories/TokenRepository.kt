@@ -156,8 +156,10 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     private fun ThorBalancesResponseJson.toCoins(chain: Chain): List<Coin> =
-        balances.map {
-                val asset = it.asset
+        balances.mapNotNull {
+            val asset = it.asset
+            val amount = it.amount.toBigIntegerOrNull()
+            if (amount == null || amount != BigInteger.ZERO) {
                 val supportedCoin = SupportedCoins.firstOrNull { coin ->
                     coin.id == "${asset.symbol}-${chain.id}"
                 }
@@ -167,12 +169,13 @@ internal class TokenRepositoryImpl @Inject constructor(
                     ticker = asset.ticker,
                     logo = asset.icon ?: "",
                     decimal = asset.decimals,
-                    isNativeToken = supportedCoin?.isNativeToken?: false,
+                    isNativeToken = supportedCoin?.isNativeToken ?: false,
                     priceProviderID = "",
                     address = "",
                     hexPublicKey = "",
                 )
-            }
+            } else null
+        }
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
 
