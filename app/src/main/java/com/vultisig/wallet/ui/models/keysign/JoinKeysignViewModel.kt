@@ -93,6 +93,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
+    data object MissingRequiredVault : JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
     data object WrongVault : JoinKeysignError(R.string.join_keysign_wrong_vault.asUiText())
     data object WrongVaultShare :
         JoinKeysignError(R.string.join_keysign_error_wrong_vault_share.asUiText())
@@ -301,10 +302,10 @@ internal class JoinKeysignViewModel @Inject constructor(
                 it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
             }
             matchingVault?.let {
-                _currentVault = it
-                _localPartyID = it.localPartyID
-            } ?: run {
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
+                return false
+            } ?: run {
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.MissingRequiredVault)
                 return false
             }
         }
@@ -613,7 +614,9 @@ internal class JoinKeysignViewModel @Inject constructor(
         viewModelScope.launch {
             val keysignError = currentState.value as JoinKeysignState.Error
             when (keysignError.errorType) {
-                JoinKeysignError.WrongVault, JoinKeysignError.WrongVaultShare -> navigator.navigate(
+                JoinKeysignError.MissingRequiredVault,
+                JoinKeysignError.WrongVault,
+                JoinKeysignError.WrongVaultShare -> navigator.navigate(
                     Destination.Home(showVaultList = true),
                     opts = NavigationOptions(clearBackStack = true)
                 )
