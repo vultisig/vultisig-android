@@ -24,7 +24,15 @@ class GasFeeRefreshUiRepository @Inject constructor(
     suspend fun refreshGasFee() {
         val chain = chain.value ?: return
         val address = address.value ?: return
-        val gasFee = gasFeeRepository.getGasFee(chain, address)
+
+        val gasFee = try {
+            gasFeeRepository.getGasFee(
+                chain,
+                address
+            )
+        } catch (e: Exception) {
+            null
+        }
         this.gasFee.update { gasFee }
     }
 }
