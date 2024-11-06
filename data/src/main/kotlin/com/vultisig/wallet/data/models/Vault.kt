@@ -2,8 +2,10 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 
+typealias VaultId = String
+
 data class Vault(
-    val id: String,
+    val id: VaultId,
     var name: String,
     var pubKeyECDSA: String = "",
     var pubKeyEDDSA: String = "",

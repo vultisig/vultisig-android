@@ -91,7 +91,7 @@ internal fun SendFormScreen(
         onDstAddressLostFocus = viewModel::validateDstAddress,
         onTokenAmountLostFocus = viewModel::validateTokenAmount,
         onDismissError = viewModel::dismissError,
-        onSelectToken = viewModel::selectToken,
+        onSelectToken = viewModel::openTokenSelection,
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onChoosePercentageAmount = viewModel::choosePercentageAmount,

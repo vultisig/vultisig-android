@@ -73,8 +73,8 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindAvailableTokenBalanceUseCase(
-        impl: AvailableTokenBalanceUseCaseImpl
-    ): AvailableTokenBalanceUseCase
+        impl: GetAvailableTokenBalanceUseCaseImpl
+    ): GetAvailableTokenBalanceUseCase
 
     @Binds
     @Singleton
