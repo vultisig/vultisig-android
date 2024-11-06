@@ -68,8 +68,10 @@ internal class TokenRepositoryImpl @Inject constructor(
             }
 
             TokenStandard.SOL -> flow {
+                val builtInTokens = builtInTokens.first().filter { it.chain == chain }
+                emit(builtInTokens)
                 val tokens = splTokenRepository.getTokens(address)
-                emit(tokens)
+                emit(builtInTokens + tokens)
             }
 
             else ->
