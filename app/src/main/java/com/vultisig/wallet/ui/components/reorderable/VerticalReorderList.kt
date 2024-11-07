@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -124,6 +125,10 @@ internal fun <T : Any> VerticalReorderList(
 
             onMove(i, j)
         })
+
+    LaunchedEffect(isReorderEnabled) {
+        lazyListState.scrollToItem(0)
+    }
     LazyColumn(
         verticalArrangement = verticalArrangement,
         state = lazyListState,
