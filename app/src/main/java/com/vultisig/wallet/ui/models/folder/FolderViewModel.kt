@@ -62,7 +62,7 @@ internal class  FolderViewModel @Inject constructor(
         collectVaults()
         collectAvailableVaults()
         validateEachTextChange()
-        getFolderNames()
+        collectFolderNames()
     }
 
     private fun collectVaults() = viewModelScope.launch {
@@ -71,7 +71,7 @@ internal class  FolderViewModel @Inject constructor(
         }
     }
 
-    private fun getFolderNames() = viewModelScope.launch {
+    private fun collectFolderNames() = viewModelScope.launch {
         folderRepository.getAll().collectLatest { folders ->
             state.update { it.copy(folderNames = folders.map { folder -> folder.name }) }
         }
@@ -132,20 +132,20 @@ internal class  FolderViewModel @Inject constructor(
         if (state.value.nameError != null)
             return
 
-        val nameField = nameFieldState.text.toString()
+        val name = nameFieldState.text.toString()
 
-        if (nameField.isEmpty() || nameField == state.value.folder?.name) {
+        if (name.isEmpty() || name == state.value.folder?.name) {
             state.update { it.copy(isEditMode = false) }
             return
         }
-        val name = generateUniqueName(
-            nameField,
+        val uniqueName = generateUniqueName(
+            name,
             state.value.folderNames
         )
-        folderRepository.updateFolderName(folderId, name)
+        folderRepository.updateFolderName(folderId, uniqueName)
         state.update { it.copy(
             isEditMode = false,
-            folder = state.value.folder?.copy(name = name),
+            folder = it.folder?.copy(name = uniqueName),
         ) }
     }
 

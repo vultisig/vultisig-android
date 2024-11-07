@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ import com.vultisig.wallet.ui.components.VaultSwitch
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.models.folder.FolderUiModel
 import com.vultisig.wallet.ui.models.folder.FolderViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -133,45 +135,6 @@ internal fun FolderScreen(
             )
         }
 
-        val topContent = listOf<@Composable LazyItemScope.() -> Unit> @Composable {
-            FormTextFieldCard(
-                title = stringResource(id = R.string.create_folder_name),
-                hint = state.folder?.name ?: "",
-                error = state.nameError,
-                keyboardType = KeyboardType.Text,
-                textFieldState = nameFieldState,
-            )
-            UiSpacer(size = 16.dp)
-            Text(
-                text = stringResource(id = R.string.current_vaults),
-                color = Theme.colors.neutral200,
-                style = Theme.montserrat.body1,
-            )
-            UiSpacer(size = 16.dp)
-        }
-
-        val bottomContent = listOf<@Composable LazyItemScope.() -> Unit> @Composable {
-            UiSpacer(size = 20.dp)
-            Text(
-                text = stringResource(id = R.string.select_vaults_to_add_to_the_folder),
-                color = Theme.colors.neutral200,
-                style = Theme.montserrat.body1,
-            )
-            UiSpacer(size = 16.dp)
-
-            state.availableVaults.forEach { vault ->
-                val check = remember { mutableStateOf(false) }
-                SelectionItem(
-                    title = vault.name,
-                    isChecked = check.value,
-                    onCheckedChange = {
-                        check.value = viewModel.tryToCheckVault(it, vault.id)
-                    },
-                )
-                UiSpacer(size = 16.dp)
-            }
-        }
-
         VerticalReorderList(
             onMove = viewModel::onMoveVaults,
             data = state.vaults,
@@ -183,8 +146,8 @@ internal fun FolderScreen(
             ),
             modifier = Modifier
                 .padding(contentPadding),
-            beforeContents = if (state.isEditMode) topContent else null,
-            afterContents = if (state.isEditMode && state.availableVaults.isNotEmpty()) bottomContent else null,
+            beforeContents = TopFolderScreenContent(state, nameFieldState),
+            afterContents = BottomFolderScreenContent(state, viewModel::tryToCheckVault),
         ) { vault ->
             val check = remember { mutableStateOf(true) }
             val trailingContent = @Composable {
@@ -220,4 +183,59 @@ internal fun FolderScreen(
             )
         }
     }
+}
+
+@Composable
+private fun BottomFolderScreenContent(
+    state: FolderUiModel,
+    tryToCheckVault: (Boolean, String) -> Boolean,
+) = if (state.isEditMode && state.availableVaults.isNotEmpty()) {
+    listOf<@Composable LazyItemScope.() -> Unit> @Composable {
+        UiSpacer(size = 20.dp)
+        Text(
+            text = stringResource(id = R.string.select_vaults_to_add_to_the_folder),
+            color = Theme.colors.neutral200,
+            style = Theme.montserrat.body1,
+        )
+        UiSpacer(size = 16.dp)
+
+        state.availableVaults.forEach { vault ->
+            val check = remember { mutableStateOf(false) }
+            SelectionItem(
+                title = vault.name,
+                isChecked = check.value,
+                onCheckedChange = {
+                    check.value = tryToCheckVault(it, vault.id)
+                },
+            )
+            UiSpacer(size = 16.dp)
+        }
+    }
+} else {
+    null
+}
+
+@Composable
+private fun TopFolderScreenContent(
+    state: FolderUiModel,
+    nameFieldState: TextFieldState
+) = if (state.isEditMode) {
+    listOf<@Composable LazyItemScope.() -> Unit> @Composable {
+        FormTextFieldCard(
+            title = stringResource(id = R.string.create_folder_name),
+            hint = state.folder?.name ?: "",
+            error = state.nameError,
+            keyboardType = KeyboardType.Text,
+            textFieldState = nameFieldState,
+        )
+        UiSpacer(size = 16.dp)
+        Text(
+            text = stringResource(id = R.string.current_vaults),
+            color = Theme.colors.neutral200,
+            style = Theme.montserrat.body1,
+        )
+        UiSpacer(size = 16.dp)
+    }
+} else {
+    null
 }
