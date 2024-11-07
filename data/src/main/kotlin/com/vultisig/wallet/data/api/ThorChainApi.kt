@@ -90,48 +90,34 @@ internal class ThorChainApiImpl @Inject constructor(
         interval: String,
         isAffiliate: Boolean,
     ): THORChainSwapQuoteDeserialized {
-        val response = httpClient
-            .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
-                parameter(
-                    "from_asset",
-                    fromAsset
-                )
-                parameter(
-                    "to_asset",
-                    toAsset
-                )
-                parameter(
-                    "amount",
-                    amount
-                )
-                parameter(
-                    "destination",
-                    address
-                )
-                parameter(
-                    "streaming_interval",
-                    interval
-                )
-                if (isAffiliate) {
-                    parameter(
-                        "affiliate",
-                        THORChainSwaps.AFFILIATE_FEE_ADDRESS
-                    )
-                    parameter(
-                        "affiliate_bps",
-                        THORChainSwaps.AFFILIATE_FEE_RATE
-                    )
+        try {
+            val response = httpClient
+                .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
+                    parameter("from_asset", fromAsset)
+                    parameter("to_asset", toAsset)
+                    parameter("amount", amount)
+                    parameter("destination", address)
+                    parameter("streaming_interval", interval)
+                    if (isAffiliate) {
+                        parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                        parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
+                    }
                 }
-                header(
-                    xClientID,
-                    xClientIDValue
-                )
+            if (!response.status.isSuccess()) {
+                return THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError(response.status.description))
             }
-        val responseRawString = response.bodyAsText()
-        return json.decodeFromString(
-            thorChainSwapQuoteResponseJsonSerializer,
-            responseRawString
-        )
+            val responseRawString = response.body<String>()
+            return json.decodeFromString(
+                thorChainSwapQuoteResponseJsonSerializer,
+                responseRawString
+            )
+        } catch (e: Exception) {
+            return THORChainSwapQuoteDeserialized.Error(
+                THORChainSwapQuoteError(
+                    e.message ?: "Unknown error"
+                )
+            )
+        }
     }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
