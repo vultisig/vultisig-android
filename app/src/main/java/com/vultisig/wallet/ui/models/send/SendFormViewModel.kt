@@ -92,7 +92,7 @@ internal data class SendFormUiModel(
     val hasMemo: Boolean = false,
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
-    val isSendingForm: Boolean = false,
+    val isLoading: Boolean = false,
 )
 
 internal data class SendSrc(
@@ -333,7 +333,7 @@ internal class SendFormViewModel @Inject constructor(
 
     fun send() {
         viewModelScope.launch {
-            enableSendingForm()
+            showLoading()
             try {
                 val vaultId = vaultId
                     ?: throw InvalidTransactionDataException(
@@ -517,22 +517,22 @@ internal class SendFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } finally {
-                disableSendingForm()
+                hideLoading()
             }
         }
     }
 
-    private fun disableSendingForm() {
+    private fun hideLoading() {
         uiState.update {
             it.copy(
-                isSendingForm = false
+                isLoading = false
             )
         }
     }
 
-    private fun enableSendingForm() {
+    private fun showLoading() {
         uiState.update {
-            it.copy(isSendingForm = true)
+            it.copy(isLoading = true)
         }
     }
 

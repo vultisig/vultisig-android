@@ -29,7 +29,7 @@ internal fun MultiColorButton(
     trailingIcon: Int? = null,
     iconColor: Color? = null,
     backgroundColor: Color? = null,
-    isBusy: Boolean = false,
+    isLoading: Boolean = false,
     disabled: Boolean = false,
     iconSize: Dp? = null,
     borderSize: Dp? = null,
@@ -72,7 +72,7 @@ internal fun MultiColorButton(
             )
             .clickOnce(
                 onClick = onClick,
-                enabled = !disabled && !isBusy,
+                enabled = !disabled && !isLoading,
             )
     ) {
         if (startIcon != null)
@@ -84,12 +84,12 @@ internal fun MultiColorButton(
                 modifier = Modifier.size(iconSize ?: 15.dp)
             )
         else UiSpacer(iconSize ?: 25.dp)
-        when (isBusy) {
-            true -> UiCirclesLoader(
+        if (isLoading) {
+            UiCirclesLoader(
                 color1 = textColor ?: appColor.oxfordBlue800
             )
-
-            false -> content?.invoke() ?: Text(
+        } else {
+            content?.invoke() ?: Text(
                 text = text,
                 color = if (disabled == true) appColor.neutral800 else textColor
                     ?: appColor.oxfordBlue800,
