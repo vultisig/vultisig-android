@@ -294,6 +294,7 @@ internal fun SendFormScreen(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .padding(all = 16.dp),
+            isLoading = state.isLoading,
             onClick = {
                 focusManager.clearFocus()
                 onSend()
