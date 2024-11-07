@@ -265,21 +265,23 @@ internal class JoinKeysignViewModel @Inject constructor(
                 if (_useVultisigRelay) {
                     this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY
                     // when Payload is not in the QRCode
-                    routerApi.getPayload(_serverAddress, payloadId).let { payload ->
-                        if (payload.isNotEmpty()) {
-                            val rawPayload = decompressQr(payload.decodeBase64Bytes())
-                            val payloadProto =
-                                protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
-                            val keysignMsgProto = KeysignMessageProto(
-                                keysignPayload = payloadProto,
-                                sessionId = tempKeysignMessageProto!!.sessionId,
-                                serviceName = tempKeysignMessageProto!!.serviceName,
-                                encryptionKeyHex = tempKeysignMessageProto!!.encryptionKeyHex,
-                                useVultisigRelay = _useVultisigRelay,
-                                payloadId = payloadId
-                            )
-                            if (!loadKeysignMessage(keysignMsgProto)) {
-                                return@launch
+                    if (!payloadProto.payloadId.isEmpty()) {
+                        routerApi.getPayload(_serverAddress, payloadId).let { payload ->
+                            if (payload.isNotEmpty()) {
+                                val rawPayload = decompressQr(payload.decodeBase64Bytes())
+                                val payloadProto =
+                                    protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
+                                val keysignMsgProto = KeysignMessageProto(
+                                    keysignPayload = payloadProto,
+                                    sessionId = tempKeysignMessageProto!!.sessionId,
+                                    serviceName = tempKeysignMessageProto!!.serviceName,
+                                    encryptionKeyHex = tempKeysignMessageProto!!.encryptionKeyHex,
+                                    useVultisigRelay = _useVultisigRelay,
+                                    payloadId = payloadId
+                                )
+                                if (!loadKeysignMessage(keysignMsgProto)) {
+                                    return@launch
+                                }
                             }
                         }
                     }
@@ -578,6 +580,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                     }
                 }
             }
+        } else {
+            currentState.value = JoinKeysignState.JoinKeysign
         }
 
         // discovery finished
