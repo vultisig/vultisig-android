@@ -147,10 +147,12 @@ internal class  FolderViewModel @Inject constructor(
             state.value.folderNames
         )
         folderRepository.updateFolderName(folderId, uniqueName)
-        state.update { it.copy(
-            isEditMode = false,
-            folder = it.folder?.copy(name = uniqueName),
-        ) }
+        state.update {
+            it.copy(
+                isEditMode = false,
+                folder = it.folder?.copy(name = uniqueName),
+            )
+        }
     }
 
     fun onMoveVaults(oldOrder: Int, newOrder: Int) {
