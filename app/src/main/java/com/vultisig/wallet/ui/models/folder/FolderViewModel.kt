@@ -97,10 +97,14 @@ internal class  FolderViewModel @Inject constructor(
 
     private fun validate() = viewModelScope.launch {
         val name = nameFieldState.text.toString()
-        val errorMessage = if (!isNameLengthValid(name))
+        val errorMessage = if (!isNameValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
         state.update { it.copy(nameError = errorMessage) }
+    }
+
+    private fun isNameValid(name: String): Boolean {
+        return isNameLengthValid(name)
     }
 
     fun selectVault(vaultId: String) = viewModelScope.launch {
@@ -129,10 +133,10 @@ internal class  FolderViewModel @Inject constructor(
     }
 
     private suspend fun changeFolderName() {
-        if (state.value.nameError != null)
-            return
-
         val name = nameFieldState.text.toString()
+
+        if (!isNameValid(name))
+            return
 
         if (name.isEmpty() || name == state.value.folder?.name) {
             state.update { it.copy(isEditMode = false) }
