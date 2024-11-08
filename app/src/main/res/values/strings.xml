@@ -454,7 +454,7 @@
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
     <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
-    <string name="vault_backup_hint_to_long" translatable="false">Hint is too long</string>
+    <string name="vault_password_hint_to_long" translatable="false">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
     <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>

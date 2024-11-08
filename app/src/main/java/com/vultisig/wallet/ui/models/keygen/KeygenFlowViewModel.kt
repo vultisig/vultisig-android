@@ -150,6 +150,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
+    private val passwordHint: String? = savedStateHandle[Destination.KeygenFlow.ARG_PASSWORD_HINT]
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     private val isFastSign: Boolean
@@ -172,6 +173,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             _encryptionKeyHex,
             _oldResharePrefix,
             password,
+            passwordHint,
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
