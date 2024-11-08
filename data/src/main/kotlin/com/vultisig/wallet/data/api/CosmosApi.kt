@@ -2,11 +2,11 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosThorChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.utils.CosmosTHORChainResponseSerializer
+import com.vultisig.wallet.data.utils.CosmosThorChainResponseSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -32,7 +32,7 @@ interface CosmosApiFactory {
 internal class CosmosApiFactoryImp @Inject constructor(
     private val httpClient: HttpClient,
     private val json: Json,
-    private val cosmosTHORChainResponseSerializer: CosmosTHORChainResponseSerializer,
+    private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
 ) : CosmosApiFactory {
     override fun createCosmosApi(chain: Chain): CosmosApi {
         return when (chain) {
@@ -40,28 +40,28 @@ internal class CosmosApiFactoryImp @Inject constructor(
                 httpClient,
                 "https://cosmos-rest.publicnode.com",
                 json,
-                cosmosTHORChainResponseSerializer,
+                cosmosThorChainResponseSerializer,
             )
 
             Chain.Kujira -> CosmosApiImp(
                 httpClient,
                 "https://kujira-rest.publicnode.com",
                 json,
-                cosmosTHORChainResponseSerializer,
+                cosmosThorChainResponseSerializer,
             )
 
             Chain.Dydx -> CosmosApiImp(
                 httpClient,
                 "https://dydx-rest.publicnode.com",
                 json,
-                cosmosTHORChainResponseSerializer,
+                cosmosThorChainResponseSerializer,
             )
 
             Chain.Osmosis -> CosmosApiImp(
                 httpClient,
                 "https://osmosis-rest.publicnode.com",
                 json,
-                cosmosTHORChainResponseSerializer,
+                cosmosThorChainResponseSerializer,
             )
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")
@@ -73,7 +73,7 @@ internal class CosmosApiImp(
     private val httpClient: HttpClient,
     private val rpcEndpoint: String,
     private val json: Json,
-    private val cosmosTHORChainResponseSerializer: CosmosTHORChainResponseSerializer,
+    private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
 ) : CosmosApi {
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response = httpClient
@@ -86,22 +86,22 @@ internal class CosmosApiImp(
         val response = httpClient
             .get("$rpcEndpoint/cosmos/auth/v1beta1/accounts/$address") {
             }
-        val responseBody = response.bodyAsText()
+        val responseBody = response.body<String>()
         val decodedResponse = json.decodeFromString(
-            cosmosTHORChainResponseSerializer,
+            cosmosThorChainResponseSerializer,
             responseBody
         )
 
         Timber.d("getAccountNumber: $responseBody")
         return when (decodedResponse) {
-            is CosmosTHORChainAccountResponse.Error ->
+            is CosmosThorChainAccountResponse.Error ->
                 THORChainAccountValue(
                     accountNumber = "0",
                     sequence = "0",
                     address = null
                 )
 
-            is CosmosTHORChainAccountResponse.Success ->
+            is CosmosThorChainAccountResponse.Success ->
                 decodedResponse.response.account ?: error("Error getting account")
         }
     }

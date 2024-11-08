@@ -3,14 +3,15 @@ package com.vultisig.wallet.data.utils
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
-import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
-import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.cosmos.CosmosThorChainAccountResponse
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
-import com.vultisig.wallet.data.models.SplTokenDeserialized.*
+import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
+import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -53,9 +54,14 @@ object BigIntegerSerializer : KSerializer<BigInteger> {
         BigInteger.valueOf(decoder.decodeLong())
 }
 
-@Singleton
-class SplTokenResponseJsonSerializer @Inject constructor(private val json: Json) :
-    KSerializer<SplTokenDeserialized> {
+
+interface SplTokenResponseJsonSerializer : KSerializer<SplTokenDeserialized>
+
+
+class SplTokenResponseJsonSerializerImpl @Inject constructor(
+    private val json: Json,
+) :
+    SplTokenResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("SplTokenResponseJsonSerializer")
 
@@ -77,7 +83,7 @@ class SplTokenResponseJsonSerializer @Inject constructor(private val json: Json)
     }
 
     override fun serialize(encoder: Encoder, value: SplTokenDeserialized) {
-        throw UnsupportedOperationException("Serialization is not required")
+        throw UnsupportedOperationException("Serialization is not implemented")
     }
 }
 
@@ -125,15 +131,17 @@ object KeysignResponseSerializer : KSerializer<tss.KeysignResponse> {
 }
 
 
-@Singleton
-class CosmosTHORChainResponseSerializer @Inject constructor(
+interface CosmosThorChainResponseSerializer : KSerializer<CosmosThorChainAccountResponse>
+
+
+class CosmosThorChainResponseSerializerImpl @Inject constructor(
     private val json: Json,
 ) :
-    KSerializer<CosmosTHORChainAccountResponse> {
+    CosmosThorChainResponseSerializer {
     override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("CosmosTHORChainResponseSerializer")
+        buildClassSerialDescriptor("CosmosThorChainResponseSerializer")
 
-    override fun deserialize(decoder: Decoder): CosmosTHORChainAccountResponse {
+    override fun deserialize(decoder: Decoder): CosmosThorChainAccountResponse {
         val input = decoder as JsonDecoder
         val jsonObject = input.decodeJsonElement().jsonObject
 
@@ -141,17 +149,17 @@ class CosmosTHORChainResponseSerializer @Inject constructor(
                 && jsonObject.containsKey("code"))
 
         return if (isErrorResponse) {
-            CosmosTHORChainAccountResponse.Error(
+            CosmosThorChainAccountResponse.Error(
                 json.decodeFromJsonElement<THORChainAccountErrorJson>(jsonObject)
             )
         } else {
-            CosmosTHORChainAccountResponse.Success(
+            CosmosThorChainAccountResponse.Success(
                 json.decodeFromJsonElement<THORChainAccountJson>(jsonObject)
             )
         }
     }
 
-    override fun serialize(encoder: Encoder, value: CosmosTHORChainAccountResponse) {
-        throw UnsupportedOperationException("Serialization is not required")
+    override fun serialize(encoder: Encoder, value: CosmosThorChainAccountResponse) {
+        throw UnsupportedOperationException("Serialization is not implemented")
     }
 }
