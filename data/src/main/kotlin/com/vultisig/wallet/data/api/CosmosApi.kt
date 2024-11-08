@@ -36,6 +36,8 @@ internal class CosmosApiFactoryImp @Inject constructor(
             Chain.Kujira -> CosmosApiImp(httpClient, "https://kujira-rest.publicnode.com")
             Chain.Dydx -> CosmosApiImp(httpClient, "https://dydx-rest.publicnode.com")
             Chain.Osmosis -> CosmosApiImp(httpClient, "https://osmosis-rest.publicnode.com")
+            Chain.Terra -> CosmosApiImp(httpClient, "https://terra-lcd.publicnode.com")
+            Chain.TerraClassic -> CosmosApiImp(httpClient, "https://terra-classic-lcd.publicnode.com")
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
     }

@@ -80,6 +80,8 @@ internal fun Coins.getCoinLogo(logoName: String): ImageModel {
         "wif" -> R.drawable.wif
         "ray" -> R.drawable.ray
         "jup" -> R.drawable.jup
+        "luna" -> R.drawable.luna
+        "lunc" -> R.drawable.lunc
 
         else -> logoName
     }
