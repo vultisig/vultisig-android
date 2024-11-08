@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,10 @@ interface VaultDataStoreRepository {
     suspend fun setFastSignHint(vaultId: String, hint: String)
 
     suspend fun readFastSignHint(vaultId: String): Flow<String>
+
+    suspend fun setGlobalBackupReminderStatus(month: Int)
+
+    suspend fun readGlobalBackupReminderStatus(): Flow<Int>
 }
 
 internal class VaultDataStoreRepositoryImpl @Inject constructor(
@@ -51,10 +56,21 @@ internal class VaultDataStoreRepositoryImpl @Inject constructor(
         return appDataStore.readData(onVaultFastSignHintKey(vaultId), "")
     }
 
+    override suspend fun setGlobalBackupReminderStatus(month: Int) {
+        appDataStore.editData { preferences ->
+            preferences[onGlobalBackupReminderStatusKey()] = month
+        }
+    }
+
+    override suspend fun readGlobalBackupReminderStatus(): Flow<Int> {
+        return appDataStore.readData(onGlobalBackupReminderStatusKey(), 0)
+    }
+
     private companion object PreferencesKey {
         fun onVaultBackupStatusKey(vaultId: String) = booleanPreferencesKey(name = "vault_backup/$vaultId")
         fun onVaultFastSignHintKey(vaultId: String) = stringPreferencesKey(name = "vault_fast_sign_hint/$vaultId")
         fun onVaultBackupHintKey(vaultFileName: String) = stringPreferencesKey(name = "vault_backup_hint/$vaultFileName")
+        fun onGlobalBackupReminderStatusKey() = intPreferencesKey(name = "global_backup_reminder_status")
     }
 }
 

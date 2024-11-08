@@ -111,4 +111,16 @@ internal interface DataUsecasesModule {
     fun bindInitializeThorChainNetworkIdUseCase(
         impl: InitializeThorChainNetworkIdUseCaseImpl
     ): InitializeThorChainNetworkIdUseCase
+
+    @Binds
+    @Singleton
+    fun bindNeverShowGlobalBackupReminder(
+        impl: NeverShowGlobalBackupReminderImpl
+    ): NeverShowGlobalBackupReminder
+
+    @Binds
+    @Singleton
+    fun bindGetGlobalBackupReminderStatus(
+        impl: GetGlobalBackupReminderStatusImpl
+    ): GetGlobalBackupReminderStatus
 }
