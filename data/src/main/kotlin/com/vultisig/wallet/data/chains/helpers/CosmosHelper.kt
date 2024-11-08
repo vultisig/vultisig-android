@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -23,10 +24,16 @@ import wallet.core.jni.proto.TransactionCompiler
 class CosmosHelper(
     private val coinType: CoinType,
     private val denom: String,
+    private val gasLimit: Long = DEFAULT_GAS_LIMIT,
 ) {
 
     companion object {
-        private const val GAS_LIMIT = 200000L
+        private const val DEFAULT_GAS_LIMIT = 200000L
+
+        fun getChainGasLimit(chain: Chain): Long = when (chain) {
+            Chain.Terra, Chain.TerraClassic -> 300000L
+            else -> DEFAULT_GAS_LIMIT
+        }
 
         const val ATOM_DENOM = "uatom"
     }
@@ -47,7 +54,7 @@ class CosmosHelper(
             .setMode(Cosmos.BroadcastMode.SYNC)
             .setFee(
                 Cosmos.Fee.newBuilder()
-                    .setGas(GAS_LIMIT)
+                    .setGas(gasLimit)
                     .addAllAmounts(
                         listOf(
                             Cosmos.Amount.newBuilder()
@@ -118,7 +125,7 @@ class CosmosHelper(
             )
             .setFee(
                 Cosmos.Fee.newBuilder()
-                    .setGas(GAS_LIMIT)
+                    .setGas(gasLimit)
                     .addAllAmounts(
                         listOf(
                             Cosmos.Amount.newBuilder()

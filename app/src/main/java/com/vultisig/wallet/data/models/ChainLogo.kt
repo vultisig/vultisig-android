@@ -29,4 +29,6 @@ internal val Chain.logo: Int
         Chain.Sui -> R.drawable.sui
         Chain.Ton -> R.drawable.ton
         Chain.Osmosis -> R.drawable.osmo
+        Chain.Terra -> R.drawable.luna
+        Chain.TerraClassic -> R.drawable.lunc
     }
