@@ -15,6 +15,8 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import timber.log.Timber
 import java.math.BigInteger
@@ -36,6 +38,7 @@ interface BlockChainSpecificRepository {
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
         gasLimit: BigInteger? = null,
+        dstAddress: String? = null,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -61,6 +64,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         isMaxAmountEnabled: Boolean,
         isDeposit: Boolean,
         gasLimit: BigInteger?,
+        dstAddress: String?,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {
@@ -165,13 +169,34 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             )
         }
 
-        TokenStandard.SOL -> {
-            val blockHash = solanaApi.getRecentBlockHash()
-            Timber.d("solana blockhash: $blockHash")
+        TokenStandard.SOL -> coroutineScope {
+            val blockHash = async {
+                solanaApi.getRecentBlockHash()
+            }
+            val fromAddressPubKey = async {
+                solanaApi.getTokenAssociatedAccountByOwner(
+                    token.address,
+                    token.contractAddress
+                ).takeIf { !token.isNativeToken }
+            }
+            val toAddressPubKey = async {
+                dstAddress?.let {
+                    solanaApi.getTokenAssociatedAccountByOwner(
+                        dstAddress,
+                        token.contractAddress
+                    ).takeIf { !token.isNativeToken }
+                }
+            }
+            val recentBlockHashResult = blockHash.await()
+            val fromAddressPubKeyResult = fromAddressPubKey.await()
+            val toAddressPubKeyResult = toAddressPubKey.await()
+            Timber.d("solana blockhash: $recentBlockHashResult")
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Solana(
-                    recentBlockHash = blockHash,
-                    priorityFee = gasFee.value
+                    recentBlockHash = recentBlockHashResult,
+                    priorityFee = gasFee.value,
+                    fromAddressPubKey = fromAddressPubKeyResult,
+                    toAddressPubKey = toAddressPubKeyResult,
                 )
             )
         }
