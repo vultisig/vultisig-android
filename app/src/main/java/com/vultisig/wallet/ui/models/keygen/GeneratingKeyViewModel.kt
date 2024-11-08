@@ -56,6 +56,7 @@ internal class GeneratingKeyViewModel(
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
     private val password: String? = null,
+    private val hint: String? = null,
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
@@ -111,6 +112,7 @@ internal class GeneratingKeyViewModel(
             this.vault.signers = keygenCommittee
             currentState.value = KeygenState.Success
             this._messagePuller?.stop()
+
         } catch (e: Exception) {
             Timber.tag("GeneratingKeyViewModel").d("generateKey error: %s", e.stackTraceToString())
             val errorMessage = UiText.DynamicString(e.message ?: "Unknown error")
@@ -267,7 +269,7 @@ internal class GeneratingKeyViewModel(
             this@GeneratingKeyViewModel.action == TssAction.ReShare
         )
         vaultDataStoreRepository.setBackupStatus(vaultId = vault.id, false)
-
+        hint?.let { vaultDataStoreRepository.setFastSignHint(vaultId = vault.id, hint = it) }
         delay(2.seconds)
 
         stopService()

@@ -321,6 +321,7 @@ internal sealed class Destination(
         val vaultSetupType: VaultSetupType,
         val email: String?,
         val password: String?,
+        val hint: String? = null,
     ) : Destination(
         route = buildRoute(
             vaultId,
@@ -328,17 +329,20 @@ internal sealed class Destination(
             vaultSetupType.raw,
             Uri.encode(email),
             Uri.encode(password),
+            Uri.encode(hint),
         )
     ) {
         companion object {
             const val ARG_VAULT_ID = "vault_id"
             const val ARG_VAULT_NAME = "vault_name"
+            const val ARG_PASSWORD_HINT = "password_hint"
 
             const val STATIC_ROUTE = "keygen/generate?${ARG_VAULT_ID}={$ARG_VAULT_ID}" +
                     "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
                     "&${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
                     "&${ARG_EMAIL}={$ARG_EMAIL}" +
-                    "&${ARG_PASSWORD}={$ARG_PASSWORD}"
+                    "&${ARG_PASSWORD}={$ARG_PASSWORD}" +
+                    "&${ARG_PASSWORD_HINT}={$ARG_PASSWORD_HINT}"
 
             fun generateNewVault(
                 name: String,
@@ -357,12 +361,13 @@ internal sealed class Destination(
                 type: Int,
                 email: String?,
                 password: String?,
+                hint: String?,
             ) = "keygen/generate?${ARG_VAULT_ID}=$vaultId" +
                     "&${ARG_VAULT_NAME}=$name" +
                     "&${ARG_VAULT_SETUP_TYPE}=${type}" +
                     "&${ARG_EMAIL}=$email" +
-                    "&${ARG_PASSWORD}=$password"
-
+                    "&${ARG_PASSWORD}=$password" +
+                    "&${ARG_PASSWORD_HINT}=$hint"
         }
     }
 
