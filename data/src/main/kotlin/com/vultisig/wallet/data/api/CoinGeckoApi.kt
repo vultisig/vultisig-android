@@ -6,8 +6,8 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import timber.log.Timber
 import java.math.BigDecimal
-import java.net.UnknownHostException
 import javax.inject.Inject
 
 typealias CurrencyToPrice = Map<String, BigDecimal>
@@ -30,7 +30,7 @@ interface CoinGeckoApi {
 internal class CoinGeckoApiImpl @Inject constructor(
     private val http: HttpClient,
 ) : CoinGeckoApi {
-    
+
 
     override suspend fun getCryptoPrices(
         priceProviderIds: List<String>,
@@ -38,10 +38,14 @@ internal class CoinGeckoApiImpl @Inject constructor(
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = priceProviderIds.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return fetchPrices(
-            priceProviderIdsParam,
-            currenciesParam
-        )
+        return try {
+            fetchPrices(
+                priceProviderIdsParam, currenciesParam
+            )
+        } catch (e: Exception) {
+            Timber.d(e, "error occurred in getCryptoPrices")
+            emptyMap()
+        }
     }
 
     override suspend fun getContractsPrice(
@@ -51,41 +55,38 @@ internal class CoinGeckoApiImpl @Inject constructor(
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = contractAddresses.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return fetchContractPrices(
-            chain.coinGeckoAssetId,
-            priceProviderIdsParam,
-            currenciesParam,
-        )
+        return try {
+            fetchContractPrices(
+                chain.coinGeckoAssetId,
+                priceProviderIdsParam,
+                currenciesParam,
+            )
+        } catch (e: Exception) {
+            Timber.d(e, "error occurred in getContractsPrice")
+            emptyMap()
+        }
     }
 
     private suspend fun fetchPrices(
         coins: String,
         fiats: String,
-    ): Map<String, CurrencyToPrice> = try {
-        http
-            .get("https://api.vultisig.com/coingeicko/api/v3/simple/price") {
-                parameter("ids", coins)
-                parameter("vs_currencies", fiats)
-                header("Content-Type", "application/json")
-            }.body()
-    } catch (e: UnknownHostException) {
-        emptyMap()
-    }
+    ): Map<String, CurrencyToPrice> = http
+        .get("https://api.vultisig.com/coingeicko/api/v3/simple/price") {
+            parameter("ids", coins)
+            parameter("vs_currencies", fiats)
+            header("Content-Type", "application/json")
+        }.body()
 
     private suspend fun fetchContractPrices(
         chainId: String,
         coins: String,
         fiats: String,
-    ): Map<String, CurrencyToPrice> = try {
-        http
-            .get("https://api.vultisig.com/coingeicko/api/v3/simple/token_price/${chainId}") {
-                parameter("contract_addresses", coins)
-                parameter("vs_currencies", fiats)
-                header("Content-Type", "application/json")
-            }.body()
-    } catch (e: UnknownHostException) {
-        emptyMap()
-    }
+    ): Map<String, CurrencyToPrice> = http
+        .get("https://api.vultisig.com/coingeicko/api/v3/simple/token_price/${chainId}") {
+            parameter("contract_addresses", coins)
+            parameter("vs_currencies", fiats)
+            header("Content-Type", "application/json")
+        }.body()
 
     private val Chain.coinGeckoAssetId: String
         get() = when (this) {

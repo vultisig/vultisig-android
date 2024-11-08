@@ -82,7 +82,7 @@ internal class SolanaApiImp @Inject constructor(
                 BigInteger.ZERO
             }
             rpcResp.result?.value ?: error("getBalance error")
-        } catch (e: UnknownHostException) {
+        } catch (e: Exception) {
             BigInteger.ZERO
         }
     }
