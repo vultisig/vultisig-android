@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -31,6 +32,7 @@ import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_ADDRESS
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Coin
@@ -51,6 +53,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -92,7 +95,6 @@ import vultisig.keysign.v1.UTXOSpecific
 import vultisig.keysign.v1.UtxoInfo
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.random.Random
 
 internal sealed class KeysignFlowState {
     data object PeerDiscovery : KeysignFlowState()
@@ -128,10 +130,12 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
     private val mapDepositTransactionUiModel: DepositTransactionToUiModelMapper,
     private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
+    private val generateServiceName: GenerateServiceName,
+    private val routerApi: RouterApi,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
-    private val _serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
-    private var _serverAddress: String = "http://127.0.0.1:18080" // local mediator server
+    private val _serviceName: String = generateServiceName()
+    private var _serverAddress: String = LOCAL_MEDIATOR_SERVER_ADDRESS
     private var _participantDiscovery: ParticipantDiscovery? = null
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _currentVault: Vault? = null
@@ -241,157 +245,157 @@ internal class KeysignFlowViewModel @Inject constructor(
         val approvePayload = keysignPayload.approvePayload
 
         val specific = keysignPayload.blockChainSpecific
-
+        val keysignPayloadProto = KeysignPayloadProto(
+            coin = keysignPayload.coin.toCoinProto(),
+            toAddress = keysignPayload.toAddress,
+            toAmount = keysignPayload.toAmount.toString(),
+            memo = keysignPayload.memo,
+            vaultLocalPartyId = keysignPayload.vaultLocalPartyID,
+            vaultPublicKeyEcdsa = keysignPayload.vaultPublicKeyECDSA,
+            utxoSpecific = if (specific is BlockChainSpecific.UTXO) {
+                UTXOSpecific(
+                    byteFee = specific.byteFee.toString(),
+                    sendMaxAmount = specific.sendMaxAmount,
+                )
+            } else null,
+            utxoInfo = keysignPayload.utxos.map {
+                UtxoInfo(
+                    hash = it.hash,
+                    amount = it.amount,
+                    index = it.index,
+                )
+            },
+            ethereumSpecific = if (specific is BlockChainSpecific.Ethereum) {
+                EthereumSpecific(
+                    maxFeePerGasWei = specific.maxFeePerGasWei.toString(),
+                    priorityFee = specific.priorityFeeWei.toString(),
+                    nonce = specific.nonce.toLong(),
+                    gasLimit = specific.gasLimit.toString(),
+                )
+            } else null,
+            thorchainSpecific = if (specific is BlockChainSpecific.THORChain) {
+                THORChainSpecific(
+                    accountNumber = specific.accountNumber.toString().toULong(),
+                    sequence = specific.sequence.toString().toULong(),
+                    fee = specific.fee.toString().toULong(),
+                    isDeposit = specific.isDeposit,
+                )
+            } else null,
+            mayaSpecific = if (specific is BlockChainSpecific.MayaChain) {
+                MAYAChainSpecific(
+                    accountNumber = specific.accountNumber.toString().toULong(),
+                    sequence = specific.sequence.toString().toULong(),
+                    isDeposit = specific.isDeposit,
+                )
+            } else null,
+            cosmosSpecific = if (specific is BlockChainSpecific.Cosmos) {
+                CosmosSpecific(
+                    accountNumber = specific.accountNumber.toString().toULong(),
+                    sequence = specific.sequence.toString().toULong(),
+                    gas = specific.gas.toString().toULong(),
+                )
+            } else null,
+            solanaSpecific = if (specific is BlockChainSpecific.Solana) {
+                SolanaSpecific(
+                    recentBlockHash = specific.recentBlockHash,
+                    priorityFee = specific.priorityFee.toString(),
+                    toTokenAssociatedAddress = specific.toAddressPubKey,
+                    fromTokenAssociatedAddress = specific.fromAddressPubKey,
+                )
+            } else null,
+            polkadotSpecific = if (specific is BlockChainSpecific.Polkadot) {
+                PolkadotSpecific(
+                    recentBlockHash = specific.recentBlockHash,
+                    nonce = specific.nonce.toString().toULong(),
+                    currentBlockNumber = specific.currentBlockNumber.toString(),
+                    specVersion = specific.specVersion,
+                    transactionVersion = specific.transactionVersion,
+                    genesisHash = specific.genesisHash,
+                )
+            } else null,
+            suicheSpecific = if (specific is BlockChainSpecific.Sui) {
+                SuiSpecific(
+                    referenceGasPrice = specific.referenceGasPrice.toString(),
+                    coins = specific.coins,
+                )
+            } else null,
+            tonSpecific = if (specific is BlockChainSpecific.Ton) {
+                TonSpecific(
+                    sequenceNumber = specific.sequenceNumber,
+                    expireAt = specific.expireAt,
+                    bounceable = specific.bounceable,
+                )
+            } else null,
+            thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {
+                val from = swapPayload.data
+                THORChainSwapPayload(
+                    fromAddress = from.fromAddress,
+                    fromCoin = from.fromCoin.toCoinProto(),
+                    toCoin = from.toCoin.toCoinProto(),
+                    vaultAddress = from.vaultAddress,
+                    routerAddress = from.routerAddress,
+                    fromAmount = from.fromAmount.toString(),
+                    toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                    toAmountLimit = from.toAmountLimit,
+                    streamingInterval = from.streamingInterval,
+                    streamingQuantity = from.streamingQuantity,
+                    expirationTime = from.expirationTime,
+                    isAffiliate = from.isAffiliate,
+                )
+            } else null,
+            mayachainSwapPayload = if (swapPayload is SwapPayload.MayaChain) {
+                val from = swapPayload.data
+                THORChainSwapPayload(
+                    fromAddress = from.fromAddress,
+                    fromCoin = from.fromCoin.toCoinProto(),
+                    toCoin = from.toCoin.toCoinProto(),
+                    vaultAddress = from.vaultAddress,
+                    routerAddress = from.routerAddress,
+                    fromAmount = from.fromAmount.toString(),
+                    toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                    toAmountLimit = from.toAmountLimit,
+                    streamingInterval = from.streamingInterval,
+                    streamingQuantity = from.streamingQuantity,
+                    expirationTime = from.expirationTime,
+                    isAffiliate = from.isAffiliate,
+                )
+            } else null,
+            oneinchSwapPayload = if (swapPayload is SwapPayload.OneInch) {
+                val from = swapPayload.data
+                OneInchSwapPayload(
+                    fromCoin = from.fromCoin.toCoinProto(),
+                    toCoin = from.toCoin.toCoinProto(),
+                    fromAmount = from.fromAmount.toString(),
+                    toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                    quote = from.quote.let { it ->
+                        OneInchQuote(
+                            dstAmount = it.dstAmount,
+                            tx = it.tx.let {
+                                OneInchTransaction(
+                                    from = it.from,
+                                    to = it.to,
+                                    `data` = it.data,
+                                    `value` = it.value,
+                                    gasPrice = it.gasPrice,
+                                    gas = it.gas,
+                                )
+                            }
+                        )
+                    }
+                )
+            } else null,
+            erc20ApprovePayload = if (approvePayload is ERC20ApprovePayload) {
+                Erc20ApprovePayload(
+                    spender = approvePayload.spender,
+                    amount = approvePayload.amount.toString(),
+                )
+            } else null,
+        )
         val keysignProto = protoBuf.encodeToByteArray(
             KeysignMessageProto(
                 sessionId = _sessionID,
                 serviceName = _serviceName,
-                keysignPayload = KeysignPayloadProto(
-                    coin = keysignPayload.coin.toCoinProto(),
-                    toAddress = keysignPayload.toAddress,
-                    toAmount = keysignPayload.toAmount.toString(),
-                    memo = keysignPayload.memo,
-                    vaultLocalPartyId = keysignPayload.vaultLocalPartyID,
-                    vaultPublicKeyEcdsa = keysignPayload.vaultPublicKeyECDSA,
-                    utxoSpecific = if (specific is BlockChainSpecific.UTXO) {
-                        UTXOSpecific(
-                            byteFee = specific.byteFee.toString(),
-                            sendMaxAmount = specific.sendMaxAmount,
-                        )
-                    } else null,
-                    utxoInfo = keysignPayload.utxos.map {
-                        UtxoInfo(
-                            hash = it.hash,
-                            amount = it.amount,
-                            index = it.index,
-                        )
-                    },
-                    ethereumSpecific = if (specific is BlockChainSpecific.Ethereum) {
-                        EthereumSpecific(
-                            maxFeePerGasWei = specific.maxFeePerGasWei.toString(),
-                            priorityFee = specific.priorityFeeWei.toString(),
-                            nonce = specific.nonce.toLong(),
-                            gasLimit = specific.gasLimit.toString(),
-                        )
-                    } else null,
-                    thorchainSpecific = if (specific is BlockChainSpecific.THORChain) {
-                        THORChainSpecific(
-                            accountNumber = specific.accountNumber.toString().toULong(),
-                            sequence = specific.sequence.toString().toULong(),
-                            fee = specific.fee.toString().toULong(),
-                            isDeposit = specific.isDeposit,
-                        )
-                    } else null,
-                    mayaSpecific = if (specific is BlockChainSpecific.MayaChain) {
-                        MAYAChainSpecific(
-                            accountNumber = specific.accountNumber.toString().toULong(),
-                            sequence = specific.sequence.toString().toULong(),
-                            isDeposit = specific.isDeposit,
-                        )
-                    } else null,
-                    cosmosSpecific = if (specific is BlockChainSpecific.Cosmos) {
-                        CosmosSpecific(
-                            accountNumber = specific.accountNumber.toString().toULong(),
-                            sequence = specific.sequence.toString().toULong(),
-                            gas = specific.gas.toString().toULong(),
-                        )
-                    } else null,
-                    solanaSpecific = if (specific is BlockChainSpecific.Solana) {
-                        SolanaSpecific(
-                            recentBlockHash = specific.recentBlockHash,
-                            priorityFee = specific.priorityFee.toString(),
-                            toTokenAssociatedAddress = specific.toAddressPubKey,
-                            fromTokenAssociatedAddress = specific.fromAddressPubKey,
-                        )
-                    } else null,
-                    polkadotSpecific = if (specific is BlockChainSpecific.Polkadot) {
-                        PolkadotSpecific(
-                            recentBlockHash = specific.recentBlockHash,
-                            nonce = specific.nonce.toString().toULong(),
-                            currentBlockNumber = specific.currentBlockNumber.toString(),
-                            specVersion = specific.specVersion,
-                            transactionVersion = specific.transactionVersion,
-                            genesisHash = specific.genesisHash,
-                        )
-                    } else null,
-                    suicheSpecific = if (specific is BlockChainSpecific.Sui) {
-                        SuiSpecific(
-                            referenceGasPrice = specific.referenceGasPrice.toString(),
-                            coins = specific.coins,
-                        )
-                    } else null,
-                    tonSpecific = if (specific is BlockChainSpecific.Ton) {
-                        TonSpecific(
-                            sequenceNumber = specific.sequenceNumber,
-                            expireAt = specific.expireAt,
-                            bounceable = specific.bounceable,
-                        )
-                    } else null,
-                    thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {
-                        val from = swapPayload.data
-                        THORChainSwapPayload(
-                            fromAddress = from.fromAddress,
-                            fromCoin = from.fromCoin.toCoinProto(),
-                            toCoin = from.toCoin.toCoinProto(),
-                            vaultAddress = from.vaultAddress,
-                            routerAddress = from.routerAddress,
-                            fromAmount = from.fromAmount.toString(),
-                            toAmountDecimal = from.toAmountDecimal.toPlainString(),
-                            toAmountLimit = from.toAmountLimit,
-                            streamingInterval = from.streamingInterval,
-                            streamingQuantity = from.streamingQuantity,
-                            expirationTime = from.expirationTime,
-                            isAffiliate = from.isAffiliate,
-                        )
-                    } else null,
-                    mayachainSwapPayload = if (swapPayload is SwapPayload.MayaChain) {
-                        val from = swapPayload.data
-                        THORChainSwapPayload(
-                            fromAddress = from.fromAddress,
-                            fromCoin = from.fromCoin.toCoinProto(),
-                            toCoin = from.toCoin.toCoinProto(),
-                            vaultAddress = from.vaultAddress,
-                            routerAddress = from.routerAddress,
-                            fromAmount = from.fromAmount.toString(),
-                            toAmountDecimal = from.toAmountDecimal.toPlainString(),
-                            toAmountLimit = from.toAmountLimit,
-                            streamingInterval = from.streamingInterval,
-                            streamingQuantity = from.streamingQuantity,
-                            expirationTime = from.expirationTime,
-                            isAffiliate = from.isAffiliate,
-                        )
-                    } else null,
-                    oneinchSwapPayload = if (swapPayload is SwapPayload.OneInch) {
-                        val from = swapPayload.data
-                        OneInchSwapPayload(
-                            fromCoin = from.fromCoin.toCoinProto(),
-                            toCoin = from.toCoin.toCoinProto(),
-                            fromAmount = from.fromAmount.toString(),
-                            toAmountDecimal = from.toAmountDecimal.toPlainString(),
-                            quote = from.quote.let { it ->
-                                OneInchQuote(
-                                    dstAmount = it.dstAmount,
-                                    tx = it.tx.let {
-                                        OneInchTransaction(
-                                            from = it.from,
-                                            to = it.to,
-                                            `data` = it.data,
-                                            `value` = it.value,
-                                            gasPrice = it.gasPrice,
-                                            gas = it.gas,
-                                        )
-                                    }
-                                )
-                            }
-                        )
-                    } else null,
-                    erc20ApprovePayload = if (approvePayload is ERC20ApprovePayload) {
-                        Erc20ApprovePayload(
-                            spender = approvePayload.spender,
-                            amount = approvePayload.amount.toString(),
-                        )
-                    } else null,
-                ),
+                keysignPayload = keysignPayloadProto,
                 encryptionKeyHex = _encryptionKeyHex,
                 useVultisigRelay = isRelayEnabled
             )
@@ -399,13 +403,6 @@ internal class KeysignFlowViewModel @Inject constructor(
 
         Timber.d("keysignProto: $keysignProto")
 
-        val data = compressQr(keysignProto).encodeBase64()
-
-        _keysignMessage.value =
-            "vultisig://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" + data
-
-
-        addressProvider.update(_keysignMessage.value)
         if (!isRelayEnabled) {
             startMediatorService(context)
         } else {
@@ -415,6 +412,31 @@ internal class KeysignFlowViewModel @Inject constructor(
             }
             _participantDiscovery?.discoveryParticipants()
         }
+
+        var data = compressQr(keysignProto).encodeBase64()
+        if (routerApi.shouldUploadPayload(data)) {
+            protoBuf.encodeToByteArray(keysignPayloadProto).let {
+                compressQr(it).encodeBase64().let { compressedData ->
+                    val hash = routerApi.uploadPayload(_serverAddress, compressedData)
+                    protoBuf.encodeToByteArray(
+                        KeysignMessageProto(
+                            sessionId = _sessionID,
+                            serviceName = _serviceName,
+                            encryptionKeyHex = _encryptionKeyHex,
+                            useVultisigRelay = isRelayEnabled,
+                            payloadId = hash,
+                        )
+                    ).let { compressedData ->
+                        data = compressQr(compressedData).encodeBase64()
+                    }
+                }
+            }
+        }
+        _keysignMessage.value =
+            "vultisig://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" + data
+
+        addressProvider.update(_keysignMessage.value)
+
     }
 
     private fun updateTransactionUiModel(
@@ -566,7 +588,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value = option
         _serverAddress = when (option) {
             NetworkPromptOption.LOCAL -> {
-                "http://127.0.0.1:18080"
+                LOCAL_MEDIATOR_SERVER_ADDRESS
             }
 
             NetworkPromptOption.INTERNET -> {

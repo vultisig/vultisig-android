@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
+import com.vultisig.wallet.data.utils.TextFieldUtils.HINT_MAX_LENGTH
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -48,8 +49,6 @@ internal data class BackupPasswordState(
     val backupContent: String = "",
     val error: UiText? = null,
 )
-
-private const val HINT_MAX_LENGTH = 50
 
 @HiltViewModel
 internal class BackupPasswordViewModel @Inject constructor(
@@ -168,7 +167,7 @@ internal class BackupPasswordViewModel @Inject constructor(
     private fun validateHint(): Boolean {
         val errorMessage =
             if (hintPasswordTextFieldState.text.length > HINT_MAX_LENGTH)
-                UiText.StringResource(R.string.vault_backup_hint_to_long)
+                UiText.StringResource(R.string.vault_password_hint_to_long)
             else null
 
         uiState.update {

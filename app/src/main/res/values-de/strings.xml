@@ -13,7 +13,7 @@
     <string name="vault_settings_reshare_title">Erneut teilen</string>
     <string name="vault_settings_reshare_subtitle">Tresor mit einem neuen Komitee erneut teilen</string>
     <string name="vault_settings_delete_title">Löschen</string>
-    <string name="join_keysign_wrong_vault">Sie haben nicht den erforderlichen Tresor für Keysign</string>
+    <string name="join_keysign_missing_required_vault">Sie haben nicht den erforderlichen Tresor für Keysign</string>
     <string name="choose_tokens">Tokens wählen</string>
     <string name="send_screen_title">Senden</string>
     <string name="send_from_address">Von</string>

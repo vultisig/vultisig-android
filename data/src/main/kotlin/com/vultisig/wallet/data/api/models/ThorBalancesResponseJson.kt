@@ -13,6 +13,8 @@ internal data class ThorBalancesResponseJson(
 internal data class ThorAssetBalanceJson(
     @SerialName("asset")
     val asset: ThorAssetJson,
+    @SerialName("amount")
+    val amount: String,
 )
 
 @Serializable

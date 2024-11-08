@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -38,7 +41,9 @@ import com.vultisig.wallet.ui.components.VaultCeil
 import com.vultisig.wallet.ui.components.VaultCeilUiModel
 import com.vultisig.wallet.ui.components.VaultSwitch
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
+import com.vultisig.wallet.ui.models.folder.FolderUiModel
 import com.vultisig.wallet.ui.models.folder.FolderViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -49,15 +54,18 @@ internal fun FolderScreen(
     viewModel: FolderViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val nameFieldState = viewModel.nameFieldState
+
     Scaffold(
         bottomBar = {
             if (state.isEditMode) {
                 Box(Modifier.imePadding()) {
                     MultiColorButton(
-                        backgroundColor = Theme.colors.miamiMarmalade,
+                        backgroundColor = Theme.colors.turquoise600Main,
                         textColor = Theme.colors.oxfordBlue600Main,
                         iconColor = Theme.colors.turquoise800,
                         textStyle = Theme.montserrat.subtitle1,
+                        disabled = state.nameError != null,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
@@ -65,10 +73,8 @@ internal fun FolderScreen(
                                 end = 16.dp,
                                 bottom = 16.dp,
                             ),
-                        text = stringResource(id = R.string.delete_folder),
-                        onClick = {
-                            viewModel.deleteFolder()
-                        },
+                        text = stringResource(id = R.string.save_changes),
+                        onClick = viewModel::edit,
                     )
                 }
             }
@@ -98,12 +104,13 @@ internal fun FolderScreen(
                 actions = {
                     val modifier = remember { Modifier.padding(horizontal = 16.dp) }
                     if (state.isEditMode) {
-                        Text(
-                            text = stringResource(id = R.string.home_scree_done),
-                            style = Theme.menlo.subtitle1,
-                            fontWeight = FontWeight.Bold,
-                            color = Theme.colors.neutral0,
-                            modifier = modifier.clickOnce(onClick = viewModel::edit)
+                        Icon(
+                            painter = painterResource(id = R.drawable.trash_outline),
+                            contentDescription = "edit",
+                            tint = Theme.colors.miamiMarmalade,
+                            modifier = modifier
+                                .clickOnce(onClick = viewModel::deleteFolder)
+                                .size(24.dp)
                         )
                     }
                     else {
@@ -128,28 +135,6 @@ internal fun FolderScreen(
             )
         }
 
-        val bottomContent = listOf<@Composable LazyItemScope.() -> Unit> @Composable {
-            UiSpacer(size = 20.dp)
-            Text(
-                text = stringResource(id = R.string.select_vaults_to_add_to_the_folder),
-                color = Theme.colors.neutral200,
-                style = Theme.montserrat.body1,
-            )
-            UiSpacer(size = 16.dp)
-
-            state.availableVaults.forEach { vault ->
-                val check = remember { mutableStateOf(false) }
-                SelectionItem(
-                    title = vault.name,
-                    isChecked = check.value,
-                    onCheckedChange = {
-                        check.value = viewModel.tryToCheckVault(it, vault.id)
-                    },
-                )
-                UiSpacer(size = 16.dp)
-            }
-        }
-
         VerticalReorderList(
             onMove = viewModel::onMoveVaults,
             data = state.vaults,
@@ -161,7 +146,20 @@ internal fun FolderScreen(
             ),
             modifier = Modifier
                 .padding(contentPadding),
-            afterContents = if (state.isEditMode && state.availableVaults.isNotEmpty()) bottomContent else null,
+            beforeContents =
+            if (state.isEditMode)
+                listOf<@Composable LazyItemScope.() -> Unit> @Composable {
+                    TopFolderScreenContent(state, nameFieldState)
+                }
+            else
+                null,
+            afterContents =
+            if (state.isEditMode && state.availableVaults.isNotEmpty())
+                listOf<@Composable LazyItemScope.() -> Unit> @Composable {
+                    BottomFolderScreenContent (state, viewModel::tryToCheckVault)
+                }
+            else
+                null,
         ) { vault ->
             val check = remember { mutableStateOf(true) }
             val trailingContent = @Composable {
@@ -197,4 +195,51 @@ internal fun FolderScreen(
             )
         }
     }
+}
+
+@Composable
+private fun BottomFolderScreenContent(
+    state: FolderUiModel,
+    tryToCheckVault: (Boolean, String) -> Boolean,
+) {
+    UiSpacer(size = 20.dp)
+    Text(
+        text = stringResource(id = R.string.select_vaults_to_add_to_the_folder),
+        color = Theme.colors.neutral200,
+        style = Theme.montserrat.body1,
+    )
+    UiSpacer(size = 16.dp)
+
+    state.availableVaults.forEach { vault ->
+        val check = remember { mutableStateOf(false) }
+        SelectionItem(
+            title = vault.name,
+            isChecked = check.value,
+            onCheckedChange = {
+                check.value = tryToCheckVault(it, vault.id)
+            },
+        )
+        UiSpacer(size = 16.dp)
+    }
+}
+
+@Composable
+private fun TopFolderScreenContent(
+    state: FolderUiModel,
+    nameFieldState: TextFieldState
+) {
+    FormTextFieldCard(
+        title = stringResource(id = R.string.create_folder_name),
+        hint = state.folder?.name ?: "",
+        error = state.nameError,
+        keyboardType = KeyboardType.Text,
+        textFieldState = nameFieldState,
+    )
+    UiSpacer(size = 16.dp)
+    Text(
+        text = stringResource(id = R.string.current_vaults),
+        color = Theme.colors.neutral200,
+        style = Theme.montserrat.body1,
+    )
+    UiSpacer(size = 16.dp)
 }

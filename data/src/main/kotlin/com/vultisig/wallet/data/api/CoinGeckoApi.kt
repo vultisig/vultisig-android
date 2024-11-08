@@ -98,6 +98,7 @@ internal class CoinGeckoApiImpl @Inject constructor(
             Chain.Optimism -> "optimistic-ethereum"
             Chain.BscChain -> "binance-smart-chain"
             Chain.ZkSync -> "zksync"
+            Chain.Solana -> "solana"
 
             else -> error("No CoinGecko asset id for chain $this")
         }

@@ -3,6 +3,9 @@ package com.vultisig.wallet.data.utils
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
+import com.vultisig.wallet.data.api.models.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.models.SplTokenDeserialized.*
 import kotlinx.serialization.KSerializer
@@ -74,6 +77,33 @@ class SplTokenResponseJsonSerializer @Inject constructor(private val json: Json)
         throw UnsupportedOperationException("Serialization is not required")
     }
 }
+
+@Singleton
+class THORChainSwapQuoteResponseJsonSerializer @Inject constructor(private val json: Json) :
+    KSerializer<THORChainSwapQuoteDeserialized> {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("THORChainSwapQuoteResponseJsonSerializer")
+
+    override fun deserialize(decoder: Decoder): THORChainSwapQuoteDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        return if (jsonObject.containsKey("fees")) {
+            THORChainSwapQuoteDeserialized.Result(
+                json.decodeFromJsonElement<THORChainSwapQuote>(jsonObject)
+            )
+        } else {
+            THORChainSwapQuoteDeserialized.Error(
+                json.decodeFromJsonElement<THORChainSwapQuoteError>(jsonObject)
+            )
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: THORChainSwapQuoteDeserialized) {
+        throw UnsupportedOperationException("Serialization is not required")
+    }
+}
+
 
 
 object KeysignResponseSerializer : KSerializer<tss.KeysignResponse> {

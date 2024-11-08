@@ -147,6 +147,8 @@ data class SplAmountAccountJson(
 data class SplAmountValueJson(
     @SerialName("account")
     val account: SplAmountAccountJson,
+    @SerialName("pubkey")
+    val pubKey: String,
 )
 
 @Serializable

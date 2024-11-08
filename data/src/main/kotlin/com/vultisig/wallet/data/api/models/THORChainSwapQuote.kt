@@ -8,6 +8,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import java.math.BigInteger
 
+sealed class THORChainSwapQuoteDeserialized {
+    data class Result(val data: THORChainSwapQuote) : THORChainSwapQuoteDeserialized()
+    data class Error(val error: THORChainSwapQuoteError) : THORChainSwapQuoteDeserialized()
+}
+
+@Serializable
+data class  THORChainSwapQuoteError(
+    @SerialName("error")
+    val message: String
+)
+
 @Serializable
 data class THORChainSwapQuote(
     @SerialName("dust_threshold")

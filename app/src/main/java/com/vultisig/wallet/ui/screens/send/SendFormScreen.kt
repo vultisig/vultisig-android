@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -45,6 +46,7 @@ import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.text.SeparateNumberOutputTransformation
 
 
 @Composable
@@ -91,7 +93,7 @@ internal fun SendFormScreen(
         onDstAddressLostFocus = viewModel::validateDstAddress,
         onTokenAmountLostFocus = viewModel::validateTokenAmount,
         onDismissError = viewModel::dismissError,
-        onSelectToken = viewModel::selectToken,
+        onSelectToken = viewModel::openTokenSelection,
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onChoosePercentageAmount = viewModel::choosePercentageAmount,
@@ -209,12 +211,17 @@ internal fun SendFormScreen(
                     textFieldState = memoFieldState
                 )
 
+            val separateNumberOutputTransformation = remember {
+                SeparateNumberOutputTransformation()
+            }
+            
             FormTextFieldCardWithPercentage(
                 title = stringResource(R.string.send_amount),
                 hint = stringResource(R.string.send_amount_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = tokenAmountFieldState,
                 onLostFocus = onTokenAmountLostFocus,
+                outputTransformation = separateNumberOutputTransformation,
                 error = state.tokenAmountError,
                 onPercentClick = onChoosePercentageAmount
             ) {
@@ -232,6 +239,7 @@ internal fun SendFormScreen(
                 hint = stringResource(R.string.send_amount_currency_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = fiatAmountFieldState,
+                outputTransformation = separateNumberOutputTransformation,
                 error = null
             )
             if (state.showGasFee) {
@@ -286,6 +294,7 @@ internal fun SendFormScreen(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .padding(all = 16.dp),
+            isLoading = state.isLoading,
             onClick = {
                 focusManager.clearFocus()
                 onSend()

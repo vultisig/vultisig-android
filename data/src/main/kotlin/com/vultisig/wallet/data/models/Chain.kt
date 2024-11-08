@@ -6,8 +6,10 @@ import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import wallet.core.jni.CoinType
 
+typealias ChainId = String
+
 enum class Chain(
-    val raw: String,
+    val raw: ChainId,
     val standard: TokenStandard,
     val feeUnit: String,
 ) {
@@ -133,3 +135,33 @@ fun Chain.oneInchChainId(): Int =
         Chain.ZkSync -> 324
         else -> error("Chain $this is not supported by 1inch API")
     }
+
+fun Chain.swapAssetName(): String {
+    return when (this) {
+        Chain.ThorChain -> "THOR"
+        Chain.Ethereum -> "ETH"
+        Chain.Avalanche -> "AVAX"
+        Chain.BscChain -> "BSC"
+        Chain.Bitcoin -> "BTC"
+        Chain.BitcoinCash -> "BCH"
+        Chain.Litecoin -> "LTC"
+        Chain.Dogecoin -> "DOGE"
+        Chain.GaiaChain -> "GAIA"
+        Chain.Kujira -> "KUJI"
+        Chain.Solana -> "SOL"
+        Chain.Dash -> "DASH"
+        Chain.MayaChain -> "MAYA"
+        Chain.Arbitrum -> "ARB"
+        Chain.Base -> "BASE"
+        Chain.Optimism -> "OP"
+        Chain.Polygon -> "POL"
+        Chain.Blast -> "BLAST"
+        Chain.CronosChain -> "CRO"
+        Chain.Polkadot -> "DOT"
+        Chain.Dydx -> "DYDX"
+        Chain.ZkSync -> "ZK"
+        Chain.Sui -> "SUI"
+        Chain.Ton -> "TON"
+        Chain.Osmosis -> "OSMO"
+    }
+}
