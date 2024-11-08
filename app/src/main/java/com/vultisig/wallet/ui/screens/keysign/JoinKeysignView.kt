@@ -141,7 +141,7 @@ internal fun JoinKeysignView(
                 val buttonText: String
                 val infoText: String?
                 when(state.errorType) {
-                    is JoinKeysignError.WrongVaultShare -> {
+                    is JoinKeysignError.WrongVaultShare, is JoinKeysignError.WrongVault -> {
                         errorLabel = state.errorType.message.asString()
                         buttonText = stringResource(R.string.join_keysign_error_wrong_vault_share_try_again_button)
                         infoText = null
@@ -203,7 +203,7 @@ private fun JoinKeysignScreen(
 private fun JoinKeysignViewPreview() {
     JoinKeysignScreen(
         navController = rememberNavController(),
-        state = Error(errorType = JoinKeysignError.WrongVault),
+        state = Error(errorType = JoinKeysignError.MissingRequiredVault),
         keysignState = KeysignState.CreatingInstance,
     )
 }

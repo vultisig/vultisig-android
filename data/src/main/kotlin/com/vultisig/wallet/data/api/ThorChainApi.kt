@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.models.THORChainSwapQuote
+import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
@@ -9,6 +11,8 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.models.SplTokenDeserialized
+import com.vultisig.wallet.data.utils.THORChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -21,6 +25,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -45,7 +51,7 @@ interface ThorChainApi {
         amount: String,
         interval: String,
         isAffiliate: Boolean,
-    ): THORChainSwapQuote
+    ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getTHORChainNativeTransactionFee(): BigInteger
@@ -60,6 +66,8 @@ interface ThorChainApi {
 
 internal class ThorChainApiImpl @Inject constructor(
     private val httpClient: HttpClient,
+    private val thorChainSwapQuoteResponseJsonSerializer: THORChainSwapQuoteResponseJsonSerializer,
+    private val json: Json,
 ) : ThorChainApi {
 
     private val xClientID = "X-Client-ID"
@@ -81,19 +89,36 @@ internal class ThorChainApiImpl @Inject constructor(
         amount: String,
         interval: String,
         isAffiliate: Boolean,
-    ): THORChainSwapQuote = httpClient
-        .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
-            parameter("from_asset", fromAsset)
-            parameter("to_asset", toAsset)
-            parameter("amount", amount)
-            parameter("destination", address)
-            parameter("streaming_interval", interval)
-            if (isAffiliate) {
-                parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
+    ): THORChainSwapQuoteDeserialized {
+        try {
+            val response = httpClient
+                .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
+                    parameter("from_asset", fromAsset)
+                    parameter("to_asset", toAsset)
+                    parameter("amount", amount)
+                    parameter("destination", address)
+                    parameter("streaming_interval", interval)
+                    if (isAffiliate) {
+                        parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                        parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
+                    }
+                }
+            if (!response.status.isSuccess()) {
+                return THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError(response.status.description))
             }
-            header(xClientID, xClientIDValue)
-        }.body()
+            val responseRawString = response.body<String>()
+            return json.decodeFromString(
+                thorChainSwapQuoteResponseJsonSerializer,
+                responseRawString
+            )
+        } catch (e: Exception) {
+            return THORChainSwapQuoteDeserialized.Error(
+                THORChainSwapQuoteError(
+                    e.message ?: "Unknown error"
+                )
+            )
+        }
+    }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response = httpClient

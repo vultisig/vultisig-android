@@ -229,7 +229,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                                 errorMessage.value =
-                                    UiText.StringResource(R.string.join_keysign_wrong_vault)
+                                    UiText.StringResource(R.string.join_keysign_missing_required_vault)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }

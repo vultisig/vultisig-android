@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -15,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +30,7 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
+import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.keygen.KeygenPasswordUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -43,6 +47,7 @@ internal fun KeygenPasswordScreen(
         state = state,
         passwordFieldState = model.passwordFieldState,
         verifyPasswordFieldState = model.verifyPasswordFieldState,
+        hintPasswordTextFieldState = model.hintPasswordTextFieldState,
         onPasswordLostFocus = model::verifyPassword,
         onVerifyPasswordLostFocus = model::verifyConfirmPassword,
         onPasswordVisibilityToggle = model::togglePasswordVisibility,
@@ -57,6 +62,7 @@ private fun KeygenPasswordScreen(
     state: KeygenPasswordUiModel,
     passwordFieldState: TextFieldState,
     verifyPasswordFieldState: TextFieldState,
+    hintPasswordTextFieldState: TextFieldState,
     onPasswordLostFocus: () -> Unit,
     onVerifyPasswordLostFocus: () -> Unit,
     onPasswordVisibilityToggle: () -> Unit,
@@ -76,6 +82,7 @@ private fun KeygenPasswordScreen(
                 modifier = Modifier
                     .padding(contentPadding)
                     .background(Theme.colors.oxfordBlue800)
+                    .verticalScroll(rememberScrollState())
                     .fillMaxSize()
                     .padding(
                         horizontal = 12.dp,
@@ -131,6 +138,15 @@ private fun KeygenPasswordScreen(
                 )
 
                 UiSpacer(size = 12.dp)
+                FormTextFieldCard(
+                    title = stringResource(
+                        R.string.backup_password_optional_password_protection_hint
+                    ),
+                    hint = stringResource(R.string.backup_password_screen_hint_field),
+                    error = state.hintPasswordErrorMessage,
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = hintPasswordTextFieldState,
+                )
             }
         },
         bottomBar = {
@@ -189,6 +205,7 @@ private fun KeygenPasswordScreenPreview() {
         state = KeygenPasswordUiModel(),
         passwordFieldState = TextFieldState(),
         verifyPasswordFieldState = TextFieldState(),
+        hintPasswordTextFieldState = TextFieldState(),
         onPasswordLostFocus = {},
         onVerifyPasswordLostFocus = {},
         onPasswordVisibilityToggle = {},

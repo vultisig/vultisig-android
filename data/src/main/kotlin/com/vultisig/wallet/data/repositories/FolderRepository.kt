@@ -11,6 +11,7 @@ interface FolderRepository {
     suspend fun getFolder(id: String): Folder
     suspend fun deleteFolder(id: String)
     suspend fun insertFolder(name: String): Int
+    suspend fun updateFolderName(id: String, name: String)
     fun getAll(): Flow<List<Folder>>
 }
 
@@ -22,6 +23,10 @@ internal class FolderRepositoryImpl @Inject constructor(
 
     override suspend fun deleteFolder(id: String) {
         folderDao.deleteFolder(id)
+    }
+
+    override suspend fun updateFolderName(id: String, name: String) {
+        folderDao.updateFolderName(id, name)
     }
 
     override suspend fun insertFolder(name: String): Int =

@@ -6,8 +6,10 @@ import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import wallet.core.jni.CoinType
 
+typealias ChainId = String
+
 enum class Chain(
-    val raw: String,
+    val raw: ChainId,
     val standard: TokenStandard,
     val feeUnit: String,
 ) {

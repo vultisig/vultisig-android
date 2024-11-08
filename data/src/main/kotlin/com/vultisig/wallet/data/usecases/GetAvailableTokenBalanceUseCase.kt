@@ -7,11 +7,11 @@ import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigInteger
 import javax.inject.Inject
 
-interface AvailableTokenBalanceUseCase : suspend (Account, BigInteger) -> TokenValue?
+interface GetAvailableTokenBalanceUseCase : suspend (Account, BigInteger) -> TokenValue?
 
-internal class AvailableTokenBalanceUseCaseImpl @Inject constructor(
+internal class GetAvailableTokenBalanceUseCaseImpl @Inject constructor(
     private val solanaApi: SolanaApi,
-) : AvailableTokenBalanceUseCase {
+) : GetAvailableTokenBalanceUseCase {
 
     override suspend fun invoke(
         account: Account,
