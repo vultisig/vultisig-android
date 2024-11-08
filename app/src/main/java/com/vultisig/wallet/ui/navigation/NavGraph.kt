@@ -193,6 +193,10 @@ internal fun SetupNavGraph(
                     type = NavType.StringType
                     nullable = true
                 },
+                navArgument(Destination.KeygenFlow.ARG_PASSWORD_HINT) {
+                    type = NavType.StringType
+                    nullable = true
+                }
             )
         ) {
             KeygenFlowView(navController)

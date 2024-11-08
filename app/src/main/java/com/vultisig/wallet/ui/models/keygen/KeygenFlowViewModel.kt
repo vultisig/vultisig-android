@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_ADDRESS
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
@@ -37,9 +38,10 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.data.usecases.GenerateServerPartyId
+import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
-import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -66,7 +68,6 @@ import timber.log.Timber
 import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.random.Random
 
 enum class KeygenFlowState {
     PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
@@ -120,6 +121,8 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val generateServerPartyId: GenerateServerPartyId,
+    private val generateServiceName: GenerateServiceName
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
@@ -134,10 +137,10 @@ internal class KeygenFlowViewModel @Inject constructor(
     )
 
     private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
-    private val serviceName: String = "vultisigApp-${Random.nextInt(1, 1000)}"
-    private var serverAddress: String = "http://127.0.0.1:18080" // local mediator server
+    private val serviceName: String = generateServiceName()
+    private var serverAddress: String = LOCAL_MEDIATOR_SERVER_ADDRESS
     private var participantDiscovery: ParticipantDiscovery? = null
-    private var action: TssAction = TssAction.KEYGEN
+    private val action = MutableStateFlow(TssAction.KEYGEN)
     private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "New Vault")
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _oldResharePrefix: String = ""
@@ -147,6 +150,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
+    private val passwordHint: String? = savedStateHandle[Destination.KeygenFlow.ARG_PASSWORD_HINT]
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     private val isFastSign: Boolean
@@ -161,7 +165,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
             vault,
-            this.action,
+            this.action.value,
             uiState.value.selection,
             vault.signers.filter { uiState.value.selection.contains(it) },
             serverAddress,
@@ -169,6 +173,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             _encryptionKeyHex,
             _oldResharePrefix,
             password,
+            passwordHint,
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
@@ -217,15 +222,14 @@ internal class KeygenFlowViewModel @Inject constructor(
             vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
         }
 
-        val action = if (vault.pubKeyECDSA.isEmpty()) {
-            uiState.value = uiState.value.copy(isReshareMode = false)
-            TssAction.KEYGEN
+        if (vault.pubKeyECDSA.isEmpty()) {
+            uiState.update { it.copy(isReshareMode = false) }
+            action.value = TssAction.KEYGEN
         } else {
-            uiState.value = uiState.value.copy(isReshareMode = true)
-            TssAction.ReShare
+            uiState.update { it.copy(isReshareMode = true) }
+            action.value = TssAction.ReShare
         }
         serverAddress = Endpoints.VULTISIG_RELAY
-        this.action = action
         this.vault = vault
         if (this.vault.hexChainCode.isEmpty()) {
             val secureRandom = SecureRandom()
@@ -256,7 +260,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             }
         }
         val isRelayEnabled = isRelayEnabled.value
-        val keygenPayload = when (action) {
+        val keygenPayload = when (action.value) {
             TssAction.KEYGEN -> {
                 "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
                         compressQr(
@@ -403,9 +407,6 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    private fun generateServerPartyId(): String =
-        "$LOCAL_PARTY_ID_PREFIX-${Random.nextInt(100, 999)}"
-
     fun addParticipant(participant: String) {
         val currentList = uiState.value.selection
         if (currentList.contains(participant)) return
@@ -462,7 +463,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         uiState.update { it.copy(networkOption = option) }
         serverAddress = when (option) {
             NetworkPromptOption.LOCAL -> {
-                "http://127.0.0.1:18080"
+                LOCAL_MEDIATOR_SERVER_ADDRESS
             }
 
             NetworkPromptOption.INTERNET -> {

@@ -35,7 +35,8 @@ internal class QrAddressViewModel @Inject constructor(
     private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
     val address = savedStateHandle.get<String>(Destination.QrAddressScreen.ARG_COIN_ADDRESS)
-    val currentVault: MutableState<Vault?> = mutableStateOf(null)
+    val chainName = savedStateHandle.get<String>(Destination.QrAddressScreen.ARG_CHAIN_NAME)
+    private val currentVault: MutableState<Vault?> = mutableStateOf(null)
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)

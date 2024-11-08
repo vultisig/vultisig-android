@@ -29,6 +29,7 @@ import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun BiometricsEnableScreen(
@@ -120,6 +121,15 @@ private fun BiometricsEnableScreen(
                     }
                 }
             )
+            if (uiModel.passwordHint != null) {
+                UiSpacer(size = 8.dp)
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = uiModel.passwordHint.asString(),
+                    color = Theme.colors.neutral0,
+                    style = Theme.menlo.body2,
+                )
+            }
         }
     }
 }

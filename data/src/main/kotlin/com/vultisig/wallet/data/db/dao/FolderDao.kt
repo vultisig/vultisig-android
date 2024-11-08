@@ -15,6 +15,9 @@ interface FolderDao {
     @Query("DELETE FROM vaultFolder WHERE id = :id")
     suspend fun deleteFolder(id: String)
 
+    @Query("UPDATE vaultFolder SET name = :name WHERE id = :id")
+    suspend fun updateFolderName(id: String, name: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFolder(folder: FolderEntity) : Long
 

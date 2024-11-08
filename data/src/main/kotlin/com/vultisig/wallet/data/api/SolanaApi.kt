@@ -45,6 +45,7 @@ interface SolanaApi {
     suspend fun getSPLTokensInfo(tokens: List<String>): List<SplTokenJson>
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
+    suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String): String?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -280,6 +281,36 @@ internal class SolanaApiImp @Inject constructor(
             }
             val value = rpcResp.value ?: error("getSPLTokenBalance error")
             return value.value[0].account.data.parsed.info.tokenAmount.amount
+        } catch (e: Exception) {
+            Timber.e(e)
+            return null
+        }
+    }
+
+    override suspend fun getTokenAssociatedAccountByOwner(
+        walletAddress: String,
+        mintAddress: String,
+    ): String? {
+        try {
+            val response = httpClient.postRpc<SplAmountRpcResponseJson>(
+                url = rpcEndpoint2,
+                method = "getTokenAccountsByOwner",
+                params = buildJsonArray {
+                    add(walletAddress)
+                    addJsonObject {
+                        put("mint", mintAddress)
+                    }
+                    addJsonObject {
+                        put("encoding", ENCODING_SPL_REQUEST_PARAM)
+                    }
+                }
+            )
+            if (response.error != null) {
+                Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
+                return null
+            }
+            val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
+            return value.value[0].pubKey
         } catch (e: Exception) {
             Timber.e(e)
             return null

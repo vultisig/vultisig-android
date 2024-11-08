@@ -73,8 +73,8 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindAvailableTokenBalanceUseCase(
-        impl: AvailableTokenBalanceUseCaseImpl
-    ): AvailableTokenBalanceUseCase
+        impl: GetAvailableTokenBalanceUseCaseImpl
+    ): GetAvailableTokenBalanceUseCase
 
     @Binds
     @Singleton
@@ -94,4 +94,21 @@ internal interface DataUsecasesModule {
         impl: SearchEvmTokenUseCaseImpl
     ): SearchEvmTokenUseCase
 
+    @Binds
+    @Singleton
+    fun bindGenerateServerPartyId(
+        impl: GenerateServerPartyIdImpl
+    ): GenerateServerPartyId
+
+    @Binds
+    @Singleton
+    fun bindGenerateServiceName(
+        impl: GenerateServiceNameImpl
+    ): GenerateServiceName
+
+    @Binds
+    @Singleton
+    fun bindInitializeThorChainNetworkIdUseCase(
+        impl: InitializeThorChainNetworkIdUseCaseImpl
+    ): InitializeThorChainNetworkIdUseCase
 }
