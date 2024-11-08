@@ -15,7 +15,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
@@ -102,78 +101,71 @@ internal fun SendScreen(
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
     val isGasSettingsEnabled by viewModel.isGasSettingAvailable.collectAsState()
-    val isRefreshing by viewModel.isLoading.collectAsState()
-    BoxWithSwipeRefresh(
-        onSwipe = viewModel::refreshGas,
-        isRefreshing = isRefreshing,
-        hasPullToRefresh = route == SendDst.Send.route
+    ProgressScreen(
+        navController = progressNav,
+        title = title,
+        progress = progress,
+        showStartIcon = !isKeysignFinished,
+        endIcon = if (isGasSettingsEnabled) {
+            R.drawable.advance_gas_settings
+        } else {
+            qr?.let { R.drawable.qr_share }
+        },
+        onEndIconClick = if (isGasSettingsEnabled) {
+            viewModel::onGasSettingsClick
+        } else qr?.let {
+            {
+                keysignShareViewModel.shareQRCode(context)
+            }
+        } ?: {},
+        onStartIconClick = { viewModel.navigateToHome(useMainNavigator) },
     ) {
-        ProgressScreen(
-            navController = progressNav,
-            title = title,
-            progress = progress,
-            showStartIcon = !isKeysignFinished,
-            endIcon = if (isGasSettingsEnabled) {
-                R.drawable.advance_gas_settings
-            } else {
-                qr?.let { R.drawable.qr_share }
-            },
-            onEndIconClick = if (isGasSettingsEnabled) {
-                viewModel::onGasSettingsClick
-            } else qr?.let {
-                {
-                    keysignShareViewModel.shareQRCode(context)
-                }
-            } ?: {},
-            onStartIconClick = { viewModel.navigateToHome(useMainNavigator) },
+        NavHost(
+            navController = sendNav,
+            startDestination = SendDst.Send.route,
+            enterTransition = slideInFromEndEnterTransition(),
+            exitTransition = slideOutToStartExitTransition(),
+            popEnterTransition = slideInFromStartEnterTransition(),
+            popExitTransition = slideOutToEndExitTransition(),
         ) {
-            NavHost(
-                navController = sendNav,
-                startDestination = SendDst.Send.route,
-                enterTransition = slideInFromEndEnterTransition(),
-                exitTransition = slideOutToStartExitTransition(),
-                popEnterTransition = slideInFromStartEnterTransition(),
-                popExitTransition = slideOutToEndExitTransition(),
+            composable(
+                route = SendDst.Send.route,
             ) {
-                composable(
-                    route = SendDst.Send.route,
-                ) {
-                    SendFormScreen(
-                        vaultId = vaultId,
-                        chainId = chainId,
-                        startWithTokenId = startWithTokenId,
-                        qrCodeResult = qrCodeResult,
-                    )
-                }
-                composable(
-                    route = SendDst.VerifyTransaction.staticRoute,
-                    arguments = SendDst.transactionArgs,
-                ) {
-                    VerifyTransactionScreen()
-                }
-                composable(
-                    route = SendDst.Password.staticRoute,
-                    arguments = SendDst.transactionArgs,
-                ) {
-                    KeysignPasswordScreen()
-                }
-                composable(
-                    route = SendDst.Keysign.staticRoute,
-                    arguments = SendDst.transactionArgs,
-                ) { entry ->
-                    val transactionId = entry.arguments
-                        ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-                    keysignShareViewModel.loadTransaction(transactionId)
+                SendFormScreen(
+                    vaultId = vaultId,
+                    chainId = chainId,
+                    startWithTokenId = startWithTokenId,
+                    qrCodeResult = qrCodeResult,
+                )
+            }
+            composable(
+                route = SendDst.VerifyTransaction.staticRoute,
+                arguments = SendDst.transactionArgs,
+            ) {
+                VerifyTransactionScreen()
+            }
+            composable(
+                route = SendDst.Password.staticRoute,
+                arguments = SendDst.transactionArgs,
+            ) {
+                KeysignPasswordScreen()
+            }
+            composable(
+                route = SendDst.Keysign.staticRoute,
+                arguments = SendDst.transactionArgs,
+            ) { entry ->
+                val transactionId = entry.arguments
+                    ?.getString(SendDst.ARG_TRANSACTION_ID)!!
+                keysignShareViewModel.loadTransaction(transactionId)
 
-                    KeysignFlowView(
-                        onComplete = {
-                            viewModel.navigateToHome(useMainNavigator)
-                        },
-                        onKeysignFinished = {
-                            viewModel.finishKeysign()
-                        }
-                    )
-                }
+                KeysignFlowView(
+                    onComplete = {
+                        viewModel.navigateToHome(useMainNavigator)
+                    },
+                    onKeysignFinished = {
+                        viewModel.finishKeysign()
+                    }
+                )
             }
         }
     }

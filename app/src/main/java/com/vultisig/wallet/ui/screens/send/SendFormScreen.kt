@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.send
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.BoxWithSwipeRefresh
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
@@ -100,6 +100,7 @@ internal fun SendFormScreen(
         onScan = viewModel::scanAddress,
         onAddressBookClick = viewModel::openAddressBook,
         onSend = viewModel::send,
+        onSwipe = viewModel::refreshGasFee,
     )
 }
 
@@ -121,6 +122,7 @@ internal fun SendFormScreen(
     onAddressBookClick: () -> Unit = {},
     onScan: () -> Unit = {},
     onSend: () -> Unit = {},
+    onSwipe: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -134,8 +136,10 @@ internal fun SendFormScreen(
     }
 
 
-    Box(
+    BoxWithSwipeRefresh (
         modifier = Modifier.fillMaxSize(),
+        isRefreshing = state.isRefreshing,
+        onSwipe = onSwipe,
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),

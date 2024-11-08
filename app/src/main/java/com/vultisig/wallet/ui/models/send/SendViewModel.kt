@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
-import com.vultisig.wallet.data.repositories.GasFeeRefreshUiRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
@@ -29,10 +28,8 @@ internal class SendViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val advanceGasUiRepository: AdvanceGasUiRepository,
-    private val gasFeeRefreshUiRepository: GasFeeRefreshUiRepository,
 ) : ViewModel() {
     val dst = sendNavigator.destination
-    val isLoading = MutableStateFlow(false)
     val isKeysignFinished = MutableStateFlow(false)
     val currentVault: MutableState<Vault?> = mutableStateOf(null)
     val isGasSettingAvailable = advanceGasUiRepository.shouldShowAdvanceGasSettingsIcon
@@ -44,14 +41,6 @@ internal class SendViewModel @Inject constructor(
                 ?.let {
                     currentVault.value = it
                 }
-        }
-    }
-
-    fun refreshGas() {
-        viewModelScope.launch{
-            isLoading.value = true
-            gasFeeRefreshUiRepository.refreshGasFee()
-            isLoading.value = false
         }
     }
 
