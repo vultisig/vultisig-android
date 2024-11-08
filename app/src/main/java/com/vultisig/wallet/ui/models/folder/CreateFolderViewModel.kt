@@ -48,12 +48,12 @@ internal class CreateFolderViewModel @Inject constructor(
     val textFieldState = TextFieldState()
 
     init {
-        getFolderNames()
+        collectFolderNames()
         getVaults()
         validateEachTextChange()
     }
 
-    private fun getFolderNames() = viewModelScope.launch {
+    private fun collectFolderNames() = viewModelScope.launch {
         folderRepository.getAll().collectLatest { folders ->
             state.update { it.copy(folderNames = folders.map { folder -> folder.name }) }
         }

@@ -10,7 +10,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -78,7 +77,6 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
     @ApplicationContext private val context: Context,
-    savedStateHandle: SavedStateHandle,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
@@ -231,7 +229,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                                 errorMessage.value =
-                                    UiText.StringResource(R.string.join_keysign_wrong_vault)
+                                    UiText.StringResource(R.string.join_keysign_missing_required_vault)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.keygen
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
@@ -26,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +56,8 @@ internal class GeneratingKeyViewModel(
     private val encryptionKeyHex: String,
     private val oldResharePrefix: String,
     private val password: String? = null,
-    @SuppressLint("StaticFieldLeak") private val context: Context,
+    private val hint: String? = null,
+    @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
@@ -66,7 +67,7 @@ internal class GeneratingKeyViewModel(
     internal val isReshareMode: Boolean,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
-) : ViewModel(){
+) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
 
@@ -84,11 +85,11 @@ internal class GeneratingKeyViewModel(
         currentState.collect { state ->
             when (state) {
                 is KeygenState.Error -> {
-                    stopService(context.applicationContext)
+                    stopService()
                 }
 
                 KeygenState.Success -> {
-                    saveVault(context.applicationContext)
+                    saveVault()
                 }
 
                 else -> Unit
@@ -111,6 +112,7 @@ internal class GeneratingKeyViewModel(
             this.vault.signers = keygenCommittee
             currentState.value = KeygenState.Success
             this._messagePuller?.stop()
+
         } catch (e: Exception) {
             Timber.tag("GeneratingKeyViewModel").d("generateKey error: %s", e.stackTraceToString())
             val errorMessage = UiText.DynamicString(e.message ?: "Unknown error")
@@ -260,17 +262,17 @@ internal class GeneratingKeyViewModel(
         }
     }
 
-    private suspend fun saveVault(context: Context) {
+    private suspend fun saveVault() {
 
         saveVault(
             this@GeneratingKeyViewModel.vault,
             this@GeneratingKeyViewModel.action == TssAction.ReShare
         )
         vaultDataStoreRepository.setBackupStatus(vaultId = vault.id, false)
-
+        hint?.let { vaultDataStoreRepository.setFastSignHint(vaultId = vault.id, hint = it) }
         delay(2.seconds)
 
-        stopService(context)
+        stopService()
 
         lastOpenedVaultRepository.setLastOpenedVaultId(vault.id)
 
@@ -286,7 +288,7 @@ internal class GeneratingKeyViewModel(
         )
     }
 
-    fun stopService(context: Context) {
+    fun stopService() {
         // start mediator service
         val intent = Intent(context, MediatorService::class.java)
         context.stopService(intent)

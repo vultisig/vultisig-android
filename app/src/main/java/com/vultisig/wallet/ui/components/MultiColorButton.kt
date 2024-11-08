@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -28,7 +29,8 @@ internal fun MultiColorButton(
     trailingIcon: Int? = null,
     iconColor: Color? = null,
     backgroundColor: Color? = null,
-    disabled: Boolean? = false,
+    isLoading: Boolean = false,
+    disabled: Boolean = false,
     iconSize: Dp? = null,
     borderSize: Dp? = null,
     minWidth: Dp? = null,
@@ -39,7 +41,6 @@ internal fun MultiColorButton(
     onClick: () -> Unit,
     content : (@Composable ()->Unit)? = null,
 ) {
-    val emptyClickAction: () -> Unit = {}
     var innerModifier = modifier
     val appColor = Theme.colors
     if (borderSize != null)
@@ -62,15 +63,16 @@ internal fun MultiColorButton(
         modifier = innerModifier
             .clip(shape = RoundedCornerShape(60.dp))
             .background(
-                color = if (disabled == true) appColor.neutral600 else backgroundColor
-                    ?: appColor.turquoise600Main
+                color = if (disabled) appColor.neutral600
+                else backgroundColor ?: appColor.turquoise600Main
             )
             .defaultMinSize(
                 minWidth = minWidth ?: 170.dp,
                 minHeight = minHeight ?: 44.dp
             )
             .clickOnce(
-                onClick = if (disabled == false) onClick else emptyClickAction
+                onClick = onClick,
+                enabled = !disabled && !isLoading,
             )
     ) {
         if (startIcon != null)
@@ -82,12 +84,19 @@ internal fun MultiColorButton(
                 modifier = Modifier.size(iconSize ?: 15.dp)
             )
         else UiSpacer(iconSize ?: 25.dp)
-        content?.invoke() ?: Text(
-            text = text,
-            color = if (disabled == true) appColor.neutral800 else textColor
-                ?: appColor.oxfordBlue800,
-            style = textStyle ?: Theme.montserrat.subtitle1
-        )
+        if (isLoading) {
+            UiCirclesLoader(
+                color1 = textColor ?: appColor.oxfordBlue800
+            )
+        } else {
+            content?.invoke() ?: Text(
+                text = text,
+                color = if (disabled == true) appColor.neutral800 else textColor
+                    ?: appColor.oxfordBlue800,
+                style = textStyle ?: Theme.montserrat.subtitle1
+            )
+        }
+
         if (trailingIcon != null)
             Icon(
                 painter = painterResource(trailingIcon),

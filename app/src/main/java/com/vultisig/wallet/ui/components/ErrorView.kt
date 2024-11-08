@@ -30,6 +30,7 @@ internal fun ErrorView(
 
         Column(
             Modifier
+                .fillMaxWidth()
                 .padding(
                     start = 81.dp,
                     end = 81.dp,

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,6 +26,8 @@ import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun KeysignPasswordScreen(
@@ -78,6 +81,16 @@ private fun KeysignPasswordScreen(
                 )
 
                 UiSpacer(size = 12.dp)
+
+                if (state.passwordHint != null) {
+                    UiSpacer(size = 8.dp)
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = state.passwordHint.asString(),
+                        color = Theme.colors.neutral0,
+                        style = Theme.menlo.body2,
+                    )
+                }
             }
         },
         bottomBar = {
@@ -129,6 +142,18 @@ private fun VisibilityToggle(
 private fun KeysignPasswordScreenPreview() {
     KeysignPasswordScreen(
         state = KeysignPasswordUiModel(),
+        passwordFieldState = TextFieldState(),
+        onPasswordLostFocus = {},
+        onPasswordVisibilityToggle = {},
+        onContinueClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun KeysignPasswordWithHintScreenPreview() {
+    KeysignPasswordScreen(
+        state = KeysignPasswordUiModel(passwordHint = UiText.DynamicString("Hint")),
         passwordFieldState = TextFieldState(),
         onPasswordLostFocus = {},
         onPasswordVisibilityToggle = {},
