@@ -85,6 +85,7 @@ internal data class SwapFormUiModel(
     val error: UiText? = null,
     val formError: UiText? = null,
     val isSwapDisabled: Boolean = false,
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -155,6 +156,22 @@ internal class SwapFormViewModel @Inject constructor(
             val gasFeeFiatValue = gasFeeFiat.value ?: return
 
             val srcToken = selectedSrc.account.token
+            val selectedSrcBalance = selectedSrc.account.tokenValue?.value ?: return
+
+            val srcAmountInt = srcAmount
+                ?.movePointRight(selectedSrc.account.token.decimal)
+                ?.toBigInteger()
+
+            if (srcAmountInt == BigInteger.ZERO) return
+
+            val srcTokenValue = srcAmountInt
+                ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
+                ?: return
+
+            val quote = quote ?: return
+
+            showLoading()
+
             val dstToken = selectedDst.account.token
 
             if (srcToken == dstToken) {
@@ -164,17 +181,6 @@ internal class SwapFormViewModel @Inject constructor(
             }
 
             val srcAddress = selectedSrc.address.address
-
-            val srcAmountInt = srcAmount
-                ?.movePointRight(selectedSrc.account.token.decimal)
-                ?.toBigInteger()
-
-            val selectedSrcBalance = selectedSrc.account.tokenValue?.value ?: return
-            if (srcAmountInt == BigInteger.ZERO) return
-            val srcTokenValue = srcAmountInt
-                ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
-                ?: return
-
 
             if (srcToken.isNativeToken) {
                 if (srcAmountInt + gasFee.value > selectedSrcBalance) {
@@ -198,9 +204,6 @@ internal class SwapFormViewModel @Inject constructor(
                     )
                 }
             }
-
-
-            val quote = quote ?: return
 
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
@@ -365,6 +368,23 @@ internal class SwapFormViewModel @Inject constructor(
         } catch (e: InvalidTransactionDataException) {
             showError(e.text)
             return
+        } finally {
+            hideLoading()
+        }
+    }
+
+    private fun showLoading() {
+        uiState.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+    }
+    private fun hideLoading() {
+        uiState.update {
+            it.copy(
+                isLoading = false
+            )
         }
     }
 
