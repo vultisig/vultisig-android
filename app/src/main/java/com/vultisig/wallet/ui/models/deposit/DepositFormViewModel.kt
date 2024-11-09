@@ -75,6 +75,7 @@ internal data class DepositFormUiModel(
     val basisPointsError: UiText? = null,
     val assetsError: UiText? = null,
     val lpUnitsError: UiText? = null,
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -213,8 +214,9 @@ internal class DepositFormViewModel @Inject constructor(
     fun deposit() {
         viewModelScope.launch {
             try {
-                val depositOption = state.value.depositOption
+                showLoading()
 
+                val depositOption = state.value.depositOption
                 val transaction = when (depositOption) {
                     DepositOption.Bond -> createBondTransaction()
                     DepositOption.Unbond -> createUnbondTransaction()
@@ -237,6 +239,26 @@ internal class DepositFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             }
+            finally {
+                hideLoading()
+            }
+        }
+
+    }
+
+    private fun hideLoading() {
+        state.update {
+            it.copy(
+                isLoading = false
+            )
+        }
+    }
+
+    private fun showLoading() {
+        state.update {
+            it.copy(
+                isLoading = true
+            )
         }
     }
 
