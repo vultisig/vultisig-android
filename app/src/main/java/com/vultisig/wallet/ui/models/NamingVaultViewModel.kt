@@ -26,7 +26,8 @@ import javax.inject.Inject
 
 
 internal data class NamingVaultUiModel(
-    val placeholder: String = ""
+    val placeholder: String = "",
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -73,6 +74,7 @@ internal class NamingVaultViewModel @Inject constructor(
     fun navigateToKeygen() {
         if (errorMessageState.value != null)
             return
+        showLoading()
         val name = Uri.encode(
             uniqueName(
                 namingTextFieldState.text.toString()
@@ -100,6 +102,23 @@ internal class NamingVaultViewModel @Inject constructor(
                     )
                 }
             }
+        }
+        hideLoading()
+    }
+
+    private fun showLoading(){
+        state.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+    }
+
+    private fun hideLoading(){
+        state.update {
+            it.copy(
+                isLoading = false
+            )
         }
     }
 

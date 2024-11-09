@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,6 +41,7 @@ internal class VaultRenameViewModel @Inject constructor(
 
     private val vault = MutableStateFlow<Vault?>(null)
     val errorMessageState = MutableStateFlow<UiText?>(null)
+    val isLoading = MutableStateFlow(false)
 
     val renameTextFieldState = TextFieldState()
 
@@ -64,12 +66,14 @@ internal class VaultRenameViewModel @Inject constructor(
                     )
                     return@launch
                 }
+                showLoading()
                 val isNameAlreadyExist =
                     vaultRepository.getAll().any { it.name == newName }
                 if (isNameAlreadyExist) {
                     snackbarFlow.showMessage(
                         StringResource(R.string.vault_edit_this_name_already_exist).asString(context)
                     )
+                    hideLoading()
                     return@launch
                 }
                 vaultRepository.setVaultName(vault.id, newName)
@@ -77,7 +81,20 @@ internal class VaultRenameViewModel @Inject constructor(
                     Destination.Home(),
                     NavigationOptions(clearBackStack = true)
                 )
+                hideLoading()
             }
+        }
+    }
+
+    private fun showLoading(){
+        isLoading.update {
+            true
+        }
+    }
+
+    private fun hideLoading(){
+        isLoading.update {
+            false
         }
     }
 
