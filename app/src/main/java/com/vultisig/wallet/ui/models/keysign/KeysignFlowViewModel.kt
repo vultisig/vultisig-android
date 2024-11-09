@@ -167,6 +167,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value == NetworkPromptOption.INTERNET || isFastSign
     }
 
+    val isLoading = MutableStateFlow(false)
+
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
 
 
@@ -575,7 +577,9 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     fun stopParticipantDiscovery() = viewModelScope.launch {
+        isLoading.value = true
         _participantDiscovery?.stop()
+        isLoading.value = false
     }
 
     private fun cleanQrAddress() {
