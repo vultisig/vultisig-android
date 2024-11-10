@@ -84,6 +84,7 @@ private fun KeygenPasswordScreen(
                     .background(Theme.colors.oxfordBlue800)
                     .verticalScroll(rememberScrollState())
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         horizontal = 12.dp,
                         vertical = 16.dp,

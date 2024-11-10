@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,11 +30,9 @@ import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.PagerCircleIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.models.UiEvent
 import com.vultisig.wallet.ui.models.WelcomeViewModel
 import com.vultisig.wallet.ui.theme.Theme
-
 
 
 @ExperimentalAnimationApi
@@ -63,6 +63,7 @@ internal fun WelcomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .background(Theme.colors.oxfordBlue800),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
