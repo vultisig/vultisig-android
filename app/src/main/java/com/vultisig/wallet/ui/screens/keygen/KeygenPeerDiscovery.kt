@@ -80,6 +80,7 @@ internal fun KeygenPeerDiscovery(
         onStopParticipantDiscovery = {
             viewModel.finishPeerDiscovery()
         },
+        isLoading = uiState.isLoading,
     )
 }
 
@@ -101,6 +102,7 @@ internal fun KeygenPeerDiscoveryScreen(
     onStopParticipantDiscovery: () -> Unit = {},
     extractBitmap: (Bitmap) -> Unit,
     isReshare: Boolean,
+    isLoading: Boolean,
 ) {
 
     UiBarContainer(
@@ -150,6 +152,7 @@ internal fun KeygenPeerDiscoveryScreen(
                             vertical = 16.dp,
                         ),
                     onClick = onStopParticipantDiscovery,
+                    isLoading = isLoading,
                 )
             }
         }
@@ -203,6 +206,7 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         vaultSetupType = "M/N",
         isReshare = true,
         extractBitmap = {},
-        hasNetworkPrompt = true
+        hasNetworkPrompt = true,
+        isLoading = false,
     )
 }
