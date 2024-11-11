@@ -136,6 +136,13 @@ internal class SwapFormViewModel @Inject constructor(
 
     private var selectTokensJob: Job? = null
 
+    private var isLoading = false
+        set(value) {
+            uiState.update {
+                it.copy(isLoading = value)
+            }
+        }
+
     init {
         collectSelectedAccounts()
         collectSelectedTokens()
@@ -170,7 +177,7 @@ internal class SwapFormViewModel @Inject constructor(
 
             val quote = quote ?: return
 
-            showLoading()
+            isLoading = true
 
             val dstToken = selectedDst.account.token
 
@@ -364,27 +371,12 @@ internal class SwapFormViewModel @Inject constructor(
                         vaultId = vaultId,
                     )
                 )
+                isLoading = false
             }
         } catch (e: InvalidTransactionDataException) {
+            isLoading = false
             showError(e.text)
             return
-        } finally {
-            hideLoading()
-        }
-    }
-
-    private fun showLoading() {
-        uiState.update {
-            it.copy(
-                isLoading = true
-            )
-        }
-    }
-    private fun hideLoading() {
-        uiState.update {
-            it.copy(
-                isLoading = false
-            )
         }
     }
 
