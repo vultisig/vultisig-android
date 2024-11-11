@@ -236,8 +236,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             try {
                 val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
                     .decodeToString()
-                deppLinkHelper.value = DeepLinkHelper(content)
-                val qrCodeContent = requireNotNull(deppLinkHelper.value).getJsonData()
+                deepLinkHelper.value = DeepLinkHelper(content)
+                val qrCodeContent = requireNotNull(deepLinkHelper.value).getJsonData()
                 qrCodeContent ?: run {
                     throw Exception("Invalid QR code content")
                 }
@@ -312,8 +312,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             return false
         }
 
-        if (deppLinkHelper.value?.hasResharePrefix() == true) {
-            if (_currentVault.resharePrefix != requireNotNull(deppLinkHelper.value).getResharePrefix()) {
+        if (deepLinkHelper.value?.hasResharePrefix() == true) {
+            if (_currentVault.resharePrefix != requireNotNull(deepLinkHelper.value).getResharePrefix()) {
                 currentState.value =
                     JoinKeysignState.Error(JoinKeysignError.WrongReShare)
                 return false
