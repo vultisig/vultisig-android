@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -116,9 +117,10 @@ internal class TokenSelectionViewModel @Inject constructor(
                 val address = enabledCoins.first().address
                 val allChainTokens = tokenRepository.getChainTokens(chain, address)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
-                    .first()
 
-                disabledTokens.value = allChainTokens.filter { it.id !in enabledTokenIds }
+                allChainTokens.collect { chains ->
+                    disabledTokens.value = chains.filter { it.id !in enabledTokenIds }
+                }
             } catch (e: Exception) {
                 // todo handle error
                 Timber.e(e)
