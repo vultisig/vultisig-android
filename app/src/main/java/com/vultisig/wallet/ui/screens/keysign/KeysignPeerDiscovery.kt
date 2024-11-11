@@ -123,10 +123,7 @@ internal fun KeysignPeerDiscovery(
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
-        onStopParticipantDiscovery = {
-            viewModel.stopParticipantDiscovery()
-            viewModel.moveToState(KeysignFlowState.Keysign)
-        },
+        onStopParticipantDiscovery = viewModel::moveToKeysignState,
         extractBitmap = { bitmap ->
             if (bitmapPainter != null) {
                 sharedViewModel.saveShareQrBitmap(
