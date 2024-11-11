@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -21,15 +22,17 @@ internal fun VaultRenameScreen(
         viewModel.loadData()
     }
 
+    val uiState by viewModel.uiState.collectAsState()
+
     NamingComponent(
         title = stringResource(id = R.string.rename_vault_screen_edit_your_vault_name),
         inputTitle = stringResource(id = R.string.rename_vault_screen_vault_name),
         saveButtonText = stringResource(id = R.string.rename_vault_screen_continue),
         textFieldState = viewModel.renameTextFieldState,
         navHostController = navController,
-        errorText = viewModel.errorMessageState.collectAsState().value,
+        errorText = uiState.errorMessage,
         onLostFocus = viewModel::validate,
         onSave = viewModel::saveName,
-        isLoading = viewModel.isLoading.collectAsState().value,
+        isLoading = uiState.isLoading,
     )
 }

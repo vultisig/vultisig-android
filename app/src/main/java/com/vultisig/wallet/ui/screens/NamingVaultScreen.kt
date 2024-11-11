@@ -17,18 +17,18 @@ internal fun NamingVaultScreen(
     navController: NavHostController,
     model: NamingVaultViewModel = hiltViewModel()
 ) {
-    val state by model.state.collectAsState()
+    val uiState by model.uiState.collectAsState()
 
     NamingComponent(
         title = stringResource(id = R.string.naming_vault_screen_setup),
         textFieldState = model.namingTextFieldState,
         navHostController = navController,
         inputTitle = stringResource(id = R.string.naming_vault_screen_vault_name),
-        hint = state.placeholder,
+        hint = uiState.placeholder,
         hintColor = Theme.colors.neutral500,
         saveButtonText = stringResource(id = R.string.naming_vault_screen_continue),
         onSave = model::navigateToKeygen,
-        errorText = model.errorMessageState.collectAsState().value,
-        isLoading = state.isLoading
+        errorText = uiState.errorMessage,
+        isLoading = uiState.isLoading
     )
 }

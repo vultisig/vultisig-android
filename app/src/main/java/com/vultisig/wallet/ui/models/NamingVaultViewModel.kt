@@ -28,6 +28,7 @@ import javax.inject.Inject
 internal data class NamingVaultUiModel(
     val placeholder: String = "",
     val isLoading: Boolean = false,
+    val errorMessage: UiText? = null
 )
 
 @HiltViewModel
@@ -40,10 +41,9 @@ internal class NamingVaultViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-    val state = MutableStateFlow(NamingVaultUiModel())
+    val uiState = MutableStateFlow(NamingVaultUiModel())
 
     val namingTextFieldState = TextFieldState()
-    val errorMessageState = MutableStateFlow<UiText?>(null)
     private val vaultNamesList = MutableStateFlow<List<String>>(emptyList())
 
     private val vaultSetupType =
@@ -51,6 +51,13 @@ internal class NamingVaultViewModel @Inject constructor(
             (savedStateHandle.get<String>(Destination.NamingVault.ARG_VAULT_SETUP_TYPE)
                 ?: "0").toInt()
         )
+
+    private var isLoading = false
+        set(value) {
+            uiState.update {
+                it.copy(isLoading = value)
+            }
+        }
 
     init {
         val placeholder =
@@ -61,7 +68,7 @@ internal class NamingVaultViewModel @Inject constructor(
                     else -> R.string.naming_vault_placeholder_secure_vault
                 }
             )
-        state.update { it.copy(placeholder = placeholder) }
+        uiState.update { it.copy(placeholder = placeholder) }
 
         viewModelScope.launch {
             vaultNamesList.update { vaultRepository.getAll().map { it.name } }
@@ -72,13 +79,13 @@ internal class NamingVaultViewModel @Inject constructor(
     }
 
     fun navigateToKeygen() {
-        if (errorMessageState.value != null)
+        if (uiState.value.errorMessage != null)
             return
-        showLoading()
+        isLoading = true
         val name = Uri.encode(
             uniqueName(
                 namingTextFieldState.text.toString()
-                    .ifEmpty { state.value.placeholder },
+                    .ifEmpty { uiState.value.placeholder },
                 vaultNamesList.value
             )
         )
@@ -103,30 +110,19 @@ internal class NamingVaultViewModel @Inject constructor(
                 }
             }
         }
-        hideLoading()
+        isLoading = false
     }
 
-    private fun showLoading(){
-        state.update {
-            it.copy(
-                isLoading = true
-            )
-        }
-    }
-
-    private fun hideLoading(){
-        state.update {
-            it.copy(
-                isLoading = false
-            )
-        }
-    }
 
     private fun validate() = viewModelScope.launch {
         val name = namingTextFieldState.text.toString()
         val errorMessage = if (!isNameLengthValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
-        errorMessageState.update { errorMessage }
+        uiState.update {
+            it.copy(
+                errorMessage = errorMessage
+            )
+        }
     }
 }
