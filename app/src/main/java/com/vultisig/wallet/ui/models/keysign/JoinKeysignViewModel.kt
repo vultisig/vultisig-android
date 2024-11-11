@@ -189,7 +189,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
 
-    private val deppLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
+    private val deepLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
 
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
