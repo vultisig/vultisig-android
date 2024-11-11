@@ -188,6 +188,9 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var tempKeysignMessageProto: KeysignMessageProto? = null
     private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
+
+    private val deppLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
+
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
             vault = _currentVault,
@@ -233,8 +236,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             try {
                 val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
                     .decodeToString()
-                val deepLink = DeepLinkHelper(content)
-                val qrCodeContent = deepLink.getJsonData()
+                deppLinkHelper.value = DeepLinkHelper(content)
+                val qrCodeContent = requireNotNull(deppLinkHelper.value).getJsonData()
                 qrCodeContent ?: run {
                     throw Exception("Invalid QR code content")
                 }
@@ -242,13 +245,6 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
                 Timber.d("Decoded KeysignMessageProto: $payloadProto")
-                if (deepLink.hasResharePrefix()) {
-                    if (_currentVault.resharePrefix != deepLink.getResharePrefix()) {
-                        currentState.value =
-                            JoinKeysignState.Error(JoinKeysignError.WrongReShare)
-                        return@launch
-                    }
-                }
                 this@JoinKeysignViewModel._sessionID = payloadProto.sessionId
                 this@JoinKeysignViewModel._serviceName = payloadProto.serviceName
                 this@JoinKeysignViewModel._useVultisigRelay = payloadProto.useVultisigRelay
@@ -314,6 +310,14 @@ internal class JoinKeysignViewModel @Inject constructor(
         if (payload.payload.vaultLocalPartyID == _localPartyID) {
             currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
             return false
+        }
+
+        if (deppLinkHelper.value?.hasResharePrefix() == true) {
+            if (_currentVault.resharePrefix != requireNotNull(deppLinkHelper.value).getResharePrefix()) {
+                currentState.value =
+                    JoinKeysignState.Error(JoinKeysignError.WrongReShare)
+                return false
+            }
         }
 
         val ksPayload = payload.payload
