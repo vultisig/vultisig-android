@@ -163,8 +163,7 @@ internal fun FastPeerDiscovery() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-        ,
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = CenterHorizontally,
     ) {
         UiSpacer(size = 74.dp)

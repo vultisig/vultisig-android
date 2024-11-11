@@ -63,7 +63,6 @@ internal fun WelcomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .background(Theme.colors.oxfordBlue800),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

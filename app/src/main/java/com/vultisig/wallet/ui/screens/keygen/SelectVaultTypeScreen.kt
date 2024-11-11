@@ -76,9 +76,6 @@ private fun SelectVaultTypeScreen(
     ) {
         Column(
             horizontalAlignment = CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
         ) {
             Row(
                 modifier = Modifier
