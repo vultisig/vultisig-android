@@ -154,7 +154,6 @@
     <string name="vault_settings_delete_vault_details">Details:</string>
     <string name="vault_settings_delete_vault_name">Vault Name:</string>
     <string name="vault_settings_delete_vault_value">Vault Value:</string>
-    <string name="vault_settings_delete_vault_type">Vault Type:</string>
     <string name="vault_settings_delete_vault_id">Device ID:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Key:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Key:</string>
@@ -414,6 +413,7 @@
     <string name="home_screen_import_vault" translatable="false">Import Vault</string>
     <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
     <string name="vault_list_part_n_of_t" translatable="false">Part %dof%d</string>
+    <string name="vault_part_n_of_t" translatable="false">Part %d of %d</string>
     <string name="vault_list_fast_badge" translatable="false">Fast</string>
     <string name="deleted_device" translatable="false">(Deleted Device)</string>
     <string name="qr_title_join_keygen" translatable="false">Join Keygen</string>
@@ -454,6 +454,7 @@
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
     <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
+    <string name="vault_settings_delete_vault_part" translatable="false">Vault Part:</string>
     <string name="vault_password_hint_to_long" translatable="false">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
     <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
