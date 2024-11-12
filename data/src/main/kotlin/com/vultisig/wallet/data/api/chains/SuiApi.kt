@@ -1,8 +1,11 @@
 package com.vultisig.wallet.data.api.chains
 
+import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.utils.RpcResponseJson
-import com.vultisig.wallet.data.api.utils.postRpc
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -40,12 +43,16 @@ internal class SuiApiImpl @Inject constructor(
     private val rpcUrl = "https://sui-rpc.publicnode.com"
 
     override suspend fun getBalance(address: String): BigInteger {
-        val response = http.postRpc<RpcResponseJson>(
-            url = rpcUrl,
-            method = "suix_getBalance",
-            params = buildJsonArray {
-                add(address)
-            }
+        val response = http.post(urlString = rpcUrl) {
+            setBody(
+                RpcPayload(
+                    method = "suix_getBalance",
+                    params = buildJsonArray {
+                        add(address)
+                    }
+                )
+            )
+        }.body<RpcResponseJson>(
         )
 
         return response.result
@@ -59,10 +66,14 @@ internal class SuiApiImpl @Inject constructor(
     }
 
     override suspend fun getReferenceGasPrice(): BigInteger {
-        return http.postRpc<RpcResponseJson>(
-            url = rpcUrl,
-            method = "suix_getReferenceGasPrice",
-            params = JsonArray(emptyList()),
+        return http.post(urlString = rpcUrl) {
+            setBody(
+                RpcPayload(
+                    method = "suix_getReferenceGasPrice",
+                    params = JsonArray(emptyList())
+                )
+            )
+        }.body<RpcResponseJson>(
         ).result
             ?.jsonPrimitive
             ?.content
@@ -71,12 +82,16 @@ internal class SuiApiImpl @Inject constructor(
     }
 
     override suspend fun getAllCoins(address: String): List<SuiCoin> {
-        return http.postRpc<RpcResponseJson>(
-            url = rpcUrl,
-            method = "suix_getAllCoins",
-            params = buildJsonArray {
-                add(address)
-            }
+        return http.post(urlString = rpcUrl) {
+            setBody(
+                RpcPayload(
+                    method = "suix_getAllCoins",
+                    params = buildJsonArray {
+                        add(address)
+                    }
+                )
+            )
+        }.body<RpcResponseJson>(
         ).result
             ?.jsonObject
             ?.get("data")
@@ -103,15 +118,19 @@ internal class SuiApiImpl @Inject constructor(
         unsignedTransaction: String,
         signature: String
     ): String {
-        return http.postRpc<RpcResponseJson>(
-            url = rpcUrl,
-            method = "sui_executeTransactionBlock",
-            params = buildJsonArray {
-                add(unsignedTransaction)
-                addJsonArray {
-                    add(signature)
-                }
-            }
+        return http.post(urlString = rpcUrl) {
+            setBody(
+                RpcPayload(
+                    method = "sui_executeTransactionBlock",
+                    params = buildJsonArray {
+                        add(unsignedTransaction)
+                        addJsonArray {
+                            add(signature)
+                        }
+                    }
+                )
+            )
+        }.body<RpcResponseJson>(
         ).result
             ?.jsonObject
             ?.get("digest")

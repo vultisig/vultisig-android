@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
 import com.vultisig.wallet.data.api.models.SplResponseAccountJson
 import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
-import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
@@ -84,12 +83,16 @@ internal class SolanaApiImp @Inject constructor(
     }
 
     override suspend fun getMinimumBalanceForRentExemption(): BigInteger = try {
-        httpClient.postRpc<SolanaMinimumBalanceForRentExemptionJson>(
-            solanaRentExemptionEndpoint,
-            "getMinimumBalanceForRentExemption",
-            params = buildJsonArray {
-                add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
-            },
+        httpClient.post(solanaRentExemptionEndpoint) {
+            setBody(
+                RpcPayload(
+                    method = "getMinimumBalanceForRentExemption",
+                    params = buildJsonArray {
+                        add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
+                    }
+                )
+            )
+        }.body<SolanaMinimumBalanceForRentExemptionJson>(
         ).result
     } catch (e: Exception) {
         Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
@@ -292,27 +295,40 @@ internal class SolanaApiImp @Inject constructor(
         mintAddress: String,
     ): String? {
         try {
-            val response = httpClient.postRpc<SplAmountRpcResponseJson>(
-                url = rpcEndpoint2,
-                method = "getTokenAccountsByOwner",
-                params = buildJsonArray {
-                    add(walletAddress)
-                    addJsonObject {
-                        put("mint", mintAddress)
-                    }
-                    addJsonObject {
-                        put("encoding", ENCODING_SPL_REQUEST_PARAM)
-                    }
-                }
-            )
+
+            val post = httpClient.post(urlString = rpcEndpoint2) {
+                setBody(
+                    RpcPayload(
+                        method = "getTokenAccountsByOwner",
+                        params = buildJsonArray {
+                            add(walletAddress)
+                            addJsonObject {
+                                put(
+                                    "mint",
+                                    mintAddress
+                                )
+                            }
+                            addJsonObject {
+                                put(
+                                    "encoding",
+                                    ENCODING_SPL_REQUEST_PARAM
+                                )
+                            }
+                        }
+                    )
+                )
+            }
+            val response = post.body<SplAmountRpcResponseJson>()
+            Timber.d("getTokenAssociatedAccountByOwner error: ${post.bodyAsText()}")
             if (response.error != null) {
                 Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
                 return null
             }
+
             val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
             return value.value[0].pubKey
         } catch (e: Exception) {
-            Timber.e(e)
+            Timber.d("getTokenAssociatedAccountByOwner error: ${e.message}")
             return null
         }
     }
