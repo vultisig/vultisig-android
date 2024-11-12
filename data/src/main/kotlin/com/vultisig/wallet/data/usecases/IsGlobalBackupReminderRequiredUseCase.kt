@@ -13,9 +13,9 @@ internal class IsGlobalBackupReminderRequiredUseCaseImpl @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
 ) : IsGlobalBackupReminderRequiredUseCase {
     override suspend fun invoke(): Boolean {
-        val shownMonth = vaultDataStoreRepository.readGlobalBackupReminderStatus().first()
+        val shownEpochMonth = vaultDataStoreRepository.readGlobalBackupReminderStatus().first()
         val currentEpochMonth = VultiDate.getEpochMonth()
-        when (shownMonth) {
+        when (shownEpochMonth) {
             GLOBAL_REMINDER_STATUS_NOT_SET -> {
                 vaultDataStoreRepository.setGlobalBackupReminderStatus(currentEpochMonth)
                 return true
@@ -24,7 +24,6 @@ internal class IsGlobalBackupReminderRequiredUseCaseImpl @Inject constructor(
                 return false
             }
             currentEpochMonth -> {
-                vaultDataStoreRepository.setGlobalBackupReminderStatus(currentEpochMonth)
                 return false
             }
             else -> {
