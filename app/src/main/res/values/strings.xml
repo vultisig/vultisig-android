@@ -67,7 +67,6 @@
     <string name="default_chain_screen_title">Default Chains</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG TOKEN</string>
-    <string name="scan_qr_default_title">Scan</string>
     <string name="verify_transaction_screen_title">Verify</string>
     <string name="verify_transaction_from_title">From</string>
     <string name="verify_transaction_to_title">To</string>
@@ -305,8 +304,6 @@
     <string name="setup_1_device_of_vault">You need 1 more device to pair</string>
     <string name="setup_2_device_of_vault">You need 2 more devices to pair</string>
     <string name="setup_m_device_of_vault">You can pair as many devices you want</string>
-    <string name="enable_chain_button">Enable Chain</string>
-    <string name="enable_chain_warning">Chain is not selected.\nPlease enable it in chain selection.</string>
     <string name="s_of_s">%1$s of %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
@@ -472,6 +469,8 @@
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
     <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
     <string name="verify_swap_screen_total_fees" translatable="false">Total Fees</string>
+    <string name="scan_qr_code_error_text" translatable="false">Unrelated QR code is scanned</string>
+    <string name="scan_qr_code_error_button" translatable="false">Back</string>
     <string name="insufficient_native_token"  translatable="false">Insufficient %1$s</string>
     <string name="swap_error_amount_too_low"  translatable="false">Swap Amount too low</string>
 </resources>

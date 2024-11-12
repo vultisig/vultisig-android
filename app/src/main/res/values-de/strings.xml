@@ -37,7 +37,6 @@
     <string name="settings_screen_title">Einstellungen</string>
     <string name="language_setting_screen_title">Sprache</string>
     <string name="faq_setting_screen_title">FAQ</string>
-    <string name="scan_qr_default_title">Scannen</string>
     <string name="verify_transaction_screen_title">Verifizieren</string>
     <string name="verify_transaction_from_title">Von</string>
     <string name="verify_transaction_to_title">Zu</string>
@@ -283,8 +282,6 @@
     <string name="setup_1_device_of_vault">Sie benötigen 1 weiteres Gerät zum Koppeln</string>
     <string name="setup_2_device_of_vault">Zum Koppeln sind zwei weitere Geräte erforderlich</string>
     <string name="setup_m_device_of_vault">Sie können so viele Geräte koppeln, wie Sie möchten</string>
-    <string name="enable_chain_button">Kette aktivieren</string>
-    <string name="enable_chain_warning">Kette ist nicht ausgewählt. Bitte aktivieren Sie sie in der Kettenauswahl.</string>
     <string name="s_of_s">%1$s von %2$s</string>
     <string name="settings_screen_legal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
