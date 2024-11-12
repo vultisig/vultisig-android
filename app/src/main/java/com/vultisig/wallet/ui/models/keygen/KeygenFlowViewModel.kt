@@ -461,18 +461,22 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     private fun showLoading(){
-        uiState.update {
-            it.copy(
-                isLoading = true
-            )
+        if (setupType != VaultSetupType.FAST) {
+            uiState.update {
+                it.copy(
+                    isLoading = true
+                )
+            }
         }
     }
 
     private fun hideLoading(){
-        uiState.update {
-            it.copy(
-                isLoading = false
-            )
+        if (setupType != VaultSetupType.FAST) {
+            uiState.update {
+                it.copy(
+                    isLoading = false
+                )
+            }
         }
     }
 
