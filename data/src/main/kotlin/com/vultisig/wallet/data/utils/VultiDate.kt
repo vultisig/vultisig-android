@@ -1,8 +1,14 @@
 package com.vultisig.wallet.data.utils
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.monthsUntil
+
 object VultiDate {
     fun getEpochMonth(): Int {
-        val localDate = java.time.LocalDate.now()
-        return localDate.minusYears(1970).year * 12 + localDate.monthValue
+        val epochDate = Instant.fromEpochMilliseconds(0)
+        val localDate = Clock.System.now()
+        return epochDate.monthsUntil(localDate, TimeZone.currentSystemDefault())
     }
 }
