@@ -1,24 +1,26 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.repositories.GLOBAL_REMINDER_STATUS_NEVER_SHOW
+import com.vultisig.wallet.data.repositories.GLOBAL_REMINDER_STATUS_NOT_SET
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.utils.VultiDate
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-interface GetGlobalBackupReminderStatus : suspend () -> Boolean
+interface IsGlobalBackupReminderRequiredUseCase : suspend () -> Boolean
 
-internal class GetGlobalBackupReminderStatusImpl @Inject constructor(
-    val vaultDataStoreRepository: VaultDataStoreRepository,
-) : GetGlobalBackupReminderStatus {
+internal class IsGlobalBackupReminderRequiredUseCaseImpl @Inject constructor(
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
+) : IsGlobalBackupReminderRequiredUseCase {
     override suspend fun invoke(): Boolean {
         val shownMonth = vaultDataStoreRepository.readGlobalBackupReminderStatus().first()
         val currentEpochMonth = VultiDate.getEpochMonth()
         when (shownMonth) {
-            0 -> {
+            GLOBAL_REMINDER_STATUS_NOT_SET -> {
                 vaultDataStoreRepository.setGlobalBackupReminderStatus(currentEpochMonth)
                 return true
             }
-            -1 -> {
+            GLOBAL_REMINDER_STATUS_NEVER_SHOW -> {
                 return false
             }
             currentEpochMonth -> {

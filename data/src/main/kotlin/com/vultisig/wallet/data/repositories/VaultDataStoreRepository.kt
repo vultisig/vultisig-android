@@ -7,6 +7,9 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
+const val GLOBAL_REMINDER_STATUS_NEVER_SHOW = -1
+const val GLOBAL_REMINDER_STATUS_NOT_SET = 0
+
 interface VaultDataStoreRepository {
     suspend fun setBackupStatus(vaultId: String, status: Boolean)
 
@@ -63,7 +66,7 @@ internal class VaultDataStoreRepositoryImpl @Inject constructor(
     }
 
     override suspend fun readGlobalBackupReminderStatus(): Flow<Int> {
-        return appDataStore.readData(onGlobalBackupReminderStatusKey(), 0)
+        return appDataStore.readData(onGlobalBackupReminderStatusKey(), GLOBAL_REMINDER_STATUS_NOT_SET)
     }
 
     private companion object PreferencesKey {

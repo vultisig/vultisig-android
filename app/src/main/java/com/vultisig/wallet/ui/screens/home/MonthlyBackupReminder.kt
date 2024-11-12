@@ -28,7 +28,7 @@ internal fun  MonthlyBackupReminder (
     onDismiss: () -> Unit,
     onBackup: () -> Unit,
     onDoNotRemind: () -> Unit,
-){
+) {
 
     ModalBottomSheet(
         sheetState = rememberModalBottomSheetState(
@@ -42,7 +42,7 @@ internal fun  MonthlyBackupReminder (
             Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-        ){
+        ) {
             UiSpacer(size = 16.dp)
             Box {
                 UiIcon(

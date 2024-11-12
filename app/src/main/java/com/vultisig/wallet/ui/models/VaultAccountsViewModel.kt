@@ -12,8 +12,8 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.GetGlobalBackupReminderStatus
-import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminder
+import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
+import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -64,8 +64,8 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
-    private val getGlobalBackupReminderStatus: GetGlobalBackupReminderStatus,
-    private val neverShowGlobalBackupReminder: NeverShowGlobalBackupReminder,
+    private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
+    private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -84,7 +84,7 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private fun showGlobalBackupReminder() {
         viewModelScope.launch {
-            val showReminder = getGlobalBackupReminderStatus()
+            val showReminder = isGlobalBackupReminderRequired()
             uiState.update {
                 it.copy(showMonthlyBackupReminder = showReminder)
             }
@@ -216,17 +216,17 @@ internal class VaultAccountsViewModel @Inject constructor(
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun backupVault() {
         viewModelScope.launch {
-            uiState.update { it.copy(showMonthlyBackupReminder = false) }
+            dismissBackupReminder()
             navigator.navigate(Destination.BackupPassword(vaultId!!))
         }
     }
 
-    fun dismissBackupReminder() = viewModelScope.launch {
+    fun dismissBackupReminder() {
         uiState.update { it.copy(showMonthlyBackupReminder = false) }
     }
 
     fun doNotRemindBackup() = viewModelScope.launch {
-        neverShowGlobalBackupReminder()
-        uiState.update { it.copy(showMonthlyBackupReminder = false) }
+        setNeverShowGlobalBackupReminder()
+        dismissBackupReminder()
     }
 }

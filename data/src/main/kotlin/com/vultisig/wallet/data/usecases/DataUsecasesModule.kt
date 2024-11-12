@@ -115,12 +115,12 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindNeverShowGlobalBackupReminder(
-        impl: NeverShowGlobalBackupReminderImpl
-    ): NeverShowGlobalBackupReminder
+        impl: NeverShowGlobalBackupReminderUseCaseImpl
+    ): NeverShowGlobalBackupReminderUseCase
 
     @Binds
     @Singleton
     fun bindGetGlobalBackupReminderStatus(
-        impl: GetGlobalBackupReminderStatusImpl
-    ): GetGlobalBackupReminderStatus
+        impl: IsGlobalBackupReminderRequiredUseCaseImpl
+    ): IsGlobalBackupReminderRequiredUseCase
 }
