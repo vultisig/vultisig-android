@@ -282,7 +282,6 @@
     <string name="setup_1_device_of_vault">Hai bisogno di un altro dispositivo da associare</string>
     <string name="setup_2_device_of_vault">Sono necessari altri 2 dispositivi per l\’associazione</string>
     <string name="setup_m_device_of_vault">Puoi associare tutti i dispositivi che vuoi</string>
-    <string name="enable_chain_warning">La catena non è selezionata. Abilitala nella selezione della catena.</string>
     <string name="s_of_s">%1$s di %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">politica sulla riservatezza</string>

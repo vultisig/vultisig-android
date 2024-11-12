@@ -282,7 +282,6 @@
     <string name="setup_1_device_of_vault">Potreban vam je još 1 uređaj za uparivanje</string>
     <string name="setup_2_device_of_vault">Potrebna su vam još 2 uređaja za uparivanje</string>
     <string name="setup_m_device_of_vault">Možete upariti onoliko uređaja koliko želite</string>
-    <string name="enable_chain_warning">Lanac nije odabran. Omogućite ga u odabiru lanca.</string>
     <string name="s_of_s">%1$s od %2$s</string>
     <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>

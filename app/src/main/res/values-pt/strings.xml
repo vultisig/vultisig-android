@@ -283,7 +283,6 @@
     <string name="setup_1_device_of_vault">Precisa de mais 1 dispositivo para emparelhar</string>
     <string name="setup_2_device_of_vault">Precisa de mais 2 dispositivos para emparelhar</string>
     <string name="setup_m_device_of_vault">Pode emparelhar quantos dispositivos quiser</string>
-    <string name="enable_chain_warning">A cadeia não está selecionada. Por favor, ative-o na seleção da cadeia.</string>
     <string name="s_of_s">%1$s de %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de Privacidade</string>
