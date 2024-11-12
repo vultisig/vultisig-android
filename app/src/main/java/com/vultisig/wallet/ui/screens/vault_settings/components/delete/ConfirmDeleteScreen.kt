@@ -219,16 +219,15 @@ internal fun ConfirmDeleteScreen(
                         .padding(horizontal = 12.dp),
                 ) {
                     Text(
-                        text = stringResource(R.string.vault_settings_delete_vault_type),
+                        text = stringResource(R.string.vault_settings_delete_vault_part),
                         color = colors.neutral0,
                         style = Theme.menlo.body2,
                     )
                     UiSpacer(size = 12.dp)
                     Text(
-                        text = String.format(
-                            stringResource(id = R.string.s_of_s_vault),
-                            Utils.getThreshold(vaultDeleteUiModel.deviceList.size),
-                            vaultDeleteUiModel.deviceList.size.toString()
+                        text = stringResource(id = R.string.vault_part_n_of_t,
+                            vaultDeleteUiModel.vaultPart,
+                            vaultDeleteUiModel.deviceList.size,
                         ),
                         color = colors.neutral0,
                         style = Theme.menlo.overline2,

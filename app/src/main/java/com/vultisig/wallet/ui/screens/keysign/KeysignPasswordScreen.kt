@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -59,6 +61,7 @@ private fun KeysignPasswordScreen(
                     .padding(contentPadding)
                     .background(Theme.colors.oxfordBlue800)
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         horizontal = 12.dp,
                         vertical = 16.dp,

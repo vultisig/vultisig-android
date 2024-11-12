@@ -82,6 +82,7 @@ internal data class KeygenFlowUiModel(
     val qrBitmapPainter: BitmapPainter? = null,
     val networkOption: NetworkPromptOption = NetworkPromptOption.INTERNET,
     val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
+    val isLoading: Boolean = false,
 ) {
     val isContinueButtonEnabled =
         if (isReshareMode) {
@@ -426,9 +427,11 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     fun moveToKeygen() {
         viewModelScope.launch {
+            showLoading()
             withContext(Dispatchers.IO) {
                 startKeygen()
             }
+            hideLoading()
             moveToState(KeygenFlowState.KEYGEN)
         }
     }
@@ -456,6 +459,23 @@ internal class KeygenFlowViewModel @Inject constructor(
             Timber.tag("KeygenDiscoveryViewModel").e("startKeygen: %s", e.stackTraceToString())
         }
     }
+
+    private fun showLoading(){
+        uiState.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+    }
+
+    private fun hideLoading(){
+        uiState.update {
+            it.copy(
+                isLoading = false
+            )
+        }
+    }
+
 
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {

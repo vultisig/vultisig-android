@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -134,7 +136,8 @@ internal fun GeneratingKey(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
-                .padding(all = 16.dp),
+                .padding(all = 16.dp)
+                .verticalScroll(rememberScrollState()),
             contentAlignment = Center
         ) {
             when (keygenState) {
