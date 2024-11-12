@@ -293,7 +293,6 @@
     <string name="setup_1_device_of_vault">Je hebt nog 1 apparaat nodig om te koppelen</string>
     <string name="setup_2_device_of_vault">Je hebt nog 2 apparaten nodig om te koppelen</string>
     <string name="setup_m_device_of_vault">U kunt zoveel apparaten koppelen als u wilt</string>
-    <string name="enable_chain_button">Schakel keten in</string>
     <string name="enable_chain_warning">Chain is niet geselecteerd. Schakel het in bij chain selection.</string>
     <string name="s_of_s">%1$s van %2$s</string>
     <string name="settings_screen_legal">Juridisch</string>
