@@ -62,7 +62,6 @@
     <string name="default_chain_screen_title">Cadenas predeterminadas</string>
     <string name="faq_setting_screen_title">Preguntas Frecuentes</string>
     <string name="vultisig_token_setting_screen_title">Token Vultisig</string>
-    <string name="scan_qr_default_title">Escanear</string>
     <string name="verify_transaction_screen_title">Verificar</string>
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">A</string>

@@ -35,7 +35,6 @@
     <string name="settings_screen_title">Postavke</string>
     <string name="language_setting_screen_title">Jezik</string>
     <string name="faq_setting_screen_title">ČPP</string>
-    <string name="scan_qr_default_title">Skeniraj</string>
     <string name="verify_transaction_screen_title">Provjeri</string>
     <string name="verify_transaction_from_title">Od</string>
     <string name="verify_transaction_to_title">Do</string>

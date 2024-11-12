@@ -39,7 +39,6 @@
     <string name="settings_screen_title">Configurações</string>
     <string name="language_setting_screen_title">Idioma</string>
     <string name="faq_setting_screen_title">FAQ</string>
-    <string name="scan_qr_default_title">Escanear</string>
     <string name="verify_transaction_screen_title">Verificar</string>
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">Para</string>

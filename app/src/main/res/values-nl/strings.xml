@@ -66,7 +66,6 @@
     <string name="default_chain_screen_title">Standaard kettingen</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG-TOKEN</string>
-    <string name="scan_qr_default_title">Scannen</string>
     <string name="verify_transaction_screen_title">Verifiëren</string>
     <string name="verify_transaction_from_title">Van</string>
     <string name="verify_transaction_to_title">Aan</string>

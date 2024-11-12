@@ -67,7 +67,6 @@
     <string name="default_chain_screen_title">Default Chains</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG TOKEN</string>
-    <string name="scan_qr_default_title">Scan</string>
     <string name="verify_transaction_screen_title">Verify</string>
     <string name="verify_transaction_from_title">From</string>
     <string name="verify_transaction_to_title">To</string>
