@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -67,6 +68,7 @@ internal class GeneratingKeyViewModel(
     internal val isReshareMode: Boolean,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
 ) : ViewModel() {
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null
@@ -263,28 +265,42 @@ internal class GeneratingKeyViewModel(
     }
 
     private suspend fun saveVault() {
+        val vaultId = vault.id
 
         saveVault(
             this@GeneratingKeyViewModel.vault,
             this@GeneratingKeyViewModel.action == TssAction.ReShare
         )
-        vaultDataStoreRepository.setBackupStatus(vaultId = vault.id, false)
-        hint?.let { vaultDataStoreRepository.setFastSignHint(vaultId = vault.id, hint = it) }
+        vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
+        hint?.let { vaultDataStoreRepository.setFastSignHint(vaultId = vaultId, hint = it) }
         delay(2.seconds)
 
         stopService()
 
-        lastOpenedVaultRepository.setLastOpenedVaultId(vault.id)
+        lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
 
         if (password?.isNotEmpty() == true && context.canAuthenticateBiometric()) {
-            vaultPasswordRepository.savePassword(vault.id, password)
+            vaultPasswordRepository.savePassword(vaultId, password)
+        }
+
+        if (password != null) {
+            vaultMetadataRepo.requireServerBackupVerification(vaultId)
         }
 
         navigator.navigate(
-            Destination.BackupSuggestion(
-                vaultId = vault.id
-            ),
-            opts = NavigationOptions(popUpTo = Destination.Home().route)
+            dst = if (password != null) {
+                Destination.VerifyServerBackup(
+                    vaultId = vaultId,
+                    shouldSuggestBackup = true,
+                )
+            } else {
+                Destination.BackupSuggestion(
+                    vaultId = vaultId
+                )
+            },
+            opts = NavigationOptions(
+                popUpTo = Destination.Home().route,
+            )
         )
     }
 

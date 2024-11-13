@@ -6,12 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
@@ -64,6 +66,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
     private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
 ) : ViewModel() {
@@ -74,12 +77,13 @@ internal class VaultAccountsViewModel @Inject constructor(
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
 
-    fun loadData(vaultId: String) {
+    fun loadData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
         showGlobalBackupReminder()
+        showVerifyServerBackupIfNeeded(vaultId)
     }
 
     private fun showGlobalBackupReminder() {
@@ -229,4 +233,18 @@ internal class VaultAccountsViewModel @Inject constructor(
         setNeverShowGlobalBackupReminder()
         dismissBackupReminder()
     }
+
+    private fun showVerifyServerBackupIfNeeded(vaultId: VaultId) {
+        viewModelScope.launch {
+            if (vaultMetadataRepo.shouldVerifyServerBackup(vaultId)) {
+                navigator.navigate(
+                    Destination.VerifyServerBackup(
+                        vaultId = vaultId,
+                        shouldSuggestBackup = false
+                    )
+                )
+            }
+        }
+    }
+
 }

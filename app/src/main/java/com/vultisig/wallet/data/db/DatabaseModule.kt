@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.db.dao.FolderOrderDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.VaultDao
+import com.vultisig.wallet.data.db.dao.VaultMetadataDao
 import com.vultisig.wallet.data.db.dao.VaultOrderDao
 import com.vultisig.wallet.data.db.migrations.MIGRATION_10_11
 import com.vultisig.wallet.data.db.migrations.MIGRATION_11_12
@@ -18,6 +19,7 @@ import com.vultisig.wallet.data.db.migrations.MIGRATION_14_15
 import com.vultisig.wallet.data.db.migrations.MIGRATION_15_16
 import com.vultisig.wallet.data.db.migrations.MIGRATION_16_17
 import com.vultisig.wallet.data.db.migrations.MIGRATION_17_18
+import com.vultisig.wallet.data.db.migrations.MIGRATION_18_19
 import com.vultisig.wallet.data.db.migrations.MIGRATION_1_2
 import com.vultisig.wallet.data.db.migrations.MIGRATION_2_3
 import com.vultisig.wallet.data.db.migrations.MIGRATION_3_4
@@ -69,6 +71,7 @@ internal interface DatabaseModule {
                     MIGRATION_15_16,
                     MIGRATION_16_17,
                     MIGRATION_17_18,
+                    MIGRATION_18_19,
                 )
                 .build()
 
@@ -121,5 +124,12 @@ internal interface DatabaseModule {
         fun provideAddressBookOrderDao(
             appDatabase: AppDatabase,
         ): AddressBookOrderDao = appDatabase.addressBookOrderDao()
+
+        @Provides
+        @Singleton
+        fun provideVaultMetadataDao(
+            appDatabase: AppDatabase,
+        ): VaultMetadataDao = appDatabase.vaultMetadataDao()
+
     }
 }
