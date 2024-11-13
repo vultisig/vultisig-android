@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.isServerVault
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -151,7 +152,7 @@ internal class VerifySwapViewModel @Inject constructor(
         viewModelScope.launch {
             if (vaultId == null) return@launch
             val vault = requireNotNull(vaultRepository.get(vaultId))
-            val hasFastSign = vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            val hasFastSign = !vault.isServerVault() && vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
             state.update {
                 it.copy(
                     hasFastSign = hasFastSign

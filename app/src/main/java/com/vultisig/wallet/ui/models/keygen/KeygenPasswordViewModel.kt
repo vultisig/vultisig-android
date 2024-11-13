@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.isServerVault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.utils.TextFieldUtils.HINT_MAX_LENGTH
@@ -93,7 +94,7 @@ internal class KeygenPasswordViewModel @Inject constructor(
                 if (vaultId != null) {
                     // reshare, check password
                     val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-                    if (vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)) {
+                    if (!vault.isServerVault() && vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)) {
                         if (!vultiSignerRepository.isPasswordValid(
                                 publicKeyEcdsa = vault.pubKeyECDSA,
                                 password = password

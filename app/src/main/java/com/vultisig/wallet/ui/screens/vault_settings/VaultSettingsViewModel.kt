@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.vault_settings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.isServerVault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -31,7 +32,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val vault = requireNotNull(vaultRepository.get(vaultId))
-            val hasFastSign = vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            val hasFastSign = !vault.isServerVault() && vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
             uiModel.update {
                 it.copy(
                     hasFastSign = hasFastSign
