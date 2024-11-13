@@ -200,7 +200,7 @@ internal class SendFormViewModel @Inject constructor(
         }
 
         preSelectToken(
-            preSelectedChainId = preSelectedChainId,
+            preSelectedChainIds = listOf(preSelectedChainId),
             preSelectedTokenId = preSelectedTokenId,
         )
     }
@@ -244,15 +244,15 @@ internal class SendFormViewModel @Inject constructor(
 
             val vaultId = vaultId
             if (vaultId != null) {
-                val chainValidForAddress = Chain.entries.find { chain ->
+                val chainValidForAddress = Chain.entries.filter { chain ->
                     chainAccountAddressRepository.isValid(chain, qrCode)
                 }
 
                 val selectedChain = selectedTokenValue?.chain
 
                 if (
-                    chainValidForAddress != null &&
-                    chainValidForAddress != selectedChain
+                    chainValidForAddress.isNotEmpty() &&
+                    !chainValidForAddress.contains(selectedChain)
                 ) {
                     Timber.d(
                         "Address from QR has a different chain " +
@@ -260,7 +260,7 @@ internal class SendFormViewModel @Inject constructor(
                     )
 
                     preSelectToken(
-                        preSelectedChainId = chainValidForAddress.id,
+                        preSelectedChainIds = chainValidForAddress.map { it.id },
                         preSelectedTokenId = null,
                         forcePreselection = true
                     )
@@ -293,7 +293,7 @@ internal class SendFormViewModel @Inject constructor(
             val selectedChain = address.chain
             if (vaultId != null && selectedTokenValue?.chain != selectedChain) {
                 preSelectToken(
-                    preSelectedChainId = selectedChain.id,
+                    preSelectedChainIds = listOf(selectedChain.id),
                     preSelectedTokenId = null,
                     forcePreselection = true
                 )
@@ -587,17 +587,17 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     private fun preSelectToken(
-        preSelectedChainId: ChainId?,
+        preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
         forcePreselection: Boolean = false,
     ) {
-        Timber.d("preSelectToken($preSelectedChainId, $preSelectedTokenId, $forcePreselection)")
+        Timber.d("preSelectToken($preSelectedChainIds, $preSelectedTokenId, $forcePreselection)")
 
         preSelectTokenJob?.cancel()
         preSelectTokenJob = viewModelScope.launch {
             accounts.collect { accounts ->
                 val preSelectedToken = findPreselectedToken(
-                    accounts, preSelectedChainId, preSelectedTokenId
+                    accounts, preSelectedChainIds, preSelectedTokenId
                 )
 
                 Timber.d("Found a new token to pre select $preSelectedToken")
@@ -616,7 +616,7 @@ internal class SendFormViewModel @Inject constructor(
      */
     private fun findPreselectedToken(
         accounts: List<Account>,
-        preSelectedChainId: ChainId?,
+        preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
     ): Coin? {
         var searchByChainResult: Coin? = null
@@ -627,7 +627,7 @@ internal class SendFormViewModel @Inject constructor(
                 // if we find token by id, return it asap
                 return accountToken
             }
-            if (searchByChainResult == null && accountToken.chain.id == preSelectedChainId) {
+            if (searchByChainResult == null && preSelectedChainIds.contains(accountToken.chain.id)) {
                 // if we find token by chain, remember it and return later if nothing else found
                 searchByChainResult = accountToken
             }
