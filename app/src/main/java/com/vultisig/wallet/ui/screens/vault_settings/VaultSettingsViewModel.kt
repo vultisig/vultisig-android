@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.isServerVault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -19,8 +20,7 @@ import javax.inject.Inject
 internal open class VaultSettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val vaultRepository: VaultRepository,
-    private val vultiSignerRepository: VultiSignerRepository,
+    private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
 
 
@@ -31,8 +31,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val vault = requireNotNull(vaultRepository.get(vaultId))
-            val hasFastSign = !vault.isServerVault() && vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            val hasFastSign = isVaultHasFastSignById(vaultId)
             uiModel.update {
                 it.copy(
                     hasFastSign = hasFastSign

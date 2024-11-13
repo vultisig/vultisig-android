@@ -6,13 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.models.isServerVault
-import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
+import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -27,7 +24,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Immutable
@@ -63,11 +59,9 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     transactionRepository: TransactionRepository,
-    private val vaultRepository: VaultRepository,
-    private val blowfishRepository: BlowfishRepository,
-    private val vultiSignerRepository: VultiSignerRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
@@ -166,8 +160,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private fun loadFastSign() {
         viewModelScope.launch {
             if (vaultId == null) return@launch
-            val vault = requireNotNull(vaultRepository.get(vaultId))
-            val hasFastSign = !vault.isServerVault() && vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            val hasFastSign = isVaultHasFastSignById(vaultId)
             uiState.update {
                 it.copy(
                     hasFastSign = hasFastSign

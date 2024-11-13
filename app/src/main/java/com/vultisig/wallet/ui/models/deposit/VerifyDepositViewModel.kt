@@ -3,12 +3,10 @@ package com.vultisig.wallet.ui.models.deposit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.models.isServerVault
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
+import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -40,10 +38,9 @@ internal class VerifyDepositViewModel @Inject constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val mapTransactionToUiModel: DepositTransactionToUiModelMapper,
     private val depositTransactionRepository: DepositTransactionRepository,
-    private val vaultRepository: VaultRepository,
-    private val vultiSignerRepository: VultiSignerRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     ) : ViewModel() {
 
     val state = MutableStateFlow(VerifyDepositUiModel())
@@ -111,8 +108,7 @@ internal class VerifyDepositViewModel @Inject constructor(
     private fun loadFastSign() {
         viewModelScope.launch {
             if (vaultId == null) return@launch
-            val vault = requireNotNull(vaultRepository.get(vaultId))
-            val hasFastSign = !vault.isServerVault() && vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            val hasFastSign = isVaultHasFastSignById(vaultId)
             state.update {
                 it.copy(
                     hasFastSign = hasFastSign

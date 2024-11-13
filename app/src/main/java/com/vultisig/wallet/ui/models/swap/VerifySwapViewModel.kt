@@ -4,13 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.isServerVault
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
+import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -48,11 +46,9 @@ internal class VerifySwapViewModel @Inject constructor(
     private val mapTransactionToUiModel: SwapTransactionToUiModelMapper,
 
     private val swapTransactionRepository: SwapTransactionRepository,
-
-    private val vaultRepository: VaultRepository,
-    private val vultiSignerRepository: VultiSignerRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
@@ -151,8 +147,7 @@ internal class VerifySwapViewModel @Inject constructor(
     private fun loadFastSign() {
         viewModelScope.launch {
             if (vaultId == null) return@launch
-            val vault = requireNotNull(vaultRepository.get(vaultId))
-            val hasFastSign = !vault.isServerVault() && vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)
+            val hasFastSign = isVaultHasFastSignById(vaultId)
             state.update {
                 it.copy(
                     hasFastSign = hasFastSign
