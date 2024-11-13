@@ -6,6 +6,9 @@ sealed class SwapException(message: String) : Exception(message) {
     class SameAssets(message: String) : SwapException(message)
     class UnkownSwapError(message: String) : SwapException(message)
     class InsufficentSwapAmount(message: String) : SwapException(message)
+    class SwapRouteNotAvailable(message: String) : SwapException(message)
+    class TimeOut(message: String) : SwapException(message)
+
 
     companion object {
         fun handleSwapException(error: String): SwapException {
@@ -15,6 +18,8 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("swap is not supported") -> SwapIsNotSupported(error)
                     contains("/fromamount must pass") -> AmountCannotBeZero(error)
                     contains("not enough asset to pay for fees") -> InsufficentSwapAmount(error)
+                    contains("trading is halted") -> SwapRouteNotAvailable(error)
+                    contains("timeout") -> TimeOut(error)
                     else -> UnkownSwapError(error)
                 }
             }

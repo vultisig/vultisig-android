@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
 import java.math.BigDecimal
-import java.math.BigInteger
 import javax.inject.Inject
 
 interface SwapQuoteRepository {
@@ -94,7 +93,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): SwapQuote {
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
-        val mayaQuote = mayaChainApi.getSwapQuotes(
+        val mayaQuoteResult = mayaChainApi.getSwapQuotes(
             address = dstAddress,
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
@@ -103,24 +102,33 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        mayaQuote.error?.let { throw SwapException.handleSwapException(it) }
+        when (mayaQuoteResult) {
+            is THORChainSwapQuoteDeserialized.Error ->
+                throw SwapException.handleSwapException(mayaQuoteResult.error.message)
 
-        val tokenFees = mayaQuote.fees.total
-            .convertToTokenValue(dstToken)
+            is THORChainSwapQuoteDeserialized.Result -> {
+                val mayaQuote = mayaQuoteResult.data
 
-        val expectedDstTokenValue = mayaQuote.expectedAmountOut
-            .convertToTokenValue(dstToken)
+                mayaQuote.error?.let { throw SwapException.handleSwapException(it) }
 
-        val recommendedMinTokenValue = if (srcToken.chain != Chain.MayaChain) {
-            mayaQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
-        } else tokenValue
+                val tokenFees = mayaQuote.fees.total
+                    .convertToTokenValue(dstToken)
 
-        return SwapQuote.MayaChain(
-            expectedDstValue = expectedDstTokenValue,
-            fees = tokenFees,
-            data = mayaQuote,
-            recommendedMinTokenValue = recommendedMinTokenValue,
-        )
+                val expectedDstTokenValue = mayaQuote.expectedAmountOut
+                    .convertToTokenValue(dstToken)
+
+                val recommendedMinTokenValue = if (srcToken.chain != Chain.MayaChain) {
+                    mayaQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
+                } else tokenValue
+
+                return SwapQuote.MayaChain(
+                    expectedDstValue = expectedDstTokenValue,
+                    fees = tokenFees,
+                    data = mayaQuote,
+                    recommendedMinTokenValue = recommendedMinTokenValue,
+                )
+            }
+        }
     }
 
     override suspend fun getSwapQuote(

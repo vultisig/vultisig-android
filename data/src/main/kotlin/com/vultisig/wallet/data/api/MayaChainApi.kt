@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
@@ -37,7 +39,7 @@ interface MayaChainApi {
         amount: String,
         interval: String,
         isAffiliate: Boolean,
-    ): THORChainSwapQuote
+    ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
 }
@@ -65,7 +67,7 @@ internal class MayaChainApiImp @Inject constructor(
         amount: String,
         interval: String,
         isAffiliate: Boolean,
-    ): THORChainSwapQuote {
+    ): THORChainSwapQuoteDeserialized {
         val response = httpClient
             .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
                 parameter("from_asset", fromAsset)
@@ -79,7 +81,11 @@ internal class MayaChainApiImp @Inject constructor(
                 }
                 header(xClientID, xClientIDValue)
             }
-        return response.body<THORChainSwapQuote>()
+        return try {
+            THORChainSwapQuoteDeserialized.Result(response.body<THORChainSwapQuote>())
+        } catch (e: Exception) {
+            THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError(response.body<String>()))
+        }
     }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
