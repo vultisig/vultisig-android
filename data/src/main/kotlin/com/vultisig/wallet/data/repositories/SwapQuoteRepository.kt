@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteResponse
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
@@ -204,10 +204,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         )
 
         when (liFiQuoteResponse) {
-            is LiFiSwapQuoteResponse.Error ->
+            is LiFiSwapQuoteDeserialized.Error ->
                 throw SwapException.handleSwapException(liFiQuoteResponse.error.message)
 
-            is LiFiSwapQuoteResponse.Result -> {
+            is LiFiSwapQuoteDeserialized.Result -> {
                 val liFiQuote = liFiQuoteResponse.data
                 liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
                 return OneInchSwapQuoteJson(

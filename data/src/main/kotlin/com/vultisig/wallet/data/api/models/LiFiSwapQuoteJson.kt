@@ -3,9 +3,9 @@ package com.vultisig.wallet.data.api.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-sealed interface LiFiSwapQuoteResponse {
-    data class Result(val data: LiFiSwapQuoteJson) : LiFiSwapQuoteResponse
-    data class Error(val error: LiFiSwapQuoteError) : LiFiSwapQuoteResponse
+sealed interface LiFiSwapQuoteDeserialized {
+    data class Result(val data: LiFiSwapQuoteJson) : LiFiSwapQuoteDeserialized
+    data class Error(val error: LiFiSwapQuoteError) : LiFiSwapQuoteDeserialized
 }
 
 

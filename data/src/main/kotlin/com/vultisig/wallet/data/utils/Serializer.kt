@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
@@ -104,6 +107,31 @@ class THORChainSwapQuoteResponseJsonSerializer @Inject constructor(private val j
     }
 }
 
+@Singleton
+class LiFiSwapQuoteResponseSerializer @Inject constructor(private val json: Json) :
+    KSerializer<LiFiSwapQuoteDeserialized> {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("LiFiSwapQuoteResponseSerializer")
+
+    override fun deserialize(decoder: Decoder): LiFiSwapQuoteDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        return if (jsonObject.containsKey("estimate")) {
+            LiFiSwapQuoteDeserialized.Result(
+                json.decodeFromJsonElement<LiFiSwapQuoteJson>(jsonObject)
+            )
+        } else {
+            LiFiSwapQuoteDeserialized.Error(
+                json.decodeFromJsonElement<LiFiSwapQuoteError>(jsonObject)
+            )
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: LiFiSwapQuoteDeserialized) {
+        throw UnsupportedOperationException("Serialization is not required")
+    }
+}
 
 
 object KeysignResponseSerializer : KSerializer<tss.KeysignResponse> {
