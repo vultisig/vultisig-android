@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.IsVaultHasFastSignUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils.HINT_MAX_LENGTH
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -32,6 +33,7 @@ internal class KeygenPasswordViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val vultiSignerRepository: VultiSignerRepository,
+    private val isVaultHasFastSign: IsVaultHasFastSignUseCase,
 ) : ViewModel() {
 
     val state = MutableStateFlow(KeygenPasswordUiModel())
@@ -93,7 +95,7 @@ internal class KeygenPasswordViewModel @Inject constructor(
                 if (vaultId != null) {
                     // reshare, check password
                     val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-                    if (vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)) {
+                    if (isVaultHasFastSign(vault)) {
                         if (!vultiSignerRepository.isPasswordValid(
                                 publicKeyEcdsa = vault.pubKeyECDSA,
                                 password = password
