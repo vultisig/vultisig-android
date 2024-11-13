@@ -476,4 +476,9 @@
     <string name="insufficient_native_token"  translatable="false">Insufficient %1$s</string>
     <string name="swap_error_amount_too_low"  translatable="false">Swap Amount too low</string>
     <string name="swap_error_time_out"  translatable="false">Swap request timed out. Please try again</string>
+    <string name="keygen_verify_server_backup_caption" translatable="false">Enter the code received with your backup via email :</string>
+    <string name="keygen_verify_server_backup_code_hint" translatable="false">Enter code</string>
+    <string name="keygen_verify_server_backup_warning" translatable="false">This code verifies receiving the server backup via email</string>
+    <string name="keygen_verify_server_backup_title" translatable="false">Server backup verification</string>
+    <string name="keygen_verify_server_backup_invalid_code" translatable="false">Invalid code</string>
 </resources>

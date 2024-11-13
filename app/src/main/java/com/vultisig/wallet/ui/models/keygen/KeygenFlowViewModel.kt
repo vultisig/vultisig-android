@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
@@ -124,6 +125,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
     private val generateServerPartyId: GenerateServerPartyId,
     private val generateServiceName: GenerateServiceName
 ) : ViewModel() {
@@ -187,6 +189,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             encryption = encryption,
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
+            vaultMetadataRepo = vaultMetadataRepo,
         )
 
     init {

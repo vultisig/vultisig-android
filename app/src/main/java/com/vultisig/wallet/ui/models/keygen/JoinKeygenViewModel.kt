@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
@@ -80,6 +81,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -134,6 +136,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             encryption = encryption,
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
+            vaultMetadataRepo = vaultMetadataRepo,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
