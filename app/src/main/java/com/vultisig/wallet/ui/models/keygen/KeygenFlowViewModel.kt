@@ -55,8 +55,10 @@ import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -202,9 +204,11 @@ internal class KeygenFlowViewModel @Inject constructor(
         viewModelScope.launch {
             if (setupType == VaultSetupType.FAST) {
                 uiState.map { it.selection }
+                    .cancellable()
                     .collect {
                         if (it.size == 2) {
                             finishPeerDiscovery()
+                            cancel()
                         }
                     }
             }
