@@ -1505,6 +1505,28 @@ object Coins {
             priceProviderID = "osmosis",
             contractAddress = "",
             isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Terra,
+            ticker = "LUNA",
+            logo = "luna",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terra-luna-2",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.TerraClassic,
+            ticker = "LUNC",
+            logo = "lunc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terra-luna",
+            contractAddress = "",
+            isNativeToken = true,
         )
     )
 

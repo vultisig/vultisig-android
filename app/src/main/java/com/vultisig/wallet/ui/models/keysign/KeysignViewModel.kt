@@ -248,7 +248,7 @@ internal class KeysignViewModel(
                 solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Terra, Chain.TerraClassic -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
                 cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
@@ -338,10 +338,12 @@ internal class KeysignViewModel(
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis,
+            Chain.TerraClassic, Chain.Terra -> {
                 return CosmosHelper(
                     coinType = chain.coinType,
                     denom = chain.feeUnit,
+                    gasLimit = CosmosHelper.getChainGasLimit(chain),
                 ).getSignedTransaction(keysignPayload, signatures)
             }
 

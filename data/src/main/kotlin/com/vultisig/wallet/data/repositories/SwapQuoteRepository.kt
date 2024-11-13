@@ -362,7 +362,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.Solana, Chain.Polkadot, Chain.Dydx,
             Chain.CronosChain, Chain.ZkSync, Chain.Sui,
-            Chain.Ton, Chain.Osmosis -> emptySet()
+            Chain.Ton, Chain.Osmosis, Chain.Terra, Chain.TerraClassic -> emptySet()
         }
 
 

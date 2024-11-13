@@ -150,13 +150,7 @@ internal sealed class Destination(
         }
     }
 
-    data class ScanError(
-        val vaultId: String?,
-    ) : Destination(route = "scan_error?vault_id=$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "scan_error?vault_id={$ARG_VAULT_ID}"
-        }
-    }
+    data object ScanError : Destination(route = "scan_error")
 
     data class AddressBook(
         val chain: Chain? = null,

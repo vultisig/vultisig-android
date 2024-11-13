@@ -369,13 +369,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.ScanError.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
+            route = Destination.ScanError.route,
         ) {
             ScanQrErrorScreen()
         }

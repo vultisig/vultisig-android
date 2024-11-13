@@ -10,6 +10,7 @@ import java.text.NumberFormat
 import java.text.ParseException
 import java.util.Locale
 
+// FIXME: doesn't work for a lot of cases
 @Stable
 internal class SeparateNumberOutputTransformation : OutputTransformation {
 
