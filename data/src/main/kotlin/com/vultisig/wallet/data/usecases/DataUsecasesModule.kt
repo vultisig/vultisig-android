@@ -123,4 +123,16 @@ internal interface DataUsecasesModule {
     fun bindGetGlobalBackupReminderStatus(
         impl: IsGlobalBackupReminderRequiredUseCaseImpl
     ): IsGlobalBackupReminderRequiredUseCase
+
+    @Binds
+    @Singleton
+    fun bindIsVaultHasFastSignByIdUseCase(
+        impl: IsVaultHasFastSignByIdUseCaseImpl
+    ): IsVaultHasFastSignByIdUseCase
+
+    @Binds
+    @Singleton
+    fun bindIsVaultHasFastSignUseCase(
+        impl: IsVaultHasFastSignUseCaseImpl
+    ): IsVaultHasFastSignUseCase
 }

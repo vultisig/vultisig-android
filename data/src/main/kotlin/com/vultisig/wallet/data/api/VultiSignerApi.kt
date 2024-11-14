@@ -37,6 +37,11 @@ internal interface VultiSignerApi {
         publicKeyEcdsa: String,
     )
 
+    suspend fun verifyBackupCode(
+        publicKeyEcdsa: String,
+        code: String,
+    )
+
 }
 
 internal class VultiSignerApiImpl @Inject constructor(
@@ -46,7 +51,7 @@ internal class VultiSignerApiImpl @Inject constructor(
     override suspend fun joinKeygen(
         request: JoinKeygenRequestJson,
     ) {
-        http.post("https://api.vultisig.com/vault/create") {
+        http.post("$URL/create") {
             setBody(request)
         }.throwIfUnsuccessful()
     }
@@ -54,7 +59,7 @@ internal class VultiSignerApiImpl @Inject constructor(
     override suspend fun joinKeysign(
         requestJson: JoinKeysignRequestJson,
     ) {
-        http.post("https://api.vultisig.com/vault/sign") {
+        http.post("$URL/sign") {
             setBody(requestJson)
         }.throwIfUnsuccessful()
     }
@@ -62,7 +67,7 @@ internal class VultiSignerApiImpl @Inject constructor(
     override suspend fun joinReshare(
         request: JoinReshareRequestJson
     ) {
-        http.post("https://api.vultisig.com/vault/reshare") {
+        http.post("$URL/reshare") {
             setBody(request)
         }.throwIfUnsuccessful()
     }
@@ -72,14 +77,23 @@ internal class VultiSignerApiImpl @Inject constructor(
         publicKeyEcdsa: String,
         password: String,
     ) {
-        http.get("https://api.vultisig.com/vault/get/$publicKeyEcdsa") {
+        http.get("$URL/get/$publicKeyEcdsa") {
             header("x-password", Base64.encode(password.toByteArray(StandardCharsets.UTF_8)))
         }.throwIfUnsuccessful()
     }
 
     override suspend fun exist(publicKeyEcdsa: String) {
-        http.get("https://api.vultisig.com/vault/exist/$publicKeyEcdsa")
+        http.get("$URL/exist/$publicKeyEcdsa")
             .throwIfUnsuccessful()
+    }
+
+    override suspend fun verifyBackupCode(publicKeyEcdsa: String, code: String) {
+        http.get("$URL/verify/$publicKeyEcdsa/$code")
+            .throwIfUnsuccessful()
+    }
+
+    companion object {
+        private const val URL = "https://api.vultisig.com/vault"
     }
 
 }
