@@ -6,8 +6,12 @@ import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
+import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
-import com.vultisig.wallet.data.models.SplTokenDeserialized.*
+import com.vultisig.wallet.data.models.SplTokenDeserialized.Error
+import com.vultisig.wallet.data.models.SplTokenDeserialized.Result
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -22,9 +26,16 @@ import kotlinx.serialization.json.jsonObject
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
-import javax.inject.Singleton
 
-object BigDecimalSerializer : KSerializer<BigDecimal> {
+interface DefaultSerializer<T> : KSerializer<T> {
+    override fun serialize(encoder: Encoder, value: T) {
+        throw UnsupportedOperationException("Serialization is not implemented")
+    }
+}
+
+interface BigDecimalSerializer : DefaultSerializer<BigDecimal>
+
+class BigDecimalSerializerImpl @Inject constructor() : BigDecimalSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigDecimal",
         PrimitiveKind.DOUBLE
@@ -37,7 +48,9 @@ object BigDecimalSerializer : KSerializer<BigDecimal> {
         BigDecimal.valueOf(decoder.decodeDouble())
 }
 
-object BigIntegerSerializer : KSerializer<BigInteger> {
+interface BigIntegerSerializer : DefaultSerializer<BigInteger>
+
+class BigIntegerSerializerImpl @Inject constructor() : BigIntegerSerializer {
     override val descriptor = PrimitiveSerialDescriptor(
         "BigInteger",
         PrimitiveKind.DOUBLE
@@ -50,9 +63,14 @@ object BigIntegerSerializer : KSerializer<BigInteger> {
         BigInteger.valueOf(decoder.decodeLong())
 }
 
-@Singleton
-class SplTokenResponseJsonSerializer @Inject constructor(private val json: Json) :
-    KSerializer<SplTokenDeserialized> {
+
+interface SplTokenResponseJsonSerializer : DefaultSerializer<SplTokenDeserialized>
+
+
+class SplTokenResponseJsonSerializerImpl @Inject constructor(
+    private val json: Json,
+) :
+    SplTokenResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("SplTokenResponseJsonSerializer")
 
@@ -73,14 +91,13 @@ class SplTokenResponseJsonSerializer @Inject constructor(private val json: Json)
         }
     }
 
-    override fun serialize(encoder: Encoder, value: SplTokenDeserialized) {
-        throw UnsupportedOperationException("Serialization is not required")
-    }
 }
 
-@Singleton
-class THORChainSwapQuoteResponseJsonSerializer @Inject constructor(private val json: Json) :
-    KSerializer<THORChainSwapQuoteDeserialized> {
+interface ThorChainSwapQuoteResponseJsonSerializer :
+    DefaultSerializer<THORChainSwapQuoteDeserialized>
+
+class ThorChainSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
+    ThorChainSwapQuoteResponseJsonSerializer {
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("THORChainSwapQuoteResponseJsonSerializer")
 
@@ -98,15 +115,11 @@ class THORChainSwapQuoteResponseJsonSerializer @Inject constructor(private val j
             )
         }
     }
-
-    override fun serialize(encoder: Encoder, value: THORChainSwapQuoteDeserialized) {
-        throw UnsupportedOperationException("Serialization is not required")
-    }
 }
 
+interface KeysignResponseSerializer : DefaultSerializer<tss.KeysignResponse>
 
-
-object KeysignResponseSerializer : KSerializer<tss.KeysignResponse> {
+class KeysignResponseSerializerImpl @Inject constructor() : KeysignResponseSerializer {
     private val serializer = KeysignResponseSerializable.serializer()
     override val descriptor: SerialDescriptor = serializer.descriptor
 
@@ -118,5 +131,34 @@ object KeysignResponseSerializer : KSerializer<tss.KeysignResponse> {
     override fun deserialize(decoder: Decoder): tss.KeysignResponse {
         val surrogate: KeysignResponseSerializable = decoder.decodeSerializableValue(serializer)
         return surrogate.toOriginal()
+    }
+}
+
+
+interface CosmosThorChainResponseSerializer : DefaultSerializer<CosmosTHORChainAccountResponse>
+
+class CosmosThorChainResponseSerializerImpl @Inject constructor(
+    private val json: Json,
+) :
+    CosmosThorChainResponseSerializer {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("CosmosThorChainResponseSerializer")
+
+    override fun deserialize(decoder: Decoder): CosmosTHORChainAccountResponse {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        val isErrorResponse = (jsonObject.containsKey("message")
+                && jsonObject.containsKey("code"))
+
+        return if (isErrorResponse) {
+            CosmosTHORChainAccountResponse.Error(
+                json.decodeFromJsonElement<THORChainAccountErrorJson>(jsonObject)
+            )
+        } else {
+            CosmosTHORChainAccountResponse.Success(
+                json.decodeFromJsonElement<THORChainAccountJson>(jsonObject)
+            )
+        }
     }
 }
