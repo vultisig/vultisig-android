@@ -73,7 +73,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 enum class KeygenFlowState {
-    PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
+    PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR,
 }
 
 internal data class KeygenFlowUiModel(
@@ -321,7 +321,7 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    fun stopParticipantDiscovery() = viewModelScope.launch {
+    private suspend fun stopParticipantDiscovery() {
         participantDiscovery?.stop()
     }
 
@@ -543,7 +543,9 @@ internal class KeygenFlowViewModel @Inject constructor(
 
 
     override fun onCleared() {
-        stopParticipantDiscovery()
+        viewModelScope.launch {
+            stopParticipantDiscovery()
+        }
         super.onCleared()
     }
 }

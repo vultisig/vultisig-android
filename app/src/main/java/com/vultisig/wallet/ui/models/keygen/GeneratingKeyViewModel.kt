@@ -58,6 +58,7 @@ internal class GeneratingKeyViewModel(
     private val oldResharePrefix: String,
     private val password: String? = null,
     private val hint: String? = null,
+
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
@@ -232,17 +233,10 @@ internal class GeneratingKeyViewModel(
         service: ServiceImpl,
         keygenRequest: tss.KeygenRequest,
         tssKeyType: TssKeyType,
-    ): tss.KeygenResponse {
-        return withContext(Dispatchers.IO) {
-            when (tssKeyType) {
-                TssKeyType.ECDSA -> {
-                    return@withContext service.keygenECDSA(keygenRequest)
-                }
-
-                TssKeyType.EDDSA -> {
-                    return@withContext service.keygenEdDSA(keygenRequest)
-                }
-            }
+    ): tss.KeygenResponse = withContext(Dispatchers.IO) {
+        when (tssKeyType) {
+            TssKeyType.ECDSA -> service.keygenECDSA(keygenRequest)
+            TssKeyType.EDDSA -> service.keygenEdDSA(keygenRequest)
         }
     }
 
@@ -250,17 +244,10 @@ internal class GeneratingKeyViewModel(
         service: ServiceImpl,
         reshareRequest: tss.ReshareRequest,
         tssKeyType: TssKeyType,
-    ): tss.ReshareResponse {
-        return withContext(Dispatchers.IO) {
-            when (tssKeyType) {
-                TssKeyType.ECDSA -> {
-                    return@withContext service.reshareECDSA(reshareRequest)
-                }
-
-                TssKeyType.EDDSA -> {
-                    return@withContext service.resharingEdDSA(reshareRequest)
-                }
-            }
+    ): tss.ReshareResponse = withContext(Dispatchers.IO) {
+        when (tssKeyType) {
+            TssKeyType.ECDSA -> service.reshareECDSA(reshareRequest)
+            TssKeyType.EDDSA -> service.resharingEdDSA(reshareRequest)
         }
     }
 
