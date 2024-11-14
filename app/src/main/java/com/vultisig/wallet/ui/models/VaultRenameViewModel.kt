@@ -22,8 +22,14 @@ import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+internal data class VaultRenameUiModel(
+    val isLoading: Boolean = false,
+    val errorMessage: UiText? = null
+)
 
 
 @HiltViewModel
@@ -39,7 +45,14 @@ internal class VaultRenameViewModel @Inject constructor(
     private val vaultId: String = savedStateHandle.get<String>(ARG_VAULT_ID)!!
 
     private val vault = MutableStateFlow<Vault?>(null)
-    val errorMessageState = MutableStateFlow<UiText?>(null)
+
+    val uiState = MutableStateFlow(VaultRenameUiModel())
+    var isLoading = false
+        set(value) {
+            uiState.update {
+                it.copy(isLoading = value)
+            }
+        }
 
     val renameTextFieldState = TextFieldState()
 
@@ -54,7 +67,7 @@ internal class VaultRenameViewModel @Inject constructor(
 
     fun saveName() {
         viewModelScope.launch {
-            if (errorMessageState.value != null)
+            if (uiState.value.errorMessage != null)
                 return@launch
             vault.value?.let { vault ->
                 val newName = renameTextFieldState.text.toString()
@@ -64,12 +77,14 @@ internal class VaultRenameViewModel @Inject constructor(
                     )
                     return@launch
                 }
+                isLoading = true
                 val isNameAlreadyExist =
                     vaultRepository.getAll().any { it.name == newName }
                 if (isNameAlreadyExist) {
                     snackbarFlow.showMessage(
                         StringResource(R.string.vault_edit_this_name_already_exist).asString(context)
                     )
+                    isLoading = false
                     return@launch
                 }
                 vaultRepository.setVaultName(vault.id, newName)
@@ -77,14 +92,20 @@ internal class VaultRenameViewModel @Inject constructor(
                     Destination.Home(),
                     NavigationOptions(clearBackStack = true)
                 )
+                isLoading = false
             }
         }
     }
 
+
     fun validate() {
         viewModelScope.launch {
             val errorMessage = validateName(renameTextFieldState.text.toString())
-            errorMessageState.value = errorMessage
+            uiState.update {
+                it.copy(
+                    errorMessage = errorMessage
+                )
+            }
         }
     }
 

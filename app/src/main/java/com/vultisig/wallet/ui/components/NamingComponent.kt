@@ -32,6 +32,7 @@ internal fun NamingComponent(
     navHostController: NavHostController = rememberNavController(),
     inputTitle: String = "",
     errorText: UiText? = null,
+    isLoading: Boolean = false,
     onLostFocus: () -> Unit = {},
     onSave: () -> Unit = {}
 ) {
@@ -57,6 +58,7 @@ internal fun NamingComponent(
                         focusManager.clearFocus()
                         onSave()
                     },
+                    isLoading = isLoading,
                 )
             }
         },
