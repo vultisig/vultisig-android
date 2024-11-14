@@ -38,7 +38,6 @@ internal data class ImportFileState(
     val password: String? = null,
     val isPasswordObfuscated: Boolean = true,
     val passwordErrorHint: UiText? = null,
-    val passwordHint: UiText? = null,
 )
 
 internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*")
@@ -93,31 +92,15 @@ internal class ImportFileViewModel @Inject constructor(
                 saveToDb(fileContent, null)
             } catch (e: Exception) {
                 Timber.e(e)
-                val passwordHint = getPasswordHint(fileName)
                 uiModel.update {
                     it.copy(
                         showPasswordPrompt = true,
                         passwordErrorHint = null,
-                        passwordHint = passwordHint,
                     )
                 }
             }
 
         }
-    }
-
-    private suspend fun getPasswordHint(fileName: String?): UiText? {
-        if (fileName == null) return null
-
-        val passwordHintString =
-            vaultDataStoreRepository.readBackupHint(vaultFileName = fileName).first()
-
-        if (passwordHintString.isEmpty()) return null
-
-        return UiText.FormattedText(
-            R.string.import_file_password_hint_text,
-            listOf(passwordHintString)
-        )
     }
 
     private suspend fun saveToDb(fileContent: String, password: String?) {
@@ -186,5 +169,4 @@ internal class ImportFileViewModel @Inject constructor(
             it.copy(isPasswordObfuscated = !passwordVisibility)
         }
     }
-
 }
