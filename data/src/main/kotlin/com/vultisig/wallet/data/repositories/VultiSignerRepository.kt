@@ -29,6 +29,11 @@ interface VultiSignerRepository {
         publicKeyEcdsa: String,
     ): Boolean
 
+    suspend fun isBackupCodeValid(
+        publicKeyEcdsa: String,
+        code: String,
+    ): Boolean
+
 }
 
 internal class VultiSignerRepositoryImpl @Inject constructor(
@@ -72,4 +77,12 @@ internal class VultiSignerRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun isBackupCodeValid(publicKeyEcdsa: String, code: String): Boolean {
+        return try {
+            api.verifyBackupCode(publicKeyEcdsa, code)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

@@ -73,8 +73,8 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindAvailableTokenBalanceUseCase(
-        impl: AvailableTokenBalanceUseCaseImpl
-    ): AvailableTokenBalanceUseCase
+        impl: GetAvailableTokenBalanceUseCaseImpl
+    ): GetAvailableTokenBalanceUseCase
 
     @Binds
     @Singleton
@@ -96,8 +96,43 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindGenerateServerPartyId(
+        impl: GenerateServerPartyIdImpl
+    ): GenerateServerPartyId
+
+    @Binds
+    @Singleton
+    fun bindGenerateServiceName(
+        impl: GenerateServiceNameImpl
+    ): GenerateServiceName
+
+    @Binds
+    @Singleton
     fun bindInitializeThorChainNetworkIdUseCase(
         impl: InitializeThorChainNetworkIdUseCaseImpl
     ): InitializeThorChainNetworkIdUseCase
 
+    @Binds
+    @Singleton
+    fun bindNeverShowGlobalBackupReminder(
+        impl: NeverShowGlobalBackupReminderUseCaseImpl
+    ): NeverShowGlobalBackupReminderUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetGlobalBackupReminderStatus(
+        impl: IsGlobalBackupReminderRequiredUseCaseImpl
+    ): IsGlobalBackupReminderRequiredUseCase
+
+    @Binds
+    @Singleton
+    fun bindIsVaultHasFastSignByIdUseCase(
+        impl: IsVaultHasFastSignByIdUseCaseImpl
+    ): IsVaultHasFastSignByIdUseCase
+
+    @Binds
+    @Singleton
+    fun bindIsVaultHasFastSignUseCase(
+        impl: IsVaultHasFastSignUseCaseImpl
+    ): IsVaultHasFastSignUseCase
 }

@@ -12,7 +12,7 @@
     <string name="vault_settings_reshare_title">Ponovno podijeli</string>
     <string name="vault_settings_reshare_subtitle">Ponovno podijelite sef s novim odborom</string>
     <string name="vault_settings_delete_title">Izbriši</string>
-    <string name="join_keysign_wrong_vault">Nemate potreban trezor za Keysign</string>
+    <string name="join_keysign_missing_required_vault">Nemate potreban trezor za Keysign</string>
     <string name="choose_tokens">Odaberite tokene</string>
     <string name="send_screen_title">POŠALJI</string>
     <string name="send_from_address">Od</string>
@@ -35,7 +35,6 @@
     <string name="settings_screen_title">Postavke</string>
     <string name="language_setting_screen_title">Jezik</string>
     <string name="faq_setting_screen_title">ČPP</string>
-    <string name="scan_qr_default_title">Skeniraj</string>
     <string name="verify_transaction_screen_title">Provjeri</string>
     <string name="verify_transaction_from_title">Od</string>
     <string name="verify_transaction_to_title">Do</string>
@@ -202,7 +201,6 @@
     <string name="vault_settings_delete_vault_name">Ime sefa:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA ključ:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA ključ:</string>
-    <string name="vault_settings_delete_vault_type">Vrsta sefa:</string>
     <string name="vault_settings_delete_vault_id">ID uređaja:</string>
     <string name="circular_progress_indicator_done">Gotovo</string>
     <string name="verify_transaction_memo_title">dopis</string>
@@ -284,8 +282,6 @@
     <string name="setup_1_device_of_vault">Potreban vam je još 1 uređaj za uparivanje</string>
     <string name="setup_2_device_of_vault">Potrebna su vam još 2 uređaja za uparivanje</string>
     <string name="setup_m_device_of_vault">Možete upariti onoliko uređaja koliko želite</string>
-    <string name="enable_chain_button">Omogući lanac</string>
-    <string name="enable_chain_warning">Lanac nije odabran. Omogućite ga u odabiru lanca.</string>
     <string name="s_of_s">%1$s od %2$s</string>
     <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>

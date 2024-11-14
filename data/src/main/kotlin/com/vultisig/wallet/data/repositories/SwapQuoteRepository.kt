@@ -7,12 +7,14 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
+import com.vultisig.wallet.data.models.swapAssetName
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -78,7 +80,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        SwapException.handleSwapException(oneInchQuote.error)
+        oneInchQuote.error?.let { throw SwapException.handleSwapException(it) }
         return oneInchQuote
     }
 
@@ -91,7 +93,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): SwapQuote {
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
-        val mayaQuote = mayaChainApi.getSwapQuotes(
+        val mayaQuoteResult = mayaChainApi.getSwapQuotes(
             address = dstAddress,
             fromAsset = srcToken.swapAssetName(),
             toAsset = dstToken.swapAssetName(),
@@ -100,24 +102,33 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        SwapException.handleSwapException(mayaQuote.error)
+        when (mayaQuoteResult) {
+            is THORChainSwapQuoteDeserialized.Error ->
+                throw SwapException.handleSwapException(mayaQuoteResult.error.message)
 
-        val tokenFees = mayaQuote.fees.total
-            .convertToTokenValue(dstToken)
+            is THORChainSwapQuoteDeserialized.Result -> {
+                val mayaQuote = mayaQuoteResult.data
 
-        val expectedDstTokenValue = mayaQuote.expectedAmountOut
-            .convertToTokenValue(dstToken)
+                mayaQuote.error?.let { throw SwapException.handleSwapException(it) }
 
-        val recommendedMinTokenValue = if (srcToken.chain != Chain.MayaChain) {
-            mayaQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
-        } else tokenValue
+                val tokenFees = mayaQuote.fees.total
+                    .convertToTokenValue(dstToken)
 
-        return SwapQuote.MayaChain(
-            expectedDstValue = expectedDstTokenValue,
-            fees = tokenFees,
-            data = mayaQuote,
-            recommendedMinTokenValue = recommendedMinTokenValue,
-        )
+                val expectedDstTokenValue = mayaQuote.expectedAmountOut
+                    .convertToTokenValue(dstToken)
+
+                val recommendedMinTokenValue = if (srcToken.chain != Chain.MayaChain) {
+                    mayaQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
+                } else tokenValue
+
+                return SwapQuote.MayaChain(
+                    expectedDstValue = expectedDstTokenValue,
+                    fees = tokenFees,
+                    data = mayaQuote,
+                    recommendedMinTokenValue = recommendedMinTokenValue,
+                )
+            }
+        }
     }
 
     override suspend fun getSwapQuote(
@@ -138,22 +149,32 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             isAffiliate = isAffiliate,
         )
 
-        SwapException.handleSwapException(thorQuote.error)
+        when (thorQuote) {
+            is THORChainSwapQuoteDeserialized.Error -> {
+                throw SwapException.handleSwapException(thorQuote.error.message)
+            }
 
-        val tokenFees = thorQuote.fees.total
-            .convertToTokenValue(dstToken)
+            is THORChainSwapQuoteDeserialized.Result -> {
+                thorQuote.data.error?.let { throw SwapException.handleSwapException(it) }
+                val tokenFees = thorQuote.data.fees.total
+                    .convertToTokenValue(dstToken)
 
-        val expectedDstTokenValue = thorQuote.expectedAmountOut
-            .convertToTokenValue(dstToken)
+                val expectedDstTokenValue = thorQuote.data.expectedAmountOut
+                    .convertToTokenValue(dstToken)
 
-        val recommendedMinTokenValue = thorQuote.recommendedMinAmountIn.convertToTokenValue(srcToken)
+                val recommendedMinTokenValue = thorQuote.data.recommendedMinAmountIn.convertToTokenValue(srcToken)
 
-        return SwapQuote.ThorChain(
-            expectedDstValue = expectedDstTokenValue,
-            recommendedMinTokenValue = recommendedMinTokenValue,
-            fees = tokenFees,
-            data = thorQuote,
-        )
+                return SwapQuote.ThorChain(
+                    expectedDstValue = expectedDstTokenValue,
+                    recommendedMinTokenValue = recommendedMinTokenValue,
+                    fees = tokenFees,
+                    data = thorQuote.data,
+                )
+            }
+        }
+
+
+
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -180,7 +201,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAddress = srcAddress,
             toAddress = dstAddress,
         )
-        SwapException.handleSwapException(liFiQuote.message)
+        liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
 
         return OneInchSwapQuoteJson(
             dstAmount = liFiQuote.estimate.toAmount,
@@ -234,8 +255,17 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
         if (hasNotProvider(srcToken, dstToken)) return null
-        return srcToken.swapProviders.intersect(dstToken.swapProviders).firstOrNull()
+        return srcToken.swapProviders
+            .intersect(dstToken.swapProviders)
+            .firstOrNull {
+                if (isCrossChainSwap(srcToken, dstToken))
+                    it != SwapProvider.ONEINCH
+                else true
+            }
     }
+
+    private fun isCrossChainSwap(srcToken: Coin, dstToken: Coin) =
+        srcToken.chain != dstToken.chain
 
     private fun hasNotProvider(
         srcToken: Coin,
@@ -340,7 +370,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.Solana, Chain.Polkadot, Chain.Dydx,
             Chain.CronosChain, Chain.ZkSync, Chain.Sui,
-            Chain.Ton, Chain.Osmosis -> emptySet()
+            Chain.Ton, Chain.Osmosis, Chain.Terra, Chain.TerraClassic -> emptySet()
         }
 
 
@@ -349,35 +379,4 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         private const val FIXED_MAYA_SWAP_DECIMALS = 8
     }
 
-}
-
-private fun Chain.swapAssetName(): String {
-    // TODO that seems to differ just for thorChain
-    return when (this) {
-        Chain.ThorChain -> "THOR"
-        Chain.Ethereum -> "ETH"
-        Chain.Avalanche -> "AVAX"
-        Chain.BscChain -> "BSC"
-        Chain.Bitcoin -> "BTC"
-        Chain.BitcoinCash -> "BCH"
-        Chain.Litecoin -> "LTC"
-        Chain.Dogecoin -> "DOGE"
-        Chain.GaiaChain -> "GAIA"
-        Chain.Kujira -> "KUJI"
-        Chain.Solana -> "SOL"
-        Chain.Dash -> "DASH"
-        Chain.MayaChain -> "MAYA"
-        Chain.Arbitrum -> "ARB"
-        Chain.Base -> "BASE"
-        Chain.Optimism -> "OP"
-        Chain.Polygon -> "POL"
-        Chain.Blast -> "BLAST"
-        Chain.CronosChain -> "CRO"
-        Chain.Polkadot -> "DOT"
-        Chain.Dydx -> "DYDX"
-        Chain.ZkSync -> "ZK"
-        Chain.Sui -> "SUI"
-        Chain.Ton -> "TON"
-        Chain.Osmosis -> "OSMO"
-    }
 }

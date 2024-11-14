@@ -12,13 +12,16 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
@@ -32,19 +35,18 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
-import com.vultisig.wallet.data.usecases.AvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
-import com.vultisig.wallet.ui.models.swap.updateSrc
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -92,6 +94,7 @@ internal data class SendFormUiModel(
     val hasMemo: Boolean = false,
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
+    val isLoading: Boolean = false,
 )
 
 internal data class SendSrc(
@@ -124,35 +127,36 @@ internal class SendFormViewModel @Inject constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
     private val addressParserRepository: AddressParserRepository,
-    private val getAvailableTokenBalance: AvailableTokenBalanceUseCase,
+    private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val advanceGasUiRepository: AdvanceGasUiRepository,
 ) : ViewModel() {
 
+    val uiState = MutableStateFlow(SendFormUiModel())
+
+    val addressFieldState = TextFieldState()
+    val tokenAmountFieldState = TextFieldState()
+    val fiatAmountFieldState = TextFieldState()
+    val memoFieldState = TextFieldState()
+
     private var vaultId: String? = null
 
-    fun setAddressFromQrCode(qrCode: String?) {
-        if (qrCode != null) {
-            addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
-            Chain.entries.find { chain ->
-                chainAccountAddressRepository.isValid(chain, qrCode)
-            }?.let { chain ->
-                this@SendFormViewModel.chain.value = chain
-                selectedTokenId.value = null
-            }
-        }
-    }
+    private val selectedToken = MutableStateFlow<Coin?>(null)
 
-    private val addresses = MutableStateFlow<List<Address>>(emptyList())
+    private val selectedTokenValue: Coin?
+        get() = selectedToken.value
 
-    private val selectedTokenId = MutableStateFlow<String?>(null)
-
-    private val chain = MutableStateFlow<Chain?>(null)
-
-    private val selectedSrc = MutableStateFlow<SendSrc?>(null)
+    private val accounts = MutableStateFlow(emptyList<Account>())
 
     private val selectedAccount: Account?
-        get() = selectedSrc.value?.account
+        get() {
+            val selectedTokenValue = selectedTokenValue
+            val accounts = accounts.value
+            return accounts.find { it.token.id == selectedTokenValue?.id }
+        }
+
+    private var preSelectTokenJob: Job? = null
+    private var loadAccountsJob: Job? = null
 
     private val appCurrency = appCurrencyRepository
         .currency
@@ -169,22 +173,13 @@ internal class SendFormViewModel @Inject constructor(
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
     private var maxAmount = BigDecimal.ZERO
 
-    private var isSelectedStartingToken = false
-    private var lastToken = ""
-    private var lastFiat = ""
-
-    val addressFieldState = TextFieldState()
-    val tokenAmountFieldState = TextFieldState()
-    val fiatAmountFieldState = TextFieldState()
-    val memoFieldState = TextFieldState()
-
-    val uiState = MutableStateFlow(SendFormUiModel())
+    private var lastTokenValueUserInput = ""
+    private var lastFiatValueUserInput = ""
 
 
     init {
         loadSelectedCurrency()
         collectSelectedAccount()
-        collectSelectedToken()
         collectAmountChanges()
         calculateGasFees()
         calculateSpecific()
@@ -192,22 +187,22 @@ internal class SendFormViewModel @Inject constructor(
     }
 
     fun loadData(
-        vaultId: String,
-        chainId: String?,
-        startWithTokenId: String?,
+        vaultId: VaultId,
+        preSelectedChainId: ChainId?,
+        preSelectedTokenId: TokenId?,
     ) {
         memoFieldState.clearText()
 
-        if (!isSelectedStartingToken) {
-            isSelectedStartingToken = true
-            selectedTokenId.value = startWithTokenId
-            chain.value = chainId?.let(Chain::fromRaw)
-        }
-
         if (this.vaultId != vaultId) {
             this.vaultId = vaultId
-            loadTokens(vaultId)
+
+            loadAccounts(vaultId)
         }
+
+        preSelectToken(
+            preSelectedChainIds = listOf(preSelectedChainId),
+            preSelectedTokenId = preSelectedTokenId,
+        )
     }
 
     fun validateDstAddress() = viewModelScope.launch {
@@ -222,7 +217,7 @@ internal class SendFormViewModel @Inject constructor(
         uiState.update { it.copy(tokenAmountError = errorText) }
     }
 
-    fun selectToken() {
+    fun openTokenSelection() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
             navigator.navigate(
@@ -231,10 +226,46 @@ internal class SendFormViewModel @Inject constructor(
                     targetArg = Destination.SelectToken.ARG_SELECTED_TOKEN_ID,
                 )
             )
-            requestResultRepository.request<Coin?>(Destination.SelectToken.ARG_SELECTED_TOKEN_ID)
-                ?.let {
-                    selectedTokenId.value = it.id
+
+            val tokenSelectionResult = requestResultRepository
+                .request<Coin?>(Destination.SelectToken.ARG_SELECTED_TOKEN_ID)
+
+            if (tokenSelectionResult != null) {
+                selectToken(tokenSelectionResult)
+            }
+        }
+    }
+
+    fun setAddressFromQrCode(qrCode: String?) {
+        if (qrCode != null) {
+            Timber.d("setAddressFromQrCode(address = $qrCode)")
+
+            addressFieldState.setTextAndPlaceCursorAtEnd(qrCode)
+
+            val vaultId = vaultId
+            if (vaultId != null) {
+                val chainValidForAddress = Chain.entries.filter { chain ->
+                    chainAccountAddressRepository.isValid(chain, qrCode)
                 }
+
+                val selectedChain = selectedTokenValue?.chain
+
+                if (
+                    chainValidForAddress.isNotEmpty() &&
+                    !chainValidForAddress.contains(selectedChain)
+                ) {
+                    Timber.d(
+                        "Address from QR has a different chain " +
+                                "than selected token, switching. $chainValidForAddress != $selectedChain"
+                    )
+
+                    preSelectToken(
+                        preSelectedChainIds = chainValidForAddress.map { it.id },
+                        preSelectedTokenId = null,
+                        forcePreselection = true
+                    )
+                }
+            }
         }
     }
 
@@ -253,34 +284,22 @@ internal class SendFormViewModel @Inject constructor(
             navigator.navigate(
                 Destination.AddressBook(
                     requestId = REQUEST_ADDRESS_ID,
-                    chain = selectedSrc.value?.address?.chain
-                        ?: chain.value,
+                    chain = selectedTokenValue?.chain,
                 )
             )
             val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
-            selectedSrc.value = null
-            selectedTokenId.value = null
-            chain.value = address.chain
+
+            val vaultId = vaultId
+            val selectedChain = address.chain
+            if (vaultId != null && selectedTokenValue?.chain != selectedChain) {
+                preSelectToken(
+                    preSelectedChainIds = listOf(selectedChain.id),
+                    preSelectedTokenId = null,
+                    forcePreselection = true
+                )
+            }
+
             setOutputAddress(address.address)
-        }
-    }
-
-    fun chooseMaxTokenAmount() {
-        val selectedAccount = selectedAccount ?: return
-        val gasFee = gasFee.value ?: return
-        val chain = selectedAccount.token.chain
-        val specific = specific.value?.blockChainSpecific
-
-        viewModelScope.launch {
-            val gasLimit = calculateGasLimit(chain, specific)
-
-            val max = getAvailableTokenBalance(
-                selectedAccount,
-                gasFee.value.multiply(gasLimit)
-            )?.decimal ?: BigDecimal.ZERO
-
-            maxAmount = max
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(max.toPlainString())
         }
     }
 
@@ -292,38 +311,41 @@ internal class SendFormViewModel @Inject constructor(
         ethGasSettings.value = settings
     }
 
+    fun chooseMaxTokenAmount() {
+        viewModelScope.launch {
+            val max = fetchPercentageOfAvailableBalance(1f)
+
+            maxAmount = max
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
+                max?.toPlainString() ?: ""
+            )
+        }
+    }
+
     fun choosePercentageAmount(percentage: Float) {
-        val selectedAccount = selectedAccount ?: return
-        val gasFee = gasFee.value ?: return
+        viewModelScope.launch {
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
+                fetchPercentageOfAvailableBalance(percentage)?.toPlainString() ?: ""
+            )
+        }
+    }
+
+    private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal? {
+        val selectedAccount = selectedAccount ?: return null
+        val gasFee = gasFee.value ?: return null
         val chain = selectedAccount.token.chain
 
         val specific = specific.value?.blockChainSpecific
 
-        viewModelScope.launch {
-            val gasLimit = calculateGasLimit(chain, specific)
-            val availableTokenBalance = getAvailableTokenBalance(
-                selectedAccount,
-                gasFee.value.multiply(gasLimit)
-            )
+        val gasLimit = calculateGasLimit(chain, specific)
+        val availableTokenBalance = getAvailableTokenBalance(
+            selectedAccount,
+            gasFee.value.multiply(gasLimit)
+        )
 
-            val tokenValue = availableTokenBalance?.copy(
-                value = (BigDecimal(availableTokenBalance.value) * percentage.toBigDecimal()).toBigInteger()
-            )
-
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(
-                tokenValue?.decimal?.toPlainString() ?: ""
-            )
-        }
-
-    }
-
-    private fun calculateGasLimit(
-        chain: Chain,
-        specific: BlockChainSpecific?,
-    ): BigInteger = if (chain.standard == TokenStandard.EVM && specific != null) {
-        (specific as BlockChainSpecific.Ethereum).gasLimit
-    } else {
-        BigInteger.valueOf(1)
+        return availableTokenBalance?.copy(
+            value = (BigDecimal(availableTokenBalance.value) * percentage.toBigDecimal()).toBigInteger()
+        )?.decimal
     }
 
     fun dismissError() {
@@ -332,6 +354,7 @@ internal class SendFormViewModel @Inject constructor(
 
     fun send() {
         viewModelScope.launch {
+            showLoading()
             try {
                 val vaultId = vaultId
                     ?: throw InvalidTransactionDataException(
@@ -407,6 +430,7 @@ internal class SendFormViewModel @Inject constructor(
                         isSwap = false,
                         isMaxAmountEnabled = isMaxAmount,
                         isDeposit = false,
+                        dstAddress = dstAddress
                     )
                     .let {
                         val ethSettings = ethGasSettings.value
@@ -440,18 +464,25 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     }
                 } else {
-                    val nativeTokenAccount = selectedSrc.value?.address?.accounts
-                        ?.find { it.token.isNativeToken }
+                    val nativeTokenAccount = accounts.value
+                        .find { it.token.isNativeToken && it.token.chain == chain }
                     val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
                         ?: throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_no_token)
                         )
 
                     if (selectedTokenValue.value < tokenAmountInt
-                        || nativeTokenValue < gasFee.value
                     ) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    } else if (nativeTokenValue < gasFee.value
+                    ) {
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(
+                                R.string.insufficient_native_token,
+                                listOf(nativeTokenAccount.token.ticker)
+                            )
                         )
                     }
                 }
@@ -507,51 +538,109 @@ internal class SendFormViewModel @Inject constructor(
                 )
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
+            } finally {
+                hideLoading()
             }
         }
+    }
+
+    private fun hideLoading() {
+        uiState.update {
+            it.copy(
+                isLoading = false
+            )
+        }
+    }
+
+    private fun showLoading() {
+        uiState.update {
+            it.copy(isLoading = true)
+        }
+    }
+
+    private fun selectToken(token: Coin) {
+        Timber.d("selectToken(token = $token)")
+
+        selectedToken.value = token
+    }
+
+    private fun calculateGasLimit(
+        chain: Chain,
+        specific: BlockChainSpecific?,
+    ): BigInteger = if (chain.standard == TokenStandard.EVM && specific != null) {
+        (specific as BlockChainSpecific.Ethereum).gasLimit
+    } else {
+        BigInteger.valueOf(1)
     }
 
     private fun showError(text: UiText) {
         uiState.update { it.copy(errorText = text) }
     }
 
-    private fun loadTokens(vaultId: String) {
-        viewModelScope.launch {
+    private fun loadAccounts(vaultId: VaultId) {
+        loadAccountsJob?.cancel()
+        loadAccountsJob = viewModelScope.launch {
             accountsRepository.loadAddresses(vaultId)
-                .catch {
-                    // TODO handle error
-                    Timber.e(it)
-                }.collect(addresses)
+                .map { addrs -> addrs.flatMap { it.accounts } }
+                .collect(accounts)
         }
     }
 
-    private fun collectSelectedToken() {
-        viewModelScope.launch {
-            combine(
-                addresses,
-                selectedTokenId,
-                chain,
-            ) { addresses, selectedTokenId, chain ->
-                try {
-                    selectedSrc.updateSrc(selectedTokenId, addresses, chain)
-                    this@SendFormViewModel.selectedTokenId.value =
-                        selectedSrc.value?.account?.token?.id
-                } catch (e: NoSuchElementException) {
-                    navigator.navigate(
-                        Destination.ScanError(vaultId),
-                        opts = NavigationOptions(popUpTo = Destination.Home().route),
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
+    private fun preSelectToken(
+        preSelectedChainIds: List<ChainId?>,
+        preSelectedTokenId: TokenId?,
+        forcePreselection: Boolean = false,
+    ) {
+        Timber.d("preSelectToken($preSelectedChainIds, $preSelectedTokenId, $forcePreselection)")
+
+        preSelectTokenJob?.cancel()
+        preSelectTokenJob = viewModelScope.launch {
+            accounts.collect { accounts ->
+                val preSelectedToken = findPreselectedToken(
+                    accounts, preSelectedChainIds, preSelectedTokenId
+                )
+
+                Timber.d("Found a new token to pre select $preSelectedToken")
+
+                // if user hasn't yet selected any token, preselect found token
+                if ((forcePreselection || selectedTokenValue == null) && preSelectedToken != null) {
+                    selectToken(preSelectedToken)
                 }
-            }.collect()
+            }
         }
+    }
+
+    /**
+     * Returns first token found for tokenId or chainId or first token it all list,
+     * can return null if there's no tokens in the vault
+     */
+    private fun findPreselectedToken(
+        accounts: List<Account>,
+        preSelectedChainIds: List<ChainId?>,
+        preSelectedTokenId: TokenId?,
+    ): Coin? {
+        var searchByChainResult: Coin? = null
+
+        for (account in accounts) {
+            val accountToken = account.token
+            if (accountToken.id == preSelectedTokenId) {
+                // if we find token by id, return it asap
+                return accountToken
+            }
+            if (searchByChainResult == null && preSelectedChainIds.contains(accountToken.chain.id)) {
+                // if we find token by chain, remember it and return later if nothing else found
+                searchByChainResult = accountToken
+            }
+        }
+
+        // if user selected none, or nothing was found, select the first token
+        return searchByChainResult
+            ?: accounts.firstOrNull()?.token
     }
 
     private fun calculateGasFees() {
         viewModelScope.launch {
-            selectedSrc
-                .map { it?.address }
+            selectedToken
                 .filterNotNull()
                 .map {
                     gasFeeRepository.getGasFee(it.chain, it.address)
@@ -573,21 +662,19 @@ internal class SendFormViewModel @Inject constructor(
     private fun calculateSpecific() {
         viewModelScope.launch {
             combine(
-                selectedSrc.filterNotNull(),
+                selectedToken.filterNotNull(),
                 gasFee.filterNotNull(),
-            ) { selectedSrc, gasFee ->
-                val selectedAccount = selectedSrc.account
-                val chain = selectedAccount.token.chain
-                val selectedToken = selectedAccount.token
-                val srcAddress = selectedAccount.token.address
+            ) { token, gasFee ->
+                val chain = token.chain
+                val srcAddress = token.address
                 advanceGasUiRepository.updateTokenStandard(
-                    selectedToken.chain.standard
+                    token.chain.standard
                 )
                 try {
                     val spec = blockChainSpecificRepository.getSpecific(
                         chain,
                         srcAddress,
-                        selectedToken,
+                        token,
                         gasFee,
                         isSwap = false,
                         isMaxAmountEnabled = false,
@@ -611,7 +698,7 @@ internal class SendFormViewModel @Inject constructor(
                                 BigInteger.valueOf(1)
                             },
                             gasFee = gasFee,
-                            selectedToken = selectedToken,
+                            selectedToken = token,
                         )
                     )
 
@@ -649,23 +736,37 @@ internal class SendFormViewModel @Inject constructor(
 
     private fun collectSelectedAccount() {
         viewModelScope.launch {
-            selectedSrc
-                .filterNotNull()
-                .map { src ->
-                    val address = src.address.address
-                    val uiModel = accountToTokenBalanceUiModelMapper.map(src)
-                    val showGasFee = (selectedAccount?.token?.allowZeroGas() == false)
-                    val hasMemo = src.account.token.isNativeToken
-                    advanceGasUiRepository.updateTokenStandard(src.account.token.chain.standard)
-                    uiState.update {
-                        it.copy(
-                            from = address,
-                            selectedCoin = uiModel,
-                            showGasFee = showGasFee,
-                            hasMemo = hasMemo,
-                        )
-                    }
-                }.collect()
+            combine(
+                selectedToken.filterNotNull(),
+                accounts,
+            ) { token, accounts ->
+                val address = token.address
+                val showGasFee = !token.allowZeroGas()
+                val hasMemo = token.isNativeToken
+
+                val uiModel = accountToTokenBalanceUiModelMapper.map(SendSrc(
+                    Address(
+                        chain = token.chain,
+                        address = address,
+                        accounts = accounts,
+                    ),
+                    accounts.find { it.token.id == token.id } ?: Account(
+                        token = token,
+                        tokenValue = null,
+                        fiatValue = null,
+                    )
+                ))
+
+                advanceGasUiRepository.updateTokenStandard(token.chain.standard)
+                uiState.update {
+                    it.copy(
+                        from = address,
+                        selectedCoin = uiModel,
+                        showGasFee = showGasFee,
+                        hasMemo = hasMemo,
+                    )
+                }
+            }.collect()
         }
     }
 
@@ -677,22 +778,22 @@ internal class SendFormViewModel @Inject constructor(
             ) { tokenFieldValue, fiatFieldValue ->
                 val tokenString = tokenFieldValue.toString()
                 val fiatString = fiatFieldValue.toString()
-                if (lastToken != tokenString) {
+                if (lastTokenValueUserInput != tokenString) {
                     val fiatValue = convertValue(tokenString) { value, price, token ->
                         value.multiply(price)
                     } ?: return@combine
 
-                    lastToken = tokenString
-                    lastFiat = fiatValue
+                    lastTokenValueUserInput = tokenString
+                    lastFiatValueUserInput = fiatValue
 
                     fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
-                } else if (lastFiat != fiatString) {
+                } else if (lastFiatValueUserInput != fiatString) {
                     val tokenValue = convertValue(fiatString) { value, price, token ->
                         value.divide(price, token.decimal, RoundingMode.HALF_UP)
                     } ?: return@combine
 
-                    lastToken = tokenValue
-                    lastFiat = fiatString
+                    lastTokenValueUserInput = tokenValue
+                    lastFiatValueUserInput = fiatString
 
                     tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
                 }
@@ -711,7 +812,7 @@ internal class SendFormViewModel @Inject constructor(
         val decimalValue = value.toBigDecimalOrNull()
 
         return if (decimalValue != null) {
-            val selectedToken = selectedAccount?.token
+            val selectedToken = selectedTokenValue
                 ?: return null
 
             val price = try {
@@ -734,15 +835,8 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private suspend fun validateDstAddress(dstAddress: String): UiText? {
-        val selectedAccount = selectedAccount
-            ?: return UiText.StringResource(R.string.send_error_no_token)
-        val chain = selectedAccount.token.chain
-        if (
-            dstAddress.isBlank() ||
-            !(chainAccountAddressRepository.isValid(chain, dstAddress) ||
-                    addressParserRepository.isEnsNameService(dstAddress))
-        )
+    private fun validateDstAddress(dstAddress: String): UiText? {
+        if (dstAddress.isBlank())
             return UiText.StringResource(R.string.send_error_no_address)
         return null
     }

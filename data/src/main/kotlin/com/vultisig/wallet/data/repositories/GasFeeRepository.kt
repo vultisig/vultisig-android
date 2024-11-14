@@ -73,10 +73,18 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 )
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Osmosis -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Osmosis, Chain.Terra -> {
                 val nativeToken = tokenRepository.getNativeToken(chain.id)
                 TokenValue(
                     value = 7500.toBigInteger(),
+                    unit = chain.feeUnit,
+                    decimals = nativeToken.decimal,
+                )
+            }
+            Chain.TerraClassic -> {
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
+                TokenValue(
+                    value = 10000000L.toBigInteger(),
                     unit = chain.feeUnit,
                     decimals = nativeToken.decimal,
                 )

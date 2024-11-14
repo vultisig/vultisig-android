@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -25,6 +26,7 @@ import javax.inject.Inject
 internal data class KeysignPasswordUiModel(
     val isPasswordVisible: Boolean = false,
     val passwordError: UiText? = null,
+    val passwordHint: UiText? = null,
 )
 
 @HiltViewModel
@@ -33,6 +35,7 @@ internal class KeysignPasswordViewModel @Inject constructor(
     private val navigator: Navigator<SendDst>,
     private val vultiSignerRepository: VultiSignerRepository,
     private val vaultRepository: VaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
 
     private val transactionRepository: TransactionRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
@@ -82,11 +85,13 @@ internal class KeysignPasswordViewModel @Inject constructor(
                         )
                     )
                 } else {
+                    val passwordHint = getPasswordHint(vaultId)
                     state.update {
                         it.copy(
                             passwordError = UiText.StringResource(
                                 R.string.keysign_password_incorrect_password
-                            )
+                            ),
+                            passwordHint = passwordHint
                         )
                     }
                 }
@@ -94,6 +99,19 @@ internal class KeysignPasswordViewModel @Inject constructor(
         } else {
             verifyPassword()
         }
+    }
+
+    private suspend fun getPasswordHint(vaultId: String): UiText? {
+
+        val passwordHintString =
+            vaultDataStoreRepository.readFastSignHint(vaultId = vaultId).first()
+
+        if (passwordHintString.isEmpty()) return null
+
+        return UiText.FormattedText(
+            R.string.import_file_password_hint_text,
+            listOf(passwordHintString)
+        )
     }
 
     // FIXME forgive me god, this is terrible, but i need this asap;

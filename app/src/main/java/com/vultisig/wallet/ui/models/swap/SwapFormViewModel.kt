@@ -815,6 +815,18 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.SameAssets ->
                                 UiText.StringResource(R.string.swap_screen_same_asset_error_message)
+
+                            is SwapException.UnkownSwapError ->
+                                UiText.DynamicString(e.message ?: "Unknown error")
+
+                            is SwapException.InsufficentSwapAmount ->
+                                UiText.StringResource(R.string.swap_error_amount_too_low)
+
+                            is SwapException.SwapRouteNotAvailable ->
+                                UiText.StringResource(R.string.swap_route_not_available)
+
+                            is SwapException.TimeOut ->
+                                UiText.StringResource(R.string.swap_error_time_out)
                         }
                         uiState.update {
                             it.copy(

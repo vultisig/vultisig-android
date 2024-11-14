@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.models
 
 import wallet.core.jni.CoinType
 
+typealias TokenId = String
+
 data class Coin(
     val chain: Chain,
     val ticker: String,
@@ -13,7 +15,7 @@ data class Coin(
     val contractAddress: String,
     val isNativeToken: Boolean,
 ) {
-    val id: String
+    val id: TokenId
         get() = "${ticker}-${chain.id}"
 
     val coinType: CoinType
@@ -514,6 +516,72 @@ object Coins {
             isNativeToken = false,
         ),
         solana,
+        Coin(
+            chain = Chain.Solana,
+            ticker = "JUP",
+            logo = "jup",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "jupiter-exchange-solana",
+            contractAddress = "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Solana,
+            ticker = "WIF",
+            logo = "wif",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "dogwifcoin",
+            contractAddress = "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Solana,
+            ticker = "PYTH",
+            logo = "pyth",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "pyth-network",
+            contractAddress = "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Solana,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Solana,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Solana,
+            ticker = "RAY",
+            logo = "ray",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "raydium",
+            contractAddress = "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+            isNativeToken = false,
+        ),
         Coin(
             chain = Chain.BscChain,
             ticker = "BNB",
@@ -1435,6 +1503,28 @@ object Coins {
             decimal = 6,
             hexPublicKey = "",
             priceProviderID = "osmosis",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Terra,
+            ticker = "LUNA",
+            logo = "luna",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terra-luna-2",
+            contractAddress = "",
+            isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.TerraClassic,
+            ticker = "LUNC",
+            logo = "lunc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "terra-luna",
             contractAddress = "",
             isNativeToken = true,
         )

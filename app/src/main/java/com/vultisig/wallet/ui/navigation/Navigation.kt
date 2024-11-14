@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.navigation
 
 import android.net.Uri
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 
 internal open class Dst(
@@ -150,13 +151,7 @@ internal sealed class Destination(
         }
     }
 
-    data class ScanError(
-        val vaultId: String?,
-    ) : Destination(route = "scan_error?vault_id=$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "scan_error?vault_id={$ARG_VAULT_ID}"
-        }
-    }
+    data object ScanError : Destination(route = "scan_error")
 
     data class AddressBook(
         val chain: Chain? = null,
@@ -258,12 +253,16 @@ internal sealed class Destination(
     data class QrAddressScreen(
         val vaultId: String? = null,
         val address: String,
+        val chainName: String,
     ) :
-        Destination(route = "vault_details/${vaultId}/qr_address_screen/$address") {
+        Destination(route = "vault_details/${vaultId}/qr_address_screen/$address" +
+                "?${ARG_CHAIN_NAME}=${chainName}") {
         companion object {
             const val ARG_COIN_ADDRESS = "coin_address"
+            const val ARG_CHAIN_NAME = "chain_name"
             const val STATIC_ROUTE =
-                "vault_details/{$ARG_VAULT_ID}/qr_address_screen/{$ARG_COIN_ADDRESS}"
+                "vault_details/{$ARG_VAULT_ID}/qr_address_screen/{$ARG_COIN_ADDRESS}" +
+                        "?${ARG_CHAIN_NAME}={$ARG_CHAIN_NAME}"
         }
     }
 
@@ -317,6 +316,7 @@ internal sealed class Destination(
         val vaultSetupType: VaultSetupType,
         val email: String?,
         val password: String?,
+        val hint: String? = null,
     ) : Destination(
         route = buildRoute(
             vaultId,
@@ -324,17 +324,20 @@ internal sealed class Destination(
             vaultSetupType.raw,
             Uri.encode(email),
             Uri.encode(password),
+            Uri.encode(hint),
         )
     ) {
         companion object {
             const val ARG_VAULT_ID = "vault_id"
             const val ARG_VAULT_NAME = "vault_name"
+            const val ARG_PASSWORD_HINT = "password_hint"
 
             const val STATIC_ROUTE = "keygen/generate?${ARG_VAULT_ID}={$ARG_VAULT_ID}" +
                     "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
                     "&${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
                     "&${ARG_EMAIL}={$ARG_EMAIL}" +
-                    "&${ARG_PASSWORD}={$ARG_PASSWORD}"
+                    "&${ARG_PASSWORD}={$ARG_PASSWORD}" +
+                    "&${ARG_PASSWORD_HINT}={$ARG_PASSWORD_HINT}"
 
             fun generateNewVault(
                 name: String,
@@ -353,12 +356,13 @@ internal sealed class Destination(
                 type: Int,
                 email: String?,
                 password: String?,
+                hint: String?,
             ) = "keygen/generate?${ARG_VAULT_ID}=$vaultId" +
                     "&${ARG_VAULT_NAME}=$name" +
                     "&${ARG_VAULT_SETUP_TYPE}=${type}" +
                     "&${ARG_EMAIL}=$email" +
-                    "&${ARG_PASSWORD}=$password"
-
+                    "&${ARG_PASSWORD}=$password" +
+                    "&${ARG_PASSWORD_HINT}=$hint"
         }
     }
 
@@ -399,6 +403,18 @@ internal sealed class Destination(
             const val STATIC_ROUTE = "backup_suggestion/{$ARG_VAULT_ID}"
         }
     }
+
+    data class VerifyServerBackup(
+        val vaultId: VaultId,
+        val shouldSuggestBackup: Boolean,
+    ) : Destination(route = "backup/server/verify/$vaultId?${ARG_SHOULD_SUGGEST_BACKUP}=$shouldSuggestBackup") {
+        companion object {
+            const val ARG_SHOULD_SUGGEST_BACKUP = "should_suggest_backup"
+            const val STATIC_ROUTE = "backup/server/verify/{$ARG_VAULT_ID}" +
+                    "?$ARG_SHOULD_SUGGEST_BACKUP={$ARG_SHOULD_SUGGEST_BACKUP}"
+        }
+    }
+
 
     data class ShareVaultQr(val vaultId: String) :
         Destination(route = "share_vault_qr/$vaultId") {

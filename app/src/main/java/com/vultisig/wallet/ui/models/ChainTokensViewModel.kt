@@ -137,7 +137,8 @@ internal class ChainTokensViewModel @Inject constructor(
             navigator.navigate(
                 Destination.QrAddressScreen(
                     vaultId,
-                    uiState.value.chainAddress
+                    uiState.value.chainAddress,
+                    uiState.value.chainName,
                 )
             )
         }

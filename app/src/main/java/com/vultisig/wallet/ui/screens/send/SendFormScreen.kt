@@ -91,7 +91,7 @@ internal fun SendFormScreen(
         onDstAddressLostFocus = viewModel::validateDstAddress,
         onTokenAmountLostFocus = viewModel::validateTokenAmount,
         onDismissError = viewModel::dismissError,
-        onSelectToken = viewModel::selectToken,
+        onSelectToken = viewModel::openTokenSelection,
         onSetOutputAddress = viewModel::setOutputAddress,
         onChooseMaxTokenAmount = viewModel::chooseMaxTokenAmount,
         onChoosePercentageAmount = viewModel::choosePercentageAmount,
@@ -209,12 +209,18 @@ internal fun SendFormScreen(
                     textFieldState = memoFieldState
                 )
 
+            // TODO: turn back on when transformation gets fixed
+//            val separateNumberOutputTransformation = remember {
+//                SeparateNumberOutputTransformation()
+//            }
+            
             FormTextFieldCardWithPercentage(
                 title = stringResource(R.string.send_amount),
                 hint = stringResource(R.string.send_amount_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = tokenAmountFieldState,
                 onLostFocus = onTokenAmountLostFocus,
+//                outputTransformation = separateNumberOutputTransformation,
                 error = state.tokenAmountError,
                 onPercentClick = onChoosePercentageAmount
             ) {
@@ -232,6 +238,7 @@ internal fun SendFormScreen(
                 hint = stringResource(R.string.send_amount_currency_hint),
                 keyboardType = KeyboardType.Number,
                 textFieldState = fiatAmountFieldState,
+//                outputTransformation = separateNumberOutputTransformation,
                 error = null
             )
             if (state.showGasFee) {
@@ -286,6 +293,7 @@ internal fun SendFormScreen(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .padding(all = 16.dp),
+            isLoading = state.isLoading,
             onClick = {
                 focusManager.clearFocus()
                 onSend()

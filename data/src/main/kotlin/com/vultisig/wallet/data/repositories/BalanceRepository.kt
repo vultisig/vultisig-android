@@ -33,6 +33,8 @@ import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
 import com.vultisig.wallet.data.models.Chain.Solana
 import com.vultisig.wallet.data.models.Chain.Sui
+import com.vultisig.wallet.data.models.Chain.Terra
+import com.vultisig.wallet.data.models.Chain.TerraClassic
 import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
@@ -227,7 +229,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
-            GaiaChain, Kujira, Dydx, Osmosis -> {
+            GaiaChain, Kujira, Dydx, Osmosis, Terra -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
                 val listCosmosBalance = cosmosApi.getBalance(address)
                 val balance = listCosmosBalance
@@ -240,6 +242,14 @@ internal class BalanceRepositoryImpl @Inject constructor(
                             ignoreCase = true
                         )
                     }
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            TerraClassic -> {
+                val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
+                val listCosmosBalance = cosmosApi.getBalance(address)
+                val balance = listCosmosBalance
+                    .find { it.denom.equals(coin.chain.feeUnit, ignoreCase = true) }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 

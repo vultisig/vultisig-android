@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -37,6 +38,8 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlowfishRepository
@@ -72,7 +75,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -91,6 +93,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
         JoinKeysignError(UiText.DynamicString(exceptionMessage))
 
+    data object MissingRequiredVault : JoinKeysignError(R.string.join_keysign_missing_required_vault.asUiText())
     data object WrongVault : JoinKeysignError(R.string.join_keysign_wrong_vault.asUiText())
     data object WrongVaultShare :
         JoinKeysignError(R.string.join_keysign_error_wrong_vault_share.asUiText())
@@ -158,6 +161,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val routerApi: RouterApi,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -180,9 +184,13 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var isNavigateToHome: Boolean = false
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
-
+    private var payloadId: String = ""
+    private var tempKeysignMessageProto: KeysignMessageProto? = null
     private val keysignPayload: KeysignPayload?
         get() = _keysignPayload
+
+    private val deepLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
+
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
             vault = _currentVault,
@@ -228,8 +236,8 @@ internal class JoinKeysignViewModel @Inject constructor(
             try {
                 val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
                     .decodeToString()
-
-                val qrCodeContent = DeepLinkHelper(content).getJsonData()
+                deepLinkHelper.value = DeepLinkHelper(content)
+                val qrCodeContent = requireNotNull(deepLinkHelper.value).getJsonData()
                 qrCodeContent ?: run {
                     throw Exception("Invalid QR code content")
                 }
@@ -237,44 +245,42 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
                 Timber.d("Decoded KeysignMessageProto: $payloadProto")
-
-                val payload = mapKeysignMessageFromProto(payloadProto)
-                Timber.d("Mapped proto to KeysignMessage: $payload")
-
-                if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
-                    val matchingVault = vaultRepository.getAll().firstOrNull {
-                        it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
-                    }
-                    matchingVault?.let {
-                        _currentVault = it
-                        _localPartyID = it.localPartyID
-                    } ?: run {
-                        currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
+                this@JoinKeysignViewModel._sessionID = payloadProto.sessionId
+                this@JoinKeysignViewModel._serviceName = payloadProto.serviceName
+                this@JoinKeysignViewModel._useVultisigRelay = payloadProto.useVultisigRelay
+                this@JoinKeysignViewModel._encryptionKeyHex = payloadProto.encryptionKeyHex
+                // when the payload is in the QRCode
+                if (payloadProto.keysignPayload != null && payloadProto.payloadId.isEmpty()) {
+                    if (!loadKeysignMessage(payloadProto)) {
                         return@launch
                     }
+                } else {
+                    tempKeysignMessageProto = payloadProto
+                    payloadId = payloadProto.payloadId
                 }
-                if (payload.payload.vaultLocalPartyID == _localPartyID) {
-                    currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
-                    return@launch
-                }
-                val deepLink = DeepLinkHelper(content)
-                if (deepLink.hasResharePrefix()) {
-                    if (_currentVault.resharePrefix != deepLink.getResharePrefix()) {
-                        currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongReShare)
-                        return@launch
-                    }
-                }
-                val ksPayload = payload.payload
-                this@JoinKeysignViewModel._keysignPayload = ksPayload
-                this@JoinKeysignViewModel._sessionID = payload.sessionID
-                this@JoinKeysignViewModel._serviceName = payload.serviceName
-                this@JoinKeysignViewModel._useVultisigRelay = payload.useVultisigRelay
-                this@JoinKeysignViewModel._encryptionKeyHex = payload.encryptionKeyHex
-
-                loadTransaction(ksPayload)
-
                 if (_useVultisigRelay) {
                     this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY
+                    // when Payload is not in the QRCode
+                    if (!payloadProto.payloadId.isEmpty()) {
+                        routerApi.getPayload(_serverAddress, payloadId).let { payload ->
+                            if (payload.isNotEmpty()) {
+                                val rawPayload = decompressQr(payload.decodeBase64Bytes())
+                                val payloadProto =
+                                    protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
+                                val keysignMsgProto = KeysignMessageProto(
+                                    keysignPayload = payloadProto,
+                                    sessionId = tempKeysignMessageProto!!.sessionId,
+                                    serviceName = tempKeysignMessageProto!!.serviceName,
+                                    encryptionKeyHex = tempKeysignMessageProto!!.encryptionKeyHex,
+                                    useVultisigRelay = _useVultisigRelay,
+                                    payloadId = payloadId
+                                )
+                                if (!loadKeysignMessage(keysignMsgProto)) {
+                                    return@launch
+                                }
+                            }
+                        }
+                    }
                     currentState.value = JoinKeysignState.JoinKeysign
                 } else {
                     currentState.value = JoinKeysignState.DiscoverService
@@ -285,7 +291,41 @@ internal class JoinKeysignViewModel @Inject constructor(
             }
         }
     }
+    private suspend fun loadKeysignMessage(payloadProto: KeysignMessageProto): Boolean {
+        val payload = mapKeysignMessageFromProto(payloadProto)
+        Timber.d("Mapped proto to KeysignMessage: $payload")
 
+        if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
+            val matchingVault = vaultRepository.getAll().firstOrNull {
+                it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
+            }
+            matchingVault?.let {
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
+                return false
+            } ?: run {
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.MissingRequiredVault)
+                return false
+            }
+        }
+        if (payload.payload.vaultLocalPartyID == _localPartyID) {
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
+            return false
+        }
+
+        if (deepLinkHelper.value?.hasResharePrefix() == true) {
+            if (_currentVault.resharePrefix != requireNotNull(deepLinkHelper.value).getResharePrefix()) {
+                currentState.value =
+                    JoinKeysignState.Error(JoinKeysignError.WrongReShare)
+                return false
+            }
+        }
+
+        val ksPayload = payload.payload
+        this@JoinKeysignViewModel._keysignPayload = ksPayload
+
+        loadTransaction(ksPayload)
+        return true
+    }
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val swapPayload = payload.swapPayload
         val currency = appCurrencyRepository.currency.first()
@@ -521,7 +561,33 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private fun onServerAddressDiscovered(address: String) {
         _serverAddress = address
-        currentState.value = JoinKeysignState.JoinKeysign
+        if (!payloadId.isEmpty() && tempKeysignMessageProto != null) {
+            viewModelScope.launch {
+                // when Payload is not in the QRCode
+                routerApi.getPayload(_serverAddress, payloadId).let { payload ->
+                    if (payload.isNotEmpty()) {
+                        val rawPayload = decompressQr(payload.decodeBase64Bytes())
+                        val payloadProto =
+                            protoBuf.decodeFromByteArray<KeysignPayloadProto>(rawPayload)
+                        val keysignMsgProto = KeysignMessageProto(
+                            keysignPayload = payloadProto,
+                            sessionId = tempKeysignMessageProto!!.sessionId,
+                            serviceName = tempKeysignMessageProto!!.serviceName,
+                            encryptionKeyHex = tempKeysignMessageProto!!.encryptionKeyHex,
+                            useVultisigRelay = _useVultisigRelay,
+                            payloadId = payloadId
+                        )
+                        if (!loadKeysignMessage(keysignMsgProto)) {
+                            return@launch
+                        }
+                        currentState.value = JoinKeysignState.JoinKeysign
+                    }
+                }
+            }
+        } else {
+            currentState.value = JoinKeysignState.JoinKeysign
+        }
+
         // discovery finished
         _discoveryListener?.let { _nsdManager?.stopServiceDiscovery(it) }
     }
@@ -556,7 +622,9 @@ internal class JoinKeysignViewModel @Inject constructor(
         viewModelScope.launch {
             val keysignError = currentState.value as JoinKeysignState.Error
             when (keysignError.errorType) {
-                JoinKeysignError.WrongVault, JoinKeysignError.WrongVaultShare -> navigator.navigate(
+                JoinKeysignError.MissingRequiredVault,
+                JoinKeysignError.WrongVault,
+                JoinKeysignError.WrongVaultShare -> navigator.navigate(
                     Destination.Home(showVaultList = true),
                     opts = NavigationOptions(clearBackStack = true)
                 )

@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
@@ -19,6 +20,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,7 +30,8 @@ internal data class BiometricsEnableUiModel(
     val isSaveEnabled: Boolean = false,
     val isPasswordVisible: Boolean = false,
     val passwordErrorMessage: UiText? = null,
-)
+    val passwordHint: UiText? = null,
+    )
 
 @HiltViewModel
 internal class BiometricsEnableViewModel @Inject constructor(
@@ -36,6 +39,7 @@ internal class BiometricsEnableViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val vaultRepository: VaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val vultiSignerRepository: VultiSignerRepository,
     private val snackbarFlow: SnackbarFlow,
     private val navigator: Navigator<Destination>,
@@ -93,10 +97,12 @@ internal class BiometricsEnableViewModel @Inject constructor(
         )
 
         if (!isPasswordValid) {
+            val hint = getPasswordHint()
             uiModel.update { it.copy(
                 passwordErrorMessage = UiText.StringResource(
                     R.string.keysign_password_incorrect_password
                 ),
+                passwordHint = hint,
                 isSaveEnabled = false,
             ) }
             return@launch
@@ -108,6 +114,19 @@ internal class BiometricsEnableViewModel @Inject constructor(
         }
         showSnackbarMessage(uiModel.value.isSwitchEnabled)
         navigator.navigate(Destination.Back)
+    }
+
+    private suspend fun getPasswordHint(): UiText? {
+
+        val passwordHintString =
+            vaultDataStoreRepository.readFastSignHint(vaultId = vaultId).first()
+
+        if (passwordHintString.isEmpty()) return null
+
+        return UiText.FormattedText(
+            R.string.import_file_password_hint_text,
+            listOf(passwordHintString)
+        )
     }
 
 }

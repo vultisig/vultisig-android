@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.IsVaultHasFastSignUseCase
+import com.vultisig.wallet.data.utils.TextFieldUtils.HINT_MAX_LENGTH
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
@@ -21,6 +23,7 @@ internal data class KeygenPasswordUiModel(
     val isPasswordVisible: Boolean = false,
     val isVerifyPasswordVisible: Boolean = false,
     val passwordError: UiText? = null,
+    val hintPasswordErrorMessage: UiText? = null,
     val verifyPasswordError: UiText? = null,
 )
 
@@ -30,12 +33,14 @@ internal class KeygenPasswordViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val vultiSignerRepository: VultiSignerRepository,
+    private val isVaultHasFastSign: IsVaultHasFastSignUseCase,
 ) : ViewModel() {
 
     val state = MutableStateFlow(KeygenPasswordUiModel())
 
     val passwordFieldState = TextFieldState()
     val verifyPasswordFieldState = TextFieldState()
+    val hintPasswordTextFieldState = TextFieldState()
 
     private val vaultId: String? = savedStateHandle[Destination.ARG_VAULT_ID]
     private val name: String? = savedStateHandle[Destination.ARG_VAULT_NAME]
@@ -52,6 +57,9 @@ internal class KeygenPasswordViewModel @Inject constructor(
 
     private val passwordDouble: String
         get() = verifyPasswordFieldState.text.toString()
+
+    private val hint: String
+        get() = hintPasswordTextFieldState.text.toString()
 
     fun verifyPassword() {
         val error = if (isPasswordEmpty()) {
@@ -81,12 +89,13 @@ internal class KeygenPasswordViewModel @Inject constructor(
 
     fun proceed() {
         val password = password
-        if (!isPasswordEmpty() && isPasswordsMatch()) {
+        val hint = hint.ifEmpty { null }
+        if (!isPasswordEmpty() && isPasswordsMatch() && validateHint()) {
             viewModelScope.launch {
                 if (vaultId != null) {
                     // reshare, check password
                     val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-                    if (vultiSignerRepository.hasFastSign(vault.pubKeyECDSA)) {
+                    if (isVaultHasFastSign(vault)) {
                         if (!vultiSignerRepository.isPasswordValid(
                                 publicKeyEcdsa = vault.pubKeyECDSA,
                                 password = password
@@ -111,6 +120,7 @@ internal class KeygenPasswordViewModel @Inject constructor(
                         vaultSetupType = setupType,
                         email = email,
                         password = password,
+                        hint = hint,
                     )
                 )
             }
@@ -118,6 +128,18 @@ internal class KeygenPasswordViewModel @Inject constructor(
             verifyPassword()
             verifyConfirmPassword()
         }
+    }
+
+    private fun validateHint(): Boolean {
+        val errorMessage =
+            if (hintPasswordTextFieldState.text.length > HINT_MAX_LENGTH)
+                UiText.StringResource(R.string.vault_password_hint_to_long)
+            else null
+
+        state.update {
+            it.copy(hintPasswordErrorMessage = errorMessage)
+        }
+        return errorMessage == null
     }
 
     private fun isPasswordEmpty() = password.isEmpty()

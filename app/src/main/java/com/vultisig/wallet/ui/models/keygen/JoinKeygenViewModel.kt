@@ -10,7 +10,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -30,6 +29,7 @@ import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
@@ -78,10 +78,10 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
     @ApplicationContext private val context: Context,
-    savedStateHandle: SavedStateHandle,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -136,6 +136,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             encryption = encryption,
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
+            vaultMetadataRepo = vaultMetadataRepo,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -231,7 +232,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         } else {
                             if (_vault.pubKeyECDSA != payload.reshareMessage.pubKeyECDSA) {
                                 errorMessage.value =
-                                    UiText.StringResource(R.string.join_keysign_wrong_vault)
+                                    UiText.StringResource(R.string.join_keysign_missing_required_vault)
                                 currentState.value = JoinKeygenState.FailedToStart
                                 return@launch
                             }

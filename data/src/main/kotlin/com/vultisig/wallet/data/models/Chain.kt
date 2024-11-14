@@ -3,16 +3,22 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
+import com.vultisig.wallet.data.models.TokenStandard.SUBSTRATE
+import com.vultisig.wallet.data.models.TokenStandard.SUI
+import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
+import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import wallet.core.jni.CoinType
 
+typealias ChainId = String
+
 enum class Chain(
-    val raw: String,
+    val raw: ChainId,
     val standard: TokenStandard,
     val feeUnit: String,
 ) {
-    ThorChain("THORChain", TokenStandard.THORCHAIN, "Rune"),
-    MayaChain("MayaChain", TokenStandard.THORCHAIN, "cacao"),
+    ThorChain("THORChain", THORCHAIN, "Rune"),
+    MayaChain("MayaChain", THORCHAIN, "cacao"),
 
     // ERC20
     Arbitrum("Arbitrum", EVM, "Gwei"),
@@ -33,14 +39,18 @@ enum class Chain(
     Dogecoin("Dogecoin", UTXO, "Doge/vbyte"),
     Dash("Dash", UTXO, "DASH/vbyte"),
 
-    Solana("Solana", SOL, "SOL"),
     GaiaChain("Cosmos", COSMOS, "uatom"),
     Kujira("Kujira", COSMOS, "ukuji"),
     Dydx("Dydx", COSMOS, "adydx"),
     Osmosis("Osmosis", COSMOS, "uosmo"),
-    Polkadot("Polkadot", TokenStandard.SUBSTRATE, "DOT"),
-    Sui("Sui", TokenStandard.SUI, "SUI"),
-    Ton("Ton", TokenStandard.TON, "TON");
+    Terra("Terra", COSMOS, "uluna"),
+    TerraClassic("TerraClassic", COSMOS, "uluna"),
+
+    Solana("Solana", SOL, "SOL"),
+    Polkadot("Polkadot", SUBSTRATE, "DOT"),
+    Sui("Sui", SUI, "SUI"),
+    Ton("Ton", TON, "TON"),
+    ;
 
     val id: String
         get() = raw
@@ -78,6 +88,8 @@ val Chain.coinType: CoinType
         Chain.Sui -> CoinType.SUI
         Chain.Ton -> CoinType.TON
         Chain.Osmosis -> CoinType.OSMOSIS
+        Chain.Terra -> CoinType.TERRAV2
+        Chain.TerraClassic -> CoinType.TERRA
     }
 
 val Chain.TssKeysignType: TssKeyType
@@ -133,3 +145,35 @@ fun Chain.oneInchChainId(): Int =
         Chain.ZkSync -> 324
         else -> error("Chain $this is not supported by 1inch API")
     }
+
+fun Chain.swapAssetName(): String {
+    return when (this) {
+        Chain.ThorChain -> "THOR"
+        Chain.Ethereum -> "ETH"
+        Chain.Avalanche -> "AVAX"
+        Chain.BscChain -> "BSC"
+        Chain.Bitcoin -> "BTC"
+        Chain.BitcoinCash -> "BCH"
+        Chain.Litecoin -> "LTC"
+        Chain.Dogecoin -> "DOGE"
+        Chain.GaiaChain -> "GAIA"
+        Chain.Kujira -> "KUJI"
+        Chain.Solana -> "SOL"
+        Chain.Dash -> "DASH"
+        Chain.MayaChain -> "MAYA"
+        Chain.Arbitrum -> "ARB"
+        Chain.Base -> "BASE"
+        Chain.Optimism -> "OP"
+        Chain.Polygon -> "POL"
+        Chain.Blast -> "BLAST"
+        Chain.CronosChain -> "CRO"
+        Chain.Polkadot -> "DOT"
+        Chain.Dydx -> "DYDX"
+        Chain.ZkSync -> "ZK"
+        Chain.Sui -> "SUI"
+        Chain.Ton -> "TON"
+        Chain.Osmosis -> "OSMO"
+        Chain.Terra -> "LUNA"
+        Chain.TerraClassic -> "LUNC"
+    }
+}

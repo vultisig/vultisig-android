@@ -332,3 +332,18 @@ private fun SupportSQLiteDatabase.updateCoinDecimals(ticker: String, decimal: In
     """.trimIndent()
     )
 }
+
+internal val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `vaultMetadata` (
+                `vaultId` TEXT NOT NULL,
+                `isServerBackupVerified` INTEGER DEFAULT NULL,
+                PRIMARY KEY(`vaultId`),
+                FOREIGN KEY(`vaultId`) REFERENCES `vault`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
+            )
+            """.trimIndent()
+        )
+    }
+}

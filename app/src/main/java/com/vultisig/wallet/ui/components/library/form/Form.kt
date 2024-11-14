@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.TextObfuscationMode
@@ -50,7 +51,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.PercentText
@@ -167,6 +167,7 @@ internal fun FormTextFieldCard(
     error: UiText?,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
+    outputTransformation: OutputTransformation? = null,
     onLostFocus: () -> Unit = {},
     hintColor: Color = Theme.colors.neutral100,
     content: (@Composable RowScope.() -> Unit)? = null,
@@ -180,6 +181,7 @@ internal fun FormTextFieldCard(
             FormTextField(
                 hint = hint,
                 keyboardType = keyboardType,
+                outputTransformation = outputTransformation,
                 textFieldState = textFieldState,
                 content = content,
                 onLostFocus = onLostFocus,
@@ -222,11 +224,11 @@ internal fun FormTextFieldCardWithPercentage(
     error: UiText?,
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
+    outputTransformation: OutputTransformation? = null,
     onLostFocus: () -> Unit = {},
     onPercentClick: (percent: Float) -> Unit = {},
     content: (@Composable RowScope.() -> Unit)? = null,
-
-    ) {
+) {
     TextFieldValidator(
         errorText = error,
     ) {
@@ -238,6 +240,7 @@ internal fun FormTextFieldCardWithPercentage(
                 hint = hint,
                 keyboardType = keyboardType,
                 textFieldState = textFieldState,
+                outputTransformation = outputTransformation,
                 content = content,
                 onLostFocus = onLostFocus
             )
@@ -252,6 +255,7 @@ internal fun FormTextField(
     keyboardType: KeyboardType,
     textFieldState: TextFieldState,
     hintColor: Color = Theme.colors.neutral100,
+    outputTransformation: OutputTransformation? = null,
     onLostFocus: () -> Unit,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
@@ -270,6 +274,7 @@ internal fun FormTextField(
             hintColor = hintColor,
             keyboardType = keyboardType,
             textFieldState = textFieldState,
+            outputTransformation = outputTransformation,
             onLostFocus = onLostFocus,
             modifier = Modifier
                 .weight(1f),
@@ -289,6 +294,7 @@ internal fun BasicFormTextField(
     textFieldState: TextFieldState,
     onLostFocus: () -> Unit,
     modifier: Modifier = Modifier,
+    outputTransformation: OutputTransformation? = null,
     textStyle: TextStyle = Theme.menlo.body1,
     hintColor: Color = Theme.colors.neutral100,
 ) {
@@ -304,6 +310,7 @@ internal fun BasicFormTextField(
             keyboardType = keyboardType,
             imeAction = ImeAction.Done,
         ),
+        outputTransformation = outputTransformation,
         onKeyboardAction = {
             focusManager.clearFocus()
         },

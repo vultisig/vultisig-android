@@ -47,6 +47,7 @@ internal fun DeviceList(
         items = items,
         deletedItems = uiState.deletedParticipants,
         isReshare = uiState.isReshareMode,
+        isLoading = uiState.isLoading,
         onContinueClick = {
             viewModel.moveToKeygen()
         }
@@ -60,6 +61,7 @@ private fun DeviceList(
     items: List<String>,
     deletedItems: List<String>,
     isReshare: Boolean,
+    isLoading: Boolean,
     onContinueClick: () -> Unit,
 ) {
     val textColor = Theme.colors.neutral0
@@ -103,6 +105,7 @@ private fun DeviceList(
                     modifier = Modifier
                         .fillMaxWidth(),
                     onClick = onContinueClick,
+                    isLoading = isLoading,
                 )
             }
         },
@@ -240,6 +243,7 @@ private fun DeviceListPreview() {
         navController = rememberNavController(),
         localPartyId = "localPartyId",
         isReshare = false,
+        isLoading = false,
         items = listOf("device1", "device2", "device3"),
         deletedItems = emptyList(),
         onContinueClick = {}
@@ -253,6 +257,7 @@ private fun DeviceReshareListPreview() {
         navController = rememberNavController(),
         localPartyId = "localPartyId",
         isReshare = true,
+        isLoading = false,
         items = listOf("device1", "device2", "device3"),
         deletedItems = listOf("deletedDevice1", "deletedDevice2"),
         onContinueClick = {}
