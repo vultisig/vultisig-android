@@ -33,6 +33,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 interface SolanaApi {
@@ -60,27 +61,30 @@ internal class SolanaApiImp @Inject constructor(
     private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
     private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
     override suspend fun getBalance(address: String): BigInteger {
+        return try {
+            val payload = RpcPayload(
+                jsonrpc = "2.0",
+                method = "getBalance",
+                params = buildJsonArray {
+                    add(address)
+                },
+                id = 1,
+            )
+            val response = httpClient.post(rpcEndpoint) {
+                setBody(payload)
+            }
+            val rpcResp = response.body<SolanaBalanceJson>()
+            Timber.tag("solanaApiImp").d(response.toString())
 
-        val payload = RpcPayload(
-            jsonrpc = "2.0",
-            method = "getBalance",
-            params = buildJsonArray {
-                add(address)
-            },
-            id = 1,
-        )
-        val response = httpClient.post(rpcEndpoint) {
-            setBody(payload)
+            if (rpcResp.error != null) {
+                Timber.tag("solanaApiImp")
+                    .d("get balance ,address: $address error: ${rpcResp.error}")
+                BigInteger.ZERO
+            }
+            rpcResp.result?.value ?: error("getBalance error")
+        } catch (e: Exception) {
+            BigInteger.ZERO
         }
-        val rpcResp = response.body<SolanaBalanceJson>()
-        Timber.tag("solanaApiImp").d(response.toString())
-
-        if (rpcResp.error != null) {
-            Timber.tag("solanaApiImp")
-                .d("get balance ,address: $address error: ${rpcResp.error}")
-            return BigInteger.ZERO
-        }
-        return rpcResp.result?.value ?: error("getBalance error")
     }
 
     override suspend fun getMinimumBalanceForRentExemption(): BigInteger = try {

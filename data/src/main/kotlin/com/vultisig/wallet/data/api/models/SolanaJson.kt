@@ -26,7 +26,7 @@ data class SolanaMinimumBalanceForRentExemptionJson(
 @Serializable
 data class SolanaBalanceResultJson(
     @SerialName("value")
-    @Serializable(BigIntegerSerializer::class)
+    @Contextual
     val value: BigInteger,
 )
 
@@ -71,9 +71,9 @@ data class BroadcastTransactionRespJson(
 @Serializable
 data class SolanaFeeObjectJson(
     @SerialName("prioritizationFee")
-    @Serializable(BigIntegerSerializer::class)
+    @Contextual
     val prioritizationFee: BigInteger,
     @SerialName("slot")
-    @Serializable(BigIntegerSerializer::class)
+    @Contextual
     val slot: BigInteger,
 )
