@@ -463,6 +463,8 @@
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
     <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
+    <string name="do_not_remind_me_again" translatable="false">Don\'t remind me again</string>
+    <string name="monthly_backup_reminder_title" translatable="false">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title" translatable="false">Transaction complete</string>
     <string name="qr_address_screen_description" translatable="false">%s address:\n%s</string>
     <string name="join_keysign_wrong_vault" translatable="false">Wrong vault selected</string>
@@ -473,6 +475,12 @@
     <string name="scan_qr_code_error_button" translatable="false">Back</string>
     <string name="insufficient_native_token"  translatable="false">Insufficient %1$s</string>
     <string name="swap_error_amount_too_low"  translatable="false">Swap Amount too low</string>
+    <string name="swap_error_time_out"  translatable="false">Swap request timed out. Please try again</string>
+    <string name="keygen_verify_server_backup_caption" translatable="false">Enter the code received with your backup via email :</string>
+    <string name="keygen_verify_server_backup_code_hint" translatable="false">Enter code</string>
+    <string name="keygen_verify_server_backup_warning" translatable="false">This code verifies receiving the server backup via email</string>
+    <string name="keygen_verify_server_backup_title" translatable="false">Server backup verification</string>
+    <string name="keygen_verify_server_backup_invalid_code" translatable="false">Invalid code</string>
     <string name="swap_screen_invalid_no_vault" translatable="false">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error" translatable="false">No source token selected</string>
     <string name="swap_screen_invalid_selected_no_dst" translatable="false">No destination token selected</string>

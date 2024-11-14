@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api
 
-import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
@@ -11,8 +10,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.data.models.SplTokenDeserialized
-import com.vultisig.wallet.data.utils.THORChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -66,7 +64,7 @@ interface ThorChainApi {
 
 internal class ThorChainApiImpl @Inject constructor(
     private val httpClient: HttpClient,
-    private val thorChainSwapQuoteResponseJsonSerializer: THORChainSwapQuoteResponseJsonSerializer,
+    private val thorChainSwapQuoteResponseJsonSerializer: ThorChainSwapQuoteResponseJsonSerializer,
     private val json: Json,
 ) : ThorChainApi {
 

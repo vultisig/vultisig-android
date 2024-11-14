@@ -71,6 +71,14 @@ internal fun VaultAccountsScreen(
         }
     }
 
+    if (state.showMonthlyBackupReminder) {
+        MonthlyBackupReminder(
+            onDismiss = viewModel::dismissBackupReminder,
+            onBackup = viewModel::backupVault,
+            onDoNotRemind = viewModel::doNotRemindBackup,
+        )
+    }
+
     VaultAccountsScreen(
         state = state,
         isRearrangeMode = isRearrangeMode,

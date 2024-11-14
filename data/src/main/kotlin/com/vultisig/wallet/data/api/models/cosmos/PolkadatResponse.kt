@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api.models.cosmos
 
-import com.vultisig.wallet.data.utils.BigIntegerSerializer
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.math.BigInteger
@@ -8,7 +8,7 @@ import java.math.BigInteger
 @Serializable
 data class PolkadotGetNonceJson(
     @SerialName("result")
-    @Serializable(with = BigIntegerSerializer::class)
+    @Contextual
     val result: BigInteger,
 )
 
@@ -27,10 +27,10 @@ data class PolkadotGetRunTimeVersionJson(
 @Serializable
 data class PolkadotGetRunTimeVersionResultJson(
     @SerialName("transactionVersion")
-    @Serializable(with = BigIntegerSerializer::class)
+    @Contextual
     val transactionVersion: BigInteger,
     @SerialName("specVersion")
-    @Serializable(with = BigIntegerSerializer::class)
+    @Contextual
     val specVersion: BigInteger,
 )
 

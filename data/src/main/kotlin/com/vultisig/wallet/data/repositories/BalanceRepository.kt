@@ -229,7 +229,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
-            GaiaChain, Kujira, Dydx, Osmosis, Terra, TerraClassic -> {
+            GaiaChain, Kujira, Dydx, Osmosis, Terra -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
                 val listCosmosBalance = cosmosApi.getBalance(address)
                 val balance = listCosmosBalance
@@ -242,6 +242,14 @@ internal class BalanceRepositoryImpl @Inject constructor(
                             ignoreCase = true
                         )
                     }
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            TerraClassic -> {
+                val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
+                val listCosmosBalance = cosmosApi.getBalance(address)
+                val balance = listCosmosBalance
+                    .find { it.denom.equals(coin.chain.feeUnit, ignoreCase = true) }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 

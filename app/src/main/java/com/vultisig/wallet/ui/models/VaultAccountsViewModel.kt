@@ -6,12 +6,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
+import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
+import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -32,6 +36,7 @@ import javax.inject.Inject
 internal data class VaultAccountsUiModel(
     val vaultName: String = "",
     val showBackupWarning: Boolean = false,
+    val showMonthlyBackupReminder: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
@@ -61,6 +66,9 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val accountsRepository: AccountsRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
+    private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
+    private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -69,11 +77,22 @@ internal class VaultAccountsViewModel @Inject constructor(
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
 
-    fun loadData(vaultId: String) {
+    fun loadData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
+        showGlobalBackupReminder()
+        showVerifyServerBackupIfNeeded(vaultId)
+    }
+
+    private fun showGlobalBackupReminder() {
+        viewModelScope.launch {
+            val showReminder = isGlobalBackupReminderRequired()
+            uiState.update {
+                it.copy(showMonthlyBackupReminder = showReminder)
+            }
+        }
     }
 
     private fun loadBalanceVisibility(vaultId: String) {
@@ -201,7 +220,30 @@ internal class VaultAccountsViewModel @Inject constructor(
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     fun backupVault() {
         viewModelScope.launch {
+            dismissBackupReminder()
             navigator.navigate(Destination.BackupPassword(vaultId!!))
+        }
+    }
+
+    fun dismissBackupReminder() {
+        uiState.update { it.copy(showMonthlyBackupReminder = false) }
+    }
+
+    fun doNotRemindBackup() = viewModelScope.launch {
+        setNeverShowGlobalBackupReminder()
+        dismissBackupReminder()
+    }
+
+    private fun showVerifyServerBackupIfNeeded(vaultId: VaultId) {
+        viewModelScope.launch {
+            if (vaultMetadataRepo.shouldVerifyServerBackup(vaultId)) {
+                navigator.navigate(
+                    Destination.VerifyServerBackup(
+                        vaultId = vaultId,
+                        shouldSuggestBackup = false
+                    )
+                )
+            }
         }
     }
 

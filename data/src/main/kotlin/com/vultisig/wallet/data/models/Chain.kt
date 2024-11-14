@@ -44,7 +44,7 @@ enum class Chain(
     Dydx("Dydx", COSMOS, "adydx"),
     Osmosis("Osmosis", COSMOS, "uosmo"),
     Terra("Terra", COSMOS, "uluna"),
-    TerraClassic("TerraClassic", COSMOS, "ulunc"), // todo fee unit may be uluna
+    TerraClassic("TerraClassic", COSMOS, "uluna"),
 
     Solana("Solana", SOL, "SOL"),
     Polkadot("Polkadot", SUBSTRATE, "DOT"),

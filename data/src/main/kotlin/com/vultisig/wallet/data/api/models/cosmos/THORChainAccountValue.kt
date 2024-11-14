@@ -3,10 +3,23 @@ package com.vultisig.wallet.data.api.models.cosmos
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+sealed interface CosmosTHORChainAccountResponse {
+    data class Success(val response: THORChainAccountJson) : CosmosTHORChainAccountResponse
+    data class Error(val response: THORChainAccountErrorJson) : CosmosTHORChainAccountResponse
+}
+
 @Serializable
 data class THORChainAccountJson(
     @SerialName("account")
     val account: THORChainAccountValue?,
+)
+
+@Serializable
+data class THORChainAccountErrorJson(
+    @SerialName("message")
+    val message: String,
+    @SerialName("code")
+    val code: Int,
 )
 
 @Serializable
