@@ -121,9 +121,10 @@ class ThorChainSwapQuoteResponseJsonSerializerImpl @Inject constructor(private v
     }
 }
 
-@Singleton
-class LiFiSwapQuoteResponseSerializer @Inject constructor(private val json: Json) :
-    KSerializer<LiFiSwapQuoteDeserialized> {
+interface LiFiSwapQuoteResponseSerializer : DefaultSerializer<LiFiSwapQuoteDeserialized>
+
+class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: Json) :
+    LiFiSwapQuoteResponseSerializer{
     override val descriptor: SerialDescriptor =
         buildClassSerialDescriptor("LiFiSwapQuoteResponseSerializer")
 

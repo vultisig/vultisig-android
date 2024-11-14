@@ -39,4 +39,9 @@ internal interface SerializerModule {
     fun bindCosmosThorChainResponseSerializer(
         impl: CosmosThorChainResponseSerializerImpl,
     ): CosmosThorChainResponseSerializer
+
+    @Binds
+    fun bindLiFiSwapQuoteResponseSerializer(
+        impl: LiFiSwapQuoteResponseSerializerImpl,
+    ): LiFiSwapQuoteResponseSerializer
 }
