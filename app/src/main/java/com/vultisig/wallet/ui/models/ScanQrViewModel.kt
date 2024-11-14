@@ -52,9 +52,7 @@ internal class ScanQrViewModel @Inject constructor(
                             Destination.Send(vaultId = requireNotNull(vaultId), address = address)
                         }
 
-                        else -> throw IllegalArgumentException(
-                            "Unsupported QR-code flowType: $flowType"
-                        )
+                        else -> Destination.ScanError
                     }
                 )
             } catch (e: Exception) {

@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
@@ -55,8 +56,10 @@ import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -82,6 +85,7 @@ internal data class KeygenFlowUiModel(
     val qrBitmapPainter: BitmapPainter? = null,
     val networkOption: NetworkPromptOption = NetworkPromptOption.INTERNET,
     val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
+    val isLoading: Boolean = false,
 ) {
     val isContinueButtonEnabled =
         if (isReshareMode) {
@@ -121,6 +125,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
+    private val vaultMetadataRepo: VaultMetadataRepo,
     private val generateServerPartyId: GenerateServerPartyId,
     private val generateServiceName: GenerateServiceName
 ) : ViewModel() {
@@ -184,6 +189,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             encryption = encryption,
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
+            vaultMetadataRepo = vaultMetadataRepo,
         )
 
     init {
@@ -201,9 +207,11 @@ internal class KeygenFlowViewModel @Inject constructor(
         viewModelScope.launch {
             if (setupType == VaultSetupType.FAST) {
                 uiState.map { it.selection }
+                    .cancellable()
                     .collect {
                         if (it.size == 2) {
                             finishPeerDiscovery()
+                            cancel()
                         }
                     }
             }
@@ -426,9 +434,11 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     fun moveToKeygen() {
         viewModelScope.launch {
+            showLoading()
             withContext(Dispatchers.IO) {
                 startKeygen()
             }
+            hideLoading()
             moveToState(KeygenFlowState.KEYGEN)
         }
     }
@@ -456,6 +466,23 @@ internal class KeygenFlowViewModel @Inject constructor(
             Timber.tag("KeygenDiscoveryViewModel").e("startKeygen: %s", e.stackTraceToString())
         }
     }
+
+    private fun showLoading(){
+        uiState.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+    }
+
+    private fun hideLoading(){
+        uiState.update {
+            it.copy(
+                isLoading = false
+            )
+        }
+    }
+
 
     @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {

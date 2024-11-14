@@ -7,6 +7,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
+import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -69,6 +70,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                             pubKeyEDDSA = vault.pubKeyEDDSA,
                             deviceList = vault.signers,
                             localPartyId = vault.localPartyID,
+                            vaultPart = vault.getVaultPart()
                         )
                     )
                 }

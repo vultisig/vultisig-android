@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
+import com.vultisig.wallet.ui.screens.keygen.KeygenVerifyServerBackupScreen
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
@@ -369,13 +370,7 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.ScanError.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
+            route = Destination.ScanError.route,
         ) {
             ScanQrErrorScreen()
         }
@@ -528,6 +523,23 @@ internal fun SetupNavGraph(
         ) {
             BackupSuggestionScreen()
         }
+
+        composable(
+            route = Destination.VerifyServerBackup.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(Destination.VerifyServerBackup.ARG_SHOULD_SUGGEST_BACKUP) {
+                    type = NavType.BoolType
+                }
+            )
+        ) {
+            KeygenVerifyServerBackupScreen(
+                navController = navController,
+            )
+        }
+
         composable(
             route = Destination.ShareVaultQr.STATIC_ROUTE,
             arguments = listOf(

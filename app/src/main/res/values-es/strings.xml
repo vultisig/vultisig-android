@@ -62,7 +62,6 @@
     <string name="default_chain_screen_title">Cadenas predeterminadas</string>
     <string name="faq_setting_screen_title">Preguntas Frecuentes</string>
     <string name="vultisig_token_setting_screen_title">Token Vultisig</string>
-    <string name="scan_qr_default_title">Escanear</string>
     <string name="verify_transaction_screen_title">Verificar</string>
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">A</string>
@@ -202,7 +201,6 @@
     <string name="vault_settings_delete_vault_name">Nombre de la Bóveda:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Clave ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Clave EdDSA:</string>
-    <string name="vault_settings_delete_vault_type">Tipo De Bóveda:</string>
     <string name="vault_settings_delete_vault_id">ID de dispositivo:</string>
     <string name="circular_progress_indicator_done">Hecho</string>
     <string name="verify_transaction_memo_title">Memorándum</string>
@@ -284,8 +282,6 @@
     <string name="setup_1_device_of_vault">Necesita 1 dispositivo más para emparejar</string>
     <string name="setup_2_device_of_vault">Necesitas 2 dispositivos más para emparejar</string>
     <string name="setup_m_device_of_vault">Puedes emparejar tantos dispositivos como quieras</string>
-    <string name="enable_chain_button">Habilitar cadena</string>
-    <string name="enable_chain_warning">La cadena no está seleccionada. Habilítela en la selección de cadena.</string>
     <string name="s_of_s">%1$s de %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de privacidad</string>

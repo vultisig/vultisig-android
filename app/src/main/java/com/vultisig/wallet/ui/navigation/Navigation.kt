@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.navigation
 
 import android.net.Uri
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 
 internal open class Dst(
@@ -150,13 +151,7 @@ internal sealed class Destination(
         }
     }
 
-    data class ScanError(
-        val vaultId: String?,
-    ) : Destination(route = "scan_error?vault_id=$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "scan_error?vault_id={$ARG_VAULT_ID}"
-        }
-    }
+    data object ScanError : Destination(route = "scan_error")
 
     data class AddressBook(
         val chain: Chain? = null,
@@ -408,6 +403,18 @@ internal sealed class Destination(
             const val STATIC_ROUTE = "backup_suggestion/{$ARG_VAULT_ID}"
         }
     }
+
+    data class VerifyServerBackup(
+        val vaultId: VaultId,
+        val shouldSuggestBackup: Boolean,
+    ) : Destination(route = "backup/server/verify/$vaultId?${ARG_SHOULD_SUGGEST_BACKUP}=$shouldSuggestBackup") {
+        companion object {
+            const val ARG_SHOULD_SUGGEST_BACKUP = "should_suggest_backup"
+            const val STATIC_ROUTE = "backup/server/verify/{$ARG_VAULT_ID}" +
+                    "?$ARG_SHOULD_SUGGEST_BACKUP={$ARG_SHOULD_SUGGEST_BACKUP}"
+        }
+    }
+
 
     data class ShareVaultQr(val vaultId: String) :
         Destination(route = "share_vault_qr/$vaultId") {

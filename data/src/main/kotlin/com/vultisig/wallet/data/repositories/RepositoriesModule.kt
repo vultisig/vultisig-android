@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.repositories.order.AddressBookOrderRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
+import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepoImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -214,5 +216,11 @@ internal interface RepositoriesModule {
     fun bindThorChainRepository(
         impl: ThorChainRepositoryImpl
     ): ThorChainRepository
+
+    @Binds
+    @Singleton
+    fun bindVaultMetadataRepo(
+        impl: VaultMetadataRepoImpl
+    ): VaultMetadataRepo
 
 }

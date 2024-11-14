@@ -29,6 +29,10 @@ fun Vault.containsServerSigner(): Boolean {
     return signers.firstOrNull { it.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true) } != null
 }
 
+fun Vault.isServerVault(): Boolean {
+    return localPartyID.contains(LOCAL_PARTY_ID_PREFIX, ignoreCase = true)
+}
+
 fun Vault.isFastVault(): Boolean {
-    return containsServerSigner()
+    return containsServerSigner() && !isServerVault()
 }

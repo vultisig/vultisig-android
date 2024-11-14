@@ -67,7 +67,6 @@
     <string name="default_chain_screen_title">Default Chains</string>
     <string name="faq_setting_screen_title">FAQ</string>
     <string name="vultisig_token_setting_screen_title">VULTISIG TOKEN</string>
-    <string name="scan_qr_default_title">Scan</string>
     <string name="verify_transaction_screen_title">Verify</string>
     <string name="verify_transaction_from_title">From</string>
     <string name="verify_transaction_to_title">To</string>
@@ -154,7 +153,6 @@
     <string name="vault_settings_delete_vault_details">Details:</string>
     <string name="vault_settings_delete_vault_name">Vault Name:</string>
     <string name="vault_settings_delete_vault_value">Vault Value:</string>
-    <string name="vault_settings_delete_vault_type">Vault Type:</string>
     <string name="vault_settings_delete_vault_id">Device ID:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Key:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Key:</string>
@@ -306,8 +304,6 @@
     <string name="setup_1_device_of_vault">You need 1 more device to pair</string>
     <string name="setup_2_device_of_vault">You need 2 more devices to pair</string>
     <string name="setup_m_device_of_vault">You can pair as many devices you want</string>
-    <string name="enable_chain_button">Enable Chain</string>
-    <string name="enable_chain_warning">Chain is not selected.\nPlease enable it in chain selection.</string>
     <string name="s_of_s">%1$s of %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
@@ -414,6 +410,7 @@
     <string name="home_screen_import_vault" translatable="false">Import Vault</string>
     <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
     <string name="vault_list_part_n_of_t" translatable="false">Part %dof%d</string>
+    <string name="vault_part_n_of_t" translatable="false">Part %d of %d</string>
     <string name="vault_list_fast_badge" translatable="false">Fast</string>
     <string name="deleted_device" translatable="false">(Deleted Device)</string>
     <string name="qr_title_join_keygen" translatable="false">Join Keygen</string>
@@ -441,7 +438,7 @@
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
-    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultisigner</string>
+    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>
     <string name="deposit_error_invalid_lpunits"  translatable="false">LP units is invalid</string>
     <string name="deposit_error_invalid_assets"  translatable="false">Assets is invalid</string>
     <string name="deposit_form_screen_assets" translatable="false">Assets</string>
@@ -454,6 +451,7 @@
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
     <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
+    <string name="vault_settings_delete_vault_part" translatable="false">Vault Part:</string>
     <string name="vault_password_hint_to_long" translatable="false">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
     <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
@@ -465,12 +463,22 @@
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
     <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
     <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
+    <string name="do_not_remind_me_again" translatable="false">Don\'t remind me again</string>
+    <string name="monthly_backup_reminder_title" translatable="false">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title" translatable="false">Transaction complete</string>
     <string name="qr_address_screen_description" translatable="false">%s address:\n%s</string>
     <string name="join_keysign_wrong_vault" translatable="false">Wrong vault selected</string>
     <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
     <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
     <string name="verify_swap_screen_total_fees" translatable="false">Total Fees</string>
+    <string name="scan_qr_code_error_text" translatable="false">Unrelated QR code is scanned</string>
+    <string name="scan_qr_code_error_button" translatable="false">Back</string>
     <string name="insufficient_native_token"  translatable="false">Insufficient %1$s</string>
     <string name="swap_error_amount_too_low"  translatable="false">Swap Amount too low</string>
+    <string name="swap_error_time_out"  translatable="false">Swap request timed out. Please try again</string>
+    <string name="keygen_verify_server_backup_caption" translatable="false">Enter the code received with your backup via email :</string>
+    <string name="keygen_verify_server_backup_code_hint" translatable="false">Enter code</string>
+    <string name="keygen_verify_server_backup_warning" translatable="false">This code verifies receiving the server backup via email</string>
+    <string name="keygen_verify_server_backup_title" translatable="false">Server backup verification</string>
+    <string name="keygen_verify_server_backup_invalid_code" translatable="false">Invalid code</string>
 </resources>

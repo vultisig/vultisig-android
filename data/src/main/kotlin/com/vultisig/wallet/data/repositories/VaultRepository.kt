@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.VaultId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -17,12 +18,12 @@ import javax.inject.Inject
 
 interface VaultRepository {
 
-    fun getEnabledTokens(vaultId: String): Flow<List<Coin>>
+    fun getEnabledTokens(vaultId: VaultId): Flow<List<Coin>>
 
-    fun getEnabledChains(vaultId: String): Flow<Set<Chain>>
+    fun getEnabledChains(vaultId: VaultId): Flow<Set<Chain>>
 
 
-    suspend fun get(vaultId: String): Vault?
+    suspend fun get(vaultId: VaultId): Vault?
 
     suspend fun getByEcdsa(pubKeyEcdsa: String): Vault?
 
@@ -34,15 +35,16 @@ interface VaultRepository {
 
     suspend fun upsert(vault: Vault)
 
-    suspend fun setVaultName(vaultId: String, name: String)
+    suspend fun setVaultName(vaultId: VaultId, name: String)
 
-    suspend fun delete(vaultId: String)
+    suspend fun delete(vaultId: VaultId)
 
-    suspend fun deleteTokenFromVault(vaultId: String, tokenId: String)
+    suspend fun deleteTokenFromVault(vaultId: VaultId, tokenId: String)
 
-    suspend fun deleteChainFromVault(vaultId: String, chain: Chain)
+    suspend fun deleteChainFromVault(vaultId: VaultId, chain: Chain)
 
-    suspend fun addTokenToVault(vaultId: String, token: Coin)
+    suspend fun addTokenToVault(vaultId: VaultId, token: Coin)
+
 }
 
 internal class VaultRepositoryImpl @Inject constructor(
