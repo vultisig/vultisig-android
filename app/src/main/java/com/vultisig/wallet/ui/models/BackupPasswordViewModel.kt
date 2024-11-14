@@ -22,7 +22,6 @@ import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
-import com.vultisig.wallet.data.utils.TextFieldUtils.HINT_MAX_LENGTH
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -63,7 +62,6 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     val passwordTextFieldState = TextFieldState()
     val confirmPasswordTextFieldState = TextFieldState()
-    val hintPasswordTextFieldState = TextFieldState()
 
     private val vaultId: String =
         requireNotNull(savedStateHandle.get<String>(Destination.BackupPassword.ARG_VAULT_ID))
