@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.components
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
@@ -14,6 +15,7 @@ internal fun BoxWithSwipeRefresh(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
+
     PullToRefreshBox(
         modifier = modifier,
         onRefresh = onSwipe,

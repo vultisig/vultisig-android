@@ -64,34 +64,29 @@ internal fun SendScreen(
     }
 
     val progress: Float
-    val title: String
+    val title : String
 
     when {
         route == SendDst.Send.route -> {
             progress = 0.25f
             title = stringResource(R.string.send_screen_title)
         }
-
         route == SendDst.VerifyTransaction.staticRoute -> {
             progress = 0.5f
             title = stringResource(R.string.verify_transaction_screen_title)
         }
-
         route == SendDst.Password.staticRoute -> {
             progress = 0.65f
             title = stringResource(R.string.keysign_password_title)
         }
-
         route == SendDst.Keysign.staticRoute && isKeysignFinished -> {
             progress = 1f
             title = stringResource(R.string.transaction_complete_screen_title)
         }
-
         route == SendDst.Keysign.staticRoute -> {
             progress = 0.75f
             title = stringResource(R.string.keysign)
         }
-
         else -> {
             progress = 0.0f
             title = stringResource(R.string.send_screen_title)
