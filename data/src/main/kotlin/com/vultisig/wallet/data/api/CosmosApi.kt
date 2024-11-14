@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosThorChainAccountResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
@@ -36,7 +36,7 @@ internal class CosmosApiFactoryImp @Inject constructor(
 ) : CosmosApiFactory {
     override fun createCosmosApi(chain: Chain): CosmosApi {
         return when (chain) {
-            Chain.GaiaChain -> CosmosApiImp(
+             Chain.GaiaChain -> CosmosApiImp(
                 httpClient,
                 "https://cosmos-rest.publicnode.com",
                 json,
@@ -63,6 +63,19 @@ internal class CosmosApiFactoryImp @Inject constructor(
                 json,
                 cosmosThorChainResponseSerializer,
             )
+            Chain.Terra -> CosmosApiImp(
+                httpClient,
+                "https://terra-lcd.publicnode.com",
+                json,
+                cosmosThorChainResponseSerializer,
+            )
+            Chain.TerraClassic -> CosmosApiImp(
+                httpClient,
+                "https://terra-classic-lcd.publicnode.com",
+                json,
+                cosmosThorChainResponseSerializer,
+            )
+
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
@@ -86,7 +99,7 @@ internal class CosmosApiImp(
         val response = httpClient
             .get("$rpcEndpoint/cosmos/auth/v1beta1/accounts/$address") {
             }
-        val responseBody = response.body<String>()
+        val responseBody = response.bodyAsText()
         val decodedResponse = json.decodeFromString(
             cosmosThorChainResponseSerializer,
             responseBody
@@ -94,14 +107,14 @@ internal class CosmosApiImp(
 
         Timber.d("getAccountNumber: $responseBody")
         return when (decodedResponse) {
-            is CosmosThorChainAccountResponse.Error ->
+            is CosmosTHORChainAccountResponse.Error ->
                 THORChainAccountValue(
                     accountNumber = "0",
                     sequence = "0",
                     address = null
                 )
 
-            is CosmosThorChainAccountResponse.Success ->
+            is CosmosTHORChainAccountResponse.Success ->
                 decodedResponse.response.account ?: error("Error getting account")
         }
     }

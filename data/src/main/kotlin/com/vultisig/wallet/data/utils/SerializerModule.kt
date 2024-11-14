@@ -4,7 +4,6 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
 
 @Module
@@ -12,13 +11,31 @@ import javax.inject.Singleton
 internal interface SerializerModule {
 
     @Binds
-    @Singleton
+    fun bindBigDecimalSerializer(
+        impl: BigDecimalSerializerImpl,
+    ): BigDecimalSerializer
+
+    @Binds
+    fun bindBigIntegerSerializer(
+        impl: BigIntegerSerializerImpl,
+    ): BigIntegerSerializer
+
+    @Binds
+    fun bindTHORChainSwapQuoteResponseJsonSerializer(
+        impl: ThorChainSwapQuoteResponseJsonSerializerImpl,
+    ): ThorChainSwapQuoteResponseJsonSerializer
+
+    @Binds
+    fun bindKeysignResponseSerializer(
+        impl: KeysignResponseSerializerImpl,
+    ): KeysignResponseSerializer
+
+    @Binds
     fun bindSplTokenResponseJsonSerializer(
         impl: SplTokenResponseJsonSerializerImpl,
     ): SplTokenResponseJsonSerializer
 
     @Binds
-    @Singleton
     fun bindCosmosThorChainResponseSerializer(
         impl: CosmosThorChainResponseSerializerImpl,
     ): CosmosThorChainResponseSerializer
