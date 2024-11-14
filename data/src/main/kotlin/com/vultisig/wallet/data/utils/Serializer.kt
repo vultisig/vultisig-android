@@ -29,6 +29,7 @@ import kotlinx.serialization.json.jsonObject
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import javax.inject.Singleton
 
 interface DefaultSerializer<T> : KSerializer<T> {
     override fun serialize(encoder: Encoder, value: T) {
