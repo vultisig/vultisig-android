@@ -213,7 +213,7 @@ internal class VaultAccountsViewModel @Inject constructor(
                 totalFiatValue = totalFiatValue, accounts = accountsUiModel
             )
         }
-        vaultDataStoreRepository.setTotalFiatValue(requireNotNull(vaultId), totalFiatValue ?: "")
+        vaultDataStoreRepository.setTotalFiatValue(requireNotNull(vaultId), totalFiatValue)
         updateRefreshing(false)
     }
 
