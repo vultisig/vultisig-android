@@ -206,7 +206,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                 uiState.map { it.selection }
                     .cancellable()
                     .collect {
-                        if (it.size == 2) {
+                        if (it.size == VaultSetupType.FAST_PARTICIPANTS_KICKOFF_THRESHOLD) {
                             finishPeerDiscovery()
                             cancel()
                         }

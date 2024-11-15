@@ -110,7 +110,6 @@
     <string name="join_key_gen_screen_discovering_session_id">Discovering Session ID</string>
     <string name="join_key_gen_screen_joining_keygen">Joining Keygen</string>
     <string name="join_key_gen_screen_waiting_for_operationType_to_start">Waiting for %1$s to start</string>
-    <string name="keygen_flow_views_success">Success</string>
     <string name="keygen_peer_discovery_keygen">Keygen for %1$s vault</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
     <string name="keygen_peer_discovery_continue">Continue</string>

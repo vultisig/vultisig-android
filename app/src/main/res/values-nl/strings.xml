@@ -108,7 +108,6 @@
     <string name="join_key_gen_screen_discovering_session_id">Sessienummer ontdekken</string>
     <string name="join_key_gen_screen_joining_keygen">Keygen betreden</string>
     <string name="join_key_gen_screen_waiting_for_operationType_to_start">Wachten op de start van %1$s</string>
-    <string name="keygen_flow_views_success">Succes</string>
     <string name="keygen_peer_discovery_keygen">Keygen voor %1$s kluis</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Koppel met andere apparaten:</string>
     <string name="keygen_peer_discovery_continue">Doorgaan</string>
