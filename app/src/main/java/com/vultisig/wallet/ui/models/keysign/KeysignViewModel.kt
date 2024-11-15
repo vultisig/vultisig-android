@@ -157,7 +157,7 @@ internal class KeysignViewModel(
                 serverAddress = serverAddress,
                 localPartyKey = vault.localPartyID,
                 sessionApi = sessionApi,
-                sessionID = sessionId,
+                sessionId = sessionId,
                 encryption = encryption,
                 isEncryptionGCM = featureFlag?.isEncryptGcmEnabled == true,
             )
