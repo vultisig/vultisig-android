@@ -136,7 +136,8 @@ internal class SwapFormViewModel @Inject constructor(
 
     private var selectTokensJob: Job? = null
 
-    private var isLoading = false
+    private var isLoading: Boolean
+        get() = uiState.value.isLoading
         set(value) {
             uiState.update {
                 it.copy(isLoading = value)
