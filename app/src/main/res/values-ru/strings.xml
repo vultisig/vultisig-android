@@ -108,7 +108,6 @@
     <string name="join_key_gen_screen_discovering_session_id">Обнаружение идентификатора сессии</string>
     <string name="join_key_gen_screen_joining_keygen">Присоединение к генерации ключа</string>
     <string name="join_key_gen_screen_waiting_for_operationType_to_start">Ожидание начала %1$s</string>
-    <string name="keygen_flow_views_success">Успех</string>
     <string name="keygen_peer_discovery_keygen">Генерация ключа для хранилища %1$s</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Сопряжение с другими устройствами:</string>
     <string name="keygen_peer_discovery_continue">Продолжить</string>
