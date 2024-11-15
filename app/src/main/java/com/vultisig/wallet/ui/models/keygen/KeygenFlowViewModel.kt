@@ -77,7 +77,7 @@ enum class KeygenFlowState {
 
 internal data class KeygenFlowUiModel(
     val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
-    val isReshareMode: Boolean,
+    val isReshareMode: Boolean = false,
     val selection: List<String> = emptyList(),
     val deletedParticipants: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
@@ -137,57 +137,56 @@ internal class KeygenFlowViewModel @Inject constructor(
         savedStateHandle.get<Int>(ARG_VAULT_SETUP_TYPE) ?: 0
     )
 
-    val uiState = MutableStateFlow(
-        KeygenFlowUiModel(
-            vaultSetupType = setupType,
-            isReshareMode = false
-        )
-    )
-
-    private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
-    private val serviceName: String = generateServiceName()
-    private var serverUrl: String = LOCAL_MEDIATOR_SERVER_URL
-    private val action = MutableStateFlow(TssAction.KEYGEN)
-    private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "New Vault")
-    private val _encryptionKeyHex: String = Utils.encryptionKeyHex
-    private var _oldResharePrefix: String = ""
-
-
     private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_ID]
     private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
     private val passwordHint: String? = savedStateHandle[Destination.KeygenFlow.ARG_PASSWORD_HINT]
+
+
+    val uiState = MutableStateFlow(
+        KeygenFlowUiModel(
+            vaultSetupType = setupType,
+        )
+    )
+
+    private var serverUrl: String = VULTISIG_RELAY_URL
+    private val serviceName: String = generateServiceName()
+    private val sessionID: String = UUID.randomUUID().toString()
+
+    private val action = MutableStateFlow(TssAction.KEYGEN)
+    private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
+    private val _encryptionKeyHex: String = Utils.encryptionKeyHex
+    private var _oldResharePrefix: String = ""
+
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
-    private val isFastSign: Boolean
-        get() = setupType.isFast && email != null && password != null
-
-    private val isRelayEnabled =
-        MutableStateFlow(uiState.value.networkOption == NetworkPromptOption.INTERNET || isFastSign)
+    private val isFastSign: Boolean =
+        setupType.isFast && email != null && password != null
 
     val localPartyID: String
         get() = vault.localPartyID
 
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
-            vault,
-            this.action.value,
-            uiState.value.selection,
-            vault.signers.filter { uiState.value.selection.contains(it) },
-            serverUrl,
-            sessionID,
-            _encryptionKeyHex,
-            _oldResharePrefix,
-            password,
-            passwordHint,
+            vault = vault,
+            action = this.action.value,
+            keygenCommittee = uiState.value.selection,
+            oldCommittee = vault.signers.filter { uiState.value.selection.contains(it) },
+            serverAddress = serverUrl,
+            sessionId = sessionID,
+            encryptionKeyHex = _encryptionKeyHex,
+            oldResharePrefix = _oldResharePrefix,
+            password = password,
+            hint = passwordHint,
+            isReshareMode = uiState.value.isReshareMode,
+
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
             sessionApi = sessionApi,
-            isReshareMode = uiState.value.isReshareMode,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
@@ -200,13 +199,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             setData(vaultId)
-        }
-
-        viewModelScope.launch {
-            uiState.collect {
-                isRelayEnabled.value =
-                    it.networkOption == NetworkPromptOption.INTERNET || isFastSign
-            }
         }
 
         viewModelScope.launch {
@@ -224,41 +216,42 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     private suspend fun setData(vaultId: String?) {
-        // start mediator server
-
-        val vault = if (vaultId == null) {
+        vault = if (vaultId == null) {
             // generate
-            vaultName ?: error("No vault name provided")
-            Vault(id = UUID.randomUUID().toString(), vaultName)
-        } else {
-            // reshare
-            vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-        }
+            val vaultName = vaultName ?: error("No vault name provided")
 
-        if (vault.pubKeyECDSA.isEmpty()) {
             uiState.update { it.copy(isReshareMode = false) }
             action.value = TssAction.KEYGEN
+
+            Vault(
+                id = UUID.randomUUID().toString(),
+                name = vaultName,
+                hexChainCode = Utils.encryptionKeyHex,
+                localPartyID = Utils.deviceName(context),
+            )
         } else {
+            // reshare
+            val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
+
             uiState.update { it.copy(isReshareMode = true) }
             action.value = TssAction.ReShare
+
+            vault
         }
+
         serverUrl = VULTISIG_RELAY_URL
-        this.vault = vault
-        if (this.vault.hexChainCode.isEmpty()) {
-            this.vault.hexChainCode = Utils.encryptionKeyHex
-        }
-        if (this.vault.localPartyID.isEmpty()) {
-            this.vault.localPartyID = Utils.deviceName(context)
-        }
-        uiState.update { it.copy(selection = listOf(this.vault.localPartyID)) }
-        _oldResharePrefix = this.vault.resharePrefix
+        uiState.update { it.copy(selection = listOf(vault.localPartyID)) }
+        _oldResharePrefix = vault.resharePrefix
+
         updateKeygenPayload()
     }
 
     private suspend fun updateKeygenPayload() {
         stopParticipantDiscovery()
 
-        val isRelayEnabled = isRelayEnabled.value
+        val isRelayEnabled =
+            uiState.value.networkOption == NetworkPromptOption.INTERNET || isFastSign
+
         val keygenPayload = when (action.value) {
             TssAction.KEYGEN -> {
                 "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
@@ -298,16 +291,16 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         loadQrPainter(keygenPayload)
 
-        if (!isRelayEnabled) {
-            // when relay is disabled, start the mediator service
-            startMediatorService()
-        } else {
+        if (isRelayEnabled) {
             serverUrl = VULTISIG_RELAY_URL
             // start the session
             withContext(Dispatchers.IO) {
                 startSession(serverUrl, sessionID, vault.localPartyID)
             }
             startParticipantDiscovery()
+        } else {
+            // when relay is disabled, start the mediator service
+            startMediatorService()
         }
     }
 
