@@ -130,7 +130,6 @@
     <string name="token_settings_supply">Zaliha: %1$s</string>
     <string name="successfully_scanned_barcode">Uspješno skeniran crtični kod: %1$s</string>
     <string name="generating_key_screen_success">Uspjeh</string>
-    <string name="keygen_flow_views_success">Uspjeh</string>
     <string name="scan_qr_screen_return_vault">Povratni trezor</string>
     <string name="plus_icon">Ikona plus</string>
     <string name="verify_transaction_error_not_enough_consent">Provjerite sve suglasnosti</string>
@@ -279,10 +278,6 @@
     <string name="join_keysign_invalid_qr">Nevažeći sadržaj QR koda</string>
     <string name="join_keysign_failed_to_start">Pridruživanje znaku ključa nije uspjelo</string>
     <string name="deposit_form_percentage_to_remove_title">Postotak za uklanjanje</string>
-    <string name="setup_1_device_of_vault">Potreban vam je još 1 uređaj za uparivanje</string>
-    <string name="setup_2_device_of_vault">Potrebna su vam još 2 uređaja za uparivanje</string>
-    <string name="setup_m_device_of_vault">Možete upariti onoliko uređaja koliko želite</string>
-    <string name="s_of_s">%1$s od %2$s</string>
     <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
     <string name="settings_screen_tos">Uvjeti usluge</string>

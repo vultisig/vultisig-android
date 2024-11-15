@@ -130,7 +130,6 @@
     <string name="token_settings_supply">Fornecimento: %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado com sucesso: %1$s</string>
     <string name="generating_key_screen_success">Sucesso</string>
-    <string name="keygen_flow_views_success">Sucesso</string>
     <string name="scan_qr_screen_return_vault">Cofre de Retorno</string>
     <string name="plus_icon">Ícone de mais</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, verifique todos os consentimentos</string>
@@ -280,10 +279,6 @@
     <string name="join_keysign_invalid_qr">Conteúdo de código QR inválido</string>
     <string name="join_keysign_failed_to_start">Falha ao aderir ao keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Percentagem a ser removida</string>
-    <string name="setup_1_device_of_vault">Precisa de mais 1 dispositivo para emparelhar</string>
-    <string name="setup_2_device_of_vault">Precisa de mais 2 dispositivos para emparelhar</string>
-    <string name="setup_m_device_of_vault">Pode emparelhar quantos dispositivos quiser</string>
-    <string name="s_of_s">%1$s de %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de Privacidade</string>
     <string name="settings_screen_tos">Termos de Serviço</string>

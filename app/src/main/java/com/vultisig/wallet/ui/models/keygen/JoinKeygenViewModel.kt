@@ -246,7 +246,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                     }
                 }
                 if (_useVultisigRelay) {
-                    this@JoinKeygenViewModel._serverAddress = Endpoints.VULTISIG_RELAY
+                    this@JoinKeygenViewModel._serverAddress = Endpoints.VULTISIG_RELAY_URL
                     currentState.value = JoinKeygenState.JoinKeygen
                 } else {
                     currentState.value = JoinKeygenState.DiscoverService
