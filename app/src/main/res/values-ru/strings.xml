@@ -283,10 +283,6 @@
     <string name="join_keysign_invalid_qr">Недействительное содержимое QR-кода</string>
     <string name="join_keysign_failed_to_start">Не удалось присоединиться к keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Процент для удаления</string>
-    <string name="setup_1_device_of_vault">Вам нужно еще 1 устройство для сопряжения</string>
-    <string name="setup_2_device_of_vault">Для сопряжения вам понадобятся еще 2 устройства.</string>
-    <string name="setup_m_device_of_vault">Вы можете подключить столько устройств, сколько захотите.</string>
-    <string name="s_of_s">%1$s из %2$s</string>
     <string name="settings_screen_legal">Юридический</string>
     <string name="settings_screen_privacy_policy">политика конфиденциальности</string>
     <string name="settings_screen_tos">Условия обслуживания</string>

@@ -289,10 +289,6 @@
     <string name="join_keysign_invalid_qr">Ongeldige QR-code-inhoud</string>
     <string name="join_keysign_failed_to_start">Kan geen keysign joinen</string>
     <string name="deposit_form_percentage_to_remove_title">Percentage om te verwijderen</string>
-    <string name="setup_1_device_of_vault">Je hebt nog 1 apparaat nodig om te koppelen</string>
-    <string name="setup_2_device_of_vault">Je hebt nog 2 apparaten nodig om te koppelen</string>
-    <string name="setup_m_device_of_vault">U kunt zoveel apparaten koppelen als u wilt</string>
-    <string name="s_of_s">%1$s van %2$s</string>
     <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>

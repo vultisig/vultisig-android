@@ -278,10 +278,6 @@
     <string name="join_keysign_invalid_qr">Contenido de código QR no válido</string>
     <string name="join_keysign_failed_to_start">No se pudo unir a keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Porcentaje a eliminar</string>
-    <string name="setup_1_device_of_vault">Necesita 1 dispositivo más para emparejar</string>
-    <string name="setup_2_device_of_vault">Necesitas 2 dispositivos más para emparejar</string>
-    <string name="setup_m_device_of_vault">Puedes emparejar tantos dispositivos como quieras</string>
-    <string name="s_of_s">%1$s de %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">política de privacidad</string>
     <string name="settings_screen_tos">Condiciones de servicio</string>
