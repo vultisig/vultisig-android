@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
@@ -23,6 +25,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -112,6 +115,30 @@ class ThorChainSwapQuoteResponseJsonSerializerImpl @Inject constructor(private v
         } else {
             THORChainSwapQuoteDeserialized.Error(
                 json.decodeFromJsonElement<THORChainSwapQuoteError>(jsonObject)
+            )
+        }
+    }
+}
+
+
+interface OneInchSwapQuoteResponseJsonSerializer : DefaultSerializer<OneInchSwapQuoteDeserialized>
+
+class OneInchSwapQuoteResponseJsonSerializerImpl @Inject constructor(private val json: Json) :
+    OneInchSwapQuoteResponseJsonSerializer {
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("OnceInchSwapQouteResponseJsonSerializer")
+
+    override fun deserialize(decoder: Decoder): OneInchSwapQuoteDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        return if (jsonObject.containsKey("dstAmount")) {
+            OneInchSwapQuoteDeserialized.Result(
+                json.decodeFromJsonElement<OneInchSwapQuoteJson>(jsonObject)
+            )
+        } else {
+            OneInchSwapQuoteDeserialized.Error(
+                json.decodeFromJsonElement<String>(jsonObject)
             )
         }
     }

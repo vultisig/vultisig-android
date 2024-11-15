@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
@@ -79,9 +80,13 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             amount = tokenValue.value.toString(),
             isAffiliate = isAffiliate,
         )
-
-        oneInchQuote.error?.let { throw SwapException.handleSwapException(it) }
-        return oneInchQuote
+        when (oneInchQuote) {
+            is OneInchSwapQuoteDeserialized.Error -> throw SwapException.handleSwapException(oneInchQuote.error)
+            is OneInchSwapQuoteDeserialized.Result -> {
+                oneInchQuote.data.error?.let { throw SwapException.handleSwapException(it) }
+                return oneInchQuote.data
+            }
+        }
     }
 
     override suspend fun getMayaSwapQuote(

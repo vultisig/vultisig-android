@@ -4,6 +4,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 
 @Module
@@ -39,4 +40,10 @@ internal interface SerializerModule {
     fun bindCosmosThorChainResponseSerializer(
         impl: CosmosThorChainResponseSerializerImpl,
     ): CosmosThorChainResponseSerializer
+
+    @Binds
+    @Singleton
+    fun bindOneInchSwapQuoteResponseJsonSerializer(
+        impl: OneInchSwapQuoteResponseJsonSerializerImpl,
+    ): OneInchSwapQuoteResponseJsonSerializer
 }
