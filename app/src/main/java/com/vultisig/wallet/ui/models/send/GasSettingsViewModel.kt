@@ -26,7 +26,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 
-internal data class EthGasSettingsUiModel(
+internal data class GasSettingsUiModel(
     val selectedPriorityFee: PriorityFee = PriorityFee.FAST,
     val currentBaseFee: String = "",
     val totalFee: String = "",
@@ -39,13 +39,13 @@ internal enum class PriorityFee {
 }
 
 @HiltViewModel
-internal class EthGasSettingsViewModel @Inject constructor(
+internal class GasSettingsViewModel @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
     private val convertWeiToGwei: ConvertWeiToGweiUseCase,
     private val convertGweiToWei: ConvertGweiToWeiUseCase,
 ) : ViewModel() {
 
-    val state = MutableStateFlow(EthGasSettingsUiModel())
+    val state = MutableStateFlow(GasSettingsUiModel())
 
     val gasLimitState = TextFieldState()
 
@@ -111,8 +111,8 @@ internal class EthGasSettingsViewModel @Inject constructor(
         }
     }
 
-    fun save(): EthGasSettings {
-        return EthGasSettings(
+    fun save(): GasSettings {
+        return GasSettings.Eth(
             priorityFee = priorityFeesMap[state.value.selectedPriorityFee]!!,
             gasLimit = gasLimitState.text.toString().toBigInteger(),
         )

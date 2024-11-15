@@ -73,8 +73,7 @@ internal fun SendFormScreen(
     val specific = state.specific
 
     if (state.showGasSettings && selectedChain != null && specific != null) {
-        EthGasSettingsScreen(
-            navController = rememberNavController(),
+        GasSettingsScreen(
             chain = selectedChain,
             specific = specific,
             onSaveGasSettings = viewModel::saveGasSettings,

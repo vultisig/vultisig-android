@@ -25,31 +25,28 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.components.GradientButton
-import com.vultisig.wallet.ui.components.TopBar
+import com.vultisig.wallet.ui.components.TopBarWithoutNav
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTitleContainer
-import com.vultisig.wallet.ui.models.send.EthGasSettings
-import com.vultisig.wallet.ui.models.send.EthGasSettingsUiModel
-import com.vultisig.wallet.ui.models.send.EthGasSettingsViewModel
+import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
+import com.vultisig.wallet.ui.models.send.GasSettingsViewModel
+import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.PriorityFee
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun EthGasSettingsScreen(
+internal fun GasSettingsScreen(
     chain: Chain,
     specific: BlockChainSpecificAndUtxo,
-    navController: NavController,
     onDismissGasSettings: () -> Unit,
-    onSaveGasSettings: (EthGasSettings) -> Unit,
-    model: EthGasSettingsViewModel = hiltViewModel(),
+    onSaveGasSettings: (GasSettings) -> Unit,
+    model: GasSettingsViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
 
@@ -65,8 +62,7 @@ internal fun EthGasSettingsScreen(
         containerColor = Theme.colors.oxfordBlue800,
         onDismissRequest = onDismissGasSettings,
     ) {
-        EthGasSettingsScreen(
-            navController = navController,
+        GasSettingsScreen(
             state = state,
             gasLimitState = model.gasLimitState,
             onSelectPriorityFee = model::selectPriorityFee,
@@ -80,17 +76,15 @@ internal fun EthGasSettingsScreen(
 }
 
 @Composable
-private fun EthGasSettingsScreen(
-    navController: NavController,
-    state: EthGasSettingsUiModel,
+private fun GasSettingsScreen(
+    state: GasSettingsUiModel,
     gasLimitState: TextFieldState,
     onSelectPriorityFee: (PriorityFee) -> Unit,
     onCloseClick: () -> Unit,
     onSaveClick: () -> Unit,
 ) {
     Column {
-        TopBar(
-            navController = navController,
+        TopBarWithoutNav(
             centerText = stringResource(R.string.eth_gas_settings_title),
             startIcon = R.drawable.x,
             onStartIconClick = onCloseClick,
@@ -127,60 +121,67 @@ private fun EthGasSettingsScreen(
                 }
             }
 
-            FormEntry(
-                title = stringResource(R.string.eth_gas_settings_base_fee_title),
-            ) {
-                Text(
-                    text = state.currentBaseFee,
-                    color = Theme.colors.neutral100,
-                    style = Theme.menlo.body1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 48.dp)
-                        .padding(
-                            horizontal = 12.dp,
-                            vertical = 16.dp
-                        ),
-                )
-            }
-
-            FormTextFieldCard(
-                title = stringResource(R.string.eth_gas_settings_gas_limit_title),
-                hint = stringResource(R.string.eth_gas_settings_gas_limit_title),
-                error = state.gasLimitError,
-                keyboardType = KeyboardType.Number,
-                textFieldState = gasLimitState,
-            )
-
-
-            FormEntry(
-                title = stringResource(R.string.eth_gas_setting_total_fee_title),
-            ) {
-                Text(
-                    text = state.totalFee,
-                    color = Theme.colors.neutral100,
-                    style = Theme.menlo.body1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 48.dp)
-                        .padding(
-                            horizontal = 12.dp,
-                            vertical = 16.dp
-                        ),
-                )
-            }
+            EthGasSettings(state, gasLimitState)
 
             UiSpacer(size = 64.dp)
         }
     }
 }
 
+@Composable
+private fun EthGasSettings(
+    state: GasSettingsUiModel,
+    gasLimitState: TextFieldState
+) {
+    FormEntry(
+        title = stringResource(R.string.eth_gas_settings_base_fee_title),
+    ) {
+        Text(
+            text = state.currentBaseFee,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 48.dp)
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 16.dp
+                ),
+        )
+    }
+
+    FormTextFieldCard(
+        title = stringResource(R.string.eth_gas_settings_gas_limit_title),
+        hint = stringResource(R.string.eth_gas_settings_gas_limit_title),
+        error = state.gasLimitError,
+        keyboardType = KeyboardType.Number,
+        textFieldState = gasLimitState,
+    )
+
+
+    FormEntry(
+        title = stringResource(R.string.eth_gas_setting_total_fee_title),
+    ) {
+        Text(
+            text = state.totalFee,
+            color = Theme.colors.neutral100,
+            style = Theme.menlo.body1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 48.dp)
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 16.dp
+                ),
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun EthGasSettingsScreenPreview() {
-    EthGasSettingsScreen(
-        navController = rememberNavController(),
-        state = EthGasSettingsUiModel(
+    GasSettingsScreen(
+        state = GasSettingsUiModel(
             currentBaseFee = "25",
         ),
         gasLimitState = TextFieldState(),
