@@ -104,7 +104,13 @@ internal class DepositFormViewModel @Inject constructor(
     val assetsFieldState = TextFieldState()
 
     val state = MutableStateFlow(DepositFormUiModel())
-
+    var isLoading: Boolean
+        get() = state.value.isLoading
+        set(value) {
+            state.update {
+                it.copy(isLoading = value)
+            }
+        }
     fun loadData(
         vaultId: String,
         chainId: String,
@@ -214,9 +220,9 @@ internal class DepositFormViewModel @Inject constructor(
     fun deposit() {
         viewModelScope.launch {
             try {
-                showLoading()
-
+                isLoading = true
                 val depositOption = state.value.depositOption
+
                 val transaction = when (depositOption) {
                     DepositOption.Bond -> createBondTransaction()
                     DepositOption.Unbond -> createUnbondTransaction()
@@ -240,25 +246,8 @@ internal class DepositFormViewModel @Inject constructor(
                 showError(e.text)
             }
             finally {
-                hideLoading()
-            }
-        }
-
-    }
-
-    private fun hideLoading() {
-        state.update {
-            it.copy(
                 isLoading = false
-            )
-        }
-    }
-
-    private fun showLoading() {
-        state.update {
-            it.copy(
-                isLoading = true
-            )
+            }
         }
     }
 
