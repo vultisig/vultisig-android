@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -18,6 +19,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -39,6 +41,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
     private val vaultOrderRepository: OrderRepository<VaultOrderEntity>,
     private val accountsRepository: AccountsRepository,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
+    private val vaultDataStoreRepository: VaultDataStoreRepository
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -59,47 +62,66 @@ internal class ConfirmDeleteViewModel @Inject constructor(
         loadData()
     }
 
-    fun loadData() {
-        viewModelScope.launch {
-            vaultRepository.get(vaultId)?.let { vault ->
+    private fun loadData() {
+        loadVaultDeleteUiModel()
+        preloadTotalFiatValue()
+        loadTotalFiatValue()
+    }
+
+    private fun loadVaultDeleteUiModel() = viewModelScope.launch {
+        vaultRepository.get(vaultId)?.let { vault ->
+            uiModel.update {
+                it.copy(
+                    vaultDeleteUiModel = it.vaultDeleteUiModel.copy(
+                        name = vault.name,
+                        pubKeyECDSA = vault.pubKeyECDSA,
+                        pubKeyEDDSA = vault.pubKeyEDDSA,
+                        deviceList = vault.signers,
+                        localPartyId = vault.localPartyID,
+                        vaultPart = vault.getVaultPart()
+                    )
+                )
+            }
+        }
+    }
+
+    private fun preloadTotalFiatValue() = viewModelScope.launch {
+        vaultDataStoreRepository.readTotalFiatValue(vaultId).first().let { fiatValue ->
+            if (fiatValue.isEmpty()) return@let
+            uiModel.update {
+                it.copy(
+                    vaultDeleteUiModel = it.vaultDeleteUiModel.copy(
+                        totalFiatValue = fiatValue
+                    )
+                )
+            }
+        }
+    }
+
+    private fun loadTotalFiatValue() = viewModelScope.launch {
+        accountsRepository
+            .loadAddresses(vaultId)
+            .map { it ->
+                it.sortedBy {
+                    it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
+                }
+            }
+            .catch {
+                // TODO: Handle error
+                Timber.e(it)
+            }.collect { accounts ->
+                val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
+                    ?.let(fiatValueToStringMapper::map)
+                if (totalFiatValue == null) return@collect
                 uiModel.update {
                     it.copy(
-                        vaultDeleteUiModel = VaultDeleteUiModel(
-                            name = vault.name,
-                            pubKeyECDSA = vault.pubKeyECDSA,
-                            pubKeyEDDSA = vault.pubKeyEDDSA,
-                            deviceList = vault.signers,
-                            localPartyId = vault.localPartyID,
-                            vaultPart = vault.getVaultPart()
+                        vaultDeleteUiModel = it.vaultDeleteUiModel.copy(
+                            totalFiatValue = totalFiatValue?: ""
                         )
                     )
                 }
             }
-            accountsRepository
-                .loadAddresses(vaultId)
-                .map { it ->
-                    it.sortedBy {
-                        it.accounts.calculateAccountsTotalFiatValue()?.value?.unaryMinus()
-                    }
-                }
-                .catch {
-                    // TODO: Handle error
-                    Timber.e(it)
-                }.collect { accounts ->
-                    val totalFiatValue = accounts.calculateAddressesTotalFiatValue()
-                        ?.let(fiatValueToStringMapper::map)
-
-                    uiModel.update {
-                        it.copy(
-                            vaultDeleteUiModel = it.vaultDeleteUiModel.copy(
-                                totalFiatValue = totalFiatValue?: ""
-                            )
-                        )
-                    }
-                }
-        }
     }
-
 
     fun changeCheckCaution(index: Int, checked: Boolean) {
         val checkedCautionIndexes = uiModel.value.checkedCautionIndexes.toMutableList()

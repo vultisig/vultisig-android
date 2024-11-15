@@ -162,10 +162,24 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
         loadAccountsJob?.cancel()
+        loadCashedTotalFiatValue(vaultId)
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId, isRefresh)
                 .updateUiStateFromFlow()
+        }
+    }
+
+    private fun loadCashedTotalFiatValue(vaultId: String) {
+        viewModelScope.launch {
+            vaultDataStoreRepository.readTotalFiatValue(vaultId).first().let { fiatValue ->
+                if (fiatValue.isEmpty()) return@let
+                uiState.update {
+                    it.copy(
+                        totalFiatValue = fiatValue
+                    )
+                }
+            }
         }
     }
 
@@ -189,16 +203,17 @@ internal class VaultAccountsViewModel @Inject constructor(
             it.chain.raw
         }))
 
-    private fun List<Address>.updateUiStateFromList() {
+    private suspend fun List<Address>.updateUiStateFromList() {
         val totalFiatValue = this.calculateAddressesTotalFiatValue()
             ?.let(fiatValueToStringMapper::map)
         val accountsUiModel = this.map(addressToUiModelMapper::map)
-
+        if (totalFiatValue == null) return
         uiState.update {
             it.copy(
                 totalFiatValue = totalFiatValue, accounts = accountsUiModel
             )
         }
+        vaultDataStoreRepository.setTotalFiatValue(requireNotNull(vaultId), totalFiatValue ?: "")
         updateRefreshing(false)
     }
 

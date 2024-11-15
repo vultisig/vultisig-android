@@ -26,6 +26,10 @@ interface VaultDataStoreRepository {
     suspend fun setGlobalBackupReminderStatus(month: Int)
 
     suspend fun readGlobalBackupReminderStatus(): Flow<Int>
+
+    suspend fun readTotalFiatValue(vaultId: String): Flow<String>
+
+    suspend fun setTotalFiatValue(vaultId: String, totalFiatValue: String)
 }
 
 internal class VaultDataStoreRepositoryImpl @Inject constructor(
@@ -69,11 +73,22 @@ internal class VaultDataStoreRepositoryImpl @Inject constructor(
         return appDataStore.readData(onGlobalBackupReminderStatusKey(), GLOBAL_REMINDER_STATUS_NOT_SET)
     }
 
+    override suspend fun readTotalFiatValue(vaultId: String): Flow<String> {
+        return appDataStore.readData(onVaultTotalFiatValueKey(vaultId), "")
+    }
+
+    override suspend fun setTotalFiatValue(vaultId: String, totalFiatValue: String) {
+        appDataStore.editData { preferences ->
+            preferences[onVaultTotalFiatValueKey(vaultId)] = totalFiatValue
+        }
+    }
+
     private companion object PreferencesKey {
         fun onVaultBackupStatusKey(vaultId: String) = booleanPreferencesKey(name = "vault_backup/$vaultId")
         fun onVaultFastSignHintKey(vaultId: String) = stringPreferencesKey(name = "vault_fast_sign_hint/$vaultId")
         fun onVaultBackupHintKey(vaultFileName: String) = stringPreferencesKey(name = "vault_backup_hint/$vaultFileName")
         fun onGlobalBackupReminderStatusKey() = intPreferencesKey(name = "global_backup_reminder_status")
+        fun onVaultTotalFiatValueKey(vaultId: String) = stringPreferencesKey(name = "vault_total_fiat_value/$vaultId")
     }
 }
 
