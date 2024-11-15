@@ -15,6 +15,14 @@ class MediatorService : Service() {
 
     companion object {
         const val SERVICE_ACTION: String = "com.vultisig.wallet.mediator.MediatorService.STARTED"
+
+        fun start(context: Context, serverName: String) {
+            val intent = Intent(context, MediatorService::class.java)
+            intent.putExtra("serverName", serverName)
+            context.startService(intent)
+            Timber.d("startMediatorService: Mediator service started")
+        }
+
     }
 
     override fun onCreate() {
