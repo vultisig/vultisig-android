@@ -44,7 +44,6 @@ internal fun KeygenPeerDiscovery(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val applicationContext = context.applicationContext
     val qrShareTitle = stringResource(R.string.qr_title_join_keygen)
     val qrShareBackground = Theme.colors.oxfordBlue800
     val qrShareDescription = stringResource(R.string.qr_title_join_keygen_description)
@@ -61,7 +60,7 @@ internal fun KeygenPeerDiscovery(
         networkPromptOption = uiState.networkOption,
         isContinueEnabled = uiState.isContinueButtonEnabled,
         onQrAddressClick = { viewModel.shareQRCode(context) },
-        onChangeNetwork = { viewModel.changeNetworkPromptOption(it, applicationContext) },
+        onChangeNetwork = viewModel::changeNetworkPromptOption,
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
         extractBitmap = { bitmap ->
