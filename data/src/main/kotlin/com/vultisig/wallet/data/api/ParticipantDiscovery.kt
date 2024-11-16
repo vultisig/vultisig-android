@@ -9,6 +9,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@Deprecated(
+    "Depreceated in favor of DiscoverParticipantsUseCase",
+    ReplaceWith("DiscoverParticipantsUseCase")
+)
 class ParticipantDiscovery(
     private val serverAddress: String,
     private val sessionID: String,
