@@ -10,14 +10,13 @@ import com.vultisig.wallet.ui.components.ErrorView
 @Composable
 internal fun KeysignErrorScreen(
     errorMessage: String = "",
-    isSwap: Boolean = false,
     tryAgain: () -> Unit,
 ) {
     val errorLabel: String
     val infoText: String?
     when {
-        errorMessage.contains("insufficient funds") && isSwap ->{
-            errorLabel = stringResource(R.string.signing_error_insufficient_funds_swap)
+        errorMessage.contains("insufficient funds") -> {
+            errorLabel = stringResource(R.string.signing_error_insufficient_funds)
             infoText = null
         }
         else -> {

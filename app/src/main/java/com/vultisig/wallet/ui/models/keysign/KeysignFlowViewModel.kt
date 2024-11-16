@@ -32,7 +32,7 @@ import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_ADDRESS
+import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Coin
@@ -135,7 +135,7 @@ internal class KeysignFlowViewModel @Inject constructor(
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
-    private var _serverAddress: String = LOCAL_MEDIATOR_SERVER_ADDRESS
+    private var _serverAddress: String = LOCAL_MEDIATOR_SERVER_URL
     private var _participantDiscovery: ParticipantDiscovery? = null
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _currentVault: Vault? = null
@@ -216,7 +216,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                 vault = _currentVault!!,
             )
             this.selection.value = listOf(vault.localPartyID)
-            _serverAddress = Endpoints.VULTISIG_RELAY
+            _serverAddress = Endpoints.VULTISIG_RELAY_URL
             updateKeysignPayload(context)
             updateTransactionUiModel(keysignPayload)
         } catch (e: Exception) {
@@ -406,7 +406,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         if (!isRelayEnabled) {
             startMediatorService(context)
         } else {
-            _serverAddress = Endpoints.VULTISIG_RELAY
+            _serverAddress = Endpoints.VULTISIG_RELAY_URL
             withContext(Dispatchers.IO) {
                 startSession(_serverAddress, _sessionID, vault.localPartyID)
             }
@@ -515,11 +515,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             context.registerReceiver(serviceStartedReceiver, filter)
         }
 
-        // start mediator service
-        val intent = Intent(context, MediatorService::class.java)
-        intent.putExtra("serverName", _serviceName)
-        context.startService(intent)
-        Timber.tag("KeysignFlowViewModel").d("startMediatorService: Mediator service started")
+        MediatorService.start(context, _serviceName)
     }
 
     private suspend fun startSession(
@@ -588,11 +584,11 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value = option
         _serverAddress = when (option) {
             NetworkPromptOption.LOCAL -> {
-                LOCAL_MEDIATOR_SERVER_ADDRESS
+                LOCAL_MEDIATOR_SERVER_URL
             }
 
             NetworkPromptOption.INTERNET -> {
-                Endpoints.VULTISIG_RELAY
+                Endpoints.VULTISIG_RELAY_URL
             }
         }
 

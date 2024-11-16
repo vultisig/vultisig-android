@@ -110,7 +110,6 @@
     <string name="join_key_gen_screen_discovering_session_id">Discovering Session ID</string>
     <string name="join_key_gen_screen_joining_keygen">Joining Keygen</string>
     <string name="join_key_gen_screen_waiting_for_operationType_to_start">Waiting for %1$s to start</string>
-    <string name="keygen_flow_views_success">Success</string>
     <string name="keygen_peer_discovery_keygen">Keygen for %1$s vault</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Pair with other devices:</string>
     <string name="keygen_peer_discovery_continue">Continue</string>
@@ -301,10 +300,6 @@
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
     <string name="join_keysign_failed_to_start">Failed to join keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Percentage to remove</string>
-    <string name="setup_1_device_of_vault">You need 1 more device to pair</string>
-    <string name="setup_2_device_of_vault">You need 2 more devices to pair</string>
-    <string name="setup_m_device_of_vault">You can pair as many devices you want</string>
-    <string name="s_of_s">%1$s of %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
@@ -403,7 +398,7 @@
     <string name="keygen_password_warning_caption" translatable="false">Do not forget your password.</string>
     <string name="keygen_passwords_dont_match" translatable="false">Passwords should match</string>
     <string name="password_should_not_be_empty" translatable="false">Password should not be empty</string>
-    <string name="signing_error_insufficient_funds_swap" translatable="false">Insufficient funds to execute the swap. Please fund the wallet.</string>
+    <string name="signing_error_insufficient_funds" translatable="false">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
     <string name="verify_transaction_fast_sign_btn_title" translatable="false">Fast Sign</string>
     <string name="keysign_paired_sign_title" translatable="false">Paired Sign</string>
     <string name="keysign_password_title" translatable="false">Password</string>

@@ -259,7 +259,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     payloadId = payloadProto.payloadId
                 }
                 if (_useVultisigRelay) {
-                    this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY
+                    this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY_URL
                     // when Payload is not in the QRCode
                     if (!payloadProto.payloadId.isEmpty()) {
                         routerApi.getPayload(_serverAddress, payloadId).let { payload ->
