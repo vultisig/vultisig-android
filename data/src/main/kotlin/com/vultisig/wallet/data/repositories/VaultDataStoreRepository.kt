@@ -15,10 +15,6 @@ interface VaultDataStoreRepository {
 
     suspend fun readBackupStatus(vaultId: String): Flow<Boolean>
 
-    suspend fun setBackupHint(vaultFileName: String, hint: String)
-
-    suspend fun readBackupHint(vaultFileName: String): Flow<String>
-
     suspend fun setFastSignHint(vaultId: String, hint: String)
 
     suspend fun readFastSignHint(vaultId: String): Flow<String>
@@ -39,15 +35,6 @@ internal class VaultDataStoreRepositoryImpl @Inject constructor(
 
     override suspend fun readBackupStatus(vaultId: String): Flow<Boolean> =
         appDataStore.readData(onVaultBackupStatusKey(vaultId), true)
-
-    override suspend fun setBackupHint(vaultFileName: String, hint: String) {
-        appDataStore.editData { preferences ->
-            preferences[onVaultBackupHintKey(vaultFileName)] = hint
-        }
-    }
-
-    override suspend fun readBackupHint(vaultFileName: String): Flow<String> =
-        appDataStore.readData(onVaultBackupHintKey(vaultFileName), "")
 
     override suspend fun setFastSignHint(vaultId: String, hint: String) {
         appDataStore.editData { preferences ->
@@ -72,7 +59,6 @@ internal class VaultDataStoreRepositoryImpl @Inject constructor(
     private companion object PreferencesKey {
         fun onVaultBackupStatusKey(vaultId: String) = booleanPreferencesKey(name = "vault_backup/$vaultId")
         fun onVaultFastSignHintKey(vaultId: String) = stringPreferencesKey(name = "vault_fast_sign_hint/$vaultId")
-        fun onVaultBackupHintKey(vaultFileName: String) = stringPreferencesKey(name = "vault_backup_hint/$vaultFileName")
         fun onGlobalBackupReminderStatusKey() = intPreferencesKey(name = "global_backup_reminder_status")
     }
 }

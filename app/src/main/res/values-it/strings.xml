@@ -130,7 +130,6 @@
     <string name="token_settings_supply">Fornitura: %1$s</string>
     <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
     <string name="generating_key_screen_success">Successo</string>
-    <string name="keygen_flow_views_success">Successo</string>
     <string name="scan_qr_screen_return_vault">Restituisci Vault</string>
     <string name="plus_icon">Icona più</string>
     <string name="verify_transaction_error_not_enough_consent">Si prega di controllare tutti i consensi</string>
@@ -279,10 +278,6 @@
     <string name="join_keysign_invalid_qr">Contenuto del codice QR non valido</string>
     <string name="join_keysign_failed_to_start">Impossibile unirsi al keysign</string>
     <string name="deposit_form_percentage_to_remove_title">Percentuale da rimuovere</string>
-    <string name="setup_1_device_of_vault">Hai bisogno di un altro dispositivo da associare</string>
-    <string name="setup_2_device_of_vault">Sono necessari altri 2 dispositivi per l\’associazione</string>
-    <string name="setup_m_device_of_vault">Puoi associare tutti i dispositivi che vuoi</string>
-    <string name="s_of_s">%1$s di %2$s</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">politica sulla riservatezza</string>
     <string name="settings_screen_tos">Termini di servizio</string>

@@ -47,6 +47,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
@@ -95,6 +96,7 @@ internal data class SendFormUiModel(
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
 )
 
 internal data class SendSrc(
@@ -853,6 +855,35 @@ internal class SendFormViewModel @Inject constructor(
 
     fun enableAdvanceGasUi() {
         advanceGasUiRepository.showIcon()
+    }
+
+    fun refreshGasFee() {
+        val srcAddress = selectedToken.value ?: return
+        viewModelScope.launch {
+            uiState.update {
+                it.copy(
+                    isRefreshing = true
+                )
+            }
+            val gasFee = gasFeeRepository.getGasFee(
+                srcAddress.chain,
+                srcAddress.address
+            )
+
+            this@SendFormViewModel.gasFee.value = gasFee
+
+
+            // Rapid toggling of isRefreshing can cause the initial true value to be skipped,
+            // displaying only the false value in the UI resulting in the swipe refresh being frozen.
+            // this line prevent missing true value in these cases.
+            delay(100)
+
+            uiState.update {
+                it.copy(
+                    isRefreshing = false
+                )
+            }
+        }
     }
 
     companion object {

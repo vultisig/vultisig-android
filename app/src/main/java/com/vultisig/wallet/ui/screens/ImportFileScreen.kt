@@ -61,9 +61,7 @@ import com.vultisig.wallet.ui.models.ImportFileState
 import com.vultisig.wallet.ui.models.ImportFileViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTypes
-import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
-
 
 @Composable
 internal fun ImportFileScreen(
@@ -174,16 +172,6 @@ private fun ImportFileScreen(
                                     }
                                 }
                             )
-
-                            if (uiModel.passwordErrorHint != null) {
-                                UiSpacer(size = 8.dp)
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = uiModel.passwordHint?.asString()?: "",
-                                    color = appColor.neutral0,
-                                    style = menloFamily.body2,
-                                )
-                            }
 
                             TextButton(onClick = onConfirmPasswordClick) {
                                 Text(
@@ -302,9 +290,7 @@ private fun ImportFileScreen(
                 }
             }
         }
-
     }
-
 }
 
 
