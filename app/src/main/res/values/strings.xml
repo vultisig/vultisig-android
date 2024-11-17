@@ -476,4 +476,10 @@
     <string name="keygen_verify_server_backup_warning" translatable="false">This code verifies receiving the server backup via email</string>
     <string name="keygen_verify_server_backup_title" translatable="false">Server backup verification</string>
     <string name="keygen_verify_server_backup_invalid_code" translatable="false">Invalid code</string>
+    <string name="swap_screen_invalid_no_vault" translatable="false">No vault selected</string>
+    <string name="swap_screen_invalid_no_src_error" translatable="false">No source token selected</string>
+    <string name="swap_screen_invalid_selected_no_dst" translatable="false">No destination token selected</string>
+    <string name="swap_screen_invalid_zero_token_amount" translatable="false">Token amount cannot be Zero</string>
+    <string name="swap_screen_invalid_gas_fee_calculation" translatable="false">Gas fee calculation failed</string>
+    <string name="swap_screen_invalid_quote_calculation" translatable="false">Quote calculation failed</string>
 </resources>
