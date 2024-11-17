@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.SearchedTokensRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
@@ -22,7 +23,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -48,6 +48,7 @@ internal class TokenSelectionViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
+    private val searchedTokensRepository: SearchedTokensRepository,
 ) : ViewModel() {
 
     private val vaultId: String =
@@ -115,7 +116,7 @@ internal class TokenSelectionViewModel @Inject constructor(
                 val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
                 val enabledCoins = vault.coins.filter { it.chain == chain }
                 val address = enabledCoins.first().address
-                val allChainTokens = tokenRepository.getChainTokens(chain, address)
+                val allChainTokens = tokenRepository.getChainTokens(chain, address, vaultId)
                     .map { tokens -> tokens.filter { !it.isNativeToken } }
 
                 allChainTokens.collect { chains ->
@@ -169,6 +170,7 @@ internal class TokenSelectionViewModel @Inject constructor(
             coin.apply {
                 if (enabledTokenIds.value.contains(id))
                     return@apply
+                searchedTokensRepository.saveSearchedToken(coin, vaultId)
                 enableToken(this).join()
                 loadTokens()
             }

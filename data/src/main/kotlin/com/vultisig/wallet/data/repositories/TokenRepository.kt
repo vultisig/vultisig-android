@@ -7,9 +7,9 @@ import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.ThorBalancesResponseJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.Coins.SupportedCoins
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.oneInchChainId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +26,7 @@ interface TokenRepository {
 
     suspend fun getToken(tokenId: String): Coin?
 
-    fun getChainTokens(chain: Chain, address: String): Flow<List<Coin>>
+    fun getChainTokens(chain: Chain, address: String, vaultId: VaultId): Flow<List<Coin>>
 
     suspend fun getNativeToken(chainId: String): Coin
 
@@ -45,40 +45,76 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val evmApiFactory: EvmApiFactory,
     private val balanceApi: ThorBalanceApi,
     private val splTokenRepository: SplTokenRepository,
+    private val searchedTokensRepository: SearchedTokensRepository,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
         builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
 
-    override fun getChainTokens(chain: Chain, address: String): Flow<List<Coin>> =
-        when (chain.standard) {
+    override fun getChainTokens(chain: Chain, address: String, vaultId: VaultId): Flow<List<Coin>> {
+        return when (chain.standard) {
             TokenStandard.EVM -> flow {
                 val builtInTokens = builtInTokens.first().filter { it.chain == chain }
                 emit(builtInTokens)
+                val searchedTokens = searchedTokensRepository.getSearchedTokens(vaultId,chain.id)
+                emit(
+                    uniquifyTokens(
+                        searchedTokens,
+                        builtInTokens,
+                    )
+                )
                 val oneInchTokens = oneInchApi.getTokens(chain)
                 emit(
-                    builtInTokens +
-                            oneInchTokens.tokens.toCoins(chain)
-                                .filter { newCoin ->
-                                    builtInTokens.none {
-                                        it.chain == newCoin.chain
-                                                && it.ticker == newCoin.ticker
-                                    }
-                                }
+                    uniquifyTokens(
+                        builtInTokens,
+                        searchedTokens,
+                        oneInchTokens.tokens.toCoins(chain),
+                    )
                 )
             }
 
             TokenStandard.SOL -> flow {
                 val builtInTokens = builtInTokens.first().filter { it.chain == chain }
                 emit(builtInTokens)
+                val searchedTokens = searchedTokensRepository.getSearchedTokens(vaultId, chain.id)
+                emit(
+                    uniquifyTokens(
+                        searchedTokens,
+                        builtInTokens,
+                    )
+                )
                 val tokens = splTokenRepository.getTokens(address)
-                emit(builtInTokens + tokens)
+                emit(
+                    uniquifyTokens(
+                        searchedTokens,
+                        builtInTokens,
+                        tokens,
+                    )
+                )
             }
 
-            else ->
-                builtInTokens.map { allTokens ->
+            else -> flow {
+                val builtinTokens = builtInTokens.map { allTokens ->
                     allTokens.filter { it.chain.id == chain.id }
-                }
+                }.first()
+                emit(builtinTokens)
+                val searchedTokens = searchedTokensRepository.getSearchedTokens(vaultId, chain.id)
+                emit(
+                    uniquifyTokens(
+                        builtinTokens,
+                        searchedTokens,
+                    )
+                )
+            }
         }
+    }
+
+    private fun uniquifyTokens(vararg items: List<Coin>): List<Coin> {
+        return items.toList()
+            .flatten()
+            .asSequence()
+            .distinctBy { it.ticker to it.chain.id }
+            .toList()
+    }
 
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it -> it.first { it.chain.id == chainId } }.first()
@@ -179,7 +215,7 @@ internal class TokenRepositoryImpl @Inject constructor(
             } else null
         }
 
-    override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
+    override val builtInTokens: Flow<List<Coin>> = flowOf(SupportedCoins)
 
     override val nativeTokens: Flow<List<Coin>> = builtInTokens
         .map { it.filterNatives() }

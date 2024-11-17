@@ -223,4 +223,10 @@ internal interface RepositoriesModule {
         impl: VaultMetadataRepoImpl
     ): VaultMetadataRepo
 
+    @Binds
+    @Singleton
+    fun bindSearchedTokensRepository(
+        impl: SearchedTokensRepositoryImpl
+    ): SearchedTokensRepository
+
 }

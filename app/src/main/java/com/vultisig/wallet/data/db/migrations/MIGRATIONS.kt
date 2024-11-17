@@ -347,3 +347,22 @@ internal val MIGRATION_18_19 = object : Migration(18, 19) {
         )
     }
 }
+
+internal val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `searchedToken` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `vaultId` TEXT NOT NULL,
+                    `chain` TEXT NOT NULL,
+                    `ticker` TEXT NOT NULL,
+                    `decimals` INTEGER NOT NULL,
+                    `logo` TEXT NOT NULL,
+                    `priceProviderId` TEXT NOT NULL,
+                    `contractAddress` TEXT NOT NULL
+                )
+            """.trimIndent()
+        )
+    }
+}

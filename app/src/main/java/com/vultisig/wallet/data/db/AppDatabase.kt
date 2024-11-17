@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.dao.FolderDao
 import com.vultisig.wallet.data.db.dao.FolderOrderDao
+import com.vultisig.wallet.data.db.dao.SearchedTokenDao
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.dao.VaultDao
@@ -17,6 +18,7 @@ import com.vultisig.wallet.data.db.models.CoinEntity
 import com.vultisig.wallet.data.db.models.FolderEntity
 import com.vultisig.wallet.data.db.models.FolderOrderEntity
 import com.vultisig.wallet.data.db.models.KeyShareEntity
+import com.vultisig.wallet.data.db.models.SearchedTokenEntity
 import com.vultisig.wallet.data.db.models.SignerEntity
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.db.models.TokenValueEntity
@@ -38,8 +40,9 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         FolderEntity::class,
         FolderOrderEntity::class,
         VaultMetadataEntity::class,
+        SearchedTokenEntity::class,
     ],
-    version = 19,
+    version = 20,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -61,5 +64,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun vaultMetadataDao(): VaultMetadataDao
 
     abstract fun folderDao(): FolderDao
+
+    abstract fun searchedTokenDao(): SearchedTokenDao
 
 }
