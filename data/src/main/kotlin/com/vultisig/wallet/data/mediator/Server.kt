@@ -292,11 +292,12 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             "${sessionID.trim()}-${participantKey.trim()}-"
         }
         cache.asMap().filterKeys { it.startsWith(keyPrefix) }.let {
-            val messages = it.values.toList()
+            val messages = it.values.toList().map { it as Message }
             response.status(HttpStatusCode.OK.value)
             response.type("application/json")
             return Json.encodeToString(messages)
         }
+
     }
 
     private fun postMessage(request: Request, response: Response): String {
