@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -168,9 +169,14 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             Icon(
                                 painter = painterResource(
                                     id = if (uiState.isPasswordVisible)
-                                        R.drawable.hidden else R.drawable.visible
+                                        R.drawable.visible else R.drawable.hidden
                                 ),
-                                contentDescription = "toggle password visibility"
+                                contentDescription = "toggle password visibility",
+                                modifier = Modifier
+                                    .size(
+                                        20.dp,
+                                        13.dp
+                                    )
                             )
                         }
                     })
@@ -186,9 +192,14 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
                             Icon(
                                 painter = painterResource(
                                     id = if (uiState.isConfirmPasswordVisible)
-                                        R.drawable.hidden else R.drawable.visible
+                                        R.drawable.visible else R.drawable.hidden
                                 ),
-                                contentDescription = "toggle confirm password visibility"
+                                contentDescription = "toggle confirm password visibility",
+                                modifier = Modifier
+                                    .size(
+                                        20.dp,
+                                        13.dp
+                                    )
                             )
                         }
                     })
