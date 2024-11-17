@@ -170,3 +170,23 @@ data class SPLTokenRequestJson(
     @SerialName("tokens")
     val tokens: List<String>,
 )
+
+@Serializable
+data class JupiterTokenResponseJson(
+    @SerialName("address")
+    val contractAddress: String,
+    @SerialName("symbol")
+    val ticker: String,
+    @SerialName("decimals")
+    val decimals: Int,
+    @SerialName("logoURI")
+    val logo: String?,
+    @SerialName("extensions")
+    val extensions: JupiterTokenCoinGeckoIdJson?
+)
+
+@Serializable
+data class JupiterTokenCoinGeckoIdJson(
+    @SerialName("coingeckoId")
+    val coingeckoId: String?,
+)
