@@ -167,6 +167,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         networkOption.value == NetworkPromptOption.INTERNET || isFastSign
     }
 
+    val isLoading = MutableStateFlow(false)
+
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
 
 
@@ -566,7 +568,17 @@ internal class KeysignFlowViewModel @Inject constructor(
             }
             currentState.update { nextState }
         } catch (e: Exception) {
+            isLoading.value = false
             moveToState(KeysignFlowState.Error(e.message.toString()))
+        }
+    }
+
+    fun moveToKeysignState() {
+        viewModelScope.launch {
+            isLoading.value = true
+            _participantDiscovery?.stop()
+            moveToState(KeysignFlowState.Keysign)
+            isLoading.value = false
         }
     }
 

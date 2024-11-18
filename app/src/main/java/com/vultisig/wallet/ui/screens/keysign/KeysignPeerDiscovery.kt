@@ -44,6 +44,7 @@ internal fun KeysignPeerDiscovery(
 ) {
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
+    val isLoading = viewModel.isLoading.collectAsState().value
     val context = LocalContext.current.applicationContext
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     val vault = sharedViewModel.vault ?: return
@@ -118,13 +119,11 @@ internal fun KeysignPeerDiscovery(
         bitmapPainter = bitmapPainter,
         networkPromptOption = viewModel.networkOption.value,
         hasNetworkPrompt = !viewModel.isFastSign,
+        isLoading = isLoading,
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
-        onStopParticipantDiscovery = {
-            viewModel.stopParticipantDiscovery()
-            viewModel.moveToState(KeysignFlowState.Keysign)
-        },
+        onStopParticipantDiscovery = viewModel::moveToKeysignState,
         extractBitmap = { bitmap ->
             if (bitmapPainter != null) {
                 sharedViewModel.saveShareQrBitmap(
@@ -151,6 +150,7 @@ internal fun KeysignPeerDiscovery(
     bitmapPainter: BitmapPainter?,
     networkPromptOption: NetworkPromptOption,
     hasNetworkPrompt: Boolean,
+    isLoading: Boolean,
     onChangeNetwork: (NetworkPromptOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
@@ -199,6 +199,7 @@ internal fun KeysignPeerDiscovery(
                             horizontal = 16.dp,
                         ),
                     onClick = onStopParticipantDiscovery,
+                    isLoading = isLoading,
                 )
             }
         }
@@ -218,5 +219,6 @@ private fun KeysignPeerDiscoveryPreview() {
         ),
         networkPromptOption = NetworkPromptOption.LOCAL,
         hasNetworkPrompt = true,
+        isLoading = false,
     )
 }
