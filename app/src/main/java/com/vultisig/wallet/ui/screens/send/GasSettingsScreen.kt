@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.ui.components.GradientButton
 import com.vultisig.wallet.ui.components.TopBarWithoutNav
@@ -65,6 +66,7 @@ internal fun GasSettingsScreen(
         GasSettingsScreen(
             state = state,
             gasLimitState = model.gasLimitState,
+            byteFeeState = model.byteFeeState,
             onSelectPriorityFee = model::selectPriorityFee,
             onSaveClick = {
                 onSaveGasSettings(model.save())
@@ -79,6 +81,7 @@ internal fun GasSettingsScreen(
 private fun GasSettingsScreen(
     state: GasSettingsUiModel,
     gasLimitState: TextFieldState,
+    byteFeeState: TextFieldState,
     onSelectPriorityFee: (PriorityFee) -> Unit,
     onCloseClick: () -> Unit,
     onSaveClick: () -> Unit,
@@ -121,11 +124,39 @@ private fun GasSettingsScreen(
                 }
             }
 
-            EthGasSettings(state, gasLimitState)
+            when (state.chainSpecific) {
+                is BlockChainSpecific.Ethereum -> {
+                    EthGasSettings(
+                        state = state,
+                        gasLimitState = gasLimitState,
+                    )
+                }
+                is BlockChainSpecific.UTXO -> {
+                    UTXOSettings(
+                        state = state,
+                        byteFeeState = byteFeeState,
+                    )
+                }
+                else -> {}
+            }
 
             UiSpacer(size = 64.dp)
         }
     }
+}
+
+@Composable
+private fun UTXOSettings(
+    state: GasSettingsUiModel,
+    byteFeeState: TextFieldState,
+) {
+    FormTextFieldCard(
+        title = stringResource(R.string.utxo_settings_byte_fee_title),
+        hint = "",
+        error = state.byteFeeError,
+        keyboardType = KeyboardType.Number,
+        textFieldState = byteFeeState,
+    )
 }
 
 @Composable
@@ -185,6 +216,7 @@ private fun EthGasSettingsScreenPreview() {
             currentBaseFee = "25",
         ),
         gasLimitState = TextFieldState(),
+        byteFeeState = TextFieldState(),
         onSelectPriorityFee = {},
         onSaveClick = {},
         onCloseClick = {},

@@ -110,7 +110,7 @@ internal sealed class GasSettings {
         val gasLimit: BigInteger,
     ) : GasSettings()
 
-    data class Btc(
+    data class UTXO(
         val byteFee: BigInteger,
     ) : GasSettings()
 }
@@ -444,15 +444,27 @@ internal class SendFormViewModel @Inject constructor(
                         val gasSettings = gasSettings.value
                         if (gasSettings != null) {
                             val spec = it.blockChainSpecific
-                            if (gasSettings is GasSettings.Eth && spec is BlockChainSpecific.Ethereum) {
-                                it.copy(
-                                    blockChainSpecific = spec
-                                        .copy(
-                                            priorityFeeWei = gasSettings.priorityFee,
-                                            gasLimit = gasSettings.gasLimit,
-                                        )
-                                )
-                            } else it
+
+                            when {
+                                gasSettings is GasSettings.Eth && spec is BlockChainSpecific.Ethereum -> {
+                                    it.copy(
+                                        blockChainSpecific = spec
+                                            .copy(
+                                                priorityFeeWei = gasSettings.priorityFee,
+                                                gasLimit = gasSettings.gasLimit,
+                                            )
+                                    )
+                                }
+                                gasSettings is GasSettings.UTXO && spec is BlockChainSpecific.UTXO -> {
+                                    it.copy(
+                                        blockChainSpecific = spec
+                                            .copy(
+                                                byteFee = gasSettings.byteFee,
+                                            )
+                                    )
+                                }
+                                else -> it
+                            }
                         } else {
                             it
                         }
