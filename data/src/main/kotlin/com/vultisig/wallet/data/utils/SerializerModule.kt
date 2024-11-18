@@ -12,34 +12,46 @@ import javax.inject.Singleton
 internal interface SerializerModule {
 
     @Binds
+    @Singleton
     fun bindBigDecimalSerializer(
         impl: BigDecimalSerializerImpl,
     ): BigDecimalSerializer
 
     @Binds
+    @Singleton
     fun bindBigIntegerSerializer(
         impl: BigIntegerSerializerImpl,
     ): BigIntegerSerializer
 
     @Binds
+    @Singleton
     fun bindTHORChainSwapQuoteResponseJsonSerializer(
         impl: ThorChainSwapQuoteResponseJsonSerializerImpl,
     ): ThorChainSwapQuoteResponseJsonSerializer
 
     @Binds
+    @Singleton
     fun bindKeysignResponseSerializer(
         impl: KeysignResponseSerializerImpl,
     ): KeysignResponseSerializer
 
     @Binds
+    @Singleton
     fun bindSplTokenResponseJsonSerializer(
         impl: SplTokenResponseJsonSerializerImpl,
     ): SplTokenResponseJsonSerializer
 
     @Binds
+    @Singleton
     fun bindCosmosThorChainResponseSerializer(
         impl: CosmosThorChainResponseSerializerImpl,
     ): CosmosThorChainResponseSerializer
+
+    @Binds
+    @Singleton
+    fun bindLiFiSwapQuoteResponseSerializer(
+        impl: LiFiSwapQuoteResponseSerializerImpl,
+    ): LiFiSwapQuoteResponseSerializer
 
     @Binds
     @Singleton

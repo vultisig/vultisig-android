@@ -1,8 +1,9 @@
 package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
@@ -29,6 +30,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import javax.inject.Singleton
 
 interface DefaultSerializer<T> : KSerializer<T> {
     override fun serialize(encoder: Encoder, value: T) {
@@ -120,6 +122,32 @@ class ThorChainSwapQuoteResponseJsonSerializerImpl @Inject constructor(private v
     }
 }
 
+interface LiFiSwapQuoteResponseSerializer : DefaultSerializer<LiFiSwapQuoteDeserialized>
+
+class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: Json) :
+    LiFiSwapQuoteResponseSerializer{
+    override val descriptor: SerialDescriptor =
+        buildClassSerialDescriptor("LiFiSwapQuoteResponseSerializer")
+
+    override fun deserialize(decoder: Decoder): LiFiSwapQuoteDeserialized {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+
+        return if (jsonObject.containsKey("estimate")) {
+            LiFiSwapQuoteDeserialized.Result(
+                json.decodeFromJsonElement<LiFiSwapQuoteJson>(jsonObject)
+            )
+        } else {
+            LiFiSwapQuoteDeserialized.Error(
+                json.decodeFromJsonElement<LiFiSwapQuoteError>(jsonObject)
+            )
+        }
+    }
+
+    override fun serialize(encoder: Encoder, value: LiFiSwapQuoteDeserialized) {
+        throw UnsupportedOperationException("Serialization is not required")
+    }
+}
 
 interface OneInchSwapQuoteResponseJsonSerializer : DefaultSerializer<OneInchSwapQuoteDeserialized>
 
