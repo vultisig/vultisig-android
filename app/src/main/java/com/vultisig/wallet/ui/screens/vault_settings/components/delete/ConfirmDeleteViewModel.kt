@@ -92,7 +92,7 @@ internal class ConfirmDeleteViewModel @Inject constructor(
                     uiModel.update {
                         it.copy(
                             vaultDeleteUiModel = it.vaultDeleteUiModel.copy(
-                                totalFiatValue = totalFiatValue?: ""
+                                totalFiatValue = totalFiatValue
                             )
                         )
                     }
