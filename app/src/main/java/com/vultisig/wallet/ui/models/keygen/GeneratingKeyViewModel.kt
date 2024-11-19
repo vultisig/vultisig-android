@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keygen
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -14,6 +15,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
@@ -29,6 +31,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import tss.ServiceImpl
@@ -42,6 +46,8 @@ internal sealed interface KeygenState {
     data object ReshareECDSA : KeygenState
     data object ReshareEdDSA : KeygenState
     data object Success : KeygenState
+    data object VerifyBackup : KeygenState
+
     data class Error(
         val title: UiText?,
         val message: UiText,
@@ -59,6 +65,7 @@ internal class GeneratingKeyViewModel(
     private val oldResharePrefix: String,
     private val password: String? = null,
     private val hint: String? = null,
+    private val vaultSetupType: VaultSetupType?,
 
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
@@ -71,6 +78,7 @@ internal class GeneratingKeyViewModel(
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
 
     val state = MutableStateFlow<KeygenState>(KeygenState.CreatingInstance)
@@ -91,7 +99,13 @@ internal class GeneratingKeyViewModel(
             vault.signers = keygenCommittee
             state.value = KeygenState.Success
 
-            saveVault()
+            if (password != null && vaultSetupType == VaultSetupType.FAST) {
+                delay(2.seconds)
+
+                state.value = KeygenState.VerifyBackup
+            } else {
+                saveVault()
+            }
         } catch (e: Exception) {
             Timber.d("generateKey error: %s", e.stackTraceToString())
 
@@ -231,21 +245,10 @@ internal class GeneratingKeyViewModel(
             vaultPasswordRepository.savePassword(vaultId, password)
         }
 
-        if (password != null) {
-            vaultMetadataRepo.requireServerBackupVerification(vaultId)
-        }
-
         navigator.navigate(
-            dst = if (password != null) {
-                Destination.VerifyServerBackup(
-                    vaultId = vaultId,
-                    shouldSuggestBackup = true,
-                )
-            } else {
-                Destination.BackupSuggestion(
-                    vaultId = vaultId
-                )
-            },
+            dst = Destination.BackupSuggestion(
+                vaultId = vaultId
+            ),
             opts = NavigationOptions(
                 popUpTo = Destination.Home().route,
             )
@@ -258,6 +261,36 @@ internal class GeneratingKeyViewModel(
         context.stopService(intent)
         Timber.d("stop MediatorService: Mediator service stopped")
 
+    }
+
+    val verifyState = MutableStateFlow(KeygenVerifyServerBackupUiModel())
+    val codeFieldState = TextFieldState()
+
+    fun completeVerification() {
+        val code = codeFieldState.text.toString()
+
+        viewModelScope.launch {
+            setVerifyError(null)
+
+            val isCodeValid = vultiSignerRepository.isBackupCodeValid(
+                publicKeyEcdsa = vault.pubKeyECDSA,
+                code = code,
+            )
+
+            if (isCodeValid) {
+                saveVault()
+            } else {
+                setVerifyError(UiText.StringResource(R.string.keygen_verify_server_backup_invalid_code))
+            }
+        }
+    }
+
+    private fun setVerifyError(error: UiText?) {
+        verifyState.update {
+            it.copy(
+                codeError = error,
+            )
+        }
     }
 
     private fun resolveKeygenErrorFromException(e: Exception): KeygenState.Error {

@@ -27,9 +27,5 @@ fun KeygenFlowView(
         KeygenFlowState.KEYGEN -> {
             GeneratingKey(navController, viewModel.generatingKeyViewModel)
         }
-
-        KeygenFlowState.ERROR -> {
-            KeyGenErrorScreen(navController)
-        }
     }
 }
