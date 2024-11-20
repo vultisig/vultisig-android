@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="signing_error_please_try_again">Errore di Firma. Per favore, riprova.</string>
     <string name="try_again">Riprova</string>
     <string name="vault_choose_chains">Scegli Catene</string>
     <string name="vault_settings_title">Modifica Cassaforte</string>
@@ -142,7 +141,6 @@
     <string name="keysign_screen_keysign_finished">Keysign completato!</string>
     <string name="keysign">Segno chiave</string>
     <string name="generating_key_screen_keygen_failed">Keygen non riuscito</string>
-    <string name="keygen">Generazione di chiavi</string>
     <string name="device_list_screen_keygen">Generazione di chiavi</string>
     <string name="generating_key_title">Generazione di chiavi</string>
     <string name="join_key_gen_screen_keygen">Generazione di chiavi</string>

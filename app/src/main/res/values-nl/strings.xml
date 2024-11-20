@@ -4,9 +4,7 @@
     <string name="tokens">Tokens</string>
     <string name="chains">Ketting</string>
     <string name="keysign">Sleutel tekenen</string>
-    <string name="keygen">Sleutel genereren</string>
     <string name="danger_icon">Gevaarpictogram</string>
-    <string name="signing_error_please_try_again">Ondertekeningsfout. Probeer het opnieuw.</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk, correct kluis en paar apparaten.\nZorg ervoor dat er geen andere apparaten zijn het draaien van Vultisig.</string>
     <string name="try_again">Probeer opnieuw</string>
