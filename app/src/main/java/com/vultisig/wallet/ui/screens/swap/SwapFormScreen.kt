@@ -103,6 +103,7 @@ internal fun SwapFormScreen(
                     onSwap()
                 },
                 disabled = state.isSwapDisabled,
+                isLoading = state.isLoading,
             )
         }
     ) {

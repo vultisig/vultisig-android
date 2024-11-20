@@ -70,11 +70,25 @@ internal fun GeneratingKey(
         )
 
     val generatingKeyViewModel = wrapperViewModel.viewModel
-    GeneratingKey(
-        navController = navController,
-        keygenState = generatingKeyViewModel.currentState.collectAsState().value,
-        isReshare = generatingKeyViewModel.isReshareMode,
-    )
+
+    val state by generatingKeyViewModel.state.collectAsState()
+
+    if (state is KeygenState.VerifyBackup) {
+        val verifyState by generatingKeyViewModel.verifyState.collectAsState()
+        KeygenVerifyServerBackupScreen(
+            navController = navController,
+            state = verifyState,
+            codeFieldState = generatingKeyViewModel.codeFieldState,
+            onCodeLostFocus = { /* noop */ },
+            onContinueClick = generatingKeyViewModel::completeVerification,
+        )
+    } else {
+        GeneratingKey(
+            navController = navController,
+            keygenState = state,
+            isReshare = generatingKeyViewModel.isReshareMode,
+        )
+    }
 }
 
 @Composable
@@ -146,7 +160,8 @@ internal fun GeneratingKey(
                 KeygenState.KeygenEdDSA,
                 KeygenState.ReshareECDSA,
                 KeygenState.ReshareEdDSA,
-                KeygenState.Success -> {
+                KeygenState.Success,
+                KeygenState.VerifyBackup -> {
                     val title = when (keygenState) {
                         KeygenState.CreatingInstance -> stringResource(R.string.generating_key_preparing_vault)
                         KeygenState.KeygenECDSA -> stringResource(R.string.generating_key_screen_generating_ecdsa_key)
@@ -233,13 +248,9 @@ internal fun GeneratingKey(
                                 alignment = Center
                             )
 
-                            if (!keygenState.isThresholdError) {
+                            if (keygenState.title != null) {
                                 Text(
-                                    text = if (isReshare) {
-                                        stringResource(R.string.generating_key_screen_reshare_failed)
-                                    } else {
-                                        stringResource(R.string.generating_key_screen_keygen_failed)
-                                    },
+                                    text = keygenState.title.asString(),
                                     color = textColor,
                                     style = Theme.menlo.heading5
                                 )
@@ -248,7 +259,7 @@ internal fun GeneratingKey(
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
-                                text = keygenState.errorMessage.asString(),
+                                text = keygenState.message.asString(),
                                 color = textColor,
                                 style = Theme.montserrat.subtitle1,
                                 lineHeight = 24.sp,
@@ -347,8 +358,8 @@ private fun GeneratingKeyPreview() {
     GeneratingKey(
         navController = rememberNavController(),
         keygenState = KeygenState.Error(
-            UiText.StringResource(R.string.threshold_error),
-            true
+            title = UiText.StringResource(R.string.generating_key_screen_keygen_failed),
+            message = UiText.StringResource(R.string.threshold_error),
         ),
         isReshare = false,
     )

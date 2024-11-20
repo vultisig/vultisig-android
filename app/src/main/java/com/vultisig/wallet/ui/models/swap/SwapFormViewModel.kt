@@ -85,6 +85,7 @@ internal data class SwapFormUiModel(
     val error: UiText? = null,
     val formError: UiText? = null,
     val isSwapDisabled: Boolean = false,
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
@@ -135,6 +136,14 @@ internal class SwapFormViewModel @Inject constructor(
 
     private var selectTokensJob: Job? = null
 
+    private var isLoading: Boolean
+        get() = uiState.value.isLoading
+        set(value) {
+            uiState.update {
+                it.copy(isLoading = value)
+            }
+        }
+
     init {
         collectSelectedAccounts()
         collectSelectedTokens()
@@ -147,12 +156,24 @@ internal class SwapFormViewModel @Inject constructor(
     fun swap() {
         try {
             // TODO verify swap info
-            val vaultId = vaultId ?: return
-            val selectedSrc = selectedSrc.value ?: return
-            val selectedDst = selectedDst.value ?: return
 
-            val gasFee = gasFee.value ?: return
-            val gasFeeFiatValue = gasFeeFiat.value ?: return
+            isLoading = true
+            val vaultId = vaultId ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_no_vault)
+            )
+            val selectedSrc = selectedSrc.value ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_no_src_error)
+            )
+            val selectedDst = selectedDst.value ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_selected_no_dst)
+            )
+
+            val gasFee = gasFee.value ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
+            )
+            val gasFeeFiatValue = gasFeeFiat.value ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
+            )
 
             val srcToken = selectedSrc.account.token
             val dstToken = selectedDst.account.token
@@ -169,11 +190,19 @@ internal class SwapFormViewModel @Inject constructor(
                 ?.movePointRight(selectedSrc.account.token.decimal)
                 ?.toBigInteger()
 
-            val selectedSrcBalance = selectedSrc.account.tokenValue?.value ?: return
-            if (srcAmountInt == BigInteger.ZERO) return
+            val selectedSrcBalance =
+                selectedSrc.account.tokenValue?.value ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.swap_screen_same_asset_error_message)
+                )
+            if (srcAmountInt == BigInteger.ZERO)
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
+                )
             val srcTokenValue = srcAmountInt
                 ?.let { convertTokenAndValueToTokenValue(srcToken, it) }
-                ?: return
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
+                )
 
 
             if (srcToken.isNativeToken) {
@@ -199,8 +228,9 @@ internal class SwapFormViewModel @Inject constructor(
                 }
             }
 
-
-            val quote = quote ?: return
+            val quote = quote ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
+            )
 
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
@@ -361,8 +391,10 @@ internal class SwapFormViewModel @Inject constructor(
                         vaultId = vaultId,
                     )
                 )
+                isLoading = false
             }
         } catch (e: InvalidTransactionDataException) {
+            isLoading = false
             showError(e.text)
             return
         }

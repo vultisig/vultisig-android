@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="signing_error_please_try_again">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut.</string>
     <string name="signing_error_please_try_again_s">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut. %s</string>
     <string name="try_again">Erneut versuchen</string>
     <string name="vault_choose_chains">Ketten wählen</string>
@@ -130,7 +129,6 @@
     <string name="token_settings_supply">Angebot: %1$s</string>
     <string name="successfully_scanned_barcode">Barcode erfolgreich gescannt: %1$s</string>
     <string name="generating_key_screen_success">Erfolg</string>
-    <string name="keygen_flow_views_success">Erfolg</string>
     <string name="scan_qr_screen_return_vault">Tresor zurückgeben</string>
     <string name="plus_icon">Plus-Symbol</string>
     <string name="verify_transaction_error_not_enough_consent">Bitte überprüfen Sie alle Einwilligungen</string>
@@ -143,7 +141,6 @@
     <string name="keysign_screen_keysign_finished">Schlüsselsignatur fertig!</string>
     <string name="keysign">Schlüsselzeichen</string>
     <string name="generating_key_screen_keygen_failed">Keygen fehlgeschlagen</string>
-    <string name="keygen">Keygen</string>
     <string name="device_list_screen_keygen">Keygen</string>
     <string name="generating_key_title">Keygen</string>
     <string name="join_key_gen_screen_keygen">Keygen</string>
@@ -279,10 +276,6 @@
     <string name="join_keysign_invalid_qr">Ungültiger QR-Code-Inhalt</string>
     <string name="join_keysign_failed_to_start">Keysign konnte nicht beitreten</string>
     <string name="deposit_form_percentage_to_remove_title">Zu entfernender Prozentsatz</string>
-    <string name="setup_1_device_of_vault">Sie benötigen 1 weiteres Gerät zum Koppeln</string>
-    <string name="setup_2_device_of_vault">Zum Koppeln sind zwei weitere Geräte erforderlich</string>
-    <string name="setup_m_device_of_vault">Sie können so viele Geräte koppeln, wie Sie möchten</string>
-    <string name="s_of_s">%1$s von %2$s</string>
     <string name="settings_screen_legal">Rechtliches</string>
     <string name="settings_screen_privacy_policy">Datenschutzrichtlinie</string>
     <string name="settings_screen_tos">Servicebedingungen</string>

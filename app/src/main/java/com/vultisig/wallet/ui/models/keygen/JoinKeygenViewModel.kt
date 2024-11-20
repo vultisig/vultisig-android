@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
@@ -82,6 +83,7 @@ internal class JoinKeygenViewModel @Inject constructor(
     private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
+    private val vultiSignerRepository: VultiSignerRepository,
 ) : ViewModel() {
     private var _vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
     private var _localPartyID: String = ""
@@ -125,6 +127,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             _serverAddress,
             _sessionID,
             _encryptionKeyHex,
+            vaultSetupType = null,
             oldResharePrefix = _oldResharePrefix,
             navigator = navigator,
             saveVault = saveVault,
@@ -137,6 +140,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
             vaultMetadataRepo = vaultMetadataRepo,
+            vultiSignerRepository = vultiSignerRepository,
         )
 
     @OptIn(ExperimentalEncodingApi::class)
@@ -246,7 +250,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                     }
                 }
                 if (_useVultisigRelay) {
-                    this@JoinKeygenViewModel._serverAddress = Endpoints.VULTISIG_RELAY
+                    this@JoinKeygenViewModel._serverAddress = Endpoints.VULTISIG_RELAY_URL
                     currentState.value = JoinKeygenState.JoinKeygen
                 } else {
                     currentState.value = JoinKeygenState.DiscoverService

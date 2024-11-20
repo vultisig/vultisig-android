@@ -4,9 +4,7 @@
     <string name="tokens">Tokens</string>
     <string name="chains">Ketting</string>
     <string name="keysign">Sleutel tekenen</string>
-    <string name="keygen">Sleutel genereren</string>
     <string name="danger_icon">Gevaarpictogram</string>
-    <string name="signing_error_please_try_again">Ondertekeningsfout. Probeer het opnieuw.</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk, correct kluis en paar apparaten.\nZorg ervoor dat er geen andere apparaten zijn het draaien van Vultisig.</string>
     <string name="try_again">Probeer opnieuw</string>
@@ -108,7 +106,6 @@
     <string name="join_key_gen_screen_discovering_session_id">Sessienummer ontdekken</string>
     <string name="join_key_gen_screen_joining_keygen">Keygen betreden</string>
     <string name="join_key_gen_screen_waiting_for_operationType_to_start">Wachten op de start van %1$s</string>
-    <string name="keygen_flow_views_success">Succes</string>
     <string name="keygen_peer_discovery_keygen">Keygen voor %1$s kluis</string>
     <string name="keygen_peer_discovery_pair_with_other_devices">Koppel met andere apparaten:</string>
     <string name="keygen_peer_discovery_continue">Doorgaan</string>
@@ -290,10 +287,6 @@
     <string name="join_keysign_invalid_qr">Ongeldige QR-code-inhoud</string>
     <string name="join_keysign_failed_to_start">Kan geen keysign joinen</string>
     <string name="deposit_form_percentage_to_remove_title">Percentage om te verwijderen</string>
-    <string name="setup_1_device_of_vault">Je hebt nog 1 apparaat nodig om te koppelen</string>
-    <string name="setup_2_device_of_vault">Je hebt nog 2 apparaten nodig om te koppelen</string>
-    <string name="setup_m_device_of_vault">U kunt zoveel apparaten koppelen als u wilt</string>
-    <string name="s_of_s">%1$s van %2$s</string>
     <string name="settings_screen_legal">Juridisch</string>
     <string name="settings_screen_privacy_policy">Privacybeleid</string>
     <string name="settings_screen_tos">Servicevoorwaarden</string>

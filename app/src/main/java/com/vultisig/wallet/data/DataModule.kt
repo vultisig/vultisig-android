@@ -97,18 +97,6 @@ internal interface DataModule {
             )
         }
 
-        @Provides
-        @Singleton
-        fun provideBigDecimalSerializer() = BigDecimalSerializer
-
-        @Provides
-        @Singleton
-        fun provideBigIntegerSerializer() = BigIntegerSerializer
-
-        @Provides
-        @Singleton
-        fun provideKeysignResponseSerializer() = KeysignResponseSerializer
-
         @Singleton
         @Provides
         fun provideAppUpdateManager(

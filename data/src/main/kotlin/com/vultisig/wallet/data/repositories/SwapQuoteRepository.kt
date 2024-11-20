@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
@@ -192,7 +193,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val toToken =
             dstToken.contractAddress.ifEmpty { dstToken.ticker }
 
-        val liFiQuote = liFiChainApi.getSwapQuote(
+        val liFiQuoteResponse = liFiChainApi.getSwapQuote(
             fromChain = srcToken.chain.oneInchChainId().toString(),
             toChain = dstToken.chain.oneInchChainId().toString(),
             fromToken = fromToken,
@@ -201,21 +202,31 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             fromAddress = srcAddress,
             toAddress = dstAddress,
         )
-        liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
 
-        return OneInchSwapQuoteJson(
-            dstAmount = liFiQuote.estimate.toAmount,
-            tx = OneInchSwapTxJson(
-                from = liFiQuote.transactionRequest.from,
-                to = liFiQuote.transactionRequest.to,
-                data = liFiQuote.transactionRequest.data,
-                gas = liFiQuote.transactionRequest.gasLimit.substring(startIndex = 2).hexToLong(),
-                value = liFiQuote.transactionRequest.value.substring(startIndex = 2).hexToLong()
-                    .toString(),
-                gasPrice = liFiQuote.transactionRequest.gasPrice.substring(startIndex = 2)
-                    .hexToLong().toString(),
-            )
-        )
+        when (liFiQuoteResponse) {
+            is LiFiSwapQuoteDeserialized.Error ->
+                throw SwapException.handleSwapException(liFiQuoteResponse.error.message)
+
+            is LiFiSwapQuoteDeserialized.Result -> {
+                val liFiQuote = liFiQuoteResponse.data
+                liFiQuote.message?.let { throw SwapException.handleSwapException(it) }
+                return OneInchSwapQuoteJson(
+                    dstAmount = liFiQuote.estimate.toAmount,
+                    tx = OneInchSwapTxJson(
+                        from = liFiQuote.transactionRequest.from,
+                        to = liFiQuote.transactionRequest.to,
+                        data = liFiQuote.transactionRequest.data,
+                        gas = liFiQuote.transactionRequest.gasLimit.substring(startIndex = 2)
+                            .hexToLong(),
+                        value = liFiQuote.transactionRequest.value.substring(startIndex = 2)
+                            .hexToLong()
+                            .toString(),
+                        gasPrice = liFiQuote.transactionRequest.gasPrice.substring(startIndex = 2)
+                            .hexToLong().toString(),
+                    )
+                )
+            }
+        }
     }
 
     private val Coin.streamingInterval: String

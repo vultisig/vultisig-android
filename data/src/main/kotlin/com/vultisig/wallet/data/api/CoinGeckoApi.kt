@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -29,7 +30,7 @@ interface CoinGeckoApi {
 internal class CoinGeckoApiImpl @Inject constructor(
     private val http: HttpClient,
 ) : CoinGeckoApi {
-    
+
 
     override suspend fun getCryptoPrices(
         priceProviderIds: List<String>,
@@ -37,10 +38,14 @@ internal class CoinGeckoApiImpl @Inject constructor(
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = priceProviderIds.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return fetchPrices(
-            priceProviderIdsParam,
-            currenciesParam
-        )
+        return try {
+            fetchPrices(
+                priceProviderIdsParam, currenciesParam
+            )
+        } catch (e: Exception) {
+            Timber.d(e, "error occurred in getCryptoPrices")
+            emptyMap()
+        }
     }
 
     override suspend fun getContractsPrice(
@@ -50,11 +55,16 @@ internal class CoinGeckoApiImpl @Inject constructor(
     ): Map<String, CurrencyToPrice> {
         val priceProviderIdsParam = contractAddresses.joinToString(",")
         val currenciesParam = currencies.joinToString(",")
-        return fetchContractPrices(
-            chain.coinGeckoAssetId,
-            priceProviderIdsParam,
-            currenciesParam,
-        )
+        return try {
+            fetchContractPrices(
+                chain.coinGeckoAssetId,
+                priceProviderIdsParam,
+                currenciesParam,
+            )
+        } catch (e: Exception) {
+            Timber.d(e, "error occurred in getContractsPrice")
+            emptyMap()
+        }
     }
 
     private suspend fun fetchPrices(

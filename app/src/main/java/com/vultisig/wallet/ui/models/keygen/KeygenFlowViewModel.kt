@@ -15,15 +15,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.FeatureFlagApi
-import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
-import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_ADDRESS
+import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
+import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.TssAction
@@ -43,6 +41,7 @@ import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_TYPE
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -56,6 +55,7 @@ import io.ktor.util.encodeBase64
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,17 +68,16 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
-import java.security.SecureRandom
 import java.util.UUID
 import javax.inject.Inject
 
 enum class KeygenFlowState {
-    PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR, SUCCESS
+    PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN,
 }
 
 internal data class KeygenFlowUiModel(
     val currentState: KeygenFlowState = KeygenFlowState.PEER_DISCOVERY,
-    val isReshareMode: Boolean,
+    val isReshareMode: Boolean = false,
     val selection: List<String> = emptyList(),
     val deletedParticipants: List<String> = emptyList(),
     val participants: List<String> = emptyList(),
@@ -111,97 +110,97 @@ internal data class KeygenFlowUiModel(
 internal class KeygenFlowViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    @ApplicationContext private val context: Context,
+
     private val compressQr: CompressQrUseCase,
     private val saveVault: SaveVaultUseCase,
+    private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
+    private val generateQrBitmap: GenerateQrBitmap,
+    private val encryption: Encryption,
+    private val generateServerPartyId: GenerateServerPartyId,
+    private val generateServiceName: GenerateServiceName,
+    private val discoverParticipants: DiscoverParticipantsUseCase,
+
     private val vaultRepository: VaultRepository,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val signerRepository: VultiSignerRepository,
-    @ApplicationContext private val context: Context,
-    private val protoBuf: ProtoBuf,
-    private val sessionApi: SessionApi,
-    private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
-    private val generateQrBitmap: GenerateQrBitmap,
-    private val encryption: Encryption,
-    private val featureFlagApi: FeatureFlagApi,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
-    private val generateServerPartyId: GenerateServerPartyId,
-    private val generateServiceName: GenerateServiceName
+
+    private val protoBuf: ProtoBuf,
+    private val sessionApi: SessionApi,
+    private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
 
     private val setupType = VaultSetupType.fromInt(
         savedStateHandle.get<Int>(ARG_VAULT_SETUP_TYPE) ?: 0
     )
 
-    val uiState = MutableStateFlow(
-        KeygenFlowUiModel(
-            vaultSetupType = setupType,
-            isReshareMode = false
-        )
-    )
-
-    private val sessionID: String = UUID.randomUUID().toString() // generate a random UUID
-    private val serviceName: String = generateServiceName()
-    private var serverAddress: String = LOCAL_MEDIATOR_SERVER_ADDRESS
-    private var participantDiscovery: ParticipantDiscovery? = null
-    private val action = MutableStateFlow(TssAction.KEYGEN)
-    private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "New Vault")
-    private val _encryptionKeyHex: String = Utils.encryptionKeyHex
-    private var _oldResharePrefix: String = ""
-
-
     private val vaultId: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_ID]
     private val vaultName: String? = savedStateHandle[Destination.KeygenFlow.ARG_VAULT_NAME]
     private val email: String? = savedStateHandle[Destination.ARG_EMAIL]
     private val password: String? = savedStateHandle[Destination.ARG_PASSWORD]
     private val passwordHint: String? = savedStateHandle[Destination.KeygenFlow.ARG_PASSWORD_HINT]
+
+
+    val uiState = MutableStateFlow(
+        KeygenFlowUiModel(
+            vaultSetupType = setupType,
+        )
+    )
+
+    private var serverUrl: String = VULTISIG_RELAY_URL
+    private val serviceName: String = generateServiceName()
+    private val sessionID: String = UUID.randomUUID().toString()
+
+    private val action = MutableStateFlow(TssAction.KEYGEN)
+    private var vault: Vault = Vault(id = UUID.randomUUID().toString(), "")
+    private val _encryptionKeyHex: String = Utils.encryptionKeyHex
+    private var _oldResharePrefix: String = ""
+
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
-    private val isFastSign: Boolean
-        get() = setupType.isFast && email != null && password != null
-
-    private val isRelayEnabled =
-        MutableStateFlow(uiState.value.networkOption == NetworkPromptOption.INTERNET || isFastSign)
+    private val isFastSign: Boolean =
+        setupType.isFast && email != null && password != null
 
     val localPartyID: String
         get() = vault.localPartyID
 
     val generatingKeyViewModel: GeneratingKeyViewModel
         get() = GeneratingKeyViewModel(
-            vault,
-            this.action.value,
-            uiState.value.selection,
-            vault.signers.filter { uiState.value.selection.contains(it) },
-            serverAddress,
-            sessionID,
-            _encryptionKeyHex,
-            _oldResharePrefix,
-            password,
-            passwordHint,
+            vault = vault,
+            action = this.action.value,
+            keygenCommittee = uiState.value.selection,
+            oldCommittee = vault.signers.filter { uiState.value.selection.contains(it) },
+            serverAddress = serverUrl,
+            sessionId = sessionID,
+            encryptionKeyHex = _encryptionKeyHex,
+            oldResharePrefix = _oldResharePrefix,
+            password = password,
+            hint = passwordHint,
+            vaultSetupType = setupType,
+            isReshareMode = uiState.value.isReshareMode,
+
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             vaultDataStoreRepository = vaultDataStoreRepository,
             context = context,
             sessionApi = sessionApi,
-            isReshareMode = uiState.value.isReshareMode,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
             vaultMetadataRepo = vaultMetadataRepo,
+            vultiSignerRepository = signerRepository,
         )
+
+
+    private var discoverParticipantsJob: Job? = null
 
     init {
         viewModelScope.launch {
-            setData(vaultId, context.applicationContext)
-        }
-
-        viewModelScope.launch {
-            uiState.collect {
-                isRelayEnabled.value =
-                    it.networkOption == NetworkPromptOption.INTERNET || isFastSign
-            }
+            setData(vaultId)
         }
 
         viewModelScope.launch {
@@ -209,7 +208,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                 uiState.map { it.selection }
                     .cancellable()
                     .collect {
-                        if (it.size == 2) {
+                        if (it.size == VaultSetupType.FAST_PARTICIPANTS_KICKOFF_THRESHOLD) {
                             finishPeerDiscovery()
                             cancel()
                         }
@@ -218,56 +217,43 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    private suspend fun setData(vaultId: String?, context: Context) {
-        // start mediator server
-
-        val vault = if (vaultId == null) {
+    private suspend fun setData(vaultId: String?) {
+        vault = if (vaultId == null) {
             // generate
-            vaultName ?: error("No vault name provided")
-            Vault(id = UUID.randomUUID().toString(), vaultName)
-        } else {
-            // reshare
-            vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
-        }
+            val vaultName = vaultName ?: error("No vault name provided")
 
-        if (vault.pubKeyECDSA.isEmpty()) {
             uiState.update { it.copy(isReshareMode = false) }
             action.value = TssAction.KEYGEN
+
+            Vault(
+                id = UUID.randomUUID().toString(),
+                name = vaultName,
+                hexChainCode = Utils.encryptionKeyHex,
+                localPartyID = Utils.deviceName(context),
+            )
         } else {
+            // reshare
+            val vault = vaultRepository.get(vaultId) ?: error("No vault with id $vaultId")
+
             uiState.update { it.copy(isReshareMode = true) }
             action.value = TssAction.ReShare
+
+            vault
         }
-        serverAddress = Endpoints.VULTISIG_RELAY
-        this.vault = vault
-        if (this.vault.hexChainCode.isEmpty()) {
-            val secureRandom = SecureRandom()
-            val randomBytes = ByteArray(32)
-            secureRandom.nextBytes(randomBytes)
-            this.vault.hexChainCode = randomBytes.joinToString("") { "%02x".format(it) }
-        }
-        if (this.vault.localPartyID.isEmpty()) {
-            this.vault.localPartyID = Utils.deviceName(context)
-        }
-        uiState.update { it.copy(selection = listOf(this.vault.localPartyID)) }
-        _oldResharePrefix = this.vault.resharePrefix
-        updateKeygenPayload(context)
+
+        serverUrl = VULTISIG_RELAY_URL
+        uiState.update { it.copy(selection = listOf(vault.localPartyID)) }
+        _oldResharePrefix = vault.resharePrefix
+
+        updateKeygenPayload()
     }
 
-    private suspend fun updateKeygenPayload(context: Context) {
-        // stop participant discovery
+    private suspend fun updateKeygenPayload() {
         stopParticipantDiscovery()
-        this.participantDiscovery =
-            ParticipantDiscovery(serverAddress, sessionID, this.vault.localPartyID, sessionApi)
-        viewModelScope.launch {
-            participantDiscovery?.participants?.asFlow()?.collect { newList ->
-                // add all participants to the selection
-                uiState.update { it.copy(participants = newList) }
-                for (participant in newList) {
-                    addParticipant(participant)
-                }
-            }
-        }
-        val isRelayEnabled = isRelayEnabled.value
+
+        val isRelayEnabled =
+            uiState.value.networkOption == NetworkPromptOption.INTERNET || isFastSign
+
         val keygenPayload = when (action.value) {
             TssAction.KEYGEN -> {
                 "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
@@ -307,22 +293,35 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         loadQrPainter(keygenPayload)
 
-        if (!isRelayEnabled)
-        // when relay is disabled, start the mediator service
-            startMediatorService(context)
-        else {
-            serverAddress = Endpoints.VULTISIG_RELAY
+        if (isRelayEnabled) {
+            serverUrl = VULTISIG_RELAY_URL
             // start the session
             withContext(Dispatchers.IO) {
-                startSession(serverAddress, sessionID, vault.localPartyID)
+                startSession(serverUrl, sessionID, vault.localPartyID)
             }
-            // kick off discovery
-            participantDiscovery?.discoveryParticipants()
+            startParticipantDiscovery()
+        } else {
+            // when relay is disabled, start the mediator service
+            startMediatorService()
         }
     }
 
-    fun stopParticipantDiscovery() = viewModelScope.launch {
-        participantDiscovery?.stop()
+    private fun startParticipantDiscovery() {
+        stopParticipantDiscovery()
+        discoverParticipantsJob = viewModelScope.launch {
+            discoverParticipants(serverUrl, sessionID, vault.localPartyID)
+                .collect { participants ->
+                    val existingParticipants = uiState.value.participants.toSet()
+                    val newParticipants = participants - existingParticipants
+
+                    uiState.update { it.copy(participants = participants) }
+                    newParticipants.forEach(::addParticipant)
+                }
+        }
+    }
+
+    private fun stopParticipantDiscovery() {
+        discoverParticipantsJob?.cancel()
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -333,16 +332,16 @@ internal class KeygenFlowViewModel @Inject constructor(
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
                     delay(1000) // back off a second
-                    startSession(serverAddress, sessionID, vault.localPartyID)
+                    startSession(serverUrl, sessionID, vault.localPartyID)
                 }
-                // kick off discovery
-                participantDiscovery?.discoveryParticipants()
+
+                startParticipantDiscovery()
             }
         }
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun startMediatorService(context: Context) {
+    private fun startMediatorService() {
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -352,11 +351,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             context.registerReceiver(serviceStartedReceiver, filter)
         }
 
-        // start mediator service
-        val intent = Intent(context, MediatorService::class.java)
-        intent.putExtra("serverName", serviceName)
-        context.startService(intent)
-        Timber.d("startMediatorService: Mediator service started")
+        MediatorService.start(context, serviceName)
     }
 
     private suspend fun startSession(
@@ -422,7 +417,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     }
 
     fun removeParticipant(participant: String) {
-        uiState.update { it.copy(selection = uiState.value.selection.minus(participant)) }
+        uiState.update { it.copy(selection = it.selection - participant) }
     }
 
     private fun moveToState(nextState: KeygenFlowState) {
@@ -434,11 +429,11 @@ internal class KeygenFlowViewModel @Inject constructor(
 
     fun moveToKeygen() {
         viewModelScope.launch {
-            showLoading()
+            setLoading(true)
             withContext(Dispatchers.IO) {
                 startKeygen()
             }
-            hideLoading()
+            setLoading(false)
             moveToState(KeygenFlowState.KEYGEN)
         }
     }
@@ -459,7 +454,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private suspend fun startKeygen() {
         try {
             val keygenCommittee = uiState.value.selection
-            sessionApi.startWithCommittee(serverAddress, sessionID, keygenCommittee)
+            sessionApi.startWithCommittee(serverUrl, sessionID, keygenCommittee)
             Timber.tag("KeygenDiscoveryViewModel").d("startKeygen: Keygen started")
 
         } catch (e: Exception) {
@@ -467,38 +462,24 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
     }
 
-    private fun showLoading(){
+    private fun setLoading(isLoading: Boolean) {
         uiState.update {
             it.copy(
-                isLoading = true
+                isLoading = isLoading
             )
         }
     }
 
-    private fun hideLoading(){
-        uiState.update {
-            it.copy(
-                isLoading = false
-            )
-        }
-    }
-
-
-    @OptIn(DelicateCoroutinesApi::class)
-    fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
+    fun changeNetworkPromptOption(option: NetworkPromptOption) {
         if (uiState.value.networkOption == option) return
-        uiState.update { it.copy(networkOption = option) }
-        serverAddress = when (option) {
-            NetworkPromptOption.LOCAL -> {
-                LOCAL_MEDIATOR_SERVER_ADDRESS
-            }
 
-            NetworkPromptOption.INTERNET -> {
-                Endpoints.VULTISIG_RELAY
-            }
+        uiState.update { it.copy(networkOption = option) }
+        serverUrl = when (option) {
+            NetworkPromptOption.LOCAL -> LOCAL_MEDIATOR_SERVER_URL
+            NetworkPromptOption.INTERNET -> VULTISIG_RELAY_URL
         }
-        GlobalScope.launch(Dispatchers.IO) {
-            updateKeygenPayload(context)
+        viewModelScope.launch(Dispatchers.IO) {
+            updateKeygenPayload()
         }
     }
 
@@ -543,7 +524,9 @@ internal class KeygenFlowViewModel @Inject constructor(
 
 
     override fun onCleared() {
-        stopParticipantDiscovery()
+        viewModelScope.launch {
+            stopParticipantDiscovery()
+        }
         super.onCleared()
     }
 }

@@ -53,7 +53,6 @@ fun KeysignFlowView(
         is KeysignFlowState.Error -> {
             KeysignErrorScreen(
                 errorMessage = (keysignFlowState as? KeysignFlowState.Error)?.errorMessage?:  "",
-                isSwap = sharedViewModel.keysignPayload?.swapPayload != null,
                 tryAgain = viewModel::tryAgain,
             )
         }
