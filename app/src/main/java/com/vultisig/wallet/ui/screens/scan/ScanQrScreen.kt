@@ -76,7 +76,7 @@ internal fun ScanQrAndJoin(
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     ScanQrScreen(
-        navController = navController,
+        onDismiss = { navController.popBackStack() },
         onScanSuccess = viewModel::joinOrSend,
     )
 }
@@ -87,7 +87,7 @@ internal fun ScanQrScreen(
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     ScanQrScreen(
-        navController = navController,
+        onDismiss = { navController.popBackStack() },
         onScanSuccess = { qr ->
             if (viewModel.getFlowType(qr) == ScanQrViewModel.JOIN_SEND_ON_ADDRESS_FLOW) {
                 navController.previousBackStackEntry
@@ -102,7 +102,7 @@ internal fun ScanQrScreen(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun ScanQrScreen(
-    navController: NavController,
+    onDismiss: () -> Unit,
     onScanSuccess: (qr: String) -> Unit,
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
@@ -158,7 +158,7 @@ internal fun ScanQrScreen(
                             bottom = 16.dp,
                         ),
                     text = stringResource(id = R.string.scan_qr_screen_return_vault),
-                    onClick = { navController.popBackStack() },
+                    onClick = onDismiss,
                 )
 
         },

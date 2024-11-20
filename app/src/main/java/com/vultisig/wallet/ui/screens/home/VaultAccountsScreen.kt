@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.navigation.Screen
+import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
 
@@ -78,6 +79,12 @@ internal fun VaultAccountsScreen(
             onDoNotRemind = viewModel::doNotRemindBackup,
         )
     }
+    if (state.showCameraBottomSheet) {
+        ScanQrBottomSheet (
+            onDismiss = viewModel::dismissCameraBottomSheet,
+            onScanSuccess = viewModel::onScanSuccess,
+        )
+    }
 
     VaultAccountsScreen(
         state = state,
@@ -85,7 +92,7 @@ internal fun VaultAccountsScreen(
         onRefresh = viewModel::refreshData,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
-        onJoinKeysign = viewModel::joinKeysign,
+        openCamera = viewModel::openCamera,
         onAccountClick = viewModel::openAccount,
         onChooseChains = {
             navHostController.navigate(
@@ -106,7 +113,7 @@ private fun VaultAccountsScreen(
     onSend: () -> Unit = {},
     onSwap: () -> Unit = {},
     onRefresh: () -> Unit = {},
-    onJoinKeysign: () -> Unit = {},
+    openCamera: () -> Unit = {},
     onAccountClick: (AccountUiModel) -> Unit = {},
     onChooseChains: () -> Unit = {},
     onToggleBalanceVisibility: () -> Unit = {},
@@ -238,7 +245,7 @@ private fun VaultAccountsScreen(
                     size = 40.dp,
                     contentDescription = "join keysign",
                     tint = Theme.colors.oxfordBlue600Main,
-                    onClick = onJoinKeysign,
+                    onClick = openCamera,
                     modifier = Modifier
                         .background(
                             color = Theme.colors.turquoise600Main,
