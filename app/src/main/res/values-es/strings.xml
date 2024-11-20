@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="keysign">Signo de clave</string>
-    <string name="keygen">Generador de claves</string>
     <string name="danger_icon">Icono de peligro</string>
-    <string name="signing_error_please_try_again">Error al Firmar. Por favor intenta de nuevo.</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="try_again">Intentar de Nuevo</string>

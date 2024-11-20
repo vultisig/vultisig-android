@@ -27,7 +27,7 @@ internal class KeygenVerifyServerBackupViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 
-    private val vultiSignerRepository: VultiSignerRepository,
+    private val vultiSignerRepo: VultiSignerRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val vaultRepo: VaultRepository,
 ) : ViewModel() {
@@ -37,10 +37,8 @@ internal class KeygenVerifyServerBackupViewModel @Inject constructor(
     val codeFieldState = TextFieldState()
 
     private val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
-    private val shouldSuggestBackup: Boolean = requireNotNull(
-        savedStateHandle[
-            Destination.VerifyServerBackup.ARG_SHOULD_SUGGEST_BACKUP]
-    )
+    private val shouldSuggestBackup: Boolean = savedStateHandle[
+        Destination.VerifyServerBackup.ARG_SHOULD_SUGGEST_BACKUP] ?: false
 
     fun proceed() {
         val code = codeFieldState.text.toString()
@@ -50,7 +48,7 @@ internal class KeygenVerifyServerBackupViewModel @Inject constructor(
 
             setError(null)
 
-            val isCodeValid = vultiSignerRepository.isBackupCodeValid(
+            val isCodeValid = vultiSignerRepo.isBackupCodeValid(
                 publicKeyEcdsa = vault.pubKeyECDSA,
                 code = code,
             )

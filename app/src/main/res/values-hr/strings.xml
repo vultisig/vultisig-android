@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="signing_error_please_try_again">Greška pri prijavi. Molimo pokušajte ponovno.</string>
     <string name="try_again">Pokušajte ponovno</string>
     <string name="vault_choose_chains">Odaberite lance</string>
     <string name="vault_settings_title">Uredi sef</string>
@@ -142,7 +141,6 @@
     <string name="keysign_screen_keysign_finished">Keysign gotov!</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen nije uspio</string>
-    <string name="keygen">Keygen</string>
     <string name="device_list_screen_keygen">Keygen</string>
     <string name="generating_key_title">Keygen</string>
     <string name="join_key_gen_screen_keygen">Keygen</string>

@@ -49,7 +49,7 @@ internal fun KeygenVerifyServerBackupScreen(
 }
 
 @Composable
-private fun KeygenVerifyServerBackupScreen(
+internal fun KeygenVerifyServerBackupScreen(
     navController: NavController,
     state: KeygenVerifyServerBackupUiModel,
     codeFieldState: TextFieldState,

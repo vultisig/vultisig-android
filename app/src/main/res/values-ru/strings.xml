@@ -4,9 +4,7 @@
     <string name="tokens">Токены</string>
     <string name="chains">Цепочки</string>
     <string name="keysign">Ключевая подпись</string>
-    <string name="keygen">Генерация ключей</string>
     <string name="danger_icon">Иконка опасности</string>
-    <string name="signing_error_please_try_again">Ошибка подписи. Пожалуйста, попробуйте еще раз.</string>
     <string name="signing_error_please_try_again_s">Ошибка подписи. Пожалуйста, попробуйте еще раз. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Держите устройства в одной WiFi-сети, корректный хранилище и парные устройства.\nУбедитесь, что никакие другие устройства не работают с Vultisig.</string>
     <string name="try_again">Попробуйте еще раз</string>
