@@ -163,7 +163,7 @@ internal class TokenRepositoryImpl @Inject constructor(
             val amount = it.amount.toBigIntegerOrNull()
             if (amount == null || amount != BigInteger.ZERO) {
                 val supportedCoin = SupportedCoins.firstOrNull { coin ->
-                    coin.id == "${asset.symbol}-${chain.id}"
+                    coin.id == "${asset.symbol}-${chain.id}" || coin.id == "${asset.ticker}-${chain.id}"
                 }
                 Coin(
                     contractAddress = asset.contractAddress,
