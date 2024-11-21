@@ -112,7 +112,7 @@ internal fun GeneratingKey(
                             R.string.generating_key_title
                     }
                 ),
-                startIcon = R.drawable.caret_left,
+                startIcon = null,
                 navController = navController
             )
         },
