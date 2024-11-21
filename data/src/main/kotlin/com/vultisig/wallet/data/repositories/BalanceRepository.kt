@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
+import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -148,7 +149,10 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     currency.ticker
                 )
             } else {
-                null
+                FiatValue(
+                    BigDecimal.ZERO,
+                    currency.ticker
+                )
             }
 
             TokenBalanceWrapped(
