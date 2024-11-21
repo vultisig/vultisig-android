@@ -215,7 +215,6 @@
     <string name="import_file_screen_password_error">Lozinka nije ispravna.</string>
     <string name="backup_password_optional_password_protection">Dodatna zaštita lozinkom vašeg trezora</string>
     <string name="backup_password_screen_save">Uštedjeti</string>
-    <string name="backup_password_screen_skip">Preskočiti</string>
     <string name="backup_password_screen_enter_password">Unesite lozinku</string>
     <string name="import_file_screen_enter_password">Unesite lozinku</string>
     <string name="backup_password_screen_verify_password">Potvrdi lozinku</string>

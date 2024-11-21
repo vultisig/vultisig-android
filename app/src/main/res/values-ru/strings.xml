@@ -227,7 +227,6 @@
     <string name="import_file_screen_password_error">Пароль неверный.</string>
     <string name="backup_password_optional_password_protection">Дополнительная защита вашего хранилища паролем</string>
     <string name="backup_password_screen_save">Сохранять</string>
-    <string name="backup_password_screen_skip">Пропускать</string>
     <string name="backup_password_screen_enter_password">Введите пароль</string>
     <string name="import_file_screen_enter_password">Введите пароль</string>
     <string name="backup_password_screen_verify_password">Подтвердите пароль</string>

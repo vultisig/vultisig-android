@@ -114,13 +114,9 @@ internal class BackupPasswordViewModel @Inject constructor(
     }
 
     fun backupEncryptedVault() {
-        if (shouldEnableEncryption()) {
-            if (validateConfirmPassword()) {
-                val password = passwordTextFieldState.text.toString()
-                backupVault(password)
-            }
-        } else {
-            backupVault(null)
+        if (validateConfirmPassword()) {
+            val password = passwordTextFieldState.text.toString()
+            backupVault(password)
         }
     }
 
@@ -143,17 +139,17 @@ internal class BackupPasswordViewModel @Inject constructor(
         return fileName
     }
 
-    private fun shouldEnableEncryption(): Boolean {
-        val enabled = (passwordTextFieldState.text.toString().isNotEmpty()
-                || confirmPasswordTextFieldState.text.toString().isNotEmpty())
-        return enabled
-    }
-
     fun validateConfirmPassword(): Boolean {
         val errorMessage =
-            if (passwordTextFieldState.text.toString() != confirmPasswordTextFieldState.text.toString())
-                UiText.StringResource(R.string.backup_password_screen_confirm_password_error_message)
-            else null
+            when {
+                passwordTextFieldState.text.toString().isEmpty() -> {
+                    UiText.StringResource(R.string.backup_password_screen_empty_password)
+                }
+                passwordTextFieldState.text.toString() != confirmPasswordTextFieldState.text.toString() -> {
+                    UiText.StringResource(R.string.backup_password_screen_confirm_password_error_message)
+                }
+                else -> null
+            }
 
         uiState.update {
             it.copy(confirmPasswordErrorMessage = errorMessage)

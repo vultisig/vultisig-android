@@ -216,7 +216,6 @@
     <string name="import_file_screen_password_error">La contraseña no es correcta.</string>
     <string name="backup_password_optional_password_protection">Protección con contraseña opcional de su bóveda</string>
     <string name="backup_password_screen_save">Guardar</string>
-    <string name="backup_password_screen_skip">Saltar</string>
     <string name="backup_password_screen_enter_password">Introducir contraseña</string>
     <string name="import_file_screen_enter_password">Introducir contraseña</string>
     <string name="backup_password_screen_verify_password">Verificar contraseña</string>

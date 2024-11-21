@@ -215,7 +215,6 @@
     <string name="import_file_screen_password_error">Das Passwort ist nicht korrekt.</string>
     <string name="backup_password_optional_password_protection">Optionaler Passwortschutz für Ihren Tresor</string>
     <string name="backup_password_screen_save">Speichern</string>
-    <string name="backup_password_screen_skip">Überspringen</string>
     <string name="backup_password_screen_enter_password">Passwort eingeben</string>
     <string name="import_file_screen_enter_password">Passwort eingeben</string>
     <string name="backup_password_screen_verify_password">Kennwort bestätigen</string>
