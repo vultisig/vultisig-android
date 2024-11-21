@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -451,6 +452,7 @@ internal class SendFormViewModel @Inject constructor(
                             it
                         }
                     }
+                    .let { selectUtxosIfNeeded(tokenAmountInt, it) }
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance = getAvailableTokenBalance(
@@ -544,6 +546,29 @@ internal class SendFormViewModel @Inject constructor(
                 hideLoading()
             }
         }
+    }
+
+    private fun selectUtxosIfNeeded(
+        tokenAmount: BigInteger,
+        specific: BlockChainSpecificAndUtxo
+    ): BlockChainSpecificAndUtxo {
+        val spec = specific.blockChainSpecific as? BlockChainSpecific.UTXO
+
+        return if (spec != null) {
+            val totalAmount = tokenAmount + spec.byteFee * 1480.toBigInteger()
+            val resultingUtxos = mutableListOf<UtxoInfo>()
+            val existingUtxos = specific.utxos
+            var total = 0L
+            for (utxo in existingUtxos) {
+                resultingUtxos.add(utxo)
+                total += utxo.amount
+                if (total >= totalAmount.toLong()) {
+                    break
+                }
+            }
+
+            specific.copy(utxos = resultingUtxos)
+        } else specific
     }
 
     private fun hideLoading() {
