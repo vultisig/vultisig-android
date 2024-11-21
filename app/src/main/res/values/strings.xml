@@ -440,6 +440,7 @@
     <string name="join_keysign_error_wrong_vault_share" translatable="false">Same vault share. Please change the share to sign</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button" translatable="false">Change Vault</string>
     <string name="eth_gas_settings_base_fee_title" translatable="false">Current Base Fee (Gwei)</string>
+    <string name="utxo_settings_byte_fee_title" translatable="false">Network rate (sats/vbyte)</string>
     <string name="eth_gas_settings_gas_limit_title" translatable="false">Gas Limit</string>
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>

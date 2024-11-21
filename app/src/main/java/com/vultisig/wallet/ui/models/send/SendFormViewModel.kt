@@ -104,10 +104,16 @@ internal data class SendSrc(
     val account: Account,
 )
 
-internal data class EthGasSettings(
-    val priorityFee: BigInteger,
-    val gasLimit: BigInteger,
-)
+internal sealed class GasSettings {
+    data class Eth(
+        val priorityFee: BigInteger,
+        val gasLimit: BigInteger,
+    ) : GasSettings()
+
+    data class UTXO(
+        val byteFee: BigInteger,
+    ) : GasSettings()
+}
 
 internal data class InvalidTransactionDataException(
     val text: UiText,
@@ -170,7 +176,7 @@ internal class SendFormViewModel @Inject constructor(
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
-    private var ethGasSettings = MutableStateFlow<EthGasSettings?>(null)
+    private var gasSettings = MutableStateFlow<GasSettings?>(null)
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
     private var maxAmount = BigDecimal.ZERO
@@ -309,8 +315,8 @@ internal class SendFormViewModel @Inject constructor(
         advanceGasUiRepository.hideSettings()
     }
 
-    fun saveGasSettings(settings: EthGasSettings) {
-        ethGasSettings.value = settings
+    fun saveGasSettings(settings: GasSettings) {
+        gasSettings.value = settings
     }
 
     fun chooseMaxTokenAmount() {
@@ -435,18 +441,30 @@ internal class SendFormViewModel @Inject constructor(
                         dstAddress = dstAddress
                     )
                     .let {
-                        val ethSettings = ethGasSettings.value
-                        if (ethSettings != null) {
+                        val gasSettings = gasSettings.value
+                        if (gasSettings != null) {
                             val spec = it.blockChainSpecific
-                            if (spec is BlockChainSpecific.Ethereum) {
-                                it.copy(
-                                    blockChainSpecific = spec
-                                        .copy(
-                                            priorityFeeWei = ethSettings.priorityFee,
-                                            gasLimit = ethSettings.gasLimit,
-                                        )
-                                )
-                            } else it
+
+                            when {
+                                gasSettings is GasSettings.Eth && spec is BlockChainSpecific.Ethereum -> {
+                                    it.copy(
+                                        blockChainSpecific = spec
+                                            .copy(
+                                                priorityFeeWei = gasSettings.priorityFee,
+                                                gasLimit = gasSettings.gasLimit,
+                                            )
+                                    )
+                                }
+                                gasSettings is GasSettings.UTXO && spec is BlockChainSpecific.UTXO -> {
+                                    it.copy(
+                                        blockChainSpecific = spec
+                                            .copy(
+                                                byteFee = gasSettings.byteFee,
+                                            )
+                                    )
+                                }
+                                else -> it
+                            }
                         } else {
                             it
                         }
