@@ -126,12 +126,13 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
         return when (chain) {
-            Chain.BscChain, Chain.Avalanche -> getBalanceByRoute(chain, address)
             Chain.Solana -> getBalanceByRoute(chain, address)
-
             Chain.Ethereum -> balanceApi.getEthBalances(null, address)
                 .toCoins(chain)
-            Chain.Arbitrum -> balanceApi.getEthBalances(chain.oneInchChainId(), address)
+            Chain.Arbitrum, Chain.Avalanche, Chain.Base, Chain.ZkSync, Chain.Optimism, Chain.BscChain, Chain.Polygon -> balanceApi.getEthBalances(
+                chain.oneInchChainId(),
+                address
+            )
                 .toCoins(chain)
 
             else -> {
