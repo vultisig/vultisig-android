@@ -597,6 +597,7 @@ internal class SwapFormViewModel @Inject constructor(
                     address to srcAmount
                 }
                 .collect { (address, amount) ->
+                    isLoading = true
                     val (src, dst) = address
 
                     val srcToken = src.account.token
@@ -718,6 +719,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         fee = fiatValueToString.map(fiatFees),
                                         formError = null,
                                         isSwapDisabled = false,
+                                        isLoading = false
                                     )
                                 }
                             }
@@ -868,12 +870,14 @@ internal class SwapFormViewModel @Inject constructor(
                                 estimatedDstFiatValue = "0",
                                 fee = "0",
                                 isSwapDisabled = true,
-                                formError = formError
+                                formError = formError,
+                                isLoading = false
                             )
                         }
                         Timber.e("swapError $e")
                     } catch (e: Exception) {
                         // TODO handle error
+                        isLoading = false
                         Timber.e(e)
                     }
                 }
