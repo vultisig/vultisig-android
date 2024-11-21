@@ -216,7 +216,6 @@
     <string name="import_file_screen_password_error">A palavra-passe não está correta.</string>
     <string name="backup_password_optional_password_protection">Proteção opcional por palavra-passe do seu Vault</string>
     <string name="backup_password_screen_save">Guardar</string>
-    <string name="backup_password_screen_skip">Ignorar</string>
     <string name="backup_password_screen_enter_password">Introduza a senha</string>
     <string name="import_file_screen_enter_password">Introduza a senha</string>
     <string name="backup_password_screen_verify_password">Verifique a palavra-passe</string>
