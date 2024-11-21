@@ -859,6 +859,9 @@ internal class SwapFormViewModel @Inject constructor(
 
                             is SwapException.TimeOut ->
                                 UiText.StringResource(R.string.swap_error_time_out)
+
+                            is SwapException.NetworkConnection ->
+                                UiText.StringResource(R.string.network_connection_lost)
                         }
                         uiState.update {
                             it.copy(

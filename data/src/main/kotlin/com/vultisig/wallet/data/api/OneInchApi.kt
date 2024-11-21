@@ -1,14 +1,21 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.OneInchTokensJson
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.oneInchChainId
+import com.vultisig.wallet.data.utils.OneInchSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -21,7 +28,7 @@ interface OneInchApi {
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteJson
+    ): OneInchSwapQuoteDeserialized
 
     suspend fun getTokens(
         chain: Chain,
@@ -41,6 +48,8 @@ interface OneInchApi {
 
 class OneInchApiImpl @Inject constructor(
     private val httpClient: HttpClient,
+    private val oneInchSwapQuoteResponseJsonSerializer: OneInchSwapQuoteResponseJsonSerializer,
+    private val json: Json,
 ) : OneInchApi {
 
     override suspend fun getSwapQuote(
@@ -50,24 +59,37 @@ class OneInchApiImpl @Inject constructor(
         srcAddress: String,
         amount: String,
         isAffiliate: Boolean,
-    ): OneInchSwapQuoteJson =
-        httpClient.get("https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}/swap") {
-            parameter(
-                "src",
-                srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
-            parameter(
-                "dst",
-                dstTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
-            parameter("amount", amount)
-            parameter("from", srcAddress)
-            parameter("slippage", "0.5")
-            parameter("disableEstimate", true)
-            parameter("includeGas", true)
-            if (isAffiliate) {
-                parameter("referrer", ONEINCH_REFERRER_ADDRESS)
-                parameter("fee", ONEINCH_REFERRER_FEE)
+    ): OneInchSwapQuoteDeserialized {
+        try {
+            val response =
+                httpClient.get("https://api.vultisig.com/1inch/swap/v6.0/${chain.oneInchChainId()}/swap") {
+                    parameter(
+                        "src",
+                        srcTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
+                    parameter(
+                        "dst",
+                        dstTokenContractAddress.takeIf { it.isNotEmpty() } ?: ONEINCH_NULL_ADDRESS)
+                    parameter("amount", amount)
+                    parameter("from", srcAddress)
+                    parameter("slippage", "0.5")
+                    parameter("disableEstimate", true)
+                    parameter("includeGas", true)
+                    if (isAffiliate) {
+                        parameter("referrer", ONEINCH_REFERRER_ADDRESS)
+                        parameter("fee", ONEINCH_REFERRER_FEE)
+                    }
+                }
+            if (!response.status.isSuccess()) {
+                return OneInchSwapQuoteDeserialized.Error(error = response.status.description)
             }
-        }.body()
+            return json.decodeFromString(
+                oneInchSwapQuoteResponseJsonSerializer,
+                response.body<String>()
+            )
+        } catch (e: Exception) {
+            return OneInchSwapQuoteDeserialized.Error(error = e.message ?: "Unknown error")
+        }
+    }
 
 
     override suspend fun getTokens(
