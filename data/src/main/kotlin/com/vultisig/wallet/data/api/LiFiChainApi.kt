@@ -1,10 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.utils.LiFiSwapQuoteResponseSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -12,7 +9,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
@@ -52,6 +48,8 @@ internal class LiFiChainApiImpl @Inject constructor(
                     parameter("fromAmount", fromAmount)
                     parameter("fromAddress", fromAddress)
                     parameter("toAddress", toAddress)
+                    parameter("integrator", INTEGRATOR_ACCOUNT)
+                    parameter("fee", INTEGRATOR_FEE)
                 }
             if (!response.status.isSuccess()) {
                 if (response.status == HttpStatusCode.NotFound) {
@@ -80,5 +78,10 @@ internal class LiFiChainApiImpl @Inject constructor(
                 )
             )
         }
+    }
+
+    companion object {
+        private const val INTEGRATOR_ACCOUNT = "vultisig-android"
+        private const val INTEGRATOR_FEE = "0.005"
     }
 }
