@@ -41,7 +41,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         tx: String,
         payload: SwapPayload?,
     ): String? = when (payload) {
-        is SwapPayload.ThorChain -> "https://track.ninerealms.com/$tx"
+        is SwapPayload.ThorChain -> "https://thorchain.net/tx/$tx"
         is SwapPayload.MayaChain -> "https://www.xscanner.org/tx/${tx.removePrefix("0x")}"
         else -> null
     }
