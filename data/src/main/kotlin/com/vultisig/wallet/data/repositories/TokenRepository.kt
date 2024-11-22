@@ -184,7 +184,7 @@ internal class TokenRepositoryImpl @Inject constructor(
                     logo = asset.icon ?: "",
                     decimal = asset.decimals,
                     isNativeToken = supportedCoin?.isNativeToken ?: false,
-                    priceProviderID = "",
+                    priceProviderID = supportedCoin?.priceProviderID ?: "",
                     address = "",
                     hexPublicKey = "",
                 )
