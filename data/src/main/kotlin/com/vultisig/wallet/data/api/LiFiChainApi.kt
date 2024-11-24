@@ -62,7 +62,7 @@ internal class LiFiChainApiImpl @Inject constructor(
                 }
                 return LiFiSwapQuoteDeserialized.Error(
                     LiFiSwapQuoteError(
-                        response.status.description
+                        HttpStatusCode.fromValue(response.status.value).description
                     )
                 )
             }

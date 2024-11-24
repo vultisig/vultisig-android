@@ -20,6 +20,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -102,7 +103,11 @@ internal class ThorChainApiImpl @Inject constructor(
                     }
                 }
             if (!response.status.isSuccess()) {
-                return THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError(response.status.description))
+                return THORChainSwapQuoteDeserialized.Error(
+                    THORChainSwapQuoteError(
+                        HttpStatusCode.fromValue(response.status.value).description
+                    )
+                )
             }
             val responseRawString = response.body<String>()
             return json.decodeFromString(
