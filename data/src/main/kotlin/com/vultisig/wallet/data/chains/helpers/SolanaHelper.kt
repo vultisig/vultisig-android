@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -12,12 +13,26 @@ import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
+import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.SolanaAddress
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Solana
 import java.math.BigInteger
+
+private fun x(): Triple<String, ByteArray, ByteArray> {
+    val privateKey = PrivateKey()
+    val publicKey = privateKey.publicKeyEd25519
+    val nonceAccountAddress = PublicKey(
+        publicKey.data(),
+        PublicKeyType.ED25519
+    ).description()
+    val nonceAccountBytes = publicKey.data()
+    val nonceAccountPrivateKey = privateKey.data()
+    return Triple(nonceAccountAddress, nonceAccountBytes, nonceAccountPrivateKey)
+}
+
 
 class SolanaHelper(
     private val vaultHexPublicKey: String,
@@ -28,15 +43,45 @@ class SolanaHelper(
     companion object {
         val DefaultFeeInLamports: BigInteger = 1000000.toBigInteger()
     }
+    fun createNonceAccount(lamports: Long): Triple<String, PrivateKey, Solana.SigningOutput> {
+        // Generate a new private key for the nonce account
+        val privateKey = PrivateKey()
 
+        // Get the public key from the private key
+        val publicKey = privateKey.publicKeyEd25519
+
+        // Convert the public key to a Solana address
+        val nonceAccountAddress = PublicKey(publicKey.data(), PublicKeyType.ED25519).description()
+
+        // Create the nonce account
+        val createNonceAccount = Solana.CreateNonceAccount.newBuilder()
+            .setNonceAccount(nonceAccountAddress)
+            .setRent(lamports)
+            .build()
+
+        // Create the signing input
+        val signingInput = Solana.SigningInput.newBuilder()
+            .setCreateNonceAccount(createNonceAccount)
+            .build()
+
+        // Sign the transaction
+        val signedTransaction = Solana.SigningOutput.parseFrom(signingInput.toByteArray())
+
+        // Return the nonce account address, private key, and signed transaction
+        return Triple(nonceAccountAddress, privateKey, signedTransaction)
+    }
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-
         val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
             ?: error("Invalid blockChainSpecific")
         if (keysignPayload.coin.chain != Chain.Solana) {
             error("Chain is not Solana")
         }
-        val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
+
+        // Create new account/keypair
+        val newAccount = Account()  //
+
+        // Convert the private key to ByteString for the SDK
+        val privateKeyByteString = ByteString.copyFrom(newAccount.third)
 
         val input = Solana.SigningInput.newBuilder()
             .setRecentBlockhash(solanaSpecific.recentBlockHash)
@@ -46,54 +91,25 @@ class SolanaHelper(
                     .setPrice(solanaSpecific.priorityFee.toLong())
                     .build()
             )
-
-        if (keysignPayload.coin.isNativeToken) {
-            val transfer = Solana.Transfer.newBuilder()
-                .setRecipient(toAddress.description())
-                .setValue(keysignPayload.toAmount.toLong())
-            keysignPayload.memo?.let {
-                transfer.setMemo(it)
-            }
-
-            return input
-                .setTransferTransaction(transfer.build())
-                .build()
-                .toByteArray()
-        } else {
-            if (solanaSpecific.fromAddressPubKey != null && solanaSpecific.toAddressPubKey!= null) {
-                val transfer = Solana.TokenTransfer.newBuilder()
-                    .setTokenMintAddress(keysignPayload.coin.contractAddress)
-                    .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
-                    .setRecipientTokenAddress(solanaSpecific.toAddressPubKey)
-                    .setAmount(keysignPayload.toAmount.toLong())
-                    .setDecimals(keysignPayload.coin.decimal)
-
-                return input
-                    .setTokenTransferTransaction(transfer.build())
+            .setCreateNonceAccount(
+                Solana.CreateNonceAccount.newBuilder()
+                    .setNonceAccount(newAccount.first)
+          //          .setNonceAccountBytes(ByteString.copyFrom(newAccount.second))
+                    .setRent(890880L)
+                    .setNonceAccountPrivateKey(privateKeyByteString)
                     .build()
-                    .toByteArray()
-            } else {
-                val receiverAddress = SolanaAddress(toAddress.description())
-                val generatedRecipientAssociatedAddress = receiverAddress.defaultTokenAddress(
-                    keysignPayload.coin.contractAddress
-                )
-                val transferTokenMessage =
-                    Solana.CreateAndTransferToken.newBuilder()
-                        .setRecipientMainAddress(toAddress.description())
-                        .setTokenMintAddress(keysignPayload.coin.contractAddress)
-                        .setRecipientTokenAddress(generatedRecipientAssociatedAddress)
-                        .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
-                        .setAmount(keysignPayload.toAmount.toLong())
-                        .setDecimals(keysignPayload.coin.decimal)
+            )
+            .build()
 
-                return input
-                    .setCreateAndTransferTokenTransaction(transferTokenMessage.build())
-                    .build()
-                    .toByteArray()
-            }
-        }
+        return input.toByteArray()
     }
 
+    private fun getRentExemptAmount(): Long {
+        // Implement logic to get minimum balance for rent exemption
+        // This should be enough for 80 bytes (nonce account size)
+        // You can either hardcode this or fetch from RPC
+        return 890880L  // Example value, you should get the actual minimum rent exempt amount
+    }
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
         val hashes = TransactionCompiler.preImageHashes(coinType, result)
