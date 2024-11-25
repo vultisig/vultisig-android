@@ -61,18 +61,11 @@ android {
         absolutePaths = false
         lintConfig = file("$rootDir/config/lint/lint.xml")
     }
-
     configurations.all {
         resolutionStrategy.eachDependency {
             if (requested.group == "org.bouncycastle") {
                 useTarget("org.bouncycastle:bcprov-jdk15to18:1.68")
             }
-            if (requested.group.contains("org.bitcoinj")) {
-                println(requested)
-                useTarget("org.bitcoinj:bitcoinj-core:0.16.2")
-            }
-
-
         }
     }
 }
@@ -81,7 +74,6 @@ dependencies {
     implementation(project(":data"))
 
     implementation(files("libs/mobile-tss-lib.aar"))
-
 
     // kotlinx
     implementation(libs.kotlinx.coroutines.core)

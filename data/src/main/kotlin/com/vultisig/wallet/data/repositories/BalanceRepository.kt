@@ -262,7 +262,6 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     solanaApi.createNonceAccount("coin")
                     solanaApi.getBalance(address)
                 } else {
-
                     splTokenRepository.getBalance(coin)
                         ?: splTokenRepository.getCachedBalance(coin)
                 }
