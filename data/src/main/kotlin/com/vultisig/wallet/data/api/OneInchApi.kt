@@ -14,6 +14,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import java.math.BigInteger
@@ -80,7 +81,9 @@ class OneInchApiImpl @Inject constructor(
                     }
                 }
             if (!response.status.isSuccess()) {
-                return OneInchSwapQuoteDeserialized.Error(error = response.status.description)
+                return OneInchSwapQuoteDeserialized.Error(
+                    error = HttpStatusCode.fromValue(response.status.value).description
+                )
             }
             return json.decodeFromString(
                 oneInchSwapQuoteResponseJsonSerializer,
