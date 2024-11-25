@@ -24,31 +24,58 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.util.encodeBase64
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import net.avianlabs.solana.SolanaClient
+import net.avianlabs.solana.client.RpcKtorClient
+import net.avianlabs.solana.domain.core.Commitment
+import net.avianlabs.solana.domain.core.Transaction
+import net.avianlabs.solana.domain.core.decode
+import net.avianlabs.solana.domain.core.serialize
+import net.avianlabs.solana.domain.program.SystemProgram
+import net.avianlabs.solana.methods.getBalance
+import net.avianlabs.solana.methods.getFeeForMessage
+import net.avianlabs.solana.methods.getLatestBlockhash
+import net.avianlabs.solana.methods.getMinimumBalanceForRentExemption
+import net.avianlabs.solana.methods.getNonce
+import net.avianlabs.solana.methods.getTransaction
+import net.avianlabs.solana.methods.requestAirdrop
+import net.avianlabs.solana.methods.sendTransaction
+import net.avianlabs.solana.methods.simulateTransaction
+import net.avianlabs.solana.tweetnacl.TweetNaCl
+import net.avianlabs.solana.tweetnacl.TweetNaCl.Signature.Companion.generateKey
+import net.avianlabs.solana.tweetnacl.ed25519.Ed25519Keypair
+import net.avianlabs.solana.tweetnacl.vendor.encodeToBase58String
+import org.slf4j.MDC.put
 import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 interface SolanaApi {
     suspend fun getBalance(address: String): BigInteger
-    suspend fun getMinimumBalanceForRentExemption(): BigInteger
-    suspend fun getRecentBlockHash(): String
+    suspend fun getMinimumBalanceForRentExemption(dataLength: Long? = null): BigInteger    suspend fun getRecentBlockHash(): String
     suspend fun getHighPriorityFee(account: String): String
-    suspend fun broadcastTransaction(tx: String): String?
+    suspend fun broadcastTransaction(tx: String, jsonObject: JsonObject? = null): String?
     suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>?
     suspend fun getSPLTokensInfo(tokens: List<String>): List<SplTokenJson>
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
     suspend fun getJupiterTokens(): List<JupiterTokenResponseJson>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
     suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String): String?
+    suspend fun createNonceAccount(address: String)
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -57,12 +84,18 @@ internal class SolanaApiImp @Inject constructor(
     private val splTokenSerializer: SplTokenResponseJsonSerializer,
 ) : SolanaApi {
 
-    private val rpcEndpoint = "https://api.mainnet-beta.solana.com"
+    private val rpcEndpoint = "https://api.devnet.solana.com"
     private val rpcEndpoint2 = "https://solana-rpc.publicnode.com"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
     private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
     private val jupiterTokensUrl = "https://tokens.jup.ag/tokens"
+    private val client = SolanaClient(
+        client = RpcKtorClient(
+            "https://api.devnet.solana.com",
+            httpClient = httpClient
+        ),
+    )
     override suspend fun getBalance(address: String): BigInteger {
         return try {
             val payload = RpcPayload(
@@ -90,12 +123,98 @@ internal class SolanaApiImp @Inject constructor(
         }
     }
 
-    override suspend fun getMinimumBalanceForRentExemption(): BigInteger = try {
+    override suspend fun createNonceAccount(address: String) {
+        try {
+            val keypair = TweetNaCl.Signature.generateKey(Random.nextBytes(32))
+            println("Keypair: ${keypair.publicKey}")
+            val nonceAccount = TweetNaCl.Signature.generateKey(Random.nextBytes(32))
+            println("Nonce account: ${nonceAccount.publicKey}")
+
+//            client.requestAirdrop(keypair.publicKey, 2_000_000_000)
+
+            delay(1.seconds)
+            val balance = client.getBalance(keypair.publicKey)
+            println("Balance: $balance")
+
+            val rentExempt =
+                client.getMinimumBalanceForRentExemption(SystemProgram.NONCE_ACCOUNT_LENGTH).result!!
+
+            val blockhash = client.getLatestBlockhash().result!!.value
+
+            val initTransaction = Transaction.Builder()
+                .addInstruction(
+                    SystemProgram.createAccount(
+                        fromPublicKey = keypair.publicKey,
+                        newAccountPublicKey = nonceAccount.publicKey,
+                        lamports = rentExempt,
+                        space = SystemProgram.NONCE_ACCOUNT_LENGTH,
+                    )
+                )
+                .addInstruction(
+                    SystemProgram.nonceInitialize(
+                        nonceAccount = nonceAccount.publicKey,
+                        authorized = keypair.publicKey,
+                    )
+                )
+                .setRecentBlockHash(blockhash.blockhash)
+                .build()
+                .sign(listOf(keypair, nonceAccount))
+
+
+            val simulated = client.simulateTransaction(initTransaction)
+
+            println("simulated: $simulated")
+
+            val initSignature = client.sendTransaction(initTransaction)
+
+            println("Initialized nonce account: $initSignature")
+            delay(1.seconds)
+
+            val lamportsPerSignature = client.getFeeForMessage(initTransaction.message.serialize())
+            println("Lamports per signature: $lamportsPerSignature")
+
+            val nonce = client.getNonce(nonceAccount.publicKey, Commitment.Confirmed)
+            println("Nonce account info: $nonce")
+
+            val testTransaction = Transaction.Builder()
+                .addInstruction(
+                    SystemProgram.nonceAdvance(
+                        nonceAccount = nonceAccount.publicKey,
+                        authorized = keypair.publicKey,
+                    )
+                )
+                .addInstruction(
+                    SystemProgram.transfer(
+                        fromPublicKey = keypair.publicKey,
+                        toPublicKey = nonceAccount.publicKey,
+                        lamports = 1_000_000_000,
+                    )
+                )
+                .setRecentBlockHash(nonce!!.nonce)
+                .build()
+                .sign(keypair)
+
+            val testSignature = client.sendTransaction(testTransaction).result!!
+            println("Advanced nonce account: $testSignature")
+
+            delay(1.seconds)
+
+            val testTxInfo = client.getTransaction(testSignature, Commitment.Confirmed).result
+            println("Transaction info: ${testTxInfo?.decode()}")
+
+            val newNonce = client.getNonce(nonceAccount.publicKey, Commitment.Processed)
+            println("New nonce account info: $newNonce")
+        } catch (e: Exception) {
+            Timber.tag("SolanaApiImp").e("Error createNonceAccount: ${e.message}")
+        }
+    }
+
+    override suspend fun getMinimumBalanceForRentExemption(dataLength: Long?): BigInteger = try {
         httpClient.postRpc<SolanaMinimumBalanceForRentExemptionJson>(
             solanaRentExemptionEndpoint,
             "getMinimumBalanceForRentExemption",
             params = buildJsonArray {
-                add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
+                add(dataLength?:DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
             },
         ).result
     } catch (e: Exception) {
@@ -160,13 +279,16 @@ internal class SolanaApiImp @Inject constructor(
         return "0"
     }
 
-    override suspend fun broadcastTransaction(tx: String): String? {
+    override suspend fun broadcastTransaction(tx: String,jsonObject: JsonObject?): String? {
         try {
             val requestBody = RpcPayload(
                 jsonrpc = "2.0",
                 method = "sendTransaction",
                 params = buildJsonArray {
                     add(tx)
+                    jsonObject?.let {
+                        add(it)
+                    }
                 },
                 id = 1,
             )

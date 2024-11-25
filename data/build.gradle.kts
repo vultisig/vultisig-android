@@ -11,7 +11,10 @@ plugins {
     alias(libs.plugins.protobuf)
 }
 
+
 android {
+
+
     namespace = "com.vulitisig.wallet"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
@@ -43,6 +46,19 @@ android {
             srcDir("${project.rootProject.rootDir}/commondata/proto")
         }
     }
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.bouncycastle") {
+                useTarget("org.bouncycastle:bcprov-jdk15to18:1.68")
+            }
+            if (requested.group.contains("org.bitcoinj")) {
+                println(requested)
+                useTarget("org.bitcoinj:bitcoinj-core:0.16.2")
+            }
+
+
+        }
+    }
 }
 
 protobuf {
@@ -70,6 +86,9 @@ dependencies {
     // core
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.solana.kotlin)
+
+//    implementation(libs.particle.auth.core)
 
     // worker
     implementation(libs.androidx.work)

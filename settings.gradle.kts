@@ -17,6 +17,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { setUrl("https://jitpack.io") }
         maven {
             url = uri("https://maven.pkg.github.com/trustwallet/wallet-core")
             credentials {
