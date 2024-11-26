@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
+import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
@@ -70,6 +71,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
+    private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -231,7 +233,8 @@ internal class VaultAccountsViewModel @Inject constructor(
         uiState.update { it.copy(showCameraBottomSheet = false) }
     }
 
-    fun onScanSuccess(qr: String) {
+    fun onScanSuccess(qr: String) = viewModelScope.launch {
+        navigator.navigate(getDirectionByQrCodeUseCase(qr, vaultId))
         uiState.update { it.copy(showCameraBottomSheet = false) }
     }
 
