@@ -46,6 +46,10 @@ fun UiText.asString(context: Context): String {
     }
 }
 
+fun UiText.isEmpty(): Boolean {
+    return this == UiText.Empty
+}
+
 infix fun String?.or(resId: Int): UiText {
     return if (this.isNullOrBlank())
         StringResource(resId)

@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.isEmpty
 
 
 @Composable
@@ -245,6 +246,37 @@ internal fun SendFormScreen(
                 error = null
             )
             if (state.showGasFee) {
+                if (!state.gasTokenBalance.isEmpty()) {
+                    FormDetails(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        title = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = Theme.menlo.body1.fontSize,
+                                    fontFamily = Theme.menlo.body1.fontFamily,
+                                    fontWeight = Theme.menlo.body1.fontWeight,
+
+                                    )
+                            ) {
+                                append(stringResource(R.string.send_form_gas_token_balance))
+                            }
+                        },
+                        value = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = Theme.menlo.body1.fontSize,
+                                    fontFamily = Theme.menlo.body1.fontFamily,
+                                )
+                            ) {
+                                append(state.gasTokenBalance.asString())
+                            }
+                        }
+                    )
+                }
+
                 FormDetails(
                     modifier = Modifier
                         .fillMaxWidth(),

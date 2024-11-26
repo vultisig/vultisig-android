@@ -90,6 +90,7 @@ internal data class SendFormUiModel(
     val fiatCurrency: String = "",
     val gasFee: UiText = UiText.Empty,
     val totalGas: UiText = UiText.Empty,
+    val gasTokenBalance: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
@@ -129,7 +130,7 @@ internal class SendFormViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
-    private val mapGasFeeToString: TokenValueToStringWithUnitMapper,
+    private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
     private val accountsRepository: AccountsRepository,
     appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -194,6 +195,7 @@ internal class SendFormViewModel @Inject constructor(
         collectSelectedAccount()
         collectAmountChanges()
         calculateGasFees()
+        calculateGasTokenBalance()
         calculateSpecific()
         collectAdvanceGasUi()
         collectAmountChecks()
@@ -685,6 +687,34 @@ internal class SendFormViewModel @Inject constructor(
         // if user selected none, or nothing was found, select the first token
         return searchByChainResult
             ?: accounts.firstOrNull()?.token
+    }
+
+    private fun calculateGasTokenBalance() {
+        viewModelScope.launch {
+            selectedToken
+                .filterNotNull()
+                .map {
+                   if (it.isNativeToken) {
+                        null
+                    } else {
+                        accounts.value.find { account ->
+                            account.token.isNativeToken &&
+                                    account.token.chain == it.chain
+                        }?.tokenValue
+                    }
+                }
+                .filterNotNull()
+                .collect { gasTokenBalance ->
+                    uiState.update {
+                        it.copy(gasTokenBalance = UiText.DynamicString(
+                            mapTokenValueToString(
+                                gasTokenBalance
+                            )
+                        )
+                        )
+                    }
+                }
+        }
     }
 
     private fun calculateGasFees() {
