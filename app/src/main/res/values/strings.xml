@@ -4,9 +4,7 @@
     <string name="tokens">Tokens</string>
     <string name="chains">Chains</string>
     <string name="keysign">Keysign</string>
-    <string name="keygen">Keygen</string>
     <string name="danger_icon">Danger Icon</string>
-    <string name="signing_error_please_try_again">Signing Error. Please try again.</string>
     <string name="signing_error_please_try_again_s">Signing Error. Please try again. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network, correct vault and pair devices.\nMake sure no other devices are running Vultisig.</string>
     <string name="try_again">Try again</string>
@@ -239,7 +237,7 @@
     <string name="import_file_screen_password_error">Password is not correct.</string>
     <string name="backup_password_optional_password_protection">Optional password protection of your Vault</string>
     <string name="backup_password_screen_save">Save</string>
-    <string name="backup_password_screen_skip">Skip</string>
+
     <string name="backup_password_screen_enter_password">Enter Password</string>
     <string name="import_file_screen_enter_password">Enter Password</string>
     <string name="backup_password_screen_verify_password">Verify password</string>
@@ -442,6 +440,7 @@
     <string name="join_keysign_error_wrong_vault_share" translatable="false">Same vault share. Please change the share to sign</string>
     <string name="join_keysign_error_wrong_vault_share_try_again_button" translatable="false">Change Vault</string>
     <string name="eth_gas_settings_base_fee_title" translatable="false">Current Base Fee (Gwei)</string>
+    <string name="utxo_settings_byte_fee_title" translatable="false">Network rate (sats/vbyte)</string>
     <string name="eth_gas_settings_gas_limit_title" translatable="false">Gas Limit</string>
     <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
     <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
@@ -482,4 +481,7 @@
     <string name="swap_screen_invalid_zero_token_amount" translatable="false">Token amount cannot be Zero</string>
     <string name="swap_screen_invalid_gas_fee_calculation" translatable="false">Gas fee calculation failed</string>
     <string name="swap_screen_invalid_quote_calculation" translatable="false">Quote calculation failed</string>
+    <string name="backup_password_screen_skip" translatable="false">Skip Password</string>
+    <string name="backup_password_screen_empty_password" translatable="false">Please use \"Skip Password\" to save without password</string>
+    <string name="network_connection_lost" translatable="false">Network connection lost. Please check your internet connection</string>
 </resources>

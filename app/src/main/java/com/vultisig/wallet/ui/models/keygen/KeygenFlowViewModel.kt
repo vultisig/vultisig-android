@@ -72,7 +72,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 enum class KeygenFlowState {
-    PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN, ERROR,
+    PEER_DISCOVERY, DEVICE_CONFIRMATION, KEYGEN,
 }
 
 internal data class KeygenFlowUiModel(
@@ -179,6 +179,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             oldResharePrefix = _oldResharePrefix,
             password = password,
             hint = passwordHint,
+            vaultSetupType = setupType,
             isReshareMode = uiState.value.isReshareMode,
 
             navigator = navigator,
@@ -191,6 +192,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             featureFlagApi = featureFlagApi,
             vaultPasswordRepository = vaultPasswordRepository,
             vaultMetadataRepo = vaultMetadataRepo,
+            vultiSignerRepository = signerRepository,
         )
 
 

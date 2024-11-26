@@ -154,18 +154,24 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         TokenStandard.UTXO -> {
             val utxos = blockChairApi.getAddressInfo(chain, address)
 
+            val byteFee = gasFee.value
+
             BlockChainSpecificAndUtxo(
                 blockChainSpecific = BlockChainSpecific.UTXO(
-                    byteFee = gasFee.value,
+                    byteFee = byteFee,
                     sendMaxAmount = isMaxAmountEnabled,
                 ),
-                utxos = utxos?.utxos?.sortedBy { it.value }?.toList()?.map {
-                    UtxoInfo(
-                        hash = it.transactionHash,
-                        amount = it.value,
-                        index = it.index.toUInt(),
-                    )
-                } ?: emptyList(),
+                utxos = utxos
+                    ?.utxos
+                    ?.sortedBy { it.value }
+                    ?.toList()
+                    ?.map {
+                        UtxoInfo(
+                            hash = it.transactionHash,
+                            amount = it.value,
+                            index = it.index.toUInt(),
+                        )
+                    } ?: emptyList(),
             )
         }
 

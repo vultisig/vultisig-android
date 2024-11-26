@@ -86,7 +86,7 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
         showGlobalBackupReminder()
-        showVerifyServerBackupIfNeeded(vaultId)
+        // showVerifyServerBackupIfNeeded(vaultId)
     }
 
     private fun showGlobalBackupReminder() {
@@ -243,6 +243,9 @@ internal class VaultAccountsViewModel @Inject constructor(
         dismissBackupReminder()
     }
 
+    /*
+    moved as a mandatory part of generation flow
+
     private fun showVerifyServerBackupIfNeeded(vaultId: VaultId) {
         viewModelScope.launch {
             if (vaultMetadataRepo.shouldVerifyServerBackup(vaultId)) {
@@ -255,5 +258,6 @@ internal class VaultAccountsViewModel @Inject constructor(
             }
         }
     }
+     */
 
 }

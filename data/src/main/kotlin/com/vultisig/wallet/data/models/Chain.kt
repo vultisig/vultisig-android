@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
@@ -143,7 +144,7 @@ fun Chain.oneInchChainId(): Int =
         Chain.BscChain -> 56
         // Chain.CronosChain -> 25
         Chain.ZkSync -> 324
-        else -> error("Chain $this is not supported by 1inch API")
+        else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
 
 fun Chain.swapAssetName(): String {

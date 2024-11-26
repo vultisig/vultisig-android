@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.SolanaApi
+import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
@@ -24,6 +25,7 @@ interface SplTokenRepository {
     suspend fun getBalance(coin: Coin): BigInteger?
     suspend fun getTokenByContract(contractAddress: String): Coin?
     suspend fun getTokens(address: String): List<Coin>
+    suspend fun getJupiterTokens(): List<Coin>
 }
 
 internal class SplTokenRepositoryImpl @Inject constructor(
@@ -101,6 +103,12 @@ internal class SplTokenRepositoryImpl @Inject constructor(
             .firstOrNull()
             ?.run { initCoinData(this, contractAddress) }
 
+    override suspend fun getJupiterTokens(): List<Coin> = try {
+        solanaApi.getJupiterTokens().toCoins()
+    } catch (e: Exception) {
+        emptyList()
+    }
+
     override suspend fun getCachedBalance(coin: Coin): BigInteger {
         return try {
             tokenValueDao.getTokenValue(
@@ -137,4 +145,21 @@ internal class SplTokenRepositoryImpl @Inject constructor(
         address = "",
         hexPublicKey = ""
     )
+
+    private fun List<JupiterTokenResponseJson>.toCoins() =
+        asSequence()
+            .map {
+                Coin(
+                    contractAddress = it.contractAddress,
+                    chain = Chain.Solana,
+                    ticker = it.ticker,
+                    address = "",
+                    logo = it.logo ?: "",
+                    decimal = it.decimals,
+                    hexPublicKey = "",
+                    priceProviderID = it.extensions?.coingeckoId ?: "",
+                    isNativeToken = false,
+                )
+            }
+            .toList()
 }

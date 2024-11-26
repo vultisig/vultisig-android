@@ -45,7 +45,6 @@ import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
-import com.vultisig.wallet.ui.screens.keygen.KeygenVerifyServerBackupScreen
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
@@ -524,6 +523,9 @@ internal fun SetupNavGraph(
             BackupSuggestionScreen()
         }
 
+        /*
+        disabled for now, as there's no use for it, should be removed in the future
+
         composable(
             route = Destination.VerifyServerBackup.STATIC_ROUTE,
             arguments = listOf(
@@ -539,6 +541,7 @@ internal fun SetupNavGraph(
                 navController = navController,
             )
         }
+         */
 
         composable(
             route = Destination.ShareVaultQr.STATIC_ROUTE,

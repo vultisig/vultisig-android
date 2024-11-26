@@ -4,9 +4,7 @@
     <string name="tokens">Tokens</string>
     <string name="chains">Ketting</string>
     <string name="keysign">Sleutel tekenen</string>
-    <string name="keygen">Sleutel genereren</string>
     <string name="danger_icon">Gevaarpictogram</string>
-    <string name="signing_error_please_try_again">Ondertekeningsfout. Probeer het opnieuw.</string>
     <string name="signing_error_please_try_again_s">Ondertekeningsfout. Probeer het opnieuw. %s</string>
     <string name="bottom_warning_msg_keygen_error_screen">Houd apparaten op hetzelfde WiFi-netwerk, correct kluis en paar apparaten.\nZorg ervoor dat er geen andere apparaten zijn het draaien van Vultisig.</string>
     <string name="try_again">Probeer opnieuw</string>
@@ -228,7 +226,6 @@
     <string name="import_file_screen_password_error">Wachtwoord is niet correct.</string>
     <string name="backup_password_optional_password_protection">Optionele wachtwoordbeveiliging van uw kluis</string>
     <string name="backup_password_screen_save">Redden</string>
-    <string name="backup_password_screen_skip">Skip</string>
     <string name="backup_password_screen_enter_password">Voer wachtwoord in</string>
     <string name="import_file_screen_enter_password">Voer wachtwoord in</string>
     <string name="backup_password_screen_verify_password">Wachtwoord verifiëren</string>

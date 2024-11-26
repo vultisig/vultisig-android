@@ -8,6 +8,7 @@ sealed class SwapException(message: String) : Exception(message) {
     class InsufficentSwapAmount(message: String) : SwapException(message)
     class SwapRouteNotAvailable(message: String) : SwapException(message)
     class TimeOut(message: String) : SwapException(message)
+    class NetworkConnection(message: String) : SwapException(message)
 
 
     companion object {
@@ -22,6 +23,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("No available qoutes for the resquested") -> SwapRouteNotAvailable(error)
                     contains("trading is halted") -> SwapRouteNotAvailable(error)
                     contains("timeout") -> TimeOut(error)
+                    contains("unable to resolve host") -> NetworkConnection(error)
                     else -> UnkownSwapError(error)
                 }
             }

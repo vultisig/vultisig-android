@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
-    <string name="signing_error_please_try_again">Erro ao Assinar. Por favor, tente novamente.</string>
     <string name="signing_error_please_try_again_s">Erro ao Assinar. Por favor, tente novamente. %s</string>
     <string name="try_again">Tentar Novamente</string>
     <string name="vault_choose_chains">Escolher Cadeias</string>
@@ -142,7 +141,6 @@
     <string name="keysign_screen_keysign_finished">Keysign concluído!</string>
     <string name="keysign">Sinal de chave</string>
     <string name="generating_key_screen_keygen_failed">Falha na geração de chaves</string>
-    <string name="keygen">Gerador de chaves</string>
     <string name="device_list_screen_keygen">Gerador de chaves</string>
     <string name="generating_key_title">Gerador de chaves</string>
     <string name="join_key_gen_screen_keygen">Gerador de chaves</string>
@@ -218,7 +216,6 @@
     <string name="import_file_screen_password_error">A palavra-passe não está correta.</string>
     <string name="backup_password_optional_password_protection">Proteção opcional por palavra-passe do seu Vault</string>
     <string name="backup_password_screen_save">Guardar</string>
-    <string name="backup_password_screen_skip">Ignorar</string>
     <string name="backup_password_screen_enter_password">Introduza a senha</string>
     <string name="import_file_screen_enter_password">Introduza a senha</string>
     <string name="backup_password_screen_verify_password">Verifique a palavra-passe</string>

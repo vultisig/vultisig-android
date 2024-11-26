@@ -51,7 +51,9 @@ internal fun SwapScreen(
 
     val route = navBackStackEntry?.destination?.route
 
-    val topBarNavController = if (route == SendDst.Send.route) {
+    val useMainNavigator = route == SendDst.Send.route
+
+    val topBarNavController = if (useMainNavigator) {
         navController
     } else {
         swapNavHostController
@@ -97,7 +99,7 @@ internal fun SwapScreen(
         title = title,
         progress = progress,
         qrCodeResult = viewModel.addressProvider.address.collectAsState().value,
-        navigateToHome = viewModel::navigateToHome,
+        navigateToHome = { viewModel.navigateToHome(useMainNavigator) },
         finishKeysign = viewModel::finishKeysign,
     )
 }

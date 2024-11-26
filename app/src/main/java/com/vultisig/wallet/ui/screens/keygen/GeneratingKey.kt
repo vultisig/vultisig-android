@@ -70,11 +70,25 @@ internal fun GeneratingKey(
         )
 
     val generatingKeyViewModel = wrapperViewModel.viewModel
-    GeneratingKey(
-        navController = navController,
-        keygenState = generatingKeyViewModel.state.collectAsState().value,
-        isReshare = generatingKeyViewModel.isReshareMode,
-    )
+
+    val state by generatingKeyViewModel.state.collectAsState()
+
+    if (state is KeygenState.VerifyBackup) {
+        val verifyState by generatingKeyViewModel.verifyState.collectAsState()
+        KeygenVerifyServerBackupScreen(
+            navController = navController,
+            state = verifyState,
+            codeFieldState = generatingKeyViewModel.codeFieldState,
+            onCodeLostFocus = { /* noop */ },
+            onContinueClick = generatingKeyViewModel::completeVerification,
+        )
+    } else {
+        GeneratingKey(
+            navController = navController,
+            keygenState = state,
+            isReshare = generatingKeyViewModel.isReshareMode,
+        )
+    }
 }
 
 @Composable
@@ -98,7 +112,7 @@ internal fun GeneratingKey(
                             R.string.generating_key_title
                     }
                 ),
-                startIcon = R.drawable.caret_left,
+                startIcon = null,
                 navController = navController
             )
         },
@@ -146,7 +160,8 @@ internal fun GeneratingKey(
                 KeygenState.KeygenEdDSA,
                 KeygenState.ReshareECDSA,
                 KeygenState.ReshareEdDSA,
-                KeygenState.Success -> {
+                KeygenState.Success,
+                KeygenState.VerifyBackup -> {
                     val title = when (keygenState) {
                         KeygenState.CreatingInstance -> stringResource(R.string.generating_key_preparing_vault)
                         KeygenState.KeygenECDSA -> stringResource(R.string.generating_key_screen_generating_ecdsa_key)

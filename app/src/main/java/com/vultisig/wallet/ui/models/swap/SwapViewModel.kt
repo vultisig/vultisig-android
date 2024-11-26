@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class SwapViewModel @Inject constructor(
-    sendNavigator: Navigator<SendDst>,
+    private val sendNavigator: Navigator<SendDst>,
     private val mainNavigator: Navigator<Destination>,
     val addressProvider: AddressProvider,
     private val vaultRepository: VaultRepository,
@@ -42,14 +42,21 @@ internal class SwapViewModel @Inject constructor(
         isKeysignFinished.value = true
     }
 
-    fun navigateToHome() {
+    fun navigateToHome(useMainNavigator: Boolean) {
         viewModelScope.launch {
-            mainNavigator.navigate(
-                Destination.Home(),
-                NavigationOptions(
-                    clearBackStack = true
+            if (isKeysignFinished.value) {
+                mainNavigator.navigate(
+                    Destination.Home(),
+                    NavigationOptions(
+                        clearBackStack = true
+                    )
                 )
-            )
+            }
+            if (useMainNavigator) {
+                mainNavigator.navigate(Destination.Back)
+            } else {
+                sendNavigator.navigate(SendDst.Back)
+            }
         }
     }
 }
