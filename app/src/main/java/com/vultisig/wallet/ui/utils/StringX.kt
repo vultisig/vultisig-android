@@ -18,10 +18,6 @@ internal fun String.isReshare(): Boolean {
     return contains("tssType=Reshare")
 }
 
-internal fun String.isJson(): Boolean {
-    return startsWith("{") && endsWith("}")
-}
-
 internal fun List<String>.groupByTwoButKeepFirstElement(): List<String> {
     val listSize = this.size
     val originalList = this

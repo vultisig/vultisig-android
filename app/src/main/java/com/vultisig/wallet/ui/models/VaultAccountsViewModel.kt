@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
+import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
@@ -40,6 +41,7 @@ internal data class VaultAccountsUiModel(
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
+    val showCameraBottomSheet: Boolean = false,
     val accounts: List<AccountUiModel> = emptyList(),
 ) {
     val isSwapEnabled = accounts.any { it.model.chain.IsSwapSupported }
@@ -69,6 +71,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val isGlobalBackupReminderRequired: IsGlobalBackupReminderRequiredUseCase,
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
+    private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
 ) : ViewModel() {
     private var vaultId: String? = null
 
@@ -124,11 +127,8 @@ internal class VaultAccountsViewModel @Inject constructor(
         }
     }
 
-    fun joinKeysign() {
-        val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            navigator.navigate(Destination.JoinThroughQr(vaultId = vaultId))
-        }
+    fun openCamera() {
+        uiState.update { it.copy(showCameraBottomSheet = true) }
     }
 
     fun openAccount(account: AccountUiModel) {
@@ -227,6 +227,15 @@ internal class VaultAccountsViewModel @Inject constructor(
 
     fun dismissBackupReminder() {
         uiState.update { it.copy(showMonthlyBackupReminder = false) }
+    }
+
+    fun dismissCameraBottomSheet() {
+        uiState.update { it.copy(showCameraBottomSheet = false) }
+    }
+
+    fun onScanSuccess(qr: String) = viewModelScope.launch {
+        navigator.navigate(getDirectionByQrCodeUseCase(qr, vaultId))
+        uiState.update { it.copy(showCameraBottomSheet = false) }
     }
 
     fun doNotRemindBackup() = viewModelScope.launch {
