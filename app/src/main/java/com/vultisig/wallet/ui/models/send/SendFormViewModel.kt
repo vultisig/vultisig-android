@@ -8,12 +8,14 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.ImageModel
@@ -93,6 +95,7 @@ internal data class SendFormUiModel(
     val showGasFee: Boolean = true,
     val dstAddressError: UiText? = null,
     val tokenAmountError: UiText? = null,
+    val reapingError: UiText? = null,
     val hasMemo: Boolean = false,
     val showGasSettings: Boolean = false,
     val specific: BlockChainSpecificAndUtxo? = null,
@@ -193,6 +196,7 @@ internal class SendFormViewModel @Inject constructor(
         calculateGasFees()
         calculateSpecific()
         collectAdvanceGasUi()
+        collectAmountChecks()
     }
 
     fun loadData(
@@ -786,7 +790,6 @@ internal class SendFormViewModel @Inject constructor(
                 accounts,
             ) { token, accounts ->
                 val address = token.address
-                val showGasFee = !token.allowZeroGas()
                 val hasMemo = token.isNativeToken
 
                 val uiModel = accountToTokenBalanceUiModelMapper.map(SendSrc(
@@ -807,7 +810,6 @@ internal class SendFormViewModel @Inject constructor(
                     it.copy(
                         from = address,
                         selectedCoin = uiModel,
-                        showGasFee = showGasFee,
                         hasMemo = hasMemo,
                     )
                 }
@@ -841,6 +843,45 @@ internal class SendFormViewModel @Inject constructor(
                     lastFiatValueUserInput = fiatString
 
                     tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
+                }
+            }.collect()
+        }
+    }
+
+    private fun collectAmountChecks() {
+        viewModelScope.launch {
+            combine(
+                selectedToken.filterNotNull(),
+                tokenAmountFieldState.textAsFlow(),
+                gasFee.filterNotNull(),
+            ) { selectedToken, tokenAmount, gasFee ->
+                val selectedAccount = selectedAccount
+                if (selectedAccount != null &&
+                    selectedToken.chain == Chain.Polkadot &&
+                    selectedToken.ticker == Coins.polkadot.ticker
+                ) {
+                    val balance = selectedAccount.tokenValue
+                        ?.value
+                        ?: BigInteger.ZERO
+                    val tokenAmountInt = tokenAmount.toString()
+                        .toBigDecimalOrNull()
+                        ?.movePointRight(selectedToken.decimal)
+                        ?.toBigInteger()
+                        ?: BigInteger.ZERO
+
+                    if (balance - (gasFee.value + tokenAmountInt) <
+                        PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+                    ) {
+                        uiState.update {
+                            it.copy(
+                                reapingError = UiText.StringResource(R.string.send_form_polka_reaping_warning)
+                            )
+                        }
+                    } else {
+                        uiState.update {
+                            it.copy(reapingError = null)
+                        }
+                    }
                 }
             }.collect()
         }

@@ -51,6 +51,18 @@ object Coins {
         contractAddress = "",
         isNativeToken = true,
     )
+    val polkadot = Coin(
+        chain = Chain.Polkadot,
+        ticker = "DOT",
+        logo = "dot",
+        address = "",
+        decimal = 10,
+        hexPublicKey = "",
+        priceProviderID = "polkadot",
+        contractAddress = "",
+        isNativeToken = true,
+    )
+
     val SupportedCoins = listOf(
         wewe,
         Coin(
@@ -1451,17 +1463,7 @@ object Coins {
             contractAddress = "",
             isNativeToken = true,
         ),
-        Coin(
-            chain = Chain.Polkadot,
-            ticker = "DOT",
-            logo = "dot",
-            address = "",
-            decimal = 10,
-            hexPublicKey = "",
-            priceProviderID = "polkadot",
-            contractAddress = "",
-            isNativeToken = true,
-        ),
+        polkadot,
         Coin(
             chain = Chain.ZkSync,
             ticker = "ETH",
