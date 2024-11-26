@@ -123,11 +123,8 @@ internal class GasSettingsViewModel @Inject constructor(
     }
 
     private fun loadEthData(chain: Chain, spec: BlockChainSpecificAndUtxo){
-        var gasLimit = if (gasLimitState.text.isEmpty()) {
-            val specific = spec.blockChainSpecific as BlockChainSpecific.Ethereum
-            specific.gasLimit.also {
-                gasLimitState.setTextAndPlaceCursorAtEnd(specific.gasLimit.toString())
-            }
+        val gasLimit = if (gasLimitState.text.isEmpty()) {
+            (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
         } else {
             gasLimitState.text.toString().toBigInteger()
         }
