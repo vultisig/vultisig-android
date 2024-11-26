@@ -96,4 +96,9 @@ class PolkadotHelper(
             )
         )
     }
+
+    companion object {
+        const val DEFAULT_FEE_PLANCKS = 250_000_000L
+        const val DEFAULT_EXISTENTIAL_DEPOSIT = 10_000_000_000L // 1 DOT
+    }
 }

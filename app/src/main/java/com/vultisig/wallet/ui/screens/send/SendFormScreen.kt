@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.send
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -282,6 +283,23 @@ internal fun SendFormScreen(
                     }
                 )
             }
+
+            AnimatedContent(
+                targetState = state.reapingError,
+                label = "error message"
+            ) { errorMessage ->
+                if (errorMessage != null) {
+                    Column {
+                        UiSpacer(size = 8.dp)
+                        Text(
+                            text = errorMessage.asString(),
+                            color = Theme.colors.error,
+                            style = Theme.menlo.body1
+                        )
+                    }
+                }
+            }
+
             UiSpacer(size = 80.dp)
 
         }
