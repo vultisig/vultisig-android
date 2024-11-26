@@ -92,5 +92,6 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
             Chain.Osmosis -> "OSMO"
             Chain.Terra -> "LUNA"
             Chain.TerraClassic -> "LUNC"
+            Chain.Noble -> "USDC"
         }
 }

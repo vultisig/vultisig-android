@@ -80,7 +80,7 @@ object SigningHelper {
                 }
 
                 Chain.GaiaChain, Chain.Dydx, Chain.Kujira, Chain.Osmosis,
-                Chain.Terra, Chain.TerraClassic -> {
+                Chain.Terra, Chain.TerraClassic, Chain.Noble -> {
                     CosmosHelper(
                         coinType = chain.coinType,
                         denom = chain.feeUnit,

@@ -51,7 +51,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
             Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
             Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync, Chain.Sui,
-            Chain.Dydx, Chain.Bitcoin, Chain.Osmosis, Chain.Terra, Chain.TerraClassic ->
+            Chain.Dydx, Chain.Bitcoin, Chain.Osmosis, Chain.Terra, Chain.TerraClassic, Chain.Noble ->
                 "${explorerUrl}tx/"
 
             Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton ->
@@ -98,6 +98,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Osmosis -> "https://www.mintscan.io/osmosis/"
             Chain.Terra -> "https://www.mintscan.io/terra/"
             Chain.TerraClassic -> "https://finder.terra.money/classic/"
+            Chain.Noble -> "https://www.mintscan.io/noble"
         }
 
 }
