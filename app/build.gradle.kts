@@ -121,7 +121,6 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.apache.compress)
     implementation(libs.apache.compress.xz)
-    implementation(libs.guava)
     implementation(libs.mlkit.barcode)
     implementation(libs.okhttp)
     implementation(libs.timber)
