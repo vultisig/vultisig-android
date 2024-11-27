@@ -4,7 +4,6 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
@@ -21,7 +20,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -84,19 +82,17 @@ internal class GasSettingsViewModel @Inject constructor(
         }.collect()
     }
 
-    private fun collectUTXOData() = viewModelScope.launch {
-        state.map { it.selectedPriorityFee }.onEach {
-            val fee = when (it) {
-                PriorityFee.LOW -> state.value.defaultByteFee
-                    .multiply(BigInteger("2")).divide(BigInteger("3"))
+    private fun updateByteFee(priorityFee: PriorityFee) {
+        val fee = when (priorityFee) {
+            PriorityFee.LOW -> state.value.defaultByteFee
+                .multiply(BigInteger("2")).divide(BigInteger("3"))
 
-                PriorityFee.NORMAL -> state.value.defaultByteFee
+            PriorityFee.NORMAL -> state.value.defaultByteFee
 
-                PriorityFee.FAST -> state.value.defaultByteFee
-                    .multiply(BigInteger("5")).divide(BigInteger("2"))
-            }
-            byteFeeState.setTextAndPlaceCursorAtEnd(fee.toString())
-        }.collect()
+            PriorityFee.FAST -> state.value.defaultByteFee
+                .multiply(BigInteger("5")).divide(BigInteger("2"))
+        }
+        byteFeeState.setTextAndPlaceCursorAtEnd(fee.toString())
     }
 
     fun loadData(chain: Chain, spec: BlockChainSpecificAndUtxo) {
@@ -115,7 +111,6 @@ internal class GasSettingsViewModel @Inject constructor(
                     loadEthData(chain, spec)
                 }
                 is BlockChainSpecific.UTXO -> {
-                    collectUTXOData()
                     loadUTXOData(chain, spec)
                 }
                 else -> {}
@@ -154,6 +149,8 @@ internal class GasSettingsViewModel @Inject constructor(
     private fun loadUTXOData(chain: Chain, spec: BlockChainSpecificAndUtxo){
 
         viewModelScope.launch {
+            if (byteFeeState.text.toBigInteger() > BigInteger.ZERO)
+                return@launch
             try {
                 val stats = blockChairApi.getBlockChairStats(chain)
                 val byte = stats.multiply(BigInteger("5")).divide(BigInteger("2"))
@@ -173,6 +170,7 @@ internal class GasSettingsViewModel @Inject constructor(
         state.update {
             it.copy(selectedPriorityFee = priorityFee)
         }
+        updateByteFee(priorityFee)
     }
 
     fun save(): GasSettings {
@@ -205,5 +203,11 @@ internal class GasSettingsViewModel @Inject constructor(
                 PriorityFee.FAST to feeHistory[feeHistory.size - 1],
             )
         }
+    }
+
+    private fun CharSequence.toBigInteger() = try {
+        BigInteger(toString())
+    } catch (e: Exception) {
+        BigInteger.ZERO
     }
 }
