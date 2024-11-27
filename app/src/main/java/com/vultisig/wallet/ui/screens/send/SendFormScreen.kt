@@ -245,6 +245,37 @@ internal fun SendFormScreen(
                 error = null
             )
             if (state.showGasFee) {
+                if (state.gasTokenBalance != null) {
+                    FormDetails(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        title = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = Theme.menlo.body1.fontSize,
+                                    fontFamily = Theme.menlo.body1.fontFamily,
+                                    fontWeight = Theme.menlo.body1.fontWeight,
+
+                                    )
+                            ) {
+                                append(stringResource(R.string.send_form_gas_token_balance))
+                            }
+                        },
+                        value = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                    fontSize = Theme.menlo.body1.fontSize,
+                                    fontFamily = Theme.menlo.body1.fontFamily,
+                                )
+                            ) {
+                                append(state.gasTokenBalance.asString())
+                            }
+                        }
+                    )
+                }
+
                 FormDetails(
                     modifier = Modifier
                         .fillMaxWidth(),
