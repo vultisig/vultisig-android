@@ -1529,6 +1529,17 @@ object Coins {
             priceProviderID = "terra-luna",
             contractAddress = "",
             isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Noble,
+            ticker = "USDC",
+            logo = "usdc",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "",
+            isNativeToken = true,
         )
     )
 

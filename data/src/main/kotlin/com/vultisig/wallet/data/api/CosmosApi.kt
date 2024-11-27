@@ -35,50 +35,18 @@ internal class CosmosApiFactoryImp @Inject constructor(
     private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
 ) : CosmosApiFactory {
     override fun createCosmosApi(chain: Chain): CosmosApi {
-        return when (chain) {
-             Chain.GaiaChain -> CosmosApiImp(
-                httpClient,
-                "https://cosmos-rest.publicnode.com",
-                json,
-                cosmosThorChainResponseSerializer,
-            )
-
-            Chain.Kujira -> CosmosApiImp(
-                httpClient,
-                "https://kujira-rest.publicnode.com",
-                json,
-                cosmosThorChainResponseSerializer,
-            )
-
-            Chain.Dydx -> CosmosApiImp(
-                httpClient,
-                "https://dydx-rest.publicnode.com",
-                json,
-                cosmosThorChainResponseSerializer,
-            )
-
-            Chain.Osmosis -> CosmosApiImp(
-                httpClient,
-                "https://osmosis-rest.publicnode.com",
-                json,
-                cosmosThorChainResponseSerializer,
-            )
-            Chain.Terra -> CosmosApiImp(
-                httpClient,
-                "https://terra-lcd.publicnode.com",
-                json,
-                cosmosThorChainResponseSerializer,
-            )
-            Chain.TerraClassic -> CosmosApiImp(
-                httpClient,
-                "https://terra-classic-lcd.publicnode.com",
-                json,
-                cosmosThorChainResponseSerializer,
-            )
-
-
+        val apiUrl = when (chain) {
+            Chain.GaiaChain -> "https://cosmos-rest.publicnode.com"
+            Chain.Kujira -> "https://kujira-rest.publicnode.com"
+            Chain.Dydx -> "https://dydx-rest.publicnode.com"
+            Chain.Osmosis -> "https://osmosis-rest.publicnode.com"
+            Chain.Terra -> "https://terra-lcd.publicnode.com"
+            Chain.TerraClassic -> "https://terra-classic-lcd.publicnode.com"
+            Chain.Noble -> "https://noble-api.polkachu.com"
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
+
+        return CosmosApiImp(httpClient, apiUrl, json, cosmosThorChainResponseSerializer,)
     }
 }
 
