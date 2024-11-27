@@ -2,8 +2,6 @@ package com.vultisig.wallet.data.mediator
 
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
-import com.google.common.cache.Cache
-import com.google.common.cache.CacheBuilder
 import com.vultisig.wallet.data.common.sha256
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.encodeToString
@@ -15,9 +13,8 @@ import timber.log.Timber
 
 class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListener {
     private val port = 18080
-    private val cache: Cache<String, Any> = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .build()
+    private val cache = mutableMapOf<String, Any>()
+
     private val service: Service = Service.ignite()
 
     fun startMediator(name: String) {
@@ -128,7 +125,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             response.status(HttpStatusCode.BadRequest.value)
             return
         }
-        cache.getIfPresent(hash)?.let {
+        cache[hash]?.let {
 
             val content = it as? String
             val contentHash = content?.sha256()
@@ -187,7 +184,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return ""
         }
         val key = "session-$sessionID-start"
-        cache.getIfPresent(key)?.let {
+        cache[key]?.let {
             val session = it as? Session
             session?.let {
                 response.type("application/json")
@@ -212,7 +209,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return ""
         }
         val key = "keysign-${sessionID.trim()}-$messageID-complete"
-        cache.getIfPresent(key)?.let {
+        cache[key]?.let {
             response.type("application/json")
             response.status(HttpStatusCode.OK.value)
             return it as String
@@ -267,7 +264,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         } ?: run {
             "$sessionID-$participantKey-$hash"
         }
-        cache.invalidate(key)
+        cache.remove(key)
         response.status(HttpStatusCode.OK.value)
         return ""
     }
@@ -291,7 +288,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         } ?: run {
             "${sessionID.trim()}-${participantKey.trim()}-"
         }
-        cache.asMap().filterKeys { it.startsWith(keyPrefix) }.let {
+        cache.filterKeys { it.startsWith(keyPrefix) }.let {
             val messages = it.values.toList().map { it as Message }
             response.status(HttpStatusCode.OK.value)
             response.type("application/json")
@@ -344,7 +341,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         }
         Timber.tag("server").d("body: %s", request.body())
         val participants: List<String> = Json.decodeFromString(request.body())
-        cache.getIfPresent(key)?.let {
+        cache[key]?.let {
             val session = it as? Session
             session?.let {
                 for (participant in participants) {
@@ -379,7 +376,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             "session-$cleanSessionID"
         }
         Timber.tag("server").d("get session %s", key)
-        cache.getIfPresent(key)?.let {
+        cache[key]?.let {
             val session = it as? Session
             session?.let {
                 response.status(HttpStatusCode.OK.value)
@@ -399,7 +396,8 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val cleanSessionID = sessionID.trim()
         val key = "session-$cleanSessionID"
         val keyStart = "$key-start"
-        cache.invalidateAll(listOf(key, keyStart))
+        cache.remove(key)
+        cache.remove(keyStart)
         return ""
     }
 
@@ -407,7 +405,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         try {
             this.service.stop()
             // clear cache
-            cache.invalidateAll()
+            cache.clear()
             nsdManager.unregisterService(this)
         }catch (e: Exception) {
             Timber.tag("Server").e("Server stop failed: %s", e.message)
