@@ -612,6 +612,7 @@ internal class SendFormViewModel @Inject constructor(
     private fun selectToken(token: Coin) {
         Timber.d("selectToken(token = $token)")
 
+        lastTokenValueUserInput = ""
         selectedToken.value = token
     }
 
@@ -856,13 +857,14 @@ internal class SendFormViewModel @Inject constructor(
     private fun collectAmountChanges() {
         viewModelScope.launch {
             combine(
+                selectedToken.filterNotNull(),
                 tokenAmountFieldState.textAsFlow(),
                 fiatAmountFieldState.textAsFlow(),
-            ) { tokenFieldValue, fiatFieldValue ->
+            ) { selectedToken, tokenFieldValue, fiatFieldValue ->
                 val tokenString = tokenFieldValue.toString()
                 val fiatString = fiatFieldValue.toString()
                 if (lastTokenValueUserInput != tokenString) {
-                    val fiatValue = convertValue(tokenString) { value, price, token ->
+                    val fiatValue = convertValue(tokenString, selectedToken) { value, price, token ->
                         value.multiply(price)
                     } ?: return@combine
 
@@ -871,7 +873,7 @@ internal class SendFormViewModel @Inject constructor(
 
                     fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
                 } else if (lastFiatValueUserInput != fiatString) {
-                    val tokenValue = convertValue(fiatString) { value, price, token ->
+                    val tokenValue = convertValue(fiatString, selectedToken) { value, price, token ->
                         value.divide(price, token.decimal, RoundingMode.HALF_UP)
                     } ?: return@combine
 
@@ -925,6 +927,7 @@ internal class SendFormViewModel @Inject constructor(
 
     private suspend fun convertValue(
         value: String,
+        token: Coin?,
         transform: (
             value: BigDecimal,
             price: BigDecimal,
@@ -934,7 +937,7 @@ internal class SendFormViewModel @Inject constructor(
         val decimalValue = value.toBigDecimalOrNull()
 
         return if (decimalValue != null) {
-            val selectedToken = selectedTokenValue
+            val selectedToken = token
                 ?: return null
 
             val price = try {
