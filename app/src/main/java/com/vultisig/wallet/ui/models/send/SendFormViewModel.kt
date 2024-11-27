@@ -90,7 +90,7 @@ internal data class SendFormUiModel(
     val fiatCurrency: String = "",
     val gasFee: UiText = UiText.Empty,
     val totalGas: UiText = UiText.Empty,
-    val gasTokenBalance: UiText = UiText.Empty,
+    val gasTokenBalance: UiText? = null,
     val estimatedFee: UiText = UiText.Empty,
     val errorText: UiText? = null,
     val showGasFee: Boolean = true,
@@ -703,15 +703,21 @@ internal class SendFormViewModel @Inject constructor(
                         }?.tokenValue
                     }
                 }
-                .filterNotNull()
                 .collect { gasTokenBalance ->
-                    uiState.update {
-                        it.copy(gasTokenBalance = UiText.DynamicString(
-                            mapTokenValueToString(
-                                gasTokenBalance
+                    if (gasTokenBalance == null) {
+                        uiState.update {
+                            it.copy(gasTokenBalance = null)
+                        }
+                    } else {
+                        uiState.update {
+                            it.copy(
+                                gasTokenBalance = UiText.DynamicString(
+                                    mapTokenValueToString(
+                                        gasTokenBalance
+                                    )
+                                )
                             )
-                        )
-                        )
+                        }
                     }
                 }
         }

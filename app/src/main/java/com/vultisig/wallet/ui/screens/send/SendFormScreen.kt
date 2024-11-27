@@ -45,7 +45,6 @@ import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
-import com.vultisig.wallet.ui.utils.isEmpty
 
 
 @Composable
@@ -246,7 +245,7 @@ internal fun SendFormScreen(
                 error = null
             )
             if (state.showGasFee) {
-                if (!state.gasTokenBalance.isEmpty()) {
+                if (state.gasTokenBalance != null) {
                     FormDetails(
                         modifier = Modifier
                             .fillMaxWidth(),
