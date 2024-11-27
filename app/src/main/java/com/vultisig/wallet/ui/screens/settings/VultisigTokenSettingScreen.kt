@@ -60,8 +60,8 @@ fun VultisigTokenScreen(navController: NavHostController) {
             FeatureItem(stringResource(R.string.token_settings_supply, supply))
             val burnt = "3,000,000"
             FeatureItem(stringResource(R.string.token_settings_burnt, burnt))
-            FeatureItem(stringResource(R.string.feature_item_vtx_tokens_are_burnt_from_fees),R.drawable.caret_right)
-            FeatureItem(text = stringResource(R.string.feature_item_vtx_tokens_are_airdropped_to_users), icon = R.drawable.caret_right)
+            FeatureItem(stringResource(R.string.feature_item_vtx_tokens_are_burnt_from_fees),R.drawable.small_caret_right)
+            FeatureItem(text = stringResource(R.string.feature_item_vtx_tokens_are_airdropped_to_users), icon = R.drawable.small_caret_right)
             FeatureItem(text = stringResource(R.string.feature_item_learn_more), icon = R.drawable.share)
         }
 

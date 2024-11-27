@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCardWithPercentage
 import com.vultisig.wallet.ui.components.library.form.FormTitleCollapsibleTextField
+import com.vultisig.wallet.ui.components.library.form.FormTitleContainer
 import com.vultisig.wallet.ui.components.library.form.FormTokenSelection
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendFormViewModel
@@ -144,10 +146,20 @@ internal fun SendFormScreen(
                 .padding(all = 16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-
-            FormTokenSelection(
-                selectedToken = state.selectedCoin,
-                onSelectToken = onSelectToken
+            FormTitleContainer(
+                title = stringResource(R.string.form_token_selection_asset),
+            ) {
+                FormTokenSelection(
+                    selectedToken = state.selectedCoin,
+                    showBalance = false,
+                    onSelectToken = onSelectToken
+                )
+            }
+            Text(
+                text = stringResource(R.string.form_token_selection_balance) +
+                        " " + state.selectedCoin?.balance,
+                color = Theme.colors.neutral200,
+                style = Theme.menlo.body1.copy(fontWeight = FontWeight.Bold),
             )
 
             FormEntry(

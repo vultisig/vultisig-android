@@ -99,7 +99,7 @@ private fun FAQSettingItem(faq: Faq) {
 
             Icon(
                 modifier = Modifier.rotate(rotation.value),
-                painter = painterResource(id = R.drawable.caret_right),
+                painter = painterResource(id = R.drawable.small_caret_right),
                 contentDescription = null,
                 tint = colors.neutral0,
             )
