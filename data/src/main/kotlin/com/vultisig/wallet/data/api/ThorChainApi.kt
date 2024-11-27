@@ -61,6 +61,8 @@ interface ThorChainApi {
         name: String,
         chain: String
     ): String?
+
+    suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -188,6 +190,10 @@ internal class ThorChainApiImpl @Inject constructor(
         .find { it.chain == chain }
         ?.address
 
+    override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson = httpClient
+        .get("https://thornode.ninerealms.com/txs/$tx")
+        .body()
+
 }
 
 @Serializable
@@ -202,4 +208,14 @@ private data class ThorNameEntryJson(
 private data class ThorNameResponseJson(
     @SerialName("entries")
     val entries: List<ThorNameEntryJson>,
+)
+
+@Serializable
+data class ThorChainTransactionJson(
+    @SerialName("code")
+    val code: Int?,
+    @SerialName("codespace")
+    val codeSpace: String?,
+    @SerialName("raw_log")
+    val rawLog: String,
 )
