@@ -61,7 +61,7 @@ internal fun KeygenVerifyServerBackupScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.keygen_verify_server_backup_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
         content = { contentPadding ->

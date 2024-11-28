@@ -50,7 +50,7 @@ internal fun WarningCard(
     @DrawableRes startIcon: Int = R.drawable.ic_warning,
     startIconTint: Color = Theme.colors.alert,
     startIconSize: Dp = 24.dp,
-    @DrawableRes endIcon: Int = R.drawable.caret_right,
+    @DrawableRes endIcon: Int = R.drawable.ic_small_caret_right,
     endIconTint: Color = Theme.colors.neutral100,
     endIconSize: Dp = 18.dp,
     modifier: Modifier = Modifier,

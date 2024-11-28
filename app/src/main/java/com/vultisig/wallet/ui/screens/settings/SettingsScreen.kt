@@ -70,7 +70,7 @@ fun SettingsScreen(navController: NavHostController) {
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.settings_screen_title),
-                startIcon = R.drawable.caret_left
+                startIcon = R.drawable.ic_caret_left
             )
         }
     ) {
@@ -285,7 +285,7 @@ private fun AppSettingItem(
             }
 
             Icon(
-                painter = painterResource(id = R.drawable.caret_right),
+                painter = painterResource(id = R.drawable.ic_small_caret_right),
                 contentDescription = null,
                 tint = colors.neutral0,
             )

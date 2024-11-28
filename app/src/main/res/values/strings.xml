@@ -468,6 +468,8 @@
     <string name="verify_swap_screen_total_fees" translatable="false">Total Fees</string>
     <string name="scan_qr_code_error_text" translatable="false">Unrelated QR code is scanned</string>
     <string name="scan_qr_code_error_button" translatable="false">Back</string>
+    <string name="form_token_selection_balance" translatable="false">Balance: %s</string>
+    <string name="form_token_selection_asset" translatable="false">Asset</string>
     <string name="insufficient_native_token"  translatable="false">Insufficient %1$s</string>
     <string name="swap_error_amount_too_low"  translatable="false">Swap Amount too low</string>
     <string name="swap_error_time_out"  translatable="false">Swap request timed out. Please try again</string>

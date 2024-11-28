@@ -43,7 +43,7 @@ internal fun VaultDetailScreen(
     ) {
         TopBar(
             navController = navHostController,
-            startIcon = R.drawable.caret_left,
+            startIcon = R.drawable.ic_caret_left,
             centerText = stringResource(R.string.vault_settings_details_title)
         )
 

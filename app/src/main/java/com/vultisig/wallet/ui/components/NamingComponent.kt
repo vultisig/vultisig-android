@@ -66,7 +66,7 @@ internal fun NamingComponent(
             TopBar(
                 navController = navHostController,
                 centerText = title,
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
     ) {

@@ -49,7 +49,7 @@ internal fun FAQSettingScreen(navController: NavHostController) {
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.faq_setting_screen_title),
-                startIcon = R.drawable.caret_left
+                startIcon = R.drawable.ic_caret_left
             )
         }
     ) {
@@ -99,7 +99,7 @@ private fun FAQSettingItem(faq: Faq) {
 
             Icon(
                 modifier = Modifier.rotate(rotation.value),
-                painter = painterResource(id = R.drawable.caret_right),
+                painter = painterResource(id = R.drawable.ic_small_caret_right),
                 contentDescription = null,
                 tint = colors.neutral0,
             )

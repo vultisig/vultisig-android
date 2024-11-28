@@ -116,7 +116,7 @@ private fun DeviceList(
                     if (isReshare) R.string.reshare_device_screen_changes_in_setup
                     else R.string.device_list_screen_keygen
                 ),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
                 navController = navController
             )
         }

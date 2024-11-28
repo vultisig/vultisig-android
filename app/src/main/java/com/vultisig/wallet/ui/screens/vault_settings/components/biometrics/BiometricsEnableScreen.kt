@@ -81,7 +81,7 @@ private fun BiometricsEnableScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(id = R.string.vault_settings_biometrics_screen_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
     ) { padding ->

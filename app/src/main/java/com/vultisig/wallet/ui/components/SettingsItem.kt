@@ -73,7 +73,7 @@ internal fun SettingsItem(
             Spacer(modifier = Modifier.weight(1f))
 
             Icon(
-                painter = painterResource(id = R.drawable.caret_right),
+                painter = painterResource(id = R.drawable.ic_small_caret_right),
                 contentDescription = null,
                 tint = colorTint ?: Theme.colors.neutral100,
             )
