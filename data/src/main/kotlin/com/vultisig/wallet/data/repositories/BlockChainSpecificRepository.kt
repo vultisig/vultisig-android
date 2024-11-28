@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.utils.Numeric.max
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -39,6 +40,8 @@ interface BlockChainSpecificRepository {
         isDeposit: Boolean,
         gasLimit: BigInteger? = null,
         dstAddress: String? = null,
+        tokenAmountValue: BigInteger? = null,
+        memo: String? = null,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -65,6 +68,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         isDeposit: Boolean,
         gasLimit: BigInteger?,
         dstAddress: String?,
+        tokenAmountValue: BigInteger?,
+        memo: String?,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {
@@ -121,18 +126,30 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
+
                 val defaultGasLimit = BigInteger(
                     when {
                         isSwap -> "600000"
-                        token.isNativeToken -> {
-                            if (chain == Chain.Arbitrum)
-                                "120000" // arbitrum has higher gas limit
-                            else
-                                "23000"
+                        chain == Chain.Arbitrum -> {
+                                "160000" // arbitrum has higher gas limit
                         }
+
+                        token.isNativeToken -> "23000"
 
                         else -> "120000"
                     }
+                )
+
+                val estimateGasLimit = if (token.isNativeToken) evmApi.estimateGasForEthTransaction(
+                    senderAddress = token.address,
+                    recipientAddress = address,
+                    value = tokenAmountValue ?: BigInteger.ZERO,
+                    memo = memo,
+                ) else evmApi.estimateGasForERC20Transfer(
+                    senderAddress = token.address,
+                    recipientAddress = address,
+                    contractAddress = token.contractAddress,
+                    value = tokenAmountValue ?: BigInteger.ZERO,
                 )
 
                 var maxPriorityFee = evmApi.getMaxPriorityFeePerGas()
@@ -145,7 +162,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                         maxFeePerGasWei = gasFee.value,
                         priorityFeeWei = maxPriorityFee,
                         nonce = nonce,
-                        gasLimit = gasLimit ?: defaultGasLimit,
+                        gasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit),
                     )
                 )
             }
