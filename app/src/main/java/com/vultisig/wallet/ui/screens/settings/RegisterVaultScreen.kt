@@ -84,7 +84,7 @@ internal fun RegisterVaultScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.register_vault_screen_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
         bottomBar = {

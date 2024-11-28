@@ -82,7 +82,7 @@ internal fun TokenSelectionScreen(
     ) {
         TopBar(
             centerText = stringResource(R.string.tokens),
-            startIcon = R.drawable.caret_left,
+            startIcon = R.drawable.ic_caret_left,
             navController = navController
         )
 

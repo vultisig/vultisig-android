@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -84,7 +83,7 @@ internal fun ConfirmDeleteScreen(
             ) {
 
                 Image(
-                    painter = painterResource(id = R.drawable.caret_left),
+                    painter = painterResource(id = R.drawable.ic_caret_left),
                     contentDescription = null,
                     modifier = Modifier
                         .size(24.dp)

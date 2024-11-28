@@ -96,7 +96,7 @@ internal fun FolderScreen(
                 navigationIcon = {
                     IconButton(onClick = clickOnce(viewModel::back)) {
                         Image(
-                            painter = painterResource(id = R.drawable.caret_left),
+                            painter = painterResource(id = R.drawable.ic_caret_left),
                             contentDescription = "",
                         )
                     }

@@ -156,8 +156,7 @@ internal fun SendFormScreen(
                 )
             }
             Text(
-                text = stringResource(R.string.form_token_selection_balance) +
-                        " " + state.selectedCoin?.balance,
+                text = stringResource(R.string.form_token_selection_balance, state.selectedCoin?.balance.toString()),
                 color = Theme.colors.neutral200,
                 style = Theme.menlo.body1.copy(fontWeight = FontWeight.Bold),
             )

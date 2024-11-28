@@ -65,7 +65,7 @@ internal fun CreateFolderScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(id = R.string.create_folder_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
     ) {

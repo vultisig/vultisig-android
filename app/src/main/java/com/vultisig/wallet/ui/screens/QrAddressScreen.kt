@@ -51,7 +51,7 @@ internal fun QrAddressScreen(navController: NavHostController) {
             TopBar(
                 navController = navController,
                 centerText = title,
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
                 endIcon = R.drawable.qr_share,
                 onEndIconClick = { viewModel.shareQRCode(context) }
             )

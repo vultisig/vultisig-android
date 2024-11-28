@@ -35,7 +35,7 @@ internal fun <T> FormSelection(
     FormCard {
         SelectionCard(
             title = mapTypeToString(selected),
-            actionIcon = R.drawable.caret_down,
+            actionIcon = R.drawable.ic_caret_down,
             onClick = { isListExpanded = !isListExpanded },
         )
 

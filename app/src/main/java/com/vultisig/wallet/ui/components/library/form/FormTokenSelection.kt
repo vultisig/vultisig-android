@@ -15,8 +15,7 @@ internal fun FormTokenSelection(
 ) {
     val availableTokenText =
         if (showBalance)
-            stringResource(R.string.form_token_selection_balance) +
-                    " " + selectedToken?.balance
+            stringResource(R.string.form_token_selection_balance, selectedToken?.balance.toString())
         else ""
 
     FormTokenCard(

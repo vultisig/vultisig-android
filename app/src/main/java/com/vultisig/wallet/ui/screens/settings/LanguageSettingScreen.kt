@@ -54,7 +54,7 @@ fun LanguageSettingScreen(navController: NavHostController) {
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.language_setting_screen_title),
-                startIcon = R.drawable.caret_left
+                startIcon = R.drawable.ic_caret_left
             )
         }
     ) {

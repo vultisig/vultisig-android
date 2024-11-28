@@ -79,7 +79,7 @@ internal fun FormTokenCard(
             tokenLogo = selectedIcon,
             availableToken = availableToken,
             chainLogo = chainLogo,
-            actionIcon = R.drawable.caret_right,
+            actionIcon = R.drawable.ic_caret_right,
             onClick = onClick,
         )
     }
@@ -486,7 +486,7 @@ internal fun FormTitleCollapsibleTextField(
                 style = Theme.montserrat.body1,
             )
             Icon(
-                painter = painterResource(id = R.drawable.caret_down),
+                painter = painterResource(id = R.drawable.ic_caret_down),
                 contentDescription = "expand collapse",
                 modifier = Modifier
                     .width(12.dp)

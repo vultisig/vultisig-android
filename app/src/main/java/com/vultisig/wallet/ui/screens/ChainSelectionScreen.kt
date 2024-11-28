@@ -60,7 +60,7 @@ private fun ChainSelectionScreen(
             .fillMaxSize(),
     ) {
         TopBar(
-            centerText = stringResource(R.string.chains), startIcon = R.drawable.caret_left,
+            centerText = stringResource(R.string.chains), startIcon = R.drawable.ic_caret_left,
             navController = navController
         )
 

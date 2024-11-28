@@ -21,7 +21,7 @@ internal fun UiBarContainer(
     onStartIconClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val startIcon = if (showStartIcon) R.drawable.caret_left else null
+    val startIcon = if (showStartIcon) R.drawable.ic_caret_left else null
     Column(
         modifier = Modifier
             .background(Theme.colors.oxfordBlue800)
