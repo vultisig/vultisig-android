@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.deposit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -13,6 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class DepositViewModel @Inject constructor(
+    val addressProvider: AddressProvider,
     private val sendNavigator: Navigator<SendDst>,
     private val mainNavigator: Navigator<Destination>,
     ) : ViewModel() {
