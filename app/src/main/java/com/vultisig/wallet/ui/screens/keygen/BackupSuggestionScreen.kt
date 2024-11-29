@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -42,7 +43,9 @@ internal fun BackupSuggestionScreen(
     viewModel: BackupSuggestionViewModel = hiltViewModel()
 ) {
     val uiModel by viewModel.uiModel.collectAsState()
+    BackHandler { viewModel.close() }
     BackupSuggestion(
+        ableToSkip = uiModel.ableToSkip,
         showSkipConfirm = uiModel.showSkipConfirm,
         isConsentChecked = uiModel.isConsentChecked,
         skipBackup = viewModel::skipBackup,
@@ -55,6 +58,7 @@ internal fun BackupSuggestionScreen(
 
 @Composable
 internal fun BackupSuggestion(
+    ableToSkip: Boolean = true,
     showSkipConfirm: Boolean = false,
     isConsentChecked: Boolean = false,
     checkConsent: (Boolean) -> Unit,
@@ -146,13 +150,13 @@ internal fun BackupSuggestion(
                 UiSpacer(size = 14.dp)
             }
         }
-
-        UiIcon(
-            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
-            drawableResId = R.drawable.x,
-            size = 20.dp,
-            onClick = close
-        )
+        if (ableToSkip)
+            UiIcon(
+                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
+                drawableResId = R.drawable.x,
+                size = 20.dp,
+                onClick = close
+            )
         if (showSkipConfirm)
             SkipBackupConfirm(
                 isConsentChecked = isConsentChecked,
