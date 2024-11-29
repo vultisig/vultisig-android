@@ -43,6 +43,18 @@ interface EvmApi {
     suspend fun getBaseFee(): BigInteger
     suspend fun getFeeHistory(): List<BigInteger>
     suspend fun zkEstimateFee(srcAddress: String, dstAddress: String, data: String): ZkGasFee
+    suspend fun estimateGasForEthTransaction(
+        senderAddress: String,
+        recipientAddress: String,
+        value: BigInteger,
+        memo: String?,
+    ): BigInteger
+    suspend fun estimateGasForERC20Transfer(
+        senderAddress: String,
+        contractAddress: String,
+        recipientAddress: String,
+        value: BigInteger,
+    ): BigInteger
 }
 
 interface EvmApiFactory {
@@ -180,6 +192,7 @@ class EvmApiImp(
     }
 
     override suspend fun getGasPrice(): BigInteger {
+
         val rpcResp = fetch<RpcResponse>(
             "eth_gasPrice",
             buildJsonArray { }
@@ -189,6 +202,73 @@ class EvmApiImp(
             return BigInteger.ZERO
         }
         return rpcResp.result.convertToBigIntegerOrZero()
+    }
+
+    override suspend fun estimateGasForEthTransaction(
+        senderAddress: String,
+        recipientAddress: String,
+        value: BigInteger,
+        memo: String?,
+    ): BigInteger {
+        val memoDataHex = "0xffffffff".toByteArray()
+            .joinToString(separator = "") { byte -> String.format("%02x", byte) }
+
+        val rpcResp = fetch<RpcResponse>(
+            "eth_estimateGas",
+            buildJsonArray {
+                addJsonObject {
+                    put("from", senderAddress)
+                    put("to", recipientAddress)
+                    put("value", "0x${value.toString(16)}")
+                    put("data", "0x$memoDataHex")
+                }
+            }
+        )
+        if (rpcResp.error != null) {
+            Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
+            return BigInteger.ZERO
+        }
+
+        return rpcResp.result.convertToBigIntegerOrZero()
+    }
+
+    override suspend fun estimateGasForERC20Transfer(
+        senderAddress: String,
+        contractAddress: String,
+        recipientAddress: String,
+        value: BigInteger,
+    ): BigInteger {
+        val data = constructERC20TransferData(recipientAddress, value)
+        val nonce = getNonce(senderAddress)
+        val gasPrice = getGasPrice()
+        val rpcResp = fetch<RpcResponse>(
+            "eth_estimateGas",
+            buildJsonArray {
+                addJsonObject {
+                    put("from", senderAddress)
+                    put("to", contractAddress)
+                    put("value", "0x0")
+                    put("data", data)
+                    put("nonce", "0x${nonce.toString(16)}")
+                    put("gasPrice", "0x${gasPrice.toString(16)}")
+                }
+            }
+        )
+        if (rpcResp.error != null) {
+            Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
+            return BigInteger.ZERO
+        }
+
+        return rpcResp.result.convertToBigIntegerOrZero()
+    }
+
+    private fun constructERC20TransferData(recipientAddress: String, value: BigInteger): String {
+        val methodId = "a9059cbb"
+        val strippedRecipientAddress = recipientAddress.stripHexPrefix()
+        val paddedAddress = strippedRecipientAddress.padStart(64, '0')
+        val valueHex = value.toString(16)
+        val paddedValue = valueHex.padStart(64, '0')
+        return "0x$methodId$paddedAddress$paddedValue"
     }
 
     override suspend fun getMaxPriorityFeePerGas(): BigInteger {

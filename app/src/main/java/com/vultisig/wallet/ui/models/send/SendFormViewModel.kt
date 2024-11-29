@@ -442,6 +442,8 @@ internal class SendFormViewModel @Inject constructor(
                         srcAddress,
                         selectedToken,
                         gasFee,
+                        memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
+                        tokenAmountValue = tokenAmountInt,
                         isSwap = false,
                         isMaxAmountEnabled = isMaxAmount,
                         isDeposit = false,
