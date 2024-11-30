@@ -381,6 +381,7 @@
 <!--    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>-->
 <!--    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>-->
 <!--    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>-->
+<!--    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>-->
 
     <string name="select_vault_type_secure_title" translatable="false">SECURE</string>
     <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>
@@ -434,7 +435,6 @@
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
-    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>
     <string name="deposit_error_invalid_lpunits"  translatable="false">LP units is invalid</string>
     <string name="deposit_error_invalid_assets"  translatable="false">Assets is invalid</string>
     <string name="deposit_form_screen_assets" translatable="false">Assets</string>
