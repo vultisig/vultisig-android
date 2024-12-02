@@ -412,8 +412,6 @@
     <string name="backup_suggestion_header" translatable="false">Backups need to be done on every device in Vultisig</string>
     <string name="backup_suggestion_body" translatable="false">Each device has its own unique vault share, which are needed for recovery</string>
     <string name="backup_suggestion_warning" translatable="false">Back up your vault on every device individually!</string>
-    <string name="backup_suggestion_skip_backup" translatable="false">Skip Backup</string>
-    <string name="backup_suggestion_skip_consent" translatable="false">I understand that by skipping the backup I may lose access to my funds.</string>
     <string name="qr_title_join_keygen_description" translatable="false">Scan with devices to join the\nvault generation</string>
     <string name="qr_title_join_keysign_description" translatable="false">Vault: %s\nAmount: %s\n To: %s</string>
     <string name="qr_title_join_keysign_swap_description" translatable="false">Vault: %s\nFrom: %s\n To: %s</string>
