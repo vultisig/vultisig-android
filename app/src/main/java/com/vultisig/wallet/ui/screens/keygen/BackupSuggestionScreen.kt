@@ -11,13 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -29,13 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.CheckField
-import com.vultisig.wallet.ui.models.keygen.BackupSuggestionViewModel
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.TopBarWithoutNav
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.WarningCard
+import com.vultisig.wallet.ui.models.keygen.BackupSuggestionViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -61,9 +53,9 @@ internal fun BackupSuggestion(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            Column (
+            Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-            ){
+            ) {
                 Image(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -82,9 +74,7 @@ internal fun BackupSuggestion(
                         .padding(horizontal = 20.dp),
                     text = stringResource(id = R.string.backup_suggestion_header),
                     style = Theme.montserrat.heading4.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 24.sp,
-                        lineHeight = 36.sp
+                        fontWeight = FontWeight.SemiBold, fontSize = 24.sp, lineHeight = 36.sp
                     ),
                     color = Theme.colors.neutral0,
                     textAlign = TextAlign.Center
@@ -98,7 +88,9 @@ internal fun BackupSuggestion(
                 modifier = Modifier.padding(horizontal = 20.dp),
             ) {
                 Text(
-                    modifier = Modifier.padding(vertical = 16.dp).weight(1f),
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .weight(1f),
                     text = stringResource(id = R.string.backup_suggestion_warning),
                     style = Theme.montserrat.subtitle1,
                     color = Theme.colors.neutral0,
@@ -127,8 +119,7 @@ internal fun BackupSuggestion(
                 MultiColorButton(
                     text = stringResource(R.string.vault_settings_backup_title),
                     textColor = Theme.colors.oxfordBlue800,
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = navigateToBackupPasswordScreen
                 )
 
@@ -139,11 +130,8 @@ internal fun BackupSuggestion(
 }
 
 
-
 @Preview
 @Composable
 fun BackupSuggestionPreview() {
-    BackupSuggestion(
-        navigateToBackupPasswordScreen = {}
-    )
+    BackupSuggestion(navigateToBackupPasswordScreen = {})
 }
