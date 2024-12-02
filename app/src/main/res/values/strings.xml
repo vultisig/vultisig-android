@@ -374,13 +374,17 @@
     <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>
     <string name="join_keygen_screen_renew" translatable="false">Renew</string>
 
-    <string name="select_vault_type_fast_title" translatable="false">FAST</string>
     <string name="folders_list_title" translatable="false">Folders</string>
-    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>
-    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>
-    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>
-    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>
-    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>
+
+<!--    fast&active vaults are temporarily disabled -->
+<!--    <string name="select_vault_type_fast_title" translatable="false">FAST</string>-->
+<!--    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>-->
+<!--    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>-->
+<!--    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>-->
+<!--    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>-->
+<!--    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>-->
+<!--    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>-->
+
     <string name="select_vault_type_start" translatable="false">START</string>
     <string name="keygen_email_screen_title" translatable="false">EMAIL</string>
     <string name="keygen_email_continue_button" translatable="false">Continue</string>
@@ -431,7 +435,6 @@
     <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
-    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>
     <string name="deposit_error_invalid_lpunits"  translatable="false">LP units is invalid</string>
     <string name="deposit_error_invalid_assets"  translatable="false">Assets is invalid</string>
     <string name="deposit_form_screen_assets" translatable="false">Assets</string>
@@ -488,4 +491,8 @@
     <string name="backup_password_screen_empty_password" translatable="false">Please use \"Skip Password\" to save without password</string>
     <string name="network_connection_lost" translatable="false">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning" translatable="false">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
+    <string name="select_vault_type_secure_vault_title" translatable="false">Secure Vault</string>
+    <string name="select_vault_type_secure_vault_point_0" translatable="false">2of3, 3of4, 4of6  device setups available</string>
+    <string name="select_vault_type_secure_vault_point_1" translatable="false">One backup per device</string>
+    <string name="select_vault_type_secure_vault_point_2" translatable="false">Redundant, Secure</string>
 </resources>
