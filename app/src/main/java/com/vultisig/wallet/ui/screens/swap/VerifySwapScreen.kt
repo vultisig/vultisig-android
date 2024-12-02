@@ -89,6 +89,7 @@ internal fun VerifySwapScreen(
     VerifySwapScreen(
         provider = state.provider.asString(),
         swapTransactionUiModel = state.swapTransactionUiModel,
+        hasAllConsents = state.hasAllConsents,
         consentAmount = state.consentAmount,
         consentReceiveAmount = state.consentReceiveAmount,
         consentAllowance = state.consentAllowance,
@@ -107,6 +108,7 @@ internal fun VerifySwapScreen(
 private fun VerifySwapScreen(
     provider: String,
     swapTransactionUiModel: SwapTransactionUiModel,
+    hasAllConsents: Boolean,
     consentAmount: Boolean,
     consentReceiveAmount: Boolean,
     consentAllowance: Boolean,
@@ -135,6 +137,7 @@ private fun VerifySwapScreen(
                         textColor = Theme.colors.oxfordBlue800,
                         modifier = Modifier
                             .fillMaxWidth(),
+                        disabled = !hasAllConsents,
                         onClick = onFastSignClick,
                     )
 
@@ -148,6 +151,7 @@ private fun VerifySwapScreen(
                         borderSize = 1.dp,
                         modifier = Modifier
                             .fillMaxWidth(),
+                        disabled = !hasAllConsents,
                         onClick = onConfirm
                     )
                 } else {
@@ -156,6 +160,7 @@ private fun VerifySwapScreen(
                         textColor = Theme.colors.oxfordBlue800,
                         modifier = Modifier
                             .fillMaxWidth(),
+                        disabled = !hasAllConsents,
                         onClick = onConfirm,
                     )
                 }
@@ -238,6 +243,7 @@ private fun VerifySwapScreen(
 private fun VerifySwapScreenPreview() {
     VerifySwapScreen(
         provider = "THORChain",
+        hasAllConsents = false,
         consentAmount = true,
         consentReceiveAmount = false,
         swapTransactionUiModel = SwapTransactionUiModel(

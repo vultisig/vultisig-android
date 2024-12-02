@@ -112,6 +112,7 @@ internal fun VerifyTransactionScreen(
                         textColor = Theme.colors.oxfordBlue800,
                         modifier = Modifier
                             .fillMaxWidth(),
+                        disabled = !state.hasAllConsents,
                         onClick = onFastSignClick,
                     )
 
@@ -125,6 +126,7 @@ internal fun VerifyTransactionScreen(
                         borderSize = 1.dp,
                         modifier = Modifier
                             .fillMaxWidth(),
+                        disabled = !state.hasAllConsents,
                         onClick = onConfirm
                     )
                 } else {
@@ -133,6 +135,7 @@ internal fun VerifyTransactionScreen(
                         textColor = Theme.colors.oxfordBlue800,
                         modifier = Modifier
                             .fillMaxWidth(),
+                        disabled = !state.hasAllConsents,
                         onClick = onConfirm,
                     )
                 }
