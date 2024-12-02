@@ -780,7 +780,8 @@ internal class SwapFormViewModel @Inject constructor(
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
                                         formError = null,
-                                        isSwapDisabled = false
+                                        isSwapDisabled = false,
+                                        isLoading = false,
                                     )
                                 }
                             }
@@ -834,7 +835,8 @@ internal class SwapFormViewModel @Inject constructor(
                                         ),
                                         fee = fiatValueToString.map(fiatFees),
                                         formError = null,
-                                        isSwapDisabled = false
+                                        isSwapDisabled = false,
+                                        isLoading = false,
                                     )
                                 }
                             }
