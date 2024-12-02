@@ -7,7 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
@@ -18,8 +17,6 @@ fun KeysignFlowView(
     onComplete: () -> Unit,
     onKeysignFinished: (() -> Unit)? = null,
 ) {
-    KeepScreenOn()
-
     val viewModel: KeysignFlowViewModel = hiltViewModel()
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     val keysignFlowState by viewModel.currentState.collectAsState()
