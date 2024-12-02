@@ -42,29 +42,14 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun BackupSuggestionScreen(
     viewModel: BackupSuggestionViewModel = hiltViewModel()
 ) {
-    val uiModel by viewModel.uiModel.collectAsState()
-    BackHandler { viewModel.close() }
+    BackHandler { }
     BackupSuggestion(
-        ableToSkip = uiModel.ableToSkip,
-        showSkipConfirm = uiModel.showSkipConfirm,
-        isConsentChecked = uiModel.isConsentChecked,
-        skipBackup = viewModel::skipBackup,
-        close = viewModel::close,
-        closeSkipConfirm = viewModel::closeSkipConfirm,
-        checkConsent = viewModel::checkConsent,
         navigateToBackupPasswordScreen = viewModel::navigateToBackupPasswordScreen
     )
 }
 
 @Composable
 internal fun BackupSuggestion(
-    ableToSkip: Boolean = true,
-    showSkipConfirm: Boolean = false,
-    isConsentChecked: Boolean = false,
-    checkConsent: (Boolean) -> Unit,
-    skipBackup: () -> Unit,
-    closeSkipConfirm: () -> Unit,
-    close: () -> Unit,
     navigateToBackupPasswordScreen: () -> Unit
 ) {
     Box {
@@ -150,73 +135,6 @@ internal fun BackupSuggestion(
                 UiSpacer(size = 14.dp)
             }
         }
-        if (ableToSkip)
-            UiIcon(
-                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
-                drawableResId = R.drawable.x,
-                size = 20.dp,
-                onClick = close
-            )
-        if (showSkipConfirm)
-            SkipBackupConfirm(
-                isConsentChecked = isConsentChecked,
-                checkConsent = checkConsent,
-                skipBackup = skipBackup,
-                closeSkipConfirm = closeSkipConfirm
-            )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun SkipBackupConfirm(
-    isConsentChecked: Boolean,
-    checkConsent: (Boolean) -> Unit,
-    skipBackup: () -> Unit,
-    closeSkipConfirm: () -> Unit
-){
-    ModalBottomSheet(
-        sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = true,
-        ),
-        dragHandle = null,
-        containerColor = Theme.colors.oxfordBlue800,
-        onDismissRequest = closeSkipConfirm,
-    ) {
-        Column {
-            TopBarWithoutNav(
-                centerText = stringResource(R.string.backup_suggestion_skip_backup),
-                startIcon = R.drawable.x,
-                onStartIconClick = closeSkipConfirm,
-            )
-
-            CheckField(
-                modifier = Modifier.padding(16.dp),
-                isChecked = isConsentChecked,
-                onCheckedChange = checkConsent,
-                textStyle = Theme.menlo.body2.copy(
-                    color = Theme.colors.neutral0,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 22.sp,
-                ),
-                title = stringResource(id = R.string.backup_suggestion_skip_consent),
-            )
-
-            MultiColorButton(
-                backgroundColor = Theme.colors.miamiMarmalade,
-                textColor = Theme.colors.oxfordBlue600Main,
-                iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.subtitle1,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                disabled = !isConsentChecked,
-                text = stringResource(id = R.string.backup_suggestion_skip_backup),
-                onClick = {
-                    skipBackup()
-                },
-            )
-        }
     }
 }
 
@@ -226,26 +144,6 @@ internal fun SkipBackupConfirm(
 @Composable
 fun BackupSuggestionPreview() {
     BackupSuggestion(
-        showSkipConfirm = false,
-        isConsentChecked = false,
-        checkConsent = {},
-        skipBackup = {},
-        close = {},
-        closeSkipConfirm = {},
-        navigateToBackupPasswordScreen = {}
-    )
-}
-
-@Preview
-@Composable
-fun BackupSuggestionShowSkipPreview() {
-    BackupSuggestion(
-        showSkipConfirm = true,
-        isConsentChecked = false,
-        checkConsent = {},
-        skipBackup = {},
-        close = {},
-        closeSkipConfirm = {},
         navigateToBackupPasswordScreen = {}
     )
 }
