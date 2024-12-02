@@ -50,7 +50,10 @@ internal data class VerifyTransactionUiModel(
     val blowfishShow: Boolean = false,
     val blowfishWarnings: List<String> = emptyList(),
     val hasFastSign: Boolean = false,
-)
+) {
+    val hasAllConsents: Boolean
+        get() = consentAddress && consentAmount && consentDst
+}
 
 @HiltViewModel
 internal class VerifyTransactionViewModel @Inject constructor(
@@ -126,11 +129,7 @@ internal class VerifyTransactionViewModel @Inject constructor(
     private fun keysign(
         keysignInitType: KeysignInitType,
     ) {
-        val hasAllConsents = uiState.value.let {
-            it.consentAddress && it.consentAmount && it.consentDst
-        }
-
-        if (hasAllConsents) {
+        if (uiState.value.hasAllConsents) {
             viewModelScope.launch {
                 val transaction = transaction.filterNotNull().first()
                 navigator.navigate (
