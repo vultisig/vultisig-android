@@ -82,7 +82,11 @@ internal fun Coins.getCoinLogo(logoName: String): ImageModel {
         "jup" -> R.drawable.jup
         "luna" -> R.drawable.luna
         "lunc" -> R.drawable.lunc
-
+        "astro" -> R.drawable.astro
+        "mnta" -> R.drawable.mnta
+        "nstk" -> R.drawable.nstk
+        "usk" -> R.drawable.usk
+        "wink" -> R.drawable.wink
         else -> logoName
     }
 }
