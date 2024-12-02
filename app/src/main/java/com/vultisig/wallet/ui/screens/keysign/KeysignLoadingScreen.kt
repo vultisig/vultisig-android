@@ -13,6 +13,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.theme.Theme
@@ -22,6 +23,8 @@ internal fun KeysignLoadingScreen(
     text: String,
     modifier: Modifier = Modifier,
 ) {
+    KeepScreenOn()
+
     Column(
         modifier = modifier
             .fillMaxSize()
