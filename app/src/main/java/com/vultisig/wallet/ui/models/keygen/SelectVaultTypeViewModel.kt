@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.models.keygen
 import androidx.annotation.DrawableRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
@@ -29,13 +28,13 @@ internal data class SelectVaultTypeUiModel(
             description = UiText.StringResource(R.string.select_vault_type_active_description),
             hasPair = true,
         ),
-         */
         VaultTypeUiModel(
             title = UiText.StringResource(R.string.select_vault_type_secure_title),
             drawableResId = R.drawable.vault_type_secure,
             description = UiText.StringResource(R.string.select_vault_type_secure_description),
             hasPair = true,
         ),
+         */
     ),
 )
 
