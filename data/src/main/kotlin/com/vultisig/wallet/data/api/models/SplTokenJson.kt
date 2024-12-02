@@ -90,7 +90,7 @@ data class SplTokenInfo(
     @SerialName("decimals")
     val decimals: Int,
     @SerialName("logoURI")
-    val logoURI: String,
+    val logoURI: String?,
     @SerialName("extensions")
     val extensions: SplExtensionsJson?,
 )
