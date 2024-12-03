@@ -237,15 +237,29 @@ internal class BalanceRepositoryImpl @Inject constructor(
             GaiaChain, Kujira, Dydx, Osmosis, Terra, Noble -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
                 val listCosmosBalance = cosmosApi.getBalance(address)
-                val balance = listCosmosBalance
-                    .find {
+                val balance =
+                    listCosmosBalance.find {
                         it.denom.equals(
                             "u${coin.ticker.lowercase()}",
                             ignoreCase = true
-                        ) || it.denom.equals(
-                            "a${coin.ticker.lowercase()}",
-                            ignoreCase = true
-                        )
+                        ) ||
+                                it.denom.equals(
+                                    "a${coin.ticker.lowercase()}",
+                                    ignoreCase = true
+                                ) ||
+                                (it.denom.contains("factory/") &&
+                                        (it.denom.split("/")[2].equals(
+                                            "u${coin.ticker.lowercase()}",
+                                            ignoreCase = true
+                                        ) ||
+                                                it.denom
+                                                    .split("/")[2]
+                                                    .equals(
+                                                        "a${coin.ticker.lowercase()}",
+                                                        ignoreCase = true
+                                                    )))
+                        // todo handle for ibc tokens like
+                        // ibc/640E1C3E28FD45F611971DF891AE3DC90C825DF759DF8FAA8F33F7F72B35AD56
                     }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
