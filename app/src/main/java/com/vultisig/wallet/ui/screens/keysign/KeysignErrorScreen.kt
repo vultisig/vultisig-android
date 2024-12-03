@@ -19,6 +19,10 @@ internal fun KeysignErrorScreen(
             errorLabel = stringResource(R.string.signing_error_insufficient_funds)
             infoText = null
         }
+        errorMessage.contains("failed to calculate bob mid and bob_mic_mc") -> {
+            errorLabel = stringResource(R.string.signing_error_mixed_reshare)
+            infoText = null
+        }
         else -> {
             errorLabel = stringResource(R.string.signing_error_please_try_again_s, errorMessage)
             infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)
