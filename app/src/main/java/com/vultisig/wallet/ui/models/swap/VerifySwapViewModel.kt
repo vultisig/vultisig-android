@@ -37,7 +37,10 @@ internal data class VerifySwapUiModel(
     val consentAllowance: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
-)
+) {
+    val hasAllConsents: Boolean
+        get() = consentAmount && consentReceiveAmount && (consentAllowance || !swapTransactionUiModel.hasConsentAllowance)
+}
 
 @HiltViewModel
 internal class VerifySwapViewModel @Inject constructor(
