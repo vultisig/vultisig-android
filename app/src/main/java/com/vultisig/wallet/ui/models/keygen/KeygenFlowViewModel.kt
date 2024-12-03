@@ -256,7 +256,7 @@ internal class KeygenFlowViewModel @Inject constructor(
 
         val keygenPayload = when (action.value) {
             TssAction.KEYGEN -> {
-                "vultisig://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
+                "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
                         compressQr(
                             protoBuf.encodeToByteArray(
                                 KeygenMessageProto(
@@ -272,7 +272,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             }
 
             TssAction.ReShare -> {
-                "vultisig://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" +
+                "https://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" +
                         compressQr(
                             protoBuf.encodeToByteArray(
                                 ReshareMessageProto(
