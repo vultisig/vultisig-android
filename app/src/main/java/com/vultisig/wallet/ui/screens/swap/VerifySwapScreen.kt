@@ -137,7 +137,7 @@ private fun VerifySwapScreen(
                         textColor = Theme.colors.oxfordBlue800,
                         modifier = Modifier
                             .fillMaxWidth(),
-                        disabled = !hasAllConsents,
+                        disabled = isConsentsEnabled && !hasAllConsents,
                         onClick = onFastSignClick,
                     )
 
@@ -151,7 +151,7 @@ private fun VerifySwapScreen(
                         borderSize = 1.dp,
                         modifier = Modifier
                             .fillMaxWidth(),
-                        disabled = !hasAllConsents,
+                        disabled = isConsentsEnabled && !hasAllConsents,
                         onClick = onConfirm
                     )
                 } else {
@@ -160,7 +160,7 @@ private fun VerifySwapScreen(
                         textColor = Theme.colors.oxfordBlue800,
                         modifier = Modifier
                             .fillMaxWidth(),
-                        disabled = !hasAllConsents,
+                        disabled = isConsentsEnabled && !hasAllConsents,
                         onClick = onConfirm,
                     )
                 }
