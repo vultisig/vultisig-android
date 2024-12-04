@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.TerraHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
@@ -355,9 +356,16 @@ internal class KeysignViewModel(
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis,
-            Chain.TerraClassic, Chain.Terra, Chain.Noble -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Noble -> {
                 return CosmosHelper(
+                    coinType = chain.coinType,
+                    denom = chain.feeUnit,
+                    gasLimit = CosmosHelper.getChainGasLimit(chain),
+                ).getSignedTransaction(keysignPayload, signatures)
+            }
+
+            Chain.TerraClassic, Chain.Terra -> {
+                return TerraHelper(
                     coinType = chain.coinType,
                     denom = chain.feeUnit,
                     gasLimit = CosmosHelper.getChainGasLimit(chain),
