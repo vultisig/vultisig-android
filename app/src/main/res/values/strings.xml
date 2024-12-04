@@ -451,7 +451,7 @@
     <string name="vault_settings_delete_vault_part" translatable="false">Vault Part:</string>
     <string name="vault_password_hint_to_long" translatable="false">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
-    <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
+    <string name="vault_details_screen_signer" translatable="false">Singer %s: %s</string>
     <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
     <string name="register_vault_screen_title" translatable="false">Register Vault</string>
     <string name="register_vault_screen_step_3" translatable="false">3. Upload your Vault QR Code</string>
