@@ -105,7 +105,7 @@ val Chain.canSelectTokens: Boolean
     get() = when {
         this == Chain.CronosChain || this == Chain.ZkSync -> false
         standard == EVM -> true
-        this == Chain.MayaChain || this == Chain.Solana -> true
+        this == Chain.MayaChain || this == Chain.Solana || this == Chain.Kujira -> true
         else -> false
     }
 
