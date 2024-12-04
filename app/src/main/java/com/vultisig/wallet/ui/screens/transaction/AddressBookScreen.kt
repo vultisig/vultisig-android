@@ -65,7 +65,7 @@ internal fun AddressBookScreen(
     AddressBookScreen(
         navController = navController,
         state = state,
-        onAddressClick = model::selectAddress,
+        onAddressClick = model::clickAddress,
         onDeleteAddressClick = model::deleteAddress,
         onToggleEditMode = model::toggleEditMode,
         onAddAddressClick = model::addAddress,
