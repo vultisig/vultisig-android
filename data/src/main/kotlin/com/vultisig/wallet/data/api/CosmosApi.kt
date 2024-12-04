@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJson
+import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
@@ -15,7 +17,11 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.util.encodeBase64
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -23,6 +29,9 @@ interface CosmosApi {
     suspend fun getBalance(address: String): List<CosmosBalance>
     suspend fun getAccountNumber(address: String): THORChainAccountValue
     suspend fun broadcastTransaction(tx: String): String?
+    suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance
+    suspend fun getIbcDenomTraces(contractAddress: String): CosmosIbcDenomTraceDenomTraceJson
+    suspend fun getLatestBlock(): String
 }
 
 interface CosmosApiFactory {
@@ -46,7 +55,7 @@ internal class CosmosApiFactoryImp @Inject constructor(
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
 
-        return CosmosApiImp(httpClient, apiUrl, json, cosmosThorChainResponseSerializer,)
+        return CosmosApiImp(httpClient, apiUrl, json, cosmosThorChainResponseSerializer)
     }
 }
 
@@ -104,5 +113,39 @@ internal class CosmosApiImp(
             Timber.tag("CosmosApiService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
+    }
+
+    override suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance {
+        val payload = "{\"balance\":{\"address\":\"$address\"}}".encodeBase64()
+
+        return CosmosBalance(
+            denom = contractAddress,
+            amount = httpClient
+                .get("$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload")
+                .body<JsonObject>()["data"]
+                ?.jsonObject
+                ?.get("balance")
+                ?.jsonPrimitive
+                ?.content ?: "0"
+        )
+    }
+
+    override suspend fun getIbcDenomTraces(contractAddress: String): CosmosIbcDenomTraceDenomTraceJson {
+        val hash = contractAddress.removePrefix("ibc/")
+        return httpClient.get("$rpcEndpoint/ibc/apps/transfer/v1/denom_traces/$hash")
+            .body<CosmosIbcDenomTraceJson>()
+            .denomTrace!!
+    }
+
+    override suspend fun getLatestBlock(): String {
+        return httpClient.get("$rpcEndpoint/cosmos/base/tendermint/v1beta1/blocks/latest")
+            .body<JsonObject>()
+            .jsonObject["block"]
+            ?.jsonObject
+            ?.get("header")
+            ?.jsonObject
+            ?.get("height")
+            ?.jsonPrimitive
+            ?.content ?: "0"
     }
 }
