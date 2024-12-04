@@ -1,10 +1,8 @@
 package com.vultisig.wallet.ui.models.keygen
 
 import androidx.annotation.DrawableRes
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
@@ -17,6 +15,7 @@ import javax.inject.Inject
 internal data class SelectVaultTypeUiModel(
     val selectedTypeIndex: Int = 0,
     val types: List<VaultTypeUiModel> = listOf(
+        /* fast&active vaults are temporarily disabled
         VaultTypeUiModel(
             title = UiText.StringResource(R.string.select_vault_type_fast_title),
             drawableResId = R.drawable.vault_type_fast,
@@ -35,6 +34,7 @@ internal data class SelectVaultTypeUiModel(
             description = UiText.StringResource(R.string.select_vault_type_secure_description),
             hasPair = true,
         ),
+         */
     ),
 )
 
@@ -47,11 +47,8 @@ internal data class VaultTypeUiModel(
 
 @HiltViewModel
 internal class SelectVaultTypeViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
-
-    private val vaultId: String? = savedStateHandle.get(Destination.ARG_VAULT_ID)
 
     val state = MutableStateFlow(SelectVaultTypeUiModel())
 
@@ -64,34 +61,18 @@ internal class SelectVaultTypeViewModel @Inject constructor(
     }
 
     fun start() {
-        when (state.value.selectedTypeIndex) {
-            0 -> {
-                // Fast
-                viewModelScope.launch {
-                    navigator.navigate(
-                        Destination.NamingVault(
-                            VaultSetupType.FAST,
-                        )
-                    )
-                }
-            }
-
-            1 -> {
-                // Active
-                viewModelScope.launch {
-                    navigator.navigate(
-                        Destination.NamingVault(
-                            VaultSetupType.ACTIVE,
-                        )
-                    )
-                }
-            }
-
-            2 -> {
-                viewModelScope.launch {
-                    navigator.navigate(Destination.NamingVault(VaultSetupType.SECURE))
-                }
-            }
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.NamingVault(
+                    when (state.value.selectedTypeIndex) {
+                        /* fast&active vaults are temporarily disabled
+                        0 -> VaultSetupType.FAST
+                        1 -> VaultSetupType.ACTIVE
+                        */
+                        else -> VaultSetupType.SECURE
+                    }
+                )
+            )
         }
     }
 

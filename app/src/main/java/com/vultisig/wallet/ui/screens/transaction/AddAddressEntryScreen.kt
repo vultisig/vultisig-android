@@ -82,7 +82,7 @@ internal fun AddAddressEntryScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.add_address_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
         content = { scaffoldPadding ->
@@ -103,7 +103,7 @@ internal fun AddAddressEntryScreen(
                         tokenLogo = selectedChain.logo,
                         chainLogo = null,
                         onClick = { isChainsExpanded = !isChainsExpanded },
-                        actionIcon = R.drawable.caret_down,
+                        actionIcon = R.drawable.ic_caret_down,
                     )
 
                     if (isChainsExpanded) {

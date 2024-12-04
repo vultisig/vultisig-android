@@ -22,9 +22,18 @@ class AdvanceGasUiRepository @Inject constructor() {
         tokenStandard.filterNotNull(),
         isEnabled
     ) { blockChainSpecific, tokenStandard, isEnabled ->
-        isEnabled &&
-                blockChainSpecific is BlockChainSpecific.Ethereum &&
-                tokenStandard == TokenStandard.EVM
+        isEnabled && isAllowedAdvanceGasSettings(blockChainSpecific, tokenStandard)
+    }
+
+    private fun isAllowedAdvanceGasSettings(
+        blockChainSpecific: BlockChainSpecific,
+        tokenStandard: TokenStandard,
+    ) = when {
+        blockChainSpecific is BlockChainSpecific.Ethereum &&
+                tokenStandard == TokenStandard.EVM -> true
+        blockChainSpecific is BlockChainSpecific.UTXO &&
+                tokenStandard == TokenStandard.UTXO -> true
+        else -> false
     }
 
     fun updateBlockChainSpecific(blockChainSpecific: BlockChainSpecific) {

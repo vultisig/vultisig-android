@@ -104,7 +104,7 @@ internal fun AddressBookScreen(
                 navigationIcon = {
                     IconButton(onClick = clickOnce { navController.popBackStack() }) {
                         Icon(
-                            painter = painterResource(id = R.drawable.caret_left),
+                            painter = painterResource(id = R.drawable.ic_caret_left),
                             contentDescription = null,
                             tint = Theme.colors.neutral0,
                         )

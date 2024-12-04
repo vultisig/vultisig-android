@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.models.Chain.GaiaChain
 import com.vultisig.wallet.data.models.Chain.Kujira
 import com.vultisig.wallet.data.models.Chain.Litecoin
 import com.vultisig.wallet.data.models.Chain.MayaChain
+import com.vultisig.wallet.data.models.Chain.Noble
 import com.vultisig.wallet.data.models.Chain.Optimism
 import com.vultisig.wallet.data.models.Chain.Osmosis
 import com.vultisig.wallet.data.models.Chain.Polkadot
@@ -50,6 +51,7 @@ import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
+import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -148,7 +150,10 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     currency.ticker
                 )
             } else {
-                null
+                FiatValue(
+                    BigDecimal.ZERO,
+                    currency.ticker
+                )
             }
 
             TokenBalanceWrapped(
@@ -229,27 +234,48 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
-            GaiaChain, Kujira, Dydx, Osmosis, Terra -> {
+            GaiaChain, Kujira, Dydx, Osmosis, Terra, Noble -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
-                val listCosmosBalance = cosmosApi.getBalance(address)
-                val balance = listCosmosBalance
-                    .find {
-                        it.denom.equals(
-                            "u${coin.ticker.lowercase()}",
-                            ignoreCase = true
-                        ) || it.denom.equals(
-                            "a${coin.ticker.lowercase()}",
-                            ignoreCase = true
-                        )
-                    }
+
+                val balance = if (coin.contractAddress.startsWith("terra")) {
+                    cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
+                } else {
+                    val listCosmosBalance = cosmosApi.getBalance(address)
+                    listCosmosBalance
+                        .find {
+                            it.denom.equals(
+                                "u${coin.ticker.lowercase()}",
+                                ignoreCase = true
+                            ) || it.denom.equals(
+                                "a${coin.ticker.lowercase()}",
+                                ignoreCase = true
+                            ) || it.denom.equals(
+                                coin.contractAddress,
+                                ignoreCase = true,
+                            )
+                        }
+                }
+
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
             TerraClassic -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
-                val listCosmosBalance = cosmosApi.getBalance(address)
-                val balance = listCosmosBalance
-                    .find { it.denom.equals(coin.chain.feeUnit, ignoreCase = true) }
+
+                val balance = if (coin.contractAddress.startsWith("terra")) {
+                    cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
+                } else {
+                    val listCosmosBalance = cosmosApi.getBalance(address)
+                    listCosmosBalance
+                        .find {
+                            it.denom.equals(coin.chain.feeUnit, ignoreCase = true) ||
+                                    it.denom.equals(
+                                        coin.contractAddress,
+                                        ignoreCase = true,
+                                    )
+                        }
+                }
+
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 

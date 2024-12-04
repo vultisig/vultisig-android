@@ -143,4 +143,10 @@ internal interface DataUsecasesModule {
     fun bindIsVaultHasFastSignUseCase(
         impl: IsVaultHasFastSignUseCaseImpl
     ): IsVaultHasFastSignUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetFlowTypeUseCase(
+        impl: GetFlowTypeUseCaseImpl
+    ): GetFlowTypeUseCase
 }

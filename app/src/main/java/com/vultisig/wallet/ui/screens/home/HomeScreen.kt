@@ -117,7 +117,7 @@ private fun HomeScreen(
 
 
                         UiIcon(
-                            drawableResId = R.drawable.caret_right,
+                            drawableResId = R.drawable.ic_small_caret_right,
                             size = 12.dp,
                             modifier = Modifier.rotate(caretRotation)
                         )

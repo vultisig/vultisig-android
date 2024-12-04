@@ -84,6 +84,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.KeysignMessage
 import java.math.BigInteger
+import java.net.UnknownHostException
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -101,6 +102,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
     data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
+    data object FailedConnectToServer : JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
 }
 
 sealed interface JoinKeysignState {
@@ -285,6 +287,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } else {
                     currentState.value = JoinKeysignState.DiscoverService
                 }
+            } catch (e: UnknownHostException) {
+                Timber.d(e, "Failed to resolve request")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
                 Timber.d(e, "Failed to parse QR code")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)

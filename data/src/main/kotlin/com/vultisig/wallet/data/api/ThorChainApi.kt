@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.TOLERANCE_BPS
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
@@ -20,6 +21,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -60,6 +62,8 @@ interface ThorChainApi {
         name: String,
         chain: String
     ): String?
+
+    suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -96,13 +100,18 @@ internal class ThorChainApiImpl @Inject constructor(
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", interval)
+                    parameter("tolerance_bps", TOLERANCE_BPS)
                     if (isAffiliate) {
                         parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                         parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
                     }
                 }
             if (!response.status.isSuccess()) {
-                return THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError(response.status.description))
+                return THORChainSwapQuoteDeserialized.Error(
+                    THORChainSwapQuoteError(
+                        HttpStatusCode.fromValue(response.status.value).description
+                    )
+                )
             }
             val responseRawString = response.body<String>()
             return json.decodeFromString(
@@ -183,6 +192,10 @@ internal class ThorChainApiImpl @Inject constructor(
         .find { it.chain == chain }
         ?.address
 
+    override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson = httpClient
+        .get("https://thornode.ninerealms.com/txs/$tx")
+        .body()
+
 }
 
 @Serializable
@@ -197,4 +210,14 @@ private data class ThorNameEntryJson(
 private data class ThorNameResponseJson(
     @SerialName("entries")
     val entries: List<ThorNameEntryJson>,
+)
+
+@Serializable
+data class ThorChainTransactionJson(
+    @SerialName("code")
+    val code: Int?,
+    @SerialName("codespace")
+    val codeSpace: String?,
+    @SerialName("raw_log")
+    val rawLog: String,
 )

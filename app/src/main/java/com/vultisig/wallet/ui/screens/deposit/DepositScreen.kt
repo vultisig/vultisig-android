@@ -36,6 +36,9 @@ internal fun DepositScreen(
     viewModel: DepositViewModel = hiltViewModel(),
 ) {
     val depositNavHostController = rememberNavController()
+    val context = LocalContext.current
+    val keysignShareViewModel: KeysignShareViewModel =
+        hiltViewModel(context as MainActivity)
 
     val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
 
@@ -85,8 +88,10 @@ internal fun DepositScreen(
             title = stringResource(R.string.deposit_screen_title)
         }
     }
-
+    val qrAddress by viewModel.addressProvider.address.collectAsState()
+    val qr = qrAddress.takeIf { it.isNotEmpty() }
     DepositScreen(
+        keysignShareViewModel = keysignShareViewModel,
         topBarNavController = topBarNavController,
         navHostController = depositNavHostController,
         vaultId = vaultId,
@@ -94,6 +99,10 @@ internal fun DepositScreen(
         title = title,
         progress = progress,
         showStartIcon = !isKeysignFinished,
+        endIcon = qr?.let { R.drawable.qr_share },
+        endIconClick = qr?.let {
+            { keysignShareViewModel.shareQRCode(context) }
+        } ?: {},
         onKeysignFinished = { viewModel.navigateToHome(shouldUseMainNavigator) },
         finishKeysign = viewModel::finishKeysign,
     )
@@ -102,6 +111,7 @@ internal fun DepositScreen(
 @Suppress("ReplaceNotNullAssertionWithElvisReturn")
 @Composable
 private fun DepositScreen(
+    keysignShareViewModel: KeysignShareViewModel,
     topBarNavController: NavController,
     navHostController: NavHostController,
     title: String,
@@ -109,16 +119,20 @@ private fun DepositScreen(
     vaultId: String,
     chainId: String,
     showStartIcon: Boolean,
+    endIcon: Int? = null,
+    endIconClick: () -> Unit = {},
     onKeysignFinished: () -> Unit = {},
     finishKeysign:() -> Unit = {},
 ) {
-    val context = LocalContext.current
+
     ProgressScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
         showStartIcon = showStartIcon,
         onStartIconClick = onKeysignFinished,
+        endIcon = endIcon,
+        onEndIconClick = endIconClick,
     ) {
         NavHost(
             navController = navHostController,
@@ -155,8 +169,6 @@ private fun DepositScreen(
                 val transactionId = entry.arguments
                     ?.getString(SendDst.ARG_TRANSACTION_ID)!!
 
-                val keysignShareViewModel: KeysignShareViewModel =
-                    hiltViewModel(context as MainActivity)
                 keysignShareViewModel.loadDepositTransaction(transactionId)
 
                 KeysignFlowView(
@@ -168,18 +180,4 @@ private fun DepositScreen(
             }
         }
     }
-}
-
-@Preview
-@Composable
-internal fun DepositScreenPreview() {
-    DepositScreen(
-        topBarNavController = rememberNavController(),
-        navHostController = rememberNavController(),
-        vaultId = "",
-        chainId = "",
-        showStartIcon = true,
-        title = stringResource(id = R.string.deposit_screen_title),
-        progress = 0.35f,
-    )
 }

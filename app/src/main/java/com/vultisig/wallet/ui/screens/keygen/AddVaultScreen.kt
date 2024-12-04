@@ -31,7 +31,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -63,7 +62,7 @@ private fun AddVaultScreen(
             TopBar(
                 navController = navController,
                 centerText = "",
-                startIcon = R.drawable.caret_left.takeIf { !isFirstEntry },
+                startIcon = R.drawable.ic_caret_left.takeIf { !isFirstEntry },
                 endIcon = R.drawable.question,
                 onEndIconClick = onOpenHelp,
             )

@@ -149,7 +149,7 @@ internal fun DiscoveringSessionID(
     ) {
         TopBar(
             centerText = title,
-            startIcon = R.drawable.caret_left,
+            startIcon = R.drawable.ic_caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -194,7 +194,7 @@ internal fun DiscoverService(
     ) {
         TopBar(
             centerText = title,
-            startIcon = R.drawable.caret_left,
+            startIcon = R.drawable.ic_caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -232,7 +232,7 @@ internal fun JoiningKeygen(
     ) {
         TopBar(
             centerText = title,
-            startIcon = R.drawable.caret_left,
+            startIcon = R.drawable.ic_caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -271,7 +271,7 @@ internal fun WaitingForKeygenToStart(
     ) {
         TopBar(
             centerText = title,
-            startIcon = R.drawable.caret_left,
+            startIcon = R.drawable.ic_caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))
@@ -317,7 +317,7 @@ internal fun KeygenFailedToStart(
     ) {
         TopBar(
             centerText = title,
-            startIcon = R.drawable.caret_left,
+            startIcon = R.drawable.ic_caret_left,
             navController = navController
         )
         Spacer(modifier = Modifier.height(30.dp))

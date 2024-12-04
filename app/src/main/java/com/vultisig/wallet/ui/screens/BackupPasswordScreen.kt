@@ -130,7 +130,7 @@ internal fun BackupPasswordScreen(navHostController: NavHostController) {
             TopBar(
                 navController = navHostController,
                 centerText = stringResource(R.string.backup_password_screen_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
     ) {

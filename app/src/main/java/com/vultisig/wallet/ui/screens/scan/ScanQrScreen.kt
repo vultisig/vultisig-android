@@ -20,14 +20,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -56,6 +60,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.common.JOIN_SEND_ON_ADDRESS_FLOW
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -76,7 +81,7 @@ internal fun ScanQrAndJoin(
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     ScanQrScreen(
-        navController = navController,
+        onDismiss = { navController.popBackStack() },
         onScanSuccess = viewModel::joinOrSend,
     )
 }
@@ -87,9 +92,9 @@ internal fun ScanQrScreen(
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     ScanQrScreen(
-        navController = navController,
+        onDismiss = { navController.popBackStack() },
         onScanSuccess = { qr ->
-            if (viewModel.getFlowType(qr) == ScanQrViewModel.JOIN_SEND_ON_ADDRESS_FLOW) {
+            if (viewModel.getFlowType(qr) == JOIN_SEND_ON_ADDRESS_FLOW) {
                 navController.previousBackStackEntry
                     ?.savedStateHandle
                     ?.set(ARG_QR_CODE, qr)
@@ -102,7 +107,8 @@ internal fun ScanQrScreen(
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun ScanQrScreen(
-    navController: NavController,
+    onDismiss: () -> Unit,
+    roundedCorners: Boolean = false,
     onScanSuccess: (qr: String) -> Unit,
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
@@ -158,17 +164,18 @@ internal fun ScanQrScreen(
                             bottom = 16.dp,
                         ),
                     text = stringResource(id = R.string.scan_qr_screen_return_vault),
-                    onClick = { navController.popBackStack() },
+                    onClick = onDismiss,
                 )
 
         },
-    ) {
+    ) { paddingValues ->
         Box(
             modifier = Modifier
-                .padding(it)
+                .padding(if (roundedCorners) PaddingValues(0.dp) else paddingValues)
         ) {
             if (cameraPermissionState.status.isGranted) {
                 QrCameraScreen(
+                    roundedCorners = roundedCorners,
                     onSuccess = onSuccess,
                 )
                 Image(
@@ -256,6 +263,7 @@ internal fun ScanQrScreen(
 
 @Composable
 private fun QrCameraScreen(
+    roundedCorners: Boolean = false,
     onSuccess: (List<Barcode>) -> Unit,
 
     ) {
@@ -265,8 +273,16 @@ private fun QrCameraScreen(
         ProcessCameraProvider.getInstance(localContext)
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            unbindCameraListener(cameraProviderFuture, localContext)
+        }
+    }
+
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().let {
+            if (roundedCorners) it.clip(RoundedCornerShape(15.dp,15.dp, 0.dp, 0.dp)) else it
+        },
         factory = { context ->
             val previewView = PreviewView(context)
             val resolutionStrategy = ResolutionStrategy(

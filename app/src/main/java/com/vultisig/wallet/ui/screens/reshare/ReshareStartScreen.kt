@@ -71,7 +71,7 @@ private fun ReshareStartScreen(
                         onClick = clickOnce(navController::popBackStack)
                     ) {
                         Icon(
-                            painter = painterResource(id = R.drawable.caret_left),
+                            painter = painterResource(id = R.drawable.ic_caret_left),
                             contentDescription = null,
                             tint = colors.neutral0,
                         )
@@ -132,6 +132,7 @@ private fun ReshareStartScreen(
 
                 UiSpacer(size = 12.dp)
 
+                /* fast&active vaults are temporarily disabled
                 MultiColorButton(
                     text = stringResource(R.string.reshare_start_start_with_vultisigner_button),
                     backgroundColor = colors.oxfordBlue800,
@@ -145,6 +146,7 @@ private fun ReshareStartScreen(
                 )
 
                 UiSpacer(size = 12.dp)
+                 */
 
                 MultiColorButton(
                     text = stringResource(R.string.reshare_start_join_reshare_button),

@@ -185,7 +185,7 @@ internal fun ShareVaultQrScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(id = R.string.share_vault_qr_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
     ) {

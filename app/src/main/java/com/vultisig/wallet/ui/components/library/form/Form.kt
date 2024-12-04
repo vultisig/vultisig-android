@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -78,7 +79,7 @@ internal fun FormTokenCard(
             tokenLogo = selectedIcon,
             availableToken = availableToken,
             chainLogo = chainLogo,
-            actionIcon = R.drawable.caret_down,
+            actionIcon = R.drawable.ic_caret_right,
             onClick = onClick,
         )
     }
@@ -145,8 +146,8 @@ internal fun TokenCard(
 
         Text(
             text = availableToken ?: "",
-            color = Theme.colors.neutral100,
-            style = Theme.menlo.body1,
+            color = Theme.colors.neutral200,
+            style = Theme.menlo.body1.copy(fontWeight = FontWeight.Bold),
         )
 
         if (actionIcon != null) {
@@ -485,7 +486,7 @@ internal fun FormTitleCollapsibleTextField(
                 style = Theme.montserrat.body1,
             )
             Icon(
-                painter = painterResource(id = R.drawable.caret_down),
+                painter = painterResource(id = R.drawable.ic_caret_down),
                 contentDescription = "expand collapse",
                 modifier = Modifier
                     .width(12.dp)

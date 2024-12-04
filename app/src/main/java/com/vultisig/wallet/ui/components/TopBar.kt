@@ -113,6 +113,6 @@ private fun TopBarPreview() {
     TopBar(
         navController = rememberNavController(),
         centerText = "Title",
-        startIcon = R.drawable.caret_left,
+        startIcon = R.drawable.ic_caret_left,
     )
 }

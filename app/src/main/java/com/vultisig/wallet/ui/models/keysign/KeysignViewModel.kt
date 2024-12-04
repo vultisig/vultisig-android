@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.chains.helpers.TerraHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
@@ -32,6 +33,7 @@ import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -166,12 +168,27 @@ internal class KeysignViewModel(
                 signMessageWithRetry(this.tssInstance!!, message, 1)
             }
             broadcastTransaction()
+            checkThorChainTxResult()
             currentState.value = KeysignState.KeysignFinished
             isNavigateToHome = true
             this._messagePuller?.stop()
         } catch (e: Exception) {
             Timber.e(e)
             currentState.value = KeysignState.Error( e.message ?: "Unknown error")
+        }
+    }
+
+    private suspend fun checkThorChainTxResult() {
+        val chainSpecific = keysignPayload.blockChainSpecific
+        if (chainSpecific !is BlockChainSpecific.THORChain)
+            return
+        if (!chainSpecific.isDeposit)
+            return
+        val transactionDetail = thorChainApi.getTransactionDetail(txHash.value)
+
+        // https://docs.cosmos.network/v0.46/building-modules/errors.html#registration
+        if (transactionDetail.code != null && transactionDetail.codeSpace != null) {
+            throw Exception(transactionDetail.rawLog)
         }
     }
 
@@ -248,7 +265,8 @@ internal class KeysignViewModel(
                 solanaApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Terra, Chain.TerraClassic -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Terra,
+            Chain.TerraClassic, Chain.Noble -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(keysignPayload.coin.chain)
                 cosmosApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
@@ -338,9 +356,16 @@ internal class KeysignViewModel(
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis,
-            Chain.TerraClassic, Chain.Terra -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Noble -> {
                 return CosmosHelper(
+                    coinType = chain.coinType,
+                    denom = chain.feeUnit,
+                    gasLimit = CosmosHelper.getChainGasLimit(chain),
+                ).getSignedTransaction(keysignPayload, signatures)
+            }
+
+            Chain.TerraClassic, Chain.Terra -> {
+                return TerraHelper(
                     coinType = chain.coinType,
                     denom = chain.feeUnit,
                     gasLimit = CosmosHelper.getChainGasLimit(chain),

@@ -53,11 +53,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <!-- Handle local urls starting with "vultisig://vultisig.com" -->
-                <data
-                        android:scheme="vultisig"
-                        android:host="vultisig.com" />
-
+                <data android:scheme="vultisig" />
+                <data android:scheme="https" />
+                <data android:host="vultisig.com" />
             </intent-filter>
 
         </activity>

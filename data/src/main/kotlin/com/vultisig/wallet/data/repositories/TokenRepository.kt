@@ -7,12 +7,12 @@ import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.ThorBalancesResponseJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.Coins.SupportedCoins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.oneInchChainId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -55,15 +55,9 @@ internal class TokenRepositoryImpl @Inject constructor(
                 val builtInTokens = builtInTokens.first().filter { it.chain == chain }
                 emit(builtInTokens)
                 val oneInchTokens = oneInchApi.getTokens(chain)
-                emit(
-                    builtInTokens +
-                            oneInchTokens.tokens.toCoins(chain)
-                                .filter { newCoin ->
-                                    builtInTokens.none {
-                                        it.chain == newCoin.chain
-                                                && it.ticker == newCoin.ticker
-                                    }
-                                }
+                emitUniqueTokens(
+                    builtInTokens,
+                    oneInchTokens.tokens.toCoins(chain)
                 )
             }
 
@@ -71,7 +65,16 @@ internal class TokenRepositoryImpl @Inject constructor(
                 val builtInTokens = builtInTokens.first().filter { it.chain == chain }
                 emit(builtInTokens)
                 val tokens = splTokenRepository.getTokens(address)
-                emit(builtInTokens + tokens)
+                emitUniqueTokens(
+                    builtInTokens,
+                    tokens,
+                )
+                val jupiterTokens = splTokenRepository.getJupiterTokens()
+                emitUniqueTokens(
+                    builtInTokens,
+                    tokens,
+                    jupiterTokens
+                )
             }
 
             else ->
@@ -79,6 +82,15 @@ internal class TokenRepositoryImpl @Inject constructor(
                     allTokens.filter { it.chain.id == chain.id }
                 }
         }
+
+    private suspend fun FlowCollector<List<Coin>>.emitUniqueTokens(vararg items: List<Coin>) {
+        val coins = items.toList()
+            .flatten()
+            .asSequence()
+            .distinctBy { it.ticker to it.chain.id }
+            .toList()
+        emit(coins)
+    }
 
     override suspend fun getNativeToken(chainId: String): Coin =
         nativeTokens.map { it -> it.first { it.chain.id == chainId } }.first()
@@ -172,14 +184,14 @@ internal class TokenRepositoryImpl @Inject constructor(
                     logo = asset.icon ?: "",
                     decimal = asset.decimals,
                     isNativeToken = supportedCoin?.isNativeToken ?: false,
-                    priceProviderID = "",
+                    priceProviderID = supportedCoin?.priceProviderID ?: "",
                     address = "",
                     hexPublicKey = "",
                 )
             } else null
         }
 
-    override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.SupportedCoins)
+    override val builtInTokens: Flow<List<Coin>> = flowOf(SupportedCoins)
 
     override val nativeTokens: Flow<List<Coin>> = builtInTokens
         .map { it.filterNatives() }

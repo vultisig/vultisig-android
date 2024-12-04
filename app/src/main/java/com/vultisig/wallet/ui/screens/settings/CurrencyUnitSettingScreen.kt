@@ -51,7 +51,7 @@ internal fun CurrencyUnitSettingScreen(navController: NavHostController) {
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.currency_unit_setting_screen_title),
-                startIcon = R.drawable.caret_left
+                startIcon = R.drawable.ic_caret_left
             )
         }
     ) {

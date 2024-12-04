@@ -74,7 +74,7 @@ private fun KeygenPasswordScreen(
             TopBar(
                 navController = navController,
                 centerText = stringResource(R.string.keygen_password_title),
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
             )
         },
         content = { contentPadding ->

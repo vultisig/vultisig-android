@@ -71,7 +71,7 @@ private fun VaultSettingsScreen(
         topBar = {
             TopBar(
                 navController = navController,
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
                 centerText = stringResource(R.string.vault_settings_title)
             )
         }

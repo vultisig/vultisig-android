@@ -88,7 +88,7 @@ private fun CustomTokenScreen(
         topBar = {
             TopBar(
                 navController = navController,
-                startIcon = R.drawable.caret_left,
+                startIcon = R.drawable.ic_caret_left,
                 centerText = stringResource(R.string.custom_token_find_your_custom_token)
             )
         },

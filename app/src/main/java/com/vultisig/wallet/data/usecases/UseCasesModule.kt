@@ -75,4 +75,10 @@ internal interface UseCasesModule {
     fun bindGetSendDstByKeysignInitType(
         impl: GetSendDstByKeysignInitTypeImpl
     ): GetSendDstByKeysignInitType
+
+    @Binds
+    @Singleton
+    fun bindGetDirectionByQrCodeUseCase(
+        impl: GetDirectionByQrCodeUseCaseImpl
+    ): GetDirectionByQrCodeUseCase
 }

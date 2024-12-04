@@ -135,7 +135,7 @@ private fun ChainTokensScreen(
                 TopBar(
                     navController = navController,
                     centerText = uiModel.chainName,
-                    startIcon = R.drawable.caret_left,
+                    startIcon = R.drawable.ic_caret_left,
                 )
             },
             bottomBar = {

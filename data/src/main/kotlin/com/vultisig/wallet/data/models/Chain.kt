@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
 import com.vultisig.wallet.data.models.TokenStandard.SOL
@@ -45,6 +46,7 @@ enum class Chain(
     Osmosis("Osmosis", COSMOS, "uosmo"),
     Terra("Terra", COSMOS, "uluna"),
     TerraClassic("TerraClassic", COSMOS, "uluna"),
+    Noble("Noble", COSMOS, "uusdc"),
 
     Solana("Solana", SOL, "SOL"),
     Polkadot("Polkadot", SUBSTRATE, "DOT"),
@@ -90,6 +92,7 @@ val Chain.coinType: CoinType
         Chain.Osmosis -> CoinType.OSMOSIS
         Chain.Terra -> CoinType.TERRAV2
         Chain.TerraClassic -> CoinType.TERRA
+        Chain.Noble -> CoinType.NOBLE
     }
 
 val Chain.TssKeysignType: TssKeyType
@@ -99,11 +102,15 @@ val Chain.TssKeysignType: TssKeyType
     }
 
 val Chain.canSelectTokens: Boolean
-    get() = when {
-        this == Chain.CronosChain || this == Chain.ZkSync -> false
-        standard == EVM -> true
-        this == Chain.MayaChain || this == Chain.Solana -> true
-        else -> false
+    get() = when (this) {
+        Chain.MayaChain, Chain.Solana,
+        Chain.Terra, Chain.TerraClassic -> true
+
+        Chain.CronosChain, Chain.ZkSync -> false
+        else -> when {
+            standard == EVM -> true
+            else -> false
+        }
     }
 
 val Chain.IsSwapSupported: Boolean
@@ -143,7 +150,7 @@ fun Chain.oneInchChainId(): Int =
         Chain.BscChain -> 56
         // Chain.CronosChain -> 25
         Chain.ZkSync -> 324
-        else -> error("Chain $this is not supported by 1inch API")
+        else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
 
 fun Chain.swapAssetName(): String {
@@ -175,5 +182,6 @@ fun Chain.swapAssetName(): String {
         Chain.Osmosis -> "OSMO"
         Chain.Terra -> "LUNA"
         Chain.TerraClassic -> "LUNC"
+        Chain.Noble -> "USDC"
     }
 }

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.utils
 
+import java.math.BigInteger
 import kotlin.experimental.and
 
 object Numeric {
@@ -66,5 +67,9 @@ object Numeric {
 
     fun toHexStringNoPrefix(input: ByteArray?): String {
         return toHexString(input, 0, input!!.size, false)
+    }
+
+    fun max(input: BigInteger, input2: BigInteger): BigInteger {
+        return if (input > input2) input else input2
     }
 }

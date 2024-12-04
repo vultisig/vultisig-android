@@ -86,7 +86,6 @@ internal fun KeysignScreen(
     progressLink: String?,
     transactionTypeUiModel: TransactionTypeUiModel?
 ) {
-    KeepScreenOn()
     val text = when (state) {
         is KeysignState.CreatingInstance -> stringResource(id = R.string.keysign_screen_preparing_vault)
         is KeysignState.KeysignECDSA -> stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
@@ -112,6 +111,8 @@ internal fun KeysignScreen(
                 transactionTypeUiModel = transactionTypeUiModel,
             )
         } else {
+            KeepScreenOn()
+
             UiSpacer(weight = 1f)
             Text(
                 text = text,

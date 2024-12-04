@@ -106,7 +106,7 @@ internal fun VaultCeil(
                     trailingIcon()
                 } else {
                     UiIcon(
-                        R.drawable.caret_right, size = 20.dp
+                        R.drawable.ic_small_caret_right, size = 20.dp
                     )
                 }
             }

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.BroadcastTransactionRespJson
+import com.vultisig.wallet.data.api.models.JupiterTokenResponseJson
 import com.vultisig.wallet.data.api.models.RecentBlockHashResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.SPLTokenRequestJson
@@ -19,6 +20,7 @@ import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -33,7 +35,6 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
-import java.net.UnknownHostException
 import javax.inject.Inject
 
 interface SolanaApi {
@@ -45,6 +46,7 @@ interface SolanaApi {
     suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>?
     suspend fun getSPLTokensInfo(tokens: List<String>): List<SplTokenJson>
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
+    suspend fun getJupiterTokens(): List<JupiterTokenResponseJson>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
     suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String): String?
 }
@@ -60,6 +62,7 @@ internal class SolanaApiImp @Inject constructor(
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
     private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
+    private val jupiterTokensUrl = "https://tokens.jup.ag/tokens"
     override suspend fun getBalance(address: String): BigInteger {
         return try {
             val payload = RpcPayload(
@@ -221,6 +224,14 @@ internal class SolanaApiImp @Inject constructor(
             }
         }.awaitAll().filterNotNull()
     }
+
+    override suspend fun getJupiterTokens(): List<JupiterTokenResponseJson> =
+        httpClient.get(jupiterTokensUrl) {
+            parameter(
+                "tags",
+                "verified"
+            )
+        }.body()
 
     override suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>? {
         try {

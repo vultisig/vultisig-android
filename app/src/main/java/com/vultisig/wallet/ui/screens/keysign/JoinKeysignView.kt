@@ -18,7 +18,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.ErrorView
-import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
@@ -42,8 +41,6 @@ import com.vultisig.wallet.ui.utils.asString
 internal fun JoinKeysignView(
     navController: NavHostController,
 ) {
-    KeepScreenOn()
-
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
     var keysignState: KeysignState  by remember { mutableStateOf(KeysignState.CreatingInstance) }
