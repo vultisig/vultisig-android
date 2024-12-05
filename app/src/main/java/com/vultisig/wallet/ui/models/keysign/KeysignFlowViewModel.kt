@@ -54,6 +54,7 @@ import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
+import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
@@ -132,6 +133,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
     private val generateServiceName: GenerateServiceName,
     private val routerApi: RouterApi,
+    private val pullTssMessages: PullTssMessagesUseCase,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -176,7 +178,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = KeysignViewModel(
             vault = _currentVault!!,
             keysignCommittee = selection.value!!,
-            serverAddress = _serverAddress,
+            serverUrl = _serverAddress,
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = messagesToSign,
@@ -196,7 +198,8 @@ internal class KeysignFlowViewModel @Inject constructor(
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
-            transactionTypeUiModel = transactionTypeUiModel
+            transactionTypeUiModel = transactionTypeUiModel,
+            pullTssMessages = pullTssMessages,
         )
 
     init {
