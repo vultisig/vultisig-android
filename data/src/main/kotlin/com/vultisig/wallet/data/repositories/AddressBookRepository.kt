@@ -10,14 +10,11 @@ interface AddressBookRepository {
 
     suspend fun getEntries(): List<AddressBookEntry>
 
-    suspend fun getEntry(id: String): AddressBookEntry
+    suspend fun getEntry(chainId: String, address: String): AddressBookEntry
 
     suspend fun add(entry: AddressBookEntry)
 
-    suspend fun delete(chain: Chain, address: String)
-
-    suspend fun delete(id: String)
-
+    suspend fun delete(chainId: String, address: String)
 }
 
 internal class AddressBookRepositoryImpl @Inject constructor(
@@ -31,17 +28,11 @@ internal class AddressBookRepositoryImpl @Inject constructor(
         addressBookEntryDao.upsert(entry.toEntity())
     }
 
-    override suspend fun getEntry(id: String): AddressBookEntry {
-        val (chainId, address) = id.split("-")
+    override suspend fun getEntry(chainId: String, address: String): AddressBookEntry {
         return addressBookEntryDao.getEntry(chainId, address).toAddressBookEntry()
     }
 
-    override suspend fun delete(chain: Chain, address: String) {
-        addressBookEntryDao.delete(chain.id, address)
-    }
-
-    override suspend fun delete(id: String) {
-        val (chainId, address) = id.split("-")
+    override suspend fun delete(chainId: String, address: String) {
         addressBookEntryDao.delete(chainId, address)
     }
 

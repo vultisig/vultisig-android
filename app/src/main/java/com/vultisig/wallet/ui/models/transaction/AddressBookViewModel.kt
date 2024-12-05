@@ -109,7 +109,7 @@ internal class AddressBookViewModel @Inject constructor(
 
     fun clickAddress(model: AddressBookEntryUiModel) = viewModelScope.launch {
         if (state.value.isEditModeEnabled) {
-            editAddress(model.model.id)
+            editAddress(model.model)
         } else {
             selectAddress(model)
         }
@@ -122,13 +122,13 @@ internal class AddressBookViewModel @Inject constructor(
         }
     }
 
-    private suspend fun editAddress(id: String) {
-        navigator.navigate(Destination.AddressEntry(id))
+    private suspend fun editAddress(model: AddressBookEntry) {
+        navigator.navigate(Destination.AddressEntry(model.chain.id, model.address))
     }
 
     fun deleteAddress(model: AddressBookEntryUiModel) {
         viewModelScope.launch {
-            addressBookRepository.delete(model.model.chain, model.model.address)
+            addressBookRepository.delete(model.model.chain.id, model.model.address)
             orderRepository.delete(null, model.model.id)
             loadData()
         }

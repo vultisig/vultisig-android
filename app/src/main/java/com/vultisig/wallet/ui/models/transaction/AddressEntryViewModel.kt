@@ -40,15 +40,20 @@ internal class AddressEntryViewModel @Inject constructor(
 
     val state = MutableStateFlow(AddAddressEntryUiModel())
 
-    val addressBookEntryId = savedStateHandle.get<String?>(Destination.ARG_ADDRESS_ENTRY_ID)
+    private val addressBookEntryChainId = savedStateHandle.get<String?>(Destination.ARG_CHAIN_ID)
+
+    private val addressBookEntryAddress = savedStateHandle.get<String?>(Destination.ARG_ADDRESS)
 
     val titleTextFieldState = TextFieldState()
     val addressTextFieldState = TextFieldState()
 
     init {
         viewModelScope.launch {
-            if (addressBookEntryId != null) {
-                val addressBookEntry = addressBookRepository.getEntry(addressBookEntryId)
+            if (addressBookEntryChainId != null && addressBookEntryAddress != null) {
+                val addressBookEntry = addressBookRepository.getEntry(
+                    chainId = addressBookEntryChainId,
+                    address = addressBookEntryAddress
+                )
                 state.update {
                     it.copy(
                         titleRes = R.string.edit_address_title,
@@ -75,10 +80,11 @@ internal class AddressEntryViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            if (addressBookEntryId != null) {
-                addressBookRepository.delete(addressBookEntryId)
-                val order = orderRepository.find(parentId = null, name = addressBookEntryId)
-                orderRepository.delete(null, addressBookEntryId)
+            if (addressBookEntryChainId != null && addressBookEntryAddress != null) {
+                addressBookRepository.delete(addressBookEntryChainId, addressBookEntryAddress)
+                val orderName = "${addressBookEntryChainId}-${addressBookEntryAddress}"
+                val order = orderRepository.find(parentId = null, name = orderName)
+                orderRepository.delete(null, orderName)
                 order?.let { orderRepository.insert(it) }
             }
             addressBookRepository.add(

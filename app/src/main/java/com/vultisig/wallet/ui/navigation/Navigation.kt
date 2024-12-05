@@ -16,12 +16,12 @@ internal sealed class Destination(
     companion object {
         const val ARG_VAULT_ID = "vault_id"
         const val ARG_CHAIN_ID = "chain_id"
+        const val ARG_ADDRESS = "address"
         const val ARG_TOKEN_ID = "token_id"
         const val ARG_SRC_TOKEN_ID = "src_token_id"
         const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
-        const val ARG_ADDRESS_ENTRY_ID = "address_entry_id"
         const val ARG_VAULT_SETUP_TYPE = "vault_setup_type"
         const val ARG_VAULT_NAME = "vault_name"
         const val ARG_EMAIL = "email"
@@ -167,11 +167,12 @@ internal sealed class Destination(
     }
 
     data class AddressEntry(
-        val addressEntryId: String? = null,
-    ) : Destination(route = "address_book/entry?$ARG_ADDRESS_ENTRY_ID=$addressEntryId") {
+        val chainId: String? = null,
+        val address: String? = null,
+    ) : Destination(route = "address_book/entry?$ARG_CHAIN_ID=$chainId&$ARG_ADDRESS=$address") {
         companion object {
             const val STATIC_ROUTE =
-                "address_book/entry?$ARG_ADDRESS_ENTRY_ID={$ARG_ADDRESS_ENTRY_ID}"
+                "address_book/entry?$ARG_CHAIN_ID={$ARG_CHAIN_ID}&$ARG_ADDRESS={$ARG_ADDRESS}"
         }
     }
 
