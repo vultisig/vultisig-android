@@ -28,8 +28,15 @@ internal class SearchKujiraTokenUseCaseImpl @Inject constructor(
         return CoinAndPrice(searchedToken.toCoin(), BigDecimal.ZERO)
     }
 
-    private suspend fun searchToken(contractAddress: String): ContractData =
-        httpClient.get("$findKujiraUrl/$contractAddress").body()
+    private suspend fun searchToken(contractAddress: String): ContractData {
+       var normalizedAddress= if (contractAddress.contains("factory/")) {
+            contractAddress.split("/")[1]
+        } else {
+            contractAddress
+        }
+        val body = httpClient.get("$findKujiraUrl/$normalizedAddress")
+        return body.body()
+    }
 
 
     private fun ContractData.toCoin() = Coin(
