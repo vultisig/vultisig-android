@@ -12,7 +12,7 @@ enum class AppCurrency(
 
     RUB(ticker = "RUB"),
 
-    GPB(ticker = "GPB"),
+    GBP(ticker = "GBP"),
 
     JPY(ticker = "JPY"),
 
