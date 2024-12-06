@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,6 +52,7 @@ import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.navigation.Screen
 import com.vultisig.wallet.ui.screens.scan.ScanQrBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.scrollbar
 import kotlinx.coroutines.launch
 
 @Composable
@@ -133,7 +135,11 @@ private fun VaultAccountsScreen(
         Box(
             modifier = modifier.fillMaxSize(),
         ) {
+            val lazyColumnState = rememberLazyListState()
             LazyColumn(
+                modifier = Modifier
+                    .scrollbar(state = lazyColumnState),
+                state = lazyColumnState,
                 contentPadding = PaddingValues(all = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
