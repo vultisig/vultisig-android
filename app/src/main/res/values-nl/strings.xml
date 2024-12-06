@@ -437,4 +437,5 @@
     <string name="select_vault_type_secure_vault_point_0">2van3, 3van4, 4van6 apparaatconfiguraties beschikbaar</string>
     <string name="select_vault_type_secure_vault_point_1">Eén back-up per apparaat</string>
     <string name="select_vault_type_secure_vault_point_2">Redundant, veilig</string>
+    <string name="reshare_device_list_of_vault">%1$s van %2$s</string>
 </resources>
