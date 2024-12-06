@@ -312,6 +312,7 @@
     <string name="biometry_keysign_login_button">Sinal Rápido com biometria</string>
     <string name="save_changes">Guardar alterações</string>
     <string name="select_vault_type_secure_vault_point_2">Redundante, seguro</string>
+    <string name="current_vaults">Cofres atuais</string>
     <string name="select_vaults_to_add_to_the_folder">Selecione Vaults para adicionar à pasta.</string>
     <string name="create_folder_placeholder">Poupança</string>
     <string name="vault_settings_biometrics_title">Biometria para Sinalização Rápida</string>
