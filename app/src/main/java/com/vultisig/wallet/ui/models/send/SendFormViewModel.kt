@@ -728,7 +728,8 @@ internal class SendFormViewModel @Inject constructor(
 
     private fun calculateGasFees() {
         viewModelScope.launch {
-            selectedToken
+            combine(
+                selectedToken
                 .filterNotNull()
                 .map {
                     gasFeeRepository.getGasFee(it.chain, it.address)
@@ -736,14 +737,17 @@ internal class SendFormViewModel @Inject constructor(
                 .catch {
                     // TODO handle error when querying gas fee
                     Timber.e(it)
-                }
-                .collect { gasFee ->
-                    this@SendFormViewModel.gasFee.value = gasFee
+                },
+                gasSettings,
+                specific,
+            )
+            { gasFee, gasSettings, specific ->
+                this@SendFormViewModel.gasFee.value = adjustGasFee(gasFee,gasSettings,specific)
 
 //                    uiState.update {
 //                        it.copy(gasFee = mapGasFeeToString(gasFee))
 //                    }
-                }
+            }.collect()
         }
     }
 
@@ -752,7 +756,8 @@ internal class SendFormViewModel @Inject constructor(
             combine(
                 selectedToken.filterNotNull(),
                 gasFee.filterNotNull(),
-            ) { token, gasFee ->
+                gasSettings,
+            ) { token, gasFee, gasSettings ->
                 val chain = token.chain
                 val srcAddress = token.address
                 advanceGasUiRepository.updateTokenStandard(
@@ -781,7 +786,10 @@ internal class SendFormViewModel @Inject constructor(
                     val estimatedFee = gasFeeToEstimatedFee(
                         GasFeeParams(
                             gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                                if (gasSettings is GasSettings.Eth)
+                                    gasSettings.gasLimit
+                                else
+                                    (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
                             } else {
                                 BigInteger.valueOf(1)
                             },
@@ -803,6 +811,17 @@ internal class SendFormViewModel @Inject constructor(
             }.collect()
         }
     }
+
+    private fun adjustGasFee(
+        gasFee: TokenValue,
+        gasSettings: GasSettings?,
+        spec: BlockChainSpecificAndUtxo?,
+    ) = gasFee.copy(
+        value = if (gasSettings is GasSettings.UTXO && spec?.blockChainSpecific is BlockChainSpecific.UTXO) {
+            gasSettings.byteFee
+        } else
+            gasFee.value
+    )
 
     private fun loadSelectedCurrency() {
         viewModelScope.launch {
@@ -995,7 +1014,8 @@ internal class SendFormViewModel @Inject constructor(
                 srcAddress.address
             )
 
-            this@SendFormViewModel.gasFee.value = gasFee
+            this@SendFormViewModel.gasFee.value =
+                adjustGasFee(gasFee, gasSettings.value, specific.value)
 
 
             // Rapid toggling of isRefreshing can cause the initial true value to be skipped,

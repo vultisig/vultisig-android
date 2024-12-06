@@ -17,15 +17,13 @@ import kotlin.time.Duration.Companion.seconds
 class TssMessagePuller(
     private val service: tss.ServiceImpl,
     private val hexEncryptionKey: String,
-    serverAddress: String,
-    private val localPartyKey: String,
+    private val serverUrl: String,
+    private val localPartyId: String,
     private val sessionId: String,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val isEncryptionGCM: Boolean,
 ) {
-    private val serverUrl = "$serverAddress/message/$sessionId/$localPartyKey"
-
     private var job: Job? = null
 
     private val appliedMessageKeys = mutableSetOf<String>()
@@ -43,12 +41,12 @@ class TssMessagePuller(
 
     private suspend fun fetchMessages(messageId: String?) {
         try {
-            val messages = sessionApi.getTssMessages(serverUrl)
+            val messages = sessionApi.getTssMessages(serverUrl, sessionId, localPartyId)
 
             for (msg in messages.sortedBy { it.sequenceNo }) {
                 val key = messageId
-                    ?.let { "$sessionId-$localPartyKey-$messageId-${msg.hash}" }
-                    ?: "$sessionId-$localPartyKey-${msg.hash}"
+                    ?.let { "$sessionId-$localPartyId-$messageId-${msg.hash}" }
+                    ?: "$sessionId-$localPartyId-${msg.hash}"
 
                 // when the message is already in the cache, skip it
                 if (key in appliedMessageKeys) {
@@ -86,9 +84,8 @@ class TssMessagePuller(
         }
     }
 
-    private suspend fun deleteMessageFromServer(msgHash: String, messageID: String?) {
-        val urlString = "$serverUrl/$msgHash"
-        sessionApi.deleteTssMessage(urlString, messageID)
+    private suspend fun deleteMessageFromServer(msgHash: String, messageId: String?) {
+        sessionApi.deleteTssMessage(serverUrl, sessionId, localPartyId, msgHash, messageId)
 
         Timber.tag(TAG).d("Delete message success")
     }

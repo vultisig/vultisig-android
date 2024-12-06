@@ -129,6 +129,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         accountNumber = BigInteger(it.accountNumber.toString()),
                         sequence = BigInteger(it.sequence.toString()),
                         gas = BigInteger(it.gas.toString()),
+                        ibcDenomTraces = it.ibcDenomTraces
                     )
                 }
 

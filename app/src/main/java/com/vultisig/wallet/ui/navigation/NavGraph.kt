@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.vultisig.wallet.ui.components.SigningError
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenView
 import com.vultisig.wallet.ui.models.keygen.KeygenFlowView
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
@@ -391,13 +392,25 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.AddAddressEntry.STATIC_ROUTE,
+            route = Destination.AddressEntry.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_CHAIN_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument(ARG_ADDRESS) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
         ) { entry ->
             val savedStateHandle = entry.savedStateHandle
             val args = requireNotNull(entry.arguments)
 
-            AddAddressEntryScreen(navController = navController,
-                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR))
+            AddAddressEntryScreen(
+                navController = navController,
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR),
+            )
         }
 
         composable(

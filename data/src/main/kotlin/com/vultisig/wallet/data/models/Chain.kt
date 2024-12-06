@@ -102,11 +102,15 @@ val Chain.TssKeysignType: TssKeyType
     }
 
 val Chain.canSelectTokens: Boolean
-    get() = when {
-        this == Chain.CronosChain || this == Chain.ZkSync -> false
-        standard == EVM -> true
-        this == Chain.MayaChain || this == Chain.Solana -> true
-        else -> false
+    get() = when (this) {
+        Chain.MayaChain, Chain.Solana,
+        Chain.Terra, Chain.TerraClassic -> true
+
+        Chain.CronosChain, Chain.ZkSync -> false
+        else -> when {
+            standard == EVM -> true
+            else -> false
+        }
     }
 
 val Chain.IsSwapSupported: Boolean

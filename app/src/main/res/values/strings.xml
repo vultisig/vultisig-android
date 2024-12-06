@@ -401,6 +401,7 @@
     <string name="keygen_passwords_dont_match">Passwords should match</string>
     <string name="password_should_not_be_empty">Password should not be empty</string>
     <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
+    <string name="signing_error_mixed_reshare" translatable="false">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="keysign_paired_sign_title">Paired Sign</string>
     <string name="keysign_password_title">Password</string>
@@ -422,6 +423,42 @@
     <string name="qr_title_join_keysign_description">Vault: %s\nAmount: %s\n To: %s</string>
     <string name="qr_title_join_keysign_swap_description">Vault: %s\nFrom: %s\n To: %s</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
+    <string name="select_vault_type_start" translatable="false">START</string>
+    <string name="keygen_email_screen_title" translatable="false">EMAIL</string>
+    <string name="keygen_email_continue_button" translatable="false">Continue</string>
+    <string name="keygen_email_caption" translatable="false">Enter your email to receive your backup</string>
+    <string name="keygen_email_input_hint" translatable="false">Email</string>
+    <string name="create_folder" translatable="false">Create Folder</string>
+    <string name="keygen_verify_email_hint" translatable="false">Verify Email</string>
+    <string name="keygen_invalid_email_error" translatable="false">Invalid email</string>
+    <string name="keygen_email_dont_match" translatable="false">Emails do not match</string>
+    <string name="keygen_password_description_caption" translatable="false">This Password encrypts your Vault Share</string>
+    <string name="keygen_password_caption" translatable="false">Protect your vault</string>
+    <string name="keygen_password_title" translatable="false">PASSWORD</string>
+    <string name="keygen_password_warning_caption" translatable="false">Do not forget your password.</string>
+    <string name="keygen_passwords_dont_match" translatable="false">Passwords should match</string>
+    <string name="password_should_not_be_empty" translatable="false">Password should not be empty</string>
+    <string name="signing_error_insufficient_funds" translatable="false">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
+    <string name="signing_error_mixed_reshare" translatable="false">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
+    <string name="verify_transaction_fast_sign_btn_title" translatable="false">Fast Sign</string>
+    <string name="keysign_paired_sign_title" translatable="false">Paired Sign</string>
+    <string name="keysign_password_title" translatable="false">Password</string>
+    <string name="home_screen_import_vault" translatable="false">Import Vault</string>
+    <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
+    <string name="vault_list_part_n_of_t" translatable="false">Part %dof%d</string>
+    <string name="vault_part_n_of_t" translatable="false">Part %d of %d</string>
+    <string name="vault_list_fast_badge" translatable="false">Fast</string>
+    <string name="deleted_device" translatable="false">(Deleted Device)</string>
+    <string name="qr_title_join_keygen" translatable="false">Join Keygen</string>
+    <string name="qr_title_join_keysign" translatable="false">Join Keysign</string>
+    <string name="qr_title_join_swap_keysign" translatable="false">Join Swap</string>
+    <string name="backup_suggestion_header" translatable="false">Backups need to be done on every device in Vultisig</string>
+    <string name="backup_suggestion_body" translatable="false">Each device has its own unique vault share, which are needed for recovery</string>
+    <string name="backup_suggestion_warning" translatable="false">Back up your vault on every device individually!</string>
+    <string name="qr_title_join_keygen_description" translatable="false">Scan with devices to join the\nvault generation</string>
+    <string name="qr_title_join_keysign_description" translatable="false">Vault: %s\nAmount: %s\n To: %s</string>
+    <string name="qr_title_join_keysign_swap_description" translatable="false">Vault: %s\nFrom: %s\n To: %s</string>
+    <string name="error_folder_must_have_at_least_one_vault" translatable="false">Folder needs at least one selected vault</string>
 
     <string name="naming_vault_placeholder_fast_vault">Fast Vault</string>
     <string name="naming_vault_placeholder_active_vault">Active Vault</string>
@@ -489,6 +526,8 @@
     <string name="swap_screen_invalid_quote_calculation">Quote calculation failed</string>
     <string name="backup_password_screen_skip">Skip Password</string>
     <string name="backup_password_screen_empty_password">Please use \"Skip Password\" to save without password</string>
+    <string name="edit_address_title" translatable="false">Edit Address</string>
+    <string name="join_keysign_failed_connect_to_server" translatable="false">Failed connect to server</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
     <string name="select_vault_type_secure_vault_title">Secure Vault</string>

@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCaseImpl
+import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
+import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,6 +31,12 @@ internal interface DataUsecasesModule {
     fun bindDiscoverParticipantsUseCase(
         impl: DiscoverParticipantsUseCaseImpl
     ): DiscoverParticipantsUseCase
+
+    @Binds
+    @Singleton
+    fun bindPullTssMessagesUseCase(
+        impl: PullTssMessagesUseCaseImpl
+    ): PullTssMessagesUseCase
 
     @Binds
     @Singleton
