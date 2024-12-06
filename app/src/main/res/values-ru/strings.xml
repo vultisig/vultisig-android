@@ -310,7 +310,7 @@
     <string name="reshare_device_list_screen_desc1">Ваша конфигурация изменилась, создайте новую резервную копию.</string>
     <string name="reshare_device_list_of_vault">%1$s из %2$s</string>
     <string name="reshare_start">Начинать</string>
-    <string name="threshold_error">Порог не достигнут\\nОтсутствует достаточное количество начальных устройств</string>
+    <string name="threshold_error">Порог не достигнут\nОтсутствует достаточное количество начальных устройств</string>
     <string name="generating_key_renew">Поделиться повторно</string>
     <string name="create_folder_title">Создать папку</string>
     <string name="create_folder_name">Имя папки</string>
@@ -347,7 +347,8 @@
     <string name="keygen_password_warning_caption">Не забудьте свой пароль.</string>
     <string name="keygen_passwords_dont_match">Пароли должны совпадать</string>
     <string name="password_should_not_be_empty">Пароль не должен быть пустым</string>
-    <string name="signing_error_insufficient_funds">Недостаточно газа для покрытия комиссии за транзакцию. Пожалуйста, пополните кошелек.</string>
+    <string name="signing_error_insufficient_funds">Недостаточно газа для покрытия комиссии за транзакцию.\n Пожалуйста, пополните кошелек.</string>
+    <string name="signing_error_mixed_reshare">Смешанное подписание Reshare.\nПожалуйста, используйте общие ресурсы хранилища одного и того же цикла Reshare.</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрый знак</string>
     <string name="keysign_paired_sign_title">Парный знак</string>
     <string name="keysign_password_title">Пароль</string>
@@ -363,11 +364,9 @@
     <string name="backup_suggestion_header">Резервное копирование необходимо выполнять на каждом устройстве Vultisig.</string>
     <string name="backup_suggestion_body">Каждое устройство имеет свой уникальный ресурс хранилища, необходимый для восстановления.</string>
     <string name="backup_suggestion_warning">Создавайте резервные копии своего хранилища на каждом устройстве по отдельности!</string>
-    <string name="backup_suggestion_skip_backup">Пропустить резервное копирование</string>
-    <string name="backup_suggestion_skip_consent">Я понимаю, что, пропустив резервное копирование, я могу потерять доступ к своим средствам.</string>
-    <string name="qr_title_join_keygen_description">Сканируйте с помощью устройств, чтобы присоединиться к поколению хранилища</string>
-    <string name="qr_title_join_keysign_description">Хранилище: %s\\nСумма: %s\\n Кому: %s</string>
-    <string name="qr_title_join_keysign_swap_description">Хранилище: %s\\nОт: %s\\nКуда: %s</string>
+    <string name="qr_title_join_keygen_description">Сканируйте с помощью устройств, чтобы\n присоединиться к поколению хранилища</string>
+    <string name="qr_title_join_keysign_description">Хранилище: %s\nСумма: %s\n Кому: %s</string>
+    <string name="qr_title_join_keysign_swap_description">Хранилище: %s\nОт: %s\nКуда: %s</string>
     <string name="error_folder_must_have_at_least_one_vault">Папке необходимо выбрать хотя бы одно хранилище</string>
     <string name="naming_vault_placeholder_fast_vault">Быстрый прыжок</string>
     <string name="naming_vault_placeholder_active_vault">Активное хранилище</string>
@@ -376,8 +375,8 @@
     <string name="backup_password_optional_password_protection_hint">Необязательно: подсказка для пароля</string>
     <string name="backup_password_screen_hint_field">Введите подсказку</string>
     <string name="import_file_password_hint_text">Подсказка: %s</string>
-    <string name="keygen_vultiserver_peer_discovery_waiting">Ищем Vultiserver для подключения...</string>
-    <string name="scan_qr_upload_from_gallery">Загрузить из\\n галереи</string>
+    <string name="keygen_vultiserver_peer_discovery_waiting">Ищем Vultiserver для подключения…</string>
+    <string name="scan_qr_upload_from_gallery">Загрузить из\n галереи</string>
     <string name="reshare_start_join_reshare_button">Присоединиться Поделиться</string>
     <string name="deposit_error_invalid_lpunits">Единицы LP недействительны</string>
     <string name="deposit_error_invalid_assets">Активы недействительны</string>
@@ -407,7 +406,7 @@
     <string name="send_form_gas_token_balance">Баланс газового токена</string>
     <string name="monthly_backup_reminder_title">Не забудьте сделать резервную копию общих ресурсов хранилища и проверить их полноту.</string>
     <string name="transaction_complete_screen_title">Транзакция завершена</string>
-    <string name="qr_address_screen_description">%s адрес: %s</string>
+    <string name="qr_address_screen_description">%s адрес:\n %s</string>
     <string name="join_keysign_wrong_vault">Выбрано неправильное хранилище</string>
     <string name="keygen_fast_vault_email_hint">Этот адрес электронной почты используется только для отправки резервной копии.</string>
     <string name="register_vault_screen_save_qr_code">Сохранить QR-код</string>
@@ -432,6 +431,8 @@
     <string name="swap_screen_invalid_quote_calculation">Расчет котировки не удался</string>
     <string name="backup_password_screen_skip">Пропустить пароль</string>
     <string name="backup_password_screen_empty_password">Пожалуйста, используйте «Пропустить пароль», чтобы сохранить без пароля.</string>
+    <string name="edit_address_title">Изменить адрес</string>
+    <string name="join_keysign_failed_connect_to_server">Не удалось подключиться к серверу</string>
     <string name="network_connection_lost">Сетевое соединение потеряно. Проверьте подключение к интернету</string>
     <string name="send_form_polka_reaping_warning">Убедитесь, что вы оставили достаточно средств для покрытия сборов. Если баланс счета опустится ниже 1 DOT (экзистенциальный депозит), счет будет деактивирован (изъят), а все оставшиеся средства будут потеряны. Вы можете повторно активировать адрес с новым депозитом, превышающим экзистенциальный депозит, в любое время. Однако это не вернет потерянные средства.</string>
     <string name="select_vault_type_secure_vault_title">Безопасное хранилище</string>

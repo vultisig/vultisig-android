@@ -170,7 +170,7 @@
     <string name="settings_screen_default_chains">Zadani lanci</string>
     <string name="default_chain_screen_title">Zadani lanci</string>
     <string name="danger_icon">Ikona opasnosti</string>
-    <string name="currency_unit_setting_screen_title">Valuta</string>
+    <string name="currency_unit_setting_screen_title">Valuta\n</string>
     <string name="share_qr_utils_choose_an_app">Odaberite aplikaciju</string>
     <string name="backup_device">(Uređaj za pričuvnu kopiju)</string>
     <string name="pair_device">(Upari uređaj)</string>
@@ -337,6 +337,7 @@
     <string name="keygen_passwords_dont_match">Lozinke se moraju podudarati</string>
     <string name="password_should_not_be_empty">Lozinka ne smije biti prazna</string>
     <string name="signing_error_insufficient_funds">Nema dovoljno goriva za pokrivanje naknade za transakciju.\n Molimo uplatite novčanik.</string>
+    <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
     <string name="keysign_paired_sign_title">Upareni znak</string>
     <string name="keysign_password_title">Lozinka</string>
@@ -352,8 +353,6 @@
     <string name="backup_suggestion_header">Sigurnosne kopije potrebno je napraviti na svakom uređaju u Vultisigu</string>
     <string name="backup_suggestion_body">Svaki uređaj ima svoj jedinstveni dio trezora koji je potreban za oporavak</string>
     <string name="backup_suggestion_warning">Sigurnosno kopirajte svoj trezor na svakom uređaju pojedinačno!</string>
-    <string name="backup_suggestion_skip_backup">Preskoči sigurnosno kopiranje</string>
-    <string name="backup_suggestion_skip_consent">Razumijem da preskakanjem sigurnosne kopije mogu izgubiti pristup svojim sredstvima.</string>
     <string name="qr_title_join_keygen_description">Skenirajte s uređajima da biste se pridružili \n generacija trezora</string>
     <string name="qr_title_join_keysign_description">Trezor: %s\nIznos: %s\n Za: %s</string>
     <string name="qr_title_join_keysign_swap_description">Trezor: %s\nOd: %s\n Do: %s</string>
@@ -420,12 +419,14 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Izračun naknade za plin nije uspio</string>
     <string name="swap_screen_invalid_quote_calculation">Izračun ponude nije uspio</string>
     <string name="backup_password_screen_skip">Preskoči lozinku</string>
-    <string name="backup_password_screen_empty_password">Koristite \"Preskoči lozinku\" za spremanje bez lozinke</string>
+    <string name="backup_password_screen_empty_password">Koristite &#8220;Preskoči lozinku&#8221; za spremanje bez lozinke</string>
+    <string name="join_keysign_failed_connect_to_server">Povezivanje s poslužiteljem nije uspjelo</string>
     <string name="network_connection_lost">Mrežna veza izgubljena. Provjerite svoju internetsku vezu</string>
     <string name="send_form_polka_reaping_warning">Ostavite dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 DOT (egzistencijalni depozit), račun će biti deaktiviran (požnjet) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati s novim pologom većim od egzistencijalnog pologa u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="select_vault_type_secure_vault_title">Sigurni trezor</string>
     <string name="select_vault_type_secure_vault_point_0">Dostupne su postavke uređaja 2od3, 3od4, 4od6</string>
     <string name="select_vault_type_secure_vault_point_1">Jedna sigurnosna kopija po uređaju</string>
     <string name="select_vault_type_secure_vault_point_2">Suvišan, siguran</string>
+    <string name="edit_address_title">Uredi adresu</string>
 
 </resources>

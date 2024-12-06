@@ -170,7 +170,7 @@
     <string name="settings_screen_default_chains">Cadeias Padrão</string>
     <string name="default_chain_screen_title">Cadeias Padrão</string>
     <string name="danger_icon">Ícone de perigo</string>
-    <string name="currency_unit_setting_screen_title">Moeda</string>
+    <string name="currency_unit_setting_screen_title">Moeda\n</string>
     <string name="share_qr_utils_choose_an_app">Escolha um aplicativo</string>
     <string name="backup_device">(Dispositivo de backup)</string>
     <string name="pair_device">(Dispositivo de par)</string>
@@ -299,7 +299,7 @@
     <string name="reshare_device_list_screen_desc1">A sua configuração foi alterada, faça um novo backup.</string>
     <string name="reshare_device_list_of_vault">%1$s de %2$s</string>
     <string name="reshare_start">Iniciar</string>
-    <string name="threshold_error">Limite não atingido Faltam dispositivos iniciais suficientes</string>
+    <string name="threshold_error">Limite não atingido\n Faltam dispositivos iniciais suficientes</string>
     <string name="generating_key_renew">Partilhar de novo</string>
     <string name="create_folder_title">Criar pasta</string>
     <string name="create_folder_name">Nome da pasta</string>
@@ -337,7 +337,8 @@
     <string name="keygen_password_warning_caption">Não se esqueça da sua senha.</string>
     <string name="keygen_passwords_dont_match">As palavras-passe devem corresponder</string>
     <string name="password_should_not_be_empty">A palavra-passe não deve estar vazia</string>
-    <string name="signing_error_insufficient_funds">Não há gás suficiente para cobrir a taxa de transação. Por favor, financie a carteira.</string>
+    <string name="signing_error_insufficient_funds">Não há gás suficiente para cobrir a taxa de transação.\n Por favor, financie a carteira.</string>
+    <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="keysign_paired_sign_title">Sinal emparelhado</string>
     <string name="keysign_password_title">Palavra-passe</string>
@@ -353,11 +354,9 @@
     <string name="backup_suggestion_header">Os backups precisam de ser feitos em todos os dispositivos Vultisig</string>
     <string name="backup_suggestion_body">Cada dispositivo tem a sua própria partilha de cofre exclusiva, necessária para a recuperação</string>
     <string name="backup_suggestion_warning">Faça cópias de segurança do seu cofre em cada dispositivo individualmente!</string>
-    <string name="backup_suggestion_skip_backup">Ignorar backup</string>
-    <string name="backup_suggestion_skip_consent">Compreendo que, ao ignorar o backup, posso perder o acesso aos meus fundos.</string>
     <string name="qr_title_join_keygen_description">Digitalize com dispositivos para participar na geração do cofre</string>
-    <string name="qr_title_join_keysign_description">Cofre: %s\\nValor: %s\\n Para: %s</string>
-    <string name="qr_title_join_keysign_swap_description">Cofre: %s De: %s\\n Para: %s</string>
+    <string name="qr_title_join_keysign_description">Cofre: %s\nValor: %s\n Para: %s</string>
+    <string name="qr_title_join_keysign_swap_description">Cofre: %s De: %s\n Para: %s</string>
     <string name="error_folder_must_have_at_least_one_vault">A pasta necessita de pelo menos um cofre selecionado</string>
     <string name="naming_vault_placeholder_fast_vault">Cofre Rápido</string>
     <string name="naming_vault_placeholder_active_vault">Cofre ativo</string>
@@ -366,8 +365,8 @@
     <string name="backup_password_optional_password_protection_hint">Opcional: dica de palavra-passe</string>
     <string name="backup_password_screen_hint_field">Insira uma dica</string>
     <string name="import_file_password_hint_text">Dica: %s</string>
-    <string name="keygen_vultiserver_peer_discovery_waiting">Procuro Vultiserver para ligar...</string>
-    <string name="scan_qr_upload_from_gallery">fazer upload de\\Galeria</string>
+    <string name="keygen_vultiserver_peer_discovery_waiting">Procuro Vultiserver para ligar…</string>
+    <string name="scan_qr_upload_from_gallery">fazer upload de\nGaleria</string>
     <string name="reshare_start_join_reshare_button">Junte-se a partilhar novamente</string>
     <string name="deposit_error_invalid_lpunits">As unidades LP são inválidas</string>
     <string name="deposit_error_invalid_assets">Os recursos são inválidos</string>
@@ -397,7 +396,7 @@
     <string name="send_form_gas_token_balance">Saldo de ficha de gás</string>
     <string name="monthly_backup_reminder_title">Não se esqueça de fazer uma cópia de segurança das partilhas do cofre e verificar se estão completas.</string>
     <string name="transaction_complete_screen_title">Transação concluída</string>
-    <string name="qr_address_screen_description">Endereço %s:\\n%s</string>
+    <string name="qr_address_screen_description">Endereço %s:\n%s</string>
     <string name="join_keysign_wrong_vault">Cofre errado selecionado</string>
     <string name="keygen_fast_vault_email_hint">Este e-mail é apenas utilizado para enviar o backup</string>
     <string name="register_vault_screen_save_qr_code">Guardar código QR</string>
@@ -422,6 +421,8 @@
     <string name="swap_screen_invalid_quote_calculation">Falha no cálculo da cotação</string>
     <string name="backup_password_screen_skip">Ignorar palavra-passe</string>
     <string name="backup_password_screen_empty_password">Use \"Ignorar palavra-passe\" para guardar sem palavra-passe</string>
+    <string name="edit_address_title">Editar endereço</string>
+    <string name="join_keysign_failed_connect_to_server">Falha ao ligar ao servidor</string>
     <string name="network_connection_lost">Ligação de rede perdida. Verifique a sua ligação com a Internet</string>
     <string name="send_form_polka_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta cair abaixo de 1 DOT (Depósito Existencial), a conta será desativada (recolhida) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <string name="select_vault_type_secure_vault_title">Cofre seguro</string>

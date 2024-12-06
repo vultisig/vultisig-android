@@ -347,6 +347,7 @@
     <string name="keygen_passwords_dont_match">Wachtwoorden moeten overeenkomen</string>
     <string name="password_should_not_be_empty">Wachtwoord mag niet leeg zijn</string>
     <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de portemonnee.</string>
+    <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_paired_sign_title">Gepaard teken</string>
     <string name="keysign_password_title">Wachtwoord</string>
@@ -362,9 +363,7 @@
     <string name="backup_suggestion_header">Op elk apparaat in Vultisig moeten back-ups worden gemaakt</string>
     <string name="backup_suggestion_body">Elk apparaat heeft zijn eigen unieke kluisdeling, die nodig zijn voor herstel</string>
     <string name="backup_suggestion_warning">Maak op elk apparaat afzonderlijk een back-up van uw kluis!</string>
-    <string name="backup_suggestion_skip_backup">Back-up overslaan</string>
-    <string name="backup_suggestion_skip_consent">Ik begrijp dat ik door het overslaan van de back-up mogelijk geen toegang meer heb tot mijn geld.</string>
-    <string name="qr_title_join_keygen_description">Scannen met apparaten om deel te nemen aan de kluisgeneratie</string>
+    <string name="qr_title_join_keygen_description">Scannen met apparaten om deel te nemen\n aan de kluisgeneratie</string>
     <string name="qr_title_join_keysign_description">Kluis: %s\nBedrag: %s\nAan: %s</string>
     <string name="qr_title_join_keysign_swap_description">Kluis: %s\nVan: %s\nAan: %s</string>
     <string name="error_folder_must_have_at_least_one_vault">Map heeft minimaal één geselecteerde kluis nodig</string>
@@ -375,7 +374,7 @@
     <string name="backup_password_optional_password_protection_hint">Optioneel: Wachtwoordhint</string>
     <string name="backup_password_screen_hint_field">Voer een hint in</string>
     <string name="import_file_password_hint_text">Voer een hint in</string>
-    <string name="keygen_vultiserver_peer_discovery_waiting">Vultiserver gezocht om verbinding mee te maken...</string>
+    <string name="keygen_vultiserver_peer_discovery_waiting">Vultiserver gezocht om verbinding mee te maken…</string>
     <string name="scan_qr_upload_from_gallery">Uploaden van\nGalerij</string>
     <string name="reshare_start_join_reshare_button">Word lid van Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP-eenheden zijn ongeldig</string>
@@ -430,7 +429,8 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Berekening van gasvergoeding mislukt</string>
     <string name="swap_screen_invalid_quote_calculation">Berekening offerte mislukt</string>
     <string name="backup_password_screen_skip">Wachtwoord overslaan</string>
-    <string name="backup_password_screen_empty_password">Gebruik \\\"Wachtwoord overslaan\\\" om op te slaan zonder wachtwoord</string>
+    <string name="backup_password_screen_empty_password">Gebruik \"Wachtwoord overslaan\" om op te slaan zonder wachtwoord</string>
+    <string name="join_keysign_failed_connect_to_server">Verbinding met server mislukt</string>
     <string name="network_connection_lost">Netwerkverbinding verbroken. Controleer uw internetverbinding.</string>
     <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 1 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
     <string name="select_vault_type_secure_vault_title">Veilige kluis</string>
@@ -438,4 +438,5 @@
     <string name="select_vault_type_secure_vault_point_1">Eén back-up per apparaat</string>
     <string name="select_vault_type_secure_vault_point_2">Redundant, veilig</string>
     <string name="reshare_device_list_of_vault">%1$s van %2$s</string>
+    <string name="edit_address_title">Adres bewerken</string>
 </resources>

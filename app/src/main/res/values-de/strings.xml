@@ -170,7 +170,7 @@
     <string name="settings_screen_default_chains">Standardketten</string>
     <string name="default_chain_screen_title">Standardketten</string>
     <string name="danger_icon">Gefahrensymbol</string>
-    <string name="currency_unit_setting_screen_title">Währung</string>
+    <string name="currency_unit_setting_screen_title">Währung\n</string>
     <string name="share_qr_utils_choose_an_app">Wählen Sie eine App</string>
     <string name="backup_device">(Backup-Gerät)</string>
     <string name="pair_device">(Gerät koppeln)</string>
@@ -299,7 +299,7 @@
     <string name="reshare_device_list_screen_desc1">Ihre Konfiguration hat sich geändert. Erstellen Sie ein neues Backup.</string>
     <string name="reshare_device_list_of_vault">%1$s von %2$s</string>
     <string name="reshare_start">Start</string>
-    <string name="threshold_error">Schwellenwert nicht erreicht. Es fehlen ausreichend Erstausrüstungen.</string>
+    <string name="threshold_error">Schwellenwert nicht erreicht.\n Es fehlen ausreichend Erstausrüstungen.</string>
     <string name="generating_key_renew">Erneut teilen</string>
     <string name="create_folder_title">Ordner erstellen</string>
     <string name="create_folder_name">Ordnername</string>
@@ -337,6 +337,7 @@
     <string name="keygen_passwords_dont_match">Passwörter müssen übereinstimmen</string>
     <string name="password_should_not_be_empty">Das Passwort darf nicht leer sein</string>
     <string name="signing_error_insufficient_funds">Nicht genug Gas, um die Transaktionsgebühr zu decken.\n Bitte füllen Sie das Wallet auf.</string>
+    <string name="signing_error_mixed_reshare">Gemischte Reshare-Signatur.\nBitte verwenden Sie Vault-Freigaben aus dem gleichen Reshare-Zyklus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelles Zeichen</string>
     <string name="keysign_paired_sign_title">Gepaartes Zeichen</string>
     <string name="keysign_password_title">Passwort</string>
@@ -352,11 +353,9 @@
     <string name="backup_suggestion_header">Backups müssen auf jedem Gerät in Vultisig durchgeführt werden</string>
     <string name="backup_suggestion_body">Jedes Gerät verfügt über einen eigenen Tresor-Share, der für die Wiederherstellung benötigt wird</string>
     <string name="backup_suggestion_warning">Sichern Sie Ihren Tresor auf jedem Gerät einzeln!</string>
-    <string name="backup_suggestion_skip_backup">Sicherung überspringen</string>
-    <string name="backup_suggestion_skip_consent">Mir ist bewusst, dass ich durch das Überspringen der Sicherung möglicherweise den Zugriff auf mein Guthaben verliere.</string>
     <string name="qr_title_join_keygen_description">Mit Geräten scannen, um der \nVault-Generation beizutreten</string>
     <string name="qr_title_join_keysign_description">Tresor: %s\nVon: %s\n Bis: %s</string>
-    <string name="qr_title_join_keysign_swap_description">Tresor: %s Von: %s An: %s</string>
+    <string name="qr_title_join_keysign_swap_description">Tresor: %s\n Von: %s\n An: %s</string>
     <string name="error_folder_must_have_at_least_one_vault">Für den Ordner ist mindestens ein ausgewählter Tresor erforderlich</string>
     <string name="naming_vault_placeholder_fast_vault">Schneller Tresor</string>
     <string name="naming_vault_placeholder_active_vault">Aktiver Tresor</string>
@@ -365,8 +364,8 @@
     <string name="backup_password_optional_password_protection_hint">Optional: Passworthinweis</string>
     <string name="backup_password_screen_hint_field">Geben Sie einen Hinweis ein</string>
     <string name="import_file_password_hint_text">Hinweis: %s</string>
-    <string name="keygen_vultiserver_peer_discovery_waiting">Suche nach Vultiserver zum Verbinden ...</string>
-    <string name="scan_qr_upload_from_gallery">Hochladen von\\Galerie</string>
+    <string name="keygen_vultiserver_peer_discovery_waiting">Suche nach Vultiserver zum Verbinden …</string>
+    <string name="scan_qr_upload_from_gallery">Hochladen von\nGalerie</string>
     <string name="reshare_start_join_reshare_button">Reshare beitreten</string>
     <string name="deposit_error_invalid_lpunits">LP-Einheiten sind ungültig</string>
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
@@ -396,7 +395,7 @@
     <string name="send_form_gas_token_balance">Gas-Token-Guthaben</string>
     <string name="monthly_backup_reminder_title">Vergessen Sie nicht, Ihre Tresorfreigaben zu sichern und die Vollständigkeit zu überprüfen.</string>
     <string name="transaction_complete_screen_title">Transaktion abgeschlossen</string>
-    <string name="qr_address_screen_description">%s Adresse:\\n%s</string>
+    <string name="qr_address_screen_description">%s Adresse:\n%s</string>
     <string name="join_keysign_wrong_vault">Falscher Tresor ausgewählt</string>
     <string name="keygen_fast_vault_email_hint">Diese E-Mail wird nur zum Senden des Backups verwendet</string>
     <string name="register_vault_screen_save_qr_code">QR-Code speichern</string>
@@ -421,6 +420,8 @@
     <string name="swap_screen_invalid_quote_calculation">Angebotsberechnung fehlgeschlagen</string>
     <string name="backup_password_screen_skip">Passwort überspringen</string>
     <string name="backup_password_screen_empty_password">Bitte verwenden Sie „Passwort überspringen“, um ohne Passwort zu speichern</string>
+    <string name="edit_address_title">Adresse bearbeiten</string>
+    <string name="join_keysign_failed_connect_to_server">Verbindung zum Server fehlgeschlagen</string>
     <string name="network_connection_lost">Netzwerkverbindung verloren. Bitte überprüfen Sie Ihre Internetverbindung</string>
     <string name="send_form_polka_reaping_warning">Stellen Sie sicher, dass Sie genügend Geld übrig lassen, um die Gebühren zu decken. Wenn ein Kontostand unter 1 DOT (Existential Deposit) fällt, wird das Konto deaktiviert (geerntet) und alle verbleibenden Gelder gehen verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung reaktivieren, die größer als die Existenzeinzahlung ist. Dadurch werden die verlorenen Gelder jedoch nicht wiederhergestellt.</string>
     <string name="select_vault_type_secure_vault_title">Sicherer Tresor</string>

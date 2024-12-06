@@ -56,7 +56,7 @@
     <string name="settings_screen_title">Configuración</string>
     <string name="settings_screen_others">Otras</string>
     <string name="language_setting_screen_title">Idioma</string>
-    <string name="currency_unit_setting_screen_title">Moneda</string>
+    <string name="currency_unit_setting_screen_title">Moneda\n</string>
     <string name="default_chain_screen_title">Cadenas predeterminadas</string>
     <string name="faq_setting_screen_title">Preguntas Frecuentes</string>
     <string name="vultisig_token_setting_screen_title">Token Vultisig</string>
@@ -299,7 +299,7 @@
     <string name="reshare_device_list_screen_desc1">Su configuración cambió, haga una nueva copia de seguridad.</string>
     <string name="reshare_device_list_of_vault">%1$s de %2$s</string>
     <string name="reshare_start">Comenzar</string>
-    <string name="threshold_error">Umbral no alcanzado Faltan suficientes dispositivos iniciales</string>
+    <string name="threshold_error">Umbral no alcanzado\n Faltan suficientes dispositivos iniciales</string>
     <string name="generating_key_renew">Compartir de nuevo</string>
     <string name="create_folder_title">Crear carpeta</string>
     <string name="create_folder_name">Nombre de la carpeta</string>
@@ -336,7 +336,8 @@
     <string name="keygen_password_warning_caption">No olvides tu contraseña.</string>
     <string name="keygen_passwords_dont_match">Las contraseñas deben coincidir</string>
     <string name="password_should_not_be_empty">La contraseña no debe estar vacía</string>
-    <string name="signing_error_insufficient_funds">No hay suficiente gasolina para cubrir la tarifa de transacción. Por favor, cargue la billetera.</string>
+    <string name="signing_error_insufficient_funds">No hay suficiente gasolina para cubrir la tarifa de transacción.\n Por favor, cargue la billetera.</string>
+    <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="verify_transaction_fast_sign_btn_title">Señal rápida</string>
     <string name="keysign_paired_sign_title">Signo emparejado</string>
     <string name="keysign_password_title">Contraseña</string>
@@ -352,11 +353,9 @@
     <string name="backup_suggestion_header">Es necesario realizar copias de seguridad en todos los dispositivos en Vultisig</string>
     <string name="backup_suggestion_body">Cada dispositivo tiene su propio recurso compartido de bóveda único, que es necesario para la recuperación.</string>
     <string name="backup_suggestion_warning">¡Realice una copia de seguridad de su bóveda en cada dispositivo individualmente!</string>
-    <string name="backup_suggestion_skip_backup">Omitir copia de seguridad</string>
-    <string name="backup_suggestion_skip_consent">Entiendo que si omito la copia de seguridad puedo perder el acceso a mis fondos.</string>
-    <string name="qr_title_join_keygen_description">Escanear con dispositivos para unirse a la generación de bóveda</string>
-    <string name="qr_title_join_keysign_description">Bóveda: %s\\nCantidad: %s\\n Para: %s</string>
-    <string name="qr_title_join_keysign_swap_description">Bóveda: %s Desde: %s Hasta: %s</string>
+    <string name="qr_title_join_keygen_description">Escanear con dispositivos para unirse a la\n generación de bóveda</string>
+    <string name="qr_title_join_keysign_description">Bóveda: %s\nCantidad: %s\n Para: %s</string>
+    <string name="qr_title_join_keysign_swap_description">Bóveda: %s\n Desde: %s\n Hasta: %s</string>
     <string name="error_folder_must_have_at_least_one_vault">La carpeta necesita al menos una bóveda seleccionada</string>
     <string name="naming_vault_placeholder_fast_vault">Bóveda rápida</string>
     <string name="naming_vault_placeholder_active_vault">Bóveda activa</string>
@@ -366,8 +365,8 @@
     <string name="backup_password_screen_hint_field">Introducir una pista</string>
     <string name="import_file_password_hint_text">Pista: %s</string>
     <string name="select_vault_type_secure_vault_point_2">Redundante, segura</string>
-    <string name="keygen_vultiserver_peer_discovery_waiting">Buscando Vultiserver para conectar...</string>
-    <string name="scan_qr_upload_from_gallery">Subir desde la galería</string>
+    <string name="keygen_vultiserver_peer_discovery_waiting">Buscando Vultiserver para conectar…</string>
+    <string name="scan_qr_upload_from_gallery">Subir desde la\n galería</string>
     <string name="reshare_start_join_reshare_button">Únase a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Las unidades LP no son válidas</string>
     <string name="deposit_error_invalid_assets">Los activos no son válidos</string>
@@ -397,7 +396,7 @@
     <string name="send_form_gas_token_balance">Saldo de tokens de gas</string>
     <string name="monthly_backup_reminder_title">No olvides hacer una copia de seguridad de tus recursos compartidos de bóveda y verificar que estén completos.</string>
     <string name="transaction_complete_screen_title">Transacción completada</string>
-    <string name="qr_address_screen_description">Dirección de %s: %s</string>
+    <string name="qr_address_screen_description">Dirección de %s:\n%s</string>
     <string name="join_keysign_wrong_vault">Bóveda incorrecta seleccionada</string>
     <string name="keygen_fast_vault_email_hint">Este correo electrónico solo se utiliza para enviar la copia de seguridad.</string>
     <string name="register_vault_screen_save_qr_code">Guardar código QR</string>
@@ -422,10 +421,12 @@
     <string name="swap_screen_invalid_quote_calculation">Error en el cálculo de cotización</string>
     <string name="backup_password_screen_skip">Omitir contraseña</string>
     <string name="backup_password_screen_empty_password">Utilice \"Omitir contraseña\" para guardar sin contraseña</string>
+    <string name="join_keysign_failed_connect_to_server">Error al conectar con el servidor</string>
     <string name="network_connection_lost">Se perdió la conexión a la red. Verifique su conexión a Internet.</string>
     <string name="send_form_polka_reaping_warning">Asegúrese de dejar fondos suficientes para cubrir las tarifas. Si el saldo de una cuenta cae por debajo de 1 DOT (depósito existencial), la cuenta se desactivará (se recuperará) y se perderán los fondos restantes. Puede reactivar la dirección con un nuevo depósito mayor que el depósito existencial en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="select_vault_type_secure_vault_title">Bóveda segura</string>
     <string name="select_vault_type_secure_vault_point_0">Configuraciones de dispositivos disponibles: 2 de 3, 3 de 4 y 4 de 6</string>
     <string name="select_vault_type_secure_vault_point_1">Una copia de seguridad por dispositivo</string>
+    <string name="edit_address_title">Editar dirección</string>
 
 </resources>

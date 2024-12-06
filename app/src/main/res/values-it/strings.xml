@@ -299,7 +299,7 @@
     <string name="reshare_device_list_screen_desc1">La configurazione è cambiata, esegui un nuovo backup.</string>
     <string name="reshare_device_list_of_vault">%1$s di %2$s</string>
     <string name="reshare_start">Inizio</string>
-    <string name="threshold_error">Soglia non raggiunta Mancano \\n abbastanza dispositivi iniziali</string>
+    <string name="threshold_error">Soglia non raggiunta Mancano \n abbastanza dispositivi iniziali</string>
     <string name="generating_key_renew">Ricondividere</string>
     <string name="create_folder_title">Crea cartella</string>
     <string name="create_folder_name">Nome cartella</string>
@@ -336,7 +336,8 @@
     <string name="keygen_password_warning_caption">Non dimenticare la tua password.</string>
     <string name="keygen_passwords_dont_match">Le password devono corrispondere</string>
     <string name="password_should_not_be_empty">La password non deve essere vuota</string>
-    <string name="signing_error_insufficient_funds">Non c\'è abbastanza benzina per coprire la commissione di transazione. Si prega di finanziare il portafoglio.</string>
+    <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
+    <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
     <string name="keysign_paired_sign_title">Segno accoppiato</string>
     <string name="keysign_password_title">Password</string>
@@ -352,11 +353,9 @@
     <string name="backup_suggestion_header">I backup devono essere eseguiti su ogni dispositivo in Vultisig</string>
     <string name="backup_suggestion_body">Ogni dispositivo ha la propria condivisione di vault univoca, necessaria per il ripristino</string>
     <string name="backup_suggestion_warning">Esegui il backup del tuo vault su ogni dispositivo singolarmente!</string>
-    <string name="backup_suggestion_skip_backup">Salta il backup</string>
-    <string name="backup_suggestion_skip_consent">Capisco che saltando il backup potrei perdere l\'accesso ai miei fondi.</string>
-    <string name="qr_title_join_keygen_description">Esegui la scansione con i dispositivi per partecipare alla generazione del vault</string>
-    <string name="qr_title_join_keysign_description">Cassaforte: %s Importo: %s A: %s</string>
-    <string name="qr_title_join_keysign_swap_description">Cassaforte: %s Da: %s A: %s</string>
+    <string name="qr_title_join_keygen_description">Esegui la scansione con i dispositivi per partecipare alla\n generazione del vault</string>
+    <string name="qr_title_join_keysign_description">Cassaforte: %s\n Importo: %s\n A: %s</string>
+    <string name="qr_title_join_keysign_swap_description">Cassaforte: %s\n Da: %s\n A: %s</string>
     <string name="error_folder_must_have_at_least_one_vault">La cartella necessita di almeno un vault selezionato</string>
     <string name="naming_vault_placeholder_fast_vault">Deposito veloce</string>
     <string name="naming_vault_placeholder_active_vault">Vault attivo</string>
@@ -365,7 +364,7 @@
     <string name="backup_password_optional_password_protection_hint">Facoltativo: Suggerimento per la password</string>
     <string name="backup_password_screen_hint_field">Inserisci un suggerimento</string>
     <string name="import_file_password_hint_text">Suggerimento: %s</string>
-    <string name="keygen_vultiserver_peer_discovery_waiting">Cerco Vultiserver per connettermi...</string>
+    <string name="keygen_vultiserver_peer_discovery_waiting">Cerco Vultiserver per connettermi…</string>
     <string name="scan_qr_upload_from_gallery">Carica dalla \nGalleria</string>
     <string name="reshare_start_join_reshare_button">Unisciti a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>
@@ -396,7 +395,7 @@
     <string name="send_form_gas_token_balance">Saldo del gettone del gas</string>
     <string name="monthly_backup_reminder_title">Non dimenticare di eseguire il backup delle condivisioni del vault e di verificarne la completezza.</string>
     <string name="transaction_complete_screen_title">Transazione completata</string>
-    <string name="qr_address_screen_description">%s indirizzo: %s</string>
+    <string name="qr_address_screen_description">%s indirizzo:\n %s</string>
     <string name="join_keysign_wrong_vault">È stato selezionato il caveau sbagliato</string>
     <string name="keygen_fast_vault_email_hint">Questa email viene utilizzata solo per inviare il backup</string>
     <string name="register_vault_screen_save_qr_code">Salva il codice QR</string>
@@ -416,15 +415,17 @@
     <string name="swap_screen_invalid_no_vault">Nessun caveau selezionato</string>
     <string name="swap_screen_invalid_no_src_error">Nessun token sorgente selezionato</string>
     <string name="swap_screen_invalid_selected_no_dst">Nessun token di destinazione selezionato</string>
-    <string name="swap_screen_invalid_zero_token_amount">L\'importo del token non può essere zero</string>
+    <string name="swap_screen_invalid_zero_token_amount">L&#8217;importo del token non può essere zero</string>
     <string name="swap_screen_invalid_gas_fee_calculation">Calcolo della tariffa del gas non riuscito</string>
     <string name="swap_screen_invalid_quote_calculation">Calcolo preventivo fallito</string>
     <string name="backup_password_screen_skip">Salta la password</string>
     <string name="backup_password_screen_empty_password">Si prega di utilizzare \"Salta password\" per salvare senza password</string>
+    <string name="join_keysign_failed_connect_to_server">Connessione al server non riuscita</string>
     <string name="network_connection_lost">Connessione di rete persa. Controlla la tua connessione Internet</string>
     <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 1 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="select_vault_type_secure_vault_title">Cassaforte sicura</string>
     <string name="select_vault_type_secure_vault_point_0">Sono disponibili configurazioni di dispositivi 2of3, 3of4, 4of6</string>
     <string name="select_vault_type_secure_vault_point_1">Un backup per dispositivo</string>
     <string name="select_vault_type_secure_vault_point_2">Ridondante, sicuro</string>
+    <string name="edit_address_title">Modifica indirizzo</string>
 </resources>
