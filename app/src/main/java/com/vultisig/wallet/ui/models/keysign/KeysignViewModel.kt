@@ -38,9 +38,9 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
-import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.wallet.OneInchSwap
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
@@ -49,9 +49,11 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -61,6 +63,7 @@ import tss.ServiceImpl
 import tss.Tss
 import java.math.BigInteger
 import java.util.Base64
+import kotlin.time.Duration.Companion.seconds
 
 internal sealed class KeysignState {
     data object CreatingInstance : KeysignState()
@@ -80,7 +83,7 @@ internal sealed interface TransactionTypeUiModel {
 internal class KeysignViewModel(
     val vault: Vault,
     private val keysignCommittee: List<String>,
-    private val serverAddress: String,
+    private val serverUrl: String,
     private val sessionId: String,
     private val encryptionKeyHex: String,
     private val messagesToSign: List<String>,
@@ -101,14 +104,10 @@ internal class KeysignViewModel(
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
     val transactionTypeUiModel: TransactionTypeUiModel?,
+    private val pullTssMessages: PullTssMessagesUseCase,
 ) : ViewModel() {
-    private var tssInstance: ServiceImpl? = null
-    private var tssMessenger: TssMessenger? = null
-    private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
-    private var _messagePuller: TssMessagePuller? = null
-    private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
     val txHash = MutableStateFlow("")
     val txLink = txHash.map {
         explorerLinkRepository.getTransactionLink(keysignPayload.coin.chain, it)
@@ -117,14 +116,22 @@ internal class KeysignViewModel(
         SharingStarted.WhileSubscribed(),
         ""
     )
-    private var featureFlag: FeatureFlagJson? = null
-    private var isNavigateToHome: Boolean = false
-
     val swapProgressLink = txHash.map {
         explorerLinkRepository.getSwapProgressLink(it, keysignPayload.swapPayload)
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(), null
     )
+
+    private var tssInstance: ServiceImpl? = null
+    private var tssMessenger: TssMessenger? = null
+    private val localStateAccessor: LocalStateAccessor = LocalStateAccessor(vault)
+
+    private var pullTssMessagesJob: Job? = null
+
+    private val signatures: MutableMap<String, tss.KeysignResponse> = mutableMapOf()
+    private var featureFlag: FeatureFlagJson? = null
+
+    private var isNavigateToHome: Boolean = false
 
     fun startKeysign() {
         viewModelScope.launch {
@@ -139,39 +146,33 @@ internal class KeysignViewModel(
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
         try {
-            this.featureFlag = featureFlagApi.getFeatureFlag()
-            this.tssMessenger = TssMessenger(
-                serverAddress,
+            featureFlag = featureFlagApi.getFeatureFlag()
+            val isEncryptionGcm = featureFlag?.isEncryptGcmEnabled == true
+
+            tssMessenger = TssMessenger(
+                serverUrl,
                 sessionId,
                 encryptionKeyHex,
                 sessionApi,
                 viewModelScope,
                 encryption,
-                featureFlag?.isEncryptGcmEnabled == true,
+                isEncryptionGcm,
             )
-            this.tssInstance = Tss.newService(this.tssMessenger, this.localStateAccessor, false)
-            this.tssInstance ?: run {
-                throw Exception("Failed to create TSS instance")
-            }
-            _messagePuller = TssMessagePuller(
-                service = this.tssInstance!!,
-                hexEncryptionKey = encryptionKeyHex,
-                serverAddress = serverAddress,
-                localPartyKey = vault.localPartyID,
-                sessionApi = sessionApi,
-                sessionId = sessionId,
-                encryption = encryption,
-                isEncryptionGCM = featureFlag?.isEncryptGcmEnabled == true,
-            )
-            this.messagesToSign.forEach { message ->
+            tssInstance = Tss.newService(tssMessenger, localStateAccessor, false)
+                ?: error("Failed to create TSS instance")
+
+            messagesToSign.forEach { message ->
                 Timber.d("signing message: $message")
-                signMessageWithRetry(this.tssInstance!!, message, 1)
+                signMessageWithRetry(tssInstance!!, message, 1)
             }
+
+            Timber.d("All messages signed, broadcasting transaction")
             broadcastTransaction()
             checkThorChainTxResult()
             currentState.value = KeysignState.KeysignFinished
             isNavigateToHome = true
-            this._messagePuller?.stop()
+
+            pullTssMessagesJob?.cancel()
         } catch (e: Exception) {
             Timber.e(e)
             currentState.value = KeysignState.Error( e.message ?: "Unknown error")
@@ -193,13 +194,26 @@ internal class KeysignViewModel(
     }
 
     private suspend fun signMessageWithRetry(service: ServiceImpl, message: String, attempt: Int) {
-        val keysignVerify = KeysignVerify(serverAddress, sessionId, sessionApi)
+        val keysignVerify = KeysignVerify(serverUrl, sessionId, sessionApi)
         try {
             Timber.d("signMessageWithRetry: $message, attempt: $attempt")
             val msgHash = message.md5()
             this.tssMessenger?.setMessageID(msgHash)
             Timber.d("signMessageWithRetry: msgHash: $msgHash")
-            this._messagePuller?.pullMessages(msgHash)
+
+            val isEncryptionGcm = featureFlag?.isEncryptGcmEnabled == true
+            pullTssMessagesJob = viewModelScope.launch {
+                pullTssMessages(
+                    serverUrl = serverUrl,
+                    sessionId = sessionId,
+                    localPartyId = vault.localPartyID,
+                    hexEncryptionKey = encryptionKeyHex,
+                    isEncryptionGcm = isEncryptionGcm,
+                    messageId = null,
+                    service = tssInstance!!,
+                ).collect()
+            }
+
             val keysignReq = tss.KeysignRequest()
             keysignReq.localPartyKey = vault.localPartyID
             keysignReq.keysignCommitteeKeys = keysignCommittee.joinToString(",")
@@ -223,10 +237,12 @@ internal class KeysignViewModel(
             }
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
-            this._messagePuller?.stop()
-            delay(1000) // backoff for 1 second
+
+            pullTssMessagesJob?.cancel()
+
+            delay(1.seconds)
         } catch (e: Exception) {
-            this._messagePuller?.stop()
+            pullTssMessagesJob?.cancel()
             Timber.tag("KeysignViewModel")
                 .d("signMessageWithRetry error: %s", e.stackTraceToString())
             val resp = keysignVerify.checkKeysignComplete(message)

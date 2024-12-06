@@ -21,8 +21,20 @@ interface SessionApi {
     suspend fun getCompletedParties(serverUrl: String, sessionId: String): List<String>
     suspend fun getParticipants(serverUrl: String, sessionId: String): List<String>
     suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message)
-    suspend fun getTssMessages(serverUrl: String): List<Message>
-    suspend fun deleteTssMessage(serverUrl: String, messageId: String?)
+
+    suspend fun getTssMessages(
+        serverUrl: String,
+        sessionId: String,
+        localPartyId: String,
+    ): List<Message>
+    suspend fun deleteTssMessage(
+        serverUrl: String,
+        sessionId: String,
+        localPartyId: String,
+        msgHash: String,
+        messageId: String?,
+    )
+
     suspend fun markLocalPartyKeysignComplete(serverUrl: String, messageId: String, sig: tss.KeysignResponse)
     suspend fun checkKeysignComplete(serverUrl: String, messageId: String): tss.KeysignResponse
 }
@@ -94,14 +106,24 @@ internal class SessionApiImpl @Inject constructor(
         }.throwIfUnsuccessful()
     }
 
-    override suspend fun getTssMessages(serverUrl: String): List<Message> {
-        return httpClient.get(serverUrl)
+    override suspend fun getTssMessages(
+        serverUrl: String,
+        sessionId: String,
+        localPartyId: String,
+    ): List<Message> {
+        return httpClient.get("$serverUrl/message/$sessionId/$localPartyId")
             .throwIfUnsuccessful()
             .body<List<Message>>()
     }
 
-    override suspend fun deleteTssMessage(url: String, messageId: String?) {
-        httpClient.delete(url){
+    override suspend fun deleteTssMessage(
+        serverUrl: String,
+        sessionId: String,
+        localPartyId: String,
+        msgHash: String,
+        messageId: String?
+    ) {
+        httpClient.delete("$serverUrl/message/$sessionId/$localPartyId/$msgHash") {
             messageId?.let {
                 header(MESSAGE_ID_HEADER_TITLE, it)
             }
