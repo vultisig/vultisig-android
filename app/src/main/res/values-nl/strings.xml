@@ -308,6 +308,7 @@
     <string name="reshare_device_screen_changes_in_setup">Wijzigingen in de instellingen</string>
     <string name="reshare_device_list_screen_new_vault_setup">Nieuwe kluisinstelling</string>
     <string name="reshare_device_list_screen_desc1">Uw configuratie is gewijzigd, maak een nieuwe back-up.</string>
+    <string name="reshare_device_list_of_vault">Redundant, veilig</string>
     <string name="reshare_start">Begin</string>
     <string name="threshold_error">Drempelwaarde niet bereikt\nEr ontbreken voldoende initiële apparaten</string>
     <string name="generating_key_renew">Opnieuw delen</string>

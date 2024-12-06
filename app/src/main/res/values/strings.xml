@@ -333,48 +333,48 @@
 
 
 
-    <string name="backup_password_screen_warning" translatable="false">Never store Vault Shares from different devices in the same location</string>
+    <string name="backup_password_screen_warning">Never store Vault Shares from different devices in the same location</string>
     <string name="backup_password_screen_confirm_password_error_message">Please make sure your passwords match</string>
     <string name="token_selection_selected_tokens_title">Selected</string>
     <string name="failed_to_resolve_address">Failed to resolve address</string>
-    <string name="vault_settings_success_backup_message" translatable="false">File saved successfully</string>
-    <string name="vault_settings_error_extension_backup_file" translatable="false">Extension not supported. Backup failed. Supported file extensions are: %s</string>
-    <string name="default_error"  translatable="false">Default error</string>
+    <string name="vault_settings_success_backup_message">File saved successfully</string>
+    <string name="vault_settings_error_extension_backup_file">Extension not supported. Backup failed. Supported file extensions are: %s</string>
+    <string name="default_error">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
     <string name="join_keygen_failed">Failed to join %1$s</string>
-    <string name="reshare_start_screen_title" translatable="false">Reshare your vault</string>
-    <string name="reshare_start_screen_body" translatable="false">Reshare can be used to refresh, expand or reduce the amount of devices in a Vault.</string>
-    <string name="reshare_start_screen_warning" translatable="false">For all Reshare actions the threshold of devices is always required.</string>
-    <string name="reshare_start_screen_start_reshare" translatable="false">Start Reshare</string>
-    <string name="resharing_the_vault" translatable="false">Resharing the Vault</string>
-    <string name="reshare_device_screen_changes_in_setup" translatable="false">Changes in Setup</string>
-    <string name="reshare_device_list_screen_new_vault_setup" translatable="false">New Vault Setup</string>
-    <string name="reshare_device_list_screen_desc1" translatable="false">Your configuration changed, make a new backup.</string>
-    <string name="reshare_device_list_of_vault" translatable="false">%1$s of %2$s</string>
-    <string name="reshare_start" translatable="false">Start</string>
-    <string name="threshold_error" translatable="false">Threshold not reached\nMissing enough initial devices</string>
-    <string name="generating_key_renew" translatable="false">Reshare</string>
-    <string name="create_folder_title" translatable="false">Create Folder</string>
-    <string name="create_folder_name" translatable="false">Folder Name</string>
-    <string name="create_folder_create" translatable="false">Create</string>
-    <string name="vault_settings_biometrics_screen_title" translatable="false">Enable Biometrics</string>
-    <string name="vault_settings_biometrics_screen_description" translatable="false">Enter Password for Fast Signing</string>
-    <string name="vault_settings_biometrics_screen_password_placeholder" translatable="false">Type here</string>
-    <string name="vault_settings_biometrics_screen_snackbar_enabled" translatable="false">Biometrics for Fast Signing is enabled</string>
-    <string name="vault_settings_biometrics_screen_snackbar_disabled" translatable="false">Biometrics for Fast Signing is disabled</string>
-    <string name="biometry_keysign_login_button" translatable="false">Fast Sign with biometry</string>
-    <string name="save_changes" translatable="false">Save Changes</string>
-    <string name="current_vaults" translatable="false">Current Vaults</string>
-    <string name="select_vaults_to_add_to_the_folder" translatable="false">Select Vaults to add to the folder.</string>
-    <string name="create_folder_placeholder" translatable="false">Savings</string>
-    <string name="vault_settings_biometrics_title"  translatable="false">Biometrics for Fast Sign</string>
-    <string name="vault_settings_biometrics_description"  translatable="false">Enable Biometrics for Fast Sign</string>
-    <string name="create_folder_list_title" translatable="false">Select Vaults to add to the folder.</string>
-    <string name="generating_key_retry" translatable="false">Retry</string>
-    <string name="generating_key_screen_reshare_failed" translatable="false">Reshare Failed</string>
-    <string name="join_keygen_screen_renew" translatable="false">Renew</string>
+    <string name="reshare_start_screen_title">Reshare your vault</string>
+    <string name="reshare_start_screen_body">Reshare can be used to refresh, expand or reduce the amount of devices in a Vault.</string>
+    <string name="reshare_start_screen_warning">For all Reshare actions the threshold of devices is always required.</string>
+    <string name="reshare_start_screen_start_reshare">Start Reshare</string>
+    <string name="resharing_the_vault">Resharing the Vault</string>
+    <string name="reshare_device_screen_changes_in_setup">Changes in Setup</string>
+    <string name="reshare_device_list_screen_new_vault_setup">New Vault Setup</string>
+    <string name="reshare_device_list_screen_desc1">Your configuration changed, make a new backup.</string>
+    <string name="reshare_device_list_of_vault">%1$s of %2$s</string>
+    <string name="reshare_start">Start</string>
+    <string name="threshold_error">Threshold not reached\nMissing enough initial devices</string>
+    <string name="generating_key_renew">Reshare</string>
+    <string name="create_folder_title">Create Folder</string>
+    <string name="create_folder_name">Folder Name</string>
+    <string name="create_folder_create">Create</string>
+    <string name="vault_settings_biometrics_screen_title">Enable Biometrics</string>
+    <string name="vault_settings_biometrics_screen_description">Enter Password for Fast Signing</string>
+    <string name="vault_settings_biometrics_screen_password_placeholder">Type here</string>
+    <string name="vault_settings_biometrics_screen_snackbar_enabled">Biometrics for Fast Signing is enabled</string>
+    <string name="vault_settings_biometrics_screen_snackbar_disabled">Biometrics for Fast Signing is disabled</string>
+    <string name="biometry_keysign_login_button">Fast Sign with biometry</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="current_vaults">Current Vaults</string>
+    <string name="select_vaults_to_add_to_the_folder">Select Vaults to add to the folder.</string>
+    <string name="create_folder_placeholder">Savings</string>
+    <string name="vault_settings_biometrics_title">Biometrics for Fast Sign</string>
+    <string name="vault_settings_biometrics_description">Enable Biometrics for Fast Sign</string>
+    <string name="create_folder_list_title">Select Vaults to add to the folder.</string>
+    <string name="generating_key_retry">Retry</string>
+    <string name="generating_key_screen_reshare_failed">Reshare Failed</string>
+    <string name="join_keygen_screen_renew">Renew</string>
 
-    <string name="folders_list_title" translatable="false">Folders</string>
+    <string name="folders_list_title">Folders</string>
 
 <!--    fast&active vaults are temporarily disabled -->
 <!--    <string name="select_vault_type_fast_title" translatable="false">FAST</string>-->
@@ -385,114 +385,114 @@
 <!--    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>-->
 <!--    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>-->
 
-    <string name="select_vault_type_start" translatable="false">START</string>
-    <string name="keygen_email_screen_title" translatable="false">EMAIL</string>
-    <string name="keygen_email_continue_button" translatable="false">Continue</string>
-    <string name="keygen_email_caption" translatable="false">Enter your email to receive your backup</string>
-    <string name="keygen_email_input_hint" translatable="false">Email</string>
-    <string name="create_folder" translatable="false">Create Folder</string>
-    <string name="keygen_verify_email_hint" translatable="false">Verify Email</string>
-    <string name="keygen_invalid_email_error" translatable="false">Invalid email</string>
-    <string name="keygen_email_dont_match" translatable="false">Emails do not match</string>
-    <string name="keygen_password_description_caption" translatable="false">This Password encrypts your Vault Share</string>
-    <string name="keygen_password_caption" translatable="false">Protect your vault</string>
-    <string name="keygen_password_title" translatable="false">PASSWORD</string>
-    <string name="keygen_password_warning_caption" translatable="false">Do not forget your password.</string>
-    <string name="keygen_passwords_dont_match" translatable="false">Passwords should match</string>
-    <string name="password_should_not_be_empty" translatable="false">Password should not be empty</string>
-    <string name="signing_error_insufficient_funds" translatable="false">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
-    <string name="verify_transaction_fast_sign_btn_title" translatable="false">Fast Sign</string>
-    <string name="keysign_paired_sign_title" translatable="false">Paired Sign</string>
-    <string name="keysign_password_title" translatable="false">Password</string>
-    <string name="home_screen_import_vault" translatable="false">Import Vault</string>
-    <string name="keysign_password_incorrect_password" translatable="false">Password is incorrect</string>
-    <string name="vault_list_part_n_of_t" translatable="false">Part %dof%d</string>
-    <string name="vault_part_n_of_t" translatable="false">Part %d of %d</string>
-    <string name="vault_list_fast_badge" translatable="false">Fast</string>
-    <string name="deleted_device" translatable="false">(Deleted Device)</string>
-    <string name="qr_title_join_keygen" translatable="false">Join Keygen</string>
-    <string name="qr_title_join_keysign" translatable="false">Join Keysign</string>
-    <string name="qr_title_join_swap_keysign" translatable="false">Join Swap</string>
-    <string name="backup_suggestion_header" translatable="false">Backups need to be done on every device in Vultisig</string>
-    <string name="backup_suggestion_body" translatable="false">Each device has its own unique vault share, which are needed for recovery</string>
-    <string name="backup_suggestion_warning" translatable="false">Back up your vault on every device individually!</string>
-    <string name="backup_suggestion_skip_backup" translatable="false">Skip Backup</string>
-    <string name="backup_suggestion_skip_consent" translatable="false">I understand that by skipping the backup I may lose access to my funds.</string>
-    <string name="qr_title_join_keygen_description" translatable="false">Scan with devices to join the\nvault generation</string>
-    <string name="qr_title_join_keysign_description" translatable="false">Vault: %s\nAmount: %s\n To: %s</string>
-    <string name="qr_title_join_keysign_swap_description" translatable="false">Vault: %s\nFrom: %s\n To: %s</string>
-    <string name="error_folder_must_have_at_least_one_vault" translatable="false">Folder needs at least one selected vault</string>
+    <string name="select_vault_type_start">START</string>
+    <string name="keygen_email_screen_title">EMAIL</string>
+    <string name="keygen_email_continue_button">Continue</string>
+    <string name="keygen_email_caption">Enter your email to receive your backup</string>
+    <string name="keygen_email_input_hint">Email</string>
+    <string name="create_folder">Create Folder</string>
+    <string name="keygen_verify_email_hint">Verify Email</string>
+    <string name="keygen_invalid_email_error">Invalid email</string>
+    <string name="keygen_email_dont_match">Emails do not match</string>
+    <string name="keygen_password_description_caption">This Password encrypts your Vault Share</string>
+    <string name="keygen_password_caption">Protect your vault</string>
+    <string name="keygen_password_title">PASSWORD</string>
+    <string name="keygen_password_warning_caption">Do not forget your password.</string>
+    <string name="keygen_passwords_dont_match">Passwords should match</string>
+    <string name="password_should_not_be_empty">Password should not be empty</string>
+    <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
+    <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
+    <string name="keysign_paired_sign_title">Paired Sign</string>
+    <string name="keysign_password_title">Password</string>
+    <string name="home_screen_import_vault">Import Vault</string>
+    <string name="keysign_password_incorrect_password">Password is incorrect</string>
+    <string name="vault_list_part_n_of_t">Part %dof%d</string>
+    <string name="vault_part_n_of_t">Part %d of %d</string>
+    <string name="vault_list_fast_badge">Fast</string>
+    <string name="deleted_device">(Deleted Device)</string>
+    <string name="qr_title_join_keygen">Join Keygen</string>
+    <string name="qr_title_join_keysign">Join Keysign</string>
+    <string name="qr_title_join_swap_keysign">Join Swap</string>
+    <string name="backup_suggestion_header">Backups need to be done on every device in Vultisig</string>
+    <string name="backup_suggestion_body">Each device has its own unique vault share, which are needed for recovery</string>
+    <string name="backup_suggestion_warning">Back up your vault on every device individually!</string>
+    <string name="backup_suggestion_skip_backup">Skip Backup</string>
+    <string name="backup_suggestion_skip_consent">I understand that by skipping the backup I may lose access to my funds.</string>
+    <string name="qr_title_join_keygen_description">Scan with devices to join the\nvault generation</string>
+    <string name="qr_title_join_keysign_description">Vault: %s\nAmount: %s\n To: %s</string>
+    <string name="qr_title_join_keysign_swap_description">Vault: %s\nFrom: %s\n To: %s</string>
+    <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
 
-    <string name="naming_vault_placeholder_fast_vault" translatable="false">Fast Vault</string>
-    <string name="naming_vault_placeholder_active_vault" translatable="false">Active Vault</string>
-    <string name="naming_vault_placeholder_secure_vault" translatable="false">Secure Vault</string>
+    <string name="naming_vault_placeholder_fast_vault">Fast Vault</string>
+    <string name="naming_vault_placeholder_active_vault">Active Vault</string>
+    <string name="naming_vault_placeholder_secure_vault">Secure Vault</string>
     <string name="share_vault_qr_uid" translatable="false">UID: %s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
-    <string name="select_vault_type_pair_action" translatable="false">PAIR</string>
-    <string name="backup_password_optional_password_protection_hint" translatable="false">Optional: Password hint</string>
-    <string name="backup_password_screen_hint_field" translatable="false">Enter a hint</string>
-    <string name="import_file_password_hint_text" translatable="false">Hint: %s</string>
-    <string name="keygen_vultiserver_peer_discovery_waiting" translatable="false">Looking for Vultiserver to connect...</string>
+    <string name="select_vault_type_pair_action">PAIR</string>
+    <string name="backup_password_optional_password_protection_hint">Optional: Password hint</string>
+    <string name="backup_password_screen_hint_field">Enter a hint</string>
+    <string name="import_file_password_hint_text">Hint: %s</string>
+    <string name="keygen_vultiserver_peer_discovery_waiting">Looking for Vultiserver to connect...</string>
     <string name="scan_qr_upload_from_gallery" translatable="false">Upload from\nGallery</string>
-    <string name="reshare_start_join_reshare_button" translatable="false">Join Reshare</string>
-    <string name="deposit_error_invalid_lpunits"  translatable="false">LP units is invalid</string>
-    <string name="deposit_error_invalid_assets"  translatable="false">Assets is invalid</string>
-    <string name="deposit_form_screen_assets" translatable="false">Assets</string>
-    <string name="deposit_form_screen_lpunits" translatable="false">LP units</string>
-    <string name="eth_gas_settings_title" translatable="false">Advanced</string>
-    <string name="join_keysign_error_wrong_vault_share" translatable="false">Same vault share. Please change the share to sign</string>
-    <string name="join_keysign_error_wrong_vault_share_try_again_button" translatable="false">Change Vault</string>
-    <string name="eth_gas_settings_base_fee_title" translatable="false">Current Base Fee (Gwei)</string>
-    <string name="utxo_settings_byte_fee_title" translatable="false">Network rate (sats/vbyte)</string>
-    <string name="eth_gas_settings_gas_limit_title" translatable="false">Gas Limit</string>
-    <string name="eth_gas_settings_priority_title" translatable="false">Priority</string>
-    <string name="eth_gas_setting_total_fee_title" translatable="false">Total Fee (Gwei)</string>
-    <string name="vault_details_screen_vault_part" translatable="false">Vault Part</string>
-    <string name="vault_settings_delete_vault_part" translatable="false">Vault Part:</string>
-    <string name="vault_password_hint_to_long" translatable="false">Hint is too long</string>
-    <string name="vault_details_screen_vault_part_desc" translatable="false">Part %s of %s</string>
-    <string name="vault_details_screen_signer" translatable="false">Signer %s: %s</string>
-    <string name="settings_screen_register_your_vaults" translatable="false">Register your Vaults</string>
-    <string name="register_vault_screen_title" translatable="false">Register Vault</string>
-    <string name="register_vault_screen_step_3" translatable="false">3. Upload your Vault QR Code</string>
-    <string name="register_vault_screen_step_4" translatable="false">4. Track your VULTIES (Vault Points) !</string>
-    <string name="register_vault_screen_step_2_go_to" translatable="false">2. Go to</string>
+    <string name="reshare_start_join_reshare_button">Join Reshare</string>
+    <string name="deposit_error_invalid_lpunits">LP units is invalid</string>
+    <string name="deposit_error_invalid_assets">Assets is invalid</string>
+    <string name="deposit_form_screen_assets">Assets</string>
+    <string name="deposit_form_screen_lpunits">LP units</string>
+    <string name="eth_gas_settings_title">Advanced</string>
+    <string name="join_keysign_error_wrong_vault_share">Same vault share. Please change the share to sign</string>
+    <string name="join_keysign_error_wrong_vault_share_try_again_button">Change Vault</string>
+    <string name="eth_gas_settings_base_fee_title">Current Base Fee (Gwei)</string>
+    <string name="utxo_settings_byte_fee_title">Network rate (sats/vbyte)</string>
+    <string name="eth_gas_settings_gas_limit_title">Gas Limit</string>
+    <string name="eth_gas_settings_priority_title">Priority</string>
+    <string name="eth_gas_setting_total_fee_title">Total Fee (Gwei)</string>
+    <string name="vault_details_screen_vault_part">Vault Part</string>
+    <string name="vault_settings_delete_vault_part">Vault Part:</string>
+    <string name="vault_password_hint_to_long">Hint is too long</string>
+    <string name="vault_details_screen_vault_part_desc">Part %s of %s</string>
+    <string name="vault_details_screen_signer">Signer %s: %s</string>
+    <string name="settings_screen_register_your_vaults">Register your Vaults</string>
+    <string name="register_vault_screen_title">Register Vault</string>
+    <string name="register_vault_screen_step_3">3. Upload your Vault QR Code</string>
+    <string name="register_vault_screen_step_4">4. Track your VULTIES (Vault Points) !</string>
+    <string name="register_vault_screen_step_2_go_to">2. Go to</string>
     <string name="register_vault_screen_step_2_vultisig_web" translatable="false">Vultisig Web</string>
-    <string name="register_vault_screen_step_1" translatable="false">"1. Save your Vault QR"</string>
-    <string name="keygen_vultiserver_peer_discovery_please_wait" translatable="false">Please wait</string>
-    <string name="do_not_remind_me_again" translatable="false">Don\'t remind me again</string>
-    <string name="send_form_gas_token_balance" translatable="false">Gas token balance</string>
-    <string name="monthly_backup_reminder_title" translatable="false">Don\'t forget to backup your vault shares and verify the completeness.</string>
-    <string name="transaction_complete_screen_title" translatable="false">Transaction complete</string>
+    <string name="register_vault_screen_step_1">"1. Save your Vault QR"</string>
+    <string name="keygen_vultiserver_peer_discovery_please_wait">Please wait</string>
+    <string name="do_not_remind_me_again">Don\'t remind me again</string>
+    <string name="send_form_gas_token_balance">Gas token balance</string>
+    <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
+    <string name="transaction_complete_screen_title">Transaction complete</string>
     <string name="qr_address_screen_description" translatable="false">%s address:\n%s</string>
-    <string name="join_keysign_wrong_vault" translatable="false">Wrong vault selected</string>
-    <string name="keygen_fast_vault_email_hint" translatable="false">This email is only used to send the backup</string>
-    <string name="register_vault_screen_save_qr_code" translatable="false">Save QR Code</string>
-    <string name="verify_swap_screen_total_fees" translatable="false">Total Fees</string>
-    <string name="scan_qr_code_error_text" translatable="false">Unrelated QR code is scanned</string>
-    <string name="scan_qr_code_error_button" translatable="false">Back</string>
-    <string name="form_token_selection_balance" translatable="false">Balance: %s</string>
-    <string name="form_token_selection_asset" translatable="false">Asset</string>
-    <string name="insufficient_native_token"  translatable="false">Insufficient %1$s</string>
-    <string name="swap_error_amount_too_low"  translatable="false">Swap Amount too low</string>
-    <string name="swap_error_time_out"  translatable="false">Swap request timed out. Please try again</string>
-    <string name="keygen_verify_server_backup_caption" translatable="false">Enter the code received with your backup via email :</string>
-    <string name="keygen_verify_server_backup_code_hint" translatable="false">Enter code</string>
+    <string name="join_keysign_wrong_vault">Wrong vault selected</string>
+    <string name="keygen_fast_vault_email_hint">This email is only used to send the backup</string>
+    <string name="register_vault_screen_save_qr_code">Save QR Code</string>
+    <string name="verify_swap_screen_total_fees">Total Fees</string>
+    <string name="scan_qr_code_error_text">Unrelated QR code is scanned</string>
+    <string name="scan_qr_code_error_button">Back</string>
+    <string name="form_token_selection_balance">Balance: %s</string>
+    <string name="form_token_selection_asset">Asset</string>
+    <string name="insufficient_native_token">Insufficient %1$s</string>
+    <string name="swap_error_amount_too_low">Swap Amount too low</string>
+    <string name="swap_error_time_out">Swap request timed out. Please try again</string>
+    <string name="keygen_verify_server_backup_caption">Enter the code received with your backup via email :</string>
+    <string name="keygen_verify_server_backup_code_hint">Enter code</string>
     <string name="keygen_verify_server_backup_warning" translatable="false">This code verifies receiving the server backup via email</string>
-    <string name="keygen_verify_server_backup_title" translatable="false">Server backup verification</string>
-    <string name="keygen_verify_server_backup_invalid_code" translatable="false">Invalid code</string>
-    <string name="swap_screen_invalid_no_vault" translatable="false">No vault selected</string>
-    <string name="swap_screen_invalid_no_src_error" translatable="false">No source token selected</string>
-    <string name="swap_screen_invalid_selected_no_dst" translatable="false">No destination token selected</string>
-    <string name="swap_screen_invalid_zero_token_amount" translatable="false">Token amount cannot be Zero</string>
-    <string name="swap_screen_invalid_gas_fee_calculation" translatable="false">Gas fee calculation failed</string>
-    <string name="swap_screen_invalid_quote_calculation" translatable="false">Quote calculation failed</string>
-    <string name="backup_password_screen_skip" translatable="false">Skip Password</string>
-    <string name="backup_password_screen_empty_password" translatable="false">Please use \"Skip Password\" to save without password</string>
-    <string name="network_connection_lost" translatable="false">Network connection lost. Please check your internet connection</string>
-    <string name="send_form_polka_reaping_warning" translatable="false">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
-    <string name="select_vault_type_secure_vault_title" translatable="false">Secure Vault</string>
-    <string name="select_vault_type_secure_vault_point_0" translatable="false">2of3, 3of4, 4of6  device setups available</string>
-    <string name="select_vault_type_secure_vault_point_1" translatable="false">One backup per device</string>
-    <string name="select_vault_type_secure_vault_point_2" translatable="false">Redundant, Secure</string>
+    <string name="keygen_verify_server_backup_title">Server backup verification</string>
+    <string name="keygen_verify_server_backup_invalid_code">Invalid code</string>
+    <string name="swap_screen_invalid_no_vault">No vault selected</string>
+    <string name="swap_screen_invalid_no_src_error">No source token selected</string>
+    <string name="swap_screen_invalid_selected_no_dst">No destination token selected</string>
+    <string name="swap_screen_invalid_zero_token_amount">Token amount cannot be Zero</string>
+    <string name="swap_screen_invalid_gas_fee_calculation">Gas fee calculation failed</string>
+    <string name="swap_screen_invalid_quote_calculation">Quote calculation failed</string>
+    <string name="backup_password_screen_skip">Skip Password</string>
+    <string name="backup_password_screen_empty_password">Please use \"Skip Password\" to save without password</string>
+    <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
+    <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
+    <string name="select_vault_type_secure_vault_title">Secure Vault</string>
+    <string name="select_vault_type_secure_vault_point_0">2of3, 3of4, 4of6  device setups available</string>
+    <string name="select_vault_type_secure_vault_point_1">One backup per device</string>
+    <string name="select_vault_type_secure_vault_point_2">This code verifies receiving the server backup via email</string>
 </resources>
