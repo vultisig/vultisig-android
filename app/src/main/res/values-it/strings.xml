@@ -419,7 +419,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Calcolo della tariffa del gas non riuscito</string>
     <string name="swap_screen_invalid_quote_calculation">Calcolo preventivo fallito</string>
     <string name="backup_password_screen_skip">Salta la password</string>
-    <string name="backup_password_screen_empty_password">Si prega di utilizzare \"Salta password\" per salvare senza password</string>
+    <string name="backup_password_screen_empty_password">Si prega di utilizzare &#8220;Salta password&#8221; per salvare senza password</string>
     <string name="join_keysign_failed_connect_to_server">Connessione al server non riuscita</string>
     <string name="network_connection_lost">Connessione di rete persa. Controlla la tua connessione Internet</string>
     <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 1 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
