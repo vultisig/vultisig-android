@@ -1,5 +1,8 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
@@ -19,7 +22,9 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -69,24 +74,62 @@ internal class MayaChainApiImp @Inject constructor(
         interval: String,
         isAffiliate: Boolean,
     ): THORChainSwapQuoteDeserialized {
-        val response = httpClient
-            .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
-                parameter("from_asset", fromAsset)
-                parameter("to_asset", toAsset)
-                parameter("amount", amount)
-                parameter("destination", address)
-                parameter("streaming_interval", interval)
-                parameter("tolerance_bps", TOLERANCE_BPS)
-                if (isAffiliate) {
-                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
+        try {
+            val response = httpClient
+                .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
+                    parameter(
+                        "from_asset",
+                        fromAsset
+                    )
+                    parameter(
+                        "to_asset",
+                        toAsset
+                    )
+                    parameter(
+                        "amount",
+                        amount
+                    )
+                    parameter(
+                        "destination",
+                        address
+                    )
+                    parameter(
+                        "streaming_interval",
+                        interval
+                    )
+                    parameter(
+                        "tolerance_bps",
+                        TOLERANCE_BPS
+                    )
+                    if (isAffiliate) {
+                        parameter(
+                            "affiliate",
+                            THORChainSwaps.AFFILIATE_FEE_ADDRESS
+                        )
+                        parameter(
+                            "affiliate_bps",
+                            THORChainSwaps.AFFILIATE_FEE_RATE
+                        )
+                    }
+                    header(
+                        xClientID,
+                        xClientIDValue
+                    )
                 }
-                header(xClientID, xClientIDValue)
+            if (!response.status.isSuccess()) {
+                return THORChainSwapQuoteDeserialized.Error(
+                    THORChainSwapQuoteError(
+                        HttpStatusCode.fromValue(response.status.value).description
+                    )
+                )
             }
-        return try {
-            THORChainSwapQuoteDeserialized.Result(response.body<THORChainSwapQuote>())
+            return THORChainSwapQuoteDeserialized.Result(response.body<THORChainSwapQuote>())
         } catch (e: Exception) {
-            THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError(response.body<String>()))
+            return THORChainSwapQuoteDeserialized.Error(
+                THORChainSwapQuoteError(
+                    e.message ?: "Unknown error"
+                )
+            )
         }
     }
 
