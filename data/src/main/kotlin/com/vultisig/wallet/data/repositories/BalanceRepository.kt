@@ -243,16 +243,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     val listCosmosBalance = cosmosApi.getBalance(address)
                     listCosmosBalance
                         .find {
-                            it.denom.equals(
-                                "u${coin.ticker.lowercase()}",
-                                ignoreCase = true
-                            ) || it.denom.equals(
-                                "a${coin.ticker.lowercase()}",
-                                ignoreCase = true
-                            ) || it.denom.equals(
-                                coin.contractAddress,
-                                ignoreCase = true,
-                            )
+                            it.hasValidDenom(coin)
                         }
                 }
 
