@@ -35,7 +35,6 @@
     <issue id="TypographyEllipsis" severity="warning" />
     <issue id="TypographyFractions" severity="warning" />
     <issue id="TypographyOther" severity="warning" />
-    <issue id="TypographyQuotes" severity="error" />
     <issue id="Typos" severity="warning" />
     <issue id="UnnecessaryComposedModifier" severity="warning" />
     <issue id="UnusedAttribute" severity="fatal" />
