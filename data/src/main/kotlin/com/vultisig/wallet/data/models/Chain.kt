@@ -104,7 +104,7 @@ val Chain.TssKeysignType: TssKeyType
 val Chain.canSelectTokens: Boolean
     get() = when (this) {
         Chain.MayaChain, Chain.Solana,
-        Chain.Terra, Chain.TerraClassic -> true
+        Chain.Terra, Chain.TerraClassic, Chain.Kujira  -> true
 
         Chain.CronosChain, Chain.ZkSync -> false
         else -> when {
