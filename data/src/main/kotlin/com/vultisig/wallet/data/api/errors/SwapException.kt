@@ -19,6 +19,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("swap is not supported") -> SwapIsNotSupported(error)
                     contains("/fromamount must pass") -> AmountCannotBeZero(error)
                     contains("not enough asset to pay for fees") -> InsufficentSwapAmount(error)
+                    contains("outbound amount does not meet requirements") -> InsufficentSwapAmount(error)
                     contains("failed to simulate swap: pool") -> SwapRouteNotAvailable(error)
                     contains("No available qoutes for the resquested") -> SwapRouteNotAvailable(error)
                     contains("pool does not exist") -> SwapRouteNotAvailable(error)
