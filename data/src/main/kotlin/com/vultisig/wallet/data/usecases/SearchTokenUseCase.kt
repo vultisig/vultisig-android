@@ -26,16 +26,18 @@ internal class SearchTokenUseCaseImpl @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val searchEvmToken: SearchEvmTokenUseCase,
     private val searchSolToken: SearchSolTokenUseCase,
+    private val searchKujiToken: SearchKujiraTokenUseCase,
 ) : SearchTokenUseCase {
     override suspend fun invoke(
         chainId: String,
         contractAddress: String
     ): CoinAndFiatValue? {
         val chain = Chain.fromRaw(chainId)
-        val searchedToken = when (chain.standard) {
-            EVM -> searchEvmToken(chainId, contractAddress)
-            SOL -> searchSolToken(contractAddress)
-            else -> error("search token not supported for ${chain.standard}")
+        val searchedToken = when {
+            chain.standard == EVM -> searchEvmToken(chainId, contractAddress)
+            chain.standard == SOL -> searchSolToken(contractAddress)
+            chain == Chain.Kujira -> searchKujiToken(contractAddress)
+            else -> error("search token not supported for $chain")
         } ?: return null
 
         val rawPrice = searchedToken.price
