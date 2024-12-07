@@ -1,12 +1,14 @@
 package com.vultisig.wallet.ui.models
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -30,5 +32,10 @@ internal class KeySignWrapperViewModel @AssistedInject constructor(
         viewModel.transactionTypeUiModel?.let { transactionUiType ->
             transactionUiModel.update { transactionUiType }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModel.viewModelScope.cancel()
     }
 }

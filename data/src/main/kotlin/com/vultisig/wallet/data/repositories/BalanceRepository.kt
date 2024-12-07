@@ -236,25 +236,46 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
             GaiaChain, Kujira, Dydx, Osmosis, Terra, Noble -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
-                val listCosmosBalance = cosmosApi.getBalance(address)
-                val balance = listCosmosBalance
-                    .find {
-                        it.denom.equals(
-                            "u${coin.ticker.lowercase()}",
-                            ignoreCase = true
-                        ) || it.denom.equals(
-                            "a${coin.ticker.lowercase()}",
-                            ignoreCase = true
-                        )
-                    }
+
+                val balance = if (coin.contractAddress.startsWith("terra")) {
+                    cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
+                } else {
+                    val listCosmosBalance = cosmosApi.getBalance(address)
+                    listCosmosBalance
+                        .find {
+                            it.denom.equals(
+                                "u${coin.ticker.lowercase()}",
+                                ignoreCase = true
+                            ) || it.denom.equals(
+                                "a${coin.ticker.lowercase()}",
+                                ignoreCase = true
+                            ) || it.denom.equals(
+                                coin.contractAddress,
+                                ignoreCase = true,
+                            )
+                        }
+                }
+
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 
             TerraClassic -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
-                val listCosmosBalance = cosmosApi.getBalance(address)
-                val balance = listCosmosBalance
-                    .find { it.denom.equals(coin.chain.feeUnit, ignoreCase = true) }
+
+                val balance = if (coin.contractAddress.startsWith("terra")) {
+                    cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
+                } else {
+                    val listCosmosBalance = cosmosApi.getBalance(address)
+                    listCosmosBalance
+                        .find {
+                            it.denom.equals(coin.chain.feeUnit, ignoreCase = true) ||
+                                    it.denom.equals(
+                                        coin.contractAddress,
+                                        ignoreCase = true,
+                                    )
+                        }
+                }
+
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 

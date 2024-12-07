@@ -53,6 +53,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -164,6 +165,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val featureFlagApi: FeatureFlagApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
+    private val pullTssMessages: PullTssMessagesUseCase,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -197,7 +199,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         get() = KeysignViewModel(
             vault = _currentVault,
             keysignCommittee = _keysignCommittee,
-            serverAddress = _serverAddress,
+            serverUrl = _serverAddress,
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = messagesToSign,
@@ -218,6 +220,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             transactionTypeUiModel = transactionTypeUiModel,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
+            pullTssMessages = pullTssMessages,
         )
 
     val verifyUiModel =

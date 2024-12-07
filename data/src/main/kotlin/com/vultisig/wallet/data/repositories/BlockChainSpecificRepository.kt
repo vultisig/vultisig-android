@@ -20,8 +20,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import timber.log.Timber
+import vultisig.keysign.v1.CosmosIbcDenomTrace
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 
 data class BlockChainSpecificAndUtxo(
     val blockChainSpecific: BlockChainSpecific,
@@ -228,6 +230,19 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val api = cosmosApiFactory.createCosmosApi(chain)
             val account = api.getAccountNumber(address)
 
+            val denomTrace = if (token.contractAddress.startsWith("ibc/")) {
+                val denomTrace = api.getIbcDenomTraces(token.contractAddress)
+                val timeout = Clock.System.now().plus(10.minutes)
+                    .nanosecondsOfSecond
+                CosmosIbcDenomTrace(
+                    path = denomTrace.path,
+                    baseDenom = denomTrace.baseDenom,
+                    latestBlock = "${api.getLatestBlock()}_$timeout",
+                )
+            } else {
+                null
+            }
+
             BlockChainSpecificAndUtxo(
                 BlockChainSpecific.Cosmos(
                     accountNumber = BigInteger(
@@ -236,6 +251,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     ),
                     sequence = BigInteger(account.sequence ?: "0"),
                     gas = gasFee.value,
+                    ibcDenomTraces = denomTrace,
                 )
             )
         }

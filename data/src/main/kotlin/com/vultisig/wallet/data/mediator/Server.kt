@@ -116,8 +116,49 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
                 response
             )
         }
+        service.post("/setup-message/:sessionID") { request, response ->
+            postSetupMessage(
+                request,
+                response
+            )
+        }
+        service.get("/setup-message/:sessionID") { request, response ->
+            getSetupMessage(
+                request,
+                response
+            )
+        }
     }
 
+    private fun getSetupMessage(request: Request, response: Response) {
+        val sessionID = request.params(":sessionID")
+        if (sessionID.isNullOrEmpty()) {
+            response.body("sessionID is empty")
+            response.status(HttpStatusCode.BadRequest.value)
+            return
+        }
+        val key = "setup-$sessionID"
+        cache[key]?.let {
+            val content = it as? String
+            response.body(content)
+            response.status(HttpStatusCode.OK.value)
+        } ?: run {
+            response.status(HttpStatusCode.NotFound.value)
+        }
+    }
+
+    private fun postSetupMessage(request: Request, response: Response) {
+        val sessionID = request.params(":sessionID")
+        if (sessionID.isNullOrEmpty()) {
+            response.body("sessionID is empty")
+            response.status(HttpStatusCode.BadRequest.value)
+            return
+        }
+        Timber.d("upload setup message: %s", sessionID)
+        val key = "setup-$sessionID"
+        cache.put(key, request.body())
+        response.status(HttpStatusCode.Created.value)
+    }
     private fun getPayload(request: Request, response: Response) {
         val hash = request.params(":hash")
         if (hash.isNullOrEmpty()) {
@@ -158,7 +199,7 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             return
         }
         cache.put(hash, request.body())
-        response.status(HttpStatusCode.OK.value)
+        response.status(HttpStatusCode.Created.value)
     }
 
     private fun postStartKeygenOrKeysign(request: Request, response: Response): String {

@@ -487,6 +487,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation" translatable="false">Gas fee calculation failed</string>
     <string name="swap_screen_invalid_quote_calculation" translatable="false">Quote calculation failed</string>
     <string name="backup_password_screen_skip" translatable="false">Skip Password</string>
+    <string name="edit_address_title" translatable="false">Edit Address</string>
     <string name="join_keysign_failed_connect_to_server" translatable="false">Failed connect to server</string>
     <string name="backup_password_screen_empty_password" translatable="false">Please use \"Skip Password\" to save without password</string>
     <string name="network_connection_lost" translatable="false">Network connection lost. Please check your internet connection</string>

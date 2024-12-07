@@ -79,9 +79,16 @@ object SigningHelper {
                     utxo.getPreSignedImageHash(payload)
                 }
 
-                Chain.GaiaChain, Chain.Dydx, Chain.Kujira, Chain.Osmosis,
-                Chain.Terra, Chain.TerraClassic, Chain.Noble -> {
+                Chain.GaiaChain, Chain.Dydx, Chain.Kujira, Chain.Osmosis, Chain.Noble -> {
                     CosmosHelper(
+                        coinType = chain.coinType,
+                        denom = chain.feeUnit,
+                        gasLimit = CosmosHelper.getChainGasLimit(chain),
+                    ).getPreSignedImageHash(payload)
+                }
+
+                Chain.Terra, Chain.TerraClassic -> {
+                    TerraHelper(
                         coinType = chain.coinType,
                         denom = chain.feeUnit,
                         gasLimit = CosmosHelper.getChainGasLimit(chain),
