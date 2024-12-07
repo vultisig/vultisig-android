@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.TOLERANCE_BPS
+import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -25,6 +26,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -52,6 +54,8 @@ interface MayaChainApi {
 
 internal class MayaChainApiImp @Inject constructor(
     private val httpClient: HttpClient,
+    private val thorChainSwapQuoteResponseJsonSerializer: ThorChainSwapQuoteResponseJsonSerializer,
+    private val json: Json,
 ) : MayaChainApi {
 
     private val xClientID = "X-Client-ID"
@@ -77,44 +81,17 @@ internal class MayaChainApiImp @Inject constructor(
         try {
             val response = httpClient
                 .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
-                    parameter(
-                        "from_asset",
-                        fromAsset
-                    )
-                    parameter(
-                        "to_asset",
-                        toAsset
-                    )
-                    parameter(
-                        "amount",
-                        amount
-                    )
-                    parameter(
-                        "destination",
-                        address
-                    )
-                    parameter(
-                        "streaming_interval",
-                        interval
-                    )
-                    parameter(
-                        "tolerance_bps",
-                        TOLERANCE_BPS
-                    )
+                    parameter("from_asset", fromAsset)
+                    parameter("to_asset", toAsset)
+                    parameter("amount", amount)
+                    parameter("destination", address)
+                    parameter("streaming_interval", interval)
+                    parameter("tolerance_bps", TOLERANCE_BPS)
                     if (isAffiliate) {
-                        parameter(
-                            "affiliate",
-                            THORChainSwaps.AFFILIATE_FEE_ADDRESS
-                        )
-                        parameter(
-                            "affiliate_bps",
-                            THORChainSwaps.AFFILIATE_FEE_RATE
-                        )
+                        parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                        parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
                     }
-                    header(
-                        xClientID,
-                        xClientIDValue
-                    )
+                    header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {
                 return THORChainSwapQuoteDeserialized.Error(
@@ -123,7 +100,11 @@ internal class MayaChainApiImp @Inject constructor(
                     )
                 )
             }
-            return THORChainSwapQuoteDeserialized.Result(response.body<THORChainSwapQuote>())
+            val responseRawString = response.body<String>()
+            return json.decodeFromString(
+                thorChainSwapQuoteResponseJsonSerializer,
+                responseRawString
+            )
         } catch (e: Exception) {
             return THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(
