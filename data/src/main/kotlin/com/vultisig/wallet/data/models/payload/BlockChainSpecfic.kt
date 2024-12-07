@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models.payload
 
+import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.SuiCoin
 import java.math.BigInteger
 
@@ -33,6 +34,7 @@ sealed class BlockChainSpecific {
         val accountNumber: BigInteger,
         val sequence: BigInteger,
         val gas: BigInteger,
+        val ibcDenomTraces: CosmosIbcDenomTrace?,
     ) : BlockChainSpecific()
 
     data class Solana(

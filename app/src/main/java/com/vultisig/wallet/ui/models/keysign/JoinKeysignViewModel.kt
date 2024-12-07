@@ -53,6 +53,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -84,6 +85,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.KeysignMessage
 import java.math.BigInteger
+import java.net.UnknownHostException
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -101,6 +103,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data object WrongReShare : JoinKeysignError(R.string.join_keysign_wrong_reshare.asUiText())
     data object InvalidQr : JoinKeysignError(R.string.join_keysign_invalid_qr.asUiText())
     data object FailedToStart : JoinKeysignError(R.string.join_keysign_failed_to_start.asUiText())
+    data object FailedConnectToServer : JoinKeysignError(R.string.join_keysign_failed_connect_to_server.asUiText())
 }
 
 sealed interface JoinKeysignState {
@@ -162,6 +165,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val featureFlagApi: FeatureFlagApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
+    private val pullTssMessages: PullTssMessagesUseCase,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -195,7 +199,7 @@ internal class JoinKeysignViewModel @Inject constructor(
         get() = KeysignViewModel(
             vault = _currentVault,
             keysignCommittee = _keysignCommittee,
-            serverAddress = _serverAddress,
+            serverUrl = _serverAddress,
             sessionId = _sessionID,
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = messagesToSign,
@@ -216,6 +220,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             transactionTypeUiModel = transactionTypeUiModel,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
+            pullTssMessages = pullTssMessages,
         )
 
     val verifyUiModel =
@@ -285,6 +290,9 @@ internal class JoinKeysignViewModel @Inject constructor(
                 } else {
                     currentState.value = JoinKeysignState.DiscoverService
                 }
+            } catch (e: UnknownHostException) {
+                Timber.d(e, "Failed to resolve request")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
                 Timber.d(e, "Failed to parse QR code")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)

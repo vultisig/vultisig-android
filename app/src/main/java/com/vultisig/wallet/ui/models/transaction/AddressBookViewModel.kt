@@ -107,18 +107,29 @@ internal class AddressBookViewModel @Inject constructor(
         }
     }
 
-    fun selectAddress(model: AddressBookEntryUiModel) {
-        if (requestId != null) {
-            viewModelScope.launch {
-                requestResultRepository.respond(requestId, model.model)
-                navigator.navigate(Destination.Back)
-            }
+    fun clickAddress(model: AddressBookEntryUiModel) = viewModelScope.launch {
+        if (state.value.isEditModeEnabled) {
+            editAddress(model.model)
+        } else {
+            selectAddress(model)
         }
+    }
+
+    private suspend fun selectAddress(model: AddressBookEntryUiModel) {
+        if (requestId != null) {
+            requestResultRepository.respond(requestId, model.model)
+            navigator.navigate(Destination.Back)
+        }
+    }
+
+    private suspend fun editAddress(model: AddressBookEntry) {
+        navigator.navigate(Destination.AddressEntry(model.chain.id, model.address))
     }
 
     fun deleteAddress(model: AddressBookEntryUiModel) {
         viewModelScope.launch {
-            addressBookRepository.delete(model.model.chain, model.model.address)
+            addressBookRepository.delete(model.model.chain.id, model.model.address)
+            orderRepository.delete(null, model.model.id)
             loadData()
         }
     }
@@ -129,7 +140,7 @@ internal class AddressBookViewModel @Inject constructor(
 
     fun addAddress() {
         viewModelScope.launch {
-            navigator.navigate(Destination.AddAddressEntry)
+            navigator.navigate(Destination.AddressEntry())
         }
     }
 
