@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.models.SplResponseJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.api.models.SplTokenInfo
+import com.vultisig.wallet.data.api.utils.RpcResponseJson
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import io.ktor.client.HttpClient
@@ -32,6 +33,9 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
 import timber.log.Timber
 import java.math.BigInteger
@@ -49,6 +53,8 @@ interface SolanaApi {
     suspend fun getJupiterTokens(): List<JupiterTokenResponseJson>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
     suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String): String?
+    suspend fun getSlot(): Long
+    suspend fun getBlockhashAtSlot(slot: Long): String?
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -102,6 +108,43 @@ internal class SolanaApiImp @Inject constructor(
         Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
         BigInteger.ZERO
     }
+
+    override suspend fun getSlot() = try {
+        httpClient.postRpc<RpcResponseJson>(
+            rpcEndpoint,
+            "getSlot",
+            params = buildJsonArray {
+                addJsonObject {
+                    put("commitment", "processed")
+                }
+            }
+        ).result?.jsonPrimitive?.long ?: 0
+    } catch (e: Exception) {
+        Timber.e("Error getting BlockHeight: ${e.message}")
+        0
+    }
+
+    override suspend fun getBlockhashAtSlot(slot: Long): String? {
+        val postRpc = httpClient.postRpc<RpcResponseJson>(
+            rpcEndpoint,
+            "getBlock",
+            params = buildJsonArray {
+                add(slot)
+                addJsonObject {
+                    put("encoding", "json")
+                    put("transactionDetails", "none")
+                }
+            }
+        )
+
+        postRpc.error.takeIf { it != null }?.run {
+            if (message.contains("Block not available for slot")) return null
+            else error("getBlockhashAtSlot $message")
+        }
+
+        return postRpc.result?.jsonObject?.get("previousBlockhash")?.jsonPrimitive?.content
+    }
+
 
     override suspend fun getRecentBlockHash(): String {
         val payload = RpcPayload(

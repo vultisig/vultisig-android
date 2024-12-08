@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
+import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.TerraHelper
@@ -86,9 +87,9 @@ internal class KeysignViewModel(
     private val serverUrl: String,
     private val sessionId: String,
     private val encryptionKeyHex: String,
-    private val messagesToSign: List<String>,
+    private var messagesToSign: List<String>,
     private val keyType: TssKeyType,
-    private val keysignPayload: KeysignPayload,
+    private var keysignPayload: KeysignPayload,
     private val thorChainApi: ThorChainApi,
     private val blockChairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
@@ -161,6 +162,8 @@ internal class KeysignViewModel(
             tssInstance = Tss.newService(tssMessenger, localStateAccessor, false)
                 ?: error("Failed to create TSS instance")
 
+            updateMessagesInNecessary()
+
             messagesToSign.forEach { message ->
                 Timber.d("signing message: $message")
                 signMessageWithRetry(tssInstance!!, message, 1)
@@ -177,6 +180,49 @@ internal class KeysignViewModel(
             Timber.e(e)
             currentState.value = KeysignState.Error( e.message ?: "Unknown error")
         }
+    }
+
+    private suspend fun updateMessagesInNecessary() {
+        if (keysignPayload.blockChainSpecific is BlockChainSpecific.Solana) {
+            val currentSlot = solanaApi.getSlot()
+            val newSlot = findUniqueSlot(currentSlot)
+            var commonBlockHash = ""
+            var isBlockhashResponseFound = false
+            delay((newSlot - currentSlot).times(600))
+            while (!isBlockhashResponseFound) {
+                val blockhashAtSlot = try {
+                    solanaApi.getBlockhashAtSlot(newSlot)
+                } catch (e: Exception) {
+                    Timber.d(e)
+                    isBlockhashResponseFound = true
+                    ""
+                }
+                if (blockhashAtSlot != null) {
+                    isBlockhashResponseFound = true
+                    commonBlockHash = blockhashAtSlot
+                }
+                delay(3000)
+            }
+
+            if (commonBlockHash.isNotEmpty()) {
+                keysignPayload = keysignPayload.copy(
+                    blockChainSpecific = (keysignPayload.blockChainSpecific as BlockChainSpecific.Solana).copy(
+                        recentBlockHash = commonBlockHash
+                    )
+                )
+
+                val newMessages = SigningHelper.getKeysignMessages(
+                    payload = keysignPayload,
+                    vault = vault,
+                )
+                messagesToSign = newMessages
+            }
+        }
+    }
+
+
+    private fun findUniqueSlot(currentSlot: Long): Long {
+        return ((currentSlot + 27) / 30 + 1) * 30
     }
 
     private suspend fun checkThorChainTxResult() {
