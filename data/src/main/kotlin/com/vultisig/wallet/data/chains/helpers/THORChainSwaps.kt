@@ -22,7 +22,7 @@ class THORChainSwaps(
     companion object {
         const val AFFILIATE_FEE_ADDRESS = "va"
         const val AFFILIATE_FEE_RATE = "50" // 50 BP
-        const val TOLERANCE_BPS = "50"
+        const val TOLERANCE_BPS = "100"
     }
 
     private fun getPreSignedInputData(
