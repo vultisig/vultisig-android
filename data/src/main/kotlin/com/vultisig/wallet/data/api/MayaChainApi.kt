@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -18,7 +19,10 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -46,6 +50,8 @@ interface MayaChainApi {
 
 internal class MayaChainApiImp @Inject constructor(
     private val httpClient: HttpClient,
+    private val thorChainSwapQuoteResponseJsonSerializer: ThorChainSwapQuoteResponseJsonSerializer,
+    private val json: Json,
 ) : MayaChainApi {
 
     private val xClientID = "X-Client-ID"
@@ -68,23 +74,38 @@ internal class MayaChainApiImp @Inject constructor(
         interval: String,
         isAffiliate: Boolean,
     ): THORChainSwapQuoteDeserialized {
-        val response = httpClient
-            .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
-                parameter("from_asset", fromAsset)
-                parameter("to_asset", toAsset)
-                parameter("amount", amount)
-                parameter("destination", address)
-                parameter("streaming_interval", interval)
-                if (isAffiliate) {
-                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
+        try {
+            val response = httpClient
+                .get("https://mayanode.mayachain.info/mayachain/quote/swap") {
+                    parameter("from_asset", fromAsset)
+                    parameter("to_asset", toAsset)
+                    parameter("amount", amount)
+                    parameter("destination", address)
+                    parameter("streaming_interval", interval)
+                    if (isAffiliate) {
+                        parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                        parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
+                    }
+                    header(xClientID, xClientIDValue)
                 }
-                header(xClientID, xClientIDValue)
+            if (!response.status.isSuccess()) {
+                return THORChainSwapQuoteDeserialized.Error(
+                    THORChainSwapQuoteError(
+                        HttpStatusCode.fromValue(response.status.value).description
+                    )
+                )
             }
-        return try {
-            THORChainSwapQuoteDeserialized.Result(response.body<THORChainSwapQuote>())
+            val responseRawString = response.body<String>()
+            return json.decodeFromString(
+                thorChainSwapQuoteResponseJsonSerializer,
+                responseRawString
+            )
         } catch (e: Exception) {
-            THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError(response.body<String>()))
+            return THORChainSwapQuoteDeserialized.Error(
+                THORChainSwapQuoteError(
+                    e.message ?: "Unknown error"
+                )
+            )
         }
     }
 
