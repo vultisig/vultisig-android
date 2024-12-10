@@ -50,6 +50,7 @@ internal data class VerifyTransactionUiModel(
     val blowfishShow: Boolean = false,
     val blowfishWarnings: List<String> = emptyList(),
     val hasFastSign: Boolean = false,
+    val functionName: String? = null,
 ) {
     val hasAllConsents: Boolean
         get() = consentAddress && consentAmount && consentDst

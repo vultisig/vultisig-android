@@ -173,6 +173,11 @@ internal fun VerifyTransactionScreen(
                             title = stringResource(R.string.verify_transaction_memo_title),
                             value = state.transaction.memo
                         )
+                    if (!state.functionName.isNullOrEmpty())
+                        OtherField(
+                            title = stringResource(R.string.deposit_screen_title),
+                            value = state.functionName
+                        )
 
                     OtherField(
                         title = stringResource(R.string.verify_transaction_amount_title),
