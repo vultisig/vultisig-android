@@ -46,7 +46,7 @@ internal class SuiApiImpl @Inject constructor(
             method = "suix_getBalance",
             params = buildJsonArray {
                 add(address)
-                if (contractAddress != "")
+                if (contractAddress.isNotEmpty())
                     add(contractAddress)
             }
         )
