@@ -217,6 +217,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                             )
                         }
                     }.awaitAll().associate { (contractAddress, priceInUsd) ->
+                        //Since Lifi provides prices in USD, we use USDT to convert them into the local currency
                         contractAddress to mapOf(currency to priceInUsd * tetherPrice)
                     }
                 coinGeckoContractsPrice + lifiContractsPrice
