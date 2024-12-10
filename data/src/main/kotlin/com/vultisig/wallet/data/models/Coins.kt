@@ -1431,6 +1431,17 @@ object Coins {
         ),
         Coin(
             chain = Chain.Kujira,
+            ticker = "NAMI",
+            logo = "nami",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "nami-protocol",
+            contractAddress = "factory/kujira13x2l25mpkhwnwcwdzzd34cr8fyht9jlj7xu9g4uffe36g3fmln8qkvm3qn/unami",
+            isNativeToken = false
+        ),
+        Coin(
+            chain = Chain.Kujira,
             ticker = "ASTRO",
             logo = "astro",
             address = "",
