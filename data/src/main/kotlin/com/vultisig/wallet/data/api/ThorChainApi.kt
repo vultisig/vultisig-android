@@ -9,7 +9,6 @@ import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.TOLERANCE_BPS
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
@@ -100,7 +99,6 @@ internal class ThorChainApiImpl @Inject constructor(
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", interval)
-                    parameter("tolerance_bps", TOLERANCE_BPS)
                     if (isAffiliate) {
                         parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                         parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)

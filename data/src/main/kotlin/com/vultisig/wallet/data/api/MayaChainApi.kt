@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
@@ -12,7 +11,6 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.TOLERANCE_BPS
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -86,7 +84,6 @@ internal class MayaChainApiImp @Inject constructor(
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", interval)
-                    parameter("tolerance_bps", TOLERANCE_BPS)
                     if (isAffiliate) {
                         parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                         parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
