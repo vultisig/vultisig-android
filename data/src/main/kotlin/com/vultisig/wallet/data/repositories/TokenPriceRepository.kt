@@ -161,7 +161,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         tokenIdToPrices: Map<String, CurrencyToPrice>,
         currency: String,
     ) {
-        tokenIdToPrices.forEach { (tokenId, currencyToPrice) ->
+        val tokenIdToPricesFiltered = tokenIdToPrices.filter {
+                (_, currencyToPrice) -> currencyToPrice.isNotEmpty()
+        }
+        tokenIdToPricesFiltered.forEach { (tokenId, currencyToPrice) ->
             currencyToPrice[currency]?.toPlainString()?.let { price ->
                 tokenPriceDao.insertTokenPrice(
                     TokenPriceEntity(
@@ -173,7 +176,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             }
         }
 
-        tokenIdToPrice.update { it + tokenIdToPrices }
+        tokenIdToPrice.update { it + tokenIdToPricesFiltered }
     }
 
     private suspend fun fetchPricesWithContractAddress(
