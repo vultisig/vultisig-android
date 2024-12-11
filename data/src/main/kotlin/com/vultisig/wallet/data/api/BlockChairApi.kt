@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.models.SuggestedTransactionFeeDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -28,7 +27,7 @@ interface BlockChairApi {
     ): BlockChairInfo?
 
     suspend fun getBlockChairStats(chain: Chain): BigInteger
-    suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String
+    suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String
 }
 
 internal class BlockChairApiImp @Inject constructor(
@@ -44,8 +43,6 @@ internal class BlockChairApiImp @Inject constructor(
         Chain.Dash -> "dash"
         else -> throw IllegalArgumentException("Unsupported chain $chain")
     }
-
-    private fun getChainName(coin: Coin): String = getChainName(coin.chain)
 
     override suspend fun getAddressInfo(
         chain: Chain,
@@ -73,13 +70,13 @@ internal class BlockChairApiImp @Inject constructor(
         return response.body<SuggestedTransactionFeeDataJson>().data.value
     }
 
-    override suspend fun broadcastTransaction(coin: Coin, signedTransaction: String): String {
+    override suspend fun broadcastTransaction(chain: Chain, signedTransaction: String): String {
         val bodyContent = json.encodeToString(
             TransactionHashRequestBodyJson(signedTransaction)
         )
         Timber.d("bodyContent:$bodyContent")
         val response =
-            httpClient.post("https://api.vultisig.com/blockchair/${getChainName(coin)}/push/transaction") {
+            httpClient.post("https://api.vultisig.com/blockchair/${getChainName(chain)}/push/transaction") {
                 header("Content-Type", "application/json")
                 setBody(bodyContent)
             }

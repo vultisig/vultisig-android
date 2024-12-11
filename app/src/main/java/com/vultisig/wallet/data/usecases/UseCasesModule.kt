@@ -12,6 +12,12 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
+    fun bindBroadcastTxUseCase(
+        impl: BroadcastTxUseCaseImpl
+    ): BroadcastTxUseCase
+
+    @Binds
+    @Singleton
     fun bindConvertTokenValueToFiatUseCase(
         impl: ConvertTokenValueToFiatUseCaseImpl
     ): ConvertTokenValueToFiatUseCase
