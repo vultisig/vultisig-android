@@ -266,7 +266,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             "${chain.swapAssetName()}.${ticker}"
         }
     } else {
-        "${chain.swapAssetName()}.${ticker}-${contractAddress}"
+        if (chain == Chain.Kujira && (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))) {
+            "${chain.swapAssetName()}.${ticker}"
+        } else
+            "${chain.swapAssetName()}.${ticker}-${contractAddress}"
     }
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
