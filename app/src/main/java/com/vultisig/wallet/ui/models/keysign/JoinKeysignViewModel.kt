@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
@@ -44,7 +45,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.EtherfaceRepository
+import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -168,7 +169,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
     private val pullTssMessages: PullTssMessagesUseCase,
-    private val etherfaceRepository: EtherfaceRepository,
+    private val fourByteRepository: FourByteRepository,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -565,7 +566,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
                     )
                     transactionScan(transaction)
-                    transactionFunction(payload.memo ?: "")
+                    transactionFunctionName(payload.memo ?: "", chain)
                 }
             }
         }
@@ -714,16 +715,17 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private fun transactionScan(transaction: Transaction) {}
 
-    private fun transactionFunction(memo: String){
+    private fun transactionFunctionName(memo: String, chain: Chain) {
         viewModelScope.launch {
-                val functionName = etherfaceRepository.decodeFunction(memo)
-                verifyUiModel.update { state ->
-                    (state as VerifyUiModel.Send).copy(
-                        model = state.model.copy(
-                            functionName = functionName
-                        )
+            if (chain.standard != TokenStandard.EVM) return@launch
+            val functionName = fourByteRepository.decodeFunction(memo)
+            verifyUiModel.update { state ->
+                (state as VerifyUiModel.Send).copy(
+                    model = state.model.copy(
+                        functionName = functionName
                     )
-                }
+                )
+            }
         }
     }
 }

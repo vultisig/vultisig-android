@@ -124,6 +124,6 @@ internal interface ApiModule {
     @Binds
     @Singleton
     fun bindEtherfaceApi(
-        impl: EtherfaceApiImpl
-    ): EtherfaceApi
+        impl: FourByteApiImpl
+    ): FourByteApi
 }

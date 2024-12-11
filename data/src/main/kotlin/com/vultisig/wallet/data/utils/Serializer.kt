@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.utils
 
+import com.vultisig.wallet.data.api.models.FourByteResponse
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
@@ -28,11 +29,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
-import javax.inject.Singleton
 
 interface DefaultSerializer<T> : KSerializer<T> {
     override fun serialize(encoder: Encoder, value: T) {
@@ -217,5 +216,19 @@ class CosmosThorChainResponseSerializerImpl @Inject constructor(
                 json.decodeFromJsonElement<THORChainAccountJson>(jsonObject)
             )
         }
+    }
+}
+
+interface FourByteResponseSerializer : DefaultSerializer<FourByteResponse>
+
+class FourByteResponseSerializerImpl @Inject constructor(
+    private val json: Json,
+) : FourByteResponseSerializer {
+    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("FourByteResponse")
+
+    override fun deserialize(decoder: Decoder): FourByteResponse {
+        val input = decoder as JsonDecoder
+        val jsonObject = input.decodeJsonElement().jsonObject
+        return json.decodeFromJsonElement<FourByteResponse>(jsonObject)
     }
 }

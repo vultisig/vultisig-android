@@ -225,7 +225,7 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindEtherfaceRepository(
-        impl: EtherfaceRepositoryImpl
-    ): EtherfaceRepository
+    fun bindFourByteRepository(
+        impl: FourByteRepositoryImpl
+    ): FourByteRepository
 }
