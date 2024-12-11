@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class LiQuestResponseJson(
     @SerialName("priceUSD")
-    val priceUSD: String,
+    val priceUsd: String,
 )

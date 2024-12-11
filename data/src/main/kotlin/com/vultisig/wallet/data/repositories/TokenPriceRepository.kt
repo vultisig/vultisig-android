@@ -218,7 +218,9 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                         }
                     }.awaitAll().associate { (contractAddress, priceInUsd) ->
                         //Since Lifi provides prices in USD, we use USDT to convert them into the local currency
-                        contractAddress to mapOf(currency to priceInUsd * tetherPrice)
+                        contractAddress to mapOf(
+                            currency to (priceInUsd?.times(tetherPrice) ?: BigDecimal.ZERO)
+                        )
                     }
                 coinGeckoContractsPrice + lifiContractsPrice
             }
@@ -228,14 +230,14 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     private suspend fun getLifiContractPriceInUsd(
         chain: Chain,
         contract: String,
-    ): BigDecimal = try {
+    ): BigDecimal? = try {
         BigDecimal(
             liQuestApi.getLifiContractPriceUsd(
                 chain, contract
-            ).priceUSD
+            ).priceUsd
         )
     } catch (e: Exception) {
-        BigDecimal.ZERO
+        null
     }
 
     private suspend fun fetchPriceWithContractAddress(
