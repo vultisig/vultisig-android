@@ -1552,6 +1552,17 @@ object Coins {
             isNativeToken = true,
         ),
         Coin(
+            chain = Chain.Sui,
+            ticker = "Eth",
+            logo = "eth",
+            address = "",
+            decimal = 8,
+            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "0xd0e89b2af5e4910726fbcd8b8dd37bb79b29e5f83f7491bca830e94f7f226d29::eth::ETH",
+            isNativeToken = false,
+        ),
+        Coin(
             chain = Chain.Ton,
             ticker = "TON",
             logo = "ton",

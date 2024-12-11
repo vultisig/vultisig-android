@@ -17,7 +17,8 @@ import javax.inject.Inject
 interface SuiApi {
 
     suspend fun getBalance(
-        address: String
+        address: String,
+        contractAddress: String,
     ): BigInteger
 
     suspend fun getReferenceGasPrice(): BigInteger
@@ -39,12 +40,14 @@ internal class SuiApiImpl @Inject constructor(
 
     private val rpcUrl = "https://sui-rpc.publicnode.com"
 
-    override suspend fun getBalance(address: String): BigInteger {
+    override suspend fun getBalance(address: String, contractAddress: String): BigInteger {
         val response = http.postRpc<RpcResponseJson>(
             url = rpcUrl,
             method = "suix_getBalance",
             params = buildJsonArray {
                 add(address)
+                if (contractAddress.isNotEmpty())
+                    add(contractAddress)
             }
         )
 
