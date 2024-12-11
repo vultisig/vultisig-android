@@ -496,4 +496,6 @@
     <string name="select_vault_type_secure_vault_point_0">2of3, 3of4, 4of6  device setups available</string>
     <string name="select_vault_type_secure_vault_point_1">One backup per device</string>
     <string name="select_vault_type_secure_vault_point_2">Redundant, Secure</string>
+    <string name="verify_sign_message_method_field_title">Method</string>
+    <string name="verify_sign_message_message_field_title">Message</string>
 </resources>

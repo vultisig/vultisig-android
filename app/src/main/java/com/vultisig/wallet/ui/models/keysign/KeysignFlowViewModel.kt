@@ -16,19 +16,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.api.BlockChairApi
-import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
-import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
-import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
@@ -51,6 +44,7 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
@@ -108,14 +102,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
-    private val blockChairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
-    private val mayaChainApi: MayaChainApi,
-    private val cosmosApiFactory: CosmosApiFactory,
-    private val solanaApi: SolanaApi,
-    private val polkadotApi: PolkadotApi,
-    private val suiApi: SuiApi,
-    private val tonApi: TonApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
     @ApplicationContext private val context: Context,
@@ -134,6 +121,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val generateServiceName: GenerateServiceName,
     private val routerApi: RouterApi,
     private val pullTssMessages: PullTssMessagesUseCase,
+    private val broadcastTx: BroadcastTxUseCase,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -185,16 +173,10 @@ internal class KeysignFlowViewModel @Inject constructor(
             keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
             keysignPayload = _keysignPayload!!,
             thorChainApi = thorChainApi,
-            blockChairApi = blockChairApi,
+            broadcastTx = broadcastTx,
             evmApiFactory = evmApiFactory,
-            mayaChainApi = mayaChainApi,
-            cosmosApiFactory = cosmosApiFactory,
-            solanaApi = solanaApi,
-            polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
-            suiApi = suiApi,
-            tonApi = tonApi,
             navigator = navigator,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
