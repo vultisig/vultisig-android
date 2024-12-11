@@ -289,7 +289,10 @@ internal class BalanceRepositoryImpl @Inject constructor(
             }
             Polkadot -> polkadotApi.getBalance(address)
 
-            Sui -> suiApi.getBalance(address)
+            Sui -> suiApi.getBalance(
+                address,
+                coin.contractAddress
+            )
 
             Ton -> tonApi.getBalance(address)
 
