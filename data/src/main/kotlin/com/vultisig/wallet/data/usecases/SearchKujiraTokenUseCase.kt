@@ -16,10 +16,13 @@ internal class SearchKujiraTokenUseCaseImpl @Inject constructor(
     private val httpClient: HttpClient,
 ) : SearchKujiraTokenUseCase {
 
-    private val findKujiraUrl = "https://kujira-rest.publicnode.com/cosmwasm/wasm/v1/contract/"
+    companion object {
+        private const val findKujiraUrl =
+            "https://kujira-rest.publicnode.com/cosmwasm/wasm/v1/contract/"
+    }
 
     override suspend operator fun invoke(contractAddress: String): CoinAndPrice? {
-        val searchedToken: ContractData? = try {
+        val searchedToken: ContractDataJson? = try {
             searchToken(contractAddress)
         } catch (e: Exception) {
             null
@@ -28,7 +31,7 @@ internal class SearchKujiraTokenUseCaseImpl @Inject constructor(
         return CoinAndPrice(searchedToken.toCoin(), BigDecimal.ZERO)
     }
 
-    private suspend fun searchToken(contractAddress: String): ContractData {
+    private suspend fun searchToken(contractAddress: String): ContractDataJson {
        var normalizedAddress= if (contractAddress.contains("factory/")) {
             contractAddress.split("/")[1]
         } else {
@@ -39,9 +42,9 @@ internal class SearchKujiraTokenUseCaseImpl @Inject constructor(
     }
 
 
-    private fun ContractData.toCoin() = Coin(
+    private fun ContractDataJson.toCoin() = Coin(
         chain = Chain.Kujira,
-        ticker = contractInfo.label,
+        ticker = contractInfoJson.label,
         logo = "",
         address = "",
         hexPublicKey = "",
@@ -53,15 +56,15 @@ internal class SearchKujiraTokenUseCaseImpl @Inject constructor(
 }
 
 @Serializable
-private data class ContractInfo(
+private data class ContractInfoJson(
     @SerialName("label")
     val label: String,
 )
 
 @Serializable
-private data class ContractData(
+private data class ContractDataJson(
     @SerialName("contract_info")
-    val contractInfo: ContractInfo,
+    val contractInfoJson: ContractInfoJson,
     @SerialName("address")
     val address: String,
 )
