@@ -9,10 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -58,16 +58,14 @@ internal class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        val systemBarStyle = SystemBarStyle.auto(
+            Colors.Default.oxfordBlue800.toArgb(),
+            Colors.Default.oxfordBlue800.toArgb(),
+        ) { true }
 
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                Colors.Default.oxfordBlue800.toArgb(),
-                Colors.Default.oxfordBlue800.toArgb(),
-            ) { true },
-            navigationBarStyle = SystemBarStyle.auto(
-                Colors.Default.oxfordBlue800.toArgb(),
-                Colors.Default.oxfordBlue800.toArgb(),
-            ) { true },
+            statusBarStyle = systemBarStyle,
+            navigationBarStyle = systemBarStyle,
         )
 
         setContent {
@@ -81,26 +79,22 @@ internal class MainActivity : AppCompatActivity() {
                         navController.route(it.dst.route, it.opts)
                     }
                 }
-
-                Surface(
-                    color = Colors.Default.oxfordBlue800,
+                Box(
+                    modifier = Modifier
+                        .background(color = Colors.Default.oxfordBlue800)
+                        .safeDrawingPadding()
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .safeDrawingPadding()
-                    ) {
-                        SetupNavGraph(
-                            navController = navController,
-                            startDestination = screen,
-                        )
+                    SetupNavGraph(
+                        navController = navController,
+                        startDestination = screen,
+                    )
 
-                        BiometryAuthScreen()
+                    BiometryAuthScreen()
 
-                        SnackbarHost(
-                            modifier = Modifier.align(Alignment.BottomCenter),
-                            hostState = mainViewModel.snakeBarHostState
-                        )
-                    }
+                    SnackbarHost(
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        hostState = mainViewModel.snakeBarHostState
+                    )
                 }
             }
         }
