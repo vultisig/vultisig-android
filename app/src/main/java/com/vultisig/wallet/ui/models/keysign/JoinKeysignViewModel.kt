@@ -386,8 +386,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
 
                         val swapTransaction = SwapTransactionUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            srcTokenValue = "${mapTokenValueToStringWithUnit(srcTokenValue)} (${srcToken.chain})",
+                            dstTokenValue = "${mapTokenValueToStringWithUnit(dstTokenValue)} (${dstToken.chain})",
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -421,8 +421,8 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
                         val swapTransactionUiModel = SwapTransactionUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            srcTokenValue = "${mapTokenValueToStringWithUnit(srcTokenValue)} (${srcToken.chain})",
+                            dstTokenValue = "${mapTokenValueToStringWithUnit(dstTokenValue)} (${dstToken.chain})",
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -456,8 +456,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                         val estimatedFee =
                             convertTokenValueToFiat(dstToken, quote.fees, currency)
                         val swapTransactionUiModel = SwapTransactionUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            srcTokenValue = "${mapTokenValueToStringWithUnit(srcTokenValue)} (${srcToken.chain})",
+                            dstTokenValue = "${mapTokenValueToStringWithUnit(dstTokenValue)} (${dstToken.chain})",
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -491,13 +491,15 @@ internal class JoinKeysignViewModel @Inject constructor(
                         fromAddress = payload.coin.address,
                         // TODO toAddress is empty on ios, get node address from memo
                         nodeAddress = payload.toAddress,
-                        srcTokenValue = mapTokenValueToStringWithUnit(
-                            TokenValue(
-                                value = payload.toAmount,
-                                token = payload.coin,
-                            )
+                        srcTokenValue = "${
+                            mapTokenValueToStringWithUnit(
+                                TokenValue(
+                                    value = payload.toAmount,
+                                    token = payload.coin,
+                                )
 
-                        ),
+                            )
+                        } (${payload.coin.chain})",
                         estimatedFees = mapTokenValueToStringWithUnit(
                             TokenValue(
                                 value = fee,
