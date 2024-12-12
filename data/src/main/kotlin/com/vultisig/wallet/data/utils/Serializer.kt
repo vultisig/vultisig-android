@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.utils
 
-import com.vultisig.wallet.data.api.models.FourByteResponse
+import com.vultisig.wallet.data.api.models.FourByteResponseJson
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
@@ -216,19 +216,5 @@ class CosmosThorChainResponseSerializerImpl @Inject constructor(
                 json.decodeFromJsonElement<THORChainAccountJson>(jsonObject)
             )
         }
-    }
-}
-
-interface FourByteResponseSerializer : DefaultSerializer<FourByteResponse>
-
-class FourByteResponseSerializerImpl @Inject constructor(
-    private val json: Json,
-) : FourByteResponseSerializer {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("FourByteResponse")
-
-    override fun deserialize(decoder: Decoder): FourByteResponse {
-        val input = decoder as JsonDecoder
-        val jsonObject = input.decodeJsonElement().jsonObject
-        return json.decodeFromJsonElement<FourByteResponse>(jsonObject)
     }
 }

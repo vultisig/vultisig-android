@@ -58,10 +58,4 @@ internal interface SerializerModule {
     fun bindOneInchSwapQuoteResponseJsonSerializer(
         impl: OneInchSwapQuoteResponseJsonSerializerImpl,
     ): OneInchSwapQuoteResponseJsonSerializer
-
-    @Binds
-    @Singleton
-    fun bindFourByteResponseSerializer(
-        impl: FourByteResponseSerializerImpl,
-    ): FourByteResponseSerializer
 }

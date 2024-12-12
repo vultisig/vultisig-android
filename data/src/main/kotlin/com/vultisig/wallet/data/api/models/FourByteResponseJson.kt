@@ -4,13 +4,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class FourByteResponse (
+internal data class FourByteResponseJson (
     @SerialName("results")
-    val list: List<FourByteResponceItem>
+    val list: List<FourByteResponseItem>
 )
 
 @Serializable
-data class FourByteResponceItem (
+internal data class FourByteResponseItem (
     @SerialName("id")
     val id: Int,
     @SerialName("created_at")

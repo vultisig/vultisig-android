@@ -566,7 +566,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
                     )
                     transactionScan(transaction)
-                    transactionFunctionName(payload.memo ?: "", chain)
+                    transactionFunctionName(payload.memo, chain)
                 }
             }
         }
@@ -715,9 +715,9 @@ internal class JoinKeysignViewModel @Inject constructor(
 
     private fun transactionScan(transaction: Transaction) {}
 
-    private fun transactionFunctionName(memo: String, chain: Chain) {
+    private fun transactionFunctionName(memo: String?, chain: Chain) {
+        if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return
         viewModelScope.launch {
-            if (chain.standard != TokenStandard.EVM) return@launch
             val functionName = fourByteRepository.decodeFunction(memo)
             verifyUiModel.update { state ->
                 (state as VerifyUiModel.Send).copy(
