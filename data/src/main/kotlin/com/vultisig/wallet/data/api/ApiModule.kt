@@ -120,4 +120,10 @@ internal interface ApiModule {
     fun bindRouterApi(
         impl: RouterApiImp,
     ): RouterApi
+
+    @Binds
+    @Singleton
+    fun bindFourByteApi(
+        impl: FourByteApiImpl
+    ): FourByteApi
 }

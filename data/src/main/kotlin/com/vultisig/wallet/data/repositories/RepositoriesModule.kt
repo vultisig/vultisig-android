@@ -223,4 +223,9 @@ internal interface RepositoriesModule {
         impl: VaultMetadataRepoImpl
     ): VaultMetadataRepo
 
+    @Binds
+    @Singleton
+    fun bindFourByteRepository(
+        impl: FourByteRepositoryImpl
+    ): FourByteRepository
 }
