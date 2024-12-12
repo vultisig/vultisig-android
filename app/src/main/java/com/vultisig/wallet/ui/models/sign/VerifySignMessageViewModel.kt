@@ -3,12 +3,11 @@ package com.vultisig.wallet.ui.models.sign
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
-import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
@@ -33,8 +32,7 @@ internal data class VerifySignMessageUiModel(
 internal class VerifySignMessageViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val sendNavigator: Navigator<SendDst>,
-    private val mapTransactionToUiModel: DepositTransactionToUiModelMapper,
-    private val depositTransactionRepository: DepositTransactionRepository,
+    private val customMessagePayloadRepo: CustomMessagePayloadRepo,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
@@ -47,15 +45,18 @@ internal class VerifySignMessageViewModel @Inject constructor(
     private val vaultId: String? = savedStateHandle[SendDst.ARG_VAULT_ID]
 
     init {
-//        viewModelScope.launch {
-//            val transaction = depositTransactionRepository.getTransaction(transactionId)
-//
-//            state.update {
-//                it.copy(
-//                    depositTransactionUiModel = mapTransactionToUiModel(transaction)
-//                )
-//            }
-//        }
+        viewModelScope.launch {
+            val payload = customMessagePayloadRepo.get(transactionId)!!.payload
+
+            state.update {
+                it.copy(
+                    model = SignMessageTransactionUiModel(
+                        method = payload.method,
+                        message = payload.message,
+                    )
+                )
+            }
+        }
 
         loadFastSign()
         loadPassword()

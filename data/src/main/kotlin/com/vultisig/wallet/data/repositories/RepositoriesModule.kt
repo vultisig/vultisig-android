@@ -21,6 +21,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindCustomMessagePayloadRepo(
+        impl: CustomMessagePayloadRepoImpl
+    ): CustomMessagePayloadRepo
+
+    @Binds
+    @Singleton
     fun bindChainAccountAddressRepository(
         impl: ChainAccountAddressRepositoryImpl,
     ): ChainAccountAddressRepository

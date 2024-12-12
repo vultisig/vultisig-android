@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
-import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
@@ -704,12 +703,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
                     }
                     customMessagePayload != null -> {
-                        messagesToSign = listOf(
-                            customMessagePayload!!.message
-                                .toByteArray()
-                                .toKeccak256ByteArray()
-                                .toHexString()
-                        )
+                        messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
                     }
                 }
 

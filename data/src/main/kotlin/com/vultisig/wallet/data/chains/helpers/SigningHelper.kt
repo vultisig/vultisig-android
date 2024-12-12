@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
@@ -10,9 +13,19 @@ import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.wallet.OneInchSwap
+import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
 
 object SigningHelper {
+
+    fun getKeysignMessages(
+        messagePayload: CustomMessagePayload
+    ): List<String> = listOf(
+        messagePayload.message
+            .toByteArray()
+            .toKeccak256ByteArray()
+            .toHexString()
+    )
 
     fun getKeysignMessages(
         payload: KeysignPayload,
@@ -97,7 +110,8 @@ object SigningHelper {
                 }
 
                 Chain.MayaChain -> {
-                    val mayaChainHelper = ThorChainHelper.maya(vault.pubKeyECDSA, vault.hexChainCode)
+                    val mayaChainHelper =
+                        ThorChainHelper.maya(vault.pubKeyECDSA, vault.hexChainCode)
                     mayaChainHelper.getPreSignedImageHash(payload)
                 }
 
