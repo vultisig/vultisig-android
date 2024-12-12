@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
+import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.TerraHelper
@@ -435,6 +436,15 @@ internal class KeysignViewModel(
                     vaultHexPublicKey = vault.pubKeyEDDSA,
                     payload = keysignPayload,
                     signatures = signatures,
+                )
+            }
+            Chain.Ripple -> {
+                return RippleHelper.getSignedTransaction(
+                    vaultHexPubKey = vault.pubKeyECDSA,
+                    vaultHexChainCode = vault.hexChainCode,
+                    keysignPayload = keysignPayload,
+                    signatures = signatures,
+                    vault = vault
                 )
             }
         }

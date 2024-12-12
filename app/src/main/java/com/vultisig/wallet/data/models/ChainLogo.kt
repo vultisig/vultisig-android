@@ -32,4 +32,5 @@ internal val Chain.logo: Int
         Chain.Terra -> R.drawable.luna
         Chain.TerraClassic -> R.drawable.lunc
         Chain.Noble -> R.drawable.noble
+        Chain.Noble -> R.drawable.noble
     }

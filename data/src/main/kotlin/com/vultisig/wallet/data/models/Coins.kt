@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.Chain.BscChain
+import com.vultisig.wallet.data.models.Chain.Ripple
 import com.vultisig.wallet.data.models.Chain.Terra
 import com.vultisig.wallet.data.models.Chain.TerraClassic
 
@@ -1679,7 +1680,19 @@ object Coins {
                 isNativeToken = false,
                 address = "",
                 hexPublicKey = "",
+            ),
+            Coin(
+                chain = Ripple,
+                ticker = "XRP",
+                logo = "xrp",
+                decimal = 6,
+                priceProviderID = "ripple",
+                contractAddress = "",
+                isNativeToken = true,
+                address = "",
+                hexPublicKey = "",
             )
         )
+
 
 }

@@ -112,6 +112,8 @@ object SigningHelper {
                 Chain.Ton -> {
                     TonHelper.getPreSignedImageHash(payload)
                 }
+
+                Chain.Ripple -> TODO()
             }
         }
 
