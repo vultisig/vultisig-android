@@ -52,6 +52,8 @@ enum class Chain(
     Polkadot("Polkadot", SUBSTRATE, "DOT"),
     Sui("Sui", SUI, "SUI"),
     Ton("Ton", TON, "TON"),
+
+    Ripple("ripple",TokenStandard.RIPPLE, "XRP"),
     ;
 
     val id: String
@@ -93,6 +95,7 @@ val Chain.coinType: CoinType
         Chain.Terra -> CoinType.TERRAV2
         Chain.TerraClassic -> CoinType.TERRA
         Chain.Noble -> CoinType.NOBLE
+        Chain.Ripple -> CoinType.XRP
     }
 
 val Chain.TssKeysignType: TssKeyType
@@ -185,5 +188,6 @@ fun Chain.swapAssetName(): String {
         Chain.Terra -> "LUNA"
         Chain.TerraClassic -> "LUNC"
         Chain.Noble -> "USDC"
+        Chain.Ripple -> "XRP"
     }
 }

@@ -112,10 +112,13 @@ object SigningHelper {
                 Chain.Ton -> {
                     TonHelper.getPreSignedImageHash(payload)
                 }
+
+                Chain.Ripple -> {
+                    RippleHelper.getPreSignedImageHash(payload)
+                }
             }
         }
 
         return messages.sorted()
     }
-
 }

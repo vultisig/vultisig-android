@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
@@ -19,6 +20,7 @@ import com.vultisig.wallet.data.chains.helpers.CosmosHelper
 import com.vultisig.wallet.data.chains.helpers.ERC20Helper
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
+import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.TerraHelper
@@ -98,6 +100,7 @@ internal class KeysignViewModel(
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
+    private val rippleApi:RippleApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
@@ -306,6 +309,10 @@ internal class KeysignViewModel(
             Chain.Ton -> {
                 tonApi.broadcastTransaction(signedTransaction.rawTransaction)
             }
+
+            Chain.Ripple -> {
+                rippleApi.broadcastTransaction(signedTransaction.rawTransaction)
+            }
         }
         Timber.d("transaction hash: $txHash")
         if (txHash != null) {
@@ -434,6 +441,12 @@ internal class KeysignViewModel(
                 return TonHelper.getSignedTransaction(
                     vaultHexPublicKey = vault.pubKeyEDDSA,
                     payload = keysignPayload,
+                    signatures = signatures,
+                )
+            }
+            Chain.Ripple -> {
+                return RippleHelper.getSignedTransaction(
+                    keysignPayload = keysignPayload,
                     signatures = signatures,
                 )
             }

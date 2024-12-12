@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -158,6 +159,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
+    private val rippleApi: RippleApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
@@ -217,6 +219,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             suiApi = suiApi,
             tonApi = tonApi,
             navigator = navigator,
+            rippleApi = rippleApi,
             transactionTypeUiModel = transactionTypeUiModel,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
