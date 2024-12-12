@@ -44,6 +44,7 @@ internal fun VaultSettingsScreen(
         onRenameClick = viewModel::openRename,
         onBackupClick = viewModel::navigateToBackupPasswordScreen,
         onReshareClick = viewModel::navigateToReshareStartScreen,
+        onSignMessageClick = viewModel::signMessage,
         onBiometricsClick = viewModel::navigateToBiometricsScreen,
         onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
     )
@@ -58,6 +59,7 @@ private fun VaultSettingsScreen(
     onRenameClick: () -> Unit = {},
     onBackupClick: () -> Unit = {},
     onReshareClick: () -> Unit = {},
+    onSignMessageClick: () -> Unit = {},
     onBiometricsClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
 ) {
@@ -112,6 +114,13 @@ private fun VaultSettingsScreen(
                 subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
                 icon = R.drawable.share,
                 onClick = onReshareClick
+            )
+
+            SettingsItem(
+                title = stringResource(R.string.vault_settings_sign_message_title),
+                subtitle = stringResource(R.string.vault_settings_sign_message_description),
+                icon = R.drawable.baseline_edit_square_24,
+                onClick = onSignMessageClick,
             )
 
             if (uiModel.hasFastSign && canAuthenticateBiometric) {

@@ -61,6 +61,7 @@ import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
 import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
+import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
@@ -355,6 +356,20 @@ internal fun SetupNavGraph(
             route = Destination.ScanQr.route,
         ) {
             ScanQrScreen(navController = navController)
+        }
+
+        composable(
+            route = Destination.SignMessage.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            )
+        ) { entry ->
+            val args = requireNotNull(entry.arguments)
+
+            SignMessageScreen(
+                navController = navController,
+                vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
+            )
         }
 
         composable(

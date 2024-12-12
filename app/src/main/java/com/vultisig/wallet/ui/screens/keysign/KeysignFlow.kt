@@ -20,7 +20,7 @@ fun KeysignFlowView(
     val viewModel: KeysignFlowViewModel = hiltViewModel()
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     val keysignFlowState by viewModel.currentState.collectAsState()
-    if (sharedViewModel.vault == null || sharedViewModel.keysignPayload == null) {
+    if (!sharedViewModel.hasAllData) {
         // information is not available, go back
         viewModel.moveToState(KeysignFlowState.Error("Keysign information not available"))
     }

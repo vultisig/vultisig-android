@@ -16,6 +16,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindBroadcastTxUseCase(
+        impl: BroadcastTxUseCaseImpl
+    ): BroadcastTxUseCase
+
+    @Binds
+    @Singleton
     fun bindEncryption(
         impl: AesEncryption
     ): Encryption

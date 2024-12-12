@@ -111,6 +111,17 @@ internal sealed class Destination(
         }
     }
 
+    data class SignMessage(
+        val vaultId: String,
+    ) : Destination(
+        route = "vault_detail/${vaultId}/sign_message"
+    ) {
+        companion object {
+            const val STATIC_ROUTE =
+                "vault_detail/{$ARG_VAULT_ID}/sign_message"
+        }
+    }
+
     data class SelectTokens(
         val vaultId: String,
         val chainId: String,

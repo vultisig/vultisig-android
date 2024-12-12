@@ -51,7 +51,8 @@ internal fun KeysignPeerDiscovery(
     val context = LocalContext.current.applicationContext
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
     val vault = sharedViewModel.vault ?: return
-    val keysignPayload = sharedViewModel.keysignPayload ?: return
+    val keysignPayload = sharedViewModel.keysignPayload
+    val customMessagePayload = sharedViewModel.customMessagePayload
     val isSwap = sharedViewModel.keysignPayload?.swapPayload != null
     val amount by sharedViewModel.amount.collectAsState()
     val toAmount by sharedViewModel.toAmount.collectAsState()
@@ -63,19 +64,21 @@ internal fun KeysignPeerDiscovery(
 
     val qrShareBackground = Theme.colors.oxfordBlue800
 
-    val qrShareDescription = if (isSwap)
-        stringResource(
-            R.string.qr_title_join_keysign_swap_description,
-            vault.name.forCanvasMinify(),
-            amount.forCanvasMinify(),
-            toAmount.forCanvasMinify(),
-        ) else
-        stringResource(
-            R.string.qr_title_join_keysign_description,
-            vault.name.forCanvasMinify(),
-            amount.forCanvasMinify(),
-            keysignPayload.toAddress.forCanvasMinify(),
-        )
+    val qrShareDescription = if (keysignPayload != null) {
+        if (isSwap)
+            stringResource(
+                R.string.qr_title_join_keysign_swap_description,
+                vault.name.forCanvasMinify(),
+                amount.forCanvasMinify(),
+                toAmount.forCanvasMinify(),
+            ) else
+            stringResource(
+                R.string.qr_title_join_keysign_description,
+                vault.name.forCanvasMinify(),
+                amount.forCanvasMinify(),
+                keysignPayload.toAddress.forCanvasMinify(),
+            )
+    } else ""
 
     LaunchedEffect(key1 = viewModel.participants) {
         viewModel.participants.asFlow().collect { newList ->
@@ -99,7 +102,7 @@ internal fun KeysignPeerDiscovery(
     }
     LaunchedEffect(Unit) {
         // start mediator server
-        viewModel.setData(vault, context, keysignPayload)
+        viewModel.setData(vault, context, keysignPayload, customMessagePayload)
     }
 
     LaunchedEffect(viewModel.keysignMessage.value) {
