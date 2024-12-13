@@ -129,7 +129,7 @@
     <string name="token_settings_supply">Fornecimento: %1$s</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado com sucesso: %1$s</string>
     <string name="generating_key_screen_success">Sucesso</string>
-    <string name="scan_qr_screen_return_vault">Cofre de Retorno</string>
+    <string name="scan_qr_screen_return_vault">Retornar ao Cofre</string>
     <string name="plus_icon">Ícone de mais</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, verifique todos os consentimentos</string>
     <string name="settings_screen_others">Outras</string>
