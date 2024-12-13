@@ -108,7 +108,7 @@ class EvmApiFactoryImp @Inject constructor(
 
             Chain.Arbitrum -> EvmApiImp(
                 httpClient,
-                "https://arbitrum-one-rpc.publicnode.com"
+                "https://api.vultisig.com/arb/"
             )
 
             Chain.ZkSync -> EvmApiImp(
