@@ -260,8 +260,8 @@ internal class KeysignViewModel(
         Timber.d("transaction hash: $txHash")
         if (txHash != null) {
             this.txHash.value = txHash
-            explorerLinkRepository.getTransactionLink(payload.coin.chain, txHash)
-            explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
+            txLink.value = explorerLinkRepository.getTransactionLink(payload.coin.chain, txHash)
+            swapProgressLink.value = explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
         }
     }
 
