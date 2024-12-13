@@ -74,6 +74,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
             amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
+            customMessagePayload = null
             keysignPayload = KeysignPayload(
                 coin = coin,
                 toAddress = transaction.dstAddress,
@@ -95,6 +96,7 @@ internal class KeysignShareViewModel @Inject constructor(
             val vault = vaultRepository.get(dto.vaultId)!!
 
             this@KeysignShareViewModel.vault = vault
+            keysignPayload = null
             customMessagePayload = dto.payload
         }
     }
@@ -116,6 +118,7 @@ internal class KeysignShareViewModel @Inject constructor(
             amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
             toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
 
+            customMessagePayload = null
             keysignPayload = when (transaction) {
 
                 is SwapTransaction.RegularSwapTransaction -> {
@@ -168,6 +171,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
 
+            customMessagePayload = null
             keysignPayload = KeysignPayload(
                 coin = srcToken,
                 toAddress = transaction.dstAddress,
