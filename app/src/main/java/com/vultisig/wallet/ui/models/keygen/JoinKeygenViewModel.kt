@@ -190,6 +190,8 @@ internal class JoinKeygenViewModel @Inject constructor(
                 }
                 Timber.d("Decoded KeygenMessage: $payload")
 
+                val allVaults = vaultRepository.getAll()
+
                 when (payload) {
                     is PeerDiscoveryPayload.Keygen -> {
                         this@JoinKeygenViewModel._action = TssAction.KEYGEN
@@ -200,6 +202,14 @@ internal class JoinKeygenViewModel @Inject constructor(
                         this@JoinKeygenViewModel._useVultisigRelay = payload.keygenMessage.useVultisigRelay
                         this@JoinKeygenViewModel._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
                         _vault.name = payload.keygenMessage.vaultName
+                        allVaults.find { it.name == _vault.name }?.let {
+                            errorMessage.value = UiText.FormattedText(
+                                R.string.vault_already_exist,
+                                listOf(_vault.name)
+                            )
+                            currentState.value = JoinKeygenState.FailedToStart
+                            return@launch
+                        }
                     }
 
                     is PeerDiscoveryPayload.Reshare -> {
@@ -214,7 +224,6 @@ internal class JoinKeygenViewModel @Inject constructor(
                         this@JoinKeygenViewModel._oldResharePrefix = payload.reshareMessage.oldResharePrefix
                         // trying to find out whether the device already have a vault with the same public key
                         // if the device has a vault with the same public key , then automatically switch to it
-                        val allVaults = vaultRepository.getAll()
                         allVaults.forEach {
                             if (it.pubKeyECDSA == payload.reshareMessage.pubKeyECDSA) {
                                 _vault = it
