@@ -135,7 +135,7 @@
     <string name="vault_settings_delete_vault_caution3">He hecho una copia de seguridad del almacén</string>
     <string name="confirm_delete_permanent_delete_message">Estás eliminando permanentemente tu almacén</string>
     <string name="confirm_delete_delete_vault">Eliminar Bóveda</string>
-    <string name="scan_qr_screen_return_vault">BÓVEDA De Retorno</string>
+    <string name="scan_qr_screen_return_vault">Regresar a la Bóveda</string>
     <string name="naming_vault_screen_continue">Continuar</string>
     <string name="naming_vault_screen_setup">Configurar</string>
     <string name="rename_vault_screen_edit_your_vault_name">Editar el nombre de tu bóveda</string>

@@ -155,7 +155,7 @@
     <string name="confirm_delete_delete_vault">Удалить хранилище</string>
     <string name="vault_accounts_account_assets">%1$s активы</string>
     <string name="s_of_s_vault">%1$s из %2$s хранилища</string>
-    <string name="scan_qr_screen_return_vault">Вернуть хранилище</string>
+    <string name="scan_qr_screen_return_vault">Вернуться в Хранилище</string>
     <string name="naming_vault_screen_continue">Продолжить</string>
     <string name="naming_vault_screen_setup">Настройка</string>
     <string name="rename_vault_screen_edit_your_vault_name">Измените имя своего хранилища</string>

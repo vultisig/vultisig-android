@@ -129,7 +129,7 @@
     <string name="token_settings_supply">Fornitura: %1$s</string>
     <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
     <string name="generating_key_screen_success">Successo</string>
-    <string name="scan_qr_screen_return_vault">Restituisci Vault</string>
+    <string name="scan_qr_screen_return_vault">Torna al Caveau</string>
     <string name="plus_icon">Icona più</string>
     <string name="verify_transaction_error_not_enough_consent">Si prega di controllare tutti i consensi</string>
     <string name="settings_screen_others">Altre</string>

@@ -129,7 +129,7 @@
     <string name="token_settings_supply">Zaliha: %1$s</string>
     <string name="successfully_scanned_barcode">Uspješno skeniran crtični kod: %1$s</string>
     <string name="generating_key_screen_success">Uspjeh</string>
-    <string name="scan_qr_screen_return_vault">Povratni trezor</string>
+    <string name="scan_qr_screen_return_vault">Povratak u Trezor</string>
     <string name="plus_icon">Ikona plus</string>
     <string name="verify_transaction_error_not_enough_consent">Provjerite sve suglasnosti</string>
     <string name="settings_screen_others">Drugi</string>

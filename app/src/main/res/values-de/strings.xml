@@ -129,7 +129,7 @@
     <string name="token_settings_supply">Angebot: %1$s</string>
     <string name="successfully_scanned_barcode">Barcode erfolgreich gescannt: %1$s</string>
     <string name="generating_key_screen_success">Erfolg</string>
-    <string name="scan_qr_screen_return_vault">Tresor zurückgeben</string>
+    <string name="scan_qr_screen_return_vault">Zurück zum Tresor</string>
     <string name="plus_icon">Plus-Symbol</string>
     <string name="verify_transaction_error_not_enough_consent">Bitte überprüfen Sie alle Einwilligungen</string>
     <string name="settings_screen_others">Andere</string>
