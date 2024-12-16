@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import vultisig.keysign.v1.CustomMessagePayload
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,11 +44,16 @@ internal class KeysignShareViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val depositTransaction: DepositTransactionRepository,
+    private val customMessagePayloadRepo: CustomMessagePayloadRepo,
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
     private val generateQrBitmap: GenerateQrBitmap,
 ) : ViewModel() {
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
+    var customMessagePayload: CustomMessagePayload? = null
+
+    val hasAllData: Boolean
+        get() = vault != null && (keysignPayload != null || customMessagePayload != null)
 
     val amount = MutableStateFlow("")
     val toAmount = MutableStateFlow("")
@@ -67,6 +74,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
             amount.value = mapTokenValueToStringWithUnit(transaction.tokenValue)
+            customMessagePayload = null
             keysignPayload = KeysignPayload(
                 coin = coin,
                 toAddress = transaction.dstAddress,
@@ -77,6 +85,19 @@ internal class KeysignShareViewModel @Inject constructor(
                 utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
             )
+        }
+    }
+
+    fun loadSignMessageTx(id: String) {
+        runBlocking {
+            val dto = customMessagePayloadRepo.get(id)
+                ?: return@runBlocking
+
+            val vault = vaultRepository.get(dto.vaultId)!!
+
+            this@KeysignShareViewModel.vault = vault
+            keysignPayload = null
+            customMessagePayload = dto.payload
         }
     }
 
@@ -97,6 +118,7 @@ internal class KeysignShareViewModel @Inject constructor(
             amount.value = mapTokenValueToStringWithUnit(transaction.srcTokenValue)
             toAmount.value = mapTokenValueToStringWithUnit(transaction.expectedDstTokenValue)
 
+            customMessagePayload = null
             keysignPayload = when (transaction) {
 
                 is SwapTransaction.RegularSwapTransaction -> {
@@ -149,6 +171,7 @@ internal class KeysignShareViewModel @Inject constructor(
 
             this@KeysignShareViewModel.vault = vault
 
+            customMessagePayload = null
             keysignPayload = KeysignPayload(
                 coin = srcToken,
                 toAddress = transaction.dstAddress,
