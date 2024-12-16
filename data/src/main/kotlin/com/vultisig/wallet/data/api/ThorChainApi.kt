@@ -190,10 +190,26 @@ internal class ThorChainApiImpl @Inject constructor(
         .find { it.chain == chain }
         ?.address
 
-    override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson = httpClient
-        .get("https://thornode.ninerealms.com/txs/$tx")
-        .body()
-
+    override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson {
+        val response = httpClient
+            .get("https://thornode.ninerealms.com/cosmos/tx/v1beta1/txs/$tx")
+        if (!response.status.isSuccess()) {
+            //The  URL initially returns a 'not found' response but eventually
+            // provides a successful response after some time
+            if (response.status.equals(HttpStatusCode.NotFound))
+                return ThorChainTransactionJson(
+                    code = null,
+                    codeSpace = null,
+                    rawLog = response.bodyAsText()
+                )
+        } else
+            return ThorChainTransactionJson(
+                code = response.status.value,
+                codeSpace = HttpStatusCode.fromValue(response.status.value).description,
+                rawLog = response.bodyAsText()
+            )
+        return response.body()
+    }
 }
 
 @Serializable
