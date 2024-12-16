@@ -84,7 +84,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Ethereum -> "https://etherscan.io/"
             Chain.GaiaChain -> "https://www.mintscan.io/cosmos/"
             Chain.Dydx -> "https://www.mintscan.io/dydx/"
-            Chain.Kujira -> "https://finder.kujira.network/"
+            Chain.Kujira -> "https://finder.kujira.network/kaiyo-1/"
             Chain.Litecoin -> "https://blockchair.com/litecoin/"
             Chain.MayaChain -> "https://www.mayascan.org/"
             Chain.Optimism -> "https://optimistic.etherscan.io/"
