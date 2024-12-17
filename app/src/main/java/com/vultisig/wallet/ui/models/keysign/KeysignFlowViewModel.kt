@@ -327,6 +327,12 @@ internal class KeysignFlowViewModel @Inject constructor(
                     coins = specific.coins,
                 )
             } else null,
+            rippleSpecific = if (specific is BlockChainSpecific.Ripple) {
+                vultisig.keysign.v1.RippleSpecific(
+                    sequence = specific.sequence,
+                    gas = specific.gas,
+                )
+            } else null,
             tonSpecific = if (specific is BlockChainSpecific.Ton) {
                 TonSpecific(
                     sequenceNumber = specific.sequenceNumber,

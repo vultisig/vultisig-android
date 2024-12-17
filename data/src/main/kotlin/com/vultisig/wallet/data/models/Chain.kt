@@ -53,7 +53,7 @@ enum class Chain(
     Sui("Sui", SUI, "SUI"),
     Ton("Ton", TON, "TON"),
 
-    Ripple("ripple",TokenStandard.RIPPLE, "XRP"),
+    Ripple("Ripple",TokenStandard.RIPPLE, "XRP"),
     ;
 
     val id: String

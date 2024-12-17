@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
+import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
@@ -20,7 +21,7 @@ import wallet.core.jni.TransactionCompiler
 object RippleHelper {
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-        require(keysignPayload.coin.chain == Chain.Ton) { "Coin is not XRP" }
+        require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
 
 
         val (sequence, gas) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
@@ -67,7 +68,7 @@ object RippleHelper {
             println(preSigningOutput.errorMessage)
             throw Exception(preSigningOutput.errorMessage)
         }
-        return listOf(preSigningOutput.dataHash.toByteArray().toHexString())
+               return listOf(Numeric.toHexString(preSigningOutput.dataHash.toByteArray()))
     }
 
     fun getSignedTransaction(
@@ -96,24 +97,24 @@ object RippleHelper {
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()
-        val signature = signatures[Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())]
+        val key = Numeric.toHexString(preSigningOutput.dataHash.toByteArray())
+        signatures[key]
             ?.getSignature()
             ?: throw Exception("Signature not found")
 
-
-
-        if (!publicKey.verifyAsDER(
-                signature,
-                preSigningOutput.dataHash.toByteArray()
-            )
-        ) {
-            val errorMessage = "Invalid signature"
-            println(errorMessage)
-            throw RuntimeException(errorMessage)
+        signatures[key]?.let {
+            if (!publicKey.verifyAsDER(
+                    it.derSignature.hexToByteArray(),
+                    preSigningOutput.dataHash.toByteArray()
+                )
+            ) {
+                Timber.e("Invalid signature")
+                throw Exception("Invalid signature")
+            }
+            allSignatures.add(it.derSignature.hexToByteArray())
+            publicKeys.add(publicKey.data())
         }
 
-        allSignatures.add(signature)
-        publicKeys.add(publicKey.data())
 
         val compileWithSignature = TransactionCompiler.compileWithSignatures(
             CoinType.XRP,
@@ -127,12 +128,12 @@ object RippleHelper {
 
         if (output.errorMessage.isNotEmpty()) {
             val errorMessage = output.errorMessage
-            println("errorMessage: $errorMessage")
+            Timber.e("$errorMessage")
             throw RuntimeException(errorMessage)
         }
 
         return SignedTransactionResult(
-            rawTransaction = output.encoded.toStringUtf8(),
+            rawTransaction = output.encoded.toByteArray().toHexString(),
             transactionHash = ""
         )
     }

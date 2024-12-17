@@ -3,20 +3,21 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class ReultJosn(
+data class ResponseJson(
+    @SerialName("result")
+    val result: ResultJson,
+)
+
+@Serializable
+data class ResultJson(
     @SerialName("engine_result")
     val engineResult: String,
     @SerialName("engine_result_message")
-    val engineResultMessage: EngineResultMessage?,
+    val engineResultMessage: String?,
     @SerialName("tx_json")
     val tx_json: TXJson?,
 )
 
-@Serializable
-data class EngineResultMessage(
-    @SerialName("engine_result_message")
-    val description: String?,
-)
 
 @Serializable
 data class TXJson(

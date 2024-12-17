@@ -65,8 +65,8 @@ sealed class BlockChainSpecific {
     ) : BlockChainSpecific()
 
     data class Ripple(
-        val sequence: BigInteger,
-        val gas: BigInteger
+        val sequence: ULong,
+        val gas: ULong
     ) : BlockChainSpecific()
 
 }

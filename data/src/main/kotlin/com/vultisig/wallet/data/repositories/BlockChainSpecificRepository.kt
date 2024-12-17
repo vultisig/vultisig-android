@@ -302,9 +302,9 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
 
             BlockChainSpecificAndUtxo(
                 blockChainSpecific = BlockChainSpecific.Ripple(
-                    sequence = rippleApi.fetchAccountsInfo(address)?.accountData?.sequence?.toBigInteger()
-                        ?: BigInteger.ZERO,
-                    gas = BigInteger("180000"),
+                    sequence = rippleApi.fetchAccountsInfo(address)?.result?.accountData?.sequence?.toULong()
+                        ?: 0UL,
+                    gas = gasFee.value.toLong().toULong(),
                 ),
             )
 

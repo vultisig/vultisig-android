@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api
 
-import ReultJosn
+import ResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.models.Coin
 import io.ktor.client.HttpClient
@@ -47,22 +47,20 @@ internal class RippleApiImp @Inject constructor(
                 setBody(payload)
             }
 
-            val rpcResp = response.body<ReultJosn>()
+            val rpcResp = response.body<ResponseJson>()
 
-            if (rpcResp.engineResult != "tesSUCCESS") {
-
-                if (rpcResp.engineResultMessage?.toString()
+            if (rpcResp.result.engineResult != "tesSUCCESS") {
+                if (rpcResp.result.engineResultMessage?.toString()
                         ?.lowercase() == "This sequence number has already passed.".lowercase()
                 ) {
-
-                    if (rpcResp.tx_json?.hash != null) {
-                        return rpcResp.tx_json.hash ?: ""
+                    if (rpcResp.result.tx_json?.hash != null) {
+                        return rpcResp.result.tx_json.hash
                     }
                 }
-                return rpcResp.engineResultMessage?.description ?: ""
+                return rpcResp.result.engineResultMessage ?: ""
             }
-            if (rpcResp.tx_json?.hash?.isNotEmpty() == true) {
-                return rpcResp.engineResultMessage?.description ?: ""
+            if (rpcResp.result.tx_json?.hash?.isNotEmpty() == true) {
+                return rpcResp.result.engineResultMessage ?: ""
             }
             return ""
         } catch (e: Exception) {
@@ -78,7 +76,7 @@ internal class RippleApiImp @Inject constructor(
     override suspend fun getBalance(coin: Coin): BigInteger {
         try {
             val accountInfo = fetchAccountsInfo(coin.address)
-            return accountInfo?.accountData?.balance?.toBigInteger() ?: BigInteger.ZERO
+            return accountInfo?.result?.accountData?.balance?.toBigInteger() ?: BigInteger.ZERO
         } catch (e: Exception) {
             Timber.e("Error in getBalance: ${e.message}")
             return BigInteger.ZERO
@@ -120,62 +118,24 @@ internal class RippleApiImp @Inject constructor(
 
 @Serializable
 data class RippleAccountResponse(
+    @SerialName("result")
+    val result: Result? = null,
+)
+
+@Serializable
+data class Result(
     @SerialName("account_data")
     val accountData: AccountData? = null,
-    @SerialName("ledger_current_index")
-    val ledgerCurrentIndex: Int? = null,
-    @SerialName("queue_data")
-    val queueData: QueueData? = null,
     val status: String? = null,
     val validated: Boolean? = null
 )
 
 @Serializable
 data class AccountData(
-    @SerialName("Account")
-    val account: String? = null,
     @SerialName("Balance")
     val balance: String? = null,
-    @SerialName("Flags")
-    val flags: Int? = null,
-    @SerialName("LedgerEntryType")
-    val ledgerEntryType: String? = null,
-    @SerialName("OwnerCount")
-    val ownerCount: Int? = null,
-    @SerialName("PreviousTxnID")
-    val previousTxnID: String? = null,
-    @SerialName("PreviousTxnLgrSeq")
-    val previousTxnLgrSeq: Int? = null,
     @SerialName("Sequence")
     val sequence: Int? = null,
-    val index: String? = null
 )
 
-@Serializable
-data class QueueData(
-    @SerialName("auth_change_queued")
-    val authChangeQueued: Boolean? = null,
-    @SerialName("highest_sequence")
-    val highestSequence: Int? = null,
-    @SerialName("lowest_sequence")
-    val lowestSequence: Int? = null,
-    @SerialName("max_spend_drops_total")
-    val maxSpendDropsTotal: String? = null,
-    val transactions: List<Transaction>? = null,
-    @SerialName("txn_count") val txnCount: Int? = null
-)
 
-@Serializable
-data class Transaction(
-    @SerialName("auth_change")
-    val authChange: Boolean? = null,
-    val fee: String? = null,
-    @SerialName(
-        "fee_level"
-    ) val feeLevel: String? = null,
-    @SerialName("max_spend_drops")
-    val maxSpendDrops: String? = null,
-    val seq: Int? = null,
-    @SerialName("LastLedgerSequence")
-    val lastLedgerSequence: Int? = null
-)
