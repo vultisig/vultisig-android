@@ -1,26 +1,19 @@
 package com.vultisig.wallet.ui.theme
 
-import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.toColorInt
 
 @Composable
 fun OnBoardingComposeTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val appColors = Colors.Default
-
     AppUtils(
-        appColor = appColors,
+        appColor = Colors.Default,
         menloTypography = menloTypography,
         montserratTypography = montserratTypography,
     ) {
@@ -36,13 +29,6 @@ fun OnBoardingComposeTheme(
             content = content
         )
     }
-    val localWindow = (LocalContext.current as Activity).window
-    if (darkTheme) {
-        localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
-    } else {
-        localWindow.statusBarColor = appColors.oxfordBlue800.toArgb()
-    }
-
 }
 
 

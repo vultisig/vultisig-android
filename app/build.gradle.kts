@@ -16,7 +16,7 @@ android {
     defaultConfig {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 35
         versionName = "1.0.35"
 
@@ -67,6 +67,8 @@ dependencies {
     implementation(project(":data"))
 
     implementation(files("libs/mobile-tss-lib.aar"))
+    implementation(files("libs/dkls-release.aar"))
+    implementation(files("libs/goschnorr-release.aar"))
 
     // kotlinx
     implementation(libs.kotlinx.coroutines.core)

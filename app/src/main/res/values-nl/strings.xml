@@ -155,7 +155,7 @@
     <string name="confirm_delete_delete_vault">Kluis verwijderen</string>
     <string name="vault_accounts_account_assets">%1$s activa</string>
     <string name="s_of_s_vault">%1$s van %2$s kluis</string>
-    <string name="scan_qr_screen_return_vault">Kluis terugsturen</string>
+    <string name="scan_qr_screen_return_vault">Terug naar de Kluis</string>
     <string name="naming_vault_screen_continue">Doorgaan</string>
     <string name="naming_vault_screen_setup">Instellen</string>
     <string name="rename_vault_screen_edit_your_vault_name">Bewerk uw kluisnaam</string>

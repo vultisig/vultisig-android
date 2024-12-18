@@ -42,6 +42,12 @@ internal interface MappersModule {
 
     @Binds
     @Singleton
+    fun bindTokenValueAndChainMapper(
+        impl: TokenValueAndChainImp,
+    ): TokenValueAndChainMapper
+
+    @Binds
+    @Singleton
     fun bindTokenValueToDecimalUiStringMapper(
         impl: TokenValueToDecimalUiStringMapperImpl,
     ): TokenValueToDecimalUiStringMapper

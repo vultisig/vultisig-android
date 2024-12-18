@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.utils
 
+import com.vultisig.wallet.data.api.models.FourByteResponseJson
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
@@ -28,11 +29,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
-import javax.inject.Singleton
 
 interface DefaultSerializer<T> : KSerializer<T> {
     override fun serialize(encoder: Encoder, value: T) {

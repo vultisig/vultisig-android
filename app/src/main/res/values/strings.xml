@@ -158,7 +158,7 @@
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s assets</string>
     <string name="s_of_s_vault">%1$s of %2$s Vault Setup</string>
-    <string name="scan_qr_screen_return_vault">Return Vault</string>
+    <string name="scan_qr_screen_return_vault">Return to Vault</string>
     <string name="naming_vault_screen_continue">Continue</string>
     <string name="naming_vault_screen_setup">Setup</string>
     <string name="rename_vault_screen_edit_your_vault_name">Edit your vault name</string>
@@ -221,9 +221,6 @@
     <string name="vault_detail_this_device">%1$s (This Device)</string>
     <string name="join_keygen_screen_reshare" >reshare</string>
     <string name="join_keygen_screen_keygen">keygen</string>
-
-
-    <!-- TODO needs translation-->
     <string name="join_keygen_wrong_reshare">Wrong ReShare</string>
     <string name="join_keysign_wrong_reshare">Wrong ReShare</string>
     <string name="swap_screen_provider_title">Provider</string>
@@ -496,4 +493,16 @@
     <string name="select_vault_type_secure_vault_point_0">2of3, 3of4, 4of6  device setups available</string>
     <string name="select_vault_type_secure_vault_point_1">One backup per device</string>
     <string name="select_vault_type_secure_vault_point_2">Redundant, Secure</string>
+
+
+    <!-- TODO needs translation-->
+    <string name="verify_sign_message_method_field_title" translatable="false">Method</string>
+    <string name="verify_sign_message_message_field_title" translatable="false">Message</string>
+    <string name="sign_message_form_method_field_title" translatable="false">Method</string>
+    <string name="sign_message_form_method_field_hint" translatable="false">Signing method</string>
+    <string name="sign_message_for_message_field_title" translatable="false">Message</string>
+    <string name="sign_message_form_message_field_hint" translatable="false">Message to sign</string>
+    <string name="sign_message_sign_screen_title" translatable="false">Sign message</string>
+    <string name="vault_settings_sign_message_title" translatable="false">Sign</string>
+    <string name="vault_settings_sign_message_description" translatable="false">Sign custom message</string>
 </resources>

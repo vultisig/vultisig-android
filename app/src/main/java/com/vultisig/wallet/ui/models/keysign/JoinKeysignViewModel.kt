@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.ui.models.keysign
 
@@ -9,25 +9,18 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.BlockChairApi
-import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
-import com.vultisig.wallet.data.api.MayaChainApi
-import com.vultisig.wallet.data.api.PolkadotApi
-import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
@@ -43,13 +36,14 @@ import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
-import com.vultisig.wallet.data.repositories.BlowfishRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
@@ -60,8 +54,11 @@ import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
+import com.vultisig.wallet.ui.models.mappers.TokenValueAndChainMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
+import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel.Companion.AFFILIATE_FEE_USD_THRESHOLD
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
@@ -77,6 +74,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -84,6 +82,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
+import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
 import java.math.BigInteger
 import java.net.UnknownHostException
@@ -91,6 +90,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+
 
 sealed class JoinKeysignError(val message: UiText) {
     data class FailedToCheck(val exceptionMessage: String) :
@@ -130,6 +130,10 @@ internal sealed class VerifyUiModel {
         val model: VerifyDepositUiModel,
     ) : VerifyUiModel()
 
+    data class SignMessage(
+        val model: VerifySignMessageUiModel,
+    ) : VerifyUiModel()
+
 }
 
 @HiltViewModel
@@ -141,25 +145,17 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
+    private val mapTokenValueAndChainMapperWithUnit: TokenValueAndChainMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
     private val gasFeeRepository: GasFeeRepository,
     private val swapQuoteRepository: SwapQuoteRepository,
-    private val blowfishRepository: BlowfishRepository,
     private val vaultRepository: VaultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
     private val protoBuf: ProtoBuf,
     private val thorChainApi: ThorChainApi,
-    private val blockChairApi: BlockChairApi,
     private val evmApiFactory: EvmApiFactory,
-    private val mayaChainApi: MayaChainApi,
-    private val cosmosApiFactory: CosmosApiFactory,
-    private val solanaApi: SolanaApi,
-    private val polkadotApi: PolkadotApi,
-    private val suiApi: SuiApi,
-    private val tonApi: TonApi,
-    private val rippleApi: RippleApi,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
@@ -168,6 +164,8 @@ internal class JoinKeysignViewModel @Inject constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
     private val pullTssMessages: PullTssMessagesUseCase,
+    private val broadcastTx: BroadcastTxUseCase,
+    private val fourByteRepository: FourByteRepository,
 ) : ViewModel() {
     val vaultId: String = requireNotNull(savedStateHandle[Destination.ARG_VAULT_ID])
     private val qrBase64: String = requireNotNull(savedStateHandle[Destination.ARG_QR])
@@ -184,6 +182,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
+    private var customMessagePayload: CustomMessagePayload? = null
     private var messagesToSign: List<String> = emptyList()
 
     private var _jobWaitingForKeysignStart: Job? = null
@@ -192,8 +191,6 @@ internal class JoinKeysignViewModel @Inject constructor(
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
     private var payloadId: String = ""
     private var tempKeysignMessageProto: KeysignMessageProto? = null
-    private val keysignPayload: KeysignPayload?
-        get() = _keysignPayload
 
     private val deepLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
 
@@ -206,20 +203,13 @@ internal class JoinKeysignViewModel @Inject constructor(
             encryptionKeyHex = _encryptionKeyHex,
             messagesToSign = messagesToSign,
             keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
-            keysignPayload = _keysignPayload!!,
+            keysignPayload = _keysignPayload,
+            broadcastTx = broadcastTx,
             thorChainApi = thorChainApi,
-            blockChairApi = blockChairApi,
             evmApiFactory = evmApiFactory,
-            mayaChainApi = mayaChainApi,
-            cosmosApiFactory = cosmosApiFactory,
-            solanaApi = solanaApi,
-            polkadotApi = polkadotApi,
             explorerLinkRepository = explorerLinkRepository,
             sessionApi = sessionApi,
-            suiApi = suiApi,
-            tonApi = tonApi,
             navigator = navigator,
-            rippleApi = rippleApi,
             transactionTypeUiModel = transactionTypeUiModel,
             encryption = encryption,
             featureFlagApi = featureFlagApi,
@@ -244,32 +234,41 @@ internal class JoinKeysignViewModel @Inject constructor(
             try {
                 val content = Base64.UrlSafe.decode(qrBase64.toByteArray())
                     .decodeToString()
+
                 deepLinkHelper.value = DeepLinkHelper(content)
-                val qrCodeContent = requireNotNull(deepLinkHelper.value).getJsonData()
-                qrCodeContent ?: run {
-                    throw Exception("Invalid QR code content")
-                }
+
+                val qrCodeContent = requireNotNull(deepLinkHelper.value)
+                    .getJsonData()
+                    ?: error("Invalid QR code content")
+
                 val rawJson = decompressQr(qrCodeContent.decodeBase64Bytes())
 
                 val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
                 Timber.d("Decoded KeysignMessageProto: $payloadProto")
-                this@JoinKeysignViewModel._sessionID = payloadProto.sessionId
-                this@JoinKeysignViewModel._serviceName = payloadProto.serviceName
-                this@JoinKeysignViewModel._useVultisigRelay = payloadProto.useVultisigRelay
-                this@JoinKeysignViewModel._encryptionKeyHex = payloadProto.encryptionKeyHex
-                // when the payload is in the QRCode
-                if (payloadProto.keysignPayload != null && payloadProto.payloadId.isEmpty()) {
-                    if (!loadKeysignMessage(payloadProto)) {
-                        return@launch
-                    }
+                _sessionID = payloadProto.sessionId
+                _serviceName = payloadProto.serviceName
+                _useVultisigRelay = payloadProto.useVultisigRelay
+                _encryptionKeyHex = payloadProto.encryptionKeyHex
+
+                val customMessagePayload = payloadProto.customMessagePayload
+                if (customMessagePayload != null) {
+                    handleCustomMessage(customMessagePayload)
                 } else {
-                    tempKeysignMessageProto = payloadProto
-                    payloadId = payloadProto.payloadId
+                    // when the payload is in the QRCode
+                    if (payloadProto.keysignPayload != null && payloadProto.payloadId.isEmpty()) {
+                        if (handleKeysignMessage(payloadProto)) {
+                            return@launch
+                        }
+                    } else {
+                        tempKeysignMessageProto = payloadProto
+                        payloadId = payloadProto.payloadId
+                    }
                 }
+
                 if (_useVultisigRelay) {
                     this@JoinKeysignViewModel._serverAddress = Endpoints.VULTISIG_RELAY_URL
                     // when Payload is not in the QRCode
-                    if (!payloadProto.payloadId.isEmpty()) {
+                    if (payloadProto.payloadId.isNotEmpty()) {
                         routerApi.getPayload(_serverAddress, payloadId).let { payload ->
                             if (payload.isNotEmpty()) {
                                 val rawPayload = decompressQr(payload.decodeBase64Bytes())
@@ -283,7 +282,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     useVultisigRelay = _useVultisigRelay,
                                     payloadId = payloadId
                                 )
-                                if (!loadKeysignMessage(keysignMsgProto)) {
+
+                                if (handleKeysignMessage(keysignMsgProto)) {
                                     return@launch
                                 }
                             }
@@ -302,23 +302,49 @@ internal class JoinKeysignViewModel @Inject constructor(
             }
         }
     }
-    private suspend fun loadKeysignMessage(payloadProto: KeysignMessageProto): Boolean {
-        val payload = mapKeysignMessageFromProto(payloadProto)
-        Timber.d("Mapped proto to KeysignMessage: $payload")
 
-        if (_currentVault.pubKeyECDSA != payload.payload.vaultPublicKeyECDSA) {
+    private fun handleCustomMessage(
+        customMessage: CustomMessagePayload
+    ) {
+        customMessagePayload = customMessage
+
+        val model = SignMessageTransactionUiModel(
+            method = customMessage.method,
+            message = customMessage.message,
+        )
+
+        transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)
+
+        verifyUiModel.value = VerifyUiModel.SignMessage(
+            model = VerifySignMessageUiModel(
+                model = model,
+            ),
+        )
+    }
+
+    private suspend fun handleKeysignMessage(
+        proto: KeysignMessageProto
+    ): Boolean {
+        val message = mapKeysignMessageFromProto(proto)
+
+        return !loadKeysignMessage(message.payload!!)
+    }
+
+    private suspend fun loadKeysignMessage(ksPayload: KeysignPayload): Boolean {
+        if (_currentVault.pubKeyECDSA != ksPayload.vaultPublicKeyECDSA) {
             val matchingVault = vaultRepository.getAll().firstOrNull {
-                it.pubKeyECDSA == payload.payload.vaultPublicKeyECDSA
+                it.pubKeyECDSA == ksPayload.vaultPublicKeyECDSA
             }
-            matchingVault?.let {
-                currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVault)
-                return false
-            } ?: run {
-                currentState.value = JoinKeysignState.Error(JoinKeysignError.MissingRequiredVault)
-                return false
-            }
+            currentState.value = JoinKeysignState.Error(
+                if (matchingVault != null)
+                    JoinKeysignError.WrongVault
+                else
+                    JoinKeysignError.MissingRequiredVault
+            )
+
+            return false
         }
-        if (payload.payload.vaultLocalPartyID == _localPartyID) {
+        if (ksPayload.vaultLocalPartyID == _localPartyID) {
             currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
             return false
         }
@@ -331,12 +357,12 @@ internal class JoinKeysignViewModel @Inject constructor(
             }
         }
 
-        val ksPayload = payload.payload
         this@JoinKeysignViewModel._keysignPayload = ksPayload
 
         loadTransaction(ksPayload)
         return true
     }
+
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val swapPayload = payload.swapPayload
         val currency = appCurrencyRepository.currency.first()
@@ -385,8 +411,18 @@ internal class JoinKeysignViewModel @Inject constructor(
                         )
 
                         val swapTransaction = SwapTransactionUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            srcTokenValue = mapTokenValueAndChainMapperWithUnit(
+                                Pair(
+                                    srcTokenValue,
+                                    srcToken.chain
+                                )
+                            ),
+                            dstTokenValue = mapTokenValueAndChainMapperWithUnit(
+                                Pair(
+                                    dstTokenValue,
+                                    dstToken.chain
+                                )
+                            ),
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -420,8 +456,18 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                         val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
                         val swapTransactionUiModel = SwapTransactionUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            srcTokenValue = mapTokenValueAndChainMapperWithUnit(
+                                Pair(
+                                    srcTokenValue,
+                                    srcToken.chain
+                                )
+                            ),
+                            dstTokenValue = mapTokenValueAndChainMapperWithUnit(
+                                Pair(
+                                    dstTokenValue,
+                                    dstToken.chain
+                                )
+                            ),
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -455,8 +501,18 @@ internal class JoinKeysignViewModel @Inject constructor(
                         val estimatedFee =
                             convertTokenValueToFiat(dstToken, quote.fees, currency)
                         val swapTransactionUiModel = SwapTransactionUiModel(
-                            srcTokenValue = mapTokenValueToStringWithUnit(srcTokenValue),
-                            dstTokenValue = mapTokenValueToStringWithUnit(dstTokenValue),
+                            srcTokenValue =  mapTokenValueAndChainMapperWithUnit(
+                                Pair(
+                                    srcTokenValue,
+                                    srcToken.chain
+                                )
+                            ),
+                            dstTokenValue = mapTokenValueAndChainMapperWithUnit(
+                                Pair(
+                                    dstTokenValue,
+                                    dstToken.chain
+                                )
+                            ),
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -490,12 +546,14 @@ internal class JoinKeysignViewModel @Inject constructor(
                         fromAddress = payload.coin.address,
                         // TODO toAddress is empty on ios, get node address from memo
                         nodeAddress = payload.toAddress,
-                        srcTokenValue = mapTokenValueToStringWithUnit(
-                            TokenValue(
-                                value = payload.toAmount,
-                                token = payload.coin,
+                        srcTokenValue =mapTokenValueAndChainMapperWithUnit(
+                            Pair(
+                                TokenValue(
+                                    value = payload.toAmount,
+                                    token = payload.coin,
+                                ),
+                                payload.coin.chain
                             )
-
                         ),
                         estimatedFees = mapTokenValueToStringWithUnit(
                             TokenValue(
@@ -564,7 +622,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             transaction = transactionToUiModel,
                         )
                     )
-                    transactionScan(transaction)
+                    transactionFunctionName(payload.memo, chain)
                 }
             }
         }
@@ -588,7 +646,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                             useVultisigRelay = _useVultisigRelay,
                             payloadId = payloadId
                         )
-                        if (!loadKeysignMessage(keysignMsgProto)) {
+                        if (handleKeysignMessage(keysignMsgProto)) {
                             return@launch
                         }
                         currentState.value = JoinKeysignState.JoinKeysign
@@ -671,16 +729,22 @@ internal class JoinKeysignViewModel @Inject constructor(
             Timber.d("Keysign committee: $_keysignCommittee")
             Timber.d("local party: $_localPartyID")
             if (this._keysignCommittee.contains(_localPartyID)) {
-                this.messagesToSign = SigningHelper.getKeysignMessages(
-                    payload = keysignPayload!!,
-                    vault = _currentVault,
-                )
+                when {
+                    _keysignPayload != null -> {
+                        messagesToSign = SigningHelper.getKeysignMessages(
+                            payload = _keysignPayload!!,
+                            vault = _currentVault,
+                        )
+                    }
+                    customMessagePayload != null -> {
+                        messagesToSign = SigningHelper.getKeysignMessages(customMessagePayload!!)
+                    }
+                }
+
                 return true
             }
         } catch (e: Exception) {
-            Timber.e(
-                "Failed to check keysign start: ${e.stackTraceToString()}"
-            )
+            Timber.e("Failed to check keysign start", e)
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
@@ -711,5 +775,17 @@ internal class JoinKeysignViewModel @Inject constructor(
         super.onCleared()
     }
 
-    private fun transactionScan(transaction: Transaction) {}
+    private fun transactionFunctionName(memo: String?, chain: Chain) {
+        if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return
+        viewModelScope.launch {
+            val functionName = fourByteRepository.decodeFunction(memo)
+            verifyUiModel.update { state ->
+                (state as VerifyUiModel.Send).copy(
+                    model = state.model.copy(
+                        functionName = functionName
+                    )
+                )
+            }
+        }
+    }
 }

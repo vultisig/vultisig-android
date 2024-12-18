@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.utils.asString
 
@@ -102,6 +103,15 @@ internal fun JoinKeysignView(
 
                     is VerifyUiModel.Deposit -> {
                         VerifyDepositScreen(
+                            state = model.model,
+                            confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                            onFastSignClick = {},
+                            onConfirm = viewModel::joinKeysign
+                        )
+                    }
+
+                    is VerifyUiModel.SignMessage -> {
+                        VerifySignMessageScreen(
                             state = model.model,
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
                             onFastSignClick = {},

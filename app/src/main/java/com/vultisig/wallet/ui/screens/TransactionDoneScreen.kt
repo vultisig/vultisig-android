@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
+import com.vultisig.wallet.ui.screens.sign.SignMessageDetail
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -82,74 +83,81 @@ internal fun TransactionDoneView(
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
         content = { contentPadding ->
-            FormCard(
-                modifier = Modifier
-                    .padding(contentPadding)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
+            if (transactionTypeUiModel is TransactionTypeUiModel.SignMessage) {
+                SignMessageDetail(
+                    method = transactionTypeUiModel.model.method,
+                    message = transactionTypeUiModel.model.message,
+                )
+            } else {
+                FormCard(
                     modifier = Modifier
-                        .padding(all = 12.dp)
-                        .fillMaxWidth(),
+                        .padding(contentPadding)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier
+                            .padding(all = 12.dp)
+                            .fillMaxWidth(),
                     ) {
-                        Text(
-                            text = stringResource(R.string.transaction_done_form_title),
-                            color = Theme.colors.neutral0,
-                            style = Theme.montserrat.heading5,
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.transaction_done_form_title),
+                                color = Theme.colors.neutral0,
+                                style = Theme.montserrat.heading5,
+                            )
 
 
-                        val clipboard = LocalClipboardManager.current
+                            val clipboard = LocalClipboardManager.current
 
-                        UiIcon(
-                            drawableResId = R.drawable.copy,
-                            size = 20.dp,
-                            onClick = {
-                                clipboard.setText(AnnotatedString(transactionLink))
-                            }
-                        )
-
-
-                        UiIcon(
-                            drawableResId = R.drawable.ic_link,
-                            size = 20.dp,
-                            onClick = {
-                                uriHandler.openUri(transactionLink)
-                            }
-                        )
-                    }
-
-                    UiSpacer(size = 16.dp)
-
-                    Text(
-                        text = transactionHash,
-                        color = Theme.colors.turquoise800,
-                        style = Theme.menlo.subtitle3,
-                    )
+                            UiIcon(
+                                drawableResId = R.drawable.copy,
+                                size = 20.dp,
+                                onClick = {
+                                    clipboard.setText(AnnotatedString(transactionLink))
+                                }
+                            )
 
 
-                    when (transactionTypeUiModel) {
-                        is TransactionTypeUiModel.Deposit ->
-                            DepositTransactionDetail(transactionTypeUiModel.depositTransactionUiModel)
-
-
-                        is TransactionTypeUiModel.Send ->
-                            TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
-
-                        is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
-                            swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
-                            progressLink = progressLink,
-                        ) { progressLink ->
-                            uriHandler.openUri(progressLink)
+                            UiIcon(
+                                drawableResId = R.drawable.ic_link,
+                                size = 20.dp,
+                                onClick = {
+                                    uriHandler.openUri(transactionLink)
+                                }
+                            )
                         }
 
-                        else -> Unit
-                    }
+                        UiSpacer(size = 16.dp)
 
+                        Text(
+                            text = transactionHash,
+                            color = Theme.colors.turquoise800,
+                            style = Theme.menlo.subtitle3,
+                        )
+
+
+                        when (transactionTypeUiModel) {
+                            is TransactionTypeUiModel.Deposit ->
+                                DepositTransactionDetail(transactionTypeUiModel.depositTransactionUiModel)
+
+
+                            is TransactionTypeUiModel.Send ->
+                                TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
+
+                            is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
+                                swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
+                                progressLink = progressLink,
+                            ) { progressLink ->
+                                uriHandler.openUri(progressLink)
+                            }
+
+                            else -> Unit
+                        }
+
+                    }
                 }
             }
         },

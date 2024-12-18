@@ -67,7 +67,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
     private val Chain.blockExplorerUrl: String
         get() = when (this) {
             Chain.Ton -> explorerUrl
-            Chain.Ripple -> "${explorerUrl}account/"
+            Chain.Solana, Chain.Ripple -> "${explorerUrl}account/"
             else -> "${explorerUrl}address/"
         }
 
@@ -86,12 +86,12 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.Ethereum -> "https://etherscan.io/"
             Chain.GaiaChain -> "https://www.mintscan.io/cosmos/"
             Chain.Dydx -> "https://www.mintscan.io/dydx/"
-            Chain.Kujira -> "https://finder.kujira.network/"
+            Chain.Kujira -> "https://finder.kujira.network/kaiyo-1/"
             Chain.Litecoin -> "https://blockchair.com/litecoin/"
             Chain.MayaChain -> "https://www.mayascan.org/"
             Chain.Optimism -> "https://optimistic.etherscan.io/"
             Chain.Polygon -> "https://polygonscan.com/"
-            Chain.Solana -> "https://explorer.solana.com/"
+            Chain.Solana -> "https://solscan.io/"
             Chain.ThorChain -> "https://thorchain.net/"
             Chain.Polkadot -> "https://polkadot.subscan.io/account/"
             Chain.ZkSync -> "https://explorer.zksync.io/"

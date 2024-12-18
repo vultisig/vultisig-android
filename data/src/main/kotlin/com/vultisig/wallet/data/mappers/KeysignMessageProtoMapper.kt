@@ -16,6 +16,7 @@ internal class KeysignMessageFromProtoMapperImpl @Inject constructor(
         payload = mapKeysignPayload(requireNotNull(from.keysignPayload)),
         encryptionKeyHex = from.encryptionKeyHex,
         useVultisigRelay = from.useVultisigRelay,
+        customMessagePayload = from.customMessagePayload,
     )
 
 }
