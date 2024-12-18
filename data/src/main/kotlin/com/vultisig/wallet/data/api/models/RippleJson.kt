@@ -3,24 +3,24 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class ResponseJson(
+data class RippleBroadcastResponseResponseJson(
     @SerialName("result")
-    val result: ResultJson,
+    val result: RippleBroadcastResponseResponseResultJson,
 )
 
 @Serializable
-data class ResultJson(
+data class RippleBroadcastResponseResponseResultJson(
     @SerialName("engine_result")
     val engineResult: String,
     @SerialName("engine_result_message")
     val engineResultMessage: String?,
     @SerialName("tx_json")
-    val tx_json: TXJson?,
+    val tx_json: RippleBroadcastResponseResponseTransactionJson?,
 )
 
 
 @Serializable
-data class TXJson(
+data class RippleBroadcastResponseResponseTransactionJson(
     @SerialName("hash")
     val hash: String?,
 )

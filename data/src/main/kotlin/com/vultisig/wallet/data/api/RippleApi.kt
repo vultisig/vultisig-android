@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api
 
-import ResponseJson
+import RippleBroadcastResponseResponseJson
 import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.models.Coin
 import io.ktor.client.HttpClient
@@ -20,7 +20,7 @@ import javax.inject.Inject
 interface RippleApi {
     suspend fun broadcastTransaction(tx: String): String?
     suspend fun getBalance(coin: Coin): BigInteger
-    suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountResponse?
+    suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson?
 }
 
 internal class RippleApiImp @Inject constructor(
@@ -47,7 +47,7 @@ internal class RippleApiImp @Inject constructor(
                 setBody(payload)
             }
 
-            val rpcResp = response.body<ResponseJson>()
+            val rpcResp = response.body<RippleBroadcastResponseResponseJson>()
 
             if (rpcResp.result.engineResult != "tesSUCCESS") {
                 if (rpcResp.result.engineResultMessage?.toString()
@@ -83,7 +83,7 @@ internal class RippleApiImp @Inject constructor(
         }
     }
 
-    override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountResponse? {
+    override suspend fun fetchAccountsInfo(walletAddress: String): RippleAccountInfoResponseJson? {
         return try {
             val payload = RpcPayload(
                 method = "account_info",
@@ -107,7 +107,7 @@ internal class RippleApiImp @Inject constructor(
             val response = http.post(rpcURL2) {
                 setBody(payload)
             }
-            response.body<RippleAccountResponse>()
+            response.body<RippleAccountInfoResponseJson>()
         } catch (e: Exception) {
             Timber.e("Error in fetchTokenAccountsByOwner: ${e.message}")
             throw e
@@ -117,21 +117,21 @@ internal class RippleApiImp @Inject constructor(
 
 
 @Serializable
-data class RippleAccountResponse(
+data class RippleAccountInfoResponseJson(
     @SerialName("result")
-    val result: Result? = null,
+    val result: RippleAccountInfoResponseResultJson? = null,
 )
 
 @Serializable
-data class Result(
+data class RippleAccountInfoResponseResultJson(
     @SerialName("account_data")
-    val accountData: AccountData? = null,
+    val accountData: RippleAccountInfoResponseAccountDataJson? = null,
     val status: String? = null,
     val validated: Boolean? = null
 )
 
 @Serializable
-data class AccountData(
+data class RippleAccountInfoResponseAccountDataJson(
     @SerialName("Balance")
     val balance: String? = null,
     @SerialName("Sequence")
