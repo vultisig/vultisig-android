@@ -249,6 +249,13 @@ object SigningHelper {
                     signatures = signatures,
                 )
             }
+
+            Chain.Ripple -> {
+                return RippleHelper.getSignedTransaction(
+                    keysignPayload = keysignPayload,
+                    signatures = signatures,
+                )
+            }
         }
     }
 
