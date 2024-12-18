@@ -103,11 +103,6 @@ internal interface ApiModule {
         impl: SuiApiImpl
     ): SuiApi
 
-    @Binds
-    @Singleton
-    fun bindThorBalanceApi(
-        impl: ThorBalanceApiImpl
-    ): ThorBalanceApi
 
     @Binds
     @Singleton
