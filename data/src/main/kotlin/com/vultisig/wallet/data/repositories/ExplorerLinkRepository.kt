@@ -67,6 +67,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
     private val Chain.blockExplorerUrl: String
         get() = when (this) {
             Chain.Ton -> explorerUrl
+            Chain.Ripple -> "${explorerUrl}account/"
             else -> "${explorerUrl}address/"
         }
 
