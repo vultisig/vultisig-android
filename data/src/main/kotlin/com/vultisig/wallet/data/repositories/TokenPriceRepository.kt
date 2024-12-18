@@ -184,8 +184,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         tokens: List<Coin>,
         currencies: List<String>,
     ): Map<String, CurrencyToPrice> =
-        if (chain == Chain.Solana) emptyMap()
-        else coinGeckoApi.getContractsPrice(
+        coinGeckoApi.getContractsPrice(
             chain = chain,
             contractAddresses = tokens.map { it.contractAddress },
             currencies = currencies,
