@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.TokenStandard.SUI
 import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
 import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
+import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
 import wallet.core.jni.CoinType
 
 typealias ChainId = String
@@ -53,7 +54,7 @@ enum class Chain(
     Sui("Sui", SUI, "SUI"),
     Ton("Ton", TON, "TON"),
 
-    Ripple("Ripple",TokenStandard.RIPPLE, "XRP"),
+    Ripple("Ripple", RIPPLE, "XRP"),
     ;
 
     val id: String

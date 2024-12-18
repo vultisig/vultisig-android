@@ -25,7 +25,7 @@ object RippleHelper {
 
 
         val (sequence, gas) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
-            ?: throw RuntimeException("getPreSignedInputData: fail to get account number and sequence")
+            ?: error("getPreSignedInputData: fail to get account number and sequence")
 
         val publicKey = PublicKey(
             keysignPayload.coin.hexPublicKey.hexToByteArray(),
@@ -33,12 +33,12 @@ object RippleHelper {
         )
 
         val operation = Ripple.OperationPayment.newBuilder()
-            .apply {
-                keysignPayload.memo?.let {
-                    destinationTag = it.toLongOrNull() ?: 0L
-                }
-                destination = keysignPayload.toAddress
-                amount = keysignPayload.toAmount.toLong()
+            .setDestination(keysignPayload.toAddress)
+            .setAmount(keysignPayload.toAmount.toLong())
+            .let {
+                if (keysignPayload.memo != null)
+                    it.setDestinationTag(keysignPayload.memo.toLongOrNull() ?: 0L)
+                else it
             }.build()
 
         val input = Ripple.SigningInput.newBuilder()
@@ -48,8 +48,8 @@ object RippleHelper {
             .setPublicKey(
                 ByteString.copyFrom(publicKey.data())
             )
-            .setOpPayment(operation).build()
-
+            .setOpPayment(operation)
+            .build()
         return input.toByteArray()
     }
 
@@ -65,10 +65,10 @@ object RippleHelper {
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
         if (preSigningOutput.errorMessage.isNotEmpty()) {
-            println(preSigningOutput.errorMessage)
-            throw Exception(preSigningOutput.errorMessage)
+            Timber.e(preSigningOutput.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
-               return listOf(Numeric.toHexString(preSigningOutput.dataHash.toByteArray()))
+        return listOf(Numeric.toHexString(preSigningOutput.dataHash.toByteArray()))
     }
 
     fun getSignedTransaction(
@@ -91,8 +91,8 @@ object RippleHelper {
             .parseFrom(hashes)
 
         if (preSigningOutput.errorMessage.isNotEmpty()) {
-            println(preSigningOutput.errorMessage)
-            throw RuntimeException(preSigningOutput.errorMessage)
+            Timber.e(preSigningOutput.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
 
         val allSignatures = DataVector()
@@ -100,7 +100,7 @@ object RippleHelper {
         val key = Numeric.toHexString(preSigningOutput.dataHash.toByteArray())
         signatures[key]
             ?.getSignature()
-            ?: throw Exception("Signature not found")
+            ?: error("Signature not found")
 
         signatures[key]?.let {
             if (!publicKey.verifyAsDER(
@@ -109,7 +109,7 @@ object RippleHelper {
                 )
             ) {
                 Timber.e("Invalid signature")
-                throw Exception("Invalid signature")
+                error("Invalid signature")
             }
             allSignatures.add(it.derSignature.hexToByteArray())
             publicKeys.add(publicKey.data())
@@ -129,7 +129,7 @@ object RippleHelper {
         if (output.errorMessage.isNotEmpty()) {
             val errorMessage = output.errorMessage
             Timber.e("$errorMessage")
-            throw RuntimeException(errorMessage)
+            error(errorMessage)
         }
 
         return SignedTransactionResult(

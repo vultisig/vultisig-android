@@ -118,7 +118,7 @@ internal interface ApiModule {
     @Binds
     @Singleton
     fun bindRippleApi(
-        impl:RippleApiImp
+        impl: RippleApiImp
     ): RippleApi
 
     @Binds

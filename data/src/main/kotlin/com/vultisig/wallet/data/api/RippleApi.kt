@@ -27,7 +27,7 @@ internal class RippleApiImp @Inject constructor(
     private val http: HttpClient,
 ) : RippleApi {
     private val rpcUrl: String = "https://api.vultisig.com/ripple"
-    private val rpcURL2: String = "https://xrplcluster.com"
+    private val rpcUrl2: String = "https://xrplcluster.com"
 
 
     override suspend fun broadcastTransaction(hex: String): String {
@@ -43,23 +43,25 @@ internal class RippleApiImp @Inject constructor(
                     }
                 }
             )
-            val response = http.post(rpcURL2) {
+            val response = http.post(rpcUrl2) {
                 setBody(payload)
             }
 
             val rpcResp = response.body<RippleBroadcastResponseResponseJson>()
 
             if (rpcResp.result.engineResult != "tesSUCCESS") {
-                if (rpcResp.result.engineResultMessage?.toString()
-                        ?.lowercase() == "This sequence number has already passed.".lowercase()
+                if (rpcResp.result.engineResultMessage.equals(
+                        "This sequence number has already passed",
+                        ignoreCase = true
+                    )
                 ) {
-                    if (rpcResp.result.tx_json?.hash != null) {
-                        return rpcResp.result.tx_json.hash
+                    if (rpcResp.result.txJson?.hash != null) {
+                        return rpcResp.result.txJson.hash
                     }
                 }
                 return rpcResp.result.engineResultMessage ?: ""
             }
-            if (rpcResp.result.tx_json?.hash?.isNotEmpty() == true) {
+            if (rpcResp.result.txJson?.hash?.isNotEmpty() == true) {
                 return rpcResp.result.engineResultMessage ?: ""
             }
             return ""
@@ -68,7 +70,7 @@ internal class RippleApiImp @Inject constructor(
                 "Error in Broadcast XRP Transaction",
                 e.message
             )
-            throw e
+            error(e.message ?: "Error in Broadcast XRP Transaction")
         }
     }
 
@@ -104,13 +106,13 @@ internal class RippleApiImp @Inject constructor(
                     }
                 }
             )
-            val response = http.post(rpcURL2) {
+            val response = http.post(rpcUrl2) {
                 setBody(payload)
             }
             response.body<RippleAccountInfoResponseJson>()
         } catch (e: Exception) {
             Timber.e("Error in fetchTokenAccountsByOwner: ${e.message}")
-            throw e
+           error(e.message ?: "Error in fetchTokenAccountsByOwner")
         }
     }
 }

@@ -15,7 +15,7 @@ data class RippleBroadcastResponseResponseResultJson(
     @SerialName("engine_result_message")
     val engineResultMessage: String?,
     @SerialName("tx_json")
-    val tx_json: RippleBroadcastResponseResponseTransactionJson?,
+    val txJson: RippleBroadcastResponseResponseTransactionJson?,
 )
 
 
