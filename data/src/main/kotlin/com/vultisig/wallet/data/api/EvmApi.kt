@@ -81,7 +81,7 @@ class EvmApiFactoryImp @Inject constructor(
 
             Chain.BscChain -> EvmApiImp(
                 httpClient,
-                "https://api.vultisig.com/bsc/"
+                "https://api.vultisig.com/bnb/"
             )
 
             Chain.Avalanche -> EvmApiImp(
