@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
+import androidx.collection.emptyLongSet
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CosmoSignature
@@ -113,7 +114,12 @@ class CosmosHelper(
                                 .addAllAmounts(
                                     listOf(
                                         Cosmos.Amount.newBuilder()
-                                            .setDenom(denom)
+                                            .setDenom(
+                                                if (keysignPayload.coin.contractAddress.contains("factory/") || keysignPayload.coin.contractAddress.contains("ibc/"))
+                                                    keysignPayload.coin.contractAddress
+                                                else
+                                                    denom
+                                            )
                                             .setAmount(keysignPayload.toAmount.toString())
                                             .build()
                                     )
