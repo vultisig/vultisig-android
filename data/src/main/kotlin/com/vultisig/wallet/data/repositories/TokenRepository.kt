@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
-import com.vultisig.wallet.data.api.models.ThorAssetBalanceResultJson
+import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -149,7 +149,7 @@ internal class TokenRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun ThorAssetBalanceResultJson.toCoins(chain: Chain): List<Coin> =
+    private fun VultisigBalanceResultJson.toCoins(chain: Chain): List<Coin> =
         tokenBalances.mapNotNull {
             if (BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO) {
                 val supportedCoin = SupportedCoins.firstOrNull { coin ->

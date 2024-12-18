@@ -4,21 +4,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ThorAssetBalanceJson(
+data class VultisigBalanceJson(
     @SerialName("result")
-    val result: ThorAssetBalanceResultJson
+    val result: VultisigBalanceResultJson
 )
 
 @Serializable
-data class ThorAssetBalanceResultJson(
+data class VultisigBalanceResultJson(
     @SerialName("address")
     val address: String,
     @SerialName("tokenBalances")
-    val tokenBalances: List<ThorAssetTokenBalanceJson>,
+    val tokenBalances: List<VultisigTokenBalanceJson>,
 )
 
 @Serializable
-data class ThorAssetTokenBalanceJson(
+data class VultisigTokenBalanceJson(
     @SerialName("contractAddress")
     val contractAddress: String,
     @SerialName("tokenBalance")

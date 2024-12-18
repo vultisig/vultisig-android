@@ -8,7 +8,7 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.RpcResponse
 import com.vultisig.wallet.data.api.models.RpcResponseJson
 import com.vultisig.wallet.data.api.models.SendTransactionJson
-import com.vultisig.wallet.data.api.models.ThorAssetBalanceJson
+import com.vultisig.wallet.data.api.models.VultisigBalanceJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.common.stripHexPrefix
@@ -60,7 +60,7 @@ interface EvmApi {
 
     suspend fun getBalances(
         address: String,
-    ): ThorAssetBalanceJson
+    ): VultisigBalanceJson
 
 
 }
@@ -458,7 +458,7 @@ class EvmApiImp(
 
     override suspend fun getBalances(
         address: String,
-    ): ThorAssetBalanceJson = http.postRpc(
+    ): VultisigBalanceJson = http.postRpc(
         rpcUrl,
         "alchemy_getTokenBalances",
         params = buildJsonArray {
