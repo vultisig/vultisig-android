@@ -38,12 +38,20 @@ class SolanaHelper(
         }
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
+        val priorityFeePrice = 1000000L
+        val priorityFeeLimit = 100000
+
         val input = Solana.SigningInput.newBuilder()
             .setRecentBlockhash(solanaSpecific.recentBlockHash)
             .setSender(keysignPayload.coin.address)
             .setPriorityFeePrice(
                 Solana.PriorityFeePrice.newBuilder()
-                    .setPrice(solanaSpecific.priorityFee.toLong())
+                    .setPrice(priorityFeePrice)
+                    .build()
+            )
+            .setPriorityFeeLimit(
+                Solana.PriorityFeeLimit.newBuilder()
+                    .setLimit(priorityFeeLimit)
                     .build()
             )
 
