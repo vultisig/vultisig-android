@@ -9,7 +9,6 @@ import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.TOLERANCE_BPS
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.client.HttpClient
@@ -100,7 +99,6 @@ internal class ThorChainApiImpl @Inject constructor(
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", interval)
-                    parameter("tolerance_bps", TOLERANCE_BPS)
                     if (isAffiliate) {
                         parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                         parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
@@ -192,10 +190,26 @@ internal class ThorChainApiImpl @Inject constructor(
         .find { it.chain == chain }
         ?.address
 
-    override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson = httpClient
-        .get("https://thornode.ninerealms.com/txs/$tx")
-        .body()
-
+    override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson {
+        val response = httpClient
+            .get("https://thornode.ninerealms.com/cosmos/tx/v1beta1/txs/$tx")
+        if (!response.status.isSuccess()) {
+            //The  URL initially returns a 'not found' response but eventually
+            // provides a successful response after some time
+            if (response.status.equals(HttpStatusCode.NotFound))
+                return ThorChainTransactionJson(
+                    code = null,
+                    codeSpace = null,
+                    rawLog = response.bodyAsText()
+                )
+        } else
+            return ThorChainTransactionJson(
+                code = response.status.value,
+                codeSpace = HttpStatusCode.fromValue(response.status.value).description,
+                rawLog = response.bodyAsText()
+            )
+        return response.body()
+    }
 }
 
 @Serializable

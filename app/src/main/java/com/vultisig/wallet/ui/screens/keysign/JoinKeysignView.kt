@@ -34,6 +34,7 @@ import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifyTransactionScreen
+import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.utils.asString
 
@@ -43,7 +44,7 @@ internal fun JoinKeysignView(
 ) {
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
-    var keysignState: KeysignState  by remember { mutableStateOf(KeysignState.CreatingInstance) }
+    var keysignState: KeysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
 
     if (keysignState is KeysignState.KeysignFinished) {
         viewModel.enableNavigationToHome()
@@ -53,11 +54,11 @@ internal fun JoinKeysignView(
         state = viewModel.currentState.value,
         keysignState = keysignState,
         onBack = viewModel::navigateToHome
-        ) { state ->
+    ) { state ->
         when (state) {
             DiscoveringSessionID,
             WaitingForKeysignStart,
-            -> {
+                -> {
                 val text = when (state) {
                     DiscoveringSessionID -> stringResource(R.string.join_keysign_discovering_session_id)
                     WaitingForKeysignStart -> stringResource(R.string.join_keysign_waiting_keysign_start)
@@ -108,6 +109,15 @@ internal fun JoinKeysignView(
                             onConfirm = viewModel::joinKeysign
                         )
                     }
+
+                    is VerifyUiModel.SignMessage -> {
+                        VerifySignMessageScreen(
+                            state = model.model,
+                            confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                            onFastSignClick = {},
+                            onConfirm = viewModel::joinKeysign
+                        )
+                    }
                 }
             }
 
@@ -137,12 +147,14 @@ internal fun JoinKeysignView(
                 val errorLabel: String
                 val buttonText: String
                 val infoText: String?
-                when(state.errorType) {
+                when (state.errorType) {
                     is JoinKeysignError.WrongVaultShare, is JoinKeysignError.WrongVault -> {
                         errorLabel = state.errorType.message.asString()
-                        buttonText = stringResource(R.string.join_keysign_error_wrong_vault_share_try_again_button)
+                        buttonText =
+                            stringResource(R.string.join_keysign_error_wrong_vault_share_try_again_button)
                         infoText = null
                     }
+
                     else -> {
                         errorLabel = stringResource(
                             R.string.signing_error_please_try_again_s,

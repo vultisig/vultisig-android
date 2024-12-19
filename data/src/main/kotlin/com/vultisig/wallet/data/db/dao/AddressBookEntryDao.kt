@@ -11,6 +11,9 @@ interface AddressBookEntryDao {
     @Query("SELECT * FROM address_book_entry")
     suspend fun getEntries(): List<AddressBookEntryEntity>
 
+    @Query("SELECT * FROM address_book_entry WHERE chainId = :chainId AND address = :address")
+    suspend fun getEntry(chainId: String, address: String): AddressBookEntryEntity
+
     @Upsert
     suspend fun upsert(entry: AddressBookEntryEntity)
 

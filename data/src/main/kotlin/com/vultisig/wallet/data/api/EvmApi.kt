@@ -68,27 +68,27 @@ class EvmApiFactoryImp @Inject constructor(
         return when (chain) {
             Chain.Ethereum -> EvmApiImp(
                 httpClient,
-                "https://ethereum-rpc.publicnode.com"
+                "https://api.vultisig.com/eth/"
             )
 
             Chain.BscChain -> EvmApiImp(
                 httpClient,
-                "https://bsc-rpc.publicnode.com"
+                "https://api.vultisig.com/bsc/"
             )
 
             Chain.Avalanche -> EvmApiImp(
                 httpClient,
-                "https://avalanche-c-chain-rpc.publicnode.com"
+                "https://api.vultisig.com/avax/"
             )
 
             Chain.Polygon -> EvmApiImp(
                 httpClient,
-                "https://polygon-bor-rpc.publicnode.com"
+                "https://api.vultisig.com/polygon/"
             )
 
             Chain.Optimism -> EvmApiImp(
                 httpClient,
-                "https://optimism-rpc.publicnode.com"
+                "https://api.vultisig.com/opt/"
             )
 
             Chain.CronosChain -> EvmApiImp(
@@ -98,7 +98,7 @@ class EvmApiFactoryImp @Inject constructor(
 
             Chain.Blast -> EvmApiImp(
                 httpClient,
-                "https://rpc.ankr.com/blast"
+                "https://api.vultisig.com/blast/"
             )
 
             Chain.Base -> EvmApiImp(
@@ -108,12 +108,12 @@ class EvmApiFactoryImp @Inject constructor(
 
             Chain.Arbitrum -> EvmApiImp(
                 httpClient,
-                "https://arbitrum-one-rpc.publicnode.com"
+                "https://api.vultisig.com/arb/"
             )
 
             Chain.ZkSync -> EvmApiImp(
                 httpClient,
-                "https://mainnet.era.zksync.io"
+                "https://api.vultisig.com/zksync/"
             )
 
             else -> throw IllegalArgumentException("Unsupported chain $chain")

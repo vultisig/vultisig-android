@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.vultisig.wallet.ui.components.SigningError
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenView
 import com.vultisig.wallet.ui.models.keygen.KeygenFlowView
+import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
@@ -60,6 +61,7 @@ import com.vultisig.wallet.ui.screens.settings.LanguageSettingScreen
 import com.vultisig.wallet.ui.screens.settings.RegisterVaultScreen
 import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
+import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
@@ -357,6 +359,20 @@ internal fun SetupNavGraph(
         }
 
         composable(
+            route = Destination.SignMessage.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
+            )
+        ) { entry ->
+            val args = requireNotNull(entry.arguments)
+
+            SignMessageScreen(
+                navController = navController,
+                vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
+            )
+        }
+
+        composable(
             route = Destination.JoinThroughQr.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) {
@@ -391,13 +407,25 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.AddAddressEntry.STATIC_ROUTE,
+            route = Destination.AddressEntry.STATIC_ROUTE,
+            arguments = listOf(
+                navArgument(ARG_CHAIN_ID) {
+                    type = NavType.StringType
+                    nullable = true
+                },
+                navArgument(ARG_ADDRESS) {
+                    type = NavType.StringType
+                    nullable = true
+                }
+            )
         ) { entry ->
             val savedStateHandle = entry.savedStateHandle
             val args = requireNotNull(entry.arguments)
 
-            AddAddressEntryScreen(navController = navController,
-                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR))
+            AddAddressEntryScreen(
+                navController = navController,
+                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR),
+            )
         }
 
         composable(

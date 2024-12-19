@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
@@ -278,7 +279,11 @@ internal class GeneratingKeyViewModel(
             )
 
             if (isCodeValid) {
-                saveVault()
+                try {
+                    saveVault()
+                } catch (e: DuplicateVaultException) {
+                    setVerifyError(UiText.StringResource(R.string.import_file_screen_duplicate_vault))
+                }
             } else {
                 setVerifyError(UiText.StringResource(R.string.keygen_verify_server_backup_invalid_code))
             }

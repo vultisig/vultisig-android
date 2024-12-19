@@ -101,39 +101,50 @@ internal fun KeysignScreen(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (state == KeysignState.KeysignFinished) {
-            TransactionDoneView(
-                transactionHash = txHash,
-                transactionLink = transactionLink,
-                onComplete = onComplete,
-                progressLink = progressLink,
-                onBack = onBack,
-                transactionTypeUiModel = transactionTypeUiModel,
-            )
-        } else {
-            KeepScreenOn()
+        when (state) {
+            KeysignState.KeysignFinished -> {
+                TransactionDoneView(
+                    transactionHash = txHash,
+                    transactionLink = transactionLink,
+                    onComplete = onComplete,
+                    progressLink = progressLink,
+                    onBack = onBack,
+                    transactionTypeUiModel = transactionTypeUiModel,
+                )
+            }
 
-            UiSpacer(weight = 1f)
-            Text(
-                text = text,
-                color = Theme.colors.neutral0,
-                style = Theme.menlo.subtitle1,
-                textAlign = TextAlign.Center,
-            )
+            is KeysignState.Error -> {
+                KeysignErrorScreen(
+                    errorMessage = state.errorMessage,
+                    tryAgain = onBack
+                )
+            }
 
-            UiSpacer(size = 32.dp)
+            else -> {
+                KeepScreenOn()
 
-            UiCirclesLoader()
+                UiSpacer(weight = 1f)
+                Text(
+                    text = text,
+                    color = Theme.colors.neutral0,
+                    style = Theme.menlo.subtitle1,
+                    textAlign = TextAlign.Center,
+                )
 
-            UiSpacer(weight = 1f)
+                UiSpacer(size = 32.dp)
 
-            DevicesOnSameNetworkHint(
-                title = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open)
-            )
+                UiCirclesLoader()
 
-            UiSpacer(size = 60.dp)
+                UiSpacer(weight = 1f)
 
-            AppVersionText(Modifier.padding(bottom = 24.dp))
+                DevicesOnSameNetworkHint(
+                    title = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open)
+                )
+
+                UiSpacer(size = 60.dp)
+
+                AppVersionText(Modifier.padding(bottom = 24.dp))
+            }
         }
     }
 }

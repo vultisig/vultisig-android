@@ -166,7 +166,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         tokenIdToPrices: Map<String, CurrencyToPrice>,
         currency: String,
     ) {
-        tokenIdToPrices.forEach { (tokenId, currencyToPrice) ->
+        val tokenIdToPricesFiltered = tokenIdToPrices.filter {
+                (_, currencyToPrice) -> currencyToPrice.isNotEmpty()
+        }
+        tokenIdToPricesFiltered.forEach { (tokenId, currencyToPrice) ->
             currencyToPrice[currency]?.toPlainString()?.let { price ->
                 tokenPriceDao.insertTokenPrice(
                     TokenPriceEntity(
@@ -178,7 +181,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             }
         }
 
-        tokenIdToPrice.update { it + tokenIdToPrices }
+        tokenIdToPrice.update { it + tokenIdToPricesFiltered }
     }
 
     private suspend fun fetchPricesWithContractAddress(
@@ -186,44 +189,41 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         contractAddresses: List<String>,
         currencies: List<String>,
     ): Map<String, CurrencyToPrice> {
-        return if (chain == Chain.Solana) emptyMap()
-        else {
-            coroutineScope {
-                val coinGeckoContractsPrice = coinGeckoApi.getContractsPrice(
-                    chain = chain,
-                    contractAddresses = contractAddresses,
-                    currencies = currencies,
-                )
-                val notInCoinGeckoTokens = contractAddresses.filterNot { address ->
-                    coinGeckoContractsPrice.keys.any { key ->
-                        key.equals(
-                            address,
-                            false
-                        )
-                    }
+        return coroutineScope {
+            val coinGeckoContractsPrice = coinGeckoApi.getContractsPrice(
+                chain = chain,
+                contractAddresses = contractAddresses,
+                currencies = currencies,
+            )
+            val notInCoinGeckoTokens = contractAddresses.filterNot { address ->
+                coinGeckoContractsPrice.keys.any { key ->
+                    key.equals(
+                        address,
+                        false
+                    )
                 }
+            }
 
-                notInCoinGeckoTokens.takeIf { it.isNotEmpty() }
-                    ?: return@coroutineScope coinGeckoContractsPrice
+            notInCoinGeckoTokens.takeIf { it.isNotEmpty() }
+                ?: return@coroutineScope coinGeckoContractsPrice
 
-                val tetherPrice = fetchTetherPrice()
-                val currency = currencies.first()
-                val lifiContractsPrice = notInCoinGeckoTokens
-                    .map { contractAddress ->
-                        async {
-                            contractAddress to getLifiContractPriceInUsd(
-                                chain,
-                                contractAddress
-                            )
-                        }
-                    }.awaitAll().associate { (contractAddress, priceInUsd) ->
-                        //Since Lifi provides prices in USD, we use USDT to convert them into the local currency
-                        contractAddress to mapOf(
-                            currency to (priceInUsd?.times(tetherPrice) ?: BigDecimal.ZERO)
+            val tetherPrice = fetchTetherPrice()
+            val currency = currencies.first()
+            val lifiContractsPrice = notInCoinGeckoTokens
+                .map { contractAddress ->
+                    async {
+                        contractAddress to getLifiContractPriceInUsd(
+                            chain,
+                            contractAddress
                         )
                     }
-                coinGeckoContractsPrice + lifiContractsPrice
-            }
+                }.awaitAll().associate { (contractAddress, priceInUsd) ->
+                    //Since Lifi provides prices in USD, we use USDT to convert them into the local currency
+                    contractAddress to mapOf(
+                        currency to (priceInUsd?.times(tetherPrice) ?: BigDecimal.ZERO)
+                    )
+                }
+            coinGeckoContractsPrice + lifiContractsPrice
         }
     }
 

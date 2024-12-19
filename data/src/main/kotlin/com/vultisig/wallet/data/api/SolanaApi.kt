@@ -12,9 +12,9 @@ import com.vultisig.wallet.data.api.models.SolanaMinimumBalanceForRentExemptionJ
 import com.vultisig.wallet.data.api.models.SplAmountRpcResponseJson
 import com.vultisig.wallet.data.api.models.SplResponseAccountJson
 import com.vultisig.wallet.data.api.models.SplResponseJson
+import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.utils.postRpc
-import com.vultisig.wallet.data.api.models.SplTokenInfo
 import com.vultisig.wallet.data.models.SplTokenDeserialized
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializer
 import io.ktor.client.HttpClient
@@ -57,8 +57,7 @@ internal class SolanaApiImp @Inject constructor(
     private val splTokenSerializer: SplTokenResponseJsonSerializer,
 ) : SolanaApi {
 
-    private val rpcEndpoint = "https://api.mainnet-beta.solana.com"
-    private val rpcEndpoint2 = "https://solana-rpc.publicnode.com"
+    private val rpcEndpoint = "https://api.vultisig.com/solana/"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
     private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
@@ -249,7 +248,7 @@ internal class SolanaApiImp @Inject constructor(
                 },
                 id = 1,
             )
-            val response = httpClient.post(rpcEndpoint2) {
+            val response = httpClient.post(rpcEndpoint) {
                 setBody(payload)
             }
             val responseContent = response.bodyAsText()
@@ -283,7 +282,7 @@ internal class SolanaApiImp @Inject constructor(
                 },
                 id = 1,
             )
-            val response = httpClient.post(rpcEndpoint2) {
+            val response = httpClient.post(rpcEndpoint) {
                 setBody(payload)
             }
             val responseContent = response.bodyAsText()
@@ -308,7 +307,7 @@ internal class SolanaApiImp @Inject constructor(
     ): String? {
         try {
             val response = httpClient.postRpc<SplAmountRpcResponseJson>(
-                url = rpcEndpoint2,
+                url = rpcEndpoint,
                 method = "getTokenAccountsByOwner",
                 params = buildJsonArray {
                     add(walletAddress)

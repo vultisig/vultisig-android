@@ -36,13 +36,13 @@ import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.TokenCard
 import com.vultisig.wallet.ui.models.transaction.AddAddressEntryUiModel
-import com.vultisig.wallet.ui.models.transaction.AddAddressEntryViewModel
+import com.vultisig.wallet.ui.models.transaction.AddressEntryViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun AddAddressEntryScreen(
     navController: NavController,
-    model: AddAddressEntryViewModel = hiltViewModel(),
+    model: AddressEntryViewModel = hiltViewModel(),
     qrCodeResult: String?,
 ) {
     val state by model.state.collectAsState()
@@ -81,7 +81,7 @@ internal fun AddAddressEntryScreen(
         topBar = {
             TopBar(
                 navController = navController,
-                centerText = stringResource(R.string.add_address_title),
+                centerText = stringResource(state.titleRes),
                 startIcon = R.drawable.ic_caret_left,
             )
         },

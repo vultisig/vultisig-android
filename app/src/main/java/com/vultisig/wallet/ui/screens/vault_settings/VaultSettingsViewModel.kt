@@ -72,4 +72,11 @@ internal open class VaultSettingsViewModel @Inject constructor(
             navigator.navigate(Destination.BiometricsEnable(vaultId))
         }
     }
+
+    fun signMessage() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.SignMessage(vaultId))
+        }
+    }
+
 }
