@@ -127,6 +127,10 @@ object SigningHelper {
                 Chain.Ton -> {
                     TonHelper.getPreSignedImageHash(payload)
                 }
+
+                Chain.Ripple -> {
+                    RippleHelper.getPreSignedImageHash(payload)
+                }
             }
         }
 
@@ -242,6 +246,13 @@ object SigningHelper {
                 return TonHelper.getSignedTransaction(
                     vaultHexPublicKey = vault.pubKeyEDDSA,
                     payload = keysignPayload,
+                    signatures = signatures,
+                )
+            }
+
+            Chain.Ripple -> {
+                return RippleHelper.getSignedTransaction(
+                    keysignPayload = keysignPayload,
                     signatures = signatures,
                 )
             }

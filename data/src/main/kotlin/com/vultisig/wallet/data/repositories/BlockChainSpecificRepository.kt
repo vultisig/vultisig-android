@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
@@ -58,6 +59,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
+    private val rippleApi: RippleApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -294,6 +296,18 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     bounceable = false,
                 ),
             )
+        }
+
+        TokenStandard.RIPPLE -> {
+
+            BlockChainSpecificAndUtxo(
+                blockChainSpecific = BlockChainSpecific.Ripple(
+                    sequence = rippleApi.fetchAccountsInfo(address)?.result?.accountData?.sequence?.toULong()
+                        ?: 0UL,
+                    gas = gasFee.value.toLong().toULong(),
+                ),
+            )
+
         }
     }
 

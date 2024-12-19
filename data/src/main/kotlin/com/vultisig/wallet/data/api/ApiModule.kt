@@ -117,6 +117,12 @@ internal interface ApiModule {
 
     @Binds
     @Singleton
+    fun bindRippleApi(
+        impl: RippleApiImp
+    ): RippleApi
+
+    @Binds
+    @Singleton
     fun bindRouterApi(
         impl: RouterApiImp,
     ): RouterApi

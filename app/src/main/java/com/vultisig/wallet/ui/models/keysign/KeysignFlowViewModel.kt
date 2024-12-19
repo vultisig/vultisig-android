@@ -83,6 +83,7 @@ import vultisig.keysign.v1.OneInchQuote
 import vultisig.keysign.v1.OneInchSwapPayload
 import vultisig.keysign.v1.OneInchTransaction
 import vultisig.keysign.v1.PolkadotSpecific
+import vultisig.keysign.v1.RippleSpecific
 import vultisig.keysign.v1.SolanaSpecific
 import vultisig.keysign.v1.SuiSpecific
 import vultisig.keysign.v1.THORChainSpecific
@@ -380,6 +381,12 @@ internal class KeysignFlowViewModel @Inject constructor(
                     SuiSpecific(
                         referenceGasPrice = specific.referenceGasPrice.toString(),
                         coins = specific.coins,
+                    )
+                } else null,
+                rippleSpecific = if (specific is BlockChainSpecific.Ripple) {
+                    RippleSpecific(
+                        sequence = specific.sequence,
+                        gas = specific.gas,
                     )
                 } else null,
                 tonSpecific = if (specific is BlockChainSpecific.Ton) {

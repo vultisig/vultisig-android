@@ -167,6 +167,12 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         bounceable = it.bounceable,
                     )
                 }
+                from.rippleSpecific != null -> from.rippleSpecific.let {
+                    BlockChainSpecific.Ripple(
+                        sequence = it.sequence,
+                        gas = it.gas,
+                    )
+                }
 
                 else -> error("No supported BlockChainSpecific in proto $from")
             },
