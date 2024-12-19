@@ -119,7 +119,6 @@
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokens are airdropped to users.</string>
     <string name="feature_item_learn_more">Learn more</string>
     <string name="signing_error_keygen">Keygen</string>
-    <string name="signing_error_signing_error_please_try_again">Signing Error. Please try again.</string>
     <string name="signing_error_try_again">Try Again</string>
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa">ECDSA Key</string>
@@ -497,6 +496,7 @@
 
     <!-- TODO needs translation-->
     <string name="verify_sign_message_method_field_title" translatable="false">Method</string>
+    <string name="signing_error_blockhash_not_found" translatable="false">Transaction time out due to slow signing.\nPlease try again.</string>
     <string name="verify_sign_message_message_field_title" translatable="false">Message</string>
     <string name="sign_message_form_method_field_title" translatable="false">Method</string>
     <string name="sign_message_form_method_field_hint" translatable="false">Signing method</string>
