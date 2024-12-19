@@ -153,7 +153,7 @@ internal class TokenRepositoryImpl @Inject constructor(
         tokenBalances.mapNotNull {
             if (BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO) {
                 val supportedCoin = SupportedCoins.firstOrNull { coin ->
-                    coin.chain == chain
+                    coin.contractAddress.equals(it.contractAddress, true) && coin.chain == chain
                 }
                 supportedCoin?.let {
                     Coin(
