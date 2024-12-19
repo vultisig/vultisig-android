@@ -64,7 +64,6 @@
     <string name="network_prompts_local">Lokalni</string>
     <string name="setup_title">Postavljanje</string>
     <string name="keysign_peer_discovery_start">Početak</string>
-    <string name="signing_error_signing_error_please_try_again">Greška pri prijavi. Molimo pokušajte ponovno.</string>
     <string name="signing_error_try_again">Pokušajte ponovno</string>
     <string name="vault_detail_screen_vault_name">Ime sefa</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>

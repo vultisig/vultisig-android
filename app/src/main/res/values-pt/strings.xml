@@ -69,7 +69,6 @@
     <string name="network_prompts_local">Local</string>
     <string name="setup_title">Configurar</string>
     <string name="keysign_peer_discovery_start">Iniciar</string>
-    <string name="signing_error_signing_error_please_try_again">Erro ao Assinar. Por favor, tente novamente.</string>
     <string name="signing_error_try_again">Tentar Novamente</string>
     <string name="vault_detail_screen_vault_name">Nome do Cofre</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>

@@ -66,7 +66,6 @@
     <string name="network_prompts_local">Lokal</string>
     <string name="setup_title">Einrichten</string>
     <string name="keysign_peer_discovery_start">Starten</string>
-    <string name="signing_error_signing_error_please_try_again">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut.</string>
     <string name="signing_error_try_again">Erneut versuchen</string>
     <string name="vault_detail_screen_vault_name">Tresorname</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
