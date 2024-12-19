@@ -116,7 +116,6 @@
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-tokens worden verbrand door kosten.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT-tokens worden aan gebruikers uitgedeeld.</string>
     <string name="feature_item_learn_more">Meer informatie</string>
-    <string name="signing_error_keygen">Keygen</string>
     <string name="signing_error_try_again">Probeer opnieuw</string>
     <string name="vault_detail_screen_vault_name">Kluisnaam</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>

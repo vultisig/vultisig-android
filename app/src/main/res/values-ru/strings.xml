@@ -116,7 +116,6 @@
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Токены VULT сжигаются из комиссий.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Токены VULT раздаются пользователям.</string>
     <string name="feature_item_learn_more">Узнать больше</string>
-    <string name="signing_error_keygen">Генерация ключа</string>
     <string name="signing_error_try_again">Попробуйте снова</string>
     <string name="vault_detail_screen_vault_name">Имя хранилища</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>

@@ -118,7 +118,6 @@
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT tokens are burnt from fees.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT tokens are airdropped to users.</string>
     <string name="feature_item_learn_more">Learn more</string>
-    <string name="signing_error_keygen">Keygen</string>
     <string name="signing_error_try_again">Try Again</string>
     <string name="vault_detail_screen_vault_name">Vault Name</string>
     <string name="vault_detail_screen_ecdsa">ECDSA Key</string>

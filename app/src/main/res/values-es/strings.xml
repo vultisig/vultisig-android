@@ -109,7 +109,6 @@
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Los tokens VULT se queman a partir de las tarifas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Los tokens VULT se envían vía airdrop a los usuarios.</string>
     <string name="feature_item_learn_more">Aprende más</string>
-    <string name="signing_error_keygen">Generador de claves</string>
     <string name="signing_error_try_again">Intentar de Nuevo</string>
     <string name="vault_detail_screen_vault_name">Nombre de la Bóveda</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
