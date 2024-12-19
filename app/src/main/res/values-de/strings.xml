@@ -66,7 +66,6 @@
     <string name="network_prompts_local">Lokal</string>
     <string name="setup_title">Einrichten</string>
     <string name="keysign_peer_discovery_start">Starten</string>
-    <string name="signing_error_try_again">Erneut versuchen</string>
     <string name="vault_detail_screen_vault_name">Tresorname</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EDDSA</string>

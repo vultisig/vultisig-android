@@ -64,7 +64,6 @@
     <string name="network_prompts_local">Locale</string>
     <string name="setup_title">Configura</string>
     <string name="keysign_peer_discovery_start">Inizia</string>
-    <string name="signing_error_try_again">Riprova</string>
     <string name="vault_detail_screen_vault_name">Nome Cassaforte</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EDDSA</string>
