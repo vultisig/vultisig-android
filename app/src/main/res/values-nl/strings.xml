@@ -130,7 +130,6 @@
     <string name="device_list_desc1">U kunt alleen transacties verzenden met deze %1$s aanwezige apparaten.</string>
     <string name="device_list_desc2">U moet een back-up maken van alle kluisshares op afzonderlijke locaties.</string>
     <string name="failed_to_start_error">Niet gelukt om te starten, fout: %1$s</string>
-    <string name="keep_devices_on_the_same_wifi_network">Houd apparaten op hetzelfde WiFi-netwerk, juiste kluis en koppel apparaten.\nZorg ervoor dat geen andere apparaten \nVultisig draaien.</string>
     <string name="camera_bind_error">Camerabindingsfout %1$s</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
     <string name="token_settings_burnt">Verbrand: %1$s</string>

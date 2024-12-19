@@ -145,7 +145,6 @@
     <string name="keygen_peer_discovery_keygen">Keygen per il caveau %1$s</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantieni i dispositivi sulla stessa rete WiFi con Vultisig aperto.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantieni i dispositivi sulla stessa rete WiFi, correggi il vault e associa i dispositivi.\nAssicurati che nessun altro dispositivo stia eseguendo Vultisig.</string>
-    <string name="keep_devices_on_the_same_wifi_network">Mantieni i dispositivi sulla stessa rete WiFi, correggi il vault e associa i dispositivi.\nAssicurati che nessun altro dispositivo stia eseguendo vultisig.</string>
     <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantieni i dispositivi sulla stessa rete con Vultisig aperto.</string>
     <string name="join_key_gen_screen_joining_keygen">Unirsi a Keygen</string>
     <string name="verify_transaction_consent_correct_dst">Non sto inviando a una truffa o a un hacker</string>
