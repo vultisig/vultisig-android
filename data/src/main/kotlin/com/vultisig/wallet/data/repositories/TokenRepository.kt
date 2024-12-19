@@ -155,17 +155,19 @@ internal class TokenRepositoryImpl @Inject constructor(
                 val supportedCoin = SupportedCoins.firstOrNull { coin ->
                     coin.contractAddress.equals(it.contractAddress, true) && coin.chain == chain
                 }
-                Coin(
-                    contractAddress = it.contractAddress,
-                    chain = chain,
-                    ticker = supportedCoin?.ticker ?: "",
-                    logo = supportedCoin?.logo ?: "",
-                    decimal = supportedCoin?.decimal ?: 0,
-                    isNativeToken = supportedCoin?.isNativeToken ?: false,
-                    priceProviderID = supportedCoin?.priceProviderID ?: "",
-                    address = "",
-                    hexPublicKey = "",
-                )
+                supportedCoin?.let {
+                    Coin(
+                        contractAddress = it.contractAddress,
+                        chain = chain,
+                        ticker = supportedCoin.ticker,
+                        logo = supportedCoin.logo,
+                        decimal = supportedCoin.decimal,
+                        isNativeToken = supportedCoin.isNativeToken,
+                        priceProviderID = supportedCoin.priceProviderID,
+                        address = "",
+                        hexPublicKey = "",
+                    )
+                }
             } else null
         }
 
