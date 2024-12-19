@@ -116,9 +116,6 @@
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Токены VULT сжигаются из комиссий.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Токены VULT раздаются пользователям.</string>
     <string name="feature_item_learn_more">Узнать больше</string>
-    <string name="signing_error_keygen">Генерация ключа</string>
-    <string name="signing_error_signing_error_please_try_again">Ошибка подписи. Пожалуйста, попробуйте снова.</string>
-    <string name="signing_error_try_again">Попробуйте снова</string>
     <string name="vault_detail_screen_vault_name">Имя хранилища</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EdDSA</string>
@@ -133,7 +130,6 @@
     <string name="device_list_desc1">Вы можете отправлять транзакции только с этими %1$s устройствами.</string>
     <string name="device_list_desc2">Вам следует создать резервные копии всех общих ресурсов хранилища в отдельных местах.</string>
     <string name="failed_to_start_error">Ошибка запуска, ошибка: %1$s</string>
-    <string name="keep_devices_on_the_same_wifi_network">Держите устройства в одной WiFi сети, правильное хранилище и сопряжённые устройства.\nУбедитесь, что ни одно другое устройство не использует Vultisig.</string>
     <string name="camera_bind_error">Ошибка привязки камеры %1$s</string>
     <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>
     <string name="token_settings_burnt">Сожжено: %1$s</string>
