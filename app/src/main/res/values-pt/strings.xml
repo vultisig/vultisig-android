@@ -69,8 +69,6 @@
     <string name="network_prompts_local">Local</string>
     <string name="setup_title">Configurar</string>
     <string name="keysign_peer_discovery_start">Iniciar</string>
-    <string name="signing_error_signing_error_please_try_again">Erro ao Assinar. Por favor, tente novamente.</string>
-    <string name="signing_error_try_again">Tentar Novamente</string>
     <string name="vault_detail_screen_vault_name">Nome do Cofre</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EDDSA</string>
@@ -145,10 +143,8 @@
     <string name="generating_key_title">Gerador de chaves</string>
     <string name="join_key_gen_screen_keygen">Gerador de chaves</string>
     <string name="keygen_peer_discovery_keygen">Keygen para o cofre de %1$s</string>
-    <string name="signing_error_keygen">Gerador de chaves</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenha os dispositivos na mesma rede WiFi com o Vultisig aberto.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos.\nCertifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
-    <string name="keep_devices_on_the_same_wifi_network">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos.\nCertifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
     <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Mantenha os dispositivos na mesma rede com o Vultisig aberto.</string>
     <string name="join_key_gen_screen_joining_keygen">Juntando-se ao Keygen</string>
     <string name="verify_transaction_consent_correct_dst">Não estou enviando para um golpe ou hacker</string>

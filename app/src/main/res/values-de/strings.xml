@@ -66,8 +66,6 @@
     <string name="network_prompts_local">Lokal</string>
     <string name="setup_title">Einrichten</string>
     <string name="keysign_peer_discovery_start">Starten</string>
-    <string name="signing_error_signing_error_please_try_again">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut.</string>
-    <string name="signing_error_try_again">Erneut versuchen</string>
     <string name="vault_detail_screen_vault_name">Tresorname</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EDDSA</string>
@@ -145,10 +143,8 @@
     <string name="generating_key_title">Keygen</string>
     <string name="join_key_gen_screen_keygen">Keygen</string>
     <string name="keygen_peer_discovery_keygen">Keygen für %1$s Tresor</string>
-    <string name="signing_error_keygen">Keygen</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Behalten Sie Geräte im selben WLAN-Netzwerk mit geöffnetem Vultisig.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Behalten Sie die Geräte im selben WLAN-Netzwerk, korrigieren Sie den Tresor und koppeln Sie die Geräte.\nStellen Sie sicher, dass Vultisig auf keinem anderen Gerät ausgeführt wird.</string>
-    <string name="keep_devices_on_the_same_wifi_network">Behalten Sie die Geräte im selben WLAN-Netzwerk, korrigieren Sie den Tresor und koppeln Sie die Geräte.\nStellen Sie sicher, dass Vultisig auf keinem anderen Gerät ausgeführt wird.</string>
     <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Behalten Sie Geräte im selben Netzwerk, während Vultisig geöffnet ist.</string>
     <string name="join_key_gen_screen_joining_keygen">Keygen beitreten</string>
     <string name="verify_transaction_consent_correct_dst">Ich sende nicht an einen Betrüger oder Hacker</string>

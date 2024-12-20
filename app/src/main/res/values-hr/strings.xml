@@ -64,8 +64,6 @@
     <string name="network_prompts_local">Lokalni</string>
     <string name="setup_title">Postavljanje</string>
     <string name="keysign_peer_discovery_start">Početak</string>
-    <string name="signing_error_signing_error_please_try_again">Greška pri prijavi. Molimo pokušajte ponovno.</string>
-    <string name="signing_error_try_again">Pokušajte ponovno</string>
     <string name="vault_detail_screen_vault_name">Ime sefa</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EDDSA</string>
@@ -145,10 +143,8 @@
     <string name="generating_key_title">Keygen</string>
     <string name="join_key_gen_screen_keygen">Keygen</string>
     <string name="keygen_peer_discovery_keygen">Keygen za %1$s trezor</string>
-    <string name="signing_error_keygen">Keygen</string>
     <string name="keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Držite uređaje na istoj WiFi mreži s otvorenim Vultisig-om.</string>
     <string name="bottom_warning_msg_keygen_error_screen">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje.\nUvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
-    <string name="keep_devices_on_the_same_wifi_network">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje.\nUvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
     <string name="generating_key_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open">Držite uređaje na istoj mreži s otvorenim Vultisig-om.</string>
     <string name="join_key_gen_screen_joining_keygen">Joining Keygen</string>
     <string name="verify_transaction_consent_correct_dst">Ne šaljem prijevaru ili hakeru</string>

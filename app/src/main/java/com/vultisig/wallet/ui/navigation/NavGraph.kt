@@ -7,7 +7,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.vultisig.wallet.ui.components.SigningError
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenView
 import com.vultisig.wallet.ui.models.keygen.KeygenFlowView
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
@@ -202,10 +201,6 @@ internal fun SetupNavGraph(
             )
         ) {
             KeygenFlowView(navController)
-        }
-
-        composable(route = Screen.SigningError.route) {
-            SigningError(navController)
         }
 
         composable(route = Destination.ImportVault.route) {

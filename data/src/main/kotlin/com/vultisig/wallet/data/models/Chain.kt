@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.TokenStandard.SUI
 import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
 import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
+import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
 import wallet.core.jni.CoinType
 
 typealias ChainId = String
@@ -52,6 +53,8 @@ enum class Chain(
     Polkadot("Polkadot", SUBSTRATE, "DOT"),
     Sui("Sui", SUI, "SUI"),
     Ton("Ton", TON, "TON"),
+
+    Ripple("Ripple", RIPPLE, "XRP"),
     ;
 
     val id: String
@@ -93,6 +96,7 @@ val Chain.coinType: CoinType
         Chain.Terra -> CoinType.TERRAV2
         Chain.TerraClassic -> CoinType.TERRA
         Chain.Noble -> CoinType.NOBLE
+        Chain.Ripple -> CoinType.XRP
     }
 
 val Chain.TssKeysignType: TssKeyType
@@ -185,5 +189,6 @@ fun Chain.swapAssetName(): String {
         Chain.Terra -> "LUNA"
         Chain.TerraClassic -> "LUNC"
         Chain.Noble -> "USDC"
+        Chain.Ripple -> "XRP"
     }
 }
