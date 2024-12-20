@@ -2,14 +2,13 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
-import com.vultisig.wallet.data.api.ThorBalanceApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
-import com.vultisig.wallet.data.api.models.ThorBalancesResponseJson
+import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
+import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins.SupportedCoins
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.oneInchChainId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -43,7 +42,6 @@ interface TokenRepository {
 internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
-    private val balanceApi: ThorBalanceApi,
     private val splTokenRepository: SplTokenRepository,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
@@ -125,14 +123,11 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
+        val evmApi = evmApiFactory.createEvmApi(chain)
         return when (chain) {
-            Chain.BscChain, Chain.Avalanche -> getBalanceByRoute(chain, address)
-            Chain.Solana -> getBalanceByRoute(chain, address)
-
-            Chain.Ethereum -> balanceApi.getEthBalances(null, address)
-                .toCoins(chain)
-            Chain.Arbitrum -> balanceApi.getEthBalances(chain.oneInchChainId(), address)
-                .toCoins(chain)
+            Chain.BscChain, Chain.Avalanche,
+            Chain.Ethereum, Chain.Arbitrum,
+                -> evmApi.getBalances(address).result.toCoins(chain)
 
             else -> {
                 // cant get this for non EVM chains right now
@@ -154,40 +149,25 @@ internal class TokenRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun getBalanceByRoute(
-        chain: Chain,
-        address: String,
-    ): List<Coin> =
-        balanceApi.getBalances(chain.toThorWalletChainName(), address)
-            .toCoins(chain)
-
-    private fun Chain.toThorWalletChainName(): String = when (this) {
-        Chain.BscChain -> "bsc"
-        Chain.Avalanche -> "avalanche"
-        Chain.Solana -> "solana"
-        Chain.Sui -> "sui"
-        else -> error("Chain $this is not supported by ThorWallet API")
-    }
-
-    private fun ThorBalancesResponseJson.toCoins(chain: Chain): List<Coin> =
-        balances.mapNotNull {
-            val asset = it.asset
-            val amount = it.amount.toBigIntegerOrNull()
-            if (amount == null || amount != BigInteger.ZERO) {
+    private fun VultisigBalanceResultJson.toCoins(chain: Chain): List<Coin> =
+        tokenBalances.mapNotNull {
+            if (BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO) {
                 val supportedCoin = SupportedCoins.firstOrNull { coin ->
-                    coin.id == "${asset.symbol}-${chain.id}" || coin.id == "${asset.ticker}-${chain.id}"
+                    coin.contractAddress.equals(it.contractAddress, true) && coin.chain == chain
                 }
-                Coin(
-                    contractAddress = asset.contractAddress,
-                    chain = chain,
-                    ticker = asset.ticker,
-                    logo = asset.icon ?: "",
-                    decimal = asset.decimals,
-                    isNativeToken = supportedCoin?.isNativeToken ?: false,
-                    priceProviderID = supportedCoin?.priceProviderID ?: "",
-                    address = "",
-                    hexPublicKey = "",
-                )
+                supportedCoin?.let {
+                    Coin(
+                        contractAddress = it.contractAddress,
+                        chain = chain,
+                        ticker = supportedCoin.ticker,
+                        logo = supportedCoin.logo,
+                        decimal = supportedCoin.decimal,
+                        isNativeToken = supportedCoin.isNativeToken,
+                        priceProviderID = supportedCoin.priceProviderID,
+                        address = "",
+                        hexPublicKey = "",
+                    )
+                }
             } else null
         }
 

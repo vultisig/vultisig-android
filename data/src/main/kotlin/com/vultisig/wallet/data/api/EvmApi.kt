@@ -8,7 +8,9 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.RpcResponse
 import com.vultisig.wallet.data.api.models.RpcResponseJson
 import com.vultisig.wallet.data.api.models.SendTransactionJson
+import com.vultisig.wallet.data.api.models.VultisigBalanceJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
+import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.models.Chain
@@ -55,6 +57,12 @@ interface EvmApi {
         recipientAddress: String,
         value: BigInteger,
     ): BigInteger
+
+    suspend fun getBalances(
+        address: String,
+    ): VultisigBalanceJson
+
+
 }
 
 interface EvmApiFactory {
@@ -73,7 +81,7 @@ class EvmApiFactoryImp @Inject constructor(
 
             Chain.BscChain -> EvmApiImp(
                 httpClient,
-                "https://api.vultisig.com/bsc/"
+                "https://api.vultisig.com/bnb/"
             )
 
             Chain.Avalanche -> EvmApiImp(
@@ -447,6 +455,16 @@ class EvmApiImp(
             )
         }
     }
+
+    override suspend fun getBalances(
+        address: String,
+    ): VultisigBalanceJson = http.postRpc(
+        rpcUrl,
+        "alchemy_getTokenBalances",
+        params = buildJsonArray {
+            add(address)
+        }
+    )
 
     private suspend inline fun <reified T> fetch(
         method: String,
