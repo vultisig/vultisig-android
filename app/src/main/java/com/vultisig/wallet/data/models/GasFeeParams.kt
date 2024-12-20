@@ -6,6 +6,7 @@ data class GasFeeParams(
     val gasLimit: BigInteger,
     val gasFee: TokenValue,
     val selectedToken: Coin,
+    val perUnit: Boolean = false,
 )
 
 internal data class EstimatedGasFee(

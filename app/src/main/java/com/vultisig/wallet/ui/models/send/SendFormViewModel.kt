@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
+import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -26,6 +27,7 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
@@ -38,6 +40,7 @@ import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -65,6 +68,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import wallet.core.jni.proto.Bitcoin
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -143,6 +147,7 @@ internal class SendFormViewModel @Inject constructor(
     private val getAvailableTokenBalance: GetAvailableTokenBalanceUseCase,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val advanceGasUiRepository: AdvanceGasUiRepository,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SendFormUiModel())
@@ -426,6 +431,8 @@ internal class SendFormViewModel @Inject constructor(
                         UiText.StringResource(R.string.send_error_no_token)
                     )
 
+                val memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
+
                 val selectedToken = selectedAccount.token
 
                 val tokenAmountInt =
@@ -517,7 +524,6 @@ internal class SendFormViewModel @Inject constructor(
                     }
                 }
 
-
                 val totalGasAndFee = gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = if (chain.standard == TokenStandard.EVM) {
@@ -525,7 +531,20 @@ internal class SendFormViewModel @Inject constructor(
                         } else {
                             BigInteger.valueOf(1)
                         },
-                        gasFee = gasFee,
+                        gasFee = if (chain.standard == TokenStandard.UTXO) {
+                            val plan = getBitcoinTransactionPlan(
+                                vaultId,
+                                selectedToken,
+                                dstAddress,
+                                tokenAmountInt,
+                                specific,
+                                memo,
+                            )
+
+                            gasFee.copy(
+                                value = BigInteger.valueOf(plan.fee)
+                            )
+                        } else gasFee,
                         selectedToken = selectedToken,
                     )
                 )
@@ -551,12 +570,10 @@ internal class SendFormViewModel @Inject constructor(
 
                     blockChainSpecific = specific.blockChainSpecific,
                     utxos = specific.utxos,
-                    memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
+                    memo = memo,
                     estimatedFee = totalGasAndFee.formattedFiatValue,
                     totalGass = totalGasAndFee.formattedTokenValue,
                 )
-
-                Timber.d("Transaction: $transaction")
 
                 transactionRepository.addTransaction(transaction)
                 advanceGasUiRepository.hideIcon()
@@ -572,6 +589,33 @@ internal class SendFormViewModel @Inject constructor(
                 hideLoading()
             }
         }
+    }
+
+    private suspend fun getBitcoinTransactionPlan(
+        vaultId: String,
+        selectedToken: Coin,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        specific: BlockChainSpecificAndUtxo,
+        memo: String?,
+    ): Bitcoin.TransactionPlan {
+        val vault = vaultRepository.get(vaultId)!!
+
+        val keysignPayload = KeysignPayload(
+            coin = selectedToken,
+            toAddress = dstAddress,
+            toAmount = tokenAmountInt,
+            blockChainSpecific = specific.blockChainSpecific,
+            memo = memo,
+            vaultPublicKeyECDSA = vault.pubKeyECDSA,
+            vaultLocalPartyID = vault.localPartyID,
+            utxos = specific.utxos,
+        )
+
+        val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
+
+        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
+        return plan
     }
 
     private fun selectUtxosIfNeeded(
@@ -795,6 +839,7 @@ internal class SendFormViewModel @Inject constructor(
                             },
                             gasFee = gasFee,
                             selectedToken = token,
+                            perUnit = true,
                         )
                     )
 
@@ -1034,6 +1079,5 @@ internal class SendFormViewModel @Inject constructor(
     companion object {
         private const val REQUEST_ADDRESS_ID = "request_address_id"
     }
-
 }
 
