@@ -86,7 +86,7 @@ internal class SuiApiImpl @Inject constructor(
             ?.jsonArray
             ?.mapNotNull {
                 val coinType = it.jsonObject["coinType"]?.jsonPrimitive?.content
-                if (coinType == "0x2::sui::SUI") {
+                if (coinType != null) {
                     SuiCoin(
                         coinObjectId = it.jsonObject["coinObjectId"]?.jsonPrimitive?.content ?: "",
                         version = it.jsonObject["version"]?.jsonPrimitive?.content ?: "",
