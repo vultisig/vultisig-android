@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.GasFeeParams
@@ -27,6 +28,8 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
 
         val nativeToken = tokenRepository.getNativeToken(from.selectedToken.chain.id)
 
+        val chain = nativeToken.chain
+
         var tokenValue = TokenValue(
             value = from.gasFee.value.multiply(from.gasLimit),
             unit = from.gasFee.unit,
@@ -39,16 +42,24 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
             appCurrency
         )
 
-        if (nativeToken.chain.feeUnit.equals("Gwei", ignoreCase = true)) {
-            tokenValue = tokenValue.copy(
-                value = tokenValue.value.divide(BigInteger.TEN.pow(9)),
-            )
+
+        tokenValue = when {
+            chain.feeUnit.equals("Gwei", ignoreCase = true) ->
+                tokenValue.copy(
+                    value = tokenValue.value.divide(BigInteger.TEN.pow(9)),
+                    unit = nativeToken.ticker,
+                )
+
+            chain == Chain.Bitcoin && from.perUnit->
+                tokenValue.copy(
+                    unit = chain.feeUnit,
+                )
+
+            else ->
+                tokenValue.copy(
+                    unit = nativeToken.ticker,
+                )
         }
-        tokenValue = TokenValue(
-            value = tokenValue.value,
-            unit = nativeToken.ticker,
-            decimals =tokenValue.decimals
-        )
 
         return EstimatedGasFee(
             formattedFiatValue = fiatValueToStringMapper.map(fiatFees),
