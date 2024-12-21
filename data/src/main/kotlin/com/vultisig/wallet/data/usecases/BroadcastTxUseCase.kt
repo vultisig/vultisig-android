@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
+import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.chains.SuiApi
@@ -38,6 +39,7 @@ import com.vultisig.wallet.data.models.Chain.TerraClassic
 import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
+import com.vultisig.wallet.data.models.Chain.Ripple
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import javax.inject.Inject
 
@@ -58,6 +60,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
     private val polkadotApi: PolkadotApi,
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
+    private val rippleApi: RippleApi,
 ) : BroadcastTxUseCase {
 
     override suspend fun invoke(
@@ -109,6 +112,10 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
 
         Ton -> {
             tonApi.broadcastTransaction(tx.rawTransaction)
+        }
+
+        Ripple -> {
+            rippleApi.broadcastTransaction(tx.rawTransaction)
         }
     }
 

@@ -109,9 +109,6 @@
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">Los tokens VULT se queman a partir de las tarifas.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">Los tokens VULT se envían vía airdrop a los usuarios.</string>
     <string name="feature_item_learn_more">Aprende más</string>
-    <string name="signing_error_keygen">Generador de claves</string>
-    <string name="signing_error_signing_error_please_try_again">Error al Firmar. Por favor intenta de nuevo.</string>
-    <string name="signing_error_try_again">Intentar de Nuevo</string>
     <string name="vault_detail_screen_vault_name">Nombre de la Bóveda</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EDDSA</string>
@@ -126,7 +123,6 @@
     <string name="device_list_desc1">Sólo puedes enviar transacciones con estos %1$s dispositivos presentes.</string>
     <string name="device_list_desc2">Debes realizar una copia de seguridad de todos los recursos compartidos de bóveda en ubicaciones separadas.</string>
     <string name="failed_to_start_error">Error al iniciar, error: %1$s</string>
-    <string name="keep_devices_on_the_same_wifi_network">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
     <string name="token_settings_supply">Oferta: %1$s</string>
     <string name="this_device">(Este Dispositivo)</string>

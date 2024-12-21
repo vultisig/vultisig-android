@@ -64,4 +64,9 @@ sealed class BlockChainSpecific {
         val bounceable: Boolean,
     ) : BlockChainSpecific()
 
+    data class Ripple(
+        val sequence: ULong,
+        val gas: ULong
+    ) : BlockChainSpecific()
+
 }

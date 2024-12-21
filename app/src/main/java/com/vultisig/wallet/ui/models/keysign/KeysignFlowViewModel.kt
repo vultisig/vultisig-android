@@ -83,6 +83,7 @@ import vultisig.keysign.v1.OneInchQuote
 import vultisig.keysign.v1.OneInchSwapPayload
 import vultisig.keysign.v1.OneInchTransaction
 import vultisig.keysign.v1.PolkadotSpecific
+import vultisig.keysign.v1.RippleSpecific
 import vultisig.keysign.v1.SolanaSpecific
 import vultisig.keysign.v1.SuiSpecific
 import vultisig.keysign.v1.THORChainSpecific
@@ -137,7 +138,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val _keysignMessage: MutableState<String> = mutableStateOf("")
     private var messagesToSign = emptyList<String>()
 
-    var currentState: MutableStateFlow<KeysignFlowState> =
+    val currentState: MutableStateFlow<KeysignFlowState> =
         MutableStateFlow(KeysignFlowState.PeerDiscovery)
     val selection = MutableLiveData<List<String>>()
     val localPartyID: String?
@@ -382,6 +383,12 @@ internal class KeysignFlowViewModel @Inject constructor(
                         coins = specific.coins,
                     )
                 } else null,
+                rippleSpecific = if (specific is BlockChainSpecific.Ripple) {
+                    RippleSpecific(
+                        sequence = specific.sequence,
+                        gas = specific.gas,
+                    )
+                } else null,
                 tonSpecific = if (specific is BlockChainSpecific.Ton) {
                     TonSpecific(
                         sequenceNumber = specific.sequenceNumber,
@@ -504,7 +511,6 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
-    @OptIn(DelicateCoroutinesApi::class)
     private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == MediatorService.SERVICE_ACTION) {
@@ -514,7 +520,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     return
                 }
                 // send a request to local mediator server to start the session
-                GlobalScope.launch(Dispatchers.IO) {
+                viewModelScope.launch(Dispatchers.IO) {
                     delay(1000) // back off a second
                     startSession(_serverAddress, _sessionID, _currentVault!!.localPartyID)
                 }
@@ -617,7 +623,6 @@ internal class KeysignFlowViewModel @Inject constructor(
         addressProvider.clean()
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
         if (networkOption.value == option) return
         networkOption.value = option
@@ -631,7 +636,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             }
         }
 
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             updateKeysignPayload(context)
         }
     }

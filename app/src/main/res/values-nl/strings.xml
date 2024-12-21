@@ -116,9 +116,6 @@
     <string name="feature_item_vtx_tokens_are_burnt_from_fees">VULT-tokens worden verbrand door kosten.</string>
     <string name="feature_item_vtx_tokens_are_airdropped_to_users">VULT-tokens worden aan gebruikers uitgedeeld.</string>
     <string name="feature_item_learn_more">Meer informatie</string>
-    <string name="signing_error_keygen">Keygen</string>
-    <string name="signing_error_signing_error_please_try_again">Ondertekeningsfout. Probeer het opnieuw.</string>
-    <string name="signing_error_try_again">Probeer opnieuw</string>
     <string name="vault_detail_screen_vault_name">Kluisnaam</string>
     <string name="vault_detail_screen_ecdsa">ECDSA</string>
     <string name="vault_detail_screen_eddsa">EDDSA</string>
@@ -133,7 +130,6 @@
     <string name="device_list_desc1">U kunt alleen transacties verzenden met deze %1$s aanwezige apparaten.</string>
     <string name="device_list_desc2">U moet een back-up maken van alle kluisshares op afzonderlijke locaties.</string>
     <string name="failed_to_start_error">Niet gelukt om te starten, fout: %1$s</string>
-    <string name="keep_devices_on_the_same_wifi_network">Houd apparaten op hetzelfde WiFi-netwerk, juiste kluis en koppel apparaten.\nZorg ervoor dat geen andere apparaten \nVultisig draaien.</string>
     <string name="camera_bind_error">Camerabindingsfout %1$s</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
     <string name="token_settings_burnt">Verbrand: %1$s</string>
