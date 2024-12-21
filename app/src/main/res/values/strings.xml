@@ -502,4 +502,5 @@
     <string name="sign_message_sign_screen_title" translatable="false">Sign message</string>
     <string name="vault_settings_sign_message_title" translatable="false">Sign</string>
     <string name="vault_settings_sign_message_description" translatable="false">Sign custom message</string>
+    <string name="swap_screen_invalid_specific_and_utxo" translatable="false">Specific calculation failed</string>
 </resources>
