@@ -573,6 +573,17 @@ object Coins {
             isNativeToken = false,
         ),
         Coin(
+            chain = Chain.Solana,
+            ticker = "KWEEN",
+            logo = "kween",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kween",
+            contractAddress = "DEf93bSt8dx58gDFCcz4CwbjYZzjwaRBYAciJYLfdCA9",
+            isNativeToken = false
+        ),
+        Coin(
             chain = BscChain,
             ticker = "BNB",
             logo = "bsc",
