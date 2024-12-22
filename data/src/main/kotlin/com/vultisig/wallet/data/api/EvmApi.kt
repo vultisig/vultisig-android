@@ -160,7 +160,6 @@ class EvmApiImp(
                 add("latest")
             }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -177,7 +176,6 @@ class EvmApiImp(
                 add("latest")
             }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get balance ,address: $address error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -193,7 +191,6 @@ class EvmApiImp(
                 add("latest")
             }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get nonce ,address: $address error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -208,7 +205,6 @@ class EvmApiImp(
             "eth_gasPrice",
             buildJsonArray { }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get gas price error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -236,7 +232,6 @@ class EvmApiImp(
                 }
             }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -267,7 +262,6 @@ class EvmApiImp(
                 }
             }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -290,7 +284,6 @@ class EvmApiImp(
             "eth_maxPriorityFeePerGas",
             buildJsonArray { }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get max priority fee per gas , error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -316,7 +309,6 @@ class EvmApiImp(
                 add("latest")
             }
         )
-        rpcResp ?: return BigInteger.ZERO
         if (rpcResp.error != null) {
             Timber.d("get allowance,contract address: $contractAddress,owner: $owner,spender: $spender, error: ${rpcResp.error.message}")
             return BigInteger.ZERO
@@ -404,7 +396,6 @@ class EvmApiImp(
                 add(true)
             }
         )
-        response ?: error("failed to get base fee")
         return response.result.baseFeePerGas.convertToBigIntegerOrZero()
     }
 
@@ -420,7 +411,6 @@ class EvmApiImp(
             }
         )
 
-        response ?: error("failed to get fee history")
         val rewards = response.result.reward
 
         return rewards.mapNotNull { it.firstOrNull() }
@@ -442,13 +432,6 @@ class EvmApiImp(
                     put("data", data)
                 }
             }
-        )
-
-        response ?: return ZkGasFee(
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO,
-            BigInteger.ZERO
         )
         return if (response.error != null) {
             Timber.d(
@@ -487,20 +470,15 @@ class EvmApiImp(
         method: String,
         params: JsonArray,
         id: Int = 1,
-    ): T? = try {
-        http.post(rpcUrl) {
-            setBody(
-                RpcPayload(
-                    method = method,
-                    params = params,
-                    id = id
-                )
+    ): T = http.post(rpcUrl) {
+        setBody(
+            RpcPayload(
+                method = method,
+                params = params,
+                id = id
             )
-        }.body()
-    } catch (e: Exception) {
-        Timber.e(e)
-        null
-    }
+        )
+    }.body()
 
     private fun generateCustomTokenPayload(
         contractAddress: String,
@@ -546,7 +524,6 @@ class EvmApiImp(
                 add("latest")
             }
         )
-        rpcResp ?: error("Failed to fetch ens for params $params")
         val data = rpcResp.result?.stripHexPrefix()?.let { Numeric.hexStringToByteArray(it) }
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
     }
