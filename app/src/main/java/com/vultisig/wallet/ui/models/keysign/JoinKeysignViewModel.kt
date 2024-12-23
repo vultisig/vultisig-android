@@ -397,8 +397,17 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 when (swapPayload) {
                     is SwapPayload.OneInch -> {
+                        val oneInchSwapTxJson = swapPayload.data.quote.tx
+                        //if swapFee is not null then it provider is Lifi otherwise 1inch
+                        val value = if (oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null) {
+                            oneInchSwapTxJson.swapFee.toBigInteger()
+                        } else {
+                            oneInchSwapTxJson.gasPrice.toBigInteger() *
+                                    (oneInchSwapTxJson.gas.takeIf { it != 0L }
+                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
+                        }
                         val estimatedTokenFees = TokenValue(
-                            value = swapPayload.data.quote.tx.swapFee.toBigInteger(),
+                            value = value,
                             token = nativeToken
                         )
 

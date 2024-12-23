@@ -212,9 +212,6 @@ internal class SwapFormViewModel @Inject constructor(
 
             val swapFee =
                 quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
-                )
 
             if (srcToken.isNativeToken) {
                 if (srcAmountInt + gasFee.value + swapFee > selectedSrcBalance) {
@@ -231,7 +228,7 @@ internal class SwapFormViewModel @Inject constructor(
                     )
 
                 if (selectedSrcBalance < srcAmountInt
-                    || nativeTokenValue < gasFee.value
+                    || nativeTokenValue < gasFee.value + swapFee
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
@@ -623,11 +620,10 @@ internal class SwapFormViewModel @Inject constructor(
                             throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
                         }
 
-                        this@SwapFormViewModel.provider = swapQuoteRepository.resolveProvider(
-                            srcToken,
-                            dstToken
-                        )
+                        val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
                             ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+
+                        this@SwapFormViewModel.provider=provider
 
 
                         val hasUserSetTokenValue = srcTokenValue != null
@@ -850,8 +846,6 @@ internal class SwapFormViewModel @Inject constructor(
                                     )
                                 }
                             }
-
-                            else -> {}
                         }
                     } catch (e: SwapException) {
                         val formError = when (e) {
