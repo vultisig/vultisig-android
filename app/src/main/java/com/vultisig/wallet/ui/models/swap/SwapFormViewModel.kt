@@ -404,16 +404,22 @@ internal class SwapFormViewModel @Inject constructor(
         srcToken: Coin,
         srcAddress: String,
         gasFee: TokenValue,
-    ) = blockChainSpecificRepository.getSpecific(
-        srcToken.chain,
-        srcAddress,
-        srcToken,
-        gasFee,
-        isSwap = true,
-        isMaxAmountEnabled = false,
-        isDeposit = srcToken.chain == Chain.MayaChain,
-        gasLimit = getGasLimit(srcToken),
-    )
+    ) = try {
+        blockChainSpecificRepository.getSpecific(
+            srcToken.chain,
+            srcAddress,
+            srcToken,
+            gasFee,
+            isSwap = true,
+            isMaxAmountEnabled = false,
+            isDeposit = srcToken.chain == Chain.MayaChain,
+            gasLimit = getGasLimit(srcToken),
+        )
+    } catch (e: Exception) {
+        throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
+        )
+    }
 
 
     fun selectSrcToken() {
@@ -550,35 +556,39 @@ internal class SwapFormViewModel @Inject constructor(
                     val chain = selectedAccount.token.chain
                     val selectedToken = selectedAccount.token
                     val srcAddress = selectedAccount.token.address
-                    val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
+                    try {
+                        val spec = getSpecificAndUtxo(selectedToken, srcAddress, gasFee)
 
-                    val estimatedFee = gasFeeToEstimatedFee(
-                        GasFeeParams(
-                            gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                            } else {
-                                BigInteger.valueOf(1)
-                            },
-                            gasFee = gasFee,
-                            selectedToken = selectedToken,
+                        val estimatedFee = gasFeeToEstimatedFee(
+                            GasFeeParams(
+                                gasLimit = if (chain.standard == TokenStandard.EVM) {
+                                    (spec.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                                } else {
+                                    BigInteger.valueOf(1)
+                                },
+                                gasFee = gasFee,
+                                selectedToken = selectedToken,
+                            )
                         )
-                    )
 
-                    gasFeeFiat.value = estimatedFee.fiatValue
+                        gasFeeFiat.value = estimatedFee.fiatValue
 
-                    uiState.update {
-                        it.copy(
-                            gas = estimatedFee.formattedTokenValue,
-                            fiatGas = estimatedFee.formattedFiatValue,
-                        )
+                        uiState.update {
+                            it.copy(
+                                gas = estimatedFee.formattedTokenValue,
+                                fiatGas = estimatedFee.formattedFiatValue,
+                            )
+                        }
+                    } catch (e: Exception) {
+                        showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
                     }
                 }
         }
     }
 
     private fun collectTotalFee() {
-        gasFeeFiat.filterNotNull().combine(swapFeeFiat.filterNotNull()) { a, b ->
-            a + b
+        gasFeeFiat.filterNotNull().combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
+            gasFeeFiat + swapFeeFiat
         }.onEach { totalFee ->
             uiState.update {
                 it.copy(totalFee = fiatValueToString.map(totalFee))
