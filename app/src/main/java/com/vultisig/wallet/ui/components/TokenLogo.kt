@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +23,7 @@ internal fun TokenLogo(
         model = logo,
         contentDescription = null,
          modifier = modifier
-            .clip(RoundedCornerShape(50)),
+             .clip(CircleShape),
         error = {
             Box(
                 modifier = errorLogoModifier,
