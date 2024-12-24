@@ -61,9 +61,7 @@ import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -179,6 +177,7 @@ internal class KeysignFlowViewModel @Inject constructor(
             messagesToSign = messagesToSign,
             keyType = tssKeysignType,
             keysignPayload = _keysignPayload,
+            customMessagePayload = customMessagePayload,
             thorChainApi = thorChainApi,
             broadcastTx = broadcastTx,
             evmApiFactory = evmApiFactory,

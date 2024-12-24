@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -40,10 +41,10 @@ import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
-import com.vultisig.wallet.ui.screens.sign.SignMessageDetail
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -83,81 +84,43 @@ internal fun TransactionDoneView(
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
         content = { contentPadding ->
-            if (transactionTypeUiModel is TransactionTypeUiModel.SignMessage) {
-                SignMessageDetail(
-                    method = transactionTypeUiModel.model.method,
-                    message = transactionTypeUiModel.model.message,
-                )
-            } else {
-                FormCard(
+            FormCard(
+                modifier = Modifier
+                    .padding(contentPadding)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Column(
                     modifier = Modifier
-                        .padding(contentPadding)
-                        .verticalScroll(rememberScrollState())
+                        .padding(all = 12.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(all = 12.dp)
-                            .fillMaxWidth(),
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.transaction_done_form_title),
-                                color = Theme.colors.neutral0,
-                                style = Theme.montserrat.heading5,
-                            )
+                    if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
+                        TxLinkAndHash(transactionLink, uriHandler, transactionHash)
+                    }
 
-
-                            val clipboard = LocalClipboardManager.current
-
-                            UiIcon(
-                                drawableResId = R.drawable.copy,
-                                size = 20.dp,
-                                onClick = {
-                                    clipboard.setText(AnnotatedString(transactionLink))
-                                }
-                            )
-
-
-                            UiIcon(
-                                drawableResId = R.drawable.ic_link,
-                                size = 20.dp,
-                                onClick = {
-                                    uriHandler.openUri(transactionLink)
-                                }
-                            )
-                        }
-
-                        UiSpacer(size = 16.dp)
-
-                        Text(
-                            text = transactionHash,
-                            color = Theme.colors.turquoise800,
-                            style = Theme.menlo.subtitle3,
+                    when (transactionTypeUiModel) {
+                        is TransactionTypeUiModel.Deposit -> DepositTransactionDetail(
+                            transactionTypeUiModel.depositTransactionUiModel
                         )
 
+                        is TransactionTypeUiModel.Send -> TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
 
-                        when (transactionTypeUiModel) {
-                            is TransactionTypeUiModel.Deposit ->
-                                DepositTransactionDetail(transactionTypeUiModel.depositTransactionUiModel)
-
-
-                            is TransactionTypeUiModel.Send ->
-                                TransactionDetail(transaction = transactionTypeUiModel.transactionUiModel)
-
-                            is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
-                                swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
-                                progressLink = progressLink,
-                            ) { progressLink ->
-                                uriHandler.openUri(progressLink)
-                            }
-
-                            else -> Unit
+                        is TransactionTypeUiModel.Swap -> SwapTransactionDetail(
+                            swapTransaction = transactionTypeUiModel.swapTransactionUiModel,
+                            progressLink = progressLink,
+                        ) { progressLink ->
+                            uriHandler.openUri(progressLink)
                         }
 
+                        is TransactionTypeUiModel.SignMessage -> CustomMessageDetail(
+                            transactionTypeUiModel.model,
+                            transactionHash
+                        )
+
+                        else -> Unit
                     }
+
                 }
             }
         },
@@ -174,6 +137,40 @@ internal fun TransactionDoneView(
         modifier = Modifier
             .fillMaxSize()
             .padding(all = 16.dp),
+    )
+}
+
+@Composable
+private fun TxLinkAndHash(
+    transactionLink: String,
+    uriHandler: UriHandler,
+    transactionHash: String,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.transaction_done_form_title),
+            color = Theme.colors.neutral0,
+            style = Theme.montserrat.heading5,
+        )
+
+        val clipboard = LocalClipboardManager.current
+
+        UiIcon(drawableResId = R.drawable.copy, size = 20.dp, onClick = {
+            clipboard.setText(AnnotatedString(transactionLink))
+        })
+
+
+        UiIcon(drawableResId = R.drawable.ic_link, size = 20.dp, onClick = {
+            uriHandler.openUri(transactionLink)
+        })
+    }
+    Text(
+        text = transactionHash,
+        color = Theme.colors.turquoise800,
+        style = Theme.menlo.subtitle3,
     )
 }
 
@@ -326,6 +323,30 @@ private fun TransactionDetail(transaction: TransactionUiModel?) {
                 }
             })
     }
+}
+
+@Composable
+private fun CustomMessageDetail(
+    signMessage: SignMessageTransactionUiModel?,
+    signature: String,
+) {
+    if (signMessage == null) return
+
+    AddressField(
+        title = stringResource(R.string.verify_sign_message_method_field_title),
+        address = signMessage.method,
+    )
+
+    AddressField(
+        title = stringResource(R.string.verify_sign_message_message_field_title),
+        address = signMessage.message,
+    )
+
+    AddressField(
+        title = stringResource(R.string.verify_sign_message_message_field_signature),
+        address = signature,
+        divider = false,
+    )
 }
 
 @Preview

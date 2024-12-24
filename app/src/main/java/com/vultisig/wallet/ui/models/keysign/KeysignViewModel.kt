@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
+import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
@@ -37,8 +38,10 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import tss.KeysignResponse
 import tss.ServiceImpl
 import tss.Tss
+import vultisig.keysign.v1.CustomMessagePayload
 import wallet.core.jni.CoinType
 import java.math.BigInteger
 import java.util.Base64
@@ -69,6 +72,7 @@ internal class KeysignViewModel(
     private val messagesToSign: List<String>,
     private val keyType: TssKeyType,
     private val keysignPayload: KeysignPayload?,
+    private val customMessagePayload: CustomMessagePayload?,
     private val thorChainApi: ThorChainApi,
     private val evmApiFactory: EvmApiFactory,
     private val broadcastTx: BroadcastTxUseCase,
@@ -203,6 +207,7 @@ internal class KeysignViewModel(
             if (keysignResp.r.isNullOrEmpty() || keysignResp.s.isNullOrEmpty()) {
                 throw Exception("Failed to sign message")
             }
+            calculateCustomMessageSignature(keysignResp)
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
 
@@ -223,6 +228,13 @@ internal class KeysignViewModel(
             }
             signMessageWithRetry(service, message, attempt + 1)
         }
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun calculateCustomMessageSignature(keysignResp: KeysignResponse) {
+        if (customMessagePayload == null)
+            return
+        txHash.value = keysignResp.getSignature().toHexString()
     }
 
     private suspend fun broadcastTransaction() {
