@@ -146,14 +146,18 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     ): SwapQuote {
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
-        val thorQuote = thorChainApi.getSwapQuotes(
-            address = dstAddress,
-            fromAsset = srcToken.swapAssetName(),
-            toAsset = dstToken.swapAssetName(),
-            amount = thorTokenValue.toString(),
-            interval = "1",
-            isAffiliate = isAffiliate,
-        )
+        val thorQuote = try {
+            thorChainApi.getSwapQuotes(
+                address = dstAddress,
+                fromAsset = srcToken.swapAssetName(),
+                toAsset = dstToken.swapAssetName(),
+                amount = thorTokenValue.toString(),
+                interval = "1",
+                isAffiliate = isAffiliate,
+            )
+        } catch (e: Exception) {
+            throw SwapException.handleSwapException(e.message ?: "Unknown error")
+        }
 
         when (thorQuote) {
             is THORChainSwapQuoteDeserialized.Error -> {
