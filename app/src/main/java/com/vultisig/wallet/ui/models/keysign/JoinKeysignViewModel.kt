@@ -214,6 +214,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             encryption = encryption,
             featureFlagApi = featureFlagApi,
             pullTssMessages = pullTssMessages,
+            customMessagePayload = customMessagePayload,
         )
 
     val verifyUiModel =
