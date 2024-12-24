@@ -51,6 +51,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
@@ -604,7 +605,8 @@ internal fun FormDetails(
         Text(
             text = value,
             color = Theme.colors.neutral100,
-            style = Theme.menlo.body1
+            style = Theme.menlo.body1,
+            textAlign = TextAlign.End
         )
     }
 }

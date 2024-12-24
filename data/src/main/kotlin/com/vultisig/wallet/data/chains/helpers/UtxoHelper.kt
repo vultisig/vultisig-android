@@ -219,4 +219,11 @@ class UtxoHelper(
             transactionHash = output.transactionId
         )
     }
+
+    fun getBitcoinTransactionPlan(keysignPayload: KeysignPayload): Bitcoin.TransactionPlan {
+        val signingInput = getBitcoinSigningInput(keysignPayload)
+        val plan: Bitcoin.TransactionPlan =
+            AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
+        return plan
+    }
 }
