@@ -448,6 +448,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                                         `value` = it.value,
                                         gasPrice = it.gasPrice,
                                         gas = it.gas,
+                                        swapFee = it.swapFee,
                                     )
                                 }
                             )

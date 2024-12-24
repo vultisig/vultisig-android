@@ -120,6 +120,8 @@ internal class SwapFormViewModel @Inject constructor(
 
     private var quote: SwapQuote? = null
 
+    private var provider: SwapProvider? = null
+
     private val srcAmount: BigDecimal?
         get() = srcAmountState.text.toString().toBigDecimalOrNull()
 
@@ -204,9 +206,15 @@ internal class SwapFormViewModel @Inject constructor(
                     UiText.StringResource(R.string.swap_screen_invalid_zero_token_amount)
                 )
 
+            val quote = quote ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
+            )
+
+            val swapFee =
+                quote.fees.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
 
             if (srcToken.isNativeToken) {
-                if (srcAmountInt + gasFee.value > selectedSrcBalance) {
+                if (srcAmountInt + gasFee.value + swapFee > selectedSrcBalance) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
                     )
@@ -220,7 +228,7 @@ internal class SwapFormViewModel @Inject constructor(
                     )
 
                 if (selectedSrcBalance < srcAmountInt
-                    || nativeTokenValue < gasFee.value
+                    || nativeTokenValue < gasFee.value + swapFee
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_insufficient_balance)
@@ -228,9 +236,6 @@ internal class SwapFormViewModel @Inject constructor(
                 }
             }
 
-            val quote = quote ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
-            )
 
             viewModelScope.launch {
                 val dstTokenValue = quote.expectedDstValue
@@ -628,6 +633,9 @@ internal class SwapFormViewModel @Inject constructor(
                         val provider = swapQuoteRepository.resolveProvider(srcToken, dstToken)
                             ?: throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
 
+                        this@SwapFormViewModel.provider=provider
+
+
                         val hasUserSetTokenValue = srcTokenValue != null
 
                         val tokenValue = srcTokenValue?.let {
@@ -811,9 +819,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
 
                                 val tokenFees = TokenValue(
-                                    value = quote.tx.gasPrice.toBigInteger()
-                                            * (quote.tx.gas.takeIf { it != 0L }
-                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger(),
+                                    value = quote.tx.swapFee.toBigInteger(),
                                     token = srcNativeToken
                                 )
 

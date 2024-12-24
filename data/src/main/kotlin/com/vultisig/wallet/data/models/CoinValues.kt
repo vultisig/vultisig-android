@@ -39,6 +39,9 @@ data class FiatValue(
     val currency: String,
 ) {
     operator fun plus(other: FiatValue): FiatValue {
+        require(currency == other.currency) {
+            "fiat currencies are not equal for $this and $other"
+        }
         return FiatValue(
             value = value + other.value,
             currency = currency

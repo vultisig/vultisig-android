@@ -12,7 +12,7 @@ sealed interface LiFiSwapQuoteDeserialized {
 @Serializable
 data class LiFiSwapQuoteError(
     @SerialName("message")
-    val message: String
+    val message: String,
 )
 
 
@@ -46,4 +46,14 @@ data class LiFiSwapTxJson(
 data class LiFiSwapEstimateJson(
     @SerialName("toAmount")
     val toAmount: String,
+    @SerialName("feeCosts")
+    val feeCosts: List<LiFiSwapFeeCostJson>,
+)
+
+@Serializable
+data class LiFiSwapFeeCostJson(
+    @SerialName("amount")
+    val amount: String,
+    @SerialName("included")
+    val included: Boolean,
 )
