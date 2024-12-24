@@ -156,7 +156,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 isAffiliate = isAffiliate,
             )
         } catch (e: Exception) {
-            throw throw SwapException.handleSwapException(e.message ?: "Unknown error")
+            throw SwapException.handleSwapException(e.message ?: "Unknown error")
         }
 
         when (thorQuote) {

@@ -91,7 +91,7 @@ internal class ThorChainApiImpl @Inject constructor(
         interval: String,
         isAffiliate: Boolean,
     ): THORChainSwapQuoteDeserialized {
-         val response = httpClient
+        val response = httpClient
             .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
                 parameter("from_asset", fromAsset)
                 parameter("to_asset", toAsset)
@@ -104,25 +104,16 @@ internal class ThorChainApiImpl @Inject constructor(
                 }
             }
         return try {
-            val responseRawString = response.body<String>()
             json.decodeFromString(
                 thorChainSwapQuoteResponseJsonSerializer,
-                responseRawString
+                response.body<String>()
             )
         } catch (e: Exception) {
-            if (!response.status.isSuccess()) {
-                THORChainSwapQuoteDeserialized.Error(
-                    THORChainSwapQuoteError(
-                        HttpStatusCode.fromValue(response.status.value).description
-                    )
+            THORChainSwapQuoteDeserialized.Error(
+                THORChainSwapQuoteError(
+                    HttpStatusCode.fromValue(response.status.value).description
                 )
-            } else {
-                THORChainSwapQuoteDeserialized.Error(
-                    THORChainSwapQuoteError(
-                        e.message ?: "Unknown error"
-                    )
-                )
-            }
+            )
         }
     }
 
