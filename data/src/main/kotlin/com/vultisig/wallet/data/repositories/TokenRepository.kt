@@ -9,6 +9,9 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins.SupportedCoins
 import com.vultisig.wallet.data.models.TokenStandard
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -149,27 +152,44 @@ internal class TokenRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun VultisigBalanceResultJson.toCoins(chain: Chain): List<Coin> =
-        tokenBalances.mapNotNull {
-            if (BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO) {
-                val supportedCoin = SupportedCoins.firstOrNull { coin ->
-                    coin.contractAddress.equals(it.contractAddress, true) && coin.chain == chain
-                }
-                supportedCoin?.let {
-                    Coin(
-                        contractAddress = it.contractAddress,
-                        chain = chain,
-                        ticker = supportedCoin.ticker,
-                        logo = supportedCoin.logo,
-                        decimal = supportedCoin.decimal,
-                        isNativeToken = supportedCoin.isNativeToken,
-                        priceProviderID = supportedCoin.priceProviderID,
-                        address = "",
-                        hexPublicKey = "",
-                    )
-                }
-            } else null
-        }
+    private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {
+        val (supportedCoins, unsupportedCoins) = tokenBalances
+            .filter { BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO }
+            .map { json ->
+                val supportedCoin =
+                    SupportedCoins.firstOrNull {
+                        json.contractAddress.equals(it.contractAddress, true) && it.chain == chain
+                    }
+                if (supportedCoin != null)
+                    json.contractAddress to createCoin(json.contractAddress, supportedCoin, chain)
+                else json.contractAddress to null
+            }.partition { (_, supportedCoin) ->
+                supportedCoin != null
+            }
+
+        supportedCoins
+            .mapNotNull { (_, coin) -> coin } +
+                unsupportedCoins
+                    .map { (contractAddress, _) ->
+                        async {
+                            getTokenByContract(chain.id, contractAddress)
+                        }
+                    }
+                    .awaitAll()
+                    .filterNotNull()
+    }
+
+    private fun createCoin(contractAddress: String, supportedCoin: Coin, chain: Chain) = Coin(
+        contractAddress = contractAddress,
+        chain = chain,
+        ticker = supportedCoin.ticker,
+        logo = supportedCoin.logo,
+        decimal = supportedCoin.decimal,
+        isNativeToken = supportedCoin.isNativeToken,
+        priceProviderID = supportedCoin.priceProviderID,
+        address = "",
+        hexPublicKey = "",
+    )
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(SupportedCoins)
 
