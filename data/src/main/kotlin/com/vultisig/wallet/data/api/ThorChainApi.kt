@@ -91,35 +91,27 @@ internal class ThorChainApiImpl @Inject constructor(
         interval: String,
         isAffiliate: Boolean,
     ): THORChainSwapQuoteDeserialized {
-        try {
-            val response = httpClient
-                .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
-                    parameter("from_asset", fromAsset)
-                    parameter("to_asset", toAsset)
-                    parameter("amount", amount)
-                    parameter("destination", address)
-                    parameter("streaming_interval", interval)
-                    if (isAffiliate) {
-                        parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                        parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
-                    }
+        val response = httpClient
+            .get("https://thornode.ninerealms.com/thorchain/quote/swap") {
+                parameter("from_asset", fromAsset)
+                parameter("to_asset", toAsset)
+                parameter("amount", amount)
+                parameter("destination", address)
+                parameter("streaming_interval", interval)
+                if (isAffiliate) {
+                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                    parameter("affiliate_bps", THORChainSwaps.AFFILIATE_FEE_RATE)
                 }
-            if (!response.status.isSuccess()) {
-                return THORChainSwapQuoteDeserialized.Error(
-                    THORChainSwapQuoteError(
-                        HttpStatusCode.fromValue(response.status.value).description
-                    )
-                )
             }
-            val responseRawString = response.body<String>()
-            return json.decodeFromString(
+        return try {
+            json.decodeFromString(
                 thorChainSwapQuoteResponseJsonSerializer,
-                responseRawString
+                response.body<String>()
             )
         } catch (e: Exception) {
-            return THORChainSwapQuoteDeserialized.Error(
+            THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(
-                    e.message ?: "Unknown error"
+                    HttpStatusCode.fromValue(response.status.value).description
                 )
             )
         }

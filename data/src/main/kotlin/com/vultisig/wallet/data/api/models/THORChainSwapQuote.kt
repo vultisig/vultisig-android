@@ -1,8 +1,10 @@
 package com.vultisig.wallet.data.api.models
 
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
 import java.math.BigInteger
 
 sealed class THORChainSwapQuoteDeserialized {
@@ -10,10 +12,11 @@ sealed class THORChainSwapQuoteDeserialized {
     data class Error(val error: THORChainSwapQuoteError) : THORChainSwapQuoteDeserialized()
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-data class  THORChainSwapQuoteError(
-    @SerialName("error")
-    val message: String
+data class THORChainSwapQuoteError(
+    @JsonNames("error", "message")
+    val message: String,
 )
 
 @Serializable
