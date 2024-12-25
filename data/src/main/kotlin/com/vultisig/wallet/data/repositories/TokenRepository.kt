@@ -154,15 +154,26 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {
         val (supportedCoins, unsupportedCoins) = tokenBalances
-            .filter { BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO }
+            .filter {
+                BigInteger(
+                    it.balance.stripHexPrefix(),
+                    16
+                ) > BigInteger.ZERO
+            }
             .map { json ->
                 val supportedCoin =
                     SupportedCoins.firstOrNull {
-                        json.contractAddress.equals(it.contractAddress, true) && it.chain == chain
+                        json.contractAddress.equals(
+                            it.contractAddress,
+                            true
+                        ) && it.chain == chain
                     }
-                if (supportedCoin != null)
-                    json.contractAddress to createCoin(json.contractAddress, supportedCoin, chain)
-                else json.contractAddress to null
+                json.contractAddress to supportedCoin?.let {
+                    createCoin(
+                        json.contractAddress,
+                        supportedCoin
+                    )
+                }
             }.partition { (_, supportedCoin) ->
                 supportedCoin != null
             }
@@ -172,16 +183,19 @@ internal class TokenRepositoryImpl @Inject constructor(
                 unsupportedCoins
                     .map { (contractAddress, _) ->
                         async {
-                            getTokenByContract(chain.id, contractAddress)
+                            getTokenByContract(
+                                chain.id,
+                                contractAddress
+                            )
                         }
                     }
                     .awaitAll()
                     .filterNotNull()
     }
 
-    private fun createCoin(contractAddress: String, supportedCoin: Coin, chain: Chain) = Coin(
+    private fun createCoin(contractAddress: String, supportedCoin: Coin) = Coin(
         contractAddress = contractAddress,
-        chain = chain,
+        chain = supportedCoin.chain,
         ticker = supportedCoin.ticker,
         logo = supportedCoin.logo,
         decimal = supportedCoin.decimal,
@@ -224,7 +238,8 @@ internal class TokenRepositoryImpl @Inject constructor(
         asSequence()
             .map { it.value }
             .map {
-                val supportedCoin = SupportedCoins.firstOrNull { coin -> coin.id == "${it.symbol}-${chain.id}" }
+                val supportedCoin =
+                    SupportedCoins.firstOrNull { coin -> coin.id == "${it.symbol}-${chain.id}" }
                 Coin(
                     contractAddress = it.address,
                     chain = chain,
