@@ -347,3 +347,24 @@ internal val MIGRATION_18_19 = object : Migration(18, 19) {
         )
     }
 }
+
+internal val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.updatePriceProviderId("USDT", "Arbitrum", "tether")
+        db.updatePriceProviderId("USDC.e", "Arbitrum", "usd-coin-ethereum-bridged")
+        db.updatePriceProviderId("USDC", "Arbitrum", "usd-coin")
+    }
+}
+
+private fun SupportSQLiteDatabase.updatePriceProviderId(
+    ticker: String,
+    chain: String,
+    priceProviderId: String,
+) {
+    execSQL(
+        """
+        UPDATE coin SET priceProviderId = "$priceProviderId"
+        WHERE ticker = "$ticker" AND chain = "$chain"
+    """.trimIndent()
+    )
+}
