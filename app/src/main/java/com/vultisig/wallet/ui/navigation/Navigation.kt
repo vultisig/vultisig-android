@@ -4,6 +4,7 @@ import android.net.Uri
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
+import kotlinx.serialization.Serializable
 
 internal open class Dst(
     val route: String,
@@ -475,4 +476,11 @@ internal sealed class Destination(
             const val STATIC_ROUTE = "custom_token/{$ARG_CHAIN_ID}"
         }
     }
+}
+
+sealed class Route {
+
+    @Serializable
+    data object Secret : Route()
+
 }

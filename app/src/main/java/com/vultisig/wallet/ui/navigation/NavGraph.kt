@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
 import com.vultisig.wallet.ui.screens.QrAddressScreen
+import com.vultisig.wallet.ui.screens.SecretScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
 import com.vultisig.wallet.ui.screens.ShareVaultQrScreen
 import com.vultisig.wallet.ui.screens.TokenDetailScreen
@@ -614,6 +615,10 @@ internal fun SetupNavGraph(
             )
         ) {
             RegisterVaultScreen(navController)
+        }
+
+        composable<Route.Secret> {
+            SecretScreen(navController)
         }
     }
 }

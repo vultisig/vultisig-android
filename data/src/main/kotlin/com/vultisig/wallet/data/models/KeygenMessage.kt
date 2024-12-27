@@ -7,4 +7,5 @@ data class KeygenMessage(
     val serviceName: String,
     val encryptionKeyHex: String,
     val useVultisigRelay: Boolean,
+    val libType: SigningLibType,
 )

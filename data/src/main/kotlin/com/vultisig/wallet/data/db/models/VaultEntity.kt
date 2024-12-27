@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.vultisig.wallet.data.models.SigningLibType
 
 @Entity(
     tableName = "vault",
@@ -28,6 +29,8 @@ data class VaultEntity(
     val hexChainCode: String,
     @ColumnInfo("resharePrefix")
     val resharePrefix: String,
+    @ColumnInfo("libType")
+    val libType: SigningLibType,
 )
 
 @Entity(

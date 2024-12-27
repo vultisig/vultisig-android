@@ -9,7 +9,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.keygen.DKLSKeygen
+import com.vultisig.wallet.data.keygen.SchnorrKeygen
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.KeyShare
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
@@ -67,6 +71,7 @@ internal class GeneratingKeyViewModel(
     private val password: String? = null,
     private val hint: String? = null,
     private val vaultSetupType: VaultSetupType?,
+    private val isInitiatingDevice: Boolean,
 
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
@@ -87,15 +92,26 @@ internal class GeneratingKeyViewModel(
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     private var featureFlag: FeatureFlagJson? = null
 
+    private val dklsKeygen = DKLSKeygen(
+        vault = vault,
+        keygenCommittee = keygenCommittee,
+        mediatorURL = serverAddress,
+        sessionID = sessionId,
+        encryptionKeyHex = encryptionKeyHex,
+        isInitiateDevice = isInitiatingDevice,
+        encryption = encryption,
+        sessionApi = sessionApi,
+    )
+
+
     suspend fun generateKey() {
         state.value = KeygenState.CreatingInstance
 
         try {
-            featureFlag = featureFlagApi.getFeatureFlag()
-
-            val tss = createTss()
-
-            keygenWithRetry(tss, 1)
+            when (vault.libType) {
+                SigningLibType.DKLS -> startKeygenDkls()
+                SigningLibType.GG20 -> startKeygenGG20()
+            }
 
             vault.signers = keygenCommittee
             state.value = KeygenState.Success
@@ -114,6 +130,62 @@ internal class GeneratingKeyViewModel(
 
             stopService()
         }
+    }
+
+    private suspend fun startKeygenDkls() {
+
+        state.value = KeygenState.KeygenECDSA
+
+        dklsKeygen.dklsKeygenWithRetry(0)
+
+        state.value = KeygenState.KeygenEdDSA
+
+        val schnorr = SchnorrKeygen(
+            vault = vault,
+            keygenCommittee = keygenCommittee,
+            mediatorURL = serverAddress,
+            sessionID = sessionId,
+            encryptionKeyHex = encryptionKeyHex,
+
+            encryption = encryption,
+            sessionApi = sessionApi,
+            setupMessage = dklsKeygen.setupMessage,
+        )
+
+        schnorr.schnorrKeygenWithRetry(0)
+
+        val keyshareEcdsa = dklsKeygen.keyshare!!
+        val keyshareEddsa = schnorr.keyshare!!
+
+        vault.pubKeyECDSA = keyshareEcdsa.pubKey
+        vault.pubKeyEDDSA = keyshareEddsa.pubKey
+        vault.hexChainCode = keyshareEcdsa.chaincode
+        vault.keyshares = listOf(
+            KeyShare(
+                pubKey = keyshareEcdsa.pubKey,
+                keyShare = keyshareEcdsa.keyshare
+            ),
+            KeyShare(
+                pubKey = keyshareEddsa.pubKey,
+                keyShare = keyshareEddsa.keyshare
+            )
+        )
+
+        sessionApi.markLocalPartyComplete(
+            serverAddress,
+            sessionId,
+            listOf(vault.localPartyID)
+        )
+
+        waitCompleteParties()
+    }
+
+    private suspend fun startKeygenGG20() {
+        featureFlag = featureFlagApi.getFeatureFlag()
+
+        val tss = createTss()
+
+        keygenWithRetry(tss, 1)
     }
 
     private suspend fun keygenWithRetry(service: ServiceImpl, attempt: Int = 1) {
@@ -178,22 +250,7 @@ internal class GeneratingKeyViewModel(
                 )
                 Timber.d("Local party ${vault.localPartyID} marked as complete")
 
-                var counter = 0
-                var isSuccess = false
-                while (counter < 60) {
-                    val serverCompletedParties =
-                        sessionApi.getCompletedParties(serverAddress, sessionId)
-                    if (serverCompletedParties.containsAll(keygenCommittee)) {
-                        isSuccess = true
-                        break // this means all parties have completed the key generation process
-                    }
-                    delay(1.seconds)
-                    counter++
-                }
-
-                if (!isSuccess) {
-                    throw Exception("Timeout waiting for all parties to complete the key generation process")
-                }
+                waitCompleteParties()
 
                 Timber.d("All parties have completed the key generation process")
 
@@ -209,6 +266,25 @@ internal class GeneratingKeyViewModel(
                     throw e
                 }
             }
+        }
+    }
+
+    private suspend fun waitCompleteParties() {
+        var counter = 0
+        var isSuccess = false
+        while (counter < 60) {
+            val serverCompletedParties =
+                sessionApi.getCompletedParties(serverAddress, sessionId)
+            if (serverCompletedParties.containsAll(keygenCommittee)) {
+                isSuccess = true
+                break // this means all parties have completed the key generation process
+            }
+            delay(1.seconds)
+            counter++
+        }
+
+        if (!isSuccess) {
+            throw Exception("Timeout waiting for all parties to complete the key generation process")
         }
     }
 

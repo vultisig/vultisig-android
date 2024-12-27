@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.OldJsonVaultRoot
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
+import com.vultisig.wallet.data.models.proto.v1.toSigningLibType
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
@@ -75,6 +76,7 @@ internal class ParseVaultFromStringUseCaseImpl @Inject constructor(
                 )
             },
             coins = emptyList(),
+            libType = proto.libType.toSigningLibType(),
         )
     }
 

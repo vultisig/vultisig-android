@@ -37,6 +37,10 @@ interface SessionApi {
 
     suspend fun markLocalPartyKeysignComplete(serverUrl: String, messageId: String, sig: tss.KeysignResponse)
     suspend fun checkKeysignComplete(serverUrl: String, messageId: String): tss.KeysignResponse
+
+    suspend fun getSetupMessage(serverUrl: String, sessionId: String): String
+    suspend fun uploadSetupMessage(serverUrl: String, sessionId: String, message: String)
+
 }
 
 internal class SessionApiImpl @Inject constructor(
@@ -145,6 +149,18 @@ internal class SessionApiImpl @Inject constructor(
         return httpClient.get(serverUrl) {
             header(MESSAGE_ID_HEADER_TITLE, messageId)
         }.throwIfUnsuccessful().body<tss.KeysignResponse>()
+    }
+
+    override suspend fun getSetupMessage(serverUrl: String, sessionId: String): String {
+        return httpClient.get("$serverUrl/setup-message/$sessionId")
+            .throwIfUnsuccessful()
+            .body()
+    }
+
+    override suspend fun uploadSetupMessage(serverUrl: String, sessionId: String, message: String) {
+        httpClient.post("$serverUrl/setup-message/$sessionId") {
+            setBody(message)
+        }.throwIfUnsuccessful()
     }
 
     companion object {

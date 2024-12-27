@@ -234,4 +234,11 @@ internal interface RepositoriesModule {
     fun bindFourByteRepository(
         impl: FourByteRepositoryImpl
     ): FourByteRepository
+
+    @Binds
+    @Singleton
+    fun bindSecretSettingsRepository(
+        impl: SecretSettingsRepositoryImpl
+    ): SecretSettingsRepository
+
 }

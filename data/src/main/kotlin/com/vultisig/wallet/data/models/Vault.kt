@@ -15,7 +15,10 @@ data class Vault(
     var resharePrefix: String = "",
     var keyshares: List<KeyShare> = listOf(),
     val coins: List<Coin> = emptyList(),
+    var libType: SigningLibType = SigningLibType.GG20,
 )
+
+enum class SigningLibType { DKLS, GG20 }
 
 fun Vault.getVaultPart(): Int {
     return signers.indexOf(localPartyID) + 1
