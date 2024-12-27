@@ -161,11 +161,12 @@ internal class TokenRepositoryImpl @Inject constructor(
             chain
         )
         val validContractAddress = cleanContractAddressList(
-            unsupportedCoins,
-            chain
+            unsupportedCoins.map { (contractAddress, _) -> contractAddress },
+            chain,
         )
         val supportedCoins = supportedCoinsAndContracts
             .mapNotNull { (_, coin) -> coin }
+
         val newCoins = getNewCoins(validContractAddress, chain)
         supportedCoins + newCoins
     }
@@ -183,56 +184,44 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     private fun extractCoinsFromJson(response: VultisigBalanceResultJson, chain: Chain) =
         response.tokenBalances
-            .filter { BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO }
+            .filter {
+                BigInteger(
+                    it.balance.stripHexPrefix(),
+                    16
+                ) > BigInteger.ZERO
+            }
             .map { json ->
                 val supportedCoin =
                     SupportedCoins.firstOrNull {
-                        json.contractAddress.equals(it.contractAddress, true) && it.chain == chain
+                        json.contractAddress.equals(
+                            it.contractAddress,
+                            true
+                        ) && it.chain == chain
                     }
-                if (supportedCoin != null)
-                    json.contractAddress to createCoin(json.contractAddress, supportedCoin, chain)
-                else json.contractAddress to null
+                json.contractAddress to supportedCoin?.let {
+                    createCoin(
+                        json.contractAddress,
+                        supportedCoin
+                    )
+                }
             }.partition { (_, supportedCoin) ->
                 supportedCoin != null
             }
 
     private suspend fun cleanContractAddressList(
-        unsupportedCoins: List<Pair<String, Coin?>>,
+        unsupportedContracts: List<String>,
         chain: Chain,
     ) = coroutineScope {
-        val currency = currencyRepository.currency.first()
-        unsupportedCoins
-            .map { (contractAddress, _) ->
-                async {
-                    contractAddress.takeIf {
-                        isNotScamAddress(
-                            chain,
-                            currency.ticker,
-                            contractAddress,
-                        )
-                    }
-                }
-            }
-            .awaitAll()
-            .filterNotNull()
-    }
-
-    private suspend fun isNotScamAddress(
-        chain: Chain,
-        currency: String,
-        contractAddress: String,
-    ): Boolean {
-        val coinGeckoPrice = coinGeckoApi.getContractsPrice(
+        coinGeckoApi.getContractsPrice(
             chain = chain,
-            contractAddresses = listOf(contractAddress),
-            currencies = listOf(currency),
-        ).values.firstOrNull()
-        return coinGeckoPrice != null
+            contractAddresses = unsupportedContracts,
+            currencies = listOf(currencyRepository.currency.first().ticker),
+        ).keys.toList()
     }
 
-    private fun createCoin(contractAddress: String, supportedCoin: Coin, chain: Chain) = Coin(
+    private fun createCoin(contractAddress: String, supportedCoin: Coin) = Coin(
         contractAddress = contractAddress,
-        chain = chain,
+        chain = supportedCoin.chain,
         ticker = supportedCoin.ticker,
         logo = supportedCoin.logo,
         decimal = supportedCoin.decimal,
