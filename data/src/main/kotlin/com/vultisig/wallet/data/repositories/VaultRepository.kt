@@ -140,6 +140,7 @@ internal class VaultRepositoryImpl @Inject constructor(
                     },
                 )
             },
+            libType = vault.vault.libType,
         )
     }
 
@@ -155,6 +156,7 @@ internal class VaultRepositoryImpl @Inject constructor(
                 hexChainCode = vault.hexChainCode,
                 localPartyID = vault.localPartyID,
                 resharePrefix = vault.resharePrefix,
+                libType = vault.libType,
             ),
             keyShares = vault.keyshares.map {
                 KeyShareEntity(

@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.vultisig.wallet.data.db.converters.SigningLibTypeTypeConverter
 import com.vultisig.wallet.data.db.dao.AddressBookEntryDao
 import com.vultisig.wallet.data.db.dao.AddressBookOrderDao
 import com.vultisig.wallet.data.db.dao.FolderDao
@@ -39,8 +41,11 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         FolderOrderEntity::class,
         VaultMetadataEntity::class,
     ],
-    version = 19,
+    version = 20,
     exportSchema = false,
+)
+@TypeConverters(
+    SigningLibTypeTypeConverter::class,
 )
 abstract class AppDatabase : RoomDatabase() {
 

@@ -10,6 +10,8 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -38,6 +40,8 @@ internal class SettingsViewModel @Inject constructor(
     val state = MutableStateFlow(SettingsUiModel())
     val vaultId = savedStateHandle.get<String>(Destination.Settings.ARG_VAULT_ID)!!
 
+    private val multipleClicksDetector = MultipleClicksDetector()
+
     fun loadSettings() {
         viewModelScope.launch {
             loadCurrency()
@@ -47,7 +51,7 @@ internal class SettingsViewModel @Inject constructor(
 
     private fun loadAppLocale() {
         viewModelScope.launch {
-            appLocaleRepository.local.collect{ locale: AppLanguage ->
+            appLocaleRepository.local.collect { locale: AppLanguage ->
                 state.update {
                     it.copy(selectedLocal = locale.toUiModel())
                 }
@@ -57,7 +61,7 @@ internal class SettingsViewModel @Inject constructor(
 
     private fun loadCurrency() {
         viewModelScope.launch {
-            appCurrencyRepository.currency.collect{ currency: AppCurrency ->
+            appCurrencyRepository.currency.collect { currency: AppCurrency ->
                 state.update {
                     it.copy(selectedCurrency = currency.toUiModel())
                 }
@@ -71,11 +75,18 @@ internal class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun clickSecret() {
+        if (multipleClicksDetector.clickAndCheckIfDetected()) {
+            viewModelScope.launch {
+                navigator.route(Route.Secret)
+            }
+        }
+    }
 
     private fun AppCurrency.toUiModel() = CurrencyUnit(name)
 
 
-    private fun AppLanguage.toUiModel() = Language(mainName,engName)
+    private fun AppLanguage.toUiModel() = Language(mainName, engName)
 
 
 }

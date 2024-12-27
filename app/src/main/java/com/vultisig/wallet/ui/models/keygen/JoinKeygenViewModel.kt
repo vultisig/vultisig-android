@@ -129,6 +129,7 @@ internal class JoinKeygenViewModel @Inject constructor(
             _encryptionKeyHex,
             vaultSetupType = null,
             oldResharePrefix = _oldResharePrefix,
+            isInitiatingDevice = false,
             navigator = navigator,
             saveVault = saveVault,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
@@ -202,6 +203,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         this@JoinKeygenViewModel._useVultisigRelay = payload.keygenMessage.useVultisigRelay
                         this@JoinKeygenViewModel._encryptionKeyHex = payload.keygenMessage.encryptionKeyHex
                         _vault.name = payload.keygenMessage.vaultName
+                        _vault.libType = payload.keygenMessage.libType
                         allVaults.find { it.name == _vault.name }?.let {
                             errorMessage.value = UiText.FormattedText(
                                 R.string.vault_already_exist,
@@ -231,6 +233,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                                 return@forEach
                             }
                         }
+                        _vault.libType = payload.reshareMessage.libType
                         if (_vault.pubKeyECDSA.isEmpty()) {
                             _vault.hexChainCode = payload.reshareMessage.hexChainCode
                             _vault.name = payload.reshareMessage.vaultName

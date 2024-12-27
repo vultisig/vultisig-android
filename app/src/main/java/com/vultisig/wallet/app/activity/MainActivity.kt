@@ -79,6 +79,13 @@ internal class MainActivity : AppCompatActivity() {
                         navController.route(it.dst.route, it.opts)
                     }
                 }
+
+                LaunchedEffect(Unit) {
+                    mainViewModel.route.collect {
+                        navController.route(it)
+                    }
+                }
+
                 Box(
                     modifier = Modifier
                         .background(color = Colors.Default.oxfordBlue800)
