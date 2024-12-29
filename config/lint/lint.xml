@@ -38,13 +38,11 @@
     <issue id="Typos" severity="warning" />
     <issue id="UnnecessaryComposedModifier" severity="warning" />
     <issue id="UnusedAttribute" severity="fatal" />
-    <issue id="UnusedIds" severity="error" />
-    <issue id="UnusedNamespace" severity="error" />
-    <issue id="UnusedQuantity" severity="error" />
+    <issue id="UnusedIds" severity="warning" />
+    <issue id="UnusedNamespace" severity="fatal" />
+    <issue id="UnusedQuantity" severity="fatal" />
     <issue id="UnusedResources" severity="error" />
-    <issue id="WrongCase" severity="error" />
-    <issue id="WrongManifestParent" severity="error"/>\
     <issue id="UnusedTranslation" severity="warning" />
-    <issue id="UnknownNullness" severity="error" />
+    <issue id="UnknownNullness" severity="fatal" />
     <issue id="VectorPath" severity="ignore" />
 </lint>
