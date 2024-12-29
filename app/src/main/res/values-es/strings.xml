@@ -178,7 +178,6 @@
     <string name="camera_permission_denied">No se ha concedido el permiso para la cámara. Habilítelo en la configuración.</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="camera_bind_error">Error de vinculación de cámara %1$s</string>
-    <string name="token_settings_burnt">Quemado: %1$s</string>
     <string name="backup_device">(Dispositivo de respaldo)</string>
     <string name="pair_device">(Dispositivo de emparejamiento)</string>
     <string name="device_list_of_vault">%1$s de la bóveda de %2$s</string>

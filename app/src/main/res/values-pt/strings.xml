@@ -175,7 +175,6 @@
     <string name="chain_account_item_address_copied">%1$s copiado para a área de transferência</string>
     <string name="device_list_of_vault">%1$s do cofre %2$s</string>
     <string name="s_of_s_vault">%1$s do cofre %2$s</string>
-    <string name="token_settings_burnt">Queimado: %1$s</string>
     <string name="camera_bind_error">Erro de vinculação da câmera %1$s</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="camera_permission_denied">Permissão de câmera não concedida. Por favor, habilite-a nas configurações.</string>
