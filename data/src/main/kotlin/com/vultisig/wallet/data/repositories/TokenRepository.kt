@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
@@ -9,6 +10,9 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins.SupportedCoins
 import com.vultisig.wallet.data.models.TokenStandard
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -43,6 +47,8 @@ internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
     private val splTokenRepository: SplTokenRepository,
+    private val coinGeckoApi: CoinGeckoApi,
+    private val currencyRepository: AppCurrencyRepository,
 ) : TokenRepository {
     override suspend fun getToken(tokenId: String): Coin? =
         builtInTokens.map { allTokens -> allTokens.firstOrNull { it.id == tokenId } }.firstOrNull()
@@ -149,27 +155,81 @@ internal class TokenRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun VultisigBalanceResultJson.toCoins(chain: Chain): List<Coin> =
-        tokenBalances.mapNotNull {
-            if (BigInteger(it.balance.stripHexPrefix(), 16) > BigInteger.ZERO) {
-                val supportedCoin = SupportedCoins.firstOrNull { coin ->
-                    coin.contractAddress.equals(it.contractAddress, true) && coin.chain == chain
-                }
-                supportedCoin?.let {
-                    Coin(
-                        contractAddress = it.contractAddress,
-                        chain = chain,
-                        ticker = supportedCoin.ticker,
-                        logo = supportedCoin.logo,
-                        decimal = supportedCoin.decimal,
-                        isNativeToken = supportedCoin.isNativeToken,
-                        priceProviderID = supportedCoin.priceProviderID,
-                        address = "",
-                        hexPublicKey = "",
+    private suspend fun VultisigBalanceResultJson.toCoins(chain: Chain) = coroutineScope {
+        val (supportedCoinsAndContracts, unsupportedCoins) = extractCoinsFromJson(
+            this@toCoins,
+            chain
+        )
+        val validContractAddress = cleanContractAddressList(
+            unsupportedCoins.map { (contractAddress, _) -> contractAddress },
+            chain,
+        )
+        val supportedCoins = supportedCoinsAndContracts
+            .mapNotNull { (_, coin) -> coin }
+
+        val newCoins = getNewCoins(validContractAddress, chain)
+        supportedCoins + newCoins
+    }
+
+    private suspend fun getNewCoins(
+        validContractAddress: List<String>,
+        chain: Chain,
+    ) = coroutineScope {
+        validContractAddress.map { contractAddress ->
+            async {
+                getTokenByContract(chain.id, contractAddress)
+            }
+        }
+    }.awaitAll().filterNotNull()
+
+    private fun extractCoinsFromJson(response: VultisigBalanceResultJson, chain: Chain) =
+        response.tokenBalances
+            .filter {
+                BigInteger(
+                    it.balance.stripHexPrefix(),
+                    16
+                ) > BigInteger.ZERO
+            }
+            .map { json ->
+                val supportedCoin =
+                    SupportedCoins.firstOrNull {
+                        json.contractAddress.equals(
+                            it.contractAddress,
+                            true
+                        ) && it.chain == chain
+                    }
+                json.contractAddress to supportedCoin?.let {
+                    createCoin(
+                        json.contractAddress,
+                        supportedCoin
                     )
                 }
-            } else null
-        }
+            }.partition { (_, supportedCoin) ->
+                supportedCoin != null
+            }
+
+    private suspend fun cleanContractAddressList(
+        unsupportedContracts: List<String>,
+        chain: Chain,
+    ) = coroutineScope {
+        coinGeckoApi.getContractsPrice(
+            chain = chain,
+            contractAddresses = unsupportedContracts,
+            currencies = listOf(currencyRepository.currency.first().ticker),
+        ).keys.toList()
+    }
+
+    private fun createCoin(contractAddress: String, supportedCoin: Coin) = Coin(
+        contractAddress = contractAddress,
+        chain = supportedCoin.chain,
+        ticker = supportedCoin.ticker,
+        logo = supportedCoin.logo,
+        decimal = supportedCoin.decimal,
+        isNativeToken = supportedCoin.isNativeToken,
+        priceProviderID = supportedCoin.priceProviderID,
+        address = "",
+        hexPublicKey = "",
+    )
 
     override val builtInTokens: Flow<List<Coin>> = flowOf(SupportedCoins)
 
