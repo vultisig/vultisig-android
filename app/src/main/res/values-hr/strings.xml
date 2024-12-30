@@ -175,7 +175,6 @@
     <string name="chain_account_item_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="device_list_of_vault">%1$s od %2$s trezora</string>
     <string name="s_of_s_vault">%1$s od %2$s trezora</string>
-    <string name="token_settings_burnt">Spaljeno: %1$s</string>
     <string name="camera_bind_error">Pogreška povezivanja kamere %1$s</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="camera_permission_denied">Dopuštenje za kameru nije odobreno. Omogućite ga u postavkama.</string>

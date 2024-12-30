@@ -132,7 +132,6 @@
     <string name="failed_to_start_error">Niet gelukt om te starten, fout: %1$s</string>
     <string name="camera_bind_error">Camerabindingsfout %1$s</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
-    <string name="token_settings_burnt">Verbrand: %1$s</string>
     <string name="token_settings_supply">Voorraad: %1$s</string>
     <string name="backup_device">(Reserveapparaat)</string>
     <string name="pair_device">(Koppel apparaat)</string>

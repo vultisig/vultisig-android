@@ -132,7 +132,6 @@
     <string name="failed_to_start_error">Ошибка запуска, ошибка: %1$s</string>
     <string name="camera_bind_error">Ошибка привязки камеры %1$s</string>
     <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>
-    <string name="token_settings_burnt">Сожжено: %1$s</string>
     <string name="token_settings_supply">Предложение: %1$s</string>
     <string name="backup_device">(Резервное устройство)</string>
     <string name="pair_device">(Сопряжённое устройство)</string>
