@@ -127,4 +127,10 @@ internal interface ApiModule {
     fun bindFourByteApi(
         impl: FourByteApiImpl
     ): FourByteApi
+
+    @Binds
+    @Singleton
+    fun bindLiQuestApi(
+        impl: LiQuestApiImpl,
+    ): LiQuestApi
 }

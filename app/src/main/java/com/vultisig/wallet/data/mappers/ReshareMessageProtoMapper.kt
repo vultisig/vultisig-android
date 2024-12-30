@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.models.ReshareMessage
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
+import com.vultisig.wallet.data.models.proto.v1.toProto
+import com.vultisig.wallet.data.models.proto.v1.toSigningLibType
 import javax.inject.Inject
 
 internal interface ReshareMessageFromProtoMapper : MapperFunc<ReshareMessageProto, ReshareMessage>
@@ -18,6 +20,7 @@ internal class ReshareMessageFromProtoMapperImpl @Inject constructor() :
         useVultisigRelay = from.useVultisigRelay,
         oldResharePrefix = from.oldResharePrefix,
         vaultName = from.vaultName,
+        libType = from.libType.toSigningLibType(),
     )
 }
 
@@ -34,5 +37,6 @@ internal class ReshareMessageToProtoMapperImpl @Inject constructor() : ReshareMe
         useVultisigRelay = from.useVultisigRelay,
         oldResharePrefix = from.oldResharePrefix,
         vaultName = from.vaultName,
+        libType = from.libType.toProto(),
     )
 }

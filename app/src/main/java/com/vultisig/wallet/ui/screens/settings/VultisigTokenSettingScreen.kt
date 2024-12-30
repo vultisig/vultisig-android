@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.settings
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -28,11 +30,13 @@ import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TopBar
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun VultisigTokenScreen(navController: NavHostController) {
     val colors = Theme.colors
+    val uriHandler = LocalUriHandler.current
 
     Scaffold(
         modifier = Modifier
@@ -52,28 +56,35 @@ fun VultisigTokenScreen(navController: NavHostController) {
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "\$1.01", style = Theme.montserrat.heading5, color = colors.neutral0)
+            Text(text = "\$1", style = Theme.montserrat.heading5, color = colors.neutral0)
             UiSpacer(size = 32.dp)
             Image(painter = painterResource(id = R.drawable.vultisig), contentDescription = "logo")
             UiSpacer(size = 32.dp)
-            val supply = "97,000,000"
+            val supply = "100,000,000"
             FeatureItem(stringResource(R.string.token_settings_supply, supply))
-            val burnt = "3,000,000"
-            FeatureItem(stringResource(R.string.token_settings_burnt, burnt))
             FeatureItem(stringResource(R.string.feature_item_vtx_tokens_are_burnt_from_fees),R.drawable.ic_small_caret_right)
-            FeatureItem(text = stringResource(R.string.feature_item_vtx_tokens_are_airdropped_to_users), icon = R.drawable.ic_small_caret_right)
-            FeatureItem(text = stringResource(R.string.feature_item_learn_more), icon = R.drawable.share)
+            FeatureItem(text = stringResource(R.string.feature_item_vtx_tokens_are_airdropped_to_users), icon = R.drawable.ic_small_caret_right )
+            FeatureItem(
+                text = stringResource(R.string.feature_item_learn_more),
+                icon = R.drawable.share
+            ) {
+                uriHandler.openUri("https://vultisig.com/vult")
+            }
         }
 
     }
 }
 
 @Composable
-fun FeatureItem(text: String, @DrawableRes icon: Int? = null) {
+fun FeatureItem(text: String, @DrawableRes icon: Int? = null, onClick: () -> Unit = {}) {
     val colors = Theme.colors
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(
+                horizontal = 12.dp,
+                vertical = 8.dp
+            )
+            .clickable(onClick = onClick)
             .fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(

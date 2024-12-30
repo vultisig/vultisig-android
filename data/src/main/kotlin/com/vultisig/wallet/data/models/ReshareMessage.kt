@@ -10,4 +10,5 @@ data class ReshareMessage(
     val useVultisigRelay: Boolean,
     val oldResharePrefix: String,
     val vaultName: String,
+    val libType: SigningLibType,
 )

@@ -350,6 +350,16 @@ internal val MIGRATION_18_19 = object : Migration(18, 19) {
 
 internal val MIGRATION_19_20 = object : Migration(19, 20) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            ALTER TABLE `vault` ADD COLUMN `libType` TEXT NOT NULL DEFAULT 'GG20'
+            """.trimIndent()
+        )
+    }
+}
+
+internal val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(db: SupportSQLiteDatabase) {
         db.updatePriceProviderId("USDT", "Arbitrum", "tether")
         db.updatePriceProviderId("USDC.e", "Arbitrum", "usd-coin-ethereum-bridged")
         db.updatePriceProviderId("USDC", "Arbitrum", "usd-coin")

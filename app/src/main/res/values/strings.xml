@@ -134,7 +134,6 @@
     <string name="failed_to_start_error">Failed to start,error: %1$s</string>
     <string name="camera_bind_error">Camera bind error %1$s</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
-    <string name="token_settings_burnt">Burnt: %1$s</string>
     <string name="token_settings_supply">Supply: %1$s</string>
     <string name="backup_device">(Backup Device)</string>
     <string name="pair_device">(Pair Device)</string>
@@ -504,4 +503,5 @@
     <string name="vault_settings_sign_message_description" translatable="false">Sign custom message</string>
     <string name="swap_screen_invalid_specific_and_utxo" translatable="false">Specific calculation failed</string>
     <string name="verify_sign_message_message_field_signature" translatable="false">Signature</string>
+    <string name="secret_enable_dkls" translatable="false">Enable DKLS</string>
 </resources>

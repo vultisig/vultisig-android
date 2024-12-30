@@ -175,7 +175,6 @@
     <string name="chain_account_item_address_copied">%1$s copiato negli appunti</string>
     <string name="device_list_of_vault">%1$s di %2$s Caveau</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
-    <string name="token_settings_burnt">Bruciato: %1$s</string>
     <string name="camera_bind_error">Errore di associazione della fotocamera %1$s</string>
     <string name="network_prompts_internet">Internet</string>
     <string name="camera_permission_denied">Autorizzazione della telecamera non concessa. Abilitala nelle impostazioni.</string>

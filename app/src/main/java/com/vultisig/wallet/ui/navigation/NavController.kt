@@ -26,3 +26,9 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
         }
     }
 }
+
+internal fun NavController.route(route: Any) {
+    Timber.d("route($route)")
+
+    navigate(route)
+}

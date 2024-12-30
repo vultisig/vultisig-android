@@ -24,11 +24,14 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
+import com.vultisig.wallet.data.models.proto.v1.toProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -60,6 +63,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -127,6 +131,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val signerRepository: VultiSignerRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
+    private val secretSettingsRepository: SecretSettingsRepository,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
@@ -181,6 +186,7 @@ internal class KeygenFlowViewModel @Inject constructor(
             hint = passwordHint,
             vaultSetupType = setupType,
             isReshareMode = uiState.value.isReshareMode,
+            isInitiatingDevice = true,
 
             navigator = navigator,
             saveVault = saveVault,
@@ -241,6 +247,12 @@ internal class KeygenFlowViewModel @Inject constructor(
             vault
         }
 
+        vault.libType = if (secretSettingsRepository.isDklsEnabled.first()) {
+            SigningLibType.DKLS
+        } else {
+            SigningLibType.GG20
+        }
+
         serverUrl = VULTISIG_RELAY_URL
         uiState.update { it.copy(selection = listOf(vault.localPartyID)) }
         _oldResharePrefix = vault.resharePrefix
@@ -266,6 +278,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     encryptionKeyHex = this._encryptionKeyHex,
                                     useVultisigRelay = isRelayEnabled,
                                     vaultName = this.vault.name,
+                                    libType = this.vault.libType.toProto(),
                                 )
                             )
                         ).encodeBase64()
@@ -284,7 +297,8 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     encryptionKeyHex = this._encryptionKeyHex,
                                     useVultisigRelay = isRelayEnabled,
                                     oldResharePrefix = vault.resharePrefix,
-                                    vaultName = vault.name
+                                    vaultName = vault.name,
+                                    libType = this.vault.libType.toProto(),
                                 )
                             )
                         ).encodeBase64()

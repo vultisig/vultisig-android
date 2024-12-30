@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.models.KeygenMessage
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
+import com.vultisig.wallet.data.models.proto.v1.toProto
+import com.vultisig.wallet.data.models.proto.v1.toSigningLibType
 import javax.inject.Inject
 
 interface KeygenMessageFromProtoMapper : MapperFunc<KeygenMessageProto, KeygenMessage>
@@ -15,6 +17,7 @@ internal class KeygenMessageFromProtoMapperImpl @Inject constructor() :
         serviceName = from.serviceName,
         encryptionKeyHex = from.encryptionKeyHex,
         useVultisigRelay = from.useVultisigRelay,
+        libType = from.libType.toSigningLibType(),
     )
 }
 
@@ -28,5 +31,6 @@ internal class KeygenMessageToProtoMapperImpl @Inject constructor() : KeygenMess
         serviceName = from.serviceName,
         encryptionKeyHex = from.encryptionKeyHex,
         useVultisigRelay = from.useVultisigRelay,
+        libType = from.libType.toProto(),
     )
 }
