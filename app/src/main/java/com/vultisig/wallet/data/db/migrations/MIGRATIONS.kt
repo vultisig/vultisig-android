@@ -358,7 +358,7 @@ internal val MIGRATION_19_20 = object : Migration(19, 20) {
     }
 }
 
-internal val MIGRATION_19_20 = object : Migration(19, 20) {
+internal val MIGRATION_20_21 = object : Migration(19, 20) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.updatePriceProviderId("USDT", "Arbitrum", "tether")
         db.updatePriceProviderId("USDC.e", "Arbitrum", "usd-coin-ethereum-bridged")

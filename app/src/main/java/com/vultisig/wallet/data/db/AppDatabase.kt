@@ -41,7 +41,7 @@ import com.vultisig.wallet.data.db.models.VaultOrderEntity
         FolderOrderEntity::class,
         VaultMetadataEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = false,
 )
 @TypeConverters(
