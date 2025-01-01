@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.utils.Numeric
 import wallet.core.jni.CoinType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Solana
 import wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
 
 internal object Swaps {
@@ -28,6 +29,14 @@ internal object Swaps {
 
             TokenStandard.EVM, TokenStandard.THORCHAIN, TokenStandard.COSMOS ->
                 getPreSigningOutput(preImageHashes)
+
+            TokenStandard.SOL ->{
+                val preSigningOutput = Solana.PreSigningOutput.parseFrom(preImageHashes)
+                preSigningOutput.errorMessage?.let {
+                    error(it)
+                }
+                return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
+            }
 
             else -> error("Unsupported chain type $chain")
         }

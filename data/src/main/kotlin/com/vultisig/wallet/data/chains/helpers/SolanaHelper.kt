@@ -68,7 +68,7 @@ class SolanaHelper(
                 .build()
                 .toByteArray()
         } else {
-            if (solanaSpecific.fromAddressPubKey != null && solanaSpecific.toAddressPubKey!= null) {
+            if (solanaSpecific.fromAddressPubKey != null && solanaSpecific.toAddressPubKey != null) {
                 val transfer = Solana.TokenTransfer.newBuilder()
                     .setTokenMintAddress(keysignPayload.coin.contractAddress)
                     .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
@@ -140,6 +140,54 @@ class SolanaHelper(
             transactionHash = output.encoded.take(64).encodeBase64()
         )
     }
+
+    fun getSwapSignedTransaction(
+        inputData: ByteArray,
+        signatures: Map<String, tss.KeysignResponse>,
+    ): SignedTransactionResult {
+        val publicKey =
+            PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
+
+        val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
+        val preSigningOutput =
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
+        
+        preSigningOutput.errorMessage?.let{
+            error(it)
+        }
+        val allSignatures = DataVector()
+        val allPublicKeys = DataVector()
+        val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
+
+        val signature =
+            signatures[key]?.getSignature() ?: error("Signature not found")
+
+        val verified = publicKey.verify(
+            signature, (preSigningOutput.data).toByteArray()
+        )
+        if (!verified) {
+            error("Signature verification failed")
+        }
+        allSignatures.add(signature)
+
+        allPublicKeys.add(publicKey.data())
+        val compileWithSignature = TransactionCompiler.compileWithSignatures(
+            coinType,
+            inputData,
+            allSignatures,
+            allPublicKeys
+        )
+
+        val output = Solana.SigningOutput.parseFrom(compileWithSignature)
+        output.errorMessage?.let{
+            error(it)
+        }
+        return SignedTransactionResult(
+            rawTransaction = output.encoded,
+            transactionHash = output.encoded.take(64).encodeBase64()
+        )
+    }
+
 
     fun getZeroSignedTransaction(
         keysignPayload: KeysignPayload,
