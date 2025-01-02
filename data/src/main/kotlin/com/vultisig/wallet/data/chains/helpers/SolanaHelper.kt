@@ -151,10 +151,11 @@ class SolanaHelper(
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
-        
-        preSigningOutput.errorMessage?.let{
-            error(it)
+
+        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+            error(preSigningOutput.errorMessage)
         }
+
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
@@ -179,8 +180,8 @@ class SolanaHelper(
         )
 
         val output = Solana.SigningOutput.parseFrom(compileWithSignature)
-        output.errorMessage?.let{
-            error(it)
+        if (!output.errorMessage.isNullOrEmpty()) {
+            error(output.errorMessage)
         }
         return SignedTransactionResult(
             rawTransaction = output.encoded,

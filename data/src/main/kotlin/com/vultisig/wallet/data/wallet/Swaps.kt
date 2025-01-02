@@ -32,8 +32,8 @@ internal object Swaps {
 
             TokenStandard.SOL ->{
                 val preSigningOutput = Solana.PreSigningOutput.parseFrom(preImageHashes)
-                preSigningOutput.errorMessage?.let {
-                    error(it)
+                if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
+                    error(preSigningOutput.errorMessage)
                 }
                 return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
             }
@@ -45,7 +45,7 @@ internal object Swaps {
     fun getPreSigningOutput(preImageHashes: ByteArray): List<String> {
         val preSigningOutput = PreSigningOutput.parseFrom(preImageHashes)
         if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
