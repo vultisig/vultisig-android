@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.RefreshQuoteUiRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.navigation.Destination
@@ -23,6 +24,7 @@ internal class SwapViewModel @Inject constructor(
     private val mainNavigator: Navigator<Destination>,
     val addressProvider: AddressProvider,
     private val vaultRepository: VaultRepository,
+    private val refreshQuoteUiRepository: RefreshQuoteUiRepository,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -40,6 +42,10 @@ internal class SwapViewModel @Inject constructor(
 
     fun finishKeysign() {
         isKeysignFinished.value = true
+    }
+
+    fun requestToRefreshQuote(){
+        refreshQuoteUiRepository.triggerRefreshQuote()
     }
 
     fun navigateToHome(useMainNavigator: Boolean) {
