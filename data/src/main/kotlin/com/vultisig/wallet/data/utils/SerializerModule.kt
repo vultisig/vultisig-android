@@ -53,6 +53,7 @@ internal interface SerializerModule {
         impl: LiFiSwapQuoteResponseSerializerImpl,
     ): LiFiSwapQuoteResponseSerializer
 
+
     @Binds
     @Singleton
     fun bindOneInchSwapQuoteResponseJsonSerializer(

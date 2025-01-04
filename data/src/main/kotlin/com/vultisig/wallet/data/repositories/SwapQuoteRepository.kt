@@ -1,10 +1,12 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.JupiterApi
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.JupiterSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
@@ -53,6 +55,13 @@ interface SwapQuoteRepository {
         tokenValue: TokenValue,
     ): OneInchSwapQuoteJson
 
+    suspend fun getJupiterSwapQuote(
+        srcAddress: String,
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+    ): OneInchSwapQuoteJson
+
     fun resolveProvider(
         srcToken: Coin,
         dstToken: Coin,
@@ -65,6 +74,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val oneInchApi: OneInchApi,
     private val liFiChainApi: LiFiChainApi,
+    private val jupiterApi: JupiterApi,
 ) : SwapQuoteRepository {
 
     override suspend fun getOneInchSwapQuote(
@@ -202,15 +212,19 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val toToken =
             dstToken.contractAddress.ifEmpty { dstToken.ticker }
 
-        val liFiQuoteResponse = liFiChainApi.getSwapQuote(
-            fromChain = srcToken.chain.oneInchChainId().toString(),
-            toChain = dstToken.chain.oneInchChainId().toString(),
-            fromToken = fromToken,
-            toToken = toToken,
-            fromAmount = tokenValue.value.toString(),
-            fromAddress = srcAddress,
-            toAddress = dstAddress,
-        )
+        val liFiQuoteResponse = try {
+            liFiChainApi.getSwapQuote(
+                fromChain = srcToken.chain.oneInchChainId().toString(),
+                toChain = dstToken.chain.oneInchChainId().toString(),
+                fromToken = fromToken,
+                toToken = toToken,
+                fromAmount = tokenValue.value.toString(),
+                fromAddress = srcAddress,
+                toAddress = dstAddress,
+            )
+        } catch (e: Exception) {
+            throw SwapException.handleSwapException(e.message ?: "Unknown error")
+        }
 
         when (liFiQuoteResponse) {
             is LiFiSwapQuoteDeserialized.Error ->
@@ -226,22 +240,64 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 return OneInchSwapQuoteJson(
                     dstAmount = liFiQuote.estimate.toAmount,
                     tx = OneInchSwapTxJson(
-                        from = liFiQuote.transactionRequest.from,
-                        to = liFiQuote.transactionRequest.to,
+                        from = liFiQuote.transactionRequest.from ?: "",
+                        to = liFiQuote.transactionRequest.to ?: "",
                         data = liFiQuote.transactionRequest.data,
-                        gas = liFiQuote.transactionRequest.gasLimit.substring(startIndex = 2)
-                            .hexToLong(),
-                        value = liFiQuote.transactionRequest.value.substring(startIndex = 2)
-                            .hexToLong()
-                            .toString(),
-                        gasPrice = liFiQuote.transactionRequest.gasPrice.substring(startIndex = 2)
-                            .hexToLong().toString(),
+                        gas = liFiQuote.transactionRequest.gasLimit?.substring(startIndex = 2)
+                            ?.hexToLong() ?: 0,
+                        value = liFiQuote.transactionRequest.value?.substring(startIndex = 2)
+                            ?.hexToLong()
+                            ?.toString() ?: "0",
+                        gasPrice = liFiQuote.transactionRequest.gasPrice?.substring(startIndex = 2)
+                            ?.hexToLong()?.toString() ?: "0",
                         swapFee = swapFee,
                     )
                 )
             }
         }
     }
+
+    override suspend fun getJupiterSwapQuote(
+        srcAddress: String,
+        srcToken: Coin,
+        dstToken: Coin,
+        tokenValue: TokenValue,
+    ): OneInchSwapQuoteJson {
+
+        val fromToken =
+            srcToken.contractAddress.ifEmpty { SOLANA_DEFAULT_CONTRACT_ADDRESS }
+
+        val toToken =
+            dstToken.contractAddress.ifEmpty { SOLANA_DEFAULT_CONTRACT_ADDRESS }
+
+        val jupiterQuote = try {
+            jupiterApi.getSwapQuote(
+                fromToken = fromToken,
+                toToken = toToken,
+                fromAmount = tokenValue.value.toString(),
+                fromAddress = srcAddress,
+            )
+        } catch (e: Exception) {
+            throw SwapException.handleSwapException(e.message ?: "Unknown error")
+        }
+
+        val swapFee = jupiterQuote.routePlan
+            .sumOf { it.swapInfo.feeAmount.toLong() }.toString()
+        return OneInchSwapQuoteJson(
+            dstAmount = jupiterQuote.dstAmount,
+            tx = OneInchSwapTxJson(
+                from = "",
+                to = "",
+                data = jupiterQuote.swapTransaction.data,
+                gas = 0,
+                value = "0",
+                gasPrice = "0",
+                swapFee = swapFee,
+            )
+        )
+    }
+
+
 
     private val Coin.streamingInterval: String
         get() = when (chain) {
@@ -396,14 +452,15 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
 
             Chain.Blast -> setOf(SwapProvider.LIFI)
 
-            Chain.Solana, Chain.Polkadot, Chain.Dydx, Chain.CronosChain, Chain.ZkSync, Chain.Sui,
+            Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
+
+            Chain.Polkadot, Chain.Dydx, Chain.CronosChain, Chain.ZkSync, Chain.Sui,
             Chain.Ton, Chain.Osmosis, Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple -> emptySet()
         }
 
 
     companion object {
-        private const val FIXED_THOR_SWAP_DECIMALS = 8
-        private const val FIXED_MAYA_SWAP_DECIMALS = 8
+        private const val SOLANA_DEFAULT_CONTRACT_ADDRESS =
+            "So11111111111111111111111111111111111111112"
     }
-
 }

@@ -5,4 +5,5 @@ enum class SwapProvider {
     ONEINCH,
     MAYA,
     LIFI,
+    JUPITER,
 }
