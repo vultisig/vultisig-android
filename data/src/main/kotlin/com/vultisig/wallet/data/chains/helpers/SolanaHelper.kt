@@ -36,8 +36,6 @@ class SolanaHelper(
     private val vaultHexPublicKey: String,
 ) {
 
-
-
     private val coinType = CoinType.SOLANA
 
     companion object {
@@ -154,13 +152,10 @@ class SolanaHelper(
         val result = getPreSignedInputData(keysignPayload)
         val hashes = TransactionCompiler.preImageHashes(coinType, result)
 
-        image_hash=hashes
-
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-        Timber.d("solana error:${preSigningOutput.errorMessage}")
         if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
         image_hash= preSigningOutput.data.toByteArray()
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
@@ -181,7 +176,7 @@ class SolanaHelper(
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
         if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
         val allSignatures = DataVector()
@@ -208,7 +203,7 @@ class SolanaHelper(
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
         if (!output.errorMessage.isNullOrEmpty()) {
-            throw Exception(output.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
         return SignedTransactionResult(
             rawTransaction = output.encoded,
@@ -228,6 +223,9 @@ class SolanaHelper(
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
+        if (!output.errorMessage.isNullOrEmpty()) {
+            error(output.errorMessage)
+        }
         return output.encoded
     }
 }
