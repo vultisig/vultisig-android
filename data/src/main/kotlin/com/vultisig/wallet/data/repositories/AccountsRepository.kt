@@ -119,7 +119,7 @@ internal class AccountsRepositoryImpl @Inject constructor(
         solanaCoins: List<Coin>,
         vault: Vault
     ): List<Coin> {
-        if (solanaCoins.isNotEmpty()) return emptyList()
+        if (solanaCoins.any { !it.isNativeToken }) return emptyList()
         val solanaAddress = solanaCoins.firstOrNull()?.address
         val newSPLTokens = mutableListOf<Coin>()
         solanaAddress?.let {
