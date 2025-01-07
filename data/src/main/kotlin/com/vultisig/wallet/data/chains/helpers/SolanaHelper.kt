@@ -24,6 +24,7 @@ import okio.ByteString.Companion.decodeHex
 import wallet.core.jni.Curve
 import wallet.core.jni.PrivateKey
 import wallet.core.jni.TransactionDecoder
+import wallet.core.jni.proto.Solana.CreateNonceAccount
 import java.math.BigInteger
 import java.util.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -47,6 +48,29 @@ class SolanaHelper(
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
+    private fun CreateNonceAccount(keysignPayload: KeysignPayload): ByteArray{
+
+//        val privateKey = PrivateKey()
+//        val publicKey = privateKey.publicKeyEd25519
+        val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
+        val nonceAccount = Solana.CreateNonceAccount.newBuilder()
+            .setNonceAccountPrivateKey(
+                ByteString.copyFrom(
+                    //nonce private key 017b9745062211b8ed330cf92ce0212a87c0ac68b16a9f02096198a77e3d424b
+                    //nonce public key 99f61e674ef17b071d65b8b5f94b35957e18ebe40ffb78d2232179a28df5a417\
+                    "017b9745062211b8ed330cf92ce0212a87c0ac68b16a9f02096198a77e3d424b".decodeHex()
+                        .toByteArray()
+                )
+            )
+            .setRent(1500000)
+            .build()
+        var input =Solana.SigningInput.newBuilder()
+            .setRecentBlockhash(solanaSpecific?.recentBlockHash)
+            .setCreateNonceAccount(nonceAccount)
+            .setSender(keysignPayload.coin.address) .build()
+            .toByteArray()
+        return input
+    }
     @OptIn(ExperimentalEncodingApi::class)
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
 
@@ -72,21 +96,17 @@ class SolanaHelper(
             )
             .setRent(1500000)
             .build()
-        Solana.SigningInput.newBuilder()
 
-        var input =Solana.SigningInput.newBuilder()
+        val advanceNonceAccount = Solana.AdvanceNonceAccount.newBuilder()
+            .setNonceAccount(nonceAccount.nonceAccount)
+            .build()
+
+        var input1 =Solana.SigningInput.newBuilder()
             .setRecentBlockhash(solanaSpecific.recentBlockHash)
             .setCreateNonceAccount(nonceAccount)
-//            .setPrivateKey(
-//                ByteString.copyFrom(
-//                    "49aa18e396912a11d0736088db3fc72ea1070a6919e02ceaf5ebeb7b076eedc5"
-//                        .decodeHex()
-//                        .toByteArray()
-//                )
-//            )
             .setSender(keysignPayload.coin.address)
 
-        val input1 = Solana.SigningInput.newBuilder()
+        val input = Solana.SigningInput.newBuilder()
 
             .setRecentBlockhash(solanaSpecific.recentBlockHash)
             .setSender(keysignPayload.coin.address)
@@ -110,7 +130,9 @@ class SolanaHelper(
             }
 
             return input
-//                .setTransferTransaction(transfer.build())
+                .setTransferTransaction(transfer.build())
+                .setNonceAccount(nonceAccount.nonceAccount)
+                .setAdvanceNonceAccount(advanceNonceAccount)
                 .build()
                 .toByteArray()
         } else {
@@ -123,7 +145,7 @@ class SolanaHelper(
                     .setDecimals(keysignPayload.coin.decimal)
 
                 return input
-//                    .setTokenTransferTransaction(transfer.build())
+                    .setTokenTransferTransaction(transfer.build())
                     .build()
                     .toByteArray()
             } else {
@@ -141,7 +163,7 @@ class SolanaHelper(
                         .setDecimals(keysignPayload.coin.decimal)
 
                 return input
-//                    .setCreateAndTransferTokenTransaction(transferTokenMessage.build())
+                    .setCreateAndTransferTokenTransaction(transferTokenMessage.build())
                     .build()
                     .toByteArray()
             }
@@ -196,14 +218,14 @@ class SolanaHelper(
         if (!publicKey2.verify(signature2, preSigningOutput.data.toByteArray())) {
             throw Exception("Signature verification failed")
         }
-        allSignatures.add(signature2)
+//        allSignatures.add(signature2)
         publicKeys.add(publicKey.data())
-        publicKeys.add(publicKey2.data())
+//        publicKeys.add(publicKey2.data())
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
         if (!output.errorMessage.isNullOrEmpty()) {
-            error(preSigningOutput.errorMessage)
+            error(output.errorMessage)
         }
         return SignedTransactionResult(
             rawTransaction = output.encoded,
