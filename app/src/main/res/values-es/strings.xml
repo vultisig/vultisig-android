@@ -398,7 +398,7 @@
     <string name="verify_swap_screen_total_fees">Tarifas totales</string>
     <string name="scan_qr_code_error_text">Se escanea un código QR no relacionado</string>
     <string name="scan_qr_code_error_button">Atrás</string>
-    <string name="form_token_selection_balance">Atrás</string>
+    <string name="form_token_selection_balance">Atrás: %s</string>
     <string name="form_token_selection_asset">Activo</string>
     <string name="insufficient_native_token">%1$s insuficientes</string>
     <string name="swap_error_amount_too_low">El monto de intercambio es demasiado bajo</string>
