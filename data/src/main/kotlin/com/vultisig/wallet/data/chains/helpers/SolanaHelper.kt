@@ -70,7 +70,7 @@ class SolanaHelper(
                         .toByteArray()
                 )
             )
-            .setRent(100000)
+            .setRent(1500000)
             .build()
         Solana.SigningInput.newBuilder()
 
