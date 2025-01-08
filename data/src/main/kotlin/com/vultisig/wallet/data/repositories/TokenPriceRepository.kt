@@ -126,7 +126,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 ).asSequence()
                     .mapNotNull { (contractAddress, value) ->
                         val tokenId = tokensByContractAddress[contractAddress.lowercase()]?.id
-                        if (tokenId != null) {
+                        if (
+                            tokenId != null &&
+                            value.filter { it.value != BigDecimal.ZERO }.isNotEmpty()
+                        ) {
                             tokenId to value
                         } else null
                     }
