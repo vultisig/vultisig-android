@@ -693,7 +693,7 @@ internal class SwapFormViewModel @Inject constructor(
                                     mapTokenValueToDecimalUiString(recommendedMinAmountToken)
                                 amount?.let {
                                     uiState.update {
-                                        if (amount < recommendedMinAmountTokenString.toBigDecimal()) {
+                                        if (amount < recommendedMinAmountToken.decimal) {
                                             it.copy(
                                                 minimumAmount = recommendedMinAmountTokenString,
                                                 isSwapDisabled = true
