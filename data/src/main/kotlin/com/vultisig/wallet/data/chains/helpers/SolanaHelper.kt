@@ -73,10 +73,7 @@ class SolanaHelper(
         if (keysignPayload.coin.chain != Chain.Solana) {
             error("Chain is not Solana")
         }
-        val toAddress = AnyAddress(
-            keysignPayload.toAddress,
-            coinType
-        )
+        val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
         val hasNonceAccount = false
         val recentBlockHash = if (hasNonceAccount)
             solanaSpecific.recentBlockHash
@@ -161,11 +158,7 @@ class SolanaHelper(
 
     fun getPreSignedImageHash(keysignPayload: KeysignPayload): List<String> {
         val result = getPreSignedInputData(keysignPayload)
-        val hashes = TransactionCompiler.preImageHashes(
-            coinType,
-            result
-        )
-
+        val hashes = TransactionCompiler.preImageHashes(coinType, result)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
         if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
@@ -179,15 +172,10 @@ class SolanaHelper(
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,
     ): SignedTransactionResult {
-        val publicKey = PublicKey(
-            vaultHexPublicKey.toHexByteArray(),
-            PublicKeyType.ED25519
-        )
+        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
         val input = getPreSignedInputData(keysignPayload)
-        val hashes = TransactionCompiler.preImageHashes(
-            coinType,
-            input
-        )
+        val hashes = TransactionCompiler.preImageHashes(coinType, input)
+
         val nonceAccountPrivateKey = PrivateKey(
             "HEX_NONCE_PRIVATE_KEY".decodeHex()
                 .toByteArray()
@@ -217,11 +205,7 @@ class SolanaHelper(
         if (creatingNonceAccountTransaction) {
             publicKeys.add(nonceAccoutPubicKey.data())
         }
-        if (!publicKey.verify(
-                signature,
-                preSigningOutput.data.toByteArray()
-            )
-        ) {
+        if (!publicKey.verify(signature, preSigningOutput.data.toByteArray())) {
             throw Exception("Signature verification failed")
         }
         allSignatures.add(signature)
@@ -240,15 +224,10 @@ class SolanaHelper(
         if (creatingNonceAccountTransaction)
             publicKeys.add(nonceAccoutPubicKey.data())
         val compiledWithSignature =
-            TransactionCompiler.compileWithSignatures(
-                coinType,
-                input,
-                allSignatures,
-                publicKeys
-            )
+            TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
         if (!output.errorMessage.isNullOrEmpty()) {
-            error(output.errorMessage)
+            error(preSigningOutput.errorMessage)
         }
         return SignedTransactionResult(
             rawTransaction = output.encoded,
@@ -259,22 +238,14 @@ class SolanaHelper(
     fun getZeroSignedTransaction(
         keysignPayload: KeysignPayload,
     ): String {
-        val publicKey = PublicKey(
-            vaultHexPublicKey.toHexByteArray(),
-            PublicKeyType.ED25519
-        )
+        val publicKey = PublicKey(vaultHexPublicKey.toHexByteArray(), PublicKeyType.ED25519)
         val input = getPreSignedInputData(keysignPayload)
         val allSignatures = DataVector()
         val publicKeys = DataVector()
         allSignatures.add("0".repeat(128).toHexByteArray())
         publicKeys.add(publicKey.data())
         val compiledWithSignature =
-            TransactionCompiler.compileWithSignatures(
-                coinType,
-                input,
-                allSignatures,
-                publicKeys
-            )
+            TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
         if (!output.errorMessage.isNullOrEmpty()) {
             error(output.errorMessage)
