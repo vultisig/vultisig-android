@@ -37,8 +37,8 @@ import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
+import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -215,6 +215,7 @@ internal class JoinKeysignViewModel @Inject constructor(
             featureFlagApi = featureFlagApi,
             pullTssMessages = pullTssMessages,
             customMessagePayload = customMessagePayload,
+            isInitiatingDevice = false,
         )
 
     val verifyUiModel =
