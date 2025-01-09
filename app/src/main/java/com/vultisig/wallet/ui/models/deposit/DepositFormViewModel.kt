@@ -244,6 +244,9 @@ internal class DepositFormViewModel @Inject constructor(
                 )
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
+            } catch (e: Exception) {
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
+                Timber.e(e)
             }
             finally {
                 isLoading = false
