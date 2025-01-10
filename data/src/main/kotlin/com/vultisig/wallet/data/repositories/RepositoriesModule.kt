@@ -241,4 +241,10 @@ internal interface RepositoriesModule {
         impl: SecretSettingsRepositoryImpl
     ): SecretSettingsRepository
 
+    @Binds
+    @Singleton
+    fun bindRefreshQuoteUiRepository(
+        impl: RefreshQuoteUiRepositoryImpl
+    ): RefreshQuoteUiRepository
+
 }

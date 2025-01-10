@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
+import com.vultisig.wallet.data.repositories.RefreshQuoteUiRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -109,6 +110,7 @@ internal class SwapFormViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val refreshQuoteUiRepository: RefreshQuoteUiRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SwapFormUiModel())
@@ -610,6 +612,9 @@ internal class SwapFormViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .combine(srcAmountState.textAsFlow()) { address, amount ->
                     address to srcAmount
+                }
+                .combine(refreshQuoteUiRepository.refreshValue) { (address, amount), _ ->
+                    address to amount
                 }
                 .collect { (address, amount) ->
                     isLoading = true
