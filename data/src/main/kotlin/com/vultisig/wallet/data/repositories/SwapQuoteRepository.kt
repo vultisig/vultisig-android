@@ -394,9 +394,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.MAYA
             ) else setOf(SwapProvider.LIFI)
 
-            Chain.Blast -> setOf(SwapProvider.LIFI)
+            Chain.Blast, Chain.CronosChain -> setOf(SwapProvider.LIFI)
 
-            Chain.Solana, Chain.Polkadot, Chain.Dydx, Chain.CronosChain, Chain.ZkSync, Chain.Sui,
+            Chain.Solana, Chain.Polkadot, Chain.Dydx, Chain.ZkSync, Chain.Sui,
             Chain.Ton, Chain.Osmosis, Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple -> emptySet()
         }
 
