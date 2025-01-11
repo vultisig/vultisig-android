@@ -101,6 +101,7 @@ internal fun SwapScreen(
         qrCodeResult = viewModel.addressProvider.address.collectAsState().value,
         navigateToHome = { viewModel.navigateToHome(useMainNavigator) },
         finishKeysign = viewModel::finishKeysign,
+        onRefreshQuoteClick = viewModel::requestToRefreshQuote
     )
 }
 
@@ -118,19 +119,28 @@ private fun SwapScreen(
     qrCodeResult: String?,
     navigateToHome: () -> Unit = {},
     finishKeysign: (() -> Unit)? = null,
+    onRefreshQuoteClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
     val keysignShareViewModel: KeysignShareViewModel =
         hiltViewModel(context as MainActivity)
 
+    val showRefreshQuoteIcon = progress == 0.25f
+
     ProgressScreen(
         navController = topBarNavController,
         title = title,
         progress = progress,
-        endIcon = qrCodeResult?.takeIf { it.isNotEmpty() }?.let { R.drawable.qr_share },
+        endIcon =
+        if (showRefreshQuoteIcon)
+            R.drawable.arrow_clockwise
+        else
+            qrCodeResult?.takeIf { it.isNotEmpty() }?.let { R.drawable.qr_share },
         onStartIconClick = navigateToHome,
-        onEndIconClick = qrCodeResult?.let {
+        onEndIconClick = if (showRefreshQuoteIcon) {
+            onRefreshQuoteClick
+        } else qrCodeResult?.let {
             {
                 keysignShareViewModel.shareQRCode(context)
             }
