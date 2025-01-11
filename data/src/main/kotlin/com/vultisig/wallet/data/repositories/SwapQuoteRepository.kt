@@ -199,8 +199,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val fromToken =
             srcToken.contractAddress.ifEmpty { srcToken.ticker }
 
-        val toToken =
-            dstToken.contractAddress.ifEmpty { dstToken.ticker }
+        val toToken = if (dstToken.ticker == "CRO") "0x0000000000000000000000000000000000000000"
+        else dstToken.contractAddress.ifEmpty { dstToken.ticker }
+
 
         val liFiQuoteResponse = liFiChainApi.getSwapQuote(
             fromChain = srcToken.chain.oneInchChainId().toString(),
