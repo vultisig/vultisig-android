@@ -12,6 +12,9 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
+import com.vultisig.wallet.data.keygen.DKLSKeysign
+import com.vultisig.wallet.data.keygen.SchnorrKeysign
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -83,6 +86,7 @@ internal class KeysignViewModel(
     private val featureFlagApi: FeatureFlagApi,
     val transactionTypeUiModel: TransactionTypeUiModel?,
     private val pullTssMessages: PullTssMessagesUseCase,
+    private val isInitiatingDevice: Boolean,
 ) : ViewModel() {
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
@@ -104,9 +108,77 @@ internal class KeysignViewModel(
     fun startKeysign() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                signAndBroadcast()
+                when (vault.libType) {
+                    SigningLibType.GG20 ->
+                        signAndBroadcast()
+
+                    SigningLibType.DKLS ->
+                        startKeysignDkls()
+                }
             }
         }
+    }
+
+    private suspend fun startKeysignDkls() {
+        val keysignPayload = keysignPayload ?: error("Keysign payload is null")
+
+        when (keyType){
+            TssKeyType.ECDSA -> {
+                currentState.value = KeysignState.KeysignECDSA
+
+                val dkls = DKLSKeysign(
+                    vault = vault,
+                    keysignCommittee = keysignCommittee,
+                    mediatorURL = serverUrl,
+                    sessionID = sessionId,
+                    encryptionKeyHex = encryptionKeyHex,
+                    messageToSign = messagesToSign,
+                    chainPath = keysignPayload.coin.coinType.derivationPath(),
+                    isInitiateDevice = isInitiatingDevice,
+                    sessionApi = sessionApi,
+                    encryption = encryption,
+                )
+
+                dkls.DKLSKeysignWithRetry(0)
+
+                this.signatures += dkls.signatures
+
+                if (signatures.isEmpty()) {
+                    error("Failed to sign transaction, signatures empty")
+                }
+            }
+            TssKeyType.EDDSA -> {
+                currentState.value = KeysignState.KeysignEdDSA
+
+                val schnorr = SchnorrKeysign(
+                    vault = vault,
+                    keysignCommittee = keysignCommittee,
+                    mediatorURL = serverUrl,
+                    sessionID = sessionId,
+                    encryptionKeyHex = encryptionKeyHex,
+                    messageToSign = messagesToSign,
+                    isInitiateDevice = isInitiatingDevice,
+                    sessionApi = sessionApi,
+                    encryption = encryption,
+                )
+
+                schnorr.keysignWithRetry(0)
+
+                this.signatures += schnorr.signatures
+
+                if (signatures.isEmpty()) {
+                    error("Failed to sign transaction, signatures empty")
+                }
+            }
+        }
+
+        Timber.d("All messages signed, broadcasting transaction")
+
+        broadcastTransaction()
+        checkThorChainTxResult()
+
+        currentState.value = KeysignState.KeysignFinished
+        isNavigateToHome = true
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
