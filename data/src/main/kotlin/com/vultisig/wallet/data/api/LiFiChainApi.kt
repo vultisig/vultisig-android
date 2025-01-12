@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.LiFiSwapQuoteResponseSerializer
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -38,7 +40,8 @@ internal class LiFiChainApiImpl @Inject constructor(
         fromAddress: String,
         toAddress: String,
     ): LiFiSwapQuoteDeserialized {
-        try {
+        val isSolanaChainInvolved = fromChain.toLong() == Chain.Solana.oneInchChainId() ||
+                toChain.toLong() == Chain.Solana.oneInchChainId()
             val response = httpClient
                 .get("https://li.quest/v1/quote") {
                     parameter("fromChain", fromChain)
@@ -48,33 +51,23 @@ internal class LiFiChainApiImpl @Inject constructor(
                     parameter("fromAmount", fromAmount)
                     parameter("fromAddress", fromAddress)
                     parameter("toAddress", toAddress)
-                    parameter("integrator", INTEGRATOR_ACCOUNT)
-                    parameter("fee", INTEGRATOR_FEE)
-                }
-            if (!response.status.isSuccess()) {
-                if (response.status == HttpStatusCode.NotFound) {
-                    return LiFiSwapQuoteDeserialized.Error(
-                        json.decodeFromString(
-                            LiFiSwapQuoteError.serializer(),
-                            response.body<String>()
+                    if (!isSolanaChainInvolved) {
+                        parameter(
+                            "integrator",
+                            INTEGRATOR_ACCOUNT
                         )
-                    )
+                        parameter("fee", INTEGRATOR_FEE)
+                    }
                 }
-                return LiFiSwapQuoteDeserialized.Error(
-                    LiFiSwapQuoteError(
-                        HttpStatusCode.fromValue(response.status.value).description
-                    )
-                )
-            }
-            val responseRawString = response.body<String>()
-            return json.decodeFromString(
+        return try {
+            json.decodeFromString(
                 liFiSwapQuoteResponseSerializer,
-                responseRawString
+                response.body<String>()
             )
         } catch (e: Exception) {
-            return LiFiSwapQuoteDeserialized.Error(
+            LiFiSwapQuoteDeserialized.Error(
                 LiFiSwapQuoteError(
-                    e.message ?: "Unknown error"
+                    HttpStatusCode.fromValue(response.status.value).description
                 )
             )
         }

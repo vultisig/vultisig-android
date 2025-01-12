@@ -203,15 +203,19 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         else dstToken.contractAddress.ifEmpty { dstToken.ticker }
 
 
-        val liFiQuoteResponse = liFiChainApi.getSwapQuote(
-            fromChain = srcToken.chain.oneInchChainId().toString(),
-            toChain = dstToken.chain.oneInchChainId().toString(),
-            fromToken = fromToken,
-            toToken = toToken,
-            fromAmount = tokenValue.value.toString(),
-            fromAddress = srcAddress,
-            toAddress = dstAddress,
-        )
+        val liFiQuoteResponse = try {
+            liFiChainApi.getSwapQuote(
+                fromChain = srcToken.chain.oneInchChainId().toString(),
+                toChain = dstToken.chain.oneInchChainId().toString(),
+                fromToken = fromToken,
+                toToken = toToken,
+                fromAmount = tokenValue.value.toString(),
+                fromAddress = srcAddress,
+                toAddress = dstAddress,
+            )
+        } catch (e: Exception) {
+            throw SwapException.handleSwapException(e.message ?: "Unknown error")
+        }
 
         when (liFiQuoteResponse) {
             is LiFiSwapQuoteDeserialized.Error ->
@@ -227,16 +231,16 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 return OneInchSwapQuoteJson(
                     dstAmount = liFiQuote.estimate.toAmount,
                     tx = OneInchSwapTxJson(
-                        from = liFiQuote.transactionRequest.from,
-                        to = liFiQuote.transactionRequest.to,
+                        from = liFiQuote.transactionRequest.from ?: "",
+                        to = liFiQuote.transactionRequest.to ?: "",
                         data = liFiQuote.transactionRequest.data,
-                        gas = liFiQuote.transactionRequest.gasLimit.substring(startIndex = 2)
-                            .hexToLong(),
-                        value = liFiQuote.transactionRequest.value.substring(startIndex = 2)
-                            .hexToLong()
-                            .toString(),
-                        gasPrice = liFiQuote.transactionRequest.gasPrice.substring(startIndex = 2)
-                            .hexToLong().toString(),
+                        gas = liFiQuote.transactionRequest.gasLimit?.substring(startIndex = 2)
+                            ?.hexToLong() ?: 0,
+                        value = liFiQuote.transactionRequest.value?.substring(startIndex = 2)
+                            ?.hexToLong()
+                            ?.toString() ?: "0",
+                        gasPrice = liFiQuote.transactionRequest.gasPrice?.substring(startIndex = 2)
+                            ?.hexToLong()?.toString() ?: "0",
                         swapFee = swapFee,
                     )
                 )
@@ -395,16 +399,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.MAYA
             ) else setOf(SwapProvider.LIFI)
 
-            Chain.Blast, Chain.CronosChain -> setOf(SwapProvider.LIFI)
+            Chain.Blast, Chain.CronosChain, Chain.Solana -> setOf(SwapProvider.LIFI)
 
-            Chain.Solana, Chain.Polkadot, Chain.Dydx, Chain.ZkSync, Chain.Sui,
+            Chain.Polkadot, Chain.Dydx, Chain.ZkSync, Chain.Sui,
             Chain.Ton, Chain.Osmosis, Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple -> emptySet()
         }
-
-
-    companion object {
-        private const val FIXED_THOR_SWAP_DECIMALS = 8
-        private const val FIXED_MAYA_SWAP_DECIMALS = 8
-    }
 
 }
