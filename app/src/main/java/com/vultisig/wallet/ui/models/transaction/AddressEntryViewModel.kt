@@ -74,8 +74,15 @@ internal class AddressEntryViewModel @Inject constructor(
         val chain = state.value.selectedChain
         val title = titleTextFieldState.text.toString()
         val address = addressTextFieldState.text.toString()
-
-        if (validateAddress(chain, address) != null) {
+        validateAddress(chain, address)?.let {
+            state.update {
+                it.copy(
+                    addressError = UiText.FormattedText(
+                        R.string.address_bookmark_error_invalid_address,
+                        listOf(chain)
+                    )
+                )
+            }
             return
         }
 
@@ -109,7 +116,10 @@ internal class AddressEntryViewModel @Inject constructor(
 
     private fun validateAddress(chain: Chain, address: String): UiText? =
         if (address.isBlank() || !chainAccountAddressRepository.isValid(chain, address)) {
-            UiText.StringResource(R.string.send_error_no_address)
+            UiText.FormattedText(
+                R.string.address_bookmark_error_invalid_address,
+                listOf(chain)
+            )
         } else {
             null
         }

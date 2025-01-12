@@ -232,39 +232,57 @@ internal class SolanaApiImp @Inject constructor(
             )
         }.body()
 
-    override suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>? {
-        try {
-            val payload = RpcPayload(
-                jsonrpc = "2.0",
-                method = "getTokenAccountsByOwner",
-                params = buildJsonArray {
-                    add(walletAddress)
-                    addJsonObject {
-                        put("programId", PROGRAM_ID_SPL_REQUEST_PARAM)
-                    }
-                    addJsonObject {
-                        put("encoding", ENCODING_SPL_REQUEST_PARAM)
-                    }
-                },
-                id = 1,
-            )
-            val response = httpClient.post(rpcEndpoint) {
-                setBody(payload)
-            }
-            val responseContent = response.bodyAsText()
-            Timber.d(responseContent)
-            val rpcResp = response.body<SplResponseJson>()
+    override suspend fun getSPLTokens(walletAddress: String): List<SplResponseAccountJson>? =
+        coroutineScope {
+            try {
+                val payload = getSplRpcPayload(walletAddress, PROGRAM_ID_SPL_REQUEST_PARAM)
+                val payloadToken2022 = getSplRpcPayload(walletAddress, TOKEN_PROGRAM_ID_2022)
 
-            if (rpcResp.error != null) {
-                Timber.d("get spl token addresses error: ${rpcResp.error}")
-                return null
+                val response = async {
+                    httpClient.post(rpcEndpoint) {
+                        setBody(payload)
+                    }
+                }
+
+                val responseToken2022 = async {
+                    httpClient.post(rpcEndpoint) {
+                        setBody(payloadToken2022)
+                    }
+                }
+
+                listOf(response, responseToken2022)
+                    .awaitAll()
+                    .mapNotNull { it.body<SplResponseJson>().result?.accounts }
+                    .flatten()
+
+            } catch (e: Exception) {
+                Timber.e(e)
+                null
             }
-            return rpcResp.result?.accounts
-        } catch (e: Exception) {
-            Timber.e(e)
-            return null
         }
-    }
+
+
+    private fun getSplRpcPayload(address: String, programId: String) = RpcPayload(
+        jsonrpc = "2.0",
+        method = "getTokenAccountsByOwner",
+        params = buildJsonArray {
+            add(address)
+            addJsonObject {
+                put(
+                    "programId",
+                    programId
+                )
+            }
+            addJsonObject {
+                put(
+                    "encoding",
+                    ENCODING_SPL_REQUEST_PARAM
+                )
+            }
+        },
+        id = 1,
+    )
+
 
     override suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String? {
         try {
@@ -335,6 +353,8 @@ internal class SolanaApiImp @Inject constructor(
     companion object {
         private const val PROGRAM_ID_SPL_REQUEST_PARAM =
             "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        private const val TOKEN_PROGRAM_ID_2022 =
+            "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
         private const val ENCODING_SPL_REQUEST_PARAM = "jsonParsed"
         private const val DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION = 165
     }
