@@ -199,8 +199,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         val fromToken =
             srcToken.contractAddress.ifEmpty { srcToken.ticker }
 
-        val toToken =
-            dstToken.contractAddress.ifEmpty { dstToken.ticker }
+        val toToken = if (dstToken.ticker == "CRO") "0x0000000000000000000000000000000000000000"
+        else dstToken.contractAddress.ifEmpty { dstToken.ticker }
+
 
         val liFiQuoteResponse = liFiChainApi.getSwapQuote(
             fromChain = srcToken.chain.oneInchChainId().toString(),
@@ -394,9 +395,9 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.MAYA
             ) else setOf(SwapProvider.LIFI)
 
-            Chain.Blast -> setOf(SwapProvider.LIFI)
+            Chain.Blast, Chain.CronosChain -> setOf(SwapProvider.LIFI)
 
-            Chain.Solana, Chain.Polkadot, Chain.Dydx, Chain.CronosChain, Chain.ZkSync, Chain.Sui,
+            Chain.Solana, Chain.Polkadot, Chain.Dydx, Chain.ZkSync, Chain.Sui,
             Chain.Ton, Chain.Osmosis, Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple -> emptySet()
         }
 
