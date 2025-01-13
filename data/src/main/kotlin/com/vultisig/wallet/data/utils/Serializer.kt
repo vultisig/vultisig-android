@@ -1,17 +1,19 @@
 package com.vultisig.wallet.data.utils
 
-import com.vultisig.wallet.data.api.models.FourByteResponseJson
+import com.vultisig.wallet.data.api.models.JupiterSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.JupiterSwapQuoteError
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
-import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.api.models.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote
-import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountErrorJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountJson
@@ -143,10 +145,6 @@ class LiFiSwapQuoteResponseSerializerImpl @Inject constructor(private val json: 
                 json.decodeFromJsonElement<LiFiSwapQuoteError>(jsonObject)
             )
         }
-    }
-
-    override fun serialize(encoder: Encoder, value: LiFiSwapQuoteDeserialized) {
-        throw UnsupportedOperationException("Serialization is not required")
     }
 }
 

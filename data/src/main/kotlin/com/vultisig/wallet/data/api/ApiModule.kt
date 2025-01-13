@@ -133,4 +133,10 @@ internal interface ApiModule {
     fun bindLiQuestApi(
         impl: LiQuestApiImpl,
     ): LiQuestApi
+
+    @Binds
+    @Singleton
+    fun bindJupiterApi(
+        impl: JupiterApiImpl,
+    ): JupiterApi
 }
