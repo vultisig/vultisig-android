@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.models.Chain
@@ -24,6 +25,7 @@ import timber.log.Timber
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 data class BlockChainSpecificAndUtxo(
@@ -60,6 +62,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
+    private val tronApi: TronApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -308,6 +311,25 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 ),
             )
 
+        }
+
+        TokenStandard.TRC20 -> {
+            val specific = tronApi.getSpecific()
+            val now = Clock.System.now()
+            val expiration = now + 1.hours
+            val rawData = specific.blockHeader.rawData
+            BlockChainSpecificAndUtxo(
+                blockChainSpecific = BlockChainSpecific.Tron(
+                    timestamp = now.toEpochMilliseconds().toULong(),
+                    expiration = expiration.toEpochMilliseconds().toULong(),
+                    blockHeaderTimestamp = rawData.timeStamp,
+                    blockHeaderNumber = rawData.number,
+                    blockHeaderVersion = rawData.version,
+                    blockHeaderTxTrieRoot = rawData.txTrieRoot,
+                    blockHeaderParentHash = rawData.parentHash,
+                    blockHeaderWitnessAddress = rawData.witnessAddress
+                )
+            )
         }
     }
 

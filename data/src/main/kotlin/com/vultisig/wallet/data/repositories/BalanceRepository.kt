@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.db.dao.TokenValueDao
@@ -96,7 +97,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
-
+    private val tronApi: TronApi,
     private val tokenValueDao: TokenValueDao,
 ) : BalanceRepository {
 
@@ -290,6 +291,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
 
             Ton -> tonApi.getBalance(address)
             Chain.Ripple -> rippleApi.getBalance(coin)
+            Chain.Tron -> tronApi.getBalance(coin)
         }, coin.ticker, coin.decimal))
     }.onEach { tokenValue ->
         tokenValueDao.insertTokenValue(

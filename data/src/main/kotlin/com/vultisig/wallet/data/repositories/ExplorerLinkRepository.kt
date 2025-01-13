@@ -62,6 +62,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 "https://finder.kujira.network/kaiyo-1/tx/"
 
             Chain.Polkadot -> "https://polkadot.subscan.io/extrinsic/"
+            Chain.Tron -> "${explorerUrl}transaction/"
         }
 
     private val Chain.blockExplorerUrl: String
@@ -102,6 +103,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.TerraClassic -> "https://finder.terra.money/classic/"
             Chain.Noble -> "https://www.mintscan.io/noble"
             Chain.Ripple -> "https://xrpscan.com/"
+            Chain.Tron -> "https://tronscan.org/#/"
         }
 
 }

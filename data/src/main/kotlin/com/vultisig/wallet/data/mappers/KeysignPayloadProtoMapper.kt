@@ -175,6 +175,19 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     )
                 }
 
+                from.tronSpecific != null -> from.tronSpecific.let {
+                    BlockChainSpecific.Tron(
+                        timestamp = it.timestamp,
+                        expiration = it.expiration,
+                        blockHeaderTimestamp = it.blockHeaderTimestamp,
+                        blockHeaderNumber = it.blockHeaderNumber,
+                        blockHeaderVersion = it.blockHeaderVersion,
+                        blockHeaderTxTrieRoot = it.blockHeaderTxTrieRoot,
+                        blockHeaderParentHash = it.blockHeaderParentHash,
+                        blockHeaderWitnessAddress = it.blockHeaderWitnessAddress,
+                    )
+                }
+
                 else -> error("No supported BlockChainSpecific in proto $from")
             },
         )

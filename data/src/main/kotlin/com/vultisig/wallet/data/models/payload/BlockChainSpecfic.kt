@@ -69,4 +69,15 @@ sealed class BlockChainSpecific {
         val gas: ULong
     ) : BlockChainSpecific()
 
+    data class Tron(
+        val timestamp: ULong,
+        val expiration: ULong,
+        val blockHeaderTimestamp: ULong,
+        val blockHeaderNumber: ULong,
+        val blockHeaderVersion: ULong,
+        val blockHeaderTxTrieRoot: String,
+        val blockHeaderParentHash: String,
+        val blockHeaderWitnessAddress: String
+    ) : BlockChainSpecific()
+
 }
