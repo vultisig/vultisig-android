@@ -26,6 +26,7 @@ interface SessionApi {
         serverUrl: String,
         sessionId: String,
         localPartyId: String,
+        messageId: String? = null,
     ): List<Message>
     suspend fun deleteTssMessage(
         serverUrl: String,
@@ -114,8 +115,13 @@ internal class SessionApiImpl @Inject constructor(
         serverUrl: String,
         sessionId: String,
         localPartyId: String,
+        messageId: String?,
     ): List<Message> {
-        return httpClient.get("$serverUrl/message/$sessionId/$localPartyId")
+        return httpClient.get("$serverUrl/message/$sessionId/$localPartyId") {
+            messageId?.let {
+                header(MESSAGE_ID_HEADER_TITLE, it)
+            }
+        }
             .throwIfUnsuccessful()
             .body<List<Message>>()
     }

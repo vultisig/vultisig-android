@@ -138,7 +138,7 @@ class SolanaHelper(
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
         if (!output.errorMessage.isNullOrEmpty()) {
-            error(preSigningOutput.errorMessage)
+            error(output.errorMessage)
         }
         return SignedTransactionResult(
             rawTransaction = output.encoded,

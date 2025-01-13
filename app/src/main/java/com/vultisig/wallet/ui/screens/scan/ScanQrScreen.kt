@@ -67,6 +67,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
+import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -97,7 +98,7 @@ internal fun ScanQrScreen(
             if (viewModel.getFlowType(qr) == JOIN_SEND_ON_ADDRESS_FLOW) {
                 navController.previousBackStackEntry
                     ?.savedStateHandle
-                    ?.set(ARG_QR_CODE, qr)
+                    ?.set(ARG_QR_CODE, qr.getAddressFromQrCode())
             }
             navController.popBackStack()
         }

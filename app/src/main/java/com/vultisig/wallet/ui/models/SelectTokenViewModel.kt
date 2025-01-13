@@ -88,7 +88,7 @@ internal class SelectTokenViewModel @Inject constructor(
                 .map { it.toString() },
         ) { selected, query ->
             val selectedUiTokens = selected.asUiTokens(emptySet())
-                .filter { it.coin.ticker.contains(query, ignoreCase = true) }
+                .filter { it.coin.id.contains(query, ignoreCase = true) }
 
 
             uiState.update {
