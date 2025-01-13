@@ -505,5 +505,6 @@
     <string name="verify_sign_message_message_field_signature" translatable="false">Signature</string>
     <string name="secret_enable_dkls" translatable="false">Enable DKLS</string>
     <string name="dialog_default_error_body" translatable="false">Something went wrong</string>
+    <string name="address_bookmark_error_invalid_address" translatable="false">This address is not valid for %s</string>
     <string name="send_error_invalid_plan_fee" translatable="false">Invalid Plan Fee</string>
 </resources>

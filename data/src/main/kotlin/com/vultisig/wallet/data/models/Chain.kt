@@ -128,7 +128,7 @@ val Chain.IsSwapSupported: Boolean
 
         Chain.Avalanche, Chain.Base, Chain.BscChain, Chain.Ethereum, Chain.Optimism, Chain.Polygon,
 
-        Chain.Arbitrum, Chain.Blast,
+        Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana,
     )
 
 val Chain.isDepositSupported: Boolean
@@ -145,17 +145,18 @@ val Chain.isLayer2: Boolean
         else -> false
     }
 
-fun Chain.oneInchChainId(): Int =
+fun Chain.oneInchChainId(): Long =
     when (this) {
         Chain.Ethereum -> 1
         Chain.Avalanche -> 43114
         Chain.Base -> 8453
+        Chain.Solana -> 1151111081099710
         //Chain.Blast -> 81457
         Chain.Arbitrum -> 42161
         Chain.Polygon -> 137
         Chain.Optimism -> 10
         Chain.BscChain -> 56
-        // Chain.CronosChain -> 25
+        Chain.CronosChain -> 25
         Chain.ZkSync -> 324
         else -> throw SwapException.SwapRouteNotAvailable("Chain $this is not supported by 1inch API")
     }
