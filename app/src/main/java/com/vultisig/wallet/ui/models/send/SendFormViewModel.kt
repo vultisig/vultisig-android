@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
+import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
@@ -26,6 +27,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
+import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
@@ -471,6 +473,7 @@ internal class SendFormViewModel @Inject constructor(
                                             )
                                     )
                                 }
+
                                 gasSettings is GasSettings.UTXO && spec is BlockChainSpecific.UTXO -> {
                                     it.copy(
                                         blockChainSpecific = spec
@@ -479,6 +482,7 @@ internal class SendFormViewModel @Inject constructor(
                                             )
                                     )
                                 }
+
                                 else -> it
                             }
                         } else {
@@ -741,7 +745,7 @@ internal class SendFormViewModel @Inject constructor(
             selectedToken
                 .filterNotNull()
                 .map {
-                   if (it.isNativeToken) {
+                    if (it.isNativeToken) {
                         null
                     } else {
                         accounts.value.find { account ->
@@ -774,19 +778,19 @@ internal class SendFormViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 selectedToken
-                .filterNotNull()
-                .map {
-                    gasFeeRepository.getGasFee(it.chain, it.address)
-                }
-                .catch {
-                    // TODO handle error when querying gas fee
-                    Timber.e(it)
-                },
+                    .filterNotNull()
+                    .map {
+                        gasFeeRepository.getGasFee(it.chain, it.address)
+                    }
+                    .catch {
+                        // TODO handle error when querying gas fee
+                        Timber.e(it)
+                    },
                 gasSettings,
                 specific,
             )
             { gasFee, gasSettings, specific ->
-                this@SendFormViewModel.gasFee.value = adjustGasFee(gasFee,gasSettings,specific)
+                this@SendFormViewModel.gasFee.value = adjustGasFee(gasFee, gasSettings, specific)
 
 //                    uiState.update {
 //                        it.copy(gasFee = mapGasFeeToString(gasFee))
@@ -930,18 +934,20 @@ internal class SendFormViewModel @Inject constructor(
                 val tokenString = tokenFieldValue.toString()
                 val fiatString = fiatFieldValue.toString()
                 if (lastTokenValueUserInput != tokenString) {
-                    val fiatValue = convertValue(tokenString, selectedToken) { value, price, token ->
-                        value.multiply(price)
-                    } ?: return@combine
+                    val fiatValue =
+                        convertValue(tokenString, selectedToken) { value, price, token ->
+                            value.multiply(price)
+                        } ?: return@combine
 
                     lastTokenValueUserInput = tokenString
                     lastFiatValueUserInput = fiatValue
 
                     fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
                 } else if (lastFiatValueUserInput != fiatString) {
-                    val tokenValue = convertValue(fiatString, selectedToken) { value, price, token ->
-                        value.divide(price, token.decimal, RoundingMode.HALF_UP)
-                    } ?: return@combine
+                    val tokenValue =
+                        convertValue(fiatString, selectedToken) { value, price, token ->
+                            value.divide(price, token.decimal, RoundingMode.HALF_UP)
+                        } ?: return@combine
 
                     lastTokenValueUserInput = tokenValue
                     lastFiatValueUserInput = fiatString
@@ -959,35 +965,60 @@ internal class SendFormViewModel @Inject constructor(
                 tokenAmountFieldState.textAsFlow(),
                 gasFee.filterNotNull(),
             ) { selectedToken, tokenAmount, gasFee ->
-                val selectedAccount = selectedAccount
-                if (selectedAccount != null &&
-                    selectedToken.chain == Chain.Polkadot &&
-                    selectedToken.ticker == Coins.polkadot.ticker
-                ) {
-                    val balance = selectedAccount.tokenValue
-                        ?.value
-                        ?: BigInteger.ZERO
-                    val tokenAmountInt = tokenAmount.toString()
-                        .toBigDecimalOrNull()
-                        ?.movePointRight(selectedToken.decimal)
-                        ?.toBigInteger()
-                        ?: BigInteger.ZERO
+                checkIsReapable(selectedToken, tokenAmount.toString(), gasFee)
+            }.collect()
+        }
+    }
 
-                    if (balance - (gasFee.value + tokenAmountInt) <
+    private fun checkIsReapable(selectedToken: Coin, tokenAmount: String, gasFee: TokenValue) {
+        val selectedAccount = selectedAccount
+        if (selectedAccount != null) {
+            val selectedChain = selectedToken.chain
+
+            if (selectedChain.hasReaping) {
+                val balance = selectedAccount.tokenValue
+                    ?.value
+                    ?: BigInteger.ZERO
+                val tokenAmountInt = tokenAmount
+                    .toBigDecimalOrNull()
+                    ?.movePointRight(selectedToken.decimal)
+                    ?.toBigInteger()
+                    ?: BigInteger.ZERO
+
+                val existentialDeposit = when {
+                    selectedChain == Chain.Polkadot &&
+                            selectedToken.ticker == Coins.polkadot.ticker -> {
                         PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-                    ) {
-                        uiState.update {
-                            it.copy(
-                                reapingError = UiText.StringResource(R.string.send_form_polka_reaping_warning)
+                    }
+
+                    selectedChain == Chain.Ripple &&
+                            selectedToken.ticker == Coins.xrp.ticker -> {
+                        RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
+                    }
+
+                    else -> return
+                }
+
+                if (balance - (gasFee.value + tokenAmountInt) < existentialDeposit) {
+                    uiState.update {
+                        it.copy(
+                            reapingError = UiText.StringResource(
+                                when (selectedChain) {
+                                    Chain.Polkadot -> R.string.send_form_polka_reaping_warning
+                                    Chain.Ripple -> R.string.send_form_ripple_reaping_warning
+                                    else -> return
+                                }
                             )
-                        }
-                    } else {
-                        uiState.update {
-                            it.copy(reapingError = null)
-                        }
+                        )
+                    }
+                } else {
+                    uiState.update {
+                        it.copy(reapingError = null)
                     }
                 }
-            }.collect()
+            }
+
+
         }
     }
 

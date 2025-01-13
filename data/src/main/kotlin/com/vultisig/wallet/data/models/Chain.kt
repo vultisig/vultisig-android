@@ -3,13 +3,13 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
+import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
 import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.models.TokenStandard.SUBSTRATE
 import com.vultisig.wallet.data.models.TokenStandard.SUI
 import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
 import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
-import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
 import wallet.core.jni.CoinType
 
 typealias ChainId = String
@@ -194,3 +194,9 @@ fun Chain.swapAssetName(): String {
         Chain.Ripple -> "XRP"
     }
 }
+
+val Chain.hasReaping: Boolean
+    get() = when (this) {
+        Chain.Polkadot, Chain.Ripple -> true
+        else -> false
+    }
