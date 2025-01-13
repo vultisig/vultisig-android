@@ -112,6 +112,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
 
         Ton -> {
             tonApi.broadcastTransaction(tx.rawTransaction)
+                ?: tx.transactionHash
         }
 
         Ripple -> {
