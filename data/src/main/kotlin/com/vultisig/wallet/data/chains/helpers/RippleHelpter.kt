@@ -3,22 +3,22 @@ package com.vultisig.wallet.data.chains.helpers
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
-import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import timber.log.Timber
-import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
-import wallet.core.jni.proto.Ripple
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
+import wallet.core.jni.proto.Ripple
 
 @OptIn(ExperimentalStdlibApi::class)
 object RippleHelper {
+
+    const val DEFAULT_EXISTENTIAL_DEPOSIT = 1000000
 
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }

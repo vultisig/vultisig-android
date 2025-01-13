@@ -29,17 +29,17 @@ data class LiFiSwapQuoteJson(
 @Serializable
 data class LiFiSwapTxJson(
     @SerialName("from")
-    val from: String,
+    val from: String?,
     @SerialName("to")
-    val to: String,
+    val to: String?,
     @SerialName("gasLimit")
-    val gasLimit: String,
+    val gasLimit: String?,
     @SerialName("data")
     val data: String,
     @SerialName("value")
-    val value: String,
+    val value: String?,
     @SerialName("gasPrice")
-    val gasPrice: String,
+    val gasPrice: String?,
 )
 
 @Serializable
