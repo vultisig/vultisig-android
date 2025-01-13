@@ -40,6 +40,17 @@ object Coins {
         contractAddress = "",
         isNativeToken = true,
     )
+    val xrp = Coin(
+        chain = Ripple,
+        ticker = "XRP",
+        logo = "xrp",
+        decimal = 6,
+        priceProviderID = "ripple",
+        contractAddress = "",
+        isNativeToken = true,
+        address = "",
+        hexPublicKey = "",
+    )
 
     val SupportedCoins = listOf(
         wewe,
@@ -1714,17 +1725,7 @@ object Coins {
                 address = "",
                 hexPublicKey = "",
             ),
-            Coin(
-                chain = Ripple,
-                ticker = "XRP",
-                logo = "xrp",
-                decimal = 6,
-                priceProviderID = "ripple",
-                contractAddress = "",
-                isNativeToken = true,
-                address = "",
-                hexPublicKey = "",
-            )
+            xrp,
         )
 
 }
