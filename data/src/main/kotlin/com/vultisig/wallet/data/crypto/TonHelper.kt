@@ -104,7 +104,7 @@ object TonHelper {
 
         return SignedTransactionResult(
             rawTransaction = output.encoded,
-            transactionHash = output.hash.toString()
+            transactionHash = output.hash.toByteArray().toHexString()
         )
     }
 
