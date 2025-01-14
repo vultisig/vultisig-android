@@ -17,7 +17,7 @@ interface TonApi {
 
     suspend fun getBalance(address: String): BigInteger
 
-    suspend fun broadcastTransaction(transaction: String): String
+    suspend fun broadcastTransaction(transaction: String): String?
 
     suspend fun getSpecificTransactionInfo(address: String): BigInteger
 }
@@ -35,12 +35,19 @@ internal class TonApiImpl @Inject constructor(
         }.body<TonBalanceResponseJson>()
             .balance
 
-    override suspend fun broadcastTransaction(transaction: String): String =
-        http.post("$baseUrl/v2/sendBocReturnHash") {
+    override suspend fun broadcastTransaction(transaction: String): String? {
+        val response = http.post("$baseUrl/v2/sendBocReturnHash") {
             setBody(TonBroadcastTransactionRequestJson(transaction))
         }.body<TonBroadcastTransactionResponseJson>()
-            .result
-            .hash
+        if (response.error != null) {
+            if (response.error.contains("duplicate message")) {
+                return null
+            }
+            throw Exception("Error broadcasting transaction: ${response.error}")
+        }
+        return response.result?.hash
+
+    }
 
     override suspend fun getSpecificTransactionInfo(
         address: String,
@@ -73,7 +80,9 @@ private data class TonBroadcastTransactionRequestJson(
 @Serializable
 private data class TonBroadcastTransactionResponseJson(
     @SerialName("result")
-    val result: TonBroadcastTransactionResponseResultJson,
+    val result: TonBroadcastTransactionResponseResultJson?,
+    @SerialName("error")
+    val error: String?,
 )
 
 @Serializable
