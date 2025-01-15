@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
-import androidx.collection.emptyLongSet
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CosmoSignature
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -74,9 +74,7 @@ class CosmosHelper(
         val hashes = preImageHashes(coinType, result)
         val preSigningOutput =
             TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
-        }
+                .checkError()
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
@@ -158,6 +156,8 @@ class CosmosHelper(
         val hashes = preImageHashes(coinType, input)
         val preSigningOutput =
             TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
+
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
         val signature = signatures[key]?.getSignatureWithRecoveryID()
             ?: throw Exception("Invalid signature")
@@ -175,6 +175,7 @@ class CosmosHelper(
             allPublicKeys
         )
         val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
+            .checkError()
         val cosmosSig = Json.decodeFromString<CosmoSignature>(output.serialized)
         return SignedTransactionResult(
             output.serialized,

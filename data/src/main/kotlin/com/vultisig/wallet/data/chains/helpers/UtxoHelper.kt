@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -42,9 +43,7 @@ class UtxoHelper(
         val inputData = getBitcoinPreSigningInputData(keysignPayload)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
-        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
-        }
+            .checkError()
         return preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             .sorted()
     }
@@ -186,6 +185,7 @@ class UtxoHelper(
         val publicKey = PublicKey(derivedPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes)
+            .checkError()
         val publicKeys = DataVector()
         val allSignatures = DataVector()
         for (item in preSigningOutput.hashPublicKeysList) {
@@ -212,6 +212,8 @@ class UtxoHelper(
             publicKeys
         )
         val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature)
+            .checkError()
+
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(
                 output.encoded.toByteArray()

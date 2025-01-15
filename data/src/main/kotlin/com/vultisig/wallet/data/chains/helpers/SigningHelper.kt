@@ -106,7 +106,7 @@ object SigningHelper {
                     utxo.getPreSignedImageHash(payload)
                 }
 
-                Chain.GaiaChain, Chain.Dydx, Chain.Kujira, Chain.Osmosis, Chain.Noble -> {
+                Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Noble, Chain.Akash -> {
                     CosmosHelper(
                         coinType = chain.coinType,
                         denom = chain.feeUnit,
@@ -202,7 +202,7 @@ object SigningHelper {
                 return thorHelper.getSignedTransaction(keysignPayload, signatures)
             }
 
-            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Noble -> {
+            Chain.GaiaChain, Chain.Kujira, Chain.Dydx, Chain.Osmosis, Chain.Noble, Chain.Akash -> {
                 return CosmosHelper(
                     coinType = chain.coinType,
                     denom = chain.feeUnit,
