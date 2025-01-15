@@ -32,7 +32,7 @@
     <string name="send_amount">Cantidad</string>
     <string name="send_amount_hint">Ingresar Cantidad</string>
     <string name="send_amount_currency_hint">Ingresar Cantidad</string>
-    <string name="send_continue_button">Nombre de la Bóveda</string>
+    <string name="send_continue_button">Continuar</string>
     <string name="send_form_network_fee">Tarifa de red</string>
     <string name="chain_account_view_send">ENVIAR</string>
     <string name="chain_account_view_swap">INTERCAMBIAR</string>
