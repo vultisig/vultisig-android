@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.models.JupiterSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
@@ -453,8 +452,8 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             Chain.Blast, Chain.CronosChain-> setOf(SwapProvider.LIFI)
             Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
 
-            Chain.Polkadot, Chain.Dydx, Chain.ZkSync, Chain.Sui,
-            Chain.Ton, Chain.Osmosis, Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple -> emptySet()
+            Chain.Polkadot, Chain.Dydx, Chain.ZkSync, Chain.Sui, Chain.Ton, Chain.Osmosis,
+            Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple, Chain.Akash-> emptySet()
         }
 
 
