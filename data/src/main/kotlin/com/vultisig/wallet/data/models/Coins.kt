@@ -40,6 +40,17 @@ object Coins {
         contractAddress = "",
         isNativeToken = true,
     )
+    val xrp = Coin(
+        chain = Ripple,
+        ticker = "XRP",
+        logo = "xrp",
+        decimal = 6,
+        priceProviderID = "ripple",
+        contractAddress = "",
+        isNativeToken = true,
+        address = "",
+        hexPublicKey = "",
+    )
 
     val SupportedCoins = listOf(
         wewe,
@@ -1628,6 +1639,17 @@ object Coins {
             priceProviderID = "usd-coin",
             contractAddress = "",
             isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Akash,
+            ticker = "AKT",
+            logo = "akash",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "akash-network",
+            contractAddress = "",
+            isNativeToken = true,
         )
     ) + terraTokens + terraClassicTokens
 
@@ -1714,17 +1736,7 @@ object Coins {
                 address = "",
                 hexPublicKey = "",
             ),
-            Coin(
-                chain = Ripple,
-                ticker = "XRP",
-                logo = "xrp",
-                decimal = 6,
-                priceProviderID = "ripple",
-                contractAddress = "",
-                isNativeToken = true,
-                address = "",
-                hexPublicKey = "",
-            )
+            xrp,
         )
 
 }

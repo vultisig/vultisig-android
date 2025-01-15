@@ -33,4 +33,5 @@ internal val Chain.logo: Int
         Chain.TerraClassic -> R.drawable.lunc
         Chain.Noble -> R.drawable.noble
         Chain.Ripple -> R.drawable.xrp
+        Chain.Akash -> R.drawable.akash
     }

@@ -3,13 +3,13 @@ package com.vultisig.wallet.data.models
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.TokenStandard.COSMOS
 import com.vultisig.wallet.data.models.TokenStandard.EVM
+import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
 import com.vultisig.wallet.data.models.TokenStandard.SOL
 import com.vultisig.wallet.data.models.TokenStandard.SUBSTRATE
 import com.vultisig.wallet.data.models.TokenStandard.SUI
 import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
 import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
-import com.vultisig.wallet.data.models.TokenStandard.RIPPLE
 import wallet.core.jni.CoinType
 
 typealias ChainId = String
@@ -48,6 +48,7 @@ enum class Chain(
     Terra("Terra", COSMOS, "uluna"),
     TerraClassic("TerraClassic", COSMOS, "uluna"),
     Noble("Noble", COSMOS, "uusdc"),
+    Akash("Akash", COSMOS, "uakt"),
 
     Solana("Solana", SOL, "SOL"),
     Polkadot("Polkadot", SUBSTRATE, "DOT"),
@@ -97,6 +98,7 @@ val Chain.coinType: CoinType
         Chain.TerraClassic -> CoinType.TERRA
         Chain.Noble -> CoinType.NOBLE
         Chain.Ripple -> CoinType.XRP
+        Chain.Akash -> CoinType.AKASH
     }
 
 val Chain.TssKeysignType: TssKeyType
@@ -192,5 +194,12 @@ fun Chain.swapAssetName(): String {
         Chain.TerraClassic -> "LUNC"
         Chain.Noble -> "USDC"
         Chain.Ripple -> "XRP"
+        Chain.Akash -> "AKT"
     }
 }
+
+val Chain.hasReaping: Boolean
+    get() = when (this) {
+        Chain.Polkadot, Chain.Ripple -> true
+        else -> false
+    }
