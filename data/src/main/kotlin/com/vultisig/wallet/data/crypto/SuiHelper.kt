@@ -129,6 +129,7 @@ object SuiHelper {
             publicKeys
         )
         val output = Sui.SigningOutput.parseFrom(compileWithSignature)
+            .checkError()
         return SignedTransactionResult(output.unsignedTx, "", output.signature)
     }
 

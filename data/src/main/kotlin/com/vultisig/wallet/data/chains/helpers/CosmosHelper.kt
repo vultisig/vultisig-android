@@ -175,6 +175,7 @@ class CosmosHelper(
             allPublicKeys
         )
         val output = Cosmos.SigningOutput.parseFrom(compileWithSignature)
+            .checkError()
         val cosmosSig = Json.decodeFromString<CosmoSignature>(output.serialized)
         return SignedTransactionResult(
             output.serialized,

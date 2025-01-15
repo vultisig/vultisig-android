@@ -212,6 +212,8 @@ class UtxoHelper(
             publicKeys
         )
         val output = Bitcoin.SigningOutput.parseFrom(compiledWithSignature)
+            .checkError()
+
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(
                 output.encoded.toByteArray()

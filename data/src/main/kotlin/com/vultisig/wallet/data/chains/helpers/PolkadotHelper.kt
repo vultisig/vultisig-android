@@ -86,6 +86,7 @@ class PolkadotHelper(
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = wallet.core.jni.proto.Polkadot.SigningOutput.parseFrom(compiledWithSignature)
+            .checkError()
 
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(

@@ -135,9 +135,7 @@ class SolanaHelper(
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
-        if (!output.errorMessage.isNullOrEmpty()) {
-            error(output.errorMessage)
-        }
+            .checkError()
         return SignedTransactionResult(
             rawTransaction = output.encoded,
             transactionHash = output.encoded.take(64).encodeBase64()
@@ -180,9 +178,7 @@ class SolanaHelper(
         )
 
         val output = Solana.SigningOutput.parseFrom(compileWithSignature)
-        if (!output.errorMessage.isNullOrEmpty()) {
-            error(output.errorMessage)
-        }
+            .checkError()
         return SignedTransactionResult(
             rawTransaction = output.encoded,
             transactionHash = output.encoded.take(64).encodeBase64()
@@ -202,9 +198,7 @@ class SolanaHelper(
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = Solana.SigningOutput.parseFrom(compiledWithSignature)
-        if (!output.errorMessage.isNullOrEmpty()) {
-            error(output.errorMessage)
-        }
+            .checkError()
         return output.encoded
     }
 }

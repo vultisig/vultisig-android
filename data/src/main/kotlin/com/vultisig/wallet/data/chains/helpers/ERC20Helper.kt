@@ -88,6 +88,7 @@ class ERC20Helper(
             allPublicKeys
         )
         val output = Ethereum.SigningOutput.parseFrom(compileWithSignature)
+            .checkError()
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
             transactionHash = output.encoded.toByteArray().toKeccak256()
