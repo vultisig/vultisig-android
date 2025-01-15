@@ -185,6 +185,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         blockHeaderTxTrieRoot = it.blockHeaderTxTrieRoot,
                         blockHeaderParentHash = it.blockHeaderParentHash,
                         blockHeaderWitnessAddress = it.blockHeaderWitnessAddress,
+                        gasFeeEstimation = it.gasEstimation,
                     )
                 }
 

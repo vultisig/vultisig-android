@@ -131,6 +131,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     blockHeaderTxTrieRoot = specific.blockHeaderTxTrieRoot,
                     blockHeaderParentHash = specific.blockHeaderParentHash,
                     blockHeaderWitnessAddress = specific.blockHeaderWitnessAddress,
+                    gasEstimation = specific.gasFeeEstimation,
                 )
             } else null,
             thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {

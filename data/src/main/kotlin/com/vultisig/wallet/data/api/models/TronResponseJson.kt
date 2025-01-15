@@ -53,3 +53,11 @@ internal data class TronTRC20BalanceResponseJson(
     @SerialName("result")
     val result: String
 )
+
+@Serializable
+internal data class TronTriggerConstantContractJson(
+    @SerialName("energy_used")
+    val energyUsed: Long,
+    @SerialName("energy_penalty")
+    val energyPenalty: Long
+)

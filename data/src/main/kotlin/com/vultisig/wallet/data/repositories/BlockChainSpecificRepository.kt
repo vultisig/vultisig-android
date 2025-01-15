@@ -318,6 +318,18 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val now = Clock.System.now()
             val expiration = now + 1.hours
             val rawData = specific.blockHeader.rawData
+
+            val estimation = TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
+                ?: run {
+                    val rawBalance = tronApi.getBalance(token)
+                    tronApi.getTriggerConstantContractFee(
+                        ownerAddressBase58 = token.address,
+                        contractAddressBase58 = token.contractAddress,
+                        recipientAddressHex = TRON_RECIPIENT_ADDRESS_HEX,
+                        amount = rawBalance
+                    )
+                }
+
             BlockChainSpecificAndUtxo(
                 blockChainSpecific = BlockChainSpecific.Tron(
                     timestamp = now.toEpochMilliseconds().toULong(),
@@ -327,7 +339,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     blockHeaderVersion = rawData.version,
                     blockHeaderTxTrieRoot = rawData.txTrieRoot,
                     blockHeaderParentHash = rawData.parentHash,
-                    blockHeaderWitnessAddress = rawData.witnessAddress
+                    blockHeaderWitnessAddress = rawData.witnessAddress,
+                    gasFeeEstimation = estimation.toULong()
                 )
             )
         }
@@ -337,6 +350,11 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         // Let's make sure we pay at least 1GWei as priority fee
         val oneGwei = 1000000000.toBigInteger()
         return priorityFee.coerceAtLeast(oneGwei)
+    }
+
+    companion object {
+        private const val TRON_RECIPIENT_ADDRESS_HEX = "0x9c9d70d46934c98fd3d7c302c4e0b924da7a4fdf"
+        private const val TRON_DEFAULT_ESTIMATION_FEE = 800_000L
     }
 
 }

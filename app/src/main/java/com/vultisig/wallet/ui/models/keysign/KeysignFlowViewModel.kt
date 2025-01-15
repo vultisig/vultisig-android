@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
@@ -104,6 +105,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val routerApi: RouterApi,
     private val pullTssMessages: PullTssMessagesUseCase,
     private val broadcastTx: BroadcastTxUseCase,
+    private val solanaApi: SolanaApi,
     private val payloadToProtoMapper: PayloadToProtoMapper,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
@@ -190,12 +192,13 @@ internal class KeysignFlowViewModel @Inject constructor(
     ) {
         try {
             _currentVault = vault
-            _keysignPayload = keysignPayload
+            val modifiedKeysignPayload = updateSolanaKeysignPayload(keysignPayload)
+            _keysignPayload = modifiedKeysignPayload
             this.customMessagePayload = customMessagePayload
             messagesToSign = when {
-                keysignPayload != null ->
+                modifiedKeysignPayload != null ->
                     SigningHelper.getKeysignMessages(
-                        payload = keysignPayload,
+                        payload = modifiedKeysignPayload,
                         vault = vault,
                     )
 
@@ -216,6 +219,15 @@ internal class KeysignFlowViewModel @Inject constructor(
             moveToState(KeysignFlowState.Error(e.message.toString()))
         }
     }
+
+    private suspend fun updateSolanaKeysignPayload(keysignPayload: KeysignPayload?) =
+        keysignPayload?.takeIf { it.blockChainSpecific is BlockChainSpecific.Solana }
+            ?.let { payload ->
+                payload.copy(
+                    blockChainSpecific = (payload.blockChainSpecific as BlockChainSpecific.Solana)
+                        .copy(recentBlockHash = solanaApi.getRecentBlockHash())
+                )
+            } ?: keysignPayload
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
     private suspend fun updateKeysignPayload(context: Context) {

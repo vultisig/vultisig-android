@@ -20,6 +20,7 @@ class TronHelper(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
 ) {
+
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val tronSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Tron
             ?: throw IllegalArgumentException("Invalid blockChainSpecific")
@@ -43,17 +44,23 @@ class TronHelper(
                                 .setVersion(tronSpecific.blockHeaderVersion.toInt())
                                 .setTxTrieRoot(
                                     ByteString.copyFrom(
-                                        tronSpecific.blockHeaderTxTrieRoot.toByteArray(),
+                                        Numeric.hexStringToByteArray(
+                                            tronSpecific.blockHeaderTxTrieRoot
+                                        ),
                                     )
                                 )
                                 .setParentHash(
                                     ByteString.copyFrom(
-                                        tronSpecific.blockHeaderParentHash.toByteArray()
+                                        Numeric.hexStringToByteArray(
+                                            tronSpecific.blockHeaderParentHash
+                                        )
                                     )
                                 )
                                 .setWitnessAddress(
                                     ByteString.copyFrom(
-                                        tronSpecific.blockHeaderWitnessAddress.toByteArray()
+                                        Numeric.hexStringToByteArray(
+                                            tronSpecific.blockHeaderWitnessAddress
+                                        )
                                     )
                                 )
                                 .build()
@@ -74,7 +81,7 @@ class TronHelper(
             val input = Tron.SigningInput.newBuilder()
                 .setTransaction(
                     Tron.Transaction.newBuilder()
-                        .setFeeLimit(TRX_FEE_LIMIT)
+                        .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
                         .setTransferTrc20Contract(contract)
                         .setTimestamp(tronSpecific.timestamp.toLong())
                         .setBlockHeader(
@@ -84,17 +91,23 @@ class TronHelper(
                                 .setVersion(tronSpecific.blockHeaderVersion.toInt())
                                 .setTxTrieRoot(
                                     ByteString.copyFrom(
-                                        tronSpecific.blockHeaderTxTrieRoot.toByteArray()
+                                        Numeric.hexStringToByteArray(
+                                            tronSpecific.blockHeaderTxTrieRoot
+                                        )
                                     )
                                 )
                                 .setParentHash(
                                     ByteString.copyFrom(
-                                        tronSpecific.blockHeaderParentHash.toByteArray()
+                                        Numeric.hexStringToByteArray(
+                                            tronSpecific.blockHeaderParentHash
+                                        )
                                     )
                                 )
                                 .setWitnessAddress(
                                     ByteString.copyFrom(
-                                        tronSpecific.blockHeaderWitnessAddress.toByteArray()
+                                        Numeric.hexStringToByteArray(
+                                            tronSpecific.blockHeaderWitnessAddress
+                                        )
                                     )
                                 )
                                 .build()
@@ -129,13 +142,15 @@ class TronHelper(
             coinType.derivationPath()
         )
         val inputData = getPreSignedInputData(keysignPayload)
-        val publicKey = PublicKey(tronPublicKey.hexToByteArray(), PublicKeyType.SECP256K1).uncompressed()
+        val publicKey =
+            PublicKey(tronPublicKey.hexToByteArray(), PublicKeyType.SECP256K1).uncompressed()
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
+
         val signature = signatures[key]?.getSignatureWithRecoveryID()
             ?: throw Exception("Signature not found")
         if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
@@ -151,7 +166,7 @@ class TronHelper(
             allPublicKeys
         )
         val output = Tron.SigningOutput.parseFrom(compileWithSignature)
-        if(output.errorMessage.isNotEmpty()){
+        if (output.errorMessage.isNotEmpty()) {
             throw Exception("sign message failed")
         }
 
@@ -161,7 +176,4 @@ class TronHelper(
         )
     }
 
-    companion object {
-        private const val TRX_FEE_LIMIT = 50_000_000L
-    }
 }

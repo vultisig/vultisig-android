@@ -4,11 +4,14 @@ import com.vultisig.wallet.data.api.models.TronBalanceResponseJson
 import com.vultisig.wallet.data.api.models.TronBroadcastTxResponseJson
 import com.vultisig.wallet.data.api.models.TronSpecificBlockJson
 import com.vultisig.wallet.data.api.models.TronTRC20BalanceResponseJson
+import com.vultisig.wallet.data.api.models.TronTriggerConstantContractJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.Numeric
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.accept
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -22,6 +25,7 @@ import timber.log.Timber
 import wallet.core.jni.Base58
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.math.max
 
 interface TronApi {
 
@@ -33,6 +37,13 @@ interface TronApi {
 
     suspend fun getSpecific(): TronSpecificBlockJson
 
+    suspend fun getTriggerConstantContractFee(
+        ownerAddressBase58: String,
+        contractAddressBase58: String,
+        recipientAddressHex: String,
+        amount: BigInteger
+    ): Long
+
 }
 
 internal class TronApiImpl @Inject constructor(
@@ -40,6 +51,7 @@ internal class TronApiImpl @Inject constructor(
 ) : TronApi {
 
     private val rpcUrl = "https://tron-rpc.publicnode.com"
+    private val tronGrid = "https://api.trongrid.io"
 
     override suspend fun broadcastTransaction(tx: String): String {
         val httpResponse = httpClient.post(rpcUrl) {
@@ -61,6 +73,44 @@ internal class TronApiImpl @Inject constructor(
             }
         }.body<TronSpecificBlockJson>()
 
+    override suspend fun getTriggerConstantContractFee(
+        ownerAddressBase58: String,
+        contractAddressBase58: String,
+        recipientAddressHex: String,
+        amount: BigInteger
+    ): Long {
+        val functionSelector = FUNCTION_SELECTOR
+        val parameter =
+            buildTrc20TransParameter(
+                recipientBaseHex = recipientAddressHex,
+                amount = amount
+            )
+        val body = buildJsonObject {
+            put("owner_address", ownerAddressBase58)
+            put("contract_address", contractAddressBase58)
+            put("function_selector", functionSelector)
+            put("parameter", parameter)
+            put("visible", true)
+        }
+        val triggerConstant = httpClient.post(tronGrid) {
+            url {
+                path("walletsolidity", "triggerconstantcontract")
+            }
+            setBody(body)
+            accept(ContentType.Application.Json)
+        }.body<TronTriggerConstantContractJson>()
+        val totalEnergy = triggerConstant.energyUsed + triggerConstant.energyPenalty
+        val totalSun = totalEnergy * 280
+        return totalSun
+    }
+
+    private fun buildTrc20TransParameter(recipientBaseHex: String, amount: BigInteger): String {
+        val paddedAddressHex = "0".repeat(24) + recipientBaseHex.stripHexPrefix()
+        val amountHex = amount.toString(16)
+        val paddedAmountHex = "0".repeat(max(0, 64 - amountHex.count())) + amountHex
+        return paddedAddressHex + paddedAmountHex
+    }
+
 
     override suspend fun getBalance(coin: Coin): BigInteger {
         try {
@@ -77,7 +127,7 @@ internal class TronApiImpl @Inject constructor(
     private suspend fun getTRC20Balance(address: String, contractAddress: String): BigInteger {
         val walletAddress = Numeric.toHexString(Base58.decode(address))
         val hexContractAddress = Numeric.toHexString(Base58.decode(contractAddress))
-        val paddedWalletAddress = "0".repeat(41) + walletAddress.drop(2)
+        val paddedWalletAddress = "0".repeat(22) + walletAddress.drop(2)
         val data = "0x70a08231$paddedWalletAddress"
         val fromAddress = "0x${walletAddress.drop(4)}"
         val toAddress = "0x${hexContractAddress.drop(4)}"
@@ -96,11 +146,11 @@ internal class TronApiImpl @Inject constructor(
         }
 
         val responseJson = httpClient.postRpc<TronTRC20BalanceResponseJson>(
-            url = rpcUrl,
+            url = "$tronGrid/jsonrpc",
             method = "eth_call",
             params = params
         )
-        return BigInteger(responseJson.result, 16)
+        return BigInteger(responseJson.result.stripHexPrefix(), 16)
     }
 
     private suspend fun getTronBalance(address: String) = httpClient.post(rpcUrl) {
@@ -115,4 +165,8 @@ internal class TronApiImpl @Inject constructor(
         )
     }.body<TronBalanceResponseJson>().balance
 
+
+    companion object {
+        private const val FUNCTION_SELECTOR = "transfer(address,uint256)"
+    }
 }

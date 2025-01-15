@@ -77,7 +77,8 @@ sealed class BlockChainSpecific {
         val blockHeaderVersion: ULong,
         val blockHeaderTxTrieRoot: String,
         val blockHeaderParentHash: String,
-        val blockHeaderWitnessAddress: String
+        val blockHeaderWitnessAddress: String,
+        val gasFeeEstimation : ULong,
     ) : BlockChainSpecific()
 
 }
