@@ -1639,6 +1639,17 @@ object Coins {
             priceProviderID = "usd-coin",
             contractAddress = "",
             isNativeToken = true,
+        ),
+        Coin(
+            chain = Chain.Akash,
+            ticker = "AKT",
+            logo = "akash",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "akash-network",
+            contractAddress = "",
+            isNativeToken = true,
         )
     ) + terraTokens + terraClassicTokens
 

@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.db.dao.TokenValueDao
 import com.vultisig.wallet.data.db.models.TokenValueEntity
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Chain.Akash
 import com.vultisig.wallet.data.models.Chain.Arbitrum
 import com.vultisig.wallet.data.models.Chain.Avalanche
 import com.vultisig.wallet.data.models.Chain.Base
@@ -237,7 +238,7 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
             }
 
-            GaiaChain, Kujira, Dydx, Osmosis, Terra, Noble -> {
+            GaiaChain, Kujira, Dydx, Osmosis, Terra, Noble, Akash -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
 
                 val balance = if (coin.contractAddress.startsWith("terra")) {

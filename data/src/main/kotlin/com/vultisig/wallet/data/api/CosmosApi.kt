@@ -52,6 +52,7 @@ internal class CosmosApiFactoryImp @Inject constructor(
             Chain.Terra -> "https://terra-lcd.publicnode.com"
             Chain.TerraClassic -> "https://terra-classic-lcd.publicnode.com"
             Chain.Noble -> "https://noble-api.polkachu.com"
+            Chain.Akash -> "https://akash-rest.publicnode.com"
             else -> throw IllegalArgumentException("Unsupported chain $chain")
         }
 
