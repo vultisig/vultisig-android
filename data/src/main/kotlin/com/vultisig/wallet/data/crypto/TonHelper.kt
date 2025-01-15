@@ -62,10 +62,7 @@ object TonHelper {
         val hashes = TransactionCompiler.preImageHashes(CoinType.TON, inputData)
         val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
             .parseFrom(hashes)
-
-        if (preSigningOutput.errorMessage.isNotEmpty()) {
-            error(preSigningOutput.errorMessage)
-        }
+            .checkError()
 
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
     }
@@ -81,6 +78,7 @@ object TonHelper {
         val hashes = TransactionCompiler.preImageHashes(CoinType.TON, inputData)
         val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
             .parseFrom(hashes)
+            .checkError()
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()

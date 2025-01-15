@@ -191,6 +191,7 @@ class ThorChainHelper(
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
+                .checkError()
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
