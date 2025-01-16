@@ -48,13 +48,6 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {
-            Chain.Avalanche, Chain.Arbitrum, Chain.Base, Chain.Blast, Chain.BscChain,
-            Chain.CronosChain, Chain.Dogecoin, Chain.Ethereum, Chain.GaiaChain, Chain.MayaChain,
-            Chain.Optimism, Chain.Polygon, Chain.Solana, Chain.ThorChain, Chain.ZkSync, Chain.Sui,
-            Chain.Dydx, Chain.Bitcoin, Chain.Osmosis, Chain.Terra, Chain.TerraClassic, Chain.Noble,
-                 Chain.Ripple->
-                "${explorerUrl}tx/"
-
             Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton ->
                 "${explorerUrl}transaction/"
 
@@ -63,6 +56,8 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
             Chain.Polkadot -> "https://polkadot.subscan.io/extrinsic/"
             Chain.Tron -> "${explorerUrl}transaction/"
+
+            else -> "${explorerUrl}tx/"
         }
 
     private val Chain.blockExplorerUrl: String
@@ -103,6 +98,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             Chain.TerraClassic -> "https://finder.terra.money/classic/"
             Chain.Noble -> "https://www.mintscan.io/noble"
             Chain.Ripple -> "https://xrpscan.com/"
+            Chain.Akash -> "https://www.mintscan.io/akash/"
             Chain.Tron -> "https://tronscan.org/#/"
         }
 

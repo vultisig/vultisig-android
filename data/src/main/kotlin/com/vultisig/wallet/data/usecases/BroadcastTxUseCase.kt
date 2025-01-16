@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Chain.Akash
 import com.vultisig.wallet.data.models.Chain.Arbitrum
 import com.vultisig.wallet.data.models.Chain.Avalanche
 import com.vultisig.wallet.data.models.Chain.Base
@@ -33,6 +34,7 @@ import com.vultisig.wallet.data.models.Chain.Optimism
 import com.vultisig.wallet.data.models.Chain.Osmosis
 import com.vultisig.wallet.data.models.Chain.Polkadot
 import com.vultisig.wallet.data.models.Chain.Polygon
+import com.vultisig.wallet.data.models.Chain.Ripple
 import com.vultisig.wallet.data.models.Chain.Solana
 import com.vultisig.wallet.data.models.Chain.Sui
 import com.vultisig.wallet.data.models.Chain.Terra
@@ -40,7 +42,6 @@ import com.vultisig.wallet.data.models.Chain.TerraClassic
 import com.vultisig.wallet.data.models.Chain.ThorChain
 import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
-import com.vultisig.wallet.data.models.Chain.Ripple
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import javax.inject.Inject
 
@@ -91,7 +92,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
         }
 
         GaiaChain, Kujira, Dydx, Osmosis, Terra,
-        TerraClassic, Noble -> {
+        TerraClassic, Noble, Akash -> {
             val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
             cosmosApi.broadcastTransaction(tx.rawTransaction)
         }
@@ -114,6 +115,7 @@ internal class BroadcastTxUseCaseImpl @Inject constructor(
 
         Ton -> {
             tonApi.broadcastTransaction(tx.rawTransaction)
+                ?: tx.transactionHash
         }
 
         Ripple -> {
