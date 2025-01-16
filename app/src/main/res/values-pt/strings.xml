@@ -56,7 +56,6 @@
     <string name="import_file_screen_upload_file_text_or_image">Selecione um arquivo de backup .vult, .bak ou .dat</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">COFRE SEGURO DE CRIPTO</string>
-    <string name="create_new_vault_screen_create_a_new_vault">Criar um Novo Cofre</string>
     <string name="device_list_screen_with_these_devices">Com estes dispositivos</string>
     <string name="device_list_screen_continue">Continuar</string>
     <string name="generating_key_preparing_vault">PREPARANDO COFRE…</string>
