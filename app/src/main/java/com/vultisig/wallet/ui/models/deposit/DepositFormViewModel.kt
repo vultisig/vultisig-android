@@ -45,16 +45,19 @@ internal enum class DepositOption {
     Leave,
     DepositPool,
     WithdrawPool,
+    Stake,
+    Unstake,
     Custom,
 }
 
 internal enum class DepositChain {
-    Maya, Thor;
+    Maya, Thor, Ton;
 
     companion object {
         fun from(chain: Chain) = when (chain) {
             Chain.MayaChain -> Maya
             Chain.ThorChain -> Thor
+            Chain.Ton -> Ton
             else -> error("chain is invalid")
         }
     }
@@ -119,23 +122,41 @@ internal class DepositFormViewModel @Inject constructor(
         val chain = chainId.let(Chain::fromRaw)
         this.chain = chain
 
-        val depositOptions = if (chain != Chain.MayaChain)
-            DepositOption.entries
-        else
-            DepositOption.entries.filter {
-                it != DepositOption.DepositPool && it != DepositOption.WithdrawPool
-            }
+        val depositChain = DepositChain.from(chain)
 
+        val depositOptions =
+            when (chain) {
+                Chain.ThorChain -> listOf(
+                    DepositOption.Bond,
+                    DepositOption.Unbond,
+                    DepositOption.Leave,
+                    DepositOption.DepositPool,
+                    DepositOption.WithdrawPool,
+                    DepositOption.Custom,
+                )
+                Chain.MayaChain -> listOf(
+                    DepositOption.Bond,
+                    DepositOption.Unbond,
+                    DepositOption.Leave,
+                    DepositOption.Custom,
+                )
+                else -> listOf(
+                    DepositOption.Stake,
+                    DepositOption.Unstake,
+                )
+            }
+        val depositOption = depositOptions.first()
         state.update {
             it.copy(
                 depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw),
                 depositOptions = depositOptions,
-                depositChain = DepositChain.from(chain)
+                depositOption = depositOption,
+                depositChain = depositChain
             )
         }
     }
 
-    fun selectDepositOption(option: DepositOption) {
+    fun selectDepositOption(option: DepositOption) = viewModelScope.launch {
         resetTextFields()
         state.update {
             it.copy(depositOption = option)
@@ -230,6 +251,8 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.Custom -> createCustomTransaction()
                     DepositOption.DepositPool -> createDepositPoolTransaction()
                     DepositOption.WithdrawPool -> createWithdrawPoolTransaction()
+                    DepositOption.Stake -> createStakeTransaction()
+                    DepositOption.Unstake -> createUnstakeTransaction()
                 }
 
                 Timber.d("Transaction: $transaction")
@@ -447,7 +470,7 @@ internal class DepositFormViewModel @Inject constructor(
                 providerAddress = provider,
             )
 
-            null -> error("chain is invalid")
+            else -> error("chain is invalid")
         }
 
         val specific = blockChainSpecificRepository
@@ -714,6 +737,56 @@ internal class DepositFormViewModel @Inject constructor(
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
         )
+    }
+
+    private suspend fun createStakeTransaction(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val depositChain = state.value.depositChain
+
+        val nodeAddress = nodeAddressFieldState.text.toString()
+
+        if (nodeAddress.isBlank() ||
+            !chainAccountAddressRepository.isValid(chain, nodeAddress)
+        ) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        }
+
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        return createCustomTransaction()
+    }
+
+    private suspend fun createUnstakeTransaction(): DepositTransaction {
+        val chain = chain
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+
+        val depositChain = state.value.depositChain
+
+        val nodeAddress = nodeAddressFieldState.text.toString()
+
+        if (nodeAddress.isBlank() ||
+            !chainAccountAddressRepository.isValid(chain, nodeAddress)
+        ) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        }
+
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        return createCustomTransaction()
     }
 
     private fun showError(text: UiText) {
