@@ -48,14 +48,13 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
 
     private val Chain.transactionExplorerUrl: String
         get() = when (this) {
-            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton ->
+            Chain.BitcoinCash, Chain.Dash, Chain.Litecoin, Chain.Ton, Chain.Tron ->
                 "${explorerUrl}transaction/"
 
             Chain.Kujira ->
                 "https://finder.kujira.network/kaiyo-1/tx/"
 
             Chain.Polkadot -> "https://polkadot.subscan.io/extrinsic/"
-            Chain.Tron -> "${explorerUrl}transaction/"
 
             else -> "${explorerUrl}tx/"
         }

@@ -11,18 +11,21 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import timber.log.Timber
 import vultisig.keysign.v1.CosmosIbcDenomTrace
+import wallet.core.jni.Base58
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
@@ -319,13 +322,17 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val expiration = now + 1.hours
             val rawData = specific.blockHeader.rawData
 
+            // Tron does not have a 0x... it can be any address
+            // We will only simulate the transaction fee with below address
+            val recipientAddressHex = Numeric.toHexString(Base58.decode(address))
+
             val estimation = TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
                 ?: run {
                     val rawBalance = tronApi.getBalance(token)
                     tronApi.getTriggerConstantContractFee(
                         ownerAddressBase58 = token.address,
                         contractAddressBase58 = token.contractAddress,
-                        recipientAddressHex = TRON_RECIPIENT_ADDRESS_HEX,
+                        recipientAddressHex = recipientAddressHex,
                         amount = rawBalance
                     )
                 }
@@ -350,11 +357,6 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         // Let's make sure we pay at least 1GWei as priority fee
         val oneGwei = 1000000000.toBigInteger()
         return priorityFee.coerceAtLeast(oneGwei)
-    }
-
-    companion object {
-        private const val TRON_RECIPIENT_ADDRESS_HEX = "0x9c9d70d46934c98fd3d7c302c4e0b924da7a4fdf"
-        private const val TRON_DEFAULT_ESTIMATION_FEE = 800_000L
     }
 
 }

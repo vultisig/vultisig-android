@@ -198,7 +198,7 @@ fun Chain.swapAssetName(): String {
         Chain.Noble -> "USDC"
         Chain.Ripple -> "XRP"
         Chain.Akash -> "AKT"
-        Chain.Tron -> "TRON"
+        Chain.Tron -> "TRX"
     }
 }
 

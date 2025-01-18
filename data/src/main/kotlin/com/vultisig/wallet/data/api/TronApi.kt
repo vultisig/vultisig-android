@@ -100,7 +100,7 @@ internal class TronApiImpl @Inject constructor(
             accept(ContentType.Application.Json)
         }.body<TronTriggerConstantContractJson>()
         val totalEnergy = triggerConstant.energyUsed + triggerConstant.energyPenalty
-        val totalSun = totalEnergy * 280
+        val totalSun = totalEnergy * ENERGY_TO_SUN_FACTOR
         return totalSun
     }
 
@@ -168,5 +168,6 @@ internal class TronApiImpl @Inject constructor(
 
     companion object {
         private const val FUNCTION_SELECTOR = "transfer(address,uint256)"
+        private const val ENERGY_TO_SUN_FACTOR = 280
     }
 }

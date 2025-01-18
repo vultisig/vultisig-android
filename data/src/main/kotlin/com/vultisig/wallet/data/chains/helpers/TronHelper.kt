@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -124,14 +127,10 @@ class TronHelper(
         val result = getPreSignedInputData(keysignPayload)
         val hashes = TransactionCompiler.preImageHashes(coinType, result)
         val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
-        }
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes).checkError()
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun getSignedTransaction(
         keysignPayload: KeysignPayload,
         signatures: Map<String, tss.KeysignResponse>,
@@ -146,15 +145,15 @@ class TronHelper(
             PublicKey(tronPublicKey.hexToByteArray(), PublicKeyType.SECP256K1).uncompressed()
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
-            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
+            wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes).checkError()
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
 
         val signature = signatures[key]?.getSignatureWithRecoveryID()
-            ?: throw Exception("Signature not found")
+            ?: error("Signature not found")
         if (!publicKey.verify(signature, preSigningOutput.dataHash.toByteArray())) {
-            throw Exception("Signature verification failed")
+            error("Signature verification failed")
         }
         allSignatures.add(signature)
         allPublicKeys.add(publicKey.data())
@@ -165,10 +164,7 @@ class TronHelper(
             allSignatures,
             allPublicKeys
         )
-        val output = Tron.SigningOutput.parseFrom(compileWithSignature)
-        if (output.errorMessage.isNotEmpty()) {
-            throw Exception("sign message failed")
-        }
+        val output = Tron.SigningOutput.parseFrom(compileWithSignature).checkError()
 
         return SignedTransactionResult(
             rawTransaction = output.json,
@@ -176,4 +172,7 @@ class TronHelper(
         )
     }
 
+    companion object {
+        internal const val TRON_DEFAULT_ESTIMATION_FEE = 800_000L
+    }
 }
