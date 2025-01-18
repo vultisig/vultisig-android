@@ -92,11 +92,6 @@ class ThorChainHelper(
                 accountNumber = specific.accountNumber
                 sequence = specific.sequence
             }
-            is BlockChainSpecific.Ton -> {
-                isDeposit = specific.isDeposit
-                accountNumber = specific.accountNumber
-                sequence = specific.sequence
-            }
             else -> error("Invalid blockChainSpecific $specific for ThorChainHelper")
         }
 

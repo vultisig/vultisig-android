@@ -549,6 +549,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     val fee = when (val specific = payload.blockChainSpecific) {
                         is BlockChainSpecific.MayaChain -> ThorChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger()
                         is BlockChainSpecific.THORChain -> specific.fee
+                        is BlockChainSpecific.Ton -> BigInteger("10000000")
                         else -> error("BlockChainSpecific $specific is not supported")
                     }
 
@@ -556,7 +557,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         fromAddress = payload.coin.address,
                         // TODO toAddress is empty on ios, get node address from memo
                         nodeAddress = payload.toAddress,
-                        srcTokenValue =mapTokenValueAndChainMapperWithUnit(
+                        srcTokenValue = mapTokenValueAndChainMapperWithUnit(
                             Pair(
                                 TokenValue(
                                     value = payload.toAmount,
