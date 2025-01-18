@@ -50,6 +50,8 @@ internal enum class DepositOption {
     Custom,
 }
 
+private const val TON_DEFAULT_ADDRESS = "Ef8t6cZkqFuHjJ_a_ydEK_tu3LHWRA4JZXRyewLY4j8FZ6B5"
+
 internal enum class DepositChain {
     Maya, Thor, Ton;
 
@@ -146,6 +148,7 @@ internal class DepositFormViewModel @Inject constructor(
                 )
             }
         val depositOption = depositOptions.first()
+        setDefaultTonAddress(depositOption, depositChain)
         state.update {
             it.copy(
                 depositMessage = R.string.deposit_message_deposit_title.asUiText(chain.raw),
@@ -158,8 +161,15 @@ internal class DepositFormViewModel @Inject constructor(
 
     fun selectDepositOption(option: DepositOption) = viewModelScope.launch {
         resetTextFields()
+        setDefaultTonAddress(option, state.value.depositChain)
         state.update {
             it.copy(depositOption = option)
+        }
+    }
+
+    private fun setDefaultTonAddress(option: DepositOption, depositChain: DepositChain?) {
+        if ((option == DepositOption.Stake || option == DepositOption.Unstake) && depositChain == DepositChain.Ton) {
+            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(TON_DEFAULT_ADDRESS)
         }
     }
 
@@ -803,7 +813,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = "",
+            dstAddress = nodeAddress,
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(

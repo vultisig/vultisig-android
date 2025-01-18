@@ -406,6 +406,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                         sequenceNumber = specific.sequenceNumber,
                         expireAt = specific.expireAt,
                         bounceable = specific.bounceable,
+                        isDeposit = specific.isDeposit,
                     )
                 } else null,
                 thorchainSwapPayload = if (swapPayload is SwapPayload.ThorChain) {
@@ -487,6 +488,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                 val isDeposit = when (val specific = keysignPayload.blockChainSpecific) {
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
                     is BlockChainSpecific.THORChain -> specific.isDeposit
+                    is BlockChainSpecific.Ton -> specific.isDeposit
                     else -> false
                 }
                 viewModelScope.launch {
