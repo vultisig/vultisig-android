@@ -105,5 +105,5 @@ object TonHelper {
             transactionHash = output.hash.toByteArray().toHexString()
         )
     }
-
+    const val DEFAULT_FEES = 10_000_000L
 }
