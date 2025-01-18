@@ -86,6 +86,7 @@ object SuiHelper {
         val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
 
         require(preSigningOutput.errorMessage.isEmpty()) { preSigningOutput.errorMessage }
 
@@ -104,6 +105,7 @@ object SuiHelper {
         val hashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
             .parseFrom(hashes)
+            .checkError()
         val preSigningOutputDataBlake2b =preSigningOutput.dataHash.toByteArray()
 
         val key = preSigningOutputDataBlake2b.toHexString()
@@ -127,6 +129,7 @@ object SuiHelper {
             publicKeys
         )
         val output = Sui.SigningOutput.parseFrom(compileWithSignature)
+            .checkError()
         return SignedTransactionResult(output.unsignedTx, "", output.signature)
     }
 

@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.common.toHexBytesInByteString
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -72,6 +73,7 @@ class PolkadotHelper(
         val hashes = TransactionCompiler.preImageHashes(coinType, input)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+                .checkError()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray())
         val allSignatures = DataVector()
         val publicKeys = DataVector()
@@ -84,6 +86,7 @@ class PolkadotHelper(
         val compiledWithSignature =
             TransactionCompiler.compileWithSignatures(coinType, input, allSignatures, publicKeys)
         val output = wallet.core.jni.proto.Polkadot.SigningOutput.parseFrom(compiledWithSignature)
+            .checkError()
 
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(

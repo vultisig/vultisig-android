@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -64,10 +65,7 @@ object RippleHelper {
         )
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-        if (preSigningOutput.errorMessage.isNotEmpty()) {
-            Timber.e(preSigningOutput.errorMessage)
-            error(preSigningOutput.errorMessage)
-        }
+                .checkError()
         return listOf(Numeric.toHexString(preSigningOutput.dataHash.toByteArray()))
     }
 
@@ -89,11 +87,7 @@ object RippleHelper {
         )
         val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
             .parseFrom(hashes)
-
-        if (preSigningOutput.errorMessage.isNotEmpty()) {
-            Timber.e(preSigningOutput.errorMessage)
-            error(preSigningOutput.errorMessage)
-        }
+            .checkError()
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()

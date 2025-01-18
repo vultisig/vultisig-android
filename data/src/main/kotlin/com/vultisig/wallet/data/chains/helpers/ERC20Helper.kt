@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.common.toKeccak256
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -50,9 +51,7 @@ class ERC20Helper(
         val hashes = TransactionCompiler.preImageHashes(coinType, result)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
-        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            throw Exception(preSigningOutput.errorMessage)
-        }
+                .checkError()
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
@@ -71,6 +70,7 @@ class ERC20Helper(
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(preHashes)
+                .checkError()
         val allSignatures = DataVector()
         val allPublicKeys = DataVector()
         val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
@@ -88,6 +88,7 @@ class ERC20Helper(
             allPublicKeys
         )
         val output = Ethereum.SigningOutput.parseFrom(compileWithSignature)
+            .checkError()
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
             transactionHash = output.encoded.toByteArray().toKeccak256()

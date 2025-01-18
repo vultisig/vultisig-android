@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.wallet
 
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.utils.Numeric
@@ -21,9 +22,7 @@ internal object Swaps {
         return when (chain.standard) {
             TokenStandard.UTXO -> {
                 val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preImageHashes)
-                if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-                    throw Exception(preSigningOutput.errorMessage)
-                }
+                    .checkError()
                 preSigningOutput.hashPublicKeysList.map { Numeric.toHexStringNoPrefix(it.dataHash.toByteArray()) }
             }
 
@@ -32,9 +31,7 @@ internal object Swaps {
 
             TokenStandard.SOL ->{
                 val preSigningOutput = Solana.PreSigningOutput.parseFrom(preImageHashes)
-                if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-                    error(preSigningOutput.errorMessage)
-                }
+                    .checkError()
                 return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.data.toByteArray()))
             }
 
@@ -44,9 +41,7 @@ internal object Swaps {
 
     fun getPreSigningOutput(preImageHashes: ByteArray): List<String> {
         val preSigningOutput = PreSigningOutput.parseFrom(preImageHashes)
-        if (!preSigningOutput.errorMessage.isNullOrEmpty()) {
-            error(preSigningOutput.errorMessage)
-        }
+            .checkError()
         return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
