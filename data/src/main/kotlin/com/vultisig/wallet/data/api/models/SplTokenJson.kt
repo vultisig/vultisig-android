@@ -141,6 +141,8 @@ data class SplAmountDataJson(
 data class SplAmountAccountJson(
     @SerialName("data")
     val data: SplAmountDataJson,
+    @SerialName("owner")
+    val owner: String,
 )
 
 @Serializable
