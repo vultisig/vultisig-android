@@ -1,7 +1,8 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,11 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -21,62 +23,59 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.vultiGradient
-import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.ui.models.keygen.StartScreenViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.startScreenAnimations
 
 @Composable
-internal fun AddVaultScreen(
-    navController: NavHostController,
-) {
-    Scaffold(
-        modifier = Modifier
-            .background(Theme.colors.oxfordBlue800),
-    ) { padding ->
-        AddVaultScreen(
-            modifier = Modifier.padding(padding),
-            onCreateNewVaultClick = {
-                navController.navigate(Destination.SelectVaultType.route)
-            },
-            onScanQrCodeClick = {
-                navController.navigate(Destination.JoinThroughQr(null).route)
-            },
-            onImportVaultClick = {
-                navController.navigate(Destination.ImportVault.route)
-            }
-        )
-    }
+internal fun StartScreen() {
+    val viewModel = hiltViewModel<StartScreenViewModel>()
+    StartScreen(
+        isAnimationRunning = viewModel.isAnimationRunning.collectAsState().value,
+        onCreateNewVaultClick = viewModel::navigateToCreateVault,
+        onScanQrCodeClick = viewModel::navigateToScanQrCode,
+        onImportVaultClick = viewModel::navigateToImportVault,
+    )
 }
 
 @Composable
-private fun AddVaultScreen(
-    modifier: Modifier,
+private fun StartScreen(
+    isAnimationRunning:Boolean,
     onCreateNewVaultClick: () -> Unit,
     onScanQrCodeClick: () -> Unit,
     onImportVaultClick: () -> Unit
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column(
-            Modifier.weight(1f),
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = CenterHorizontally
         ) {
+
+            val logoScale = animateFloatAsState(
+                if (isAnimationRunning) 1f else 0f,
+                label = "logo scale",
+                animationSpec = tween(
+                    durationMillis = 300,
+                    delayMillis = 500),
+            )
             Image(
                 painter = painterResource(id = R.drawable.vultisig),
                 contentDescription = "vultisig",
                 modifier = Modifier
                     .width(190.dp)
                     .height(160.dp)
+                    .scale(logoScale.value)
             )
             UiSpacer(16.dp)
             Text(
@@ -108,12 +107,23 @@ private fun AddVaultScreen(
                 textStyle = Theme.montserrat.subtitle1,
                 onClick = onCreateNewVaultClick,
                 modifier = Modifier
+                    .startScreenAnimations(
+                        delay = 150,
+                        label = stringResource(R.string.create_new_vault_screen_create_new_vault),
+                        isAnimationRunning = isAnimationRunning
+                    )
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
             )
 
             Text(
-                modifier = Modifier.padding(4.dp),
+                modifier = Modifier
+                    .padding(4.dp)
+                    .startScreenAnimations(
+                        delay = 300,
+                        label = stringResource(R.string.create_new_vault_screen_or),
+                        isAnimationRunning = isAnimationRunning
+                    ),
                 text = stringResource(R.string.create_new_vault_screen_or),
                 color = Theme.colors.neutral100,
                 style = Theme.menlo.subtitle1,
@@ -129,6 +139,11 @@ private fun AddVaultScreen(
                     .fillMaxWidth()
                     .padding(
                         horizontal = 16.dp,
+                    )
+                    .startScreenAnimations(
+                        delay = 550,
+                        label = stringResource(R.string.home_screen_scan_qr_code),
+                        isAnimationRunning = isAnimationRunning
                     ),
                 onClick = onScanQrCodeClick
             )
@@ -145,6 +160,11 @@ private fun AddVaultScreen(
                         start = 16.dp,
                         end = 16.dp,
                         bottom = 16.dp,
+                    )
+                    .startScreenAnimations(
+                        delay = 550,
+                        label = stringResource(R.string.home_screen_import_vault),
+                        isAnimationRunning = isAnimationRunning
                     ),
                 onClick = onImportVaultClick
             )
@@ -155,12 +175,11 @@ private fun AddVaultScreen(
 
 @Preview
 @Composable
-fun AddVaultScreenPreview() {
-    OnBoardingComposeTheme {
-        AddVaultScreen(
-            modifier = Modifier,
-            onCreateNewVaultClick = {},
-            onScanQrCodeClick = {},
-            onImportVaultClick = {})
-    }
+private fun StartScreenPreview() {
+    StartScreen(
+        isAnimationRunning = false,
+        onCreateNewVaultClick = {},
+        onScanQrCodeClick = {},
+        onImportVaultClick = {}
+    )
 }
