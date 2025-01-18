@@ -128,38 +128,12 @@ internal interface DepositMemo {
 
     }
 
-    data class Stake(
-        val nodeAddress: String,
-        val asset: String,
-        val amount: Long,
-    ) : DepositMemo {
-
-        override fun toString(): String = buildString {
-            append("STAKE:")
-            append(nodeAddress)
-            append(":")
-            append(asset)
-            append(":")
-            append(amount)
-        }
-
+    data object Stake : DepositMemo {
+        override fun toString(): String = "d"
     }
 
-    data class Unstake(
-        val nodeAddress: String,
-        val asset: String,
-        val amount: Long,
-    ) : DepositMemo {
-
-        override fun toString(): String = buildString {
-            append("UNSTAKE:")
-            append(nodeAddress)
-            append(":")
-            append(asset)
-            append(":")
-            append(amount)
-        }
-
+    data object Unstake : DepositMemo {
+        override fun toString(): String = "w"
     }
 
 

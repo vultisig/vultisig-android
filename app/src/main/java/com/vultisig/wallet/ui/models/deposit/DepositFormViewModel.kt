@@ -739,13 +739,19 @@ internal class DepositFormViewModel @Inject constructor(
         )
     }
 
-    private suspend fun createStakeTransaction(): DepositTransaction {
+    private suspend fun createTonDepositTransaction(memo: DepositMemo): DepositTransaction {
         val chain = chain
             ?: throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
         val depositChain = state.value.depositChain
+
+        if (depositChain != DepositChain.Ton) {
+            throw InvalidTransactionDataException(
+                UiText.DynamicString("chain is invalid")
+            )
+        }
 
         val nodeAddress = nodeAddressFieldState.text.toString()
 
@@ -761,33 +767,59 @@ internal class DepositFormViewModel @Inject constructor(
             .toString()
             .toBigDecimalOrNull()
 
-        return createCustomTransaction()
-    }
-
-    private suspend fun createUnstakeTransaction(): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-
-        val depositChain = state.value.depositChain
-
-        val nodeAddress = nodeAddressFieldState.text.toString()
-
-        if (nodeAddress.isBlank() ||
-            !chainAccountAddressRepository.isValid(chain, nodeAddress)
-        ) {
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
             throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
+                UiText.StringResource(R.string.send_error_no_amount)
             )
         }
+        val address = accountsRepository.loadAddress(vaultId, chain)
+            .first()
 
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()
+        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
 
-        return createCustomTransaction()
+        val tokenAmountInt =
+            tokenAmount
+                ?.movePointRight(selectedToken.decimal)
+                ?.toBigInteger() ?: BigInteger.ONE
+
+        val srcAddress = selectedToken.address
+
+        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
+
+        val specific = blockChainSpecificRepository
+            .getSpecific(
+                chain,
+                srcAddress,
+                selectedToken,
+                gasFee,
+                isSwap = false,
+                isMaxAmountEnabled = false,
+                isDeposit = true,
+            )
+
+        return DepositTransaction(
+            id = UUID.randomUUID().toString(),
+            vaultId = vaultId,
+
+            srcToken = selectedToken,
+            srcAddress = srcAddress,
+            dstAddress = "",
+
+            memo = memo.toString(),
+            srcTokenValue = TokenValue(
+                value = tokenAmountInt,
+                token = selectedToken,
+            ),
+            estimatedFees = gasFee,
+            blockChainSpecific = specific.blockChainSpecific,
+        )
     }
+
+    private suspend fun createStakeTransaction(): DepositTransaction =
+        createTonDepositTransaction(DepositMemo.Stake)
+
+    private suspend fun createUnstakeTransaction(): DepositTransaction =
+        createTonDepositTransaction(DepositMemo.Unstake)
 
     private fun showError(text: UiText) {
         state.update { it.copy(errorText = text) }
