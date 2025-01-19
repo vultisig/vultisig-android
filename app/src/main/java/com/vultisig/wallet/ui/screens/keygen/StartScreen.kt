@@ -66,8 +66,8 @@ private fun StartScreen(
                 if (isAnimationRunning) 1f else 0f,
                 label = "logo scale",
                 animationSpec = tween(
-                    durationMillis = 300,
-                    delayMillis = 500),
+                    durationMillis = 400,
+                    delayMillis = 250),
             )
             Image(
                 painter = painterResource(id = R.drawable.vultisig),
@@ -108,7 +108,7 @@ private fun StartScreen(
                 onClick = onCreateNewVaultClick,
                 modifier = Modifier
                     .startScreenAnimations(
-                        delay = 150,
+                        delay = 100,
                         label = stringResource(R.string.create_new_vault_screen_create_new_vault),
                         isAnimationRunning = isAnimationRunning
                     )
@@ -120,7 +120,7 @@ private fun StartScreen(
                 modifier = Modifier
                     .padding(4.dp)
                     .startScreenAnimations(
-                        delay = 300,
+                        delay = 200,
                         label = stringResource(R.string.create_new_vault_screen_or),
                         isAnimationRunning = isAnimationRunning
                     ),
@@ -141,7 +141,7 @@ private fun StartScreen(
                         horizontal = 16.dp,
                     )
                     .startScreenAnimations(
-                        delay = 550,
+                        delay = 350,
                         label = stringResource(R.string.home_screen_scan_qr_code),
                         isAnimationRunning = isAnimationRunning
                     ),
@@ -162,7 +162,7 @@ private fun StartScreen(
                         bottom = 16.dp,
                     )
                     .startScreenAnimations(
-                        delay = 550,
+                        delay = 350,
                         label = stringResource(R.string.home_screen_import_vault),
                         isAnimationRunning = isAnimationRunning
                     ),

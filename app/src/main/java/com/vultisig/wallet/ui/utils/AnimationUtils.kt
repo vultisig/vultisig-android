@@ -13,11 +13,11 @@ import androidx.compose.ui.unit.IntOffset
 internal fun Modifier.startScreenAnimations(
     delay: Long,
     label: String,
-    duration: Int = 1000,
+    duration: Int = 500,
     isAnimationRunning: Boolean
 ) = composed {
 
-    val start = 0.5f
+    val start = 0f
     val startDeg = -90f
     val end = 1.0f
     val endDeg = 0f

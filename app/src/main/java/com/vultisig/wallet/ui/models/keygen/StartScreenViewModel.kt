@@ -18,7 +18,7 @@ internal class StartScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            delay(100) // To avoid losing false values
+            delay(50) // To avoid losing false values
             isAnimationRunning.value = true
         }
     }
