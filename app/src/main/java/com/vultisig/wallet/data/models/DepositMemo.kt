@@ -128,6 +128,14 @@ internal interface DepositMemo {
 
     }
 
+    data object Stake : DepositMemo {
+        override fun toString(): String = "d"
+    }
+
+    data object Unstake : DepositMemo {
+        override fun toString(): String = "w"
+    }
+
 
     data class Custom(
         val memo: String,

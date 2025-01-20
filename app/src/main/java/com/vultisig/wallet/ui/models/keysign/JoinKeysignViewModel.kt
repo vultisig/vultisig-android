@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -541,6 +542,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 val isDeposit = when (val specific = payload.blockChainSpecific) {
                     is BlockChainSpecific.MayaChain -> specific.isDeposit
                     is BlockChainSpecific.THORChain -> specific.isDeposit
+                    is BlockChainSpecific.Ton -> specific.isDeposit
                     else -> false
                 }
 
@@ -548,6 +550,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                     val fee = when (val specific = payload.blockChainSpecific) {
                         is BlockChainSpecific.MayaChain -> ThorChainHelper.MAYA_CHAIN_GAS_UNIT.toBigInteger()
                         is BlockChainSpecific.THORChain -> specific.fee
+                        is BlockChainSpecific.Ton -> TonHelper.DEFAULT_FEES.toBigInteger()
                         else -> error("BlockChainSpecific $specific is not supported")
                     }
 
@@ -555,7 +558,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                         fromAddress = payload.coin.address,
                         // TODO toAddress is empty on ios, get node address from memo
                         nodeAddress = payload.toAddress,
-                        srcTokenValue =mapTokenValueAndChainMapperWithUnit(
+                        srcTokenValue = mapTokenValueAndChainMapperWithUnit(
                             Pair(
                                 TokenValue(
                                     value = payload.toAmount,

@@ -167,6 +167,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         sequenceNumber = it.sequenceNumber,
                         expireAt = it.expireAt,
                         bounceable = it.bounceable,
+                        isDeposit = it.isDeposit,
                     )
                 }
                 from.rippleSpecific != null -> from.rippleSpecific.let {

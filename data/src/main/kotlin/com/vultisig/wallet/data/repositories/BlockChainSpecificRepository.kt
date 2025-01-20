@@ -295,6 +295,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     expireAt = (Clock.System.now()
                         .epochSeconds + 600L).toULong(),
                     bounceable = false,
+                    isDeposit = isDeposit,
                 ),
             )
         }
