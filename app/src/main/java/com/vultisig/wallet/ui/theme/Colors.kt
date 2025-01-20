@@ -62,6 +62,7 @@ internal data class Colors(
     val primary: PrimaryColors = PrimaryColors(),
     val text: TextColors = TextColors(),
     val borders: BordersColors = BordersColors(),
+    val alerts: AlertsColors = AlertsColors(),
 
 
 ) {
@@ -106,4 +107,11 @@ internal data class TextButtonColors(
 internal data class BordersColors(
     val normal: Color = Color(0xFF1B3F73),
     val light: Color = Color(0xFF12284A),
+)
+
+internal data class AlertsColors(
+    val success: Color = Color(0xFF11C89C),
+    val error: Color = Color(0xFFFF5C5C),
+    val warning: Color = Color(0xFFFFC25C),
+    val info: Color = Color(0xFF5CA7FF),
 )
