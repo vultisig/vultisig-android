@@ -803,7 +803,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = "",
+            dstAddress = nodeAddress,
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
