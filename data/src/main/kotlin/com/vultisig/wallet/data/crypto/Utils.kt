@@ -7,15 +7,16 @@ import wallet.core.jni.proto.Polkadot
 import wallet.core.jni.proto.Solana
 import wallet.core.jni.proto.Sui
 import wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
+import wallet.core.jni.proto.Tron
 
-fun PreSigningOutput.checkError(): PreSigningOutput {
+internal fun PreSigningOutput.checkError(): PreSigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("PreSigningOutput contains error: $errorMessage")
     }
     return this
 }
 
-fun Bitcoin.PreSigningOutput.checkError(): Bitcoin.PreSigningOutput {
+internal fun Bitcoin.PreSigningOutput.checkError(): Bitcoin.PreSigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("PreSigningOutput contains error: $errorMessage")
     }
@@ -23,49 +24,56 @@ fun Bitcoin.PreSigningOutput.checkError(): Bitcoin.PreSigningOutput {
 }
 
 
-fun Solana.PreSigningOutput.checkError(): Solana.PreSigningOutput {
+internal fun Solana.PreSigningOutput.checkError(): Solana.PreSigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("PreSigningOutput contains error: $errorMessage")
     }
     return this
 }
 
-fun Ethereum.SigningOutput.checkError(): Ethereum.SigningOutput {
+internal fun Ethereum.SigningOutput.checkError(): Ethereum.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("SigningOutput contains error: $errorMessage")
     }
     return this
 }
 
-fun Bitcoin.SigningOutput.checkError(): Bitcoin.SigningOutput {
+internal fun Bitcoin.SigningOutput.checkError(): Bitcoin.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("SigningOutput contains error: $errorMessage")
     }
     return this
 }
 
-fun Cosmos.SigningOutput.checkError(): Cosmos.SigningOutput {
+internal fun Cosmos.SigningOutput.checkError(): Cosmos.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("SigningOutput contains error: $errorMessage")
     }
     return this
 }
 
-fun Solana.SigningOutput.checkError(): Solana.SigningOutput {
+internal fun Solana.SigningOutput.checkError(): Solana.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("SigningOutput contains error: $errorMessage")
     }
     return this
 }
 
-fun Polkadot.SigningOutput.checkError(): Polkadot.SigningOutput {
+internal fun Polkadot.SigningOutput.checkError(): Polkadot.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("SigningOutput contains error: $errorMessage")
     }
     return this
 }
 
-fun Sui.SigningOutput.checkError(): Sui.SigningOutput {
+internal fun Sui.SigningOutput.checkError(): Sui.SigningOutput {
+    if (!errorMessage.isNullOrEmpty()) {
+        error("SigningOutput contains error: $errorMessage")
+    }
+    return this
+}
+
+internal fun Tron.SigningOutput.checkError(): Tron.SigningOutput {
     if (!errorMessage.isNullOrEmpty()) {
         error("SigningOutput contains error: $errorMessage")
     }

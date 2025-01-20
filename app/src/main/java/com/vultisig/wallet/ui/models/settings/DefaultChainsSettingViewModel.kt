@@ -95,5 +95,6 @@ internal class DefaultChainsSettingViewModel @Inject constructor(
             Chain.Noble -> "USDC"
             Chain.Ripple -> "XRP"
             Chain.Akash -> "AKT"
+            Chain.Tron -> "TRX"
         }
 }

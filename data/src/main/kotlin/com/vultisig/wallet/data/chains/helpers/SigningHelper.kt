@@ -19,6 +19,7 @@ import java.math.BigInteger
 
 object SigningHelper {
 
+    @OptIn(ExperimentalStdlibApi::class)
     fun getKeysignMessages(
         messagePayload: CustomMessagePayload
     ): List<String> = listOf(
@@ -143,6 +144,14 @@ object SigningHelper {
 
                 Chain.Ripple -> {
                     RippleHelper.getPreSignedImageHash(payload)
+                }
+
+                Chain.Tron -> {
+                    TronHelper(
+                        coinType = chain.coinType,
+                        vaultHexPublicKey = vault.pubKeyECDSA,
+                        vaultHexChainCode = vault.hexChainCode
+                    ).getPreSignedImageHash(payload)
                 }
             }
         }
@@ -274,7 +283,20 @@ object SigningHelper {
                     signatures = signatures,
                 )
             }
-        }
-    }
 
+            Chain.Tron -> {
+                return TronHelper(
+                    coinType = chain.coinType,
+                    vaultHexPublicKey = vault.pubKeyECDSA,
+                    vaultHexChainCode = vault.hexChainCode
+                ).getSignedTransaction(
+                    keysignPayload = keysignPayload,
+                    signatures = signatures,
+                )
+
+            }
+        }
+
+
+}
 }

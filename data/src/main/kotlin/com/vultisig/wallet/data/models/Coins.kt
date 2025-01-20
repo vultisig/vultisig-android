@@ -1662,7 +1662,7 @@ object Coins {
             contractAddress = "",
             isNativeToken = true,
         )
-    ) + terraTokens + terraClassicTokens
+    ) + terraTokens + terraClassicTokens + tronCoins
 
     private val terraTokens
         get() = listOf(
@@ -1748,6 +1748,32 @@ object Coins {
                 hexPublicKey = "",
             ),
             xrp,
+        )
+
+    private val tronCoins
+        get() = listOf(
+            Coin(
+                chain = Chain.Tron,
+                ticker = "TRX",
+                logo = "tron",
+                decimal = 6,
+                priceProviderID = "tron",
+                contractAddress = "",
+                isNativeToken = true,
+                address = "",
+                hexPublicKey = ""
+            ),
+            Coin(
+                chain = Chain.Tron,
+                ticker = "USDT",
+                logo = "usdt",
+                decimal = 6,
+                priceProviderID = "tether",
+                contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+                isNativeToken = false,
+                address = "",
+                hexPublicKey = ""
+            ),
         )
 
 }

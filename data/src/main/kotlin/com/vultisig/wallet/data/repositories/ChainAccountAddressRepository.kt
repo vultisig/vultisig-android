@@ -59,10 +59,11 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                         MayaChainHelper.getAddress(publicKey), derivedPublicKey
                     )
                 } else {
-
+                    val pk = publicKey.takeIf { chain.coinType != CoinType.TRON }
+                        ?: publicKey.uncompressed()
                     val address = adjustAddressPrefix(
                         chain.coinType,
-                        chain.coinType.deriveAddressFromPublicKey(publicKey)
+                        chain.coinType.deriveAddressFromPublicKey(pk)
                     )
                     return Pair(
                         address,
