@@ -90,7 +90,6 @@
     <string name="import_file_screen_duplicate_vault">The vault is duplicate</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SECURE CRYPTO VAULT</string>
-    <string name="create_new_vault_screen_create_a_new_vault">Create a new Vault</string>
     <string name="device_list_screen_keygen">Keygen</string>
     <string name="device_list_screen_with_these_devices">With these devices</string>
     <string name="device_list_screen_continue">Continue</string>
@@ -508,4 +507,7 @@
     <string name="dialog_default_error_body" translatable="false">Something went wrong</string>
     <string name="address_bookmark_error_invalid_address" translatable="false">This address is not valid for %s</string>
     <string name="send_form_ripple_reaping_warning" translatable="false">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 XRP (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
+    <string name="create_new_vault_screen_or" translatable="false">OR</string>
+    <string name="home_screen_scan_qr_code" translatable="false">Scan QR code</string>
+    <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
 </resources>

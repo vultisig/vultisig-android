@@ -88,7 +88,6 @@
     <string name="import_file_screen_duplicate_vault">Хранилище дублируется</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">БЕЗОПАСНОЕ КРИПТОХРАНИЛИЩЕ</string>
-    <string name="create_new_vault_screen_create_a_new_vault">Создать новое хранилище</string>
     <string name="device_list_screen_keygen">Генерация ключей</string>
     <string name="device_list_screen_with_these_devices">С этими устройствами</string>
     <string name="device_list_screen_continue">Продолжить</string>

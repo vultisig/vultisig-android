@@ -88,7 +88,6 @@
     <string name="import_file_screen_duplicate_vault">De kluis is dubbel</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">VEILIGE CRYPTO KLUIS</string>
-    <string name="create_new_vault_screen_create_a_new_vault">Maak een nieuwe kluis</string>
     <string name="device_list_screen_keygen">Sleutel genereren</string>
     <string name="device_list_screen_with_these_devices">Met deze apparaten</string>
     <string name="device_list_screen_continue">Doorgaan</string>

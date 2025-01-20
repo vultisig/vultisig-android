@@ -42,7 +42,7 @@ import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
-import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
+import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
@@ -68,6 +68,7 @@ import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
+import com.vultisig.wallet.ui.theme.fadeInTransition
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -271,8 +272,9 @@ internal fun SetupNavGraph(
 
         composable(
             route = Destination.AddVault.route,
+            enterTransition = fadeInTransition(),
         ) {
-            AddVaultScreen(navController)
+            StartScreen()
         }
         composable(
             route = Destination.ChainTokens.STATIC_ROUTE,
