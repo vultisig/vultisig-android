@@ -54,8 +54,31 @@ internal data class Colors(
     val miamiMarmaladeFaded: Color = Color(0x59F7961B),
     val approval: Color = Color(0xff31CF59),
     val approvalFaded: Color = Color(0x5931CF59),
+
+
+    // new design system
+    val buttons: ButtonsColors = ButtonsColors(),
+    val text: TextColors = TextColors(),
+
+
 ) {
     companion object {
         val Default = Colors()
     }
 }
+
+internal data class ButtonsColors(
+    val primary: Color = Color(0xFF33E6BF),
+    val secondary: Color = Color(0xFF051B3A),
+    val disabled: Color = Color(0xFF0E1E36),
+)
+
+internal data class TextColors(
+    val button: TextButtonColors = TextButtonColors()
+)
+
+internal data class TextButtonColors(
+    val dark: Color = Color(0xFF02122B),
+    val light: Color = Color(0xFFF0F4FC),
+    val disabled: Color = Color(0xFF4D5F75),
+)
