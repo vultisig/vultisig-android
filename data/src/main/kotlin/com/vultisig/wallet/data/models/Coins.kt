@@ -1465,6 +1465,17 @@ object Coins {
         ),
         Coin(
             chain = Chain.Kujira,
+            ticker = "rKUJI",
+            logo = "rkuji",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "kujira",
+            contractAddress = "factory/kujira1tsekaqv9vmem0zwskmf90gpf0twl6k57e8vdnq/urkuji",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Kujira,
             ticker = "ASTRO",
             logo = "astro",
             address = "",
