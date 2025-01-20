@@ -156,7 +156,7 @@ fun Chain.oneInchChainId(): Long =
         Chain.Avalanche -> 43114
         Chain.Base -> 8453
         Chain.Solana -> 1151111081099710
-        //Chain.Blast -> 81457
+        Chain.Blast -> 81457
         Chain.Arbitrum -> 42161
         Chain.Polygon -> 137
         Chain.Optimism -> 10
