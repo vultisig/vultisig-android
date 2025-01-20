@@ -36,13 +36,13 @@ enum class VsButtonSize {
 
 @Composable
 fun VsButton(
+    modifier: Modifier = Modifier,
     label: String? = null,
     iconLeft: Int? = null,
     iconRight: Int? = null,
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
-    modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
