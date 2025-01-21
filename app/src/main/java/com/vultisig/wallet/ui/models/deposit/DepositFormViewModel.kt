@@ -749,7 +749,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         if (depositChain != DepositChain.Ton) {
             throw InvalidTransactionDataException(
-                UiText.DynamicString("chain is invalid")
+                UiText.StringResource(R.string.error_invalid_chain)
             )
         }
 
