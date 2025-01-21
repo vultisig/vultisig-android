@@ -63,6 +63,7 @@ internal data class Colors(
     val text: TextColors = TextColors(),
     val borders: BordersColors = BordersColors(),
     val alerts: AlertsColors = AlertsColors(),
+    val neutrals: NeutralsColors = NeutralsColors.Default
 
 
 ) {
@@ -115,3 +116,20 @@ internal data class AlertsColors(
     val warning: Color = Color(0xFFFFC25C),
     val info: Color = Color(0xFF5CA7FF),
 )
+
+internal data class NeutralsColors(
+    val n50: Color = Color(0xFFFFFFFF),
+    val n100: Color = Color(0xFFEFF2F6),
+    val n200: Color = Color(0xFFE5E7EB),
+    val n300: Color = Color(0xFFD1D5DB),
+    val n400: Color = Color(0xFF9CA3AF),
+    val n500: Color = Color(0xFF6B7280),
+    val n600: Color = Color(0xFF4B5563),
+    val n700: Color = Color(0xFF374151),
+    val n800: Color = Color(0xFF1F2A37),
+    val n900: Color = Color(0xFF000000),
+) {
+    companion object{
+        val Default = NeutralsColors()
+    }
+}
