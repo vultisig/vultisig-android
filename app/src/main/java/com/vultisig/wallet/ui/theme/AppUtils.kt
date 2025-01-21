@@ -10,6 +10,7 @@ internal fun AppUtils(
     appColor: Colors,
     menloTypography: VultisigTypography,
     montserratTypography: VultisigTypography,
+    brockmannTypography: VultisigTypography,
     content: @Composable () -> Unit,
 ) {
 
@@ -22,10 +23,14 @@ internal fun AppUtils(
     val montserratFamilyTypography = remember {
         montserratTypography
     }
+    val brockmannFamilyTypography = remember {
+        brockmannTypography
+    }
     CompositionLocalProvider(
         LocalAppColors provides appColor,
         LocalMenloFamilyTypography provides menloFamilyTypography,
-        LocalMontserratFamilyTypography provides montserratFamilyTypography
+        LocalMontserratFamilyTypography provides montserratFamilyTypography,
+        LocalBrockmannFamilyTypography provides brockmannFamilyTypography,
     ) {
         content()
     }
@@ -41,4 +46,7 @@ internal val LocalMenloFamilyTypography = compositionLocalOf {
 }
 internal val LocalMontserratFamilyTypography = compositionLocalOf {
     montserratTypography
+}
+internal val LocalBrockmannFamilyTypography = compositionLocalOf {
+    brockmannTypography
 }

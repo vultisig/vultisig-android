@@ -22,6 +22,13 @@ private val montserratFontFamily = FontFamily(
     Font(R.font.montserrat_regular, weight = FontWeight.Medium),
 )
 
+private val brockmannFontFamily = FontFamily(
+    Font(R.font.brockmann_medium, weight = FontWeight.Bold),
+    Font(R.font.brockmann_medium, weight = FontWeight.SemiBold),
+    Font(R.font.brockmann_medium, weight = FontWeight.Normal),
+    Font(R.font.brockmann_medium, weight = FontWeight.Medium),
+)
+
 @Immutable
 internal data class VultisigTypography(
     val heading1: TextStyle,
@@ -120,3 +127,5 @@ internal data class VultisigTypography(
 internal val menloTypography = VultisigTypography.createFrom(menloFontFamily)
 
 internal val montserratTypography = VultisigTypography.createFrom(montserratFontFamily)
+
+internal val brockmannTypography = VultisigTypography.createFrom(brockmannFontFamily)

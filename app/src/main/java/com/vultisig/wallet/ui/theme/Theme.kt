@@ -16,6 +16,7 @@ fun OnBoardingComposeTheme(
         appColor = Colors.Default,
         menloTypography = menloTypography,
         montserratTypography = montserratTypography,
+        brockmannTypography = brockmannTypography,
     ) {
         MaterialTheme(
             colorScheme = lightColorScheme(
@@ -45,6 +46,9 @@ internal object Theme {
         @Composable
         get() = LocalMontserratFamilyTypography.current
 
+    val brockmann: VultisigTypography
+        @Composable
+        get() = LocalBrockmannFamilyTypography.current
 }
 
 
