@@ -222,9 +222,8 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 BlockChainSpecific.Solana(
                     recentBlockHash = recentBlockHashResult,
                     priorityFee = gasFee.value,
-                    fromAddressPubKey = fromAddressPubKeyResult?.first,
-                    toAddressPubKey = toAddressPubKeyResult?.first,
-                    programId = toAddressPubKeyResult?.second ?: false
+                    fromAddressPubKey = fromAddressPubKeyResult,
+                    toAddressPubKey = toAddressPubKeyResult,
                 )
             )
         }

@@ -75,7 +75,6 @@ class SolanaHelper(
                     .setRecipientTokenAddress(solanaSpecific.toAddressPubKey)
                     .setAmount(keysignPayload.toAmount.toLong())
                     .setDecimals(keysignPayload.coin.decimal)
-                    .setTokenProgramIdValue(if (solanaSpecific.programId) 1 else 0)
 
                 return input
                     .setTokenTransferTransaction(transfer.build())
@@ -94,8 +93,6 @@ class SolanaHelper(
                         .setSenderTokenAddress(solanaSpecific.fromAddressPubKey)
                         .setAmount(keysignPayload.toAmount.toLong())
                         .setDecimals(keysignPayload.coin.decimal)
-                        .setTokenProgramIdValue(if (solanaSpecific.programId) 1 else 0)
-
 
                 return input
                     .setCreateAndTransferTokenTransaction(transferTokenMessage.build())
