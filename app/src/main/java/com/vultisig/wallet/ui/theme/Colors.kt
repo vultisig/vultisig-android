@@ -54,8 +54,82 @@ internal data class Colors(
     val miamiMarmaladeFaded: Color = Color(0x59F7961B),
     val approval: Color = Color(0xff31CF59),
     val approvalFaded: Color = Color(0x5931CF59),
+
+
+    // new design system
+    val buttons: ButtonsColors = ButtonsColors(),
+    val backgrounds: BackgroundsColors = BackgroundsColors(),
+    val primary: PrimaryColors = PrimaryColors(),
+    val text: TextColors = TextColors(),
+    val borders: BordersColors = BordersColors(),
+    val alerts: AlertsColors = AlertsColors(),
+    val neutrals: NeutralsColors = NeutralsColors.Default
+
+
 ) {
     companion object {
         val Default = Colors()
+    }
+}
+
+internal data class ButtonsColors(
+    val primary: Color = Color(0xFF33E6BF),
+    val secondary: Color = Color(0xFF051B3A),
+    val disabled: Color = Color(0xFF0E1E36),
+)
+
+internal data class BackgroundsColors(
+    val primary: Color = Color(0xFF02122B),
+    val secondary: Color = Color(0xFF051B3A),
+    val tertiary: Color = Color(0xFF11284A),
+    val success: Color = Color(0xFF042436),
+)
+
+internal data class PrimaryColors(
+    val accent1: Color = Color(0xFF042D9A),
+    val accent2: Color = Color(0xFF0339C7),
+    val accent3: Color = Color(0xFF2155DF),
+    val accent4: Color = Color(0xFF4879FD),
+)
+
+internal data class TextColors(
+    val primary: Color = Color(0xFFF0F4FC),
+    val light: Color = Color(0xFFC9D6E8),
+    val extraLight: Color = Color(0xFF8295AE),
+    val button: TextButtonColors = TextButtonColors()
+)
+
+internal data class TextButtonColors(
+    val dark: Color = Color(0xFF02122B),
+    val light: Color = Color(0xFFF0F4FC),
+    val disabled: Color = Color(0xFF4D5F75),
+)
+
+internal data class BordersColors(
+    val normal: Color = Color(0xFF1B3F73),
+    val light: Color = Color(0xFF12284A),
+)
+
+internal data class AlertsColors(
+    val success: Color = Color(0xFF11C89C),
+    val error: Color = Color(0xFFFF5C5C),
+    val warning: Color = Color(0xFFFFC25C),
+    val info: Color = Color(0xFF5CA7FF),
+)
+
+internal data class NeutralsColors(
+    val n50: Color = Color(0xFFFFFFFF),
+    val n100: Color = Color(0xFFEFF2F6),
+    val n200: Color = Color(0xFFE5E7EB),
+    val n300: Color = Color(0xFFD1D5DB),
+    val n400: Color = Color(0xFF9CA3AF),
+    val n500: Color = Color(0xFF6B7280),
+    val n600: Color = Color(0xFF4B5563),
+    val n700: Color = Color(0xFF374151),
+    val n800: Color = Color(0xFF1F2A37),
+    val n900: Color = Color(0xFF000000),
+) {
+    companion object{
+        val Default = NeutralsColors()
     }
 }
