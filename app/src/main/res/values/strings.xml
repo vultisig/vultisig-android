@@ -526,4 +526,11 @@
     <string name="select_vault_type_fast_desc_3" translatable="false">[Placeholder disadvantage]</string>
 
 
+    <string name="peer_discovery_topbar_title" translatable="false">Scan QR</string>
+    <string name="peer_discovery_action_next_title" translatable="false">Next</string>
+    <string name="peer_discovery_this_device" translatable="false">This Device</string>
+    <string name="peer_discovery_scan_with_n_device" translatable="false">Scan with %1$s device</string>
+    <string name="peer_discovery_optional_device_caption" translatable="false">Optional</string>
+    <string name="peer_discovery_waiting_for_devices_action" translatable="false">Waiting for devices...</string>
+    <string name="peer_discovery_devices_n_of_n" translatable="false">Devices (%1$s/%2$s)</string>
 </resources>
