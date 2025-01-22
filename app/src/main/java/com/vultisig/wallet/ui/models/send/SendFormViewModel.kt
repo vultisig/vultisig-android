@@ -544,10 +544,10 @@ internal class SendFormViewModel @Inject constructor(
                                 specific,
                                 memo,
                             )
-
-                            gasFee.copy(
+                            if (plan.fee > 0) gasFee.copy(
                                 value = BigInteger.valueOf(plan.fee)
                             )
+                            else gasFee
                         } else gasFee,
                         selectedToken = selectedToken,
                     )

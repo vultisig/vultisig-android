@@ -422,7 +422,10 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                 SwapProvider.LIFI,
             ) else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
-            Chain.Base -> setOf(SwapProvider.LIFI)
+            Chain.Base -> setOf(
+                SwapProvider.LIFI,
+                SwapProvider.THORCHAIN,
+            )
 
             Chain.Optimism, Chain.Polygon, Chain.ZkSync -> setOf(
                 SwapProvider.ONEINCH, SwapProvider.LIFI
