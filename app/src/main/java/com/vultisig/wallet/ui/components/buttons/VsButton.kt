@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components.buttons
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,6 +44,7 @@ fun VsButton(
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
+    onClick: () -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -59,6 +61,7 @@ fun VsButton(
                 },
                 shape = RoundedCornerShape(percent = 100)
             )
+            .clickable(enabled = state == Enabled, onClick = onClick)
             .then(
                 when (size) {
                     Medium -> Modifier.padding(
@@ -72,7 +75,6 @@ fun VsButton(
                     )
                 }
             )
-
     ) {
         val contentColor = when (state) {
             Enabled -> when (variant) {
@@ -127,34 +129,39 @@ private fun VsButtonPreview() {
             size = Medium,
             iconLeft = R.drawable.ic_caret_left,
             iconRight = R.drawable.ic_caret_right,
+            onClick = {}
         )
 
         VsButton(
             label = "Primary Disabled",
             variant = Primary,
             state = Disabled,
-            size = Medium
+            size = Medium,
+            onClick = {}
         )
 
         VsButton(
             label = "Secondary",
             variant = Secondary,
             state = Enabled,
-            size = Medium
+            size = Medium,
+            onClick = {}
         )
 
         VsButton(
             label = "Secondary Disabled",
             variant = Secondary,
             state = Disabled,
-            size = Medium
+            size = Medium,
+            onClick = {}
         )
 
         VsButton(
             label = "Primary Enabled Small",
             variant = Primary,
             state = Enabled,
-            size = Small
+            size = Small,
+            onClick = {}
         )
     }
 }

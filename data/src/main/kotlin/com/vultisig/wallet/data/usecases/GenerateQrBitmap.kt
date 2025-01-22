@@ -41,16 +41,23 @@ internal class GenerateQrBitmapImpl @Inject constructor() : GenerateQrBitmap {
             Bitmap.Config.ARGB_8888,
         )
 
+        if (bitmapMatrix == null) {
+            return bitmap
+        }
+
         for (x in 0 until matrixWidth) {
             for (y in 0 until matrixHeight) {
-                val shouldColorPixel = bitmapMatrix?.get(x, y) ?: false
+                val shouldColorPixel = bitmapMatrix.get(x, y)
                 val pixelColor =
                     if (shouldColorPixel) mainColor.toArgb() else backgroundColor.toArgb()
 
                 bitmap.setPixel(x, y, pixelColor)
             }
         }
-        if (logo == null) return bitmap
+
+        if (logo == null) {
+            return bitmap
+        }
 
         val scaledWidth = bitmap.width * QR_CODE_SCALE_FACTOR
         val scaledHeight = bitmap.height * QR_CODE_SCALE_FACTOR
