@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -171,6 +172,7 @@ private fun SelectVaultTypeScreen(
                                 contentDescription = stringResource(R.string.select_vault_type_secure),
                                 modifier = Modifier
                                     .weight(1f)
+                                    .clip(CircleShape)
                                     .clickable {
                                         onTabClick(0)
                                     }
@@ -185,6 +187,7 @@ private fun SelectVaultTypeScreen(
                                 contentDescription = stringResource(R.string.select_vault_type_fast),
                                 modifier = Modifier
                                     .weight(1f)
+                                    .clip(CircleShape)
                                     .clickable {
                                         onTabClick(1)
                                     }
@@ -200,6 +203,7 @@ private fun SelectVaultTypeScreen(
                 Column(
                     Modifier
                         .fillMaxWidth()
+                        .animateContentSize()
                         .clip(RoundedCornerShape(15))
                         .border(
                             width = 1.dp,
