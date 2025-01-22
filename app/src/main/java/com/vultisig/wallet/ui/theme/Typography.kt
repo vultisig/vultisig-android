@@ -23,11 +23,150 @@ private val montserratFontFamily = FontFamily(
 )
 
 private val brockmannFontFamily = FontFamily(
-    Font(R.font.brockmann_medium, weight = FontWeight.Bold),
-    Font(R.font.brockmann_medium, weight = FontWeight.SemiBold),
-    Font(R.font.brockmann_medium, weight = FontWeight.Normal),
+    Font(R.font.brockmann_bold, weight = FontWeight.Bold),
+    Font(R.font.brockmann_semibold, weight = FontWeight.SemiBold),
+    Font(R.font.brockmann_regular, weight = FontWeight.Normal),
     Font(R.font.brockmann_medium, weight = FontWeight.Medium),
 )
+
+@Immutable
+internal data class VsTypography(
+    val headingHeadline: TextStyle,
+    val headingLargeTitle: TextStyle,
+    val headingTitle1: TextStyle,
+    val headingTitle2: TextStyle,
+    val headingTitle3: TextStyle,
+    val headingSubtitle: TextStyle,
+    val bodyLMedium: TextStyle,
+    val bodyLRegular: TextStyle,
+    val bodyMMedium: TextStyle,
+    val bodyMRegular: TextStyle,
+    val bodySMedium: TextStyle,
+    val bodySRegular: TextStyle,
+    val supplementaryCaption: TextStyle,
+    val supplementaryFootnote: TextStyle,
+    val buttonLarge: TextStyle,
+    val buttonSemibold: TextStyle,
+    val buttonMedium: TextStyle,
+) {
+    companion object {
+        fun createFrom(fontFamily: FontFamily): VsTypography =
+            VsTypography(
+                headingHeadline = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 48.sp,
+                    lineHeight = 56.sp,
+                    letterSpacing = (-1).sp,
+                    fontFamily = fontFamily,
+                ),
+                headingLargeTitle = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 34.sp,
+                    lineHeight = 37.sp,
+                    letterSpacing = (-1).sp,
+                    fontFamily = fontFamily,
+                ),
+                headingTitle1 = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 28.sp,
+                    lineHeight = 34.sp,
+                    letterSpacing = (-0.64).sp,
+                    fontFamily = fontFamily,
+                ),
+                headingTitle2 = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 22.sp,
+                    lineHeight = 24.sp,
+                    letterSpacing = (-0.36).sp,
+                    fontFamily = fontFamily,
+                ),
+                headingTitle3 = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 17.sp,
+                    lineHeight = 20.sp,
+                    letterSpacing = (-0.3).sp,
+                    fontFamily = fontFamily,
+                ),
+                headingSubtitle = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    lineHeight = 17.sp,
+                    letterSpacing = (-0.18).sp,
+                    fontFamily = fontFamily,
+                ),
+                bodyLMedium = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 18.sp,
+                    lineHeight = 28.sp,
+                    letterSpacing = (-0.09).sp,
+                    fontFamily = fontFamily,
+                ),
+                bodyLRegular = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 18.sp,
+                    lineHeight = 28.sp,
+                    letterSpacing = (-0.09).sp,
+                    fontFamily = fontFamily,
+                ),
+                bodyMMedium = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    lineHeight = 24.sp,
+                    fontFamily = fontFamily,
+                ),
+                bodyMRegular = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    lineHeight = 24.sp,
+                    fontFamily = fontFamily,
+                ),
+                bodySMedium = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    fontFamily = fontFamily,
+                ),
+                bodySRegular = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    fontFamily = fontFamily,
+                ),
+                supplementaryCaption = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    letterSpacing = 0.12.sp,
+                    fontFamily = fontFamily,
+                ),
+                supplementaryFootnote = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    letterSpacing = 0.06.sp,
+                    fontFamily = fontFamily,
+                ),
+                buttonLarge = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    fontFamily = fontFamily,
+                ),
+                buttonSemibold = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    fontFamily = fontFamily,
+                ),
+                buttonMedium = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp,
+                    fontFamily = fontFamily,
+                ),
+            )
+    }
+}
 
 @Immutable
 internal data class VultisigTypography(
@@ -128,4 +267,4 @@ internal val menloTypography = VultisigTypography.createFrom(menloFontFamily)
 
 internal val montserratTypography = VultisigTypography.createFrom(montserratFontFamily)
 
-internal val brockmannTypography = VultisigTypography.createFrom(brockmannFontFamily)
+internal val brockmannTypography = VsTypography.createFrom(brockmannFontFamily)

@@ -46,7 +46,7 @@ internal object Theme {
         @Composable
         get() = LocalMontserratFamilyTypography.current
 
-    val brockmann: VultisigTypography
+    val brockmann: VsTypography
         @Composable
         get() = LocalBrockmannFamilyTypography.current
 }

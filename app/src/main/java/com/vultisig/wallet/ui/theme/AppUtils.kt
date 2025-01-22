@@ -10,7 +10,7 @@ internal fun AppUtils(
     appColor: Colors,
     menloTypography: VultisigTypography,
     montserratTypography: VultisigTypography,
-    brockmannTypography: VultisigTypography,
+    brockmannTypography: VsTypography,
     content: @Composable () -> Unit,
 ) {
 
