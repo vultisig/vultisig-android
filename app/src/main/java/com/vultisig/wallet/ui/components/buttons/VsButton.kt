@@ -99,7 +99,7 @@ fun VsButton(
         if (label != null) {
             Text(
                 text = label,
-                style = Theme.montserrat.body1, // TODO update typography
+                style = Theme.brockmann.button.semibold,
                 color = contentColor,
             )
         }
