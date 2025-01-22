@@ -15,7 +15,6 @@ fun RiveAnimation(
     stateMachineName: String? = null,
     alignment: Alignment = Alignment.CENTER,
     fit: Fit = Fit.CONTAIN,
-    autoPlay: Boolean = true,
     onInit: (RiveAnimationView) -> Unit = {}
 ) {
     AndroidView(
@@ -26,7 +25,6 @@ fun RiveAnimation(
                     resId = animation,
                     stateMachineName = stateMachineName,
                     alignment = alignment,
-                    autoplay = autoPlay,
                     fit = fit,
                 )
             }
