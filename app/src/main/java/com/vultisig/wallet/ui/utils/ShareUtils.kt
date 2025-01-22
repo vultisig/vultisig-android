@@ -24,16 +24,17 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
     try {
         val cachePath = File(cacheDir, "images")
         cachePath.mkdirs()
-        FileOutputStream("$cachePath/${fileName}").use { stream ->
+        val newFile = File(cachePath, fileName)
+
+        FileOutputStream(newFile).use { stream ->
             val resizedBitmap = if (bitmap.width < DEFAULT_WIDTH) {
                 val scaleFactor = DEFAULT_WIDTH / bitmap.width
                 bitmap.getResizedBitmap(DEFAULT_WIDTH, bitmap.height * scaleFactor)
             } else bitmap
 
-            resizedBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
         }
-        val imagePath = File(cacheDir, "images")
-        val newFile = File(imagePath, fileName)
+
         val contentUri = FileProvider.getUriForFile(
             this, "$packageName.provider", newFile
         )
@@ -60,13 +61,17 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
         ("${vault.name} - ${vault.pubKeyECDSA} - " +
                 "${vault.pubKeyEDDSA} - ${vault.hexChainCode}").sha256()
 
+    return shareFileName(vault.name, uid, shareType)
+}
+
+internal fun shareFileName(vaultName: String, uid: String, shareType: ShareType): String {
     val date = Date()
     val format = SimpleDateFormat(
         "yyyy-MM-dd-HH-mm-ss",
         java.util.Locale.getDefault()
     )
     val formattedDate = format.format(date)
-    return "Vault${shareType.toStringValue()}-${vault.name}-${uid.takeLast(3)}-${formattedDate}.png"
+    return "Vault${shareType.toStringValue()}-${vaultName}-${uid.takeLast(3)}-${formattedDate}.png"
 }
 
 private fun ShareType.toStringValue(): String {
