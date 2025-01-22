@@ -31,138 +31,176 @@ private val brockmannFontFamily = FontFamily(
 
 @Immutable
 internal data class VsTypography(
-    val headingHeadline: TextStyle,
-    val headingLargeTitle: TextStyle,
-    val headingTitle1: TextStyle,
-    val headingTitle2: TextStyle,
-    val headingTitle3: TextStyle,
-    val headingSubtitle: TextStyle,
-    val bodyLMedium: TextStyle,
-    val bodyLRegular: TextStyle,
-    val bodyMMedium: TextStyle,
-    val bodyMRegular: TextStyle,
-    val bodySMedium: TextStyle,
-    val bodySRegular: TextStyle,
-    val supplementaryCaption: TextStyle,
-    val supplementaryFootnote: TextStyle,
-    val buttonLarge: TextStyle,
-    val buttonSemibold: TextStyle,
-    val buttonMedium: TextStyle,
+    val headings: Headings,
+    val body: Body,
+    val supplementary: Supplementary,
+    val button: Button,
 ) {
+
+    @Immutable
+    data class Headings(
+        val headline: TextStyle,
+        val largeTitle: TextStyle,
+        val title1: TextStyle,
+        val title2: TextStyle,
+        val title3: TextStyle,
+        val subtitle: TextStyle,
+    )
+
+    @Immutable
+    data class Body(
+        val l: BodyStyles,
+        val m: BodyStyles,
+        val s: BodyStyles,
+    )
+
+    @Immutable
+    data class BodyStyles(
+        val medium: TextStyle,
+        val regular: TextStyle,
+    )
+
+    @Immutable
+    data class Supplementary(
+        val caption: TextStyle,
+        val footnote: TextStyle,
+    )
+
+    @Immutable
+    data class Button(
+        val large: TextStyle,
+        val semibold: TextStyle,
+        val medium: TextStyle,
+    )
+
     companion object {
         fun createFrom(fontFamily: FontFamily): VsTypography =
             VsTypography(
-                headingHeadline = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 48.sp,
-                    lineHeight = 56.sp,
-                    letterSpacing = (-1).sp,
-                    fontFamily = fontFamily,
+                headings = Headings(
+                    headline = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 48.sp,
+                        lineHeight = 56.sp,
+                        letterSpacing = (-1).sp,
+                        fontFamily = fontFamily,
+                    ),
+                    largeTitle = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 34.sp,
+                        lineHeight = 37.sp,
+                        letterSpacing = (-1).sp,
+                        fontFamily = fontFamily,
+                    ),
+                    title1 = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 28.sp,
+                        lineHeight = 34.sp,
+                        letterSpacing = (-0.64).sp,
+                        fontFamily = fontFamily,
+                    ),
+                    title2 = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 22.sp,
+                        lineHeight = 24.sp,
+                        letterSpacing = (-0.36).sp,
+                        fontFamily = fontFamily,
+                    ),
+                    title3 = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 17.sp,
+                        lineHeight = 20.sp,
+                        letterSpacing = (-0.3).sp,
+                        fontFamily = fontFamily,
+                    ),
+                    subtitle = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 15.sp,
+                        lineHeight = 17.sp,
+                        letterSpacing = (-0.18).sp,
+                        fontFamily = fontFamily,
+                    ),
                 ),
-                headingLargeTitle = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 34.sp,
-                    lineHeight = 37.sp,
-                    letterSpacing = (-1).sp,
-                    fontFamily = fontFamily,
+                body = Body(
+                    l = BodyStyles(
+                        medium = TextStyle(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 18.sp,
+                            lineHeight = 28.sp,
+                            letterSpacing = (-0.09).sp,
+                            fontFamily = fontFamily,
+                        ),
+                        regular = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 18.sp,
+                            lineHeight = 28.sp,
+                            letterSpacing = (-0.09).sp,
+                            fontFamily = fontFamily,
+                        ),
+                    ),
+                    m = BodyStyles(
+                        medium = TextStyle(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                            lineHeight = 24.sp,
+                            fontFamily = fontFamily,
+                        ),
+                        regular = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                            lineHeight = 24.sp,
+                            fontFamily = fontFamily,
+                        ),
+                    ),
+                    s = BodyStyles(
+                        medium = TextStyle(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            fontFamily = fontFamily,
+                        ),
+                        regular = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            fontFamily = fontFamily,
+                        ),
+                    )
                 ),
-                headingTitle1 = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 28.sp,
-                    lineHeight = 34.sp,
-                    letterSpacing = (-0.64).sp,
-                    fontFamily = fontFamily,
+                supplementary = Supplementary(
+                    caption = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        letterSpacing = 0.12.sp,
+                        fontFamily = fontFamily,
+                    ),
+                    footnote = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        letterSpacing = 0.06.sp,
+                        fontFamily = fontFamily,
+                    ),
                 ),
-                headingTitle2 = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 22.sp,
-                    lineHeight = 24.sp,
-                    letterSpacing = (-0.36).sp,
-                    fontFamily = fontFamily,
-                ),
-                headingTitle3 = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 17.sp,
-                    lineHeight = 20.sp,
-                    letterSpacing = (-0.3).sp,
-                    fontFamily = fontFamily,
-                ),
-                headingSubtitle = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 15.sp,
-                    lineHeight = 17.sp,
-                    letterSpacing = (-0.18).sp,
-                    fontFamily = fontFamily,
-                ),
-                bodyLMedium = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 18.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = (-0.09).sp,
-                    fontFamily = fontFamily,
-                ),
-                bodyLRegular = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    lineHeight = 28.sp,
-                    letterSpacing = (-0.09).sp,
-                    fontFamily = fontFamily,
-                ),
-                bodyMMedium = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
-                    lineHeight = 24.sp,
-                    fontFamily = fontFamily,
-                ),
-                bodyMRegular = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                    lineHeight = 24.sp,
-                    fontFamily = fontFamily,
-                ),
-                bodySMedium = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    fontFamily = fontFamily,
-                ),
-                bodySRegular = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    fontFamily = fontFamily,
-                ),
-                supplementaryCaption = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    letterSpacing = 0.12.sp,
-                    fontFamily = fontFamily,
-                ),
-                supplementaryFootnote = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    letterSpacing = 0.06.sp,
-                    fontFamily = fontFamily,
-                ),
-                buttonLarge = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    lineHeight = 20.sp,
-                    fontFamily = fontFamily,
-                ),
-                buttonSemibold = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    lineHeight = 20.sp,
-                    fontFamily = fontFamily,
-                ),
-                buttonMedium = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    lineHeight = 18.sp,
-                    fontFamily = fontFamily,
+                button = Button(
+                    large = TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp,
+                        fontFamily = fontFamily,
+                    ),
+                    semibold = TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        lineHeight = 20.sp,
+                        fontFamily = fontFamily,
+                    ),
+                    medium = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp,
+                        fontFamily = fontFamily,
+                    ),
                 ),
             )
     }
