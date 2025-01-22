@@ -81,4 +81,11 @@ internal interface UseCasesModule {
     fun bindGetDirectionByQrCodeUseCase(
         impl: GetDirectionByQrCodeUseCaseImpl
     ): GetDirectionByQrCodeUseCase
+
+    @Binds
+    @Singleton
+    fun bindCreateQrCodeSharingBitmapUseCase(
+        impl: CreateQrCodeSharingBitmapUseCaseImpl
+    ): CreateQrCodeSharingBitmapUseCase
+
 }
