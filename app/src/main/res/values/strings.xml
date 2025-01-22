@@ -512,4 +512,18 @@
     <string name="error_invalid_chain" translatable="false">Chain is invalid</string>
     <string name="send_error_invalid_plan_fee" translatable="false">Invalid Plan Fee</string>
     <string name="send_error_same_address" translatable="false">The to address must be different from the from address</string>
+    <string name="select_vault_type_secure" translatable="false">Secure</string>
+    <string name="select_vault_type_fast" translatable="false">Fast</string>
+
+    <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
+    <string name="select_vault_type_secure_desc_1" translatable="false">Full control, only your devices</string>
+    <string name="select_vault_type_secure_desc_2" translatable="false">Multiple devices to sign transactions</string>
+    <string name="select_vault_type_secure_desc_3" translatable="false">Use as cold vault</string>
+
+    <string name="select_vault_type_fast_title" translatable="false">Fast set-up, fast signing</string>
+    <string name="select_vault_type_fast_desc_1" translatable="false">Only 1 device needed</string>
+    <string name="select_vault_type_fast_desc_2" translatable="false">Use for small funds</string>
+    <string name="select_vault_type_fast_desc_3" translatable="false">[Placeholder disadvantage]</string>
+
+
 </resources>
