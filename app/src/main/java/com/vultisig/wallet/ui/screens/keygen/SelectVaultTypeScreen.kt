@@ -180,7 +180,7 @@ private fun SelectVaultTypeScreen(
 
                             TextAndIcon(
                                 text = stringResource(R.string.select_vault_type_fast),
-                                icon = painterResource(R.drawable.thunder),
+                                icon = painterResource(R.drawable.question),
                                 tint = if (isSecureTypeSelected) Theme.colors.neutral0 else Theme.colors.error,
                                 contentDescription = stringResource(R.string.select_vault_type_fast),
                                 modifier = Modifier
