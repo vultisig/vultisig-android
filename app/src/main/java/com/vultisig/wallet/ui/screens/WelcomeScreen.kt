@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +32,7 @@ import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.PagerCircleIndicator
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.UiEvent
 import com.vultisig.wallet.ui.models.WelcomeViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -66,44 +69,21 @@ internal fun WelcomeScreen(
             .background(Theme.colors.oxfordBlue800),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        UiSpacer(size = 30.dp)
-
-        Image(
-            painter = painterResource(R.drawable.vultisig_icon_text),
-            contentDescription = "Pager Image"
-        )
-        HorizontalPager(
-            modifier = Modifier.weight(9f),
-            state = pagerState,
-            verticalAlignment = Alignment.Top
-        ) { position ->
-            PagerScreen(onBoardingPage = pages[position])
+        if (!LocalInspectionMode.current) {
+            RiveAnimation(
+                animation = R.raw.onboarding,
+                modifier = Modifier
+                    .size(24.dp)
+            )
+        } else {
+            UiSpacer(24.dp)
         }
-        PagerCircleIndicator(
-            currentIndex = pagerState.currentPage,
-            size = pagerState.pageCount,
-        )
-        Spacer(
-            modifier = Modifier
-                .weight(0.3f)
-        )
-        MultiColorButton(
-            text = stringResource(R.string.welcome_screen_next),
-            textColor = Theme.colors.oxfordBlue800,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = 16.dp,
-                    horizontal = 16.dp,
-                ),
-            onClick = { viewModel.scrollToNextPage() }
-        )
         Spacer(
             modifier = Modifier
                 .weight(0.3f)
         )
 
-        val isSkipVisible = pagerState.currentPage < pages.size - 1
+        val isSkipVisible = true
 
         MultiColorButton(
             text = stringResource(R.string.welcome_screen_skip),
