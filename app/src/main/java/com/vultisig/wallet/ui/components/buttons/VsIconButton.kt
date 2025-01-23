@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.components.buttons
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,7 @@ fun VsIconButton(
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
+    onClick: () -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -47,6 +49,7 @@ fun VsIconButton(
                     },
                 shape = RoundedCornerShape(percent = 100)
             )
+            .clickable(enabled = state == Enabled, onClick = onClick)
             .then(
                 when (size) {
                     Medium -> Modifier.padding(
@@ -98,6 +101,7 @@ private fun VsIconButtonPreview() {
             state = Enabled,
             size = Medium,
             icon = R.drawable.ic_caret_left,
+            onClick = {},
             )
 
         VsIconButton(
@@ -105,6 +109,7 @@ private fun VsIconButtonPreview() {
             state = Disabled,
             size = Medium,
             icon = R.drawable.ic_caret_left,
+            onClick = {},
             )
 
         VsIconButton(
@@ -112,6 +117,7 @@ private fun VsIconButtonPreview() {
             state = Enabled,
             size = Medium,
             icon = R.drawable.ic_caret_left,
+            onClick = {},
             )
 
         VsIconButton(
@@ -119,6 +125,7 @@ private fun VsIconButtonPreview() {
             state = Disabled,
             size = Medium,
             icon = R.drawable.ic_caret_left,
+            onClick = {},
             )
 
         VsIconButton(
@@ -126,6 +133,7 @@ private fun VsIconButtonPreview() {
             state = Enabled,
             size = Small,
             icon = R.drawable.ic_caret_left,
+            onClick = {},
             )
 
         VsIconButton(
@@ -133,12 +141,15 @@ private fun VsIconButtonPreview() {
             state = Disabled,
             size = Small,
             icon = R.drawable.ic_caret_left,
-        )
+            onClick = {},
+            )
+
         VsIconButton(
             variant = Primary,
             state = Enabled,
             size = Mini,
             icon = R.drawable.ic_caret_left,
+            onClick = {},
         )
     }
 }
