@@ -281,7 +281,11 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         }
 
         val swapFee = jupiterQuote.routePlan
-            .sumOf { it.swapInfo.feeAmount.toLong() }.toString()
+            .firstOrNull { it.swapInfo.feeMint == fromToken }?.let {
+                it.swapInfo.feeAmount
+            } ?: "0"
+
+
         return OneInchSwapQuoteJson(
             dstAmount = jupiterQuote.dstAmount,
             tx = OneInchSwapTxJson(
