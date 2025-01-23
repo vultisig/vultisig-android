@@ -174,7 +174,8 @@ private fun VsButtonPreview() {
             label = "Primary Mini Small",
             variant = Primary,
             state = Enabled,
-            size = Mini
+            size = Mini,
+            onClick = {}
         )
     }
 }
