@@ -26,7 +26,7 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 fun VsIconButton(
     modifier: Modifier = Modifier,
-    icon: Int? = null,
+    icon: Int,
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
@@ -58,10 +58,7 @@ fun VsIconButton(
                         vertical = 12.dp,
                         horizontal = 12.dp
                     )
-                    Mini -> Modifier.padding(
-                        vertical = 0.dp,
-                        horizontal = 0.dp
-                    )
+                    Mini -> Modifier
                 }
             )
 
@@ -79,17 +76,14 @@ fun VsIconButton(
 
         val iconSize = when (size) {
             Medium -> 20.dp
-            Small -> 16.dp
-            Mini -> 16.dp
+            Small, Mini -> 16.dp
         }
 
-        if (icon != null) {
-            UiIcon(
-                drawableResId = icon,
-                size = iconSize,
-                tint = contentColor,
-            )
-        }
+        UiIcon(
+            drawableResId = icon,
+            size = iconSize,
+            tint = contentColor,
+        )
     }
 }
 

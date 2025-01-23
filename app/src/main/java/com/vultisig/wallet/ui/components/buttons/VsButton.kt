@@ -91,8 +91,7 @@ fun VsButton(
 
         val iconSize = when (size) {
             Medium -> 20.dp
-            Small -> 16.dp
-            Mini -> 16.dp
+            Small, Mini -> 16.dp
         }
 
         if (iconLeft != null) {
