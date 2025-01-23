@@ -34,4 +34,5 @@ internal val Chain.logo: Int
         Chain.Noble -> R.drawable.noble
         Chain.Ripple -> R.drawable.xrp
         Chain.Akash -> R.drawable.akash
+        Chain.Tron -> R.drawable.tron
     }
