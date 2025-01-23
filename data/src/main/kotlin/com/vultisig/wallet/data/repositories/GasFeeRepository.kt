@@ -154,6 +154,15 @@ internal class GasFeeRepositoryImpl @Inject constructor(
                 )
             }
 
+            Chain.Tron -> {
+                val nativeToken = tokenRepository.getNativeToken(chain.id)
+                TokenValue(
+                    value = BigInteger("100000"),
+                    unit = chain.feeUnit,
+                    decimals = nativeToken.decimal,
+                )
+            }
+
             else -> throw IllegalArgumentException("Can't estimate gas fee. Chain $chain is unsupported")
         }
     }

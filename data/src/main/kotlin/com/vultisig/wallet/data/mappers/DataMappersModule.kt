@@ -58,4 +58,11 @@ internal interface DataMappersModule {
         impl: SplResponseAccountJsonMapperImpl
     ): SplResponseAccountJsonMapper
 
+    @Binds
+    @Singleton
+    fun bindPayloadToProtoMapper(
+        impl: PayloadToProtoMapperImpl
+    ): PayloadToProtoMapper
 }
+
+
