@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
+import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
@@ -32,7 +33,7 @@ enum class VsButtonState {
 }
 
 enum class VsButtonSize {
-    Medium, Small
+    Medium, Small, Mini
 }
 
 @Composable
@@ -73,6 +74,11 @@ fun VsButton(
                         vertical = 12.dp,
                         horizontal = 24.dp
                     )
+
+                    Mini -> Modifier.padding(
+                        vertical = 8.dp,
+                        horizontal = 12.dp
+                    )
                 }
             )
     ) {
@@ -87,7 +93,7 @@ fun VsButton(
 
         val iconSize = when (size) {
             Medium -> 20.dp
-            Small -> 16.dp
+            Small, Mini -> 16.dp
         }
 
         if (iconLeft != null) {
@@ -162,6 +168,13 @@ private fun VsButtonPreview() {
             state = Enabled,
             size = Small,
             onClick = {}
+        )
+
+        VsButton(
+            label = "Primary Mini Small",
+            variant = Primary,
+            state = Enabled,
+            size = Mini
         )
     }
 }
