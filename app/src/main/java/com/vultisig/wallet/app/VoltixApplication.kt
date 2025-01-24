@@ -1,6 +1,7 @@
 package com.vultisig.wallet.app
 
 import android.app.Application
+import app.rive.runtime.kotlin.core.RendererType
 import app.rive.runtime.kotlin.core.Rive
 import com.vultisig.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
@@ -16,6 +17,6 @@ internal class VultisigApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
 
-        Rive.init(this)
+        Rive.init(this, defaultRenderer = RendererType.Canvas)
     }
 }

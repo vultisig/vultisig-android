@@ -13,9 +13,10 @@ fun RiveAnimation(
     modifier: Modifier = Modifier,
     @RawRes animation: Int,
     stateMachineName: String? = null,
+    animationName: String? = null,
     alignment: Alignment = Alignment.CENTER,
     fit: Fit = Fit.CONTAIN,
-    onInit: (RiveAnimationView) -> Unit = {}
+    onInit: (RiveAnimationView) -> Unit = {},
 ) {
     AndroidView(
         modifier = modifier,
@@ -24,6 +25,7 @@ fun RiveAnimation(
                 it.setRiveResource(
                     resId = animation,
                     stateMachineName = stateMachineName,
+                    animationName = animationName,
                     alignment = alignment,
                     fit = fit,
                 )

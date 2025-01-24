@@ -9,47 +9,46 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.ui.models.OnboardingAnimations.*
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-data class WelcomeState(
-    val pages: List<OnBoardPage> = emptyList(),
+data class OnboardingState(
+    val currentAnimation: String? = null,
+    val animationNumber: Int = 0,
 )
 
-internal sealed class UiEvent {
-    data class ScrollToNextPage(val screen: Destination) : UiEvent()
-}
-
 @HiltViewModel
-internal class WelcomeViewModel @Inject constructor(
+internal class OnboardingViewModel @Inject constructor(
     private val repository: OnBoardRepository,
     private val vaultsRepository: VaultRepository,
     private val navigator: Navigator<Destination>
 ) : ViewModel() {
 
-    var state by mutableStateOf(WelcomeState())
-        private set
-    private var _channel = Channel<UiEvent>()
-    var channel = _channel.receiveAsFlow()
+    val uiState = MutableStateFlow(OnboardingState())
 
-    init {
-        state = WelcomeState(pages)
-    }
-
-    fun scrollToNextPage() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val dest = if (vaultsRepository.hasVaults())
-                Destination.Home()
-            else Destination.AddVault
-
-            _channel.send(UiEvent.ScrollToNextPage(dest))
+    fun next() {
+        viewModelScope.launch {
+            val nextAnimation = animations.getOrNull(uiState.value.animationNumber + 1)
+            if (nextAnimation != null) {
+                uiState.update {
+                    it.copy(
+                        currentAnimation = nextAnimation.animation,
+                        animationNumber = it.animationNumber + 1
+                    )
+                }
+            } else {
+                saveOnBoardingState()
+            }
         }
     }
 
@@ -70,22 +69,20 @@ internal class WelcomeViewModel @Inject constructor(
     }
 }
 
-private val pages = listOf(
-    OnBoardPage(
-        image = R.drawable.intro1,
-        title = R.string.onboard_intro1_title,
-        description = R.string.onboard_intro1_desc
-    ), OnBoardPage(
-        image = R.drawable.intro2,
-        title = R.string.onboard_intro2_title,
-        description = R.string.onboard_intro2_desc,
-    ), OnBoardPage(
-        image = R.drawable.intro3,
-        title = R.string.onboard_intro3_title,
-        description = R.string.onboard_intro3_desc,
-    ), OnBoardPage(
-        image = R.drawable.intro4,
-        title = R.string.onboard_intro4_title,
-        description = R.string.onboard_intro4_desc,
-    )
+sealed class OnboardingAnimations(val animation: String) {
+    data object Screen1 : OnboardingAnimations("Screen 1")
+    data object Screen2 : OnboardingAnimations("Screen 2")
+    data object Screen3 : OnboardingAnimations("Screen 3")
+    data object Screen4 : OnboardingAnimations("Screen 4")
+    data object Screen5 : OnboardingAnimations("Screen 5")
+    data object Screen6 : OnboardingAnimations("Screen 6")
+}
+
+private val animations = listOf(
+    Screen1,
+    Screen2,
+    Screen3,
+    Screen4,
+    Screen5,
+    Screen6
 )
