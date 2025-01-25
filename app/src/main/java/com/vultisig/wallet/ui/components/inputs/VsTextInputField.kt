@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
@@ -28,67 +29,58 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldVariant.Default
-import com.vultisig.wallet.ui.theme.AlertsColors
-import com.vultisig.wallet.ui.theme.BordersColors
-import com.vultisig.wallet.ui.theme.TextColors
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.theme.cursorBrush
-import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asString
 
-internal sealed interface VsTextInputFieldVariant {
-    data object Default : VsTextInputFieldVariant
-
-    data class WrapContent(val preferredWidth: Dp? = null) : VsTextInputFieldVariant
-
+internal sealed interface VsTextInputFieldType {
+    data object Text : VsTextInputFieldType
     data class Password(
         val isVisible: Boolean,
-        val onToggleVisibilityClick: () -> Unit
-    ) : VsTextInputFieldVariant
+        val onVisibilityClick: () -> Unit
+    ) : VsTextInputFieldType
 
-    data class WithAction(
-        @DrawableRes val icon: Int,
-        val onIconClick: () -> Unit,
-        @DrawableRes val icon2: Int? = null,
-        val onIcon2Click: (() -> Unit)? = null,
-        val text: UiText?
-    ) : VsTextInputFieldVariant
+    data object Number : VsTextInputFieldType
+    data class MultiLine(
+        val minLines: Int,
+        val maxLines: Int = Int.MAX_VALUE
+    ) : VsTextInputFieldType
 }
 
-
-internal sealed class VsTextInputFieldState(val primaryColor: Color) {
-    data object Idle : VsTextInputFieldState(primaryColor = BordersColors().light)
-    data object Focus : VsTextInputFieldState(primaryColor = BordersColors().normal)
-    data object Success : VsTextInputFieldState(primaryColor = AlertsColors().success)
-    data object Error : VsTextInputFieldState(primaryColor = AlertsColors().error)
+internal enum class VsTextInputFieldInnerState {
+    Default,
+    Success,
+    Error,
 }
 
 @Composable
 internal fun VsTextInputField(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
-    variant: VsTextInputFieldVariant,
-    uiState: VsTextInputFieldState,
     onFocusChanged: (isFocused: Boolean) -> Unit,
-    hint: UiText? = null,
-    footNote: UiText? = null,
-    label: UiText? = null,
+    focused: Boolean,
+    type: VsTextInputFieldType = VsTextInputFieldType.Text,
+    innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
+    hint: String? = null,
+    footNote: String? = null,
+    label: String? = null,
+    trailingText: String? = null,
+    @DrawableRes trailingIcon: Int? = null,
+    onTrailingIconClick: (() -> Unit)? = null,
+    @DrawableRes trailingIcon2: Int? = null,
+    onTrailingIcon2Click: (() -> Unit)? = null,
     @DrawableRes labelIcon: Int? = null,
     onKeyboardAction: () -> Unit = {},
     imeAction: ImeAction = ImeAction.Unspecified,
     keyboardType: KeyboardType = KeyboardType.Unspecified,
 ) {
-    val textColors = TextColors()
     Column(
         modifier = modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -99,17 +91,17 @@ internal fun VsTextInputField(
         ) {
             if (label != null) {
                 Text(
-                    text = label.asString(),
-                    color = textColors.primary,
-                    style = Theme.montserrat.overline,
+                    text = label,
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.body.s.medium,
                 )
             }
             if (labelIcon != null) {
                 Icon(
                     painter = painterResource(labelIcon),
-                    tint = textColors.primary,
+                    tint = Theme.colors.text.extraLight,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
@@ -118,356 +110,312 @@ internal fun VsTextInputField(
                 .border(
                     border = BorderStroke(
                         width = 1.dp,
-                        color = uiState.primaryColor
+                        color = when (innerState) {
+                            VsTextInputFieldInnerState.Success -> Theme.colors.alerts.success
+                            VsTextInputFieldInnerState.Error -> Theme.colors.alerts.error
+                            VsTextInputFieldInnerState.Default ->
+                                if (focused) Theme.colors.borders.normal
+                                else Theme.colors.borders.light
+                        }
                     ),
-                    shape = RoundedCornerShape(25)
+                    shape = RoundedCornerShape(corner = CornerSize(12.dp))
                 )
-                .clip(RoundedCornerShape(25))
-                .background(Theme.colors.oxfordBlue600Main)
+                .clip(RoundedCornerShape(corner = CornerSize(12.dp)))
+                .background(Theme.colors.backgrounds.secondary)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (variant is VsTextInputFieldVariant.Password) {
-                BasicSecureTextField(
-                    state = textFieldState,
-                    textStyle = Theme.menlo.body3.copy(color = textColors.primary),
-                    cursorBrush = Theme.cursorBrush,
-                    textObfuscationMode = if (variant.isVisible)
-                        TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
-                    modifier = Modifier
-                        .onFocusChanged {
-                            onFocusChanged(it.isFocused)
-                        },
-                    decorator = { textField ->
-                        if (textFieldState.text.isEmpty() && hint != null) {
-                            Text(
-                                text = hint.asString(),
-                                color = textColors.extraLight,
-                                style = Theme.menlo.body3,
-                            )
-                        }
-                        textField()
-                    }
-                )
-                UiSpacer(1f)
-                Icon(
-                    painter = painterResource(
-                        if (variant.isVisible)
-                            R.drawable.visible else R.drawable.hidden
-                    ),
-                    tint = textColors.light,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable(
-                            onClick = variant.onToggleVisibilityClick
-                        )
-                )
-            } else {
-                BasicTextField(
-                    state = textFieldState,
-                    lineLimits = TextFieldLineLimits.SingleLine,
-                    textStyle = Theme.menlo.body3.copy(color = textColors.primary),
-                    cursorBrush = Theme.cursorBrush,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = keyboardType,
-                        imeAction = imeAction,
-                    ),
-                    onKeyboardAction = {
-                        onKeyboardAction()
-                    },
-                    modifier = Modifier
-                        .then(
-                            if (variant !is VsTextInputFieldVariant.WrapContent)
-                                Modifier.weight(1f)
-                            else {
-                                if (variant.preferredWidth != null)
-                                    Modifier.width(variant.preferredWidth)
-                                else Modifier.width(IntrinsicSize.Min)
+            when (type) {
+                is VsTextInputFieldType.Password -> {
+                    BasicSecureTextField(
+                        state = textFieldState,
+                        textStyle = Theme.brockmann.body.m.medium.copy(
+                            color = Theme.colors.text.primary
+                        ),
+                        cursorBrush = Theme.cursorBrush,
+                        textObfuscationMode = if (type.isVisible)
+                            TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
+                        modifier = Modifier
+                            .onFocusChanged {
+                                onFocusChanged(it.isFocused)
+                            },
+                        decorator = { textField ->
+                            if (textFieldState.text.isEmpty() && hint != null) {
+                                Text(
+                                    text = hint,
+                                    color = Theme.colors.text.extraLight,
+                                    style = Theme.brockmann.body.m.medium,
+                                )
                             }
-                        )
-                        .onFocusChanged {
-                            onFocusChanged(it.isFocused)
-                        },
-                    decorator = { textField ->
-                        if (textFieldState.text.isEmpty() && hint != null) {
-                            Text(
-                                text = hint.asString(),
-                                color = textColors.extraLight,
-                                style = Theme.menlo.body3,
-                            )
+                            textField()
                         }
-                        textField()
-                    })
-            }
-            if (variant is VsTextInputFieldVariant.WithAction) {
-                if (variant.text != null)
-                    Text(
-                        text = variant.text.asString(),
-                        color = textColors.light,
-                        style = Theme.montserrat.overline,
                     )
-                UiSpacer(8.dp)
-                Icon(
-                    painter = painterResource(variant.icon),
-                    tint = textColors.light,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable(onClick = variant.onIconClick)
-                )
-                if (variant.icon2 != null) {
-                    UiSpacer(8.dp)
+                    UiSpacer(1f)
                     Icon(
-                        painter = painterResource(variant.icon2),
-                        tint = textColors.light,
+                        painter = painterResource(
+                            if (type.isVisible)
+                                R.drawable.visible else R.drawable.hidden
+                        ),
+                        tint = Theme.colors.text.button.light,
                         contentDescription = null,
                         modifier = Modifier
                             .size(20.dp)
                             .clickable(
-                                onClick = variant.onIcon2Click ?: {}
+                                onClick = type.onVisibilityClick
                             )
                     )
+                }
+
+                else -> {
+                    BasicTextField(
+                        state = textFieldState,
+                        lineLimits = if (type is VsTextInputFieldType.MultiLine)
+                            TextFieldLineLimits.MultiLine(
+                                type.minLines,
+                                type.maxLines
+                            ) else TextFieldLineLimits.SingleLine,
+                        textStyle = Theme.brockmann.body.m.medium.copy(color = Theme.colors.text.primary),
+                        cursorBrush = Theme.cursorBrush,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = if (type is VsTextInputFieldType.Number)
+                                KeyboardType.Number else keyboardType,
+                            imeAction = imeAction,
+                        ),
+                        onKeyboardAction = {
+                            onKeyboardAction()
+                        },
+                        modifier = Modifier
+                            .then(
+                                if (type !is VsTextInputFieldType.Number)
+                                    Modifier.weight(1f)
+                                else {
+                                    Modifier.width(IntrinsicSize.Min)
+                                }
+                            )
+                            .onFocusChanged {
+                                onFocusChanged(it.isFocused)
+                            },
+                        decorator = { textField ->
+                            if (textFieldState.text.isEmpty() && hint != null) {
+                                Text(
+                                    text = hint,
+                                    color = Theme.colors.text.extraLight,
+                                    style = Theme.brockmann.body.m.medium,
+                                )
+                            }
+                            textField()
+                        })
+
+                    if (type !is VsTextInputFieldType.MultiLine) {
+                        if (trailingText != null)
+                            Text(
+                                text = trailingText,
+                                color = Theme.colors.text.light,
+                                style = Theme.brockmann.body.s.medium,
+                            )
+                        if (trailingIcon != null) {
+                            UiSpacer(8.dp)
+                            Icon(
+                                painter = painterResource(trailingIcon),
+                                tint = Theme.colors.text.button.light,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .width(16.dp)
+                                    .clickOnce(
+                                        onClick = onTrailingIconClick ?: {},
+                                        enabled = onTrailingIconClick != null
+                                    )
+                            )
+                        }
+                        if (trailingIcon2 != null) {
+                            UiSpacer(8.dp)
+                            Icon(
+                                painter = painterResource(trailingIcon2),
+                                tint = Theme.colors.text.button.light,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickOnce(
+                                        onClick = onTrailingIcon2Click ?: {},
+                                        enabled = onTrailingIcon2Click != null
+                                    )
+                            )
+                        }
+                    }
                 }
             }
         }
         if (footNote != null) {
             Text(
-                text = footNote.asString(),
-                color = uiState.primaryColor,
-                style = Theme.montserrat.overline
+                text = footNote,
+                color = when (innerState) {
+                    VsTextInputFieldInnerState.Success -> Theme.colors.alerts.success
+                    VsTextInputFieldInnerState.Error -> Theme.colors.alerts.error
+                    VsTextInputFieldInnerState.Default -> Theme.colors.text.primary
+                },
+                style = Theme.brockmann.supplementary.footnote
             )
         }
     }
-
 }
 
 
 @Preview(widthDp = 400)
 @Composable
-private fun DefaultVariantPreview() {
-    val textFieldState = rememberTextFieldState()
+private fun TextTypePreview() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = Default,
-            uiState = VsTextInputFieldState.Idle,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Text,
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = false,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = Default,
-            uiState = VsTextInputFieldState.Focus,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Text,
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = true,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = Default,
-            uiState = VsTextInputFieldState.Success,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Text,
+            innerState = VsTextInputFieldInnerState.Success,
+            focused = false,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = Default,
-            uiState = VsTextInputFieldState.Error,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Text,
+            innerState = VsTextInputFieldInnerState.Error,
+            focused = false,
         )
     }
 }
 
 @Preview(widthDp = 400)
 @Composable
-private fun WithActionVariantPreview() {
-    val textFieldState = rememberTextFieldState()
+private fun PasswordTypePreview() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WithAction(icon = R.drawable.question,
-                text = null,
-                onIconClick = {}
-            ),
-            uiState = VsTextInputFieldState.Idle,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Password(isVisible = true) {},
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = false,
+            initialText = "some password"
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WithAction(icon = R.drawable.question,
-                text = UiText.DynamicString("Text"),
-                onIconClick = {}
-            ),
-            uiState = VsTextInputFieldState.Focus,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Password(isVisible = false) {},
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = true,
+            initialText = "some password"
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WithAction(
-                text = UiText.DynamicString("Text"),
-                icon = R.drawable.question,
-                onIconClick = {},
-                icon2 = R.drawable.camera,
-            ),
-            uiState = VsTextInputFieldState.Success,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Password(isVisible = true) {},
+            innerState = VsTextInputFieldInnerState.Success,
+            focused = false,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WithAction(icon = R.drawable.question,
-                text = UiText.DynamicString("Text"),
-                onIconClick = {}
-            ),
-            uiState = VsTextInputFieldState.Error,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Password(isVisible = false) {},
+            innerState = VsTextInputFieldInnerState.Error,
+            focused = false,
         )
     }
 }
 
 @Preview(widthDp = 400)
 @Composable
-private fun PasswordVariantPreview() {
-    val textFieldState = rememberTextFieldState(initialText = "some password")
+private fun MultiLineTypePreview() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.Password(
-                isVisible = true,
-                onToggleVisibilityClick = {}
-            ),
-            uiState = VsTextInputFieldState.Idle,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.MultiLine(minLines = 5),
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = false,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.Password(
-                isVisible = false,
-                onToggleVisibilityClick = {}
-            ),
-            uiState = VsTextInputFieldState.Focus,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.MultiLine(minLines = 5),
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = true,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.Password(
-                isVisible = true,
-                onToggleVisibilityClick = {}
-            ),
-            uiState = VsTextInputFieldState.Success,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.MultiLine(minLines = 5),
+            innerState = VsTextInputFieldInnerState.Success,
+            focused = false,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.Password(
-                isVisible = false,
-                onToggleVisibilityClick = {}
-            ),
-            uiState = VsTextInputFieldState.Error,
-            onFocusChanged = {},
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.MultiLine(minLines = 5),
+            innerState = VsTextInputFieldInnerState.Error,
+            focused = false,
         )
     }
 }
-
 
 @Preview(widthDp = 400)
 @Composable
-private fun WrapContentVariantPreview() {
-    val textFieldState = rememberTextFieldState(initialText = "text")
+private fun NumberTypePreview() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WrapContent(),
-            uiState = VsTextInputFieldState.Idle,
-            onFocusChanged = {},
+        VsTextInputForNumberPreviewMaker(
+            type = VsTextInputFieldType.Number,
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = false,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WrapContent(),
-            uiState = VsTextInputFieldState.Focus,
-            onFocusChanged = {},
+        VsTextInputForNumberPreviewMaker(
+            type = VsTextInputFieldType.Number,
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = true,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WrapContent(),
-            uiState = VsTextInputFieldState.Success,
-            onFocusChanged = {},
+        VsTextInputForNumberPreviewMaker(
+            type = VsTextInputFieldType.Number,
+            innerState = VsTextInputFieldInnerState.Success,
+            focused = false,
         )
-        VsTextInputField(
-            modifier = Modifier,
-            label = UiText.DynamicString("Label"),
-            hint = UiText.DynamicString("hint"),
-            footNote = UiText.DynamicString("some message"),
-            labelIcon = R.drawable.ic_question_mark,
-            textFieldState = textFieldState,
-            variant = VsTextInputFieldVariant.WrapContent(),
-            uiState = VsTextInputFieldState.Error,
-            onFocusChanged = {},
+        VsTextInputForNumberPreviewMaker(
+            type = VsTextInputFieldType.Number,
+            innerState = VsTextInputFieldInnerState.Error,
+            focused = false,
         )
     }
 }
+
+@Composable
+private fun VsTextInputPreviewMaker(
+    type: VsTextInputFieldType,
+    innerState: VsTextInputFieldInnerState,
+    focused: Boolean,
+    initialText: String = "",
+) {
+    VsTextInputField(
+        modifier = Modifier,
+        label = "Label",
+        hint = "hint",
+        labelIcon = R.drawable.ic_question_mark,
+        textFieldState = rememberTextFieldState(initialText),
+        onFocusChanged = {},
+        focused = focused,
+        type = type,
+        innerState = innerState,
+        footNote = "foot note",
+        trailingText = "trail",
+        trailingIcon = R.drawable.question,
+        onTrailingIconClick = {},
+        trailingIcon2 = R.drawable.camera,
+        onTrailingIcon2Click = {},
+        onKeyboardAction = {},
+        imeAction = ImeAction.Done,
+        keyboardType = KeyboardType.Number,
+    )
+}
+
+@Composable
+private fun VsTextInputForNumberPreviewMaker(
+    type: VsTextInputFieldType,
+    innerState: VsTextInputFieldInnerState,
+    focused: Boolean,
+) {
+    VsTextInputField(
+        modifier = Modifier,
+        hint = "hint",
+        textFieldState = rememberTextFieldState(),
+        onFocusChanged = {},
+        focused = focused,
+        type = type,
+        innerState = innerState,
+        footNote = "foot note",
+    )
+}
+
 
 
