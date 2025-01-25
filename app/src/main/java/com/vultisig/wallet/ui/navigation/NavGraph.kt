@@ -129,9 +129,7 @@ internal fun SetupNavGraph(
                 }
             ),
         ) {
-            SelectVaultTypeScreen(
-                navController = navController
-            )
+            SelectVaultTypeScreen()
         }
 
         composable(

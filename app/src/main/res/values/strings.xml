@@ -523,10 +523,11 @@
     <string name="select_vault_type_secure_desc_2" translatable="false">Multiple devices to sign transactions</string>
     <string name="select_vault_type_secure_desc_3" translatable="false">Use as cold vault</string>
 
-    <string name="select_vault_type_fast_title" translatable="false">Fast set-up, fast signing</string>
+    <string name="select_vault_type_fast_title" translatable="false">Fast set-up</string>
     <string name="select_vault_type_fast_desc_1" translatable="false">Only 1 device needed</string>
-    <string name="select_vault_type_fast_desc_2" translatable="false">Use for small funds</string>
-    <string name="select_vault_type_fast_desc_3" translatable="false">[Placeholder disadvantage]</string>
-
+    <string name="select_vault_type_fast_desc_2" translatable="false">Use as cold vault</string>
+    <string name="select_vault_type_fast_desc_3" translatable="false">Vault operations rely on server</string>
+    <string name="select_vault_type_next" translatable="false">Next</string>
+    <string name="select_vault_type_choose_setup" translatable="false">Choose Set-up</string>
 
 </resources>

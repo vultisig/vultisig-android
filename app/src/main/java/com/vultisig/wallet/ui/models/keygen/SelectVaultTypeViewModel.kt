@@ -97,6 +97,12 @@ internal class SelectVaultTypeViewModel @Inject constructor(
         }
     }
 
+    fun navigateToBack() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
+    }
+
     fun start() {
         viewModelScope.launch {
             navigator.navigate(
