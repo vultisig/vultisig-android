@@ -82,6 +82,7 @@
     <string name="import_file_screen_duplicate_vault">La bóveda es una bóveda duplicadat</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">BÓVEDA DE CRIPTO</string>
+    <string name="create_new_vault_screen_create_a_new_vault">Crear una Nueva Bóveda</string>
     <string name="device_list_screen_keygen">Generador de claves</string>
     <string name="device_list_screen_with_these_devices">Con estos dispositivos</string>
     <string name="device_list_screen_continue">Continuar</string>

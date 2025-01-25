@@ -53,6 +53,7 @@
     <string name="import_file_screen_upload_file_text_or_image">Wählen Sie eine .vult, .bak oder .dat Backup-Datei aus</string>
     <string name="create_new_vault_screen_vultisig">Vultisig</string>
     <string name="create_new_vault_screen_secure_crypto_vault">SICHERER KRYPTO-TRESOR</string>
+    <string name="create_new_vault_screen_create_a_new_vault">Einen neuen Tresor erstellen</string>
     <string name="device_list_screen_with_these_devices">Mit diesen Geräten</string>
     <string name="device_list_screen_continue">Fortfahren</string>
     <string name="generating_key_preparing_vault">TRESOR VORBEREITEN…</string>
