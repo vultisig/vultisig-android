@@ -93,7 +93,12 @@ internal sealed class Destination(
                 "{$ARG_DST_TOKEN_ID}",
             )
 
-            fun buildRoute(vaultId: String, chainId: String?,srcTokenId: String?, dstTokenId: String?) =
+            fun buildRoute(
+                vaultId: String,
+                chainId: String?,
+                srcTokenId: String?,
+                dstTokenId: String?
+            ) =
                 "vault_detail/$vaultId/account/$chainId/swap?$ARG_SRC_TOKEN_ID=$srcTokenId&$ARG_DST_TOKEN_ID=$dstTokenId"
         }
     }
@@ -272,8 +277,10 @@ internal sealed class Destination(
         val address: String,
         val chainName: String,
     ) :
-        Destination(route = "vault_details/${vaultId}/qr_address_screen/$address" +
-                "?${ARG_CHAIN_NAME}=${chainName}") {
+        Destination(
+            route = "vault_details/${vaultId}/qr_address_screen/$address" +
+                    "?${ARG_CHAIN_NAME}=${chainName}"
+        ) {
         companion object {
             const val ARG_COIN_ADDRESS = "coin_address"
             const val ARG_CHAIN_NAME = "chain_name"
@@ -291,9 +298,10 @@ internal sealed class Destination(
         val setupType: VaultSetupType,
     ) : Destination(route = buildRoute(vaultId, name, setupType.raw)) {
         companion object {
-            const val STATIC_ROUTE = "keygen/email?${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
-                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
-                    "&${ARG_VAULT_ID}={$ARG_VAULT_ID}"
+            const val STATIC_ROUTE =
+                "keygen/email?${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
+                        "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
+                        "&${ARG_VAULT_ID}={$ARG_VAULT_ID}"
 
             fun buildRoute(vaultId: String?, name: String?, setupType: Int) =
                 "keygen/email?${ARG_VAULT_NAME}=${name}" +
@@ -445,7 +453,7 @@ internal sealed class Destination(
 
     data object CreateFolder : Destination(route = "create_folder")
 
-    data class Folder(val folderId: String): Destination(route = "folder/$folderId") {
+    data class Folder(val folderId: String) : Destination(route = "folder/$folderId") {
         companion object {
             const val ARG_FOLDER_ID = "folder_id"
             const val STATIC_ROUTE = "folder/{$ARG_FOLDER_ID}"
@@ -482,5 +490,15 @@ sealed class Route {
 
     @Serializable
     data object Secret : Route()
+
+    @Serializable
+    data object Keygen {
+
+        @Serializable
+        data class PeerDiscovery(
+            val vaultName: String,
+        )
+
+    }
 
 }
