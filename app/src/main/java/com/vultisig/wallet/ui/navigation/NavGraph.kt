@@ -46,7 +46,7 @@ import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
-import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreen
+import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
@@ -129,7 +129,7 @@ internal fun SetupNavGraph(
                 }
             ),
         ) {
-            SelectVaultTypeScreen()
+            ChooseVaultScreen()
         }
 
         composable(

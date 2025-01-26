@@ -8,7 +8,6 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -16,7 +15,6 @@ import javax.inject.Inject
 
 internal data class SelectVaultTypeUiModel(
     val selectedTypeIndex: Int = 0,
-    val triggerAnimation: Boolean = false,
     val vaultType: VaultType = VaultType.Secure,
     val types: List<VaultTypeUiModel> = listOf(
         /* fast&active vaults are temporarily disabled
@@ -71,20 +69,11 @@ internal data class VaultTypeUiModel(
 )
 
 @HiltViewModel
-internal class SelectVaultTypeViewModel @Inject constructor(
+internal class ChooseVaultViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     val state = MutableStateFlow(SelectVaultTypeUiModel())
-
-    init {
-        viewModelScope.launch {
-            state.update {
-                delay(200)// some delay to load initial page animation
-                it.copy(triggerAnimation = true)
-            }
-        }
-    }
 
     fun selectTab(index: Int) {
         val vaultType = if (index == 0)
