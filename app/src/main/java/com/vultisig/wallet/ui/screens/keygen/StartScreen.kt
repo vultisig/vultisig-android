@@ -1,8 +1,9 @@
 package com.vultisig.wallet.ui.screens.keygen
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -27,128 +30,132 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.models.keygen.StartScreenViewModel
+import com.vultisig.wallet.ui.models.keygen.StartViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
 @Composable
-internal fun StartScreen() {
-    val viewModel = hiltViewModel<StartScreenViewModel>()
+internal fun StartScreen(
+    model: StartViewModel = hiltViewModel()
+) {
     StartScreen(
-        isAnimationRunning = viewModel.isAnimationRunning.collectAsState().value,
-        onCreateNewVaultClick = viewModel::navigateToCreateVault,
-        onScanQrCodeClick = viewModel::navigateToScanQrCode,
-        onImportVaultClick = viewModel::navigateToImportVault,
+        onCreateNewVaultClick = model::navigateToCreateVault,
+        onScanQrCodeClick = model::navigateToScanQrCode,
+        onImportVaultClick = model::navigateToImportVault,
     )
 }
 
 @Composable
 private fun StartScreen(
-    isAnimationRunning: Boolean,
     onCreateNewVaultClick: () -> Unit,
     onScanQrCodeClick: () -> Unit,
     onImportVaultClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    val logoScale = remember {
+        Animatable(0f)
+    }
+
+    LaunchedEffect(Unit) {
+        logoScale.animateTo(
+            1f,
+            animationSpec = tween(
+                durationMillis = 200,
+                delayMillis = 200
+            ),
+        )
+    }
+
+    Scaffold(
+        containerColor = Theme.colors.backgrounds.primary,
     ) {
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = CenterHorizontally
-        ) {
-
-            val logoScale = animateFloatAsState(
-                if (isAnimationRunning) 1f else 0f,
-                label = "logo scale",
-                animationSpec = tween(
-                    durationMillis = 200,
-                    delayMillis = 200
-                ),
-            )
-            Image(
-                painter = painterResource(id = R.drawable.vultisig),
-                contentDescription = "vultisig",
-                modifier = Modifier
-                    .width(200.dp)
-                    .scale(logoScale.value)
-            )
-            UiSpacer(16.dp)
-            Text(
-                text = stringResource(R.string.create_new_vault_screen_vultisig),
-                color = Theme.colors.text.primary,
-                style = Theme.brockmann.headings.largeTitle
-            )
-        }
-        Column(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+                .background(Theme.colors.backgrounds.primary),
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(
-                vertical = 24.dp,
-                horizontal = 25.dp
-            )
         ) {
-
-            VsButton(
-                label = stringResource(R.string.create_new_vault_screen_create_new_vault),
-                modifier = Modifier
-                    .startScreenAnimations(
-                        delay = 100,
-                        label = stringResource(R.string.create_new_vault_screen_create_new_vault),
-                        isAnimationRunning = isAnimationRunning
-                    )
-                    .fillMaxWidth(),
-                onClick = onCreateNewVaultClick
-            )
-
-            SeparatorWithText(
-                text = stringResource(R.string.create_new_vault_screen_or),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .startScreenAnimations(
-                        delay = 350,
-                        label = stringResource(R.string.create_new_vault_screen_or),
-                        isAnimationRunning = isAnimationRunning
-                    )
-            )
-
-            VsButton(
-                label = stringResource(R.string.home_screen_scan_qr_code),
-                variant = VsButtonVariant.Secondary,
-                onClick = onScanQrCodeClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .startScreenAnimations(
-                        delay = 450,
-                        label = stringResource(R.string.home_screen_scan_qr_code),
-                        isAnimationRunning = isAnimationRunning
-                    ),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = CenterHorizontally
+            ) {
 
 
-            VsButton(
-                label = stringResource(R.string.home_screen_import_vault),
-                variant = VsButtonVariant.Secondary,
-                onClick = onImportVaultClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .startScreenAnimations(
-                        delay = 450,
-                        label = stringResource(R.string.home_screen_scan_qr_code),
-                        isAnimationRunning = isAnimationRunning
-                    ),
-            )
+                Image(
+                    painter = painterResource(id = R.drawable.vultisig),
+                    contentDescription = "vultisig",
+                    modifier = Modifier
+                        .width(200.dp)
+                        .scale(logoScale.value)
+                )
+                UiSpacer(16.dp)
+                Text(
+                    text = stringResource(R.string.create_new_vault_screen_vultisig),
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.headings.largeTitle
+                )
+            }
+            Column(
+                horizontalAlignment = CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(
+                    vertical = 24.dp,
+                    horizontal = 25.dp
+                )
+            ) {
+
+                VsButton(
+                    label = stringResource(R.string.create_new_vault_screen_create_new_vault),
+                    modifier = Modifier
+                        .startScreenAnimations(
+                            delay = 100,
+                        )
+                        .fillMaxWidth(),
+                    onClick = onCreateNewVaultClick
+                )
+
+                SeparatorWithText(
+                    text = stringResource(R.string.create_new_vault_screen_or),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .startScreenAnimations(
+                            delay = 350,
+                        )
+                )
+
+                VsButton(
+                    label = stringResource(R.string.home_screen_scan_qr_code),
+                    variant = VsButtonVariant.Secondary,
+                    onClick = onScanQrCodeClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .startScreenAnimations(
+                            delay = 450,
+                        ),
+                )
+
+
+                VsButton(
+                    label = stringResource(R.string.home_screen_import_vault),
+                    variant = VsButtonVariant.Secondary,
+                    onClick = onImportVaultClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .startScreenAnimations(
+                            delay = 450,
+                        ),
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun SeparatorWithText(
-    modifier: Modifier,
-    text: String
+    text: String,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier,
@@ -176,7 +183,6 @@ private fun SeparatorWithText(
 @Composable
 private fun StartScreenPreview() {
     StartScreen(
-        isAnimationRunning = false,
         onCreateNewVaultClick = {},
         onScanQrCodeClick = {},
         onImportVaultClick = {}

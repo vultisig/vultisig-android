@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 
 
 private typealias ContentTransitionFactory<T, R> = AnimatedContentTransitionScope<T>.() -> R
@@ -43,10 +42,6 @@ internal fun <T> slideOutToEndExitTransition(): ContentTransitionFactory<T, Exit
         )
     }
 
-internal fun <T> fadeInTransition(): ContentTransitionFactory<T, EnterTransition> =
-    {
-        fadeIn()
-    }
 
 internal const val SLIDE_OUT_TO = 0.1f
 
