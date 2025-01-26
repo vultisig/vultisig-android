@@ -251,7 +251,7 @@ internal class KeysignViewModel(
                     localPartyId = vault.localPartyID,
                     hexEncryptionKey = encryptionKeyHex,
                     isEncryptionGcm = isEncryptionGcm,
-                    messageId = null,
+                    messageId = msgHash,
                     service = tssInstance!!,
                 ).collect()
             }
