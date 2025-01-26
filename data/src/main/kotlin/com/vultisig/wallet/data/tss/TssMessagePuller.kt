@@ -41,7 +41,7 @@ class TssMessagePuller(
 
     private suspend fun fetchMessages(messageId: String?) {
         try {
-            val messages = sessionApi.getTssMessages(serverUrl, sessionId, localPartyId)
+            val messages = sessionApi.getTssMessages(serverUrl, sessionId, localPartyId,messageId)
 
             for (msg in messages.sortedBy { it.sequenceNo }) {
                 val key = messageId
