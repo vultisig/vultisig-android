@@ -42,6 +42,7 @@ internal fun <T> slideOutToEndExitTransition(): ContentTransitionFactory<T, Exit
         )
     }
 
+
 internal const val SLIDE_OUT_TO = 0.1f
 
 internal fun <T> screenTransitionSpec() =

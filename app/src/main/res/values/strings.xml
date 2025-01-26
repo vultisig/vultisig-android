@@ -533,4 +533,7 @@
     <string name="peer_discovery_optional_device_caption" translatable="false">Optional</string>
     <string name="peer_discovery_waiting_for_devices_action" translatable="false">Waiting for devices...</string>
     <string name="peer_discovery_devices_n_of_n" translatable="false">Devices (%1$s/%2$s)</string>
+    <string name="create_new_vault_screen_or" translatable="false">OR</string>
+    <string name="home_screen_scan_qr_code" translatable="false">Scan QR</string>
+    <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
 </resources>
