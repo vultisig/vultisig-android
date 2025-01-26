@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
+import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -89,6 +90,7 @@ internal data class KeygenFlowUiModel(
     val networkOption: NetworkPromptOption = NetworkPromptOption.INTERNET,
     val vaultSetupType: VaultSetupType = VaultSetupType.SECURE,
     val isLoading: Boolean = false,
+    val isQrHelpModalVisited: Boolean = false
 ) {
     val isContinueButtonEnabled =
         if (isReshareMode) {
@@ -132,6 +134,7 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val secretSettingsRepository: SecretSettingsRepository,
+    private val qrHelperModalRepository: QrHelperModalRepository,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
@@ -207,6 +210,15 @@ internal class KeygenFlowViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             setData(vaultId)
+        }
+
+        viewModelScope.launch {
+            val isQrHelpModalVisited = qrHelperModalRepository.isVisited()
+            uiState.update {
+                it.copy(
+                    isQrHelpModalVisited = isQrHelpModalVisited
+                )
+            }
         }
 
         viewModelScope.launch {
@@ -536,6 +548,11 @@ internal class KeygenFlowViewModel @Inject constructor(
         shareQrBitmap.value = qrBitmap
     }
 
+    fun saveHelperModalVisited() {
+        viewModelScope.launch {
+            qrHelperModalRepository.visited()
+        }
+    }
 
     override fun onCleared() {
         viewModelScope.launch {

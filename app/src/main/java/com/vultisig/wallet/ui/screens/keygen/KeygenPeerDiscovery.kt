@@ -2,25 +2,39 @@ package com.vultisig.wallet.ui.screens.keygen
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -29,13 +43,16 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
+import com.vultisig.wallet.ui.components.vultiGradientV2
 import com.vultisig.wallet.ui.models.keygen.KeygenFlowViewModel
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType.Companion.asString
 import com.vultisig.wallet.ui.screens.PeerDiscoveryView
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun KeygenPeerDiscovery(
@@ -82,6 +99,8 @@ internal fun KeygenPeerDiscovery(
             viewModel.finishPeerDiscovery()
         },
         isLoading = uiState.isLoading,
+        onDismissModal = viewModel::saveHelperModalVisited,
+        isQrHelpModalVisited = uiState.isQrHelpModalVisited
     )
 }
 
@@ -104,6 +123,8 @@ internal fun KeygenPeerDiscoveryScreen(
     extractBitmap: (Bitmap) -> Unit,
     isReshare: Boolean,
     isLoading: Boolean,
+    onDismissModal: () -> Unit,
+    isQrHelpModalVisited: Boolean,
 ) {
 
     UiBarContainer(
@@ -121,6 +142,8 @@ internal fun KeygenPeerDiscoveryScreen(
         if (isLookingForVultiServer) {
             FastPeerDiscovery()
         } else {
+            if(!isQrHelpModalVisited)
+                ShowHelperDialog(onDismissModal)
             Column(
                 horizontalAlignment = CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
@@ -192,6 +215,82 @@ internal fun FastPeerDiscovery() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShowHelperDialog(
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
+    ModalBottomSheet(
+        containerColor = Theme.colors.oxfordBlue600Main,
+        shape = RectangleShape,
+        dragHandle = null,
+        sheetState = sheetState,
+        onDismissRequest = {
+            coroutineScope.launch {
+                sheetState.hide()
+            }
+        }
+    ) {
+        ScanQrHelpModalBottomSheet {
+            coroutineScope.launch {
+                sheetState.hide()
+                onDismiss()
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun ScanQrHelpModalBottomSheet(onGotItClick: () -> Unit) {
+    Column(
+        horizontalAlignment = CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Theme.colors.oxfordBlue600Main)
+            .padding(horizontal = 35.dp),
+    ) {
+        Image(
+            painter = painterResource(R.drawable.scan_qr_help),
+            modifier = Modifier
+                .width(290.dp),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth
+        )
+        UiSpacer(36.dp)
+        Text(
+            buildAnnotatedString {
+                append(stringResource(R.string.scan_qr_code_screen_scan_the))
+                append(" ")
+                withStyle(
+                    style = SpanStyle(brush = Brush.vultiGradientV2())
+                ) {
+                    append(stringResource(R.string.scan_qr_code_screen_qr_code))
+                }
+            },
+            style = Theme.brockmann.headings.title2,
+            color = Theme.colors.text.primary,
+        )
+        UiSpacer(12.dp)
+        Text(
+            text = stringResource(R.string.scan_qr_code_annotation),
+            color = Theme.colors.text.light,
+            style = Theme.brockmann.body.s.medium,
+            textAlign = TextAlign.Center
+        )
+        UiSpacer(36.dp)
+        VsButton(
+            modifier = Modifier
+                .fillMaxWidth(),
+            label = stringResource(id = R.string.scan_qr_screen_next),
+            onClick = onGotItClick
+        )
+        UiSpacer(48.dp)
+    }
+}
+
 @Preview
 @Composable
 private fun KeygenPeerDiscoveryScreenPreview() {
@@ -211,5 +310,7 @@ private fun KeygenPeerDiscoveryScreenPreview() {
         extractBitmap = {},
         hasNetworkPrompt = true,
         isLoading = false,
+        isQrHelpModalVisited = true,
+        onDismissModal = {}
     )
 }

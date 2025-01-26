@@ -518,4 +518,8 @@
     <string name="create_new_vault_screen_or" translatable="false">OR</string>
     <string name="home_screen_scan_qr_code" translatable="false">Scan QR</string>
     <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
+    <string name="scan_qr_code_annotation" translatable="false">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
+    <string name="scan_qr_screen_next" translatable="false">Next</string>
+    <string name="scan_qr_code_screen_scan_the" translatable="false">Scan the</string>
+    <string name="scan_qr_code_screen_qr_code" translatable="false">QR code</string>
 </resources>
