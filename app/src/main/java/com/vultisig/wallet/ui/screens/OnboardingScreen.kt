@@ -26,7 +26,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
 import com.vultisig.wallet.ui.components.buttons.VsIconButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.models.OnboardingState
 import com.vultisig.wallet.ui.models.OnboardingViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -56,10 +56,12 @@ private fun OnboardingScreen(
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
-            VsTopAppBar(
+            VsTopAppProgressBar(
                 title = stringResource(R.string.onboarding_intro_title),
                 iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick,
+                progress = uiState.animationNumber + 1,
+                total = uiState.animationsTotal,
                 actions = {
                     Text(
                         text = stringResource(R.string.welcome_screen_skip),
