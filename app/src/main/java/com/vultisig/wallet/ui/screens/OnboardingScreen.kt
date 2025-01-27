@@ -95,10 +95,10 @@ private fun OnboardingContent(
     ) {
         if (!LocalInspectionMode.current) {
             RiveAnimation(
-                animation = R.raw.waiting_on_device,
+                animation = R.raw.onboarding,
                 modifier = Modifier.fillMaxWidth(),
                 onInit = { riveAnimationView ->
-                    riveAnimationView.play(animationName = "Screen 2")
+                    riveAnimationView.play(animationName = uiState.currentAnimation)
                 }
             )
         } else {
