@@ -1,22 +1,21 @@
 package com.vultisig.wallet.ui.models
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.OnBoardPage
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.OnboardingAnimations.*
+import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen1
+import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen2
+import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen3
+import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen3Reverse
+import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen4
+import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen5
+import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen6
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -74,6 +73,7 @@ sealed class OnboardingAnimations(val animation: String) {
     data object Screen2 : OnboardingAnimations("Screen 2")
     data object Screen3 : OnboardingAnimations("Screen 3")
     data object Screen4 : OnboardingAnimations("Screen 4")
+    data object Screen3Reverse : OnboardingAnimations("Screen 3 Reverse")
     data object Screen5 : OnboardingAnimations("Screen 5")
     data object Screen6 : OnboardingAnimations("Screen 6")
 }
@@ -83,6 +83,7 @@ private val animations = listOf(
     Screen2,
     Screen3,
     Screen4,
+    Screen3Reverse,
     Screen5,
-    Screen6
+    Screen6,
 )
