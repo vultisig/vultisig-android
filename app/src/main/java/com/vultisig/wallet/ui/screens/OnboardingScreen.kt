@@ -6,17 +6,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -26,7 +23,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
 import com.vultisig.wallet.ui.components.buttons.VsIconButton
-import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.RiveAnimationPro
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.OnboardingState
@@ -36,11 +32,11 @@ import com.vultisig.wallet.ui.theme.Theme
 
 @ExperimentalAnimationApi
 @Composable
-internal fun OnBoardingScreen(
+internal fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    OnBoardingScreen(
+    OnboardingScreen(
         uiState = uiState,
         onBackClick = {},
         onSkipClick = { viewModel.skip() },
@@ -49,7 +45,7 @@ internal fun OnBoardingScreen(
 }
 
 @Composable
-private fun OnBoardingScreen(
+private fun OnboardingScreen(
     uiState: OnboardingState,
     onBackClick: () -> Unit,
     onSkipClick: () -> Unit,
@@ -73,7 +69,7 @@ private fun OnBoardingScreen(
             )
         },
     ) { paddingValues ->
-        WelcomeContent(
+        OnboardingContent(
             uiState = uiState,
             paddingValues = paddingValues,
             nextClick = onNextClick,
@@ -82,7 +78,7 @@ private fun OnBoardingScreen(
 }
 
 @Composable
-private fun WelcomeContent(
+private fun OnboardingContent(
     uiState: OnboardingState,
     paddingValues: PaddingValues,
     nextClick: () -> Unit,
@@ -98,7 +94,7 @@ private fun WelcomeContent(
             animationName = uiState.currentAnimation,
             contentDescription = null,
             update = { riveAnimationView ->
-                riveAnimationView.play()
+                riveAnimationView.play(animationName = uiState.currentAnimation)
             }
         )
         Spacer(

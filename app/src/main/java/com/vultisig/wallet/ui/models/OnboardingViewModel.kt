@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 
 data class OnboardingState(
-    val currentAnimation: String? = null,
+    val currentAnimation: String = Screen1.animation,
     val animationNumber: Int = 0,
 )
 
