@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,6 +26,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
 import com.vultisig.wallet.ui.components.buttons.VsIconButton
+import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.RiveAnimationPro
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.OnboardingState
@@ -89,14 +93,17 @@ private fun OnboardingContent(
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        RiveAnimationPro(
-            resId = R.raw.onboarding,
-            animationName = uiState.currentAnimation,
-            contentDescription = null,
-            update = { riveAnimationView ->
-                riveAnimationView.play(animationName = uiState.currentAnimation)
-            }
-        )
+        if (!LocalInspectionMode.current) {
+            RiveAnimation(
+                animation = R.raw.waiting_on_device,
+                modifier = Modifier.fillMaxWidth(),
+                onInit = { riveAnimationView ->
+                    riveAnimationView.play(animationName = "Screen 2")
+                }
+            )
+        } else {
+            UiSpacer(24.dp)
+        }
         Spacer(
             modifier = Modifier
                 .weight(0.3f)
