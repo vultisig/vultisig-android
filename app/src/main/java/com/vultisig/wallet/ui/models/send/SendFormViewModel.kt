@@ -543,10 +543,10 @@ internal class SendFormViewModel @Inject constructor(
                             val plan = planFee.value ?: throw InvalidTransactionDataException(
                                 UiText.StringResource(R.string.send_error_invalid_plan_fee)
                             )
-
-                            gasFee.copy(
+                            if (plan > 0) gasFee.copy(
                                 value = BigInteger.valueOf(plan)
                             )
+                            else gasFee
                         } else gasFee,
                         selectedToken = selectedToken,
                     )

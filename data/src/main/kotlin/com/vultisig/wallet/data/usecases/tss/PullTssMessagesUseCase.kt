@@ -45,7 +45,7 @@ internal class PullTssMessagesUseCaseImpl @Inject constructor(
 
         while (currentCoroutineContext().isActive) {
             try {
-                val messages = sessionApi.getTssMessages(serverUrl, sessionId, localPartyId)
+                val messages = sessionApi.getTssMessages(serverUrl, sessionId, localPartyId,messageId)
 
                 for (msg in messages.sortedBy { it.sequenceNo }) {
                     val key = messageId

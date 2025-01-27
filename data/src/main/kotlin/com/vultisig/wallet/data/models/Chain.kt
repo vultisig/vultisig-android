@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.TokenStandard.SUI
 import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
 import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
+import com.vultisig.wallet.data.models.TokenStandard.TRC20
 import wallet.core.jni.CoinType
 
 typealias ChainId = String
@@ -56,6 +57,7 @@ enum class Chain(
     Ton("Ton", TON, "TON"),
 
     Ripple("Ripple", RIPPLE, "XRP"),
+    Tron("Tron",TRC20,"TRX")
     ;
 
     val id: String
@@ -99,6 +101,7 @@ val Chain.coinType: CoinType
         Chain.Noble -> CoinType.NOBLE
         Chain.Ripple -> CoinType.XRP
         Chain.Akash -> CoinType.AKASH
+        Chain.Tron -> CoinType.TRON
     }
 
 val Chain.TssKeysignType: TssKeyType
@@ -113,7 +116,7 @@ val Chain.canSelectTokens: Boolean
         Chain.Terra, Chain.TerraClassic,
         Chain.Sui,
         Chain.Kujira,
-        Chain.Osmosis, -> true
+        Chain.Osmosis, Chain.Tron -> true
 
         Chain.CronosChain, Chain.ZkSync -> false
         else -> when {
@@ -130,12 +133,12 @@ val Chain.IsSwapSupported: Boolean
 
         Chain.Avalanche, Chain.Base, Chain.BscChain, Chain.Ethereum, Chain.Optimism, Chain.Polygon,
 
-        Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana,
+        Chain.Arbitrum, Chain.Blast, Chain.CronosChain, Chain.Solana, Chain.ZkSync,
     )
 
 val Chain.isDepositSupported: Boolean
     get() = when (this) {
-        Chain.ThorChain, Chain.MayaChain -> true
+        Chain.ThorChain, Chain.MayaChain, Chain.Ton -> true
         else -> false
     }
 
@@ -153,7 +156,7 @@ fun Chain.oneInchChainId(): Long =
         Chain.Avalanche -> 43114
         Chain.Base -> 8453
         Chain.Solana -> 1151111081099710
-        //Chain.Blast -> 81457
+        Chain.Blast -> 81457
         Chain.Arbitrum -> 42161
         Chain.Polygon -> 137
         Chain.Optimism -> 10
@@ -195,6 +198,7 @@ fun Chain.swapAssetName(): String {
         Chain.Noble -> "USDC"
         Chain.Ripple -> "XRP"
         Chain.Akash -> "AKT"
+        Chain.Tron -> "TRX"
     }
 }
 

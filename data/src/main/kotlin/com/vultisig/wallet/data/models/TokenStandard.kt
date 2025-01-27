@@ -10,4 +10,5 @@ enum class TokenStandard {
     SUI,
     TON,
     RIPPLE,
+    TRC20,
 }
