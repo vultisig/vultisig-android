@@ -140,6 +140,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         priorityFee = BigInteger(it.priorityFee),
                         fromAddressPubKey = it.fromTokenAssociatedAddress,
                         toAddressPubKey = it.toTokenAssociatedAddress,
+                        programId = it.programId ?: false,
                     )
                 }
 
@@ -172,6 +173,20 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     BlockChainSpecific.Ripple(
                         sequence = it.sequence,
                         gas = it.gas,
+                    )
+                }
+
+                from.tronSpecific != null -> from.tronSpecific.let {
+                    BlockChainSpecific.Tron(
+                        timestamp = it.timestamp,
+                        expiration = it.expiration,
+                        blockHeaderTimestamp = it.blockHeaderTimestamp,
+                        blockHeaderNumber = it.blockHeaderNumber,
+                        blockHeaderVersion = it.blockHeaderVersion,
+                        blockHeaderTxTrieRoot = it.blockHeaderTxTrieRoot,
+                        blockHeaderParentHash = it.blockHeaderParentHash,
+                        blockHeaderWitnessAddress = it.blockHeaderWitnessAddress,
+                        gasFeeEstimation = it.gasEstimation,
                     )
                 }
 

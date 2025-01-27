@@ -48,7 +48,7 @@ interface SolanaApi {
     suspend fun getSPLTokensInfo2(tokens: List<String>): List<SplTokenInfo>
     suspend fun getJupiterTokens(): List<JupiterTokenResponseJson>
     suspend fun getSPLTokenBalance(walletAddress: String, coinAddress: String): String?
-    suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String): String?
+    suspend fun getTokenAssociatedAccountByOwner(walletAddress: String, mintAddress: String):Pair<String?, Boolean>
 }
 
 internal class SolanaApiImp @Inject constructor(
@@ -322,7 +322,7 @@ internal class SolanaApiImp @Inject constructor(
     override suspend fun getTokenAssociatedAccountByOwner(
         walletAddress: String,
         mintAddress: String,
-    ): String? {
+    ): Pair<String?, Boolean> {
         try {
             val response = httpClient.postRpc<SplAmountRpcResponseJson>(
                 url = rpcEndpoint,
@@ -339,13 +339,16 @@ internal class SolanaApiImp @Inject constructor(
             )
             if (response.error != null) {
                 Timber.d("getTokenAssociatedAccountByOwner error: ${response.error}")
-                return null
+                return Pair(null,false)
             }
             val value = response.value ?: error("getTokenAssociatedAccountByOwner error")
-            return value.value[0].pubKey
+            return Pair(
+                value.value[0].pubKey,
+                value.value[0].account.owner == TOKEN_PROGRAM_ID_2022
+            )
         } catch (e: Exception) {
             Timber.e(e)
-            return null
+            return Pair(null,false)
         }
     }
 
