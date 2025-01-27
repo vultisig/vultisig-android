@@ -29,6 +29,8 @@
 -keep class wallet.core.jni.** { *; }
 -keep class wallet.core.jni.proto.** { *; }
 
+# Dkls/Schnorr classes used in JNI
+-keep class com.silencelaboratories.** { *; }
 
 # Apache Commons Compress
 # We don't use these compression algorithms

@@ -42,6 +42,7 @@ sealed class BlockChainSpecific {
         val priorityFee: BigInteger,
         val fromAddressPubKey: String? = null,
         val toAddressPubKey: String? = null,
+        val programId: Boolean = false,
     ) : BlockChainSpecific()
 
     data class Sui(
@@ -62,11 +63,24 @@ sealed class BlockChainSpecific {
         val sequenceNumber: ULong,
         val expireAt: ULong,
         val bounceable: Boolean,
+        val isDeposit: Boolean = false,
     ) : BlockChainSpecific()
 
     data class Ripple(
         val sequence: ULong,
         val gas: ULong
+    ) : BlockChainSpecific()
+
+    data class Tron(
+        val timestamp: ULong,
+        val expiration: ULong,
+        val blockHeaderTimestamp: ULong,
+        val blockHeaderNumber: ULong,
+        val blockHeaderVersion: ULong,
+        val blockHeaderTxTrieRoot: String,
+        val blockHeaderParentHash: String,
+        val blockHeaderWitnessAddress: String,
+        val gasFeeEstimation : ULong,
     ) : BlockChainSpecific()
 
 }

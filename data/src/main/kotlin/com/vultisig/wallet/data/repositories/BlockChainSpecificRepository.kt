@@ -8,22 +8,27 @@ import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.max
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import timber.log.Timber
 import vultisig.keysign.v1.CosmosIbcDenomTrace
+import wallet.core.jni.Base58
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 data class BlockChainSpecificAndUtxo(
@@ -60,6 +65,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
     private val suiApi: SuiApi,
     private val tonApi: TonApi,
     private val rippleApi: RippleApi,
+    private val tronApi: TronApi,
 ) : BlockChainSpecificRepository {
 
     override suspend fun getSpecific(
@@ -222,8 +228,9 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 BlockChainSpecific.Solana(
                     recentBlockHash = recentBlockHashResult,
                     priorityFee = gasFee.value,
-                    fromAddressPubKey = fromAddressPubKeyResult,
-                    toAddressPubKey = toAddressPubKeyResult,
+                    fromAddressPubKey = fromAddressPubKeyResult?.first,
+                    toAddressPubKey = toAddressPubKeyResult?.first,
+                    programId = toAddressPubKeyResult?.second ?: false
                 )
             )
         }
@@ -294,6 +301,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     expireAt = (Clock.System.now()
                         .epochSeconds + 600L).toULong(),
                     bounceable = false,
+                    isDeposit = isDeposit,
                 ),
             )
         }
@@ -308,6 +316,42 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 ),
             )
 
+        }
+
+        TokenStandard.TRC20 -> {
+            val specific = tronApi.getSpecific()
+            val now = Clock.System.now()
+            val expiration = now + 1.hours
+            val rawData = specific.blockHeader.rawData
+
+            // Tron does not have a 0x... it can be any address
+            // We will only simulate the transaction fee with below address
+            val recipientAddressHex = Numeric.toHexString(Base58.decode(address))
+
+            val estimation = TRON_DEFAULT_ESTIMATION_FEE.takeIf { token.isNativeToken }
+                ?: run {
+                    val rawBalance = tronApi.getBalance(token)
+                    tronApi.getTriggerConstantContractFee(
+                        ownerAddressBase58 = token.address,
+                        contractAddressBase58 = token.contractAddress,
+                        recipientAddressHex = recipientAddressHex,
+                        amount = rawBalance
+                    )
+                }
+
+            BlockChainSpecificAndUtxo(
+                blockChainSpecific = BlockChainSpecific.Tron(
+                    timestamp = now.toEpochMilliseconds().toULong(),
+                    expiration = expiration.toEpochMilliseconds().toULong(),
+                    blockHeaderTimestamp = rawData.timeStamp,
+                    blockHeaderNumber = rawData.number,
+                    blockHeaderVersion = rawData.version,
+                    blockHeaderTxTrieRoot = rawData.txTrieRoot,
+                    blockHeaderParentHash = rawData.parentHash,
+                    blockHeaderWitnessAddress = rawData.witnessAddress,
+                    gasFeeEstimation = estimation.toULong()
+                )
+            )
         }
     }
 

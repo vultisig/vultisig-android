@@ -42,7 +42,7 @@ import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
-import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
+import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
@@ -270,7 +270,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.AddVault.route,
         ) {
-            AddVaultScreen(navController)
+            StartScreen()
         }
         composable(
             route = Destination.ChainTokens.STATIC_ROUTE,
