@@ -17,6 +17,6 @@ internal class VultisigApplication : Application() {
             Timber.plant(Timber.DebugTree())
         }
 
-        Rive.init(this, defaultRenderer = RendererType.Canvas)
+        Rive.init(this)
     }
 }

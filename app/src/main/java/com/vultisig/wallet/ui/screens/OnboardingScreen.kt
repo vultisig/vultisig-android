@@ -1,17 +1,27 @@
 package com.vultisig.wallet.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -32,6 +42,7 @@ import com.vultisig.wallet.ui.models.OnboardingPages
 import com.vultisig.wallet.ui.models.OnboardingState
 import com.vultisig.wallet.ui.models.OnboardingViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.coroutines.delay
 
 
 @ExperimentalAnimationApi
@@ -89,6 +100,22 @@ private fun OnboardingContent(
     paddingValues: PaddingValues,
     nextClick: () -> Unit,
 ) {
+    var buttonVisibility by remember { mutableStateOf(false) }
+    var buttonPlaceHolderVisibility by remember { mutableStateOf(true) }
+    var textVisibility by remember { mutableStateOf(false) }
+    var currentPageText: OnboardingPages  by remember { mutableStateOf(OnboardingPages.Screen1) }
+
+    LaunchedEffect(uiState) {
+        textVisibility = false
+        buttonVisibility = false
+        delay(1000)
+        buttonPlaceHolderVisibility = true
+        currentPageText = uiState.currentPage
+        textVisibility = true
+        delay(1000)
+        buttonPlaceHolderVisibility = false
+        buttonVisibility = true
+    }
     Column(
         modifier = Modifier
             .padding(paddingValues)
@@ -97,7 +124,7 @@ private fun OnboardingContent(
     ) {
         if (!LocalInspectionMode.current) {
             RiveAnimation(
-                animation = R.raw.onboarding,
+                animation = R.raw.onboarding_v2,
                 modifier = Modifier.fillMaxWidth(),
                 onInit = { riveAnimationView ->
                     riveAnimationView.play(animationName = uiState.currentPage.animationName)
@@ -106,20 +133,43 @@ private fun OnboardingContent(
         } else {
             UiSpacer(24.dp)
         }
-        Description(
-            page = uiState.currentPage,
-            modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .weight(0.3f)
-        )
 
-        VsIconButton(
-            variant = Primary,
-            state = Enabled,
-            size = Medium,
-            icon = R.drawable.ic_caret_right,
-            onClick = nextClick,
-        )
+
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .offset(y = (-48).dp)
+                    .weight(0.3f)
+            ) {
+                Column(modifier = Modifier.align(Alignment.Center)) {
+                    AnimatedVisibility(
+                        visible = textVisibility,
+                        enter = fadeIn(tween(200)),
+                        exit = fadeOut(tween(200)),
+                    ) {
+                        Description(
+                            page = currentPageText,
+                        )
+                    }
+                }
+            }
+
+        if (buttonPlaceHolderVisibility) {
+            UiSpacer(size = 48.dp)
+        }
+        AnimatedVisibility(
+            visible = buttonVisibility,
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(200)),
+        ) {
+            VsIconButton(
+                variant = Primary,
+                state = Enabled,
+                size = Medium,
+                icon = R.drawable.ic_caret_right,
+                onClick = nextClick,
+            )
+        }
 
         UiSpacer(size = 24.dp)
     }
@@ -168,7 +218,7 @@ private fun Description(
                     ),
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_2_part_4,
-                        gradientColors = listOf(Theme.colors.text.primary),
+                        gradientColors = Theme.colors.gradients.primary,
                     ),
                 ),
                 style = Theme.brockmann.headings.title1,
