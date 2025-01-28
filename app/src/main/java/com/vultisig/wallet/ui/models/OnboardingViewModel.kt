@@ -4,13 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen1
-import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen2
-import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen3
-import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen3Reverse
-import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen4
-import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen5
-import com.vultisig.wallet.ui.models.OnboardingAnimations.Screen6
+import com.vultisig.wallet.ui.models.OnboardingPages.Screen1
+import com.vultisig.wallet.ui.models.OnboardingPages.Screen2
+import com.vultisig.wallet.ui.models.OnboardingPages.Screen3
+import com.vultisig.wallet.ui.models.OnboardingPages.Screen4
+import com.vultisig.wallet.ui.models.OnboardingPages.Screen5
+import com.vultisig.wallet.ui.models.OnboardingPages.Screen6
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,10 +20,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-data class OnboardingState(
-    val currentAnimation: String = Screen1.animation,
-    val animationNumber: Int = 0,
-    val animationsTotal: Int = animations.size
+internal data class OnboardingState(
+    val currentPage: OnboardingPages = Screen1,
+    val pageNumber: Int = 0,
+    val pageTotal: Int = pages.size
 )
 
 @HiltViewModel
@@ -38,12 +37,12 @@ internal class OnboardingViewModel @Inject constructor(
 
     fun next() {
         viewModelScope.launch {
-            val nextAnimation = animations.getOrNull(uiState.value.animationNumber + 1)
+            val nextAnimation = pages.getOrNull(uiState.value.pageNumber + 1)
             if (nextAnimation != null) {
                 uiState.update {
                     it.copy(
-                        currentAnimation = nextAnimation.animation,
-                        animationNumber = it.animationNumber + 1
+                        currentPage = nextAnimation,
+                        pageNumber = it.pageNumber + 1
                     )
                 }
             } else {
@@ -69,22 +68,20 @@ internal class OnboardingViewModel @Inject constructor(
     }
 }
 
-sealed class OnboardingAnimations(val animation: String) {
-    data object Screen1 : OnboardingAnimations("Screen 1")
-    data object Screen2 : OnboardingAnimations("Screen 2")
-    data object Screen3 : OnboardingAnimations("Screen 3")
-    data object Screen4 : OnboardingAnimations("Screen 4")
-    data object Screen3Reverse : OnboardingAnimations("Screen 3 Reverse")
-    data object Screen5 : OnboardingAnimations("Screen 5")
-    data object Screen6 : OnboardingAnimations("Screen 6")
+internal sealed class OnboardingPages(val animationName: String) {
+    data object Screen1 : OnboardingPages("Screen 1")
+    data object Screen2 : OnboardingPages("Screen 2")
+    data object Screen3 : OnboardingPages("Screen 3")
+    data object Screen4 : OnboardingPages("Screen 4")
+    data object Screen5 : OnboardingPages("Screen 5")
+    data object Screen6 : OnboardingPages("Screen 6")
 }
 
-private val animations = listOf(
+private val pages = listOf(
     Screen1,
     Screen2,
     Screen3,
     Screen4,
-    Screen3Reverse,
     Screen5,
     Screen6,
 )
