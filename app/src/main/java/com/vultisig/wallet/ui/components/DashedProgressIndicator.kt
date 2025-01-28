@@ -22,7 +22,7 @@ fun DashedProgressIndicator(
 
         var nextBarStartPosition = 0F
 
-        for (i in 0..totalNumberOfBars) {
+        for (i in 0..<totalNumberOfBars) {
             val barStartPosition = nextBarStartPosition + 4.dp.toPx()
             val barEndPosition = barStartPosition + barLength
 
