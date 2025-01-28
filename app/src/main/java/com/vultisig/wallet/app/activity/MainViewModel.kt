@@ -51,15 +51,17 @@ internal class MainViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             if (vaultRepository.hasVaults()) {
-                _startDestination.value = Destination.Onboarding.route //TODO: restore
+                _startDestination.value = Destination.Home().route
                 _isLoading.value = false
             } else {
                 val isUserPassedOnboarding = repository.readOnBoardingState()
                     .first()
 
-                //TODO: restore if
+                if (isUserPassedOnboarding) {
+                    _startDestination.value = Destination.AddVault.route
+                } else {
                     _startDestination.value = Destination.Onboarding.route
-
+                }
 
                 _isLoading.value = false
             }
