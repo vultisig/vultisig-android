@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 internal data class Colors(
@@ -119,9 +120,11 @@ internal data class AlertsColors(
 )
 
 internal data class Gradients(
-    val primary: List<Color> = listOf(
-        Color(0xFF33E6BF),
-        Color(0xFF0439C7),
+    val primary: Brush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF33E6BF),
+            Color(0xFF0439C7),
+        )
     ),
 )
 

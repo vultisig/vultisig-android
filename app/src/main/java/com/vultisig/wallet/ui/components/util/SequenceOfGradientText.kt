@@ -23,17 +23,16 @@ internal fun SequenceOfGradientText(
 ) {
     val annotatedText = buildAnnotatedString {
         listTextItems.forEachIndexed{ index, textItem ->
-            when (textItem.gradientColors.size) {
-                0 -> {}
-                1 -> {
-                    withStyle(style = SpanStyle(color = textItem.gradientColors[0])) {
+            when (textItem.coloring) {
+                is GradientColoring.VsColor -> {
+                    withStyle(style = SpanStyle(color = textItem.coloring.color)) {
                         append(stringResource(textItem.resId))
                     }
                 }
-                else -> {
+                is GradientColoring.Gradient -> {
                     withStyle(
                         style = SpanStyle(
-                            brush = Brush.horizontalGradient(textItem.gradientColors),
+                            brush = textItem.coloring.brush,
                         )
                     ) {
                         append(stringResource(textItem.resId))
@@ -55,5 +54,10 @@ internal fun SequenceOfGradientText(
 
 internal class PartiallyGradientTextItem(
     @StringRes val resId: Int,
-    val gradientColors: List<Color>,
+    val coloring: GradientColoring,
 )
+
+internal sealed class GradientColoring {
+    data class VsColor(val color: Color) : GradientColoring()
+    data class Gradient(val brush: Brush) : GradientColoring()
+}
