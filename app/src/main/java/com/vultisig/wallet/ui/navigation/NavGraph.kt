@@ -37,7 +37,7 @@ import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
-import com.vultisig.wallet.ui.screens.WelcomeScreen
+import com.vultisig.wallet.ui.screens.OnboardingScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
@@ -88,8 +88,8 @@ internal fun SetupNavGraph(
         popEnterTransition = slideInFromStartEnterTransition(),
         popExitTransition = slideOutToEndExitTransition(),
     ) {
-        composable(route = Destination.Welcome.route) {
-            WelcomeScreen(navController = navController)
+        composable(route = Destination.Onboarding.route) {
+            OnboardingScreen()
         }
         composable(
             route = Destination.Home.STATIC_ROUTE,

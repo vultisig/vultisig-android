@@ -4,7 +4,10 @@ package com.vultisig.wallet.ui.components.topbar
 
 import android.annotation.SuppressLint
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -16,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.DashedProgressIndicator
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
@@ -129,6 +133,53 @@ fun VsTopAppBarAction(
             contentDescription = null,
             tint = Theme.colors.text.primary,
             size = 24.dp,
+        )
+    }
+}
+
+@Composable
+fun VsTopAppProgressBar(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    @DrawableRes iconLeft: Int? = null,
+    onIconLeftClick: () -> Unit,
+    progress: Int = 3,
+    total: Int = 12,
+    actions: @Composable RowScope.() -> Unit
+) {
+    Column {
+        CenterAlignedTopAppBar(
+            title = {
+                if (title != null) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = title,
+                        style = Theme.brockmann.body.l.medium,
+                        color = Theme.colors.text.primary,
+                        textAlign = TextAlign.Start,
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Theme.colors.backgrounds.primary,
+            ),
+            navigationIcon = {
+                if (iconLeft != null) {
+                    VsTopAppBarAction(
+                        icon = iconLeft,
+                        onClick = onIconLeftClick,
+                    )
+                }
+            },
+            actions = actions,
+            modifier = modifier.padding(end = 16.dp),
+        )
+        DashedProgressIndicator(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            progress = progress,
+            totalNumberOfBars = total,
         )
     }
 }

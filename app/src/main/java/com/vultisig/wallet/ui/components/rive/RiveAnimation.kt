@@ -16,7 +16,7 @@ fun RiveAnimation(
     alignment: Alignment = Alignment.CENTER,
     fit: Fit = Fit.CONTAIN,
     autoPlay: Boolean = true,
-    onInit: (RiveAnimationView) -> Unit = {}
+    onInit: (RiveAnimationView) -> Unit = {},
 ) {
     AndroidView(
         modifier = modifier,
