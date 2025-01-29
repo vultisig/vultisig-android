@@ -45,7 +45,7 @@ internal fun ShowQrHelperBottomSheet(
     )
     val coroutineScope = rememberCoroutineScope()
     ModalBottomSheet(
-        containerColor = Theme.colors.oxfordBlue600Main,
+        containerColor = Theme.colors.backgrounds.secondary,
         shape = RoundedCornerShape(24.dp),
         sheetState = sheetState,
         dragHandle = null,
