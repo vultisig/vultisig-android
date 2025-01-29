@@ -1620,6 +1620,17 @@ object Coins {
         ),
         Coin(
             chain = Chain.Osmosis,
+            ticker = "LVN",
+            logo = "lvn",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "levana-protocol",
+            contractAddress = "factory/osmo1mlng7pz4pnyxtpq0akfwall37czyk9lukaucsrn30ameplhhshtqdvfm5c/ulvn",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Osmosis,
             ticker = "USDC",
             logo = "usdc",
             address = "",

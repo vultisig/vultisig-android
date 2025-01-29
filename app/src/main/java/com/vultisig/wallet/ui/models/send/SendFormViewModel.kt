@@ -186,6 +186,8 @@ internal class SendFormViewModel @Inject constructor(
             appCurrencyRepository.defaultCurrency,
         )
 
+    private val planFee = MutableStateFlow<Long?>(null)
+
     private val gasFee = MutableStateFlow<TokenValue?>(null)
 
     private var gasSettings = MutableStateFlow<GasSettings?>(null)
@@ -203,6 +205,8 @@ internal class SendFormViewModel @Inject constructor(
         collectAmountChanges()
         calculateGasFees()
         calculateGasTokenBalance()
+        collectEstimatedFee()
+        collectPlanFee()
         calculateSpecific()
         collectAdvanceGasUi()
         collectAmountChecks()
@@ -536,16 +540,11 @@ internal class SendFormViewModel @Inject constructor(
                             BigInteger.valueOf(1)
                         },
                         gasFee = if (chain.standard == TokenStandard.UTXO) {
-                            val plan = getBitcoinTransactionPlan(
-                                vaultId,
-                                selectedToken,
-                                dstAddress,
-                                tokenAmountInt,
-                                specific,
-                                memo,
+                            val plan = planFee.value ?: throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.send_error_invalid_plan_fee)
                             )
-                            if (plan.fee > 0) gasFee.copy(
-                                value = BigInteger.valueOf(plan.fee)
+                            if (plan > 0) gasFee.copy(
+                                value = BigInteger.valueOf(plan)
                             )
                             else gasFee
                         } else gasFee,
@@ -799,13 +798,96 @@ internal class SendFormViewModel @Inject constructor(
         }
     }
 
-    private fun calculateSpecific() {
+    private fun collectPlanFee() {
+        viewModelScope.launch {
+            combine(
+                selectedToken.filterNotNull(),
+                addressFieldState.textAsFlow(),
+                tokenAmountFieldState.textAsFlow(),
+                specific.filterNotNull(),
+                memoFieldState.textAsFlow(),
+            ) { token, dstAddress, tokenAmount, specific, memo ->
+                try {
+                    val chain = token.chain
+                    if (chain.standard != TokenStandard.UTXO)
+                        planFee.value = 1
+
+                    val vaultId = vaultId
+                        ?: throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_token)
+                        )
+
+                    val resolvedDstAddress = addressParserRepository.resolveName(
+                        dstAddress.toString(),
+                        chain,
+                    )
+                    val tokenAmountInt =
+                        tokenAmount.toString().toBigDecimal()
+                            .movePointRight(token.decimal)
+                            .toBigInteger()
+
+                    val plan = getBitcoinTransactionPlan(
+                        vaultId,
+                        token,
+                        resolvedDstAddress,
+                        tokenAmountInt,
+                        specific,
+                        memo.toString(),
+                    )
+                    planFee.value = plan.fee
+                } catch (e: Exception) {
+                     Timber.e(e)
+                }
+            }.collect()
+        }
+    }
+
+    private fun collectEstimatedFee() {
         viewModelScope.launch {
             combine(
                 selectedToken.filterNotNull(),
                 gasFee.filterNotNull(),
                 gasSettings,
-            ) { token, gasFee, gasSettings ->
+                planFee.filterNotNull(),
+            ) { token, gasFee, gasSettings, planFee ->
+
+                val chain = token.chain
+                val estimatedFee = gasFeeToEstimatedFee(
+                    GasFeeParams(
+                        gasLimit = if (chain.standard == TokenStandard.EVM) {
+                            if (gasSettings is GasSettings.Eth)
+                                gasSettings.gasLimit
+                            else
+                                (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
+                        } else {
+                            BigInteger.valueOf(1)
+                        },
+                        gasFee = if (chain.standard == TokenStandard.UTXO) {
+                            gasFee.copy(
+                                value = BigInteger.valueOf(planFee)
+                            )
+                        } else gasFee,
+                        selectedToken = token,
+                        perUnit = true,
+                    )
+                )
+
+                uiState.update {
+                    it.copy(
+                        estimatedFee = UiText.DynamicString(estimatedFee.formattedFiatValue),
+                        totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue)
+                    )
+                }
+            }.collect()
+        }
+    }
+
+    private fun calculateSpecific() {
+        viewModelScope.launch {
+            combine(
+                selectedToken.filterNotNull(),
+                gasFee.filterNotNull(),
+            ) { token, gasFee ->
                 val chain = token.chain
                 val srcAddress = token.address
                 advanceGasUiRepository.updateTokenStandard(
@@ -831,28 +913,6 @@ internal class SendFormViewModel @Inject constructor(
                         )
                     }
 
-                    val estimatedFee = gasFeeToEstimatedFee(
-                        GasFeeParams(
-                            gasLimit = if (chain.standard == TokenStandard.EVM) {
-                                if (gasSettings is GasSettings.Eth)
-                                    gasSettings.gasLimit
-                                else
-                                    (specific.value?.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                            } else {
-                                BigInteger.valueOf(1)
-                            },
-                            gasFee = gasFee,
-                            selectedToken = token,
-                            perUnit = true,
-                        )
-                    )
-
-                    uiState.update {
-                        it.copy(
-                            estimatedFee = UiText.DynamicString(estimatedFee.formattedFiatValue),
-                            totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue)
-                        )
-                    }
                 } catch (e: Exception) {
                     // todo handle errors
                     Timber.e(e)
