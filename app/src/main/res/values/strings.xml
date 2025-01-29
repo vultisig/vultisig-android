@@ -539,5 +539,5 @@
     <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
     <string name="select_vault_type_next" translatable="false">Next</string>
     <string name="select_vault_type_choose_setup" translatable="false">Choose Set-up</string>
-    <string name="send_error_invalid_plan_fee" translatable="false">Invalid Plan Fee</string>
+
 </resources>

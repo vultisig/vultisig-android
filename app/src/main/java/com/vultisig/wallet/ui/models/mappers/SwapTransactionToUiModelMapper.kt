@@ -31,10 +31,8 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
             SwapProvider.THORCHAIN, SwapProvider.MAYA ->
                 from.dstToken
 
-            SwapProvider.LIFI, SwapProvider.ONEINCH ->
+            SwapProvider.LIFI, SwapProvider.ONEINCH, SwapProvider.JUPITER ->
                 tokenRepository.getNativeToken(from.srcToken.chain.id)
-            SwapProvider.JUPITER ->
-                from.srcToken
         }
 
         val fiatFees = convertTokenValueToFiat(

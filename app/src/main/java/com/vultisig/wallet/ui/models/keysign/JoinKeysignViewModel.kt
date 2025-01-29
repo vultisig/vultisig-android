@@ -408,15 +408,13 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     (oneInchSwapTxJson.gas.takeIf { it != 0L }
                                         ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT).toBigInteger()
                         }
-                        val hasJupiterSwapProvider =
-                            srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
                         val estimatedTokenFees = TokenValue(
                             value = value,
-                            token = if (hasJupiterSwapProvider) srcToken else nativeToken
+                            token = nativeToken
                         )
 
                         val estimatedFee = convertTokenValueToFiat(
-                            if (hasJupiterSwapProvider) srcToken else nativeToken,
+                            nativeToken,
                             estimatedTokenFees,
                             currency
                         )

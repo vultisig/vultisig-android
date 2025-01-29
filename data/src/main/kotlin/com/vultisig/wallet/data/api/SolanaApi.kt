@@ -108,7 +108,7 @@ internal class SolanaApiImp @Inject constructor(
             method = "getLatestBlockhash",
             params = buildJsonArray {
                 addJsonObject {
-                    put("commitment", "finalized")
+                    put("commitment", "confirmed")
                 }
             },
             id = 1,
