@@ -13,16 +13,15 @@ import com.vultisig.wallet.ui.models.OnboardingPages.Screen6
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-internal data class OnboardingState(
+internal data class OnboardingUiModel(
     val currentPage: OnboardingPages = Screen1,
-    val pageNumber: Int = 0,
+    val pageIndex: Int = 0,
     val pageTotal: Int = pages.size
 )
 
@@ -33,16 +32,16 @@ internal class OnboardingViewModel @Inject constructor(
     private val navigator: Navigator<Destination>
 ) : ViewModel() {
 
-    val uiState = MutableStateFlow(OnboardingState())
+    val uiState = MutableStateFlow(OnboardingUiModel())
 
     fun next() {
         viewModelScope.launch {
-            val nextAnimation = pages.getOrNull(uiState.value.pageNumber + 1)
+            val nextAnimation = pages.getOrNull(uiState.value.pageIndex + 1)
             if (nextAnimation != null) {
                 uiState.update {
                     it.copy(
                         currentPage = nextAnimation,
-                        pageNumber = it.pageNumber + 1
+                        pageIndex = it.pageIndex + 1
                     )
                 }
             } else {
@@ -56,7 +55,7 @@ internal class OnboardingViewModel @Inject constructor(
     }
 
     private fun saveOnBoardingState() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             repository.saveOnBoardingState(completed = true)
 
             val dest = if (vaultsRepository.hasVaults())

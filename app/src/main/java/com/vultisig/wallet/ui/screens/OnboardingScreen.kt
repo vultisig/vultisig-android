@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,29 +38,28 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
 import com.vultisig.wallet.ui.models.OnboardingPages
-import com.vultisig.wallet.ui.models.OnboardingState
+import com.vultisig.wallet.ui.models.OnboardingUiModel
 import com.vultisig.wallet.ui.models.OnboardingViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 
-@ExperimentalAnimationApi
 @Composable
 internal fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsState()
     OnboardingScreen(
-        uiState = uiState,
+        state = state,
         onBackClick = {},
-        onSkipClick = { viewModel.skip() },
-        onNextClick = { viewModel.next() },
+        onSkipClick = viewModel::skip,
+        onNextClick = viewModel::next,
     )
 }
 
 @Composable
 private fun OnboardingScreen(
-    uiState: OnboardingState,
+    state: OnboardingUiModel,
     onBackClick: () -> Unit,
     onSkipClick: () -> Unit,
     onNextClick: () -> Unit,
@@ -73,21 +71,21 @@ private fun OnboardingScreen(
                 title = stringResource(R.string.onboarding_intro_title),
                 iconLeft = R.drawable.ic_caret_left,
                 onIconLeftClick = onBackClick,
-                progress = uiState.pageNumber + 1,
-                total = uiState.pageTotal,
+                progress = state.pageIndex + 1,
+                total = state.pageTotal,
                 actions = {
                     Text(
                         text = stringResource(R.string.welcome_screen_skip),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
-                        modifier = Modifier.clickable { onSkipClick() }
+                        modifier = Modifier.clickable(onClick = onSkipClick)
                     )
                 },
             )
         },
     ) { paddingValues ->
         OnboardingContent(
-            uiState = uiState,
+            state = state,
             paddingValues = paddingValues,
             nextClick = onNextClick,
         )
@@ -96,7 +94,7 @@ private fun OnboardingScreen(
 
 @Composable
 private fun OnboardingContent(
-    uiState: OnboardingState,
+    state: OnboardingUiModel,
     paddingValues: PaddingValues,
     nextClick: () -> Unit,
 ) {
@@ -105,12 +103,12 @@ private fun OnboardingContent(
     var textVisibility by remember { mutableStateOf(false) }
     var currentPageText: OnboardingPages  by remember { mutableStateOf(OnboardingPages.Screen1) }
 
-    LaunchedEffect(uiState) {
+    LaunchedEffect(state) {
         textVisibility = false
         buttonVisibility = false
         delay(1000)
         buttonPlaceHolderVisibility = true
-        currentPageText = uiState.currentPage
+        currentPageText = state.currentPage
         textVisibility = true
         delay(1000)
         buttonPlaceHolderVisibility = false
@@ -127,7 +125,7 @@ private fun OnboardingContent(
                 animation = R.raw.onboarding_v2,
                 modifier = Modifier.fillMaxWidth(),
                 onInit = { riveAnimationView ->
-                    riveAnimationView.play(animationName = uiState.currentPage.animationName)
+                    riveAnimationView.play(animationName = state.currentPage.animationName)
                 }
             )
         } else {
@@ -139,7 +137,7 @@ private fun OnboardingContent(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
                     .offset(y = (-48).dp)
-                    .weight(0.3f)
+                    .weight(1f)
             ) {
                 Column(modifier = Modifier.align(Alignment.Center)) {
                     AnimatedVisibility(

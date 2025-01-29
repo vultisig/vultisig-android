@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.util
 
+import androidx.annotation.StringRes
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,7 +13,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun SequenceOfGradientText(
@@ -33,7 +33,7 @@ internal fun SequenceOfGradientText(
                 else -> {
                     withStyle(
                         style = SpanStyle(
-                            brush = Brush.horizontalGradient(Theme.colors.gradients.primary)
+                            brush = Brush.horizontalGradient(textItem.gradientColors),
                         )
                     ) {
                         append(stringResource(textItem.resId))
@@ -54,6 +54,6 @@ internal fun SequenceOfGradientText(
 }
 
 internal class PartiallyGradientTextItem(
-    val resId: Int,
+    @StringRes val resId: Int,
     val gradientColors: List<Color>,
 )
