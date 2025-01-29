@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.theme
 
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 internal data class Colors(
@@ -63,6 +64,7 @@ internal data class Colors(
     val text: TextColors = TextColors(),
     val borders: BordersColors = BordersColors(),
     val alerts: AlertsColors = AlertsColors(),
+    val gradients: Gradients = Gradients(),
     val neutrals: NeutralsColors = NeutralsColors.Default
 
 
@@ -115,6 +117,15 @@ internal data class AlertsColors(
     val error: Color = Color(0xFFFF5C5C),
     val warning: Color = Color(0xFFFFC25C),
     val info: Color = Color(0xFF5CA7FF),
+)
+
+internal data class Gradients(
+    val primary: Brush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF33E6BF),
+            Color(0xFF0439C7),
+        )
+    ),
 )
 
 internal data class NeutralsColors(

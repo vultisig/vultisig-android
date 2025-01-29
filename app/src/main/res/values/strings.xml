@@ -512,6 +512,26 @@
     <string name="select_vault_type_secure" translatable="false">Secure</string>
     <string name="select_vault_type_fast" translatable="false">Fast</string>
 
+    <string name="onboarding_intro_title" translatable="false">Intro</string>
+    <string name="onboarding_intro_skip" translatable="false">Skip</string>
+    <string name="onboarding_desc_page_1_part_1" translatable="false">Say hello to</string>
+    <string name="onboarding_desc_page_1_part_2" translatable="false">vault shares,</string>
+    <string name="onboarding_desc_page_1_part_3" translatable="false">your new recovery method</string>
+    <string name="onboarding_desc_page_2_part_1" translatable="false">They’re</string>
+    <string name="onboarding_desc_page_2_part_2" translatable="false">split into parts</string>
+    <string name="onboarding_desc_page_2_part_3" translatable="false">to increase security and</string>
+    <string name="onboarding_desc_page_2_part_4" translatable="false">remove single point-of-failure</string>
+    <string name="onboarding_desc_page_3_part_1" translatable="false">Each device</string>
+    <string name="onboarding_desc_page_3_part_2" translatable="false">in your vault holds</string>
+    <string name="onboarding_desc_page_3_part_3" translatable="false">one vault share</string>
+    <string name="onboarding_desc_page_4_part_1" translatable="false">Recover your vault even </string>
+    <string name="onboarding_desc_page_4_part_2" translatable="false">if a device is lost or damaged</string>
+    <string name="onboarding_desc_page_5_part_1" translatable="false">Always back up each vault share</string>
+    <string name="onboarding_desc_page_5_part_2" translatable="false">separately in a</string>
+    <string name="onboarding_desc_page_5_part_3" translatable="false">different location</string>
+    <string name="onboarding_desc_page_6_part_1" translatable="false">These shares collaborate to</string>
+    <string name="onboarding_desc_page_6_part_2" translatable="false">unlock your vault</string>
+
     <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
     <string name="select_vault_type_secure_desc_1" translatable="false">Full control, only your devices</string>
     <string name="select_vault_type_secure_desc_2" translatable="false">Multiple devices to sign transactions</string>
