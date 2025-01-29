@@ -62,8 +62,9 @@ internal class TronApiImpl @Inject constructor(
             setBody(tx)
         }
         val tronBroadcastTxResponseJson = httpResponse.body<TronBroadcastTxResponseJson>()
-        return tronBroadcastTxResponseJson.txId.takeIf { tronBroadcastTxResponseJson.code == null }
-            ?: throw Exception("Error broadcasting transaction: ${tronBroadcastTxResponseJson.code}")
+        return tronBroadcastTxResponseJson.txId.takeIf {
+            tronBroadcastTxResponseJson.code in listOf(null, DUP_TRANSACTION_ERROR_CODE)
+        } ?: throw Exception("Error broadcasting transaction: ${tronBroadcastTxResponseJson.code}")
     }
 
     override suspend fun getSpecific() =
@@ -169,5 +170,6 @@ internal class TronApiImpl @Inject constructor(
     companion object {
         private const val FUNCTION_SELECTOR = "transfer(address,uint256)"
         private const val ENERGY_TO_SUN_FACTOR = 280
+        private const val DUP_TRANSACTION_ERROR_CODE = "DUP_TRANSACTION_ERROR"
     }
 }
