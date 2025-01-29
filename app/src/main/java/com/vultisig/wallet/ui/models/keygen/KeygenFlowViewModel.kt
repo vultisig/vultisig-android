@@ -134,7 +134,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val secretSettingsRepository: SecretSettingsRepository,
-    private val qrHelperModalRepository: QrHelperModalRepository,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
@@ -210,15 +209,6 @@ internal class KeygenFlowViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             setData(vaultId)
-        }
-
-        viewModelScope.launch {
-            val isQrHelpModalVisited = qrHelperModalRepository.isVisited()
-            uiState.update {
-                it.copy(
-                    isQrHelpModalVisited = isQrHelpModalVisited
-                )
-            }
         }
 
         viewModelScope.launch {
@@ -546,12 +536,6 @@ internal class KeygenFlowViewModel @Inject constructor(
         }
         shareQrBitmap.value?.recycle()
         shareQrBitmap.value = qrBitmap
-    }
-
-    fun saveHelperModalVisited() {
-        viewModelScope.launch {
-            qrHelperModalRepository.visited()
-        }
     }
 
     override fun onCleared() {

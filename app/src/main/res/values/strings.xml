@@ -517,10 +517,12 @@
     <string name="select_vault_type_secure_desc_2" translatable="false">Multiple devices to sign transactions</string>
     <string name="select_vault_type_secure_desc_3" translatable="false">Use as cold vault</string>
 
-    <string name="select_vault_type_fast_title" translatable="false">Fast set-up, fast signing</string>
+    <string name="select_vault_type_fast_title" translatable="false">Fast set-up</string>
     <string name="select_vault_type_fast_desc_1" translatable="false">Only 1 device needed</string>
-    <string name="select_vault_type_fast_desc_2" translatable="false">Use for small funds</string>
-    <string name="select_vault_type_fast_desc_3" translatable="false">[Placeholder disadvantage]</string>
+    <string name="select_vault_type_fast_desc_2" translatable="false">Use as cold vault</string>
+    <string name="select_vault_type_fast_desc_3" translatable="false">Vault operations rely on server</string>
+
+
     <string name="peer_discovery_topbar_title" translatable="false">Scan QR</string>
     <string name="peer_discovery_action_next_title" translatable="false">Next</string>
     <string name="peer_discovery_this_device" translatable="false">This Device</string>
@@ -528,11 +530,14 @@
     <string name="peer_discovery_optional_device_caption" translatable="false">Optional</string>
     <string name="peer_discovery_waiting_for_devices_action" translatable="false">Waiting for devices...</string>
     <string name="peer_discovery_devices_n_of_n" translatable="false">Devices (%1$s/%2$s)</string>
+    <string name="scan_qr_code_modal_annotation" translatable="false">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
+    <string name="scan_qr_code_modal_next" translatable="false">Next</string>
+    <string name="scan_qr_code_modal_scan_the" translatable="false">Scan the</string>
+    <string name="scan_qr_code_modal_qr_code" translatable="false">QR code</string>
     <string name="create_new_vault_screen_or" translatable="false">OR</string>
     <string name="home_screen_scan_qr_code" translatable="false">Scan QR</string>
     <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
-    <string name="scan_qr_code_annotation" translatable="false">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
-    <string name="scan_qr_screen_next" translatable="false">Next</string>
-    <string name="scan_qr_code_screen_scan_the" translatable="false">Scan the</string>
-    <string name="scan_qr_code_screen_qr_code" translatable="false">QR code</string>
+    <string name="select_vault_type_next" translatable="false">Next</string>
+    <string name="select_vault_type_choose_setup" translatable="false">Choose Set-up</string>
+
 </resources>

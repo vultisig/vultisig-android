@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
+import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.CreateQrCodeSharingBitmapUseCase
@@ -61,7 +62,8 @@ data class PeerDiscoveryUiModel(
     val selectedDevices: List<String> = emptyList(),
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
     // we're trying to promote minimum of three devices
-    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1
+    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1,
+    val isQrHelpModalVisited: Boolean = true,
 )
 
 // TODO switch network option
@@ -85,7 +87,9 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
-) : ViewModel() {
+    private val qrHelperModalRepository: QrHelperModalRepository,
+
+    ) : ViewModel() {
 
     val state = MutableStateFlow(PeerDiscoveryUiModel())
 
@@ -150,6 +154,8 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
+            checkQrHelperModalIsVisited()
+
             setupLibType()
 
             val isRelayEnabled = network.value == NetworkOption.Internet
@@ -203,6 +209,15 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         }
     }
 
+    private suspend fun checkQrHelperModalIsVisited() {
+        val isQrHelpModalVisited = qrHelperModalRepository.isVisited()
+        state.update {
+            it.copy(
+                isQrHelpModalVisited = isQrHelpModalVisited
+            )
+        }
+    }
+
 
     private suspend fun loadQr(data: String) {
         val qrBitmap = withContext(Dispatchers.IO) {
@@ -239,5 +254,11 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     )
                 )
             ).encodeBase64()
+
+    fun saveHelperModalVisited() {
+        viewModelScope.launch {
+            qrHelperModalRepository.visited()
+        }
+    }
 
 }
