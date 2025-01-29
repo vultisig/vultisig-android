@@ -519,8 +519,10 @@
 
     <string name="select_vault_type_fast_title" translatable="false">Fast set-up</string>
     <string name="select_vault_type_fast_desc_1" translatable="false">Only 1 device needed</string>
-    <string name="select_vault_type_fast_desc_2" translatable="false">Use for small funds</string>
-    <string name="select_vault_type_fast_desc_3" translatable="false">[Placeholder disadvantage]</string>
+    <string name="select_vault_type_fast_desc_2" translatable="false">Use as cold vault</string>
+    <string name="select_vault_type_fast_desc_3" translatable="false">Vault operations rely on server</string>
+
+
     <string name="peer_discovery_topbar_title" translatable="false">Scan QR</string>
     <string name="peer_discovery_action_next_title" translatable="false">Next</string>
     <string name="peer_discovery_this_device" translatable="false">This Device</string>
