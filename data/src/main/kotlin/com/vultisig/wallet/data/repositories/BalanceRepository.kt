@@ -262,14 +262,17 @@ internal class BalanceRepositoryImpl @Inject constructor(
                     cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
                 } else {
                     val listCosmosBalance = cosmosApi.getBalance(address)
-                    listCosmosBalance
-                        .find {
-                            it.denom.equals(coin.chain.feeUnit, ignoreCase = true) ||
-                                    it.denom.equals(
-                                        coin.contractAddress,
-                                        ignoreCase = true,
-                                    )
-                        }
+                    listCosmosBalance.find {
+                        (coin.contractAddress.isEmpty() &&
+                                it.denom.equals(
+                                    coin.chain.feeUnit,
+                                    ignoreCase = true
+                                )) ||
+                                it.denom.equals(
+                                    coin.contractAddress,
+                                    ignoreCase = true,
+                                )
+                    }
                 }
 
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
