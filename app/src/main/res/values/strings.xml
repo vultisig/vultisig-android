@@ -550,6 +550,10 @@
     <string name="peer_discovery_optional_device_caption" translatable="false">Optional</string>
     <string name="peer_discovery_waiting_for_devices_action" translatable="false">Waiting for devices...</string>
     <string name="peer_discovery_devices_n_of_n" translatable="false">Devices (%1$s/%2$s)</string>
+    <string name="scan_qr_code_modal_annotation" translatable="false">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
+    <string name="scan_qr_code_modal_next" translatable="false">Next</string>
+    <string name="scan_qr_code_modal_scan_the" translatable="false">Scan the</string>
+    <string name="scan_qr_code_modal_qr_code" translatable="false">QR code</string>
     <string name="create_new_vault_screen_or" translatable="false">OR</string>
     <string name="home_screen_scan_qr_code" translatable="false">Scan QR</string>
     <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
