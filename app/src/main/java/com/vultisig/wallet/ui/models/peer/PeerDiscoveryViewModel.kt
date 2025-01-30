@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
@@ -111,6 +112,8 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
     private var discoverParticipantsJob: Job? = null
 
+    private var serverUrl: String = VULTISIG_RELAY_URL
+
     init {
         loadData()
     }
@@ -149,7 +152,28 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     }
 
     fun next() {
-        // TODO proceed to keygen
+        viewModelScope.launch {
+            navigator.route(
+                Route.Keygen.Generating(
+                    // TODO change to reshare when reshare is added
+                    action = TssAction.KEYGEN,
+                    sessionId = sessionId,
+                    serverUrl = serverUrl,
+                    localPartyId = localPartyId,
+                    name = vaultName,
+                    hexChainCode = hexChainCode,
+                    keygenCommittee = state.value.selectedDevices,
+                    encryptionKeyHex = encryptionKeyHex,
+                    isInitiatingDevice = true,
+                    libType = libType,
+
+                    // TODO vault.signers.filter { uiState.value.selection.contains(it) }
+                    //  maybe we can do it in keygen view model
+                    oldCommittee = emptyList(),
+                    oldResharePrefix = "",//oldResharePrefix,
+                )
+            )
+        }
     }
 
     private fun loadData() {
