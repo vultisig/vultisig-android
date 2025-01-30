@@ -82,7 +82,7 @@ internal data class ButtonsColors(
 
 internal data class BackgroundsColors(
     val primary: Color = Color(0xFF02122B),
-    val secondary: Color = Color(0xFF051B3A),
+    val secondary: Color = Color(0xFF061B3A),
     val tertiary: Color = Color(0xFF11284A),
     val success: Color = Color(0xFF042436),
 )
