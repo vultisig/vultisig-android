@@ -64,9 +64,9 @@ internal data class Colors(
     val text: TextColors = TextColors(),
     val borders: BordersColors = BordersColors(),
     val alerts: AlertsColors = AlertsColors(),
-    val gradients: Gradients = Gradients(),
-    val neutrals: NeutralsColors = NeutralsColors.Default
+    val neutrals: NeutralsColors = NeutralsColors.Default,
 
+    val gradients: Gradients = Gradients(),
 
 ) {
     companion object {
@@ -119,15 +119,6 @@ internal data class AlertsColors(
     val info: Color = Color(0xFF5CA7FF),
 )
 
-internal data class Gradients(
-    val primary: Brush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFF33E6BF),
-            Color(0xFF0439C7),
-        )
-    ),
-)
-
 internal data class NeutralsColors(
     val n50: Color = Color(0xFFFFFFFF),
     val n100: Color = Color(0xFFEFF2F6),
@@ -144,3 +135,18 @@ internal data class NeutralsColors(
         val Default = NeutralsColors()
     }
 }
+
+internal data class Gradients(
+    val primary: Brush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF33E6BF),
+            Color(0xFF0439C7),
+        )
+    ),
+    val primaryReversed: Brush = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF0439C7),
+            Color(0xFF33E6BF),
+        )
+    )
+)

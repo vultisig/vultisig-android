@@ -21,7 +21,6 @@ import com.silencelaboratories.godkls.lib_error.LIB_OK
 import com.silencelaboratories.godkls.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
-import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
@@ -42,7 +41,7 @@ data class DKLSKeyshare(
 )
 
 class DKLSKeygen(
-    val vault: Vault,
+    val localPartyId: String,
     val keygenCommittee: List<String>,
     val mediatorURL: String,
     val sessionID: String,
@@ -52,7 +51,7 @@ class DKLSKeygen(
     private val encryption: Encryption,
     private val sessionApi: SessionApi,
 ) {
-    var messenger: TssMessenger =
+    private val messenger: TssMessenger =
         TssMessenger(
             serverAddress = mediatorURL,
             sessionID = sessionID,
@@ -65,7 +64,6 @@ class DKLSKeygen(
 
     var keygenDoneIndicator = false
     val keyGenLock = Mutex()
-    val localPartyID: String = vault.localPartyID
     val cache = mutableMapOf<String, Any>()
     var setupMessage: ByteArray = byteArrayOf()
     var keyshare: DKLSKeyshare? = null
@@ -162,9 +160,9 @@ class DKLSKeygen(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                Timber.d("sending message from $localPartyID to: $receiverString")
+                Timber.d("sending message from ${this.localPartyId} to: $receiverString")
 
-                messenger.send(localPartyID, receiverString, encodedOutboundMessage)
+                messenger.send(this.localPartyId, receiverString, encodedOutboundMessage)
             }
         }
     }
@@ -177,7 +175,7 @@ class DKLSKeygen(
         while (true) {
             try {
                 val msgs = sessionApi
-                    .getTssMessages(mediatorURL, sessionID, localPartyID)
+                    .getTssMessages(mediatorURL, sessionID, this.localPartyId)
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs)) {
@@ -206,7 +204,7 @@ class DKLSKeygen(
         }
         val sortedMsgs = msgs.sortedBy { it.sequenceNo }
         for (msg in sortedMsgs) {
-            val key = "$sessionID-$localPartyID-${msg.hash}"
+            val key = "$sessionID-${this.localPartyId}-${msg.hash}"
             if (cache[key] != null) {
                 Timber.d("message with key: $key has been applied before")
                 continue
@@ -238,7 +236,7 @@ class DKLSKeygen(
 
     @Throws(Exception::class)
     suspend fun deleteMessageFromServer(hash: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyID, hash, null)
+        sessionApi.deleteTssMessage(mediatorURL, sessionID, this.localPartyId, hash, null)
     }
 
     @Throws(Exception::class)
@@ -278,7 +276,7 @@ class DKLSKeygen(
             val handler = Handle()
 
             val decodedSetupMsg = keygenSetupMsg.toGoSlice()
-            val localPartyIDArr = localPartyID.toByteArray()
+            val localPartyIDArr = this.localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
 
             val result = dkls_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)

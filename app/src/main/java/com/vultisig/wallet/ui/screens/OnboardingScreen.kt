@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -114,20 +113,18 @@ private fun OnboardingContent(
             .padding(paddingValues)
             .fillMaxSize(),
     ) {
-        if (!LocalInspectionMode.current) {
-            RiveAnimation(
-                animation = R.raw.onboarding_v2,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter),
-                onInit = { riveAnimationView ->
-                    riveAnimationView.fireState(
-                        stateMachineName = ONBOARDING_STATE_MACHINE_NAME,
-                        inputName = state.currentPage.triggerName,
-                    )
-                }
-            )
-        }
+        RiveAnimation(
+            animation = R.raw.onboarding,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter),
+            onInit = { riveAnimationView ->
+                riveAnimationView.fireState(
+                    stateMachineName = ONBOARDING_STATE_MACHINE_NAME,
+                    inputName = state.currentPage.triggerName,
+                )
+            }
+        )
 
         AnimatedVisibility(
             modifier = Modifier

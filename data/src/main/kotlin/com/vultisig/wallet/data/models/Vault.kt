@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
+import kotlinx.serialization.Serializable
 
 typealias VaultId = String
 
@@ -18,6 +19,7 @@ data class Vault(
     var libType: SigningLibType = SigningLibType.GG20,
 )
 
+@Serializable
 enum class SigningLibType { DKLS, GG20 }
 
 fun Vault.getVaultPart(): Int {
