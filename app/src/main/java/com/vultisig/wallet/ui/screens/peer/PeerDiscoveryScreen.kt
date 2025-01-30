@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -298,16 +297,11 @@ private fun PeerDeviceItem(
                     .padding(4.dp)
             )
         } else {
-            // rive doesn't work in preview mode.
-            if (!LocalInspectionMode.current) {
-                RiveAnimation(
-                    animation = R.raw.waiting_on_device,
-                    modifier = Modifier
-                        .size(24.dp)
-                )
-            } else {
-                UiSpacer(24.dp)
-            }
+            RiveAnimation(
+                animation = R.raw.waiting_on_device,
+                modifier = Modifier
+                    .size(24.dp)
+            )
         }
 
         UiSpacer(12.dp)

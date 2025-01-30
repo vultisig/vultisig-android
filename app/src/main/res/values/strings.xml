@@ -563,4 +563,16 @@
     <string name="select_vault_type_next" translatable="false">Next</string>
     <string name="select_vault_type_choose_setup" translatable="false">Choose Set-up</string>
 
+
+    <string name="keygen_benefit_1_template" translatable="false">Removing the single-point of failure</string>
+    <string name="keygen_benefit_1_emphasized" translatable="false">Multi-factor security,</string>
+    <string name="keygen_benefit_2_template" translatable="false">giving complete control over your assets</string>
+    <string name="keygen_benefit_2_emphasized" translatable="false">Self-custodial,</string>
+    <string name="keygen_benefit_3_template" translatable="false">Swap your favorite tokens all in one vault</string>
+    <string name="keygen_benefit_3_emphasized" translatable="false">Cross-chain,</string>
+    <string name="keygen_while_you_wait_title">While you wait, Vultisig is...</string>
+    <string name="keygen_top_bar_title">Creating Vault</string>
+    <string name="keygen_step_preparing_vault">Preparing Vault</string>
+    <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
+    <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
 </resources>

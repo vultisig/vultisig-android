@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.navigation
 
 import android.net.Uri
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import kotlinx.serialization.Serializable
@@ -364,17 +366,6 @@ internal sealed class Destination(
                     "&${ARG_PASSWORD}={$ARG_PASSWORD}" +
                     "&${ARG_PASSWORD_HINT}={$ARG_PASSWORD_HINT}"
 
-            fun generateNewVault(
-                name: String,
-                setupType: VaultSetupType
-            ) = KeygenFlow(
-                vaultId = null,
-                vaultName = name,
-                vaultSetupType = setupType,
-                email = null,
-                password = null,
-            )
-
             private fun buildRoute(
                 vaultId: String?,
                 name: String?,
@@ -460,9 +451,6 @@ internal sealed class Destination(
         }
     }
 
-    data class AddChainAccount(val vaultId: String) :
-        Destination(route = "vault_detail/$vaultId/add_account")
-
     data class ReshareStartScreen(val vaultId: String) :
         Destination(route = "reshare_start_screen/$vaultId") {
         companion object {
@@ -486,7 +474,7 @@ internal sealed class Destination(
     }
 }
 
-sealed class Route {
+internal sealed class Route {
 
     @Serializable
     data object Secret : Route()
@@ -497,6 +485,22 @@ sealed class Route {
         @Serializable
         data class PeerDiscovery(
             val vaultName: String,
+        )
+
+        @Serializable
+        data class Generating(
+            val action: TssAction,
+            val sessionId: String,
+            val serverUrl: String,
+            val localPartyId: String,
+            val name: String,
+            val hexChainCode: String,
+            val keygenCommittee: List<String>,
+            val oldCommittee: List<String>,
+            val encryptionKeyHex: String,
+            val oldResharePrefix: String,
+            val isInitiatingDevice: Boolean,
+            val libType: SigningLibType,
         )
 
     }

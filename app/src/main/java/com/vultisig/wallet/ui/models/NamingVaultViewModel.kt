@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -100,11 +101,11 @@ internal class NamingVaultViewModel @Inject constructor(
                         )
                     )
                 }
+
                 else -> {
-                    navigator.navigate(
-                        Destination.KeygenFlow.generateNewVault(
-                            name = name,
-                            setupType = vaultSetupType,
+                    navigator.route(
+                        Route.Keygen.PeerDiscovery(
+                            vaultName = name,
                         )
                     )
                 }
