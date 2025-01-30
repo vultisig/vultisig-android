@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.components.ShowQrHelperBottomSheet
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -65,6 +66,7 @@ internal fun PeerDiscoveryScreen(
         onHelpClick = model::openHelp,
         onShareQrClick = { model.shareQr(context) },
         onNextClick = model::next,
+        onDismissQrHelpModal = model::saveHelperModalVisited
     )
 }
 
@@ -75,6 +77,7 @@ private fun PeerDiscoveryScreen(
     onHelpClick: () -> Unit,
     onShareQrClick: () -> Unit,
     onNextClick: () -> Unit,
+    onDismissQrHelpModal: () -> Unit,
 ) {
     val devicesSize = state.devices.size + 1 // we always have our device
     val hasEnoughDevices = devicesSize >= state.minimumDevices
@@ -102,6 +105,10 @@ private fun PeerDiscoveryScreen(
             )
         },
         content = { contentPadding ->
+
+            if (!state.isQrHelpModalVisited)
+                ShowQrHelperBottomSheet(onDismissQrHelpModal)
+
             Column(
                 modifier = Modifier
                     .padding(contentPadding)
@@ -338,5 +345,6 @@ private fun PeerDiscoveryScreenPreview() {
         onHelpClick = {},
         onShareQrClick = {},
         onNextClick = {},
+        onDismissQrHelpModal = {}
     )
 }
