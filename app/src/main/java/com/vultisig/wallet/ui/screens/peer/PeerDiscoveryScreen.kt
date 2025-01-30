@@ -65,7 +65,7 @@ internal fun PeerDiscoveryScreen(
         onHelpClick = model::openHelp,
         onShareQrClick = { model.shareQr(context) },
         onNextClick = model::next,
-        onDismissQrHelpModal = model::saveHelperModalVisited
+        onDismissQrHelpModal = model::dismissQrHelpModal
     )
 }
 
@@ -106,7 +106,9 @@ private fun PeerDiscoveryScreen(
         content = { contentPadding ->
 
             if (!state.isQrHelpModalVisited)
-                ShowQrHelperBottomSheet(onDismissQrHelpModal)
+                ShowQrHelperBottomSheet(
+                    onDismiss = onDismissQrHelpModal
+                )
 
             Column(
                 modifier = Modifier
