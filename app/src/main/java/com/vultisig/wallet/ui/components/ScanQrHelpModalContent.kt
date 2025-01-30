@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,13 @@ internal fun ShowQrHelperBottomSheet(
             }
         }
     ) {
+        BackHandler(
+            enabled = sheetState.isVisible
+        ) {
+            coroutineScope.launch {
+                sheetState.hide()
+            }
+        }
         ScanQrHelpModalContent {
             coroutineScope.launch {
                 sheetState.hide()
