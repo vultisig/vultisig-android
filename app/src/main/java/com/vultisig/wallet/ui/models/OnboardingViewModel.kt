@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+const val ONBOARDING_STATE_MACHINE_NAME = "State Machine 1"
 
 internal data class OnboardingUiModel(
     val currentPage: OnboardingPages = Screen1,
@@ -67,13 +68,13 @@ internal class OnboardingViewModel @Inject constructor(
     }
 }
 
-internal sealed class OnboardingPages(val animationName: String) {
-    data object Screen1 : OnboardingPages("Screen 1")
-    data object Screen2 : OnboardingPages("Screen 2")
-    data object Screen3 : OnboardingPages("Screen 3")
-    data object Screen4 : OnboardingPages("Screen 4")
-    data object Screen5 : OnboardingPages("Screen 5")
-    data object Screen6 : OnboardingPages("Screen 6")
+internal sealed class OnboardingPages(val triggerName: String) {
+    data object Screen1 : OnboardingPages("Next")
+    data object Screen2 : OnboardingPages("Next")
+    data object Screen3 : OnboardingPages("Next")
+    data object Screen4 : OnboardingPages("Next")
+    data object Screen5 : OnboardingPages("Next")
+    data object Screen6 : OnboardingPages("Next")
 }
 
 private val pages = listOf(

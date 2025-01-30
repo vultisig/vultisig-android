@@ -6,11 +6,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
@@ -38,6 +35,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
+import com.vultisig.wallet.ui.models.ONBOARDING_STATE_MACHINE_NAME
 import com.vultisig.wallet.ui.models.OnboardingPages
 import com.vultisig.wallet.ui.models.OnboardingUiModel
 import com.vultisig.wallet.ui.models.OnboardingViewModel
@@ -123,7 +121,10 @@ private fun OnboardingContent(
                     .fillMaxWidth()
                     .align(Alignment.TopCenter),
                 onInit = { riveAnimationView ->
-                    riveAnimationView.play(animationName = state.currentPage.animationName)
+                    riveAnimationView.fireState(
+                        stateMachineName = ONBOARDING_STATE_MACHINE_NAME,
+                        inputName = state.currentPage.triggerName,
+                    )
                 }
             )
         }
