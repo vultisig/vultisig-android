@@ -68,13 +68,13 @@ internal class OnboardingViewModel @Inject constructor(
     }
 }
 
-internal sealed class OnboardingPages(val triggerName: String) {
-    data object Screen1 : OnboardingPages("Next")
-    data object Screen2 : OnboardingPages("Next")
-    data object Screen3 : OnboardingPages("Next")
-    data object Screen4 : OnboardingPages("Next")
-    data object Screen5 : OnboardingPages("Next")
-    data object Screen6 : OnboardingPages("Next")
+internal sealed class OnboardingPages(val triggerName: String = "Next") {
+    data object Screen1 : OnboardingPages()
+    data object Screen2 : OnboardingPages()
+    data object Screen3 : OnboardingPages()
+    data object Screen4 : OnboardingPages()
+    data object Screen5 : OnboardingPages()
+    data object Screen6 : OnboardingPages()
 }
 
 private val pages = listOf(
