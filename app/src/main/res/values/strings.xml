@@ -512,6 +512,8 @@
     <string name="select_vault_type_secure" translatable="false">Secure</string>
     <string name="select_vault_type_fast" translatable="false">Fast</string>
 
+    <string name="onboarding_intro_preview_part_1" translatable="false">Say goodbye to</string>
+    <string name="onboarding_intro_preview_part_2" translatable="false">seed phrases</string>
     <string name="onboarding_intro_title" translatable="false">Intro</string>
     <string name="onboarding_intro_skip" translatable="false">Skip</string>
     <string name="onboarding_desc_page_1_part_1" translatable="false">Say hello to</string>
