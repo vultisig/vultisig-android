@@ -279,9 +279,14 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                 )
             ).encodeBase64()
 
-    fun saveHelperModalVisited() {
+    fun dismissQrHelpModal() {
         viewModelScope.launch {
             qrHelperModalRepository.visited()
+            state.update {
+                it.copy(
+                    isQrHelpModalVisited = true
+                )
+            }
         }
     }
 
