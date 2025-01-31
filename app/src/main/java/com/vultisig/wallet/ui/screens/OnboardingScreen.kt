@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,12 +48,50 @@ internal fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
-    OnboardingScreen(
-        state = state,
-        onBackClick = {},
-        onSkipClick = viewModel::skip,
-        onNextClick = viewModel::next,
-    )
+    var showPreview by remember { mutableStateOf(true) }
+    var fadeoutPreviewText by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(800)
+        fadeoutPreviewText = true
+        delay(200)
+        showPreview = false
+    }
+    if (showPreview) {
+        Box(
+            modifier = Modifier
+                .background(Theme.colors.backgrounds.primary)
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            AnimatedVisibility(
+                modifier = Modifier.padding(64.dp),
+                visible = !fadeoutPreviewText,
+                enter = slideInVertically(),
+                exit = fadeOut(tween(200)),
+            ) {
+                SequenceOfGradientText(
+                    listTextItems = listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_intro_preview_part_1,
+                            coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_intro_preview_part_2,
+                            coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                        ),
+                    ),
+                    style = Theme.brockmann.headings.title1,
+                )
+            }
+        }
+    } else {
+        OnboardingScreen(
+            state = state,
+            onBackClick = {},
+            onSkipClick = viewModel::skip,
+            onNextClick = viewModel::next,
+        )
+    }
 }
 
 @Composable
@@ -81,6 +121,7 @@ private fun OnboardingScreen(
             )
         },
     ) { paddingValues ->
+
         OnboardingContent(
             state = state,
             paddingValues = paddingValues,
@@ -114,7 +155,7 @@ private fun OnboardingContent(
             .fillMaxSize(),
     ) {
         RiveAnimation(
-            animation = R.raw.onboarding,
+            animation = R.raw.onboarding_v2,
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter),
