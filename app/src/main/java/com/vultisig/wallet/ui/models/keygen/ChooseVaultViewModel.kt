@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
@@ -76,14 +77,17 @@ internal class ChooseVaultViewModel @Inject constructor(
     val state = MutableStateFlow(SelectVaultTypeUiModel())
 
     fun selectTab(index: Int) {
-        val vaultType = if (index == 0)
-            VaultType.Secure else VaultType.Fast
-        state.update {
-            it.copy(
-                vaultType = vaultType,
-                selectedTypeIndex = index
-            )
-        }
+        clickOnce(coolDownPeriod = 1500L) {
+            val vaultType = if (index == 0)
+                VaultType.Secure else VaultType.Fast
+            state.update {
+                it.copy(
+                    vaultType = vaultType,
+                    selectedTypeIndex = index
+                )
+            }
+        }.invoke()
+
     }
 
     fun navigateToBack() {
