@@ -129,12 +129,13 @@ internal class TokenRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
-        val evmApi = evmApiFactory.createEvmApi(chain)
         return when (chain) {
             Chain.BscChain, Chain.Avalanche,
             Chain.Ethereum, Chain.Arbitrum,
-                -> evmApi.getBalances(address).result.toCoins(chain)
-
+                -> {
+                val evmApi = evmApiFactory.createEvmApi(chain)
+                evmApi.getBalances(address).result.toCoins(chain)
+            }
             else -> {
                 // cant get this for non EVM chains right now
                 if (chain.standard != TokenStandard.EVM) return emptyList()
