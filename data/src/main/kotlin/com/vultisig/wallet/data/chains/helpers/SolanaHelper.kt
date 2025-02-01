@@ -83,9 +83,13 @@ class SolanaHelper(
                     .toByteArray()
             } else {
                 val receiverAddress = SolanaAddress(toAddress.description())
-                val generatedRecipientAssociatedAddress = receiverAddress.defaultTokenAddress(
-                    keysignPayload.coin.contractAddress
-                )
+                val generatedRecipientAssociatedAddress = if (solanaSpecific.programId) {
+                    receiverAddress.token2022Address(keysignPayload.coin.contractAddress)
+                } else {
+                    receiverAddress.defaultTokenAddress(
+                        keysignPayload.coin.contractAddress
+                    )
+                }
                 val transferTokenMessage =
                     Solana.CreateAndTransferToken.newBuilder()
                         .setRecipientMainAddress(toAddress.description())

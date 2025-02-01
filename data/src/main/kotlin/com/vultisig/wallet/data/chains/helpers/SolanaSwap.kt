@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
+import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -53,12 +54,9 @@ class SolanaSwap(
         val updatedTxData = Base64.decode(quote.tx.data)
         val decodedData = TransactionDecoder.decode(SOLANA, updatedTxData)
 
-        val decodedOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData)
-
+        val decodedOutput = Solana.DecodingTransactionOutput.parseFrom(decodedData).checkError()
         val input = Solana.SigningInput.newBuilder()
-            .setRecentBlockhash(solanaSpecific.recentBlockHash)
             .setRawMessage(decodedOutput.transaction)
-
 
         return input.build().toByteArray()
     }
