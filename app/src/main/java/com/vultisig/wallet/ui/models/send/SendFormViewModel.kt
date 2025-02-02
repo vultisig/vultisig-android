@@ -449,6 +449,14 @@ internal class SendFormViewModel @Inject constructor(
                 val srcAddress = selectedToken.address
                 val isMaxAmount = tokenAmount == maxAmount
 
+                if (chain == Chain.Tron) {
+                    if (srcAddress == dstAddress) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_same_address)
+                        )
+                    }
+                }
+                
                 val specific = blockChainSpecificRepository
                     .getSpecific(
                         chain,
