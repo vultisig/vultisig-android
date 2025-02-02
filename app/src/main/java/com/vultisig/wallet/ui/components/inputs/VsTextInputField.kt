@@ -28,6 +28,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -68,6 +70,7 @@ internal fun VsTextInputField(
     focused: Boolean,
     type: VsTextInputFieldType = VsTextInputFieldType.Text,
     innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
+    focusRequester: FocusRequester? = null,
     hint: String? = null,
     footNote: String? = null,
     label: String? = null,
@@ -134,8 +137,13 @@ internal fun VsTextInputField(
                         ),
                         cursorBrush = Theme.cursorBrush,
                         textObfuscationMode = if (type.isVisible)
-                            TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
+                            TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
                         modifier = Modifier
+                            .then(
+                                if (focusRequester != null)
+                                    Modifier.focusRequester(focusRequester)
+                                else Modifier
+                            )
                             .onFocusChanged {
                                 onFocusChanged(it.isFocused)
                             },
@@ -154,7 +162,7 @@ internal fun VsTextInputField(
                     Icon(
                         painter = painterResource(
                             if (type.isVisible)
-                                R.drawable.visible else R.drawable.hidden
+                                R.drawable.hidden else R.drawable.visible
                         ),
                         tint = Theme.colors.text.button.light,
                         contentDescription = null,
@@ -185,6 +193,11 @@ internal fun VsTextInputField(
                             onKeyboardAction()
                         },
                         modifier = Modifier
+                            .then(
+                                if (focusRequester != null)
+                                    Modifier.focusRequester(focusRequester)
+                                else Modifier
+                            )
                             .then(
                                 if (type !is VsTextInputFieldType.Number)
                                     Modifier.weight(1f)
