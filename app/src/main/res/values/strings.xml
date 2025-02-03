@@ -591,4 +591,5 @@
     <string name="fast_vault_password_screen_password_hint" translatable="false">Enter password</string>
     <string name="fast_vault_password_screen_reenter_password_hint" translatable="false">Re-enter password</string>
     <string name="fast_vault_name_screen_next" translatable="false">Next</string>
+    <string name="enter_email_screen_next" translatable="false">Next</string>
 </resources>

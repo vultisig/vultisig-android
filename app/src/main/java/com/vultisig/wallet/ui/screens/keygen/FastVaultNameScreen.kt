@@ -1,9 +1,12 @@
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,11 +23,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.FastVaultNameState
 import com.vultisig.wallet.ui.models.keygen.FastVaultNameViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun FastVaultNameScreen(
@@ -34,26 +39,37 @@ internal fun FastVaultNameScreen(
 
     FastVaultNameScreen(
         state = state,
-        onFocusChange = model::updateInputFocus,
+        textFieldState = model.textFieldState,
         onNextClick = model::navigateToEmail,
         onClearClick = model::clearInput,
-        onBackClick = model::navigateToBack
+        onBackClick = model::back
     )
 }
 
 @Composable
 private fun FastVaultNameScreen(
     state: FastVaultNameState,
-    onFocusChange: (Boolean) -> Unit,
-    onNextClick: ()->Unit,
-    onClearClick: ()->Unit,
-    onBackClick: ()->Unit,
+    textFieldState: TextFieldState,
+    onNextClick: () -> Unit,
+    onClearClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppBar(
                 onBackClick = onBackClick
+            )
+        },
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.fast_vault_name_screen_next),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                state = if (state.isNextButtonEnabled)
+                    VsButtonState.Enabled else VsButtonState.Disabled,
+                onClick = onNextClick,
             )
         }
     ) {
@@ -70,7 +86,6 @@ private fun FastVaultNameScreen(
                     top = 12.dp,
                     start = 24.dp,
                     end = 24.dp,
-                    bottom = 24.dp
                 )
         ) {
             Text(
@@ -85,20 +100,14 @@ private fun FastVaultNameScreen(
                 color = Theme.colors.text.extraLight
             )
             VsTextInputField(
-                textFieldState = state.textFieldState,
-                onFocusChanged = onFocusChange,
-                focused = state.isFocused,
+                textFieldState = textFieldState,
                 trailingIcon = R.drawable.close_circle,
                 onTrailingIconClick = onClearClick,
                 focusRequester = focusRequester,
+                footNote = state.errorMessage?.asString(),
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxSize()
                     .wrapContentHeight()
-            )
-            VsButton(
-                label = stringResource(R.string.fast_vault_name_screen_next),
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onNextClick,
             )
         }
     }
@@ -110,7 +119,7 @@ private fun FastVaultNameScreen(
 private fun FastVaultNameScreenPreview() {
     FastVaultNameScreen(
         state = FastVaultNameState(),
-        onFocusChange = {},
+        textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onClearClick = {},
         onBackClick = {}

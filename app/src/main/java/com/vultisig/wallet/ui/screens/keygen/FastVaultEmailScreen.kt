@@ -1,9 +1,12 @@
 package com.vultisig.wallet.ui.screens.keygen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,17 +40,17 @@ internal fun FastVaultEmailScreen(
 
     FastVaultEmailScreen(
         state = state,
-        onFocusChange = model::updateInputFocus,
+        textFieldState = model.textFieldState,
         onNextClick = model::navigateToPassword,
         onClearClick = model::clearInput,
-        onBackClick = model::navigateToBack
+        onBackClick = model::back
     )
 }
 
 @Composable
 private fun FastVaultEmailScreen(
     state: FastVaultEmailState,
-    onFocusChange: (Boolean) -> Unit,
+    textFieldState: TextFieldState,
     onNextClick: () -> Unit,
     onClearClick: () -> Unit,
     onBackClick: () -> Unit,
@@ -58,6 +61,17 @@ private fun FastVaultEmailScreen(
             VsTopAppBar(
                 onBackClick = onBackClick
             )
+        },
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.enter_email_screen_next),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                onClick = onNextClick,
+                state = if (state.innerState == VsTextInputFieldInnerState.Success)
+                    VsButtonState.Enabled else VsButtonState.Disabled
+            )
         }
     ) {
         Column(
@@ -67,7 +81,6 @@ private fun FastVaultEmailScreen(
                     top = 12.dp,
                     start = 24.dp,
                     end = 24.dp,
-                    bottom = 24.dp
                 )
         ) {
             val focusRequester = remember {
@@ -88,24 +101,15 @@ private fun FastVaultEmailScreen(
                 color = Theme.colors.text.extraLight
             )
             VsTextInputField(
-                textFieldState = state.textFieldState,
-                onFocusChanged = onFocusChange,
-                focused = state.isFocused,
+                textFieldState = textFieldState,
                 innerState = state.innerState,
                 trailingIcon = R.drawable.close_circle,
                 onTrailingIconClick = onClearClick,
                 footNote = state.errorMessage?.asString(),
                 focusRequester = focusRequester,
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxSize()
                     .wrapContentHeight()
-            )
-            VsButton(
-                label = "Next",
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onNextClick,
-                state = if (state.innerState == VsTextInputFieldInnerState.Success)
-                    VsButtonState.Enabled else VsButtonState.Disabled
             )
         }
     }
@@ -117,7 +121,7 @@ private fun FastVaultEmailScreen(
 private fun FastVaultEmailScreenPreview() {
     FastVaultEmailScreen(
         state = FastVaultEmailState(),
-        onFocusChange = {},
+        textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onClearClick = {},
         onBackClick = {}

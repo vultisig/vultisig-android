@@ -18,11 +18,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class FastVaultPasswordState(
-    val isPasswordFocused: Boolean = false,
-    val isConfirmPasswordFocused: Boolean = false,
     val isMoreInfoVisible: Boolean = false,
-    val passwordTextFieldState: TextFieldState = TextFieldState(),
-    val confirmPasswordTextFieldState: TextFieldState = TextFieldState(),
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val isNextButtonEnabled: Boolean = false,
@@ -35,12 +31,33 @@ internal class FastVaultPasswordViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state = MutableStateFlow(FastVaultPasswordState())
+    val passwordTextFieldState: TextFieldState = TextFieldState()
+    val confirmPasswordTextFieldState: TextFieldState = TextFieldState()
+
+    private var isMoreInfoVisible: Boolean
+        get() = state.value.isMoreInfoVisible
+        set(value) = state.update {
+            it.copy(isMoreInfoVisible = value)
+        }
+
+    private var isPasswordVisible: Boolean
+        get() = state.value.isPasswordVisible
+        set(value) = state.update {
+            it.copy(isPasswordVisible = value)
+        }
+
+    private var isConfirmPasswordVisible: Boolean
+        get() = state.value.isConfirmPasswordVisible
+        set(value) = state.update {
+            it.copy(isConfirmPasswordVisible = value)
+        }
+
 
     init {
         viewModelScope.launch {
-            state.value.passwordTextFieldState.textAsFlow()
+            passwordTextFieldState.textAsFlow()
                 .combine(
-                    state.value.confirmPasswordTextFieldState.textAsFlow()
+                    confirmPasswordTextFieldState.textAsFlow()
                 ) { password, confirmPassword ->
                     val isValidPassword = validatePassword(password, confirmPassword)
                     state.update {
@@ -52,52 +69,7 @@ internal class FastVaultPasswordViewModel @Inject constructor(
     }
 
     private fun validatePassword(password: CharSequence, confirmPassword: CharSequence) =
-        password.toString() == confirmPassword.toString()
-
-    private var isMoreInfoVisible: Boolean
-        get() = state.value.isMoreInfoVisible
-        set(value) {
-            viewModelScope.launch {
-                state.update {
-                    it.copy(isMoreInfoVisible = value)
-                }
-            }
-        }
-    private var isPasswordVisible: Boolean
-        get() = state.value.isPasswordVisible
-        set(value) {
-            viewModelScope.launch {
-                state.update {
-                    it.copy(isPasswordVisible = value)
-                }
-            }
-        }
-    private var isConfirmPasswordVisible: Boolean
-        get() = state.value.isConfirmPasswordVisible
-        set(value) {
-            viewModelScope.launch {
-                state.update {
-                    it.copy(isConfirmPasswordVisible = value)
-                }
-            }
-        }
-
-    fun updatePasswordInputFocus(isFocused: Boolean) {
-        viewModelScope.launch {
-            state.update {
-                it.copy(isPasswordFocused = isFocused)
-            }
-        }
-    }
-
-
-    fun updateConfirmPasswordInputFocus(isFocused: Boolean) {
-        viewModelScope.launch {
-            state.update {
-                it.copy(isConfirmPasswordFocused = isFocused)
-            }
-        }
-    }
+        password.isNotEmpty() && password.toString() == confirmPassword.toString()
 
     fun showMoreInfo() {
         isMoreInfoVisible = true
@@ -120,7 +92,7 @@ internal class FastVaultPasswordViewModel @Inject constructor(
 
     fun navigateToHint() {
         viewModelScope.launch {
-            val enteredPassword = state.value.passwordTextFieldState.text.toString()
+            val enteredPassword = passwordTextFieldState.text.toString()
             val args = savedStateHandle.toRoute<Route.FastVaultInfo.Password>()
             val vaultName = args.name
             val email = args.email
@@ -135,7 +107,7 @@ internal class FastVaultPasswordViewModel @Inject constructor(
     }
 
 
-    fun navigateToBack() {
+    fun back() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }

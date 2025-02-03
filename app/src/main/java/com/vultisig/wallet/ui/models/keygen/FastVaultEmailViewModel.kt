@@ -21,10 +21,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class FastVaultEmailState(
-    val isFocused: Boolean = false,
     val errorMessage: UiText? = null,
     val innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
-    val textFieldState: TextFieldState = TextFieldState(),
 )
 
 @HiltViewModel
@@ -34,32 +32,36 @@ internal class FastVaultEmailViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state = MutableStateFlow(FastVaultEmailState())
+    val textFieldState: TextFieldState = TextFieldState()
 
     init {
-        viewModelScope.launch {
-            collectEmailInput()
-        }
+        collectEmailInput()
     }
 
 
-    private suspend fun collectEmailInput() {
-        state.value.textFieldState.textAsFlow().collect { typingEmail ->
-            val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(typingEmail).matches()
-            val errorMessage =
-                UiText.StringResource(R.string.keygen_email_caption)
-                    .takeIf { typingEmail.isNotEmpty() && !isEmailValid }
-            val innerState = getInnerState(
-                email = typingEmail.toString(),
-                isEmailValid = isEmailValid
-            )
-            state.update { state ->
-                state.copy(
-                    errorMessage = errorMessage,
-                    innerState = innerState
+    private fun collectEmailInput() {
+        viewModelScope.launch {
+            textFieldState.textAsFlow().collect { typingEmail ->
+                val isEmailValid = validateEmail(typingEmail)
+                val errorMessage =
+                    UiText.StringResource(R.string.keygen_email_caption)
+                        .takeIf { typingEmail.isNotEmpty() && !isEmailValid }
+                val innerState = getInnerState(
+                    email = typingEmail.toString(),
+                    isEmailValid = isEmailValid
                 )
+                state.update { state ->
+                    state.copy(
+                        errorMessage = errorMessage,
+                        innerState = innerState
+                    )
+                }
             }
         }
     }
+
+    private fun validateEmail(typingEmail: CharSequence) =
+        Patterns.EMAIL_ADDRESS.matcher(typingEmail).matches()
 
     private fun getInnerState(
         email: String,
@@ -72,20 +74,11 @@ internal class FastVaultEmailViewModel @Inject constructor(
         else VsTextInputFieldInnerState.Error
     }
 
-
-    fun updateInputFocus(isFocused: Boolean) {
-        viewModelScope.launch {
-            state.update {
-                it.copy(isFocused = isFocused)
-            }
-        }
-    }
-
     fun navigateToPassword() {
         viewModelScope.launch {
-            if (state.value.innerState != VsTextInputFieldInnerState.Success)
+            if (!validateEmail(textFieldState.text.toString()))
                 return@launch
-            val enteredEmail = state.value.textFieldState.text.toString()
+            val enteredEmail = textFieldState.text.toString()
             val vaultName = savedStateHandle.toRoute<Route.FastVaultInfo.Email>().name
             navigator.route(
                 Route.FastVaultInfo.Password(
@@ -97,10 +90,10 @@ internal class FastVaultEmailViewModel @Inject constructor(
     }
 
     fun clearInput() {
-        state.value.textFieldState.clearText()
+        textFieldState.clearText()
     }
 
-    fun navigateToBack() {
+    fun back() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
         }
