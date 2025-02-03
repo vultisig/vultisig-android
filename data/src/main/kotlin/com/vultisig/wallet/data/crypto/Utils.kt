@@ -79,3 +79,9 @@ internal fun Tron.SigningOutput.checkError(): Tron.SigningOutput {
     }
     return this
 }
+internal fun  Solana.DecodingTransactionOutput.checkError():   Solana.DecodingTransactionOutput{
+    if (!errorMessage.isNullOrEmpty()) {
+        error(" Decoding Transaction Output contains error: $errorMessage")
+    }
+    return this
+}
