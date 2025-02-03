@@ -46,7 +46,7 @@ internal fun KeysignPeerDiscovery(
     KeepScreenOn()
 
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
-    val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
+    val participants = viewModel.participants.collectAsState(initial = emptyList()).value
     val isLoading = viewModel.isLoading.collectAsState().value
     val context = LocalContext.current.applicationContext
     val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
@@ -81,7 +81,7 @@ internal fun KeysignPeerDiscovery(
     } else ""
 
     LaunchedEffect(key1 = viewModel.participants) {
-        viewModel.participants.asFlow().collect { newList ->
+        viewModel.participants.collect { newList ->
             // add all participants to the selection
             for (participant in newList) {
                 viewModel.addParticipant(participant)
