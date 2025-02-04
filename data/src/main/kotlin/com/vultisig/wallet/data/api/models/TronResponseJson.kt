@@ -43,15 +43,17 @@ data class TronSpecificBlockRawDataJson(
 
 @Serializable
 internal data class TronBalanceResponseJson(
-    @SerialName("balance")
-    @Contextual
-    val balance: BigInteger
+    @SerialName("data")
+    val tronBalanceResponseData: Array<TronBalanceResponseData>
 )
 
 @Serializable
-internal data class TronTRC20BalanceResponseJson(
-    @SerialName("result")
-    val result: String
+internal data class TronBalanceResponseData(
+    @SerialName("balance")
+    @Contextual
+    val balance: BigInteger,
+    @SerialName("trc20")
+    val trc20: Array<Map<String, @Contextual BigInteger>>
 )
 
 @Serializable
