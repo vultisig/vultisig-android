@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,12 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,14 +62,19 @@ internal fun PeerDiscoveryScreen(
 
     val context = LocalContext.current
 
-    PeerDiscoveryScreen(
-        state = state,
-        onBackClick = model::back,
-        onHelpClick = model::openHelp,
-        onShareQrClick = { model.shareQr(context) },
-        onNextClick = model::next,
-        onDismissQrHelpModal = model::dismissQrHelpModal
-    )
+    val connectingToServer = state.connectingToServer
+    if (connectingToServer != null) {
+        ConnectingToServer(connectingToServer.isSuccess)
+    } else {
+        PeerDiscoveryScreen(
+            state = state,
+            onBackClick = model::back,
+            onHelpClick = model::openHelp,
+            onShareQrClick = { model.shareQr(context) },
+            onNextClick = model::next,
+            onDismissQrHelpModal = model::dismissQrHelpModal
+        )
+    }
 }
 
 @Composable
@@ -329,6 +337,49 @@ private fun PeerDeviceItem(
                 maxLines = 1,
             )
         }
+    }
+}
+
+@Composable
+private fun ConnectingToServer(
+    isSuccess: Boolean,
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Theme.colors.backgrounds.primary)
+            .padding(all = 24.dp),
+    ) {
+        RiveAnimation(
+            animation = R.raw.connecting_with_server,
+            modifier = Modifier
+                .size(24.dp),
+            onInit = {
+                if (isSuccess) {
+                    it.fireState("State Machine 1", "Connected")
+                }
+            }
+        )
+
+        UiSpacer(24.dp)
+
+        Text(
+            text = stringResource(R.string.keygen_connecting_with_server),
+            style = Theme.brockmann.headings.title2,
+            color = Theme.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(16.dp)
+
+        Text(
+            text = stringResource(R.string.keygen_connecting_with_server_take_a_minute),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.colors.text.light,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
