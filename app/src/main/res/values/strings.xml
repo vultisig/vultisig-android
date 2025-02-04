@@ -574,4 +574,6 @@
     <string name="keygen_step_preparing_vault">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
+    <string name="keygen_connecting_with_server">Connecting with server...</string>
+    <string name="keygen_connecting_with_server_take_a_minute">This should only take a minute</string>
 </resources>

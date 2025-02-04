@@ -58,6 +58,7 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
+import com.vultisig.wallet.ui.models.keygen.VaultType
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.launch
@@ -83,7 +84,7 @@ internal fun ChooseVaultScreen(
 @Composable
 private fun ChooseVaultScreen(
     state: SelectVaultTypeUiModel,
-    onTabClick: (index: Int) -> Unit,
+    onTabClick: (type: VaultType) -> Unit,
     onStartClick: () -> Unit,
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit,
@@ -95,7 +96,7 @@ private fun ChooseVaultScreen(
             modifier = Modifier.padding(it),
             horizontalAlignment = CenterHorizontally,
         ) {
-            val isSecureTypeSelected = state.selectedTypeIndex == 0
+            val isSecureTypeSelected = state.vaultType is VaultType.Secure
 
             val fadeAnimation = remember {
                 Animatable(0f)
@@ -179,7 +180,7 @@ private fun ChooseVaultScreen(
                                     .weight(1f)
                                     .clip(CircleShape)
                                     .clickable {
-                                        onTabClick(0)
+                                        onTabClick(VaultType.Secure)
                                     }
                                     .padding(16.dp)
                                     .wrapContentWidth(CenterHorizontally)
@@ -195,7 +196,7 @@ private fun ChooseVaultScreen(
                                     .weight(1f)
                                     .clip(CircleShape)
                                     .clickable {
-                                        onTabClick(1)
+                                        onTabClick(VaultType.Fast)
                                     }
                                     .padding(16.dp)
                                     .wrapContentWidth(CenterHorizontally)
@@ -339,7 +340,7 @@ private fun TextAndIcon(
 @Composable
 private fun SelectVaultTypeScreenPreview() {
     ChooseVaultScreen(
-        state = SelectVaultTypeUiModel(selectedTypeIndex = 0),
+        state = SelectVaultTypeUiModel(vaultType = VaultType.Secure),
         onTabClick = {},
         onStartClick = {},
         onBackClick = {},

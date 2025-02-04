@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -70,7 +69,7 @@ private fun ScanQrHelpModalContent(onGotItClick: () -> Unit) {
                     append(stringResource(R.string.scan_qr_code_modal_scan_the))
                     append(" ")
                     withStyle(
-                        style = SpanStyle(brush = Brush.vultiGradientV2())
+                        style = SpanStyle(brush = Theme.colors.gradients.primary)
                     ) {
                         append(stringResource(R.string.scan_qr_code_modal_qr_code))
                     }

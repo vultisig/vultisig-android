@@ -11,10 +11,3 @@ internal fun Brush.Companion.vultiGradient() = horizontalGradient(
         Theme.colors.persianBlue600Main
     )
 )
-@Composable
-internal fun Brush.Companion.vultiGradientV2() = horizontalGradient(
-    colors = listOf(
-        Theme.colors.buttons.primary,
-        Theme.colors.persianBlue600Main
-    ),
-)
