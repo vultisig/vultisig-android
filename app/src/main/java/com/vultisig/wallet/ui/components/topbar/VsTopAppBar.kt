@@ -141,8 +141,7 @@ fun VsTopAppBarAction(
 fun VsTopAppProgressBar(
     modifier: Modifier = Modifier,
     title: String? = null,
-    @DrawableRes iconLeft: Int? = null,
-    onIconLeftClick: () -> Unit,
+    navigationContent: @Composable () -> Unit,
     progress: Int = 3,
     total: Int = 12,
     actions: @Composable RowScope.() -> Unit
@@ -164,12 +163,7 @@ fun VsTopAppProgressBar(
                 containerColor = Theme.colors.backgrounds.primary,
             ),
             navigationIcon = {
-                if (iconLeft != null) {
-                    VsTopAppBarAction(
-                        icon = iconLeft,
-                        onClick = onIconLeftClick,
-                    )
-                }
+                navigationContent()
             },
             actions = actions,
             modifier = modifier.padding(end = 16.dp),

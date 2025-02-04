@@ -33,6 +33,8 @@ internal sealed class Destination(
 
     data object Onboarding : Destination(route = "onboarding_screen")
 
+    data object OnboardingSummary : Destination(route = "onboarding_summary")
+
     data object AddVault : Destination(
         route = "vault/new"
     )
