@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
+import com.vultisig.wallet.data.api.models.signer.toJson
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
@@ -411,6 +412,7 @@ internal class KeygenFlowViewModel @Inject constructor(
                                     localPartyId = generateServerPartyId(),
                                     encryptionPassword = password,
                                     email = email,
+                                    libType = vault.libType.toJson()
                                 )
                             )
                         }

@@ -146,6 +146,8 @@ internal class KeygenViewModel @Inject constructor(
 
                 updateStep(KeygenState.Success)
 
+                delay(1.seconds)
+
                 saveVault()
             } catch (e: Exception) {
                 Timber.d(e, "generateKey error")

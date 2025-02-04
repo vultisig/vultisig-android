@@ -485,6 +485,9 @@ internal sealed class Route {
         @Serializable
         data class PeerDiscovery(
             val vaultName: String,
+
+            val email: String? = null,
+            val password: String? = null,
         )
 
         @Serializable
