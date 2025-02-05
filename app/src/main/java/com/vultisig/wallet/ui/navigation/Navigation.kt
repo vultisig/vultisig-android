@@ -31,8 +31,6 @@ internal sealed class Destination(
         const val ARG_PASSWORD = "password"
     }
 
-    data object Onboarding : Destination(route = "onboarding_screen")
-
     data object AddVault : Destination(
         route = "vault/new"
     )
@@ -507,6 +505,12 @@ internal sealed class Route {
         )
 
     }
+
+    @Serializable
+    data object Onboarding : Route()
+
+    @Serializable
+    data object OnboardingSummary : Route()
 
     data object FastVaultInfo {
         @Serializable
