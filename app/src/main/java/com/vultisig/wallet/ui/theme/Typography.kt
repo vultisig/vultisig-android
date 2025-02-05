@@ -195,7 +195,7 @@ internal data class VsTypography(
                         lineHeightStyle = lineHeightStyle,
                     ),
                     footnote = TextStyle(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
                         letterSpacing = 0.06.sp,
