@@ -60,7 +60,6 @@ internal class SolanaApiImp @Inject constructor(
     private val rpcEndpoint = "https://api.vultisig.com/solana/"
     private val splTokensInfoEndpoint = "https://api.solana.fm/v1/tokens"
     private val splTokensInfoEndpoint2 = "https://tokens.jup.ag/token"
-    private val solanaRentExemptionEndpoint = "https://api.devnet.solana.com"
     private val jupiterTokensUrl = "https://tokens.jup.ag/tokens"
     override suspend fun getBalance(address: String): BigInteger {
         return try {
@@ -91,7 +90,7 @@ internal class SolanaApiImp @Inject constructor(
 
     override suspend fun getMinimumBalanceForRentExemption(): BigInteger = try {
         httpClient.postRpc<SolanaMinimumBalanceForRentExemptionJson>(
-            solanaRentExemptionEndpoint,
+            rpcEndpoint,
             "getMinimumBalanceForRentExemption",
             params = buildJsonArray {
                 add(DATA_LENGTH_MINIMUM_BALANCE_FOR_RENT_EXEMPTION)
