@@ -2,8 +2,13 @@
 
 package com.vultisig.wallet.ui.models.peer
 
+import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
+import android.os.Build
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
@@ -17,9 +22,11 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.toJson
+import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
+import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
@@ -33,6 +40,7 @@ import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
+import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -43,8 +51,11 @@ import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -62,6 +73,7 @@ private const val MIN_KEYGEN_DEVICES = 2
 
 data class PeerDiscoveryUiModel(
     val qr: BitmapPainter? = null,
+    val network: NetworkOption = NetworkOption.Internet,
     val localPartyId: String = "",
     val devices: List<String> = emptyList(),
     val selectedDevices: List<String> = emptyList(),
@@ -69,6 +81,7 @@ data class PeerDiscoveryUiModel(
     // we're trying to promote minimum of three devices
     val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1,
     val isQrHelpModalVisited: Boolean = true,
+    val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
 )
 
@@ -76,7 +89,6 @@ data class ConnectingToServerUiModel(
     val isSuccess: Boolean = false,
 )
 
-// TODO switch network option
 enum class NetworkOption {
     Internet, Local,
 }
@@ -105,8 +117,6 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     val state = MutableStateFlow(PeerDiscoveryUiModel())
 
     private val params = savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>()
-
-    private val network = MutableStateFlow(NetworkOption.Internet)
 
     private val sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
@@ -165,6 +175,38 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         )
     }
 
+    fun closeDevicesHint() {
+        state.update {
+            it.copy(
+                showDevicesHint = false,
+            )
+        }
+    }
+
+    fun switchMode() {
+        state.update {
+            it.copy(
+                network = when (it.network) {
+                    NetworkOption.Internet -> NetworkOption.Local
+                    NetworkOption.Local -> NetworkOption.Internet
+                }
+            )
+        }
+        viewModelScope.launch {
+            startPeerDiscovery()
+        }
+    }
+
+    fun selectDevice(device: ParticipantName) {
+        state.update {
+            it.copy(
+                selectedDevices = if (device in it.selectedDevices)
+                    it.selectedDevices - device
+                else it.selectedDevices + device
+            )
+        }
+    }
+
     fun next() {
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
@@ -206,7 +248,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     private suspend fun startPeerDiscovery() {
         checkQrHelperModalIsVisited()
 
-        val isRelayEnabled = network.value == NetworkOption.Internet
+        val isRelayEnabled = state.value.network == NetworkOption.Internet
 
         val keygenPayload = createKeygenPayload(
             isRelayEnabled = isRelayEnabled
@@ -221,53 +263,47 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         }
 
         if (isRelayEnabled) {
-            val serverUrl = VULTISIG_RELAY_URL
+            serverUrl = VULTISIG_RELAY_URL
 
             try {
-                sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
-
-                discoverParticipantsJob?.cancel()
-                discoverParticipantsJob = viewModelScope.launch {
-                    discoverParticipants(serverUrl, sessionId, localPartyId)
-                        .collect { devices ->
-                            val currentState = state.value
-                            val existingDevices = currentState.devices.toSet()
-                            val newDevices = devices - existingDevices
-
-                            val selectedDevices =
-                                currentState.selectedDevices.toSet() + newDevices
-
-                            state.update {
-                                it.copy(
-                                    devices = devices,
-                                    selectedDevices = selectedDevices.toList()
-                                )
-                            }
-                        }
-                }
+                startSession()
+                startParticipantDiscovery()
             } catch (e: Exception) {
                 Timber.e("Failed to start session", e)
                 // TODO display error, retry
             }
         } else {
-            // TODO local relay
-            // when relay is disabled, start the mediator service
-            // startMediatorService()
+            serverUrl = LOCAL_MEDIATOR_SERVER_URL
+            startMediatorService()
         }
     }
 
     private suspend fun startVultiServerConnection() {
         state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
 
-        sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
+        startSession()
 
         requestVultiServerConnection()
 
+        startParticipantDiscovery(
+            onDiscovered = { devices ->
+                if (devices.size == 1) {
+                    state.update {
+                        it.copy(connectingToServer = ConnectingToServerUiModel(true))
+                    }
+                    next()
+                }
+            }
+        )
+    }
+
+    private fun startParticipantDiscovery(
+        onDiscovered: ((devices: List<ParticipantName>) -> Unit)? = null,
+    ) {
         discoverParticipantsJob?.cancel()
         discoverParticipantsJob = viewModelScope.launch {
             discoverParticipants(serverUrl, sessionId, localPartyId)
                 .collect { devices ->
-                    // TODO reuse (also, what if state.update is not in sync?)
                     val currentState = state.value
                     val existingDevices = currentState.devices.toSet()
                     val newDevices = devices - existingDevices
@@ -282,12 +318,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                         )
                     }
 
-                    if (devices.size == 1) {
-                        state.update {
-                            it.copy(connectingToServer = ConnectingToServerUiModel(true))
-                        }
-                        next()
-                    }
+                    onDiscovered?.invoke(devices)
                 }
         }
     }
@@ -364,6 +395,39 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    private fun startMediatorService() {
+        val filter = IntentFilter()
+        filter.addAction(MediatorService.SERVICE_ACTION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
+        } else {
+            context.registerReceiver(serviceStartedReceiver, filter)
+        }
+
+        MediatorService.start(context, serviceName)
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private val serviceStartedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == MediatorService.SERVICE_ACTION) {
+                Timber.d("onReceive: Mediator service started")
+                // send a request to local mediator server to start the session
+                GlobalScope.launch(Dispatchers.IO) {
+                    delay(1000) // back off a second
+                    startSession()
+                }
+
+                startParticipantDiscovery()
+            }
+        }
+    }
+
+    private suspend fun startSession() {
+        sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
     }
 
 }
