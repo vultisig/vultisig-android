@@ -40,7 +40,7 @@ internal fun FastVaultPasswordHintScreen(
 
     FastVaultPasswordHintScreen(
         state = state,
-        textFieldState = model.textFieldState,
+        textFieldState = model.passwordHintFieldState,
         onNextClick = {
 
         },

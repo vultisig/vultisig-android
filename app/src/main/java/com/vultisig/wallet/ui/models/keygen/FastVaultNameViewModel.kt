@@ -36,7 +36,7 @@ internal class FastVaultNameViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state = MutableStateFlow(FastVaultNameState())
-    val textFieldState: TextFieldState = TextFieldState()
+    val nameFieldState = TextFieldState()
     private val vaultNamesList = MutableStateFlow<List<String>>(emptyList())
 
     init {
@@ -44,15 +44,15 @@ internal class FastVaultNameViewModel @Inject constructor(
             vaultNamesList.update {
                 vaultRepository.getAll().map { it.name }
             }
-            textFieldState.textAsFlow().collectLatest {
+            nameFieldState.textAsFlow().collectLatest {
                 validate()
             }
         }
     }
 
     private fun validate() = viewModelScope.launch {
-        val name = textFieldState.text.toString()
-        val errorMessage = if (!isNameLengthValid(name))
+        val name = nameFieldState.text.toString()
+        val errorMessage = if (!isNameValid())
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
         val isNextButtonEnabled = name.isNotEmpty() && errorMessage == null
@@ -64,13 +64,18 @@ internal class FastVaultNameViewModel @Inject constructor(
         }
     }
 
+    private fun isNameValid(): Boolean {
+        val name = nameFieldState.text.toString()
+        return isNameLengthValid(name)
+    }
+
     fun navigateToEmail() {
-        if (state.value.errorMessage != null)
+        if (!isNameValid())
             return
         viewModelScope.launch {
             val name = Uri.encode(
                 uniqueName(
-                    textFieldState.text.toString(),
+                    nameFieldState.text.toString(),
                     vaultNamesList.value
                 )
             )
@@ -81,7 +86,7 @@ internal class FastVaultNameViewModel @Inject constructor(
     }
 
     fun clearInput() {
-        textFieldState.clearText()
+        nameFieldState.clearText()
     }
 
     fun back() {

@@ -40,7 +40,7 @@ internal fun FastVaultEmailScreen(
 
     FastVaultEmailScreen(
         state = state,
-        textFieldState = model.textFieldState,
+        textFieldState = model.emailFieldState,
         onNextClick = model::navigateToPassword,
         onClearClick = model::clearInput,
         onBackClick = model::back

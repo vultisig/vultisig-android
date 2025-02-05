@@ -39,7 +39,7 @@ internal fun FastVaultNameScreen(
 
     FastVaultNameScreen(
         state = state,
-        textFieldState = model.textFieldState,
+        textFieldState = model.nameFieldState,
         onNextClick = model::navigateToEmail,
         onClearClick = model::clearInput,
         onBackClick = model::back

@@ -27,12 +27,15 @@ internal data class FastVaultPasswordState(
 @HiltViewModel
 internal class FastVaultPasswordViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
+    val vaultName = savedStateHandle.toRoute<Route.FastVaultInfo.Password>().name
+    val email = savedStateHandle.toRoute<Route.FastVaultInfo.Password>().email
+
     val state = MutableStateFlow(FastVaultPasswordState())
-    val passwordTextFieldState: TextFieldState = TextFieldState()
-    val confirmPasswordTextFieldState: TextFieldState = TextFieldState()
+    val passwordTextFieldState = TextFieldState()
+    val confirmPasswordTextFieldState = TextFieldState()
 
     private var isMoreInfoVisible: Boolean
         get() = state.value.isMoreInfoVisible
@@ -93,9 +96,6 @@ internal class FastVaultPasswordViewModel @Inject constructor(
     fun navigateToHint() {
         viewModelScope.launch {
             val enteredPassword = passwordTextFieldState.text.toString()
-            val args = savedStateHandle.toRoute<Route.FastVaultInfo.Password>()
-            val vaultName = args.name
-            val email = args.email
             navigator.route(
                 Route.FastVaultInfo.PasswordHint(
                     name = vaultName,

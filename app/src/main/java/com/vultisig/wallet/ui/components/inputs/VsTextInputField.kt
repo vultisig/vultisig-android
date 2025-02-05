@@ -323,19 +323,16 @@ private fun PasswordTypePreview() {
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Default,
-            focused = false,
             initialText = ""
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Success,
-            focused = false,
             initialText = "some password"
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = false) {},
             innerState = VsTextInputFieldInnerState.Error,
-            focused = false,
             initialText = "some password"
         )
     }

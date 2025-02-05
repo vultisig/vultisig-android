@@ -25,11 +25,11 @@ internal class FastVaultPasswordHintViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state = MutableStateFlow(FastVaultPasswordHintState())
-    val textFieldState: TextFieldState = TextFieldState()
+    val passwordHintFieldState = TextFieldState()
 
     init {
         viewModelScope.launch {
-            textFieldState.textAsFlow().collect {
+            passwordHintFieldState.textAsFlow().collect {
                 validateHint(it)
             }
         }

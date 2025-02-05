@@ -28,11 +28,12 @@ internal data class FastVaultEmailState(
 @HiltViewModel
 internal class FastVaultEmailViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     val state = MutableStateFlow(FastVaultEmailState())
-    val textFieldState: TextFieldState = TextFieldState()
+    val emailFieldState = TextFieldState()
+    val vaultName = savedStateHandle.toRoute<Route.FastVaultInfo.Email>().name
 
     init {
         collectEmailInput()
@@ -41,7 +42,7 @@ internal class FastVaultEmailViewModel @Inject constructor(
 
     private fun collectEmailInput() {
         viewModelScope.launch {
-            textFieldState.textAsFlow().collect { typingEmail ->
+            emailFieldState.textAsFlow().collect { typingEmail ->
                 val isEmailValid = validateEmail(typingEmail)
                 val errorMessage =
                     UiText.StringResource(R.string.keygen_email_caption)
@@ -76,10 +77,9 @@ internal class FastVaultEmailViewModel @Inject constructor(
 
     fun navigateToPassword() {
         viewModelScope.launch {
-            if (!validateEmail(textFieldState.text.toString()))
+            if (!validateEmail(emailFieldState.text.toString()))
                 return@launch
-            val enteredEmail = textFieldState.text.toString()
-            val vaultName = savedStateHandle.toRoute<Route.FastVaultInfo.Email>().name
+            val enteredEmail = emailFieldState.text.toString()
             navigator.route(
                 Route.FastVaultInfo.Password(
                     name = vaultName,
@@ -90,7 +90,7 @@ internal class FastVaultEmailViewModel @Inject constructor(
     }
 
     fun clearInput() {
-        textFieldState.clearText()
+        emailFieldState.clearText()
     }
 
     fun back() {
