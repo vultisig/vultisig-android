@@ -93,16 +93,13 @@ internal fun SetupNavGraph(
         popEnterTransition = slideInFromStartEnterTransition(),
         popExitTransition = slideOutToEndExitTransition(),
     ) {
-        composable(
-            route = Destination.Onboarding.route,
+        composable<Route.Onboarding>(
             enterTransition = slideInFromBottomEnterTransition(),
         ) {
             OnboardingScreen()
         }
 
-        composable(
-            route = Destination.OnboardingSummary.route
-        ) {
+        composable<Route.OnboardingSummary> {
             OnboardingSummaryScreen()
         }
 

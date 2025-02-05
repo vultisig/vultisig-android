@@ -10,13 +10,14 @@ import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen5
 import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen6
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-const val ONBOARDING_STATE_MACHINE_NAME = "State Machine 1"
+internal const val ONBOARDING_STATE_MACHINE_NAME = "State Machine 1"
 
 internal data class OnboardingUiModel(
     val currentPage: OnboardingPages = Screen1,
@@ -29,25 +30,26 @@ internal class OnboardingViewModel @Inject constructor(
     private val navigator: Navigator<Destination>
 ) : ViewModel() {
 
-    val uiState = MutableStateFlow(OnboardingUiModel())
+    val state = MutableStateFlow(OnboardingUiModel())
 
-    fun next() = viewModelScope.launch {
-        val nextAnimation = pages.getOrNull(uiState.value.pageIndex + 1)
-        if (nextAnimation != null) {
-            uiState.update {
-                it.copy(
-                    currentPage = nextAnimation,
-                    pageIndex = it.pageIndex + 1
-                )
+    fun next() {
+        viewModelScope.launch {
+            val nextAnimation = pages.getOrNull(state.value.pageIndex + 1)
+            if (nextAnimation != null) {
+                state.update {
+                    it.copy(
+                        currentPage = nextAnimation,
+                        pageIndex = it.pageIndex + 1
+                    )
+                }
+            } else {
+                navigator.route(Route.OnboardingSummary)
             }
-        } else {
-            navigator.navigate(Destination.OnboardingSummary)
         }
     }
 
-
     fun skip() = viewModelScope.launch {
-        navigator.navigate(Destination.OnboardingSummary)
+        navigator.route(Route.OnboardingSummary)
     }
 
     fun back() = viewModelScope.launch {

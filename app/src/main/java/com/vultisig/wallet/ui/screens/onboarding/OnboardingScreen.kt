@@ -50,7 +50,7 @@ import kotlinx.coroutines.delay
 internal fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.state.collectAsState()
     var showPreview by remember { mutableStateOf(true) }
     var fadeoutPreviewText by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -110,7 +110,7 @@ private fun OnboardingScreen(
             VsTopAppProgressBar(
                 navigationContent = {
                     Row(
-                        Modifier.clickable { onBackClick() }
+                        Modifier.clickable(onClick = onBackClick),
                     ) {
                         VsTopAppBarAction(
                             icon = R.drawable.ic_caret_left,
