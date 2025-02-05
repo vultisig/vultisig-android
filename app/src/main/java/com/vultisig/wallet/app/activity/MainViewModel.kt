@@ -9,9 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.install.model.UpdateAvailability
-import com.vultisig.wallet.data.repositories.OnBoardRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
@@ -19,7 +17,6 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -27,11 +24,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class MainViewModel @Inject constructor(
-    private val repository: OnBoardRepository,
     navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
-    private val discoverToken: DiscoverTokenUseCase,
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
 ) : ViewModel() {
@@ -50,21 +45,13 @@ internal class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            if (vaultRepository.hasVaults()) {
+
+            if (vaultRepository.hasVaults())
                 _startDestination.value = Destination.Home().route
-                _isLoading.value = false
-            } else {
-                val isUserPassedOnboarding = repository.readOnBoardingState()
-                    .first()
+            else
+                _startDestination.value = Destination.AddVault.route
 
-                if (isUserPassedOnboarding) {
-                    _startDestination.value = Destination.AddVault.route
-                } else {
-                    _startDestination.value = Destination.Onboarding.route
-                }
-
-                _isLoading.value = false
-            }
+            _isLoading.value = false
 
             snackbarFlow.collectMessage {
                 snakeBarHostState.showSnackbar(it)

@@ -25,6 +25,14 @@ internal fun <T> slideInFromStartEnterTransition(): ContentTransitionFactory<T, 
         )
     }
 
+internal fun <T> slideInFromBottomEnterTransition(): ContentTransitionFactory<T, EnterTransition> =
+    {
+        slideIntoContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Up,
+            animationSpec = screenTransitionSpec(),
+        )
+    }
+
 internal fun <T> slideOutToStartExitTransition(): ContentTransitionFactory<T, ExitTransition> =
     {
         slideOutOfContainer(
