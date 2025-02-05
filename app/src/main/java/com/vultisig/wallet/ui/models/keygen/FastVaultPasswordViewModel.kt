@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class FastVaultPasswordState(
+internal data class FastVaultPasswordUiModel(
     val isMoreInfoVisible: Boolean = false,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
@@ -30,10 +30,10 @@ internal class FastVaultPasswordViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    val vaultName = savedStateHandle.toRoute<Route.FastVaultInfo.Password>().name
-    val email = savedStateHandle.toRoute<Route.FastVaultInfo.Password>().email
+    val vaultName = savedStateHandle.toRoute<Route.VaultInfo.Password>().name
+    val email = savedStateHandle.toRoute<Route.VaultInfo.Password>().email
 
-    val state = MutableStateFlow(FastVaultPasswordState())
+    val state = MutableStateFlow(FastVaultPasswordUiModel())
     val passwordTextFieldState = TextFieldState()
     val confirmPasswordTextFieldState = TextFieldState()
 
@@ -97,7 +97,7 @@ internal class FastVaultPasswordViewModel @Inject constructor(
         viewModelScope.launch {
             val enteredPassword = passwordTextFieldState.text.toString()
             navigator.route(
-                Route.FastVaultInfo.PasswordHint(
+                Route.VaultInfo.PasswordHint(
                     name = vaultName,
                     email = email,
                     password = enteredPassword,
