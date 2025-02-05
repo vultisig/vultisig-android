@@ -3,8 +3,10 @@ package com.vultisig.wallet.ui.models.keygen
 import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateRandomUniqueName
@@ -12,6 +14,7 @@ import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -22,28 +25,32 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-internal data class FastVaultNameState(
+internal data class NameVaultUiModel(
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
 )
 
 @HiltViewModel
-internal class FastVaultNameViewModel @Inject constructor(
+internal class NameVaultViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val uniqueName: GenerateRandomUniqueName,
     private val isNameLengthValid: IsVaultNameValid,
 ) : ViewModel() {
 
-    val state = MutableStateFlow(FastVaultNameState())
+    val state = MutableStateFlow(NameVaultUiModel())
+
     val nameFieldState = TextFieldState()
-    private val vaultNamesList = MutableStateFlow<List<String>>(emptyList())
+
+    private val args = savedStateHandle.toRoute<Route.VaultInfo.Name>()
+
+    private var vaultNamesList = emptyList<String>()
 
     init {
         viewModelScope.launch {
-            vaultNamesList.update {
-                vaultRepository.getAll().map { it.name }
-            }
+            vaultNamesList = vaultRepository.getAll().map { it.name }
+
             nameFieldState.textAsFlow().collectLatest {
                 validate()
             }
@@ -52,7 +59,7 @@ internal class FastVaultNameViewModel @Inject constructor(
 
     private fun validate() = viewModelScope.launch {
         val name = nameFieldState.text.toString()
-        val errorMessage = if (!isNameValid())
+        val errorMessage = if (!isNameValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
         val isNextButtonEnabled = name.isNotEmpty() && errorMessage == null
@@ -64,24 +71,36 @@ internal class FastVaultNameViewModel @Inject constructor(
         }
     }
 
-    private fun isNameValid(): Boolean {
-        val name = nameFieldState.text.toString()
+    private fun isNameValid(name: String): Boolean {
         return isNameLengthValid(name)
     }
 
     fun navigateToEmail() {
-        if (!isNameValid())
+        val expectedName = nameFieldState.text.toString()
+        if (!isNameValid(expectedName))
             return
         viewModelScope.launch {
             val name = Uri.encode(
                 uniqueName(
-                    nameFieldState.text.toString(),
-                    vaultNamesList.value
+                    expectedName,
+                    vaultNamesList
                 )
             )
-            navigator.route(
-                Route.FastVaultInfo.Email(name)
-            )
+
+            when (args.vaultType) {
+                VaultType.Fast -> {
+                    navigator.route(
+                        Route.VaultInfo.Email(name)
+                    )
+                }
+                VaultType.Secure -> {
+                    navigator.route(
+                        Route.Keygen.PeerDiscovery(
+                            vaultName = name,
+                        )
+                    )
+                }
+            }
         }
     }
 

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
+import com.vultisig.wallet.ui.models.keygen.VaultType
 import kotlinx.serialization.Serializable
 
 internal open class Dst(
@@ -477,6 +478,35 @@ internal sealed class Route {
     @Serializable
     data object Secret : Route()
 
+    object VaultInfo {
+
+        @Serializable
+        enum class VaultType {
+            Fast, Secure
+        }
+
+        // required by both vault types
+        @Serializable
+        data class Name(
+            val vaultType: VaultType,
+        )
+
+        // required only by fast vault
+        @Serializable
+        data class Email(val name: String)
+        @Serializable
+        data class Password(
+            val name: String,
+            val email: String,
+        )
+        @Serializable
+        data class PasswordHint(
+            val name: String,
+            val email: String,
+            val password: String,
+        )
+    }
+
     @Serializable
     data object Keygen {
 
@@ -511,23 +541,5 @@ internal sealed class Route {
 
     @Serializable
     data object OnboardingSummary : Route()
-
-    data object FastVaultInfo {
-        @Serializable
-        data object Name
-        @Serializable
-        data class Email(val name: String)
-        @Serializable
-        data class Password(
-            val name: String,
-            val email: String,
-        )
-        @Serializable
-        data class PasswordHint(
-            val name: String,
-            val email: String,
-            val password: String,
-        )
-    }
 
 }

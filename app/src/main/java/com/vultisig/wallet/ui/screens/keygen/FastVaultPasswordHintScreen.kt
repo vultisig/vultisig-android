@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintState
+import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -41,19 +41,15 @@ internal fun FastVaultPasswordHintScreen(
     FastVaultPasswordHintScreen(
         state = state,
         textFieldState = model.passwordHintFieldState,
-        onNextClick = {
-
-        },
-        onSkipClick = {
-
-        },
+        onNextClick = model::next,
+        onSkipClick = model::skip,
         onBackClick = model::back
     )
 }
 
 @Composable
 private fun FastVaultPasswordHintScreen(
-    state: FastVaultPasswordHintState,
+    state: FastVaultPasswordHintUiModel,
     textFieldState: TextFieldState,
     onNextClick: () -> Unit,
     onSkipClick: () -> Unit,
@@ -129,7 +125,7 @@ private fun FastVaultPasswordHintScreen(
 @Composable
 private fun FastVaultPasswordHintScreenPreview() {
     FastVaultPasswordHintScreen(
-        state = FastVaultPasswordHintState(),
+        state = FastVaultPasswordHintUiModel(),
         textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onBackClick = {},

@@ -26,18 +26,18 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.models.keygen.FastVaultNameState
-import com.vultisig.wallet.ui.models.keygen.FastVaultNameViewModel
+import com.vultisig.wallet.ui.models.keygen.NameVaultUiModel
+import com.vultisig.wallet.ui.models.keygen.NameVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun FastVaultNameScreen(
-    model: FastVaultNameViewModel = hiltViewModel(),
+internal fun NameVaultScreen(
+    model: NameVaultViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
 
-    FastVaultNameScreen(
+    NameVaultScreen(
         state = state,
         textFieldState = model.nameFieldState,
         onNextClick = model::navigateToEmail,
@@ -47,8 +47,8 @@ internal fun FastVaultNameScreen(
 }
 
 @Composable
-private fun FastVaultNameScreen(
-    state: FastVaultNameState,
+private fun NameVaultScreen(
+    state: NameVaultUiModel,
     textFieldState: TextFieldState,
     onNextClick: () -> Unit,
     onClearClick: () -> Unit,
@@ -117,8 +117,8 @@ private fun FastVaultNameScreen(
 @Preview
 @Composable
 private fun FastVaultNameScreenPreview() {
-    FastVaultNameScreen(
-        state = FastVaultNameState(),
+    NameVaultScreen(
+        state = NameVaultUiModel(),
         textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onClearClick = {},
