@@ -23,6 +23,8 @@ import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAU
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
 import com.vultisig.wallet.ui.navigation.Route.Keygen
+import com.vultisig.wallet.ui.navigation.Route.Secret
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
@@ -30,7 +32,6 @@ import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
-import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.QrAddressScreen
 import com.vultisig.wallet.ui.screens.SecretScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
@@ -46,14 +47,15 @@ import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
-import com.vultisig.wallet.ui.screens.keygen.FastVaultNameScreen
-import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
-import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
+import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
@@ -639,23 +641,23 @@ internal fun SetupNavGraph(
             RegisterVaultScreen(navController)
         }
 
-        composable<Route.Secret> {
+        composable<Secret> {
             SecretScreen(navController)
         }
 
-        composable<Route.FastVaultInfo.Name> {
-            FastVaultNameScreen()
+        composable<VaultInfo.Name> {
+            NameVaultScreen()
         }
 
-        composable<Route.FastVaultInfo.Email> {
+        composable<VaultInfo.Email> {
             FastVaultEmailScreen()
         }
 
-        composable<Route.FastVaultInfo.Password> {
+        composable<VaultInfo.Password> {
             FastVaultPasswordScreen()
         }
 
-        composable<Route.FastVaultInfo.PasswordHint> {
+        composable<VaultInfo.PasswordHint> {
             FastVaultPasswordHintScreen()
         }
     }
