@@ -563,7 +563,7 @@
     <string name="home_screen_scan_qr_code" translatable="false">Scan QR</string>
     <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
     <string name="select_vault_type_next" translatable="false">Next</string>
-    <string name="select_vault_type_choose_setup" translatable="false">Choose Set-up</string>
+    <string name="select_vault_type_choose_setup" translatable="false">Choose Setup</string>
 
 
     <string name="keygen_benefit_1_template" translatable="false">Removing the single-point of failure</string>
