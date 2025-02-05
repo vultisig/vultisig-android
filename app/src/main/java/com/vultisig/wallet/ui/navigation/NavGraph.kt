@@ -45,9 +45,13 @@ import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultNameScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
@@ -637,6 +641,22 @@ internal fun SetupNavGraph(
 
         composable<Route.Secret> {
             SecretScreen(navController)
+        }
+
+        composable<Route.FastVaultInfo.Name> {
+            FastVaultNameScreen()
+        }
+
+        composable<Route.FastVaultInfo.Email> {
+            FastVaultEmailScreen()
+        }
+
+        composable<Route.FastVaultInfo.Password> {
+            FastVaultPasswordScreen()
+        }
+
+        composable<Route.FastVaultInfo.PasswordHint> {
+            FastVaultPasswordHintScreen()
         }
     }
 }
