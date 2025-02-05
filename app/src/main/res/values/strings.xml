@@ -582,4 +582,22 @@
     <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
     <string name="keygen_connecting_with_server">Connecting with server...</string>
     <string name="keygen_connecting_with_server_take_a_minute">This should only take a minute</string>
+    <string name="fast_vault_name_screen_title" translatable="false">Name your vault</string>
+    <string name="fast_vault_name_screen_desc" translatable="false">You can always rename your vault later in settings</string>
+    <string name="enter_email_screen_title" translatable="false">Enter your e-mail</string>
+    <string name="enter_email_screen_desc" translatable="false">This email is only used to send the backup of the server</string>
+    <string name="fast_vault_password_screen_title" translatable="false">Password</string>
+    <string name="fast_vault_password_screen_hint" translatable="false">This happens because the password encrypts the backup file locally, like encrypting a hard drive. In the next step you have the possibility to add a hint.</string>
+    <string name="fast_vault_password_screen_hint_title" translatable="false">More Info</string>
+    <string name="fast_vault_password_screen_warning" translatable="false">Password cannot be reset or recovered</string>
+    <string name="fast_vault_password_screen_next" translatable="false">Next</string>
+    <string name="fast_vault_password_hint_screen_title" translatable="false">Add a optional hint</string>
+    <string name="fast_vault_password_hint_screen_desc" translatable="false">This will be shown in case your forget your password</string>
+    <string name="fast_vault_password_hint_skip" translatable="false">Skip</string>
+    <string name="fast_vault_password_hint_next" translatable="false">Next</string>
+    <string name="fast_vault_password_hint_screen_hint" translatable="false">Enter hint</string>
+    <string name="fast_vault_password_screen_password_hint" translatable="false">Enter password</string>
+    <string name="fast_vault_password_screen_reenter_password_hint" translatable="false">Re-enter password</string>
+    <string name="fast_vault_name_screen_next" translatable="false">Next</string>
+    <string name="enter_email_screen_next"  translatable="false">Next</string>
 </resources>

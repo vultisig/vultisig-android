@@ -512,4 +512,22 @@ internal sealed class Route {
     @Serializable
     data object OnboardingSummary : Route()
 
+    data object FastVaultInfo {
+        @Serializable
+        data object Name
+        @Serializable
+        data class Email(val name: String)
+        @Serializable
+        data class Password(
+            val name: String,
+            val email: String,
+        )
+        @Serializable
+        data class PasswordHint(
+            val name: String,
+            val email: String,
+            val password: String,
+        )
+    }
+
 }
