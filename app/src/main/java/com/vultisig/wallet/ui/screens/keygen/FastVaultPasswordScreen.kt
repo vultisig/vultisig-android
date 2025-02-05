@@ -53,7 +53,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
-import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordState
+import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -78,7 +78,7 @@ internal fun FastVaultPasswordScreen(
 
 @Composable
 private fun FastVaultPasswordScreen(
-    state: FastVaultPasswordState,
+    state: FastVaultPasswordUiModel,
     passwordTextFieldState: TextFieldState,
     confirmPasswordTextFieldState: TextFieldState,
     onNextClick: () -> Unit,
@@ -179,6 +179,7 @@ private fun WarningCard(
     val warningColor = Theme.colors.alerts.warning
     val lightWarningColor = Theme.colors.alerts.warning.copy(alpha = 0.25f)
     Box {
+        // TODO replace with Banner
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
@@ -227,7 +228,7 @@ private fun WarningCard(
 @Preview
 private fun FastVaultPasswordScreenPreview() {
     FastVaultPasswordScreen(
-        state = FastVaultPasswordState(
+        state = FastVaultPasswordUiModel(
             isMoreInfoVisible = true
         ),
         passwordTextFieldState = rememberTextFieldState(),

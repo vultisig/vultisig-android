@@ -6,6 +6,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,11 +64,11 @@ internal class ChooseVaultViewModel @Inject constructor(
 
     fun start() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.NamingVault(
+            navigator.route(
+                Route.VaultInfo.Name(
                     when (state.value.vaultType) {
-                        VaultType.Secure -> VaultSetupType.SECURE
-                        VaultType.Fast -> VaultSetupType.FAST
+                        VaultType.Secure -> Route.VaultInfo.VaultType.Secure
+                        VaultType.Fast -> Route.VaultInfo.VaultType.Fast
                     }
                 )
             )
