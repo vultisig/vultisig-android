@@ -5,22 +5,21 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-interface OnBoardRepository {
-    suspend fun saveOnBoardingState(completed: Boolean)
-    fun readOnBoardingState(): Flow<Boolean>
+interface OnboardingRepository {
+    suspend fun saveOnboardingState(completed: Boolean)
+    fun readOnboardingState(): Flow<Boolean>
 }
 
-internal class OnBoardRepositoryImpl @Inject constructor(private val appDataStore: AppDataStore) :
-    OnBoardRepository {
+internal class OnboardingRepositoryImpl @Inject constructor(private val appDataStore: AppDataStore) :
+    OnboardingRepository {
 
-
-    override suspend fun saveOnBoardingState(completed: Boolean) {
+    override suspend fun saveOnboardingState(completed: Boolean) {
         appDataStore.editData { preferences ->
             preferences[onBoardingKey] = completed
         }
     }
 
-    override fun readOnBoardingState() =
+    override fun readOnboardingState() =
         appDataStore.readData(onBoardingKey, false)
 
     private companion object PreferencesKey {

@@ -1,24 +1,23 @@
-package com.vultisig.wallet.ui.models
+package com.vultisig.wallet.ui.models.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.repositories.OnBoardRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.OnboardingPages.Screen1
-import com.vultisig.wallet.ui.models.OnboardingPages.Screen2
-import com.vultisig.wallet.ui.models.OnboardingPages.Screen3
-import com.vultisig.wallet.ui.models.OnboardingPages.Screen4
-import com.vultisig.wallet.ui.models.OnboardingPages.Screen5
-import com.vultisig.wallet.ui.models.OnboardingPages.Screen6
+import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen1
+import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen2
+import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen3
+import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen4
+import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen5
+import com.vultisig.wallet.ui.models.onboarding.OnboardingPages.Screen6
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-const val ONBOARDING_STATE_MACHINE_NAME = "State Machine 1"
+internal const val ONBOARDING_STATE_MACHINE_NAME = "State Machine 1"
 
 internal data class OnboardingUiModel(
     val currentPage: OnboardingPages = Screen1,
@@ -28,43 +27,33 @@ internal data class OnboardingUiModel(
 
 @HiltViewModel
 internal class OnboardingViewModel @Inject constructor(
-    private val repository: OnBoardRepository,
-    private val vaultsRepository: VaultRepository,
     private val navigator: Navigator<Destination>
 ) : ViewModel() {
 
-    val uiState = MutableStateFlow(OnboardingUiModel())
+    val state = MutableStateFlow(OnboardingUiModel())
 
     fun next() {
         viewModelScope.launch {
-            val nextAnimation = pages.getOrNull(uiState.value.pageIndex + 1)
+            val nextAnimation = pages.getOrNull(state.value.pageIndex + 1)
             if (nextAnimation != null) {
-                uiState.update {
+                state.update {
                     it.copy(
                         currentPage = nextAnimation,
                         pageIndex = it.pageIndex + 1
                     )
                 }
             } else {
-                saveOnBoardingState()
+                navigator.route(Route.OnboardingSummary)
             }
         }
     }
 
-    fun skip() {
-        saveOnBoardingState()
+    fun skip() = viewModelScope.launch {
+        navigator.route(Route.OnboardingSummary)
     }
 
-    private fun saveOnBoardingState() {
-        viewModelScope.launch {
-            repository.saveOnBoardingState(completed = true)
-
-            val dest = if (vaultsRepository.hasVaults())
-                Destination.Home()
-            else Destination.AddVault
-
-            navigator.navigate(dest)
-        }
+    fun back() = viewModelScope.launch {
+        navigator.navigate(Destination.Back)
     }
 }
 
