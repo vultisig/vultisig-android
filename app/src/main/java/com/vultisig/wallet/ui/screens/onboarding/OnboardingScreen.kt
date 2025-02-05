@@ -1,4 +1,4 @@
-package com.vultisig.wallet.ui.screens
+package com.vultisig.wallet.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -32,14 +34,15 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
 import com.vultisig.wallet.ui.components.buttons.VsIconButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
-import com.vultisig.wallet.ui.models.ONBOARDING_STATE_MACHINE_NAME
-import com.vultisig.wallet.ui.models.OnboardingPages
-import com.vultisig.wallet.ui.models.OnboardingUiModel
-import com.vultisig.wallet.ui.models.OnboardingViewModel
+import com.vultisig.wallet.ui.models.onboarding.ONBOARDING_STATE_MACHINE_NAME
+import com.vultisig.wallet.ui.models.onboarding.OnboardingPages
+import com.vultisig.wallet.ui.models.onboarding.OnboardingUiModel
+import com.vultisig.wallet.ui.models.onboarding.OnboardingViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
@@ -47,7 +50,7 @@ import kotlinx.coroutines.delay
 internal fun OnboardingScreen(
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.state.collectAsState()
     var showPreview by remember { mutableStateOf(true) }
     var fadeoutPreviewText by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -87,7 +90,7 @@ internal fun OnboardingScreen(
     } else {
         OnboardingScreen(
             state = state,
-            onBackClick = {},
+            onBackClick = viewModel::back,
             onSkipClick = viewModel::skip,
             onNextClick = viewModel::next,
         )
@@ -105,9 +108,23 @@ private fun OnboardingScreen(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
             VsTopAppProgressBar(
-                title = stringResource(R.string.onboarding_intro_title),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
+                navigationContent = {
+                    Row(
+                        Modifier.clickable(onClick = onBackClick),
+                    ) {
+                        VsTopAppBarAction(
+                            icon = R.drawable.ic_caret_left,
+                            onClick = onBackClick,
+                        )
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            text = stringResource(R.string.onboarding_intro_back),
+                            style = Theme.brockmann.headings.title3,
+                            color = Theme.colors.text.primary,
+                            textAlign = TextAlign.Start,
+                        )
+                    }
+                },
                 progress = state.pageIndex + 1,
                 total = state.pageTotal,
                 actions = {
@@ -138,7 +155,7 @@ private fun OnboardingContent(
 ) {
     var buttonVisibility by remember { mutableStateOf(false) }
     var textVisibility by remember { mutableStateOf(false) }
-    var currentPageText: OnboardingPages  by remember { mutableStateOf(OnboardingPages.Screen1) }
+    var currentPageText: OnboardingPages by remember { mutableStateOf(OnboardingPages.Screen1) }
 
     LaunchedEffect(state) {
         textVisibility = false
@@ -220,11 +237,16 @@ private fun Description(
                         resId = R.string.onboarding_desc_page_1_part_3,
                         coloring = GradientColoring.VsColor(Theme.colors.text.light),
                     ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.onboarding_desc_page_1_part_4,
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                    ),
                 ),
                 style = Theme.brockmann.headings.title1,
                 modifier = modifier
             )
         }
+
         is OnboardingPages.Screen2 -> {
             SequenceOfGradientText(
                 listTextItems = listOf(
@@ -249,6 +271,7 @@ private fun Description(
                 modifier = modifier
             )
         }
+
         is OnboardingPages.Screen3 -> {
             SequenceOfGradientText(
                 listTextItems = listOf(
@@ -269,6 +292,7 @@ private fun Description(
                 modifier = modifier
             )
         }
+
         is OnboardingPages.Screen4 -> {
             SequenceOfGradientText(
                 listTextItems = listOf(
@@ -285,6 +309,7 @@ private fun Description(
                 modifier = modifier
             )
         }
+
         is OnboardingPages.Screen5 -> {
             SequenceOfGradientText(
                 listTextItems = listOf(
@@ -305,6 +330,7 @@ private fun Description(
                 modifier = modifier
             )
         }
+
         is OnboardingPages.Screen6 -> {
             SequenceOfGradientText(
                 listTextItems = listOf(

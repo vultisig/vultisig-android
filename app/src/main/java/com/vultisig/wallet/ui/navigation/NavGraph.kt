@@ -30,7 +30,7 @@ import com.vultisig.wallet.ui.screens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.CustomTokenScreen
 import com.vultisig.wallet.ui.screens.ImportFileScreen
 import com.vultisig.wallet.ui.screens.NamingVaultScreen
-import com.vultisig.wallet.ui.screens.OnboardingScreen
+import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.QrAddressScreen
 import com.vultisig.wallet.ui.screens.SecretScreen
 import com.vultisig.wallet.ui.screens.SelectTokenScreen
@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
@@ -71,6 +72,7 @@ import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
+import com.vultisig.wallet.ui.theme.slideInFromBottomEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -91,9 +93,16 @@ internal fun SetupNavGraph(
         popEnterTransition = slideInFromStartEnterTransition(),
         popExitTransition = slideOutToEndExitTransition(),
     ) {
-        composable(route = Destination.Onboarding.route) {
+        composable<Route.Onboarding>(
+            enterTransition = slideInFromBottomEnterTransition(),
+        ) {
             OnboardingScreen()
         }
+
+        composable<Route.OnboardingSummary> {
+            OnboardingSummaryScreen()
+        }
+
         composable(
             route = Destination.Home.STATIC_ROUTE,
             arguments = listOf(

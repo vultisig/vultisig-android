@@ -202,8 +202,8 @@ internal interface RepositoriesModule {
     @Singleton
     @Binds
     fun bindOnBoardRepository(
-        impl: OnBoardRepositoryImpl,
-    ): OnBoardRepository
+        impl: OnboardingRepositoryImpl,
+    ): OnboardingRepository
 
     @Singleton
     @Binds
