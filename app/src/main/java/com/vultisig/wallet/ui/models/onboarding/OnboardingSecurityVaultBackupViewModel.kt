@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.models.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupState
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.navigation.Destination
@@ -14,7 +16,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class OnboardingViewModel @Inject constructor(
+internal class OnboardingSecurityVaultBackupViewModel @Inject constructor(
+    private val onboardingSecureBackupRepository: OnboardingSecureBackupRepository,
     private val navigator: Navigator<Destination>
 ) : ViewModel() {
 
@@ -35,25 +38,16 @@ internal class OnboardingViewModel @Inject constructor(
                     )
                 }
             } else {
-                navigator.route(Route.Onboarding.VaultCreationSummary)
+                onboardingSecureBackupRepository.saveOnboardingState(OnboardingSecureBackupState.CompletedMain)
+                navigator.route(Route.VaultInfo.Name(Route.VaultInfo.VaultType.Secure))//TODO:
             }
         }
     }
 
-    fun skip() = viewModelScope.launch {
-        navigator.route(Route.Onboarding.VaultCreationSummary)
-    }
-
-    fun back() = viewModelScope.launch {
-        navigator.navigate(Destination.Back)
-    }
+    fun back() {}
 }
 
 private val pages = listOf(
     OnboardingPage(0),
     OnboardingPage(1),
-    OnboardingPage(2),
-    OnboardingPage(3),
-    OnboardingPage(4),
-    OnboardingPage(5),
 )

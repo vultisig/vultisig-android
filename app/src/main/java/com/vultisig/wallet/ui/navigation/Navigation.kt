@@ -536,10 +536,14 @@ internal sealed class Route {
 
     }
 
-    @Serializable
-    data object Onboarding : Route()
+    data object Onboarding {
+        @Serializable
+        data object VaultCreation
 
-    @Serializable
-    data object OnboardingSummary : Route()
+        @Serializable
+        data object VaultCreationSummary
 
+        @Serializable
+        data object SecurityVaultBackup
+    }
 }

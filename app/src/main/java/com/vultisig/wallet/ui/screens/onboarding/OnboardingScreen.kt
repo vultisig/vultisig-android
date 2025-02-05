@@ -33,16 +33,17 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
 import com.vultisig.wallet.ui.components.buttons.VsIconButton
+import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
-import com.vultisig.wallet.ui.models.onboarding.ONBOARDING_STATE_MACHINE_NAME
-import com.vultisig.wallet.ui.models.onboarding.OnboardingPages
-import com.vultisig.wallet.ui.models.onboarding.OnboardingUiModel
 import com.vultisig.wallet.ui.models.onboarding.OnboardingViewModel
+import com.vultisig.wallet.ui.models.onboarding.components.ONBOARDING_STATE_MACHINE_NAME
+import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
+import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
@@ -125,7 +126,7 @@ private fun OnboardingScreen(
                         )
                     }
                 },
-                progress = state.pageIndex + 1,
+                progress = state.currentPage.index + 1,
                 total = state.pageTotal,
                 actions = {
                     Text(
@@ -142,89 +143,24 @@ private fun OnboardingScreen(
         OnboardingContent(
             state = state,
             paddingValues = paddingValues,
+            riveAnimation = R.raw.onboarding_v2,
             nextClick = onNextClick,
+            textDescription = { page ->
+                Description(page = page)
+            },
         )
-    }
-}
-
-@Composable
-private fun OnboardingContent(
-    state: OnboardingUiModel,
-    paddingValues: PaddingValues,
-    nextClick: () -> Unit,
-) {
-    var buttonVisibility by remember { mutableStateOf(false) }
-    var textVisibility by remember { mutableStateOf(false) }
-    var currentPageText: OnboardingPages by remember { mutableStateOf(OnboardingPages.Screen1) }
-
-    LaunchedEffect(state) {
-        textVisibility = false
-        buttonVisibility = false
-        delay(1000)
-        currentPageText = state.currentPage
-        textVisibility = true
-        delay(1000)
-        buttonVisibility = true
-    }
-    Box(
-        modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize(),
-    ) {
-        RiveAnimation(
-            animation = R.raw.onboarding_v2,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter),
-            onInit = { riveAnimationView ->
-                riveAnimationView.fireState(
-                    stateMachineName = ONBOARDING_STATE_MACHINE_NAME,
-                    inputName = state.currentPage.triggerName,
-                )
-            }
-        )
-
-        AnimatedVisibility(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(start = 24.dp, end = 24.dp, bottom = 120.dp),
-            visible = textVisibility,
-            enter = fadeIn(tween(200)),
-            exit = fadeOut(tween(200)),
-        ) {
-            Description(
-                page = currentPageText,
-            )
-        }
-
-        AnimatedVisibility(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp),
-            visible = buttonVisibility,
-            enter = fadeIn(tween(200)),
-            exit = fadeOut(tween(200)),
-        ) {
-            VsIconButton(
-                variant = Primary,
-                state = Enabled,
-                size = Medium,
-                icon = R.drawable.ic_caret_right,
-                onClick = nextClick,
-            )
-        }
     }
 }
 
 @Composable
 private fun Description(
-    page: OnboardingPages,
+    page: OnboardingPage,
     modifier: Modifier = Modifier,
 ) {
-    when (page) {
-        is OnboardingPages.Screen1 -> {
-            SequenceOfGradientText(
-                listTextItems = listOf(
+    SequenceOfGradientText(
+        listTextItems = when (page.index) {
+            0 -> {
+                listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_1_part_1,
                         coloring = GradientColoring.VsColor(Theme.colors.text.primary),
@@ -241,15 +177,11 @@ private fun Description(
                         resId = R.string.onboarding_desc_page_1_part_4,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
-                ),
-                style = Theme.brockmann.headings.title1,
-                modifier = modifier
-            )
-        }
+                )
+            }
 
-        is OnboardingPages.Screen2 -> {
-            SequenceOfGradientText(
-                listTextItems = listOf(
+            1 -> {
+                listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_2_part_1,
                         coloring = GradientColoring.VsColor(Theme.colors.text.primary),
@@ -266,15 +198,12 @@ private fun Description(
                         resId = R.string.onboarding_desc_page_2_part_4,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
-                ),
-                style = Theme.brockmann.headings.title1,
-                modifier = modifier
-            )
-        }
+                )
 
-        is OnboardingPages.Screen3 -> {
-            SequenceOfGradientText(
-                listTextItems = listOf(
+            }
+
+            2 -> {
+                listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_3_part_1,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
@@ -287,15 +216,12 @@ private fun Description(
                         resId = R.string.onboarding_desc_page_3_part_3,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
-                ),
-                style = Theme.brockmann.headings.title1,
-                modifier = modifier
-            )
-        }
+                )
 
-        is OnboardingPages.Screen4 -> {
-            SequenceOfGradientText(
-                listTextItems = listOf(
+            }
+
+            3 -> {
+                listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_4_part_1,
                         coloring = GradientColoring.VsColor(Theme.colors.text.primary),
@@ -304,15 +230,11 @@ private fun Description(
                         resId = R.string.onboarding_desc_page_4_part_2,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
-                ),
-                style = Theme.brockmann.headings.title1,
-                modifier = modifier
-            )
-        }
+                )
+            }
 
-        is OnboardingPages.Screen5 -> {
-            SequenceOfGradientText(
-                listTextItems = listOf(
+            4 -> {
+                listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_5_part_1,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
@@ -325,15 +247,11 @@ private fun Description(
                         resId = R.string.onboarding_desc_page_5_part_3,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
-                ),
-                style = Theme.brockmann.headings.title1,
-                modifier = modifier
-            )
-        }
+                )
+            }
 
-        is OnboardingPages.Screen6 -> {
-            SequenceOfGradientText(
-                listTextItems = listOf(
+            else -> {
+                listOf(
                     PartiallyGradientTextItem(
                         resId = R.string.onboarding_desc_page_6_part_1,
                         coloring = GradientColoring.VsColor(Theme.colors.text.primary),
@@ -342,10 +260,10 @@ private fun Description(
                         resId = R.string.onboarding_desc_page_6_part_2,
                         coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
                     ),
-                ),
-                style = Theme.brockmann.headings.title1,
-                modifier = modifier
-            )
-        }
-    }
+                )
+            }
+        },
+        style = Theme.brockmann.headings.title1,
+        modifier = modifier
+    )
 }
