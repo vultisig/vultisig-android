@@ -15,6 +15,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.toJson
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
@@ -24,9 +26,11 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.CreateQrCodeSharingBitmapUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
@@ -65,6 +69,11 @@ data class PeerDiscoveryUiModel(
     // we're trying to promote minimum of three devices
     val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1,
     val isQrHelpModalVisited: Boolean = true,
+    val connectingToServer: ConnectingToServerUiModel? = null,
+)
+
+data class ConnectingToServerUiModel(
+    val isSuccess: Boolean = false,
 )
 
 // TODO switch network option
@@ -83,14 +92,15 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     private val createQrCodeSharingBitmap: CreateQrCodeSharingBitmapUseCase,
     generateServiceName: GenerateServiceName,
     private val discoverParticipants: DiscoverParticipantsUseCase,
+    private val generateServerPartyId: GenerateServerPartyId,
 
     private val secretSettingsRepository: SecretSettingsRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
+    private val qrHelperModalRepository: QrHelperModalRepository,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
-    private val qrHelperModalRepository: QrHelperModalRepository,
-
-    ) : ViewModel() {
+) : ViewModel() {
 
     val state = MutableStateFlow(PeerDiscoveryUiModel())
 
@@ -107,6 +117,10 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
     private val vaultName: String = params.vaultName
     private var libType = SigningLibType.GG20
+
+    // fast vault data
+    private val email = params.email
+    private val password = params.password
 
     private val qrBitmap = MutableStateFlow<Bitmap?>(null)
 
@@ -152,6 +166,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     }
 
     fun next() {
+        discoverParticipantsJob?.cancel()
         viewModelScope.launch {
             navigator.route(
                 Route.Keygen.Generating(
@@ -178,58 +193,102 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            checkQrHelperModalIsVisited()
-
             setupLibType()
 
-            val isRelayEnabled = network.value == NetworkOption.Internet
-
-            val keygenPayload = createKeygenPayload(
-                isRelayEnabled = isRelayEnabled
-            )
-
-            loadQr(keygenPayload)
-
-            state.update {
-                it.copy(
-                    localPartyId = localPartyId,
-                )
-            }
-
-            if (isRelayEnabled) {
-                val serverUrl = VULTISIG_RELAY_URL
-
-                try {
-                    sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
-
-                    discoverParticipantsJob?.cancel()
-                    discoverParticipantsJob = viewModelScope.launch {
-                        discoverParticipants(serverUrl, sessionId, localPartyId)
-                            .collect { devices ->
-                                val currentState = state.value
-                                val existingDevices = currentState.devices.toSet()
-                                val newDevices = devices - existingDevices
-
-                                val selectedDevices =
-                                    currentState.selectedDevices.toSet() + newDevices
-
-                                state.update {
-                                    it.copy(
-                                        devices = devices,
-                                        selectedDevices = selectedDevices.toList()
-                                    )
-                                }
-                            }
-                    }
-                } catch (e: Exception) {
-                    Timber.e("Failed to start session", e)
-                    // TODO display error, retry
-                }
+            if (email != null && password != null) {
+                startVultiServerConnection()
             } else {
-                // TODO local relay
-                // when relay is disabled, start the mediator service
-                // startMediatorService()
+                startPeerDiscovery()
             }
+        }
+    }
+
+    private suspend fun startPeerDiscovery() {
+        checkQrHelperModalIsVisited()
+
+        val isRelayEnabled = network.value == NetworkOption.Internet
+
+        val keygenPayload = createKeygenPayload(
+            isRelayEnabled = isRelayEnabled
+        )
+
+        loadQr(keygenPayload)
+
+        state.update {
+            it.copy(
+                localPartyId = localPartyId,
+            )
+        }
+
+        if (isRelayEnabled) {
+            val serverUrl = VULTISIG_RELAY_URL
+
+            try {
+                sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
+
+                discoverParticipantsJob?.cancel()
+                discoverParticipantsJob = viewModelScope.launch {
+                    discoverParticipants(serverUrl, sessionId, localPartyId)
+                        .collect { devices ->
+                            val currentState = state.value
+                            val existingDevices = currentState.devices.toSet()
+                            val newDevices = devices - existingDevices
+
+                            val selectedDevices =
+                                currentState.selectedDevices.toSet() + newDevices
+
+                            state.update {
+                                it.copy(
+                                    devices = devices,
+                                    selectedDevices = selectedDevices.toList()
+                                )
+                            }
+                        }
+                }
+            } catch (e: Exception) {
+                Timber.e("Failed to start session", e)
+                // TODO display error, retry
+            }
+        } else {
+            // TODO local relay
+            // when relay is disabled, start the mediator service
+            // startMediatorService()
+        }
+    }
+
+    private suspend fun startVultiServerConnection() {
+        state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
+
+        sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
+
+        requestVultiServerConnection()
+
+        discoverParticipantsJob?.cancel()
+        discoverParticipantsJob = viewModelScope.launch {
+            discoverParticipants(serverUrl, sessionId, localPartyId)
+                .collect { devices ->
+                    // TODO reuse (also, what if state.update is not in sync?)
+                    val currentState = state.value
+                    val existingDevices = currentState.devices.toSet()
+                    val newDevices = devices - existingDevices
+
+                    val selectedDevices =
+                        currentState.selectedDevices.toSet() + newDevices
+
+                    state.update {
+                        it.copy(
+                            devices = devices,
+                            selectedDevices = selectedDevices.toList()
+                        )
+                    }
+
+                    if (devices.size == 1) {
+                        state.update {
+                            it.copy(connectingToServer = ConnectingToServerUiModel(true))
+                        }
+                        next()
+                    }
+                }
         }
     }
 
@@ -278,6 +337,23 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     )
                 )
             ).encodeBase64()
+
+    private suspend fun requestVultiServerConnection() {
+        if (email != null && password != null) {
+            vultiSignerRepository.joinKeygen(
+                JoinKeygenRequestJson(
+                    vaultName = vaultName,
+                    sessionId = sessionId,
+                    hexEncryptionKey = encryptionKeyHex,
+                    hexChainCode = hexChainCode,
+                    localPartyId = generateServerPartyId(),
+                    encryptionPassword = password,
+                    email = email,
+                    libType = libType.toJson()
+                )
+            )
+        }
+    }
 
     fun dismissQrHelpModal() {
         viewModelScope.launch {

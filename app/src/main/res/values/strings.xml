@@ -560,7 +560,7 @@
     <string name="home_screen_scan_qr_code" translatable="false">Scan QR</string>
     <string name="create_new_vault_screen_create_new_vault" translatable="false">Create new vault</string>
     <string name="select_vault_type_next" translatable="false">Next</string>
-    <string name="select_vault_type_choose_setup" translatable="false">Choose Set-up</string>
+    <string name="select_vault_type_choose_setup" translatable="false">Choose Setup</string>
 
 
     <string name="keygen_benefit_1_template" translatable="false">Removing the single-point of failure</string>
@@ -574,6 +574,8 @@
     <string name="keygen_step_preparing_vault">Preparing Vault</string>
     <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
     <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
+    <string name="keygen_connecting_with_server">Connecting with server...</string>
+    <string name="keygen_connecting_with_server_take_a_minute">This should only take a minute</string>
     <string name="fast_vault_name_screen_title" translatable="false">Name your vault</string>
     <string name="fast_vault_name_screen_desc" translatable="false">You can always rename your vault later in settings</string>
     <string name="enter_email_screen_title" translatable="false">Enter your e-mail</string>

@@ -166,19 +166,21 @@ internal fun VsTextInputField(
                         }
                     )
                     UiSpacer(1f)
-                    Icon(
-                        painter = painterResource(
-                            if (type.isVisible)
-                                R.drawable.hidden else R.drawable.visible
-                        ),
-                        tint = Theme.colors.text.button.light,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clickable(
-                                onClick = type.onVisibilityClick
-                            )
-                    )
+                    if(textFieldState.text.isNotEmpty()) {
+                        Icon(
+                            painter = painterResource(
+                                if (type.isVisible)
+                                    R.drawable.visible else R.drawable.hidden
+                            ),
+                            tint = Theme.colors.text.button.light,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable(
+                                    onClick = type.onVisibilityClick
+                                )
+                        )
+                    }
                 }
 
                 else -> {
@@ -320,11 +322,21 @@ private fun PasswordTypePreview() {
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
+            innerState = VsTextInputFieldInnerState.Default,
+            focused = false,
+            initialText = ""
+        )
+        VsTextInputPreviewMaker(
+            type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Success,
+            focused = false,
+            initialText = "some password"
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = false) {},
             innerState = VsTextInputFieldInnerState.Error,
+            focused = false,
+            initialText = "some password"
         )
     }
 }
