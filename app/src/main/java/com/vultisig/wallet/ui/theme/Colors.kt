@@ -85,6 +85,9 @@ internal data class BackgroundsColors(
     val secondary: Color = Color(0xFF061B3A),
     val tertiary: Color = Color(0xFF11284A),
     val success: Color = Color(0xFF042436),
+    val alert: Color = Color(0xFF362B17),
+    val error: Color = Color(0xFF2B1111),
+    val neutral: Color = Color(0xFF061B3A),
 )
 
 internal data class PrimaryColors(
