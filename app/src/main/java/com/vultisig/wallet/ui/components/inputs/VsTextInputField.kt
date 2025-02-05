@@ -25,9 +25,15 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -64,10 +70,10 @@ internal enum class VsTextInputFieldInnerState {
 internal fun VsTextInputField(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
-    onFocusChanged: (isFocused: Boolean) -> Unit,
-    focused: Boolean,
+    onFocusChanged: ((isFocused: Boolean) -> Unit)? = null,
     type: VsTextInputFieldType = VsTextInputFieldType.Text,
     innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
+    focusRequester: FocusRequester? = null,
     hint: String? = null,
     footNote: String? = null,
     label: String? = null,
@@ -81,6 +87,9 @@ internal fun VsTextInputField(
     imeAction: ImeAction = ImeAction.Unspecified,
     keyboardType: KeyboardType = KeyboardType.Unspecified,
 ) {
+    var focused by remember {
+        mutableStateOf(false)
+    }
     Column(
         modifier = modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -134,10 +143,16 @@ internal fun VsTextInputField(
                         ),
                         cursorBrush = Theme.cursorBrush,
                         textObfuscationMode = if (type.isVisible)
-                            TextObfuscationMode.RevealLastTyped else TextObfuscationMode.Visible,
+                            TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
                         modifier = Modifier
+                            .then(
+                                if (focusRequester != null)
+                                    Modifier.focusRequester(focusRequester)
+                                else Modifier
+                            )
                             .onFocusChanged {
-                                onFocusChanged(it.isFocused)
+                                focused = it.isFocused
+                                onFocusChanged?.invoke(it.isFocused)
                             },
                         decorator = { textField ->
                             if (textFieldState.text.isEmpty() && hint != null) {
@@ -188,6 +203,11 @@ internal fun VsTextInputField(
                         },
                         modifier = Modifier
                             .then(
+                                if (focusRequester != null)
+                                    Modifier.focusRequester(focusRequester)
+                                else Modifier
+                            )
+                            .then(
                                 if (type !is VsTextInputFieldType.Number)
                                     Modifier.weight(1f)
                                 else {
@@ -195,7 +215,8 @@ internal fun VsTextInputField(
                                 }
                             )
                             .onFocusChanged {
-                                onFocusChanged(it.isFocused)
+                                focused = it.isFocused
+                                onFocusChanged?.invoke(it.isFocused)
                             },
                         decorator = { textField ->
                             if (textFieldState.text.isEmpty() && hint != null) {
@@ -269,22 +290,18 @@ private fun TextTypePreview() {
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Text,
             innerState = VsTextInputFieldInnerState.Default,
-            focused = false,
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Text,
             innerState = VsTextInputFieldInnerState.Default,
-            focused = true,
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Text,
             innerState = VsTextInputFieldInnerState.Success,
-            focused = false,
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Text,
             innerState = VsTextInputFieldInnerState.Error,
-            focused = false,
         )
     }
 }
@@ -296,31 +313,26 @@ private fun PasswordTypePreview() {
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Default,
-            focused = false,
             initialText = "some password"
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = false) {},
             innerState = VsTextInputFieldInnerState.Default,
-            focused = true,
             initialText = "some password"
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Default,
-            focused = false,
             initialText = ""
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = true) {},
             innerState = VsTextInputFieldInnerState.Success,
-            focused = false,
             initialText = "some password"
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.Password(isVisible = false) {},
             innerState = VsTextInputFieldInnerState.Error,
-            focused = false,
             initialText = "some password"
         )
     }
@@ -333,22 +345,18 @@ private fun MultiLineTypePreview() {
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.MultiLine(minLines = 5),
             innerState = VsTextInputFieldInnerState.Default,
-            focused = false,
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.MultiLine(minLines = 5),
             innerState = VsTextInputFieldInnerState.Default,
-            focused = true,
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.MultiLine(minLines = 5),
             innerState = VsTextInputFieldInnerState.Success,
-            focused = false,
         )
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.MultiLine(minLines = 5),
             innerState = VsTextInputFieldInnerState.Error,
-            focused = false,
         )
     }
 }
@@ -360,22 +368,18 @@ private fun NumberTypePreview() {
         VsTextInputForNumberPreviewMaker(
             type = VsTextInputFieldType.Number,
             innerState = VsTextInputFieldInnerState.Default,
-            focused = false,
         )
         VsTextInputForNumberPreviewMaker(
             type = VsTextInputFieldType.Number,
             innerState = VsTextInputFieldInnerState.Default,
-            focused = true,
         )
         VsTextInputForNumberPreviewMaker(
             type = VsTextInputFieldType.Number,
             innerState = VsTextInputFieldInnerState.Success,
-            focused = false,
         )
         VsTextInputForNumberPreviewMaker(
             type = VsTextInputFieldType.Number,
             innerState = VsTextInputFieldInnerState.Error,
-            focused = false,
         )
     }
 }
@@ -384,7 +388,6 @@ private fun NumberTypePreview() {
 private fun VsTextInputPreviewMaker(
     type: VsTextInputFieldType,
     innerState: VsTextInputFieldInnerState,
-    focused: Boolean,
     initialText: String = "",
 ) {
     VsTextInputField(
@@ -394,7 +397,6 @@ private fun VsTextInputPreviewMaker(
         labelIcon = R.drawable.ic_question_mark,
         textFieldState = rememberTextFieldState(initialText),
         onFocusChanged = {},
-        focused = focused,
         type = type,
         innerState = innerState,
         footNote = "foot note",
@@ -413,14 +415,12 @@ private fun VsTextInputPreviewMaker(
 private fun VsTextInputForNumberPreviewMaker(
     type: VsTextInputFieldType,
     innerState: VsTextInputFieldInnerState,
-    focused: Boolean,
 ) {
     VsTextInputField(
         modifier = Modifier,
         hint = "hint",
         textFieldState = rememberTextFieldState(),
         onFocusChanged = {},
-        focused = focused,
         type = type,
         innerState = innerState,
         footNote = "foot note",
