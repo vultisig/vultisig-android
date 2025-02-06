@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,7 +50,7 @@ internal fun KeysignPeerDiscovery(
     val participants = viewModel.participants.asFlow().collectAsState(initial = emptyList()).value
     val isLoading = viewModel.isLoading.collectAsState().value
     val context = LocalContext.current.applicationContext
-    val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
+    val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalActivity.current as MainActivity)
     val vault = sharedViewModel.vault ?: return
     val keysignPayload = sharedViewModel.keysignPayload
     val customMessagePayload = sharedViewModel.customMessagePayload
