@@ -1,10 +1,15 @@
 package com.vultisig.wallet.ui.models.onboarding
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupState
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,9 +19,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class OnboardingViewModel @Inject constructor(
-    private val navigator: Navigator<Destination>
+internal class OnboardingSecureVaultBackupViewModel @Inject constructor(
+    private val onboardingSecureBackupRepository: OnboardingSecureBackupRepository,
+    private val navigator: Navigator<Destination>,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    val vaultId = savedStateHandle.toRoute<Route.Onboarding.SecureVaultBackup>().vaultId
 
     val state = MutableStateFlow(
         OnboardingUiModel(
@@ -37,25 +46,23 @@ internal class OnboardingViewModel @Inject constructor(
                     )
                 }
             } else {
-                navigator.route(Route.Onboarding.VaultCreationSummary)
+                onboardingSecureBackupRepository.saveOnboardingState(OnboardingSecureBackupState.COMPLETED_MAIN)
+                navigator.navigate(
+                    dst = Destination.BackupSuggestion(
+                        vaultId = vaultId
+                    ),
+                    opts = NavigationOptions(
+                        popUpTo = Destination.Home().route,
+                    )
+                )
             }
         }
     }
 
-    fun skip() = viewModelScope.launch {
-        navigator.route(Route.Onboarding.VaultCreationSummary)
-    }
-
-    fun back() = viewModelScope.launch {
-        navigator.navigate(Destination.Back)
-    }
+    fun back() {}
 }
 
 private val pages = listOf(
-    OnboardingPage(),
-    OnboardingPage(),
-    OnboardingPage(),
-    OnboardingPage(),
     OnboardingPage(),
     OnboardingPage(),
 )

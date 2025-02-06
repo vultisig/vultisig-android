@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.repositories
+package com.vultisig.wallet.data.repositories.onboarding
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.vultisig.wallet.data.sources.AppDataStore

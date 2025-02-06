@@ -141,19 +141,21 @@ fun VsTopAppBarAction(
 fun VsTopAppProgressBar(
     modifier: Modifier = Modifier,
     title: String? = null,
-    navigationContent: @Composable () -> Unit,
+    navigationContent: @Composable () -> Unit = {},
     progress: Int = 3,
     total: Int = 12,
-    actions: @Composable RowScope.() -> Unit
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     Column {
         CenterAlignedTopAppBar(
             title = {
                 if (title != null) {
                     Text(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                         text = title,
-                        style = Theme.brockmann.body.l.medium,
+                        style = Theme.brockmann.headings.title3,
                         color = Theme.colors.text.primary,
                         textAlign = TextAlign.Start,
                     )

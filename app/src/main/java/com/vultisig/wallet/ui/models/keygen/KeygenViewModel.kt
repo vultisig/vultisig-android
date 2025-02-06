@@ -19,8 +19,11 @@ import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupState
 import com.vultisig.wallet.data.tss.LocalStateAccessorImpl
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
@@ -36,6 +39,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -67,6 +71,7 @@ internal class KeygenViewModel @Inject constructor(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
+    private val onboardingSecureBackupRepository: OnboardingSecureBackupRepository,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
@@ -350,6 +355,24 @@ internal class KeygenViewModel @Inject constructor(
         // if (password?.isNotEmpty() == true && context.canAuthenticateBiometric()) {
         //     vaultPasswordRepository.savePassword(vaultId, password)
         // }
+
+        val onboardingSecureState = onboardingSecureBackupRepository.readOnboardingState().first()
+        if (
+            !vault.isFastVault()
+            && !isReshareMode
+            && onboardingSecureState == OnboardingSecureBackupState.NOT_COMPLETED
+        ) {
+            navigator.route(Route.Onboarding.SecureVaultBackup)
+        } else {
+            navigator.navigate(
+                dst = Destination.BackupSuggestion(
+                    vaultId = vaultId
+                ),
+                opts = NavigationOptions(
+                    popUpTo = Destination.Home().route,
+                )
+            )
+        }
 
         navigator.navigate(
             dst = Destination.BackupSuggestion(

@@ -2,8 +2,9 @@ package com.vultisig.wallet.ui.models.onboarding
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.repositories.OnboardingRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepository
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -17,6 +18,11 @@ internal class OnboardingSummaryViewModel @Inject constructor(
 
     fun createVault() = viewModelScope.launch {
         onboardingRepository.saveOnboardingState(true)
-        navigator.navigate(Destination.SelectVaultType)
+        navigator.navigate(
+            dst = Destination.SelectVaultType,
+            opts = NavigationOptions(
+                popUpTo = Destination.AddVault.route,
+            )
+        )
     }
 }

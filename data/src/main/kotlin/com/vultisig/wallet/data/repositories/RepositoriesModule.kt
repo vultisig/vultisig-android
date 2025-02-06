@@ -3,6 +3,10 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.db.models.FolderOrderEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepositoryImpl
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupRepositoryImpl
 import com.vultisig.wallet.data.repositories.order.AddressBookOrderRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
@@ -204,6 +208,12 @@ internal interface RepositoriesModule {
     fun bindOnBoardRepository(
         impl: OnboardingRepositoryImpl,
     ): OnboardingRepository
+
+    @Singleton
+    @Binds
+    fun bindOnboardingSecureBackupRepository(
+        impl: OnboardingSecureBackupRepositoryImpl,
+    ): OnboardingSecureBackupRepository
 
     @Singleton
     @Binds
