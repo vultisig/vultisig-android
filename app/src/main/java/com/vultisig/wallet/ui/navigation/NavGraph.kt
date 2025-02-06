@@ -56,7 +56,7 @@ import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
-import com.vultisig.wallet.ui.screens.onboarding.OnboardingSecurityVaultBackupScreen
+import com.vultisig.wallet.ui.screens.onboarding.OnboardingSecureVaultBackupScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
@@ -110,10 +110,10 @@ internal fun SetupNavGraph(
             OnboardingSummaryScreen()
         }
 
-        composable<Route.Onboarding.SecurityVaultBackup> (
+        composable<Route.Onboarding.SecureVaultBackup> (
             enterTransition = slideInFromBottomEnterTransition(),
         ) {
-            OnboardingSecurityVaultBackupScreen()
+            OnboardingSecureVaultBackupScreen()
         }
 
         composable(

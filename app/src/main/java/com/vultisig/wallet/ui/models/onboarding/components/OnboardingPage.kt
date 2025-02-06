@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.onboarding.components
 
-data class OnboardingPage(
-    val index: Int,
+internal data class OnboardingPage(
     val triggerName: String = "Next",
 )

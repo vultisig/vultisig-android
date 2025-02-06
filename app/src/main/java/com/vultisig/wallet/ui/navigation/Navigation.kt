@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
-import com.vultisig.wallet.ui.models.keygen.VaultType
 import kotlinx.serialization.Serializable
 
 internal open class Dst(
@@ -544,6 +543,8 @@ internal sealed class Route {
         data object VaultCreationSummary
 
         @Serializable
-        data object SecurityVaultBackup
+        data class SecureVaultBackup(
+            val vaultId: String,
+        )
     }
 }

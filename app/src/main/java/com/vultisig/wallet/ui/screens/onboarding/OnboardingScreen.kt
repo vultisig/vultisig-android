@@ -2,16 +2,13 @@ package com.vultisig.wallet.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,29 +26,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
-import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
-import com.vultisig.wallet.ui.components.buttons.VsIconButton
 import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
-import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
 import com.vultisig.wallet.ui.models.onboarding.OnboardingViewModel
-import com.vultisig.wallet.ui.models.onboarding.components.ONBOARDING_STATE_MACHINE_NAME
-import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnboardingScreen(
-    viewModel: OnboardingViewModel = hiltViewModel(),
+    model: OnboardingViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by model.state.collectAsState()
     var showPreview by remember { mutableStateOf(true) }
     var fadeoutPreviewText by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -91,9 +81,9 @@ internal fun OnboardingScreen(
     } else {
         OnboardingScreen(
             state = state,
-            onBackClick = viewModel::back,
-            onSkipClick = viewModel::skip,
-            onNextClick = viewModel::next,
+            onBackClick = model::back,
+            onSkipClick = model::skip,
+            onNextClick = model::next,
         )
     }
 }
@@ -126,7 +116,7 @@ private fun OnboardingScreen(
                         )
                     }
                 },
-                progress = state.currentPage.index + 1,
+                progress = state.pageIndex + 1,
                 total = state.pageTotal,
                 actions = {
                     Text(
@@ -145,8 +135,8 @@ private fun OnboardingScreen(
             paddingValues = paddingValues,
             riveAnimation = R.raw.onboarding_v2,
             nextClick = onNextClick,
-            textDescription = { page ->
-                Description(page = page)
+            textDescription = { index ->
+                Description(index = index)
             },
         )
     }
@@ -154,11 +144,11 @@ private fun OnboardingScreen(
 
 @Composable
 private fun Description(
-    page: OnboardingPage,
+    index: Int,
     modifier: Modifier = Modifier,
 ) {
     SequenceOfGradientText(
-        listTextItems = when (page.index) {
+        listTextItems = when (index) {
             0 -> {
                 listOf(
                     PartiallyGradientTextItem(

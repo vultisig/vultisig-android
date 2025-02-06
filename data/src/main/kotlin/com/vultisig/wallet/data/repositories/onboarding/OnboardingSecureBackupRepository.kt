@@ -16,30 +16,19 @@ internal class OnboardingSecureBackupRepositoryImpl @Inject constructor(private 
 
     override suspend fun saveOnboardingState(completed: OnboardingSecureBackupState) {
         appDataStore.editData { preferences ->
-            preferences[onBoardingKey] = completed.value
+            preferences[onBoardingKey] = completed.toString()
         }
     }
 
     override fun readOnboardingState() =
-        appDataStore.readData(onBoardingKey, "NotCompleted")
-            .map { OnboardingSecureBackupState.fromString(it) }
+        appDataStore.readData(onBoardingKey, "NOT_COMPLETED")
+            .map { OnboardingSecureBackupState.valueOf(it) }
 
     private companion object PreferencesKey {
         val onBoardingKey = stringPreferencesKey(name = "on_boarding_secure_backup_test")
     }
 }
 
-sealed class OnboardingSecureBackupState(val value: String) {
-    data object NotCompleted : OnboardingSecureBackupState("NotCompleted")
-    data object CompletedMain : OnboardingSecureBackupState("CompletedMain")
-    data object CompletedSummary : OnboardingSecureBackupState("CompletedSummary")
-    companion object {
-        fun fromString(value: String): OnboardingSecureBackupState {
-            return when (value) {
-                "CompletedMain" -> CompletedMain
-                "CompletedSummary" -> CompletedSummary
-                else -> NotCompleted
-            }
-        }
-    }
+enum class OnboardingSecureBackupState {
+    NOT_COMPLETED, COMPLETED_MAIN, COMPLETED_SUMMARY
 }

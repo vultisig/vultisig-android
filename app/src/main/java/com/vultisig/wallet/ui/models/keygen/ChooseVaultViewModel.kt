@@ -67,26 +67,15 @@ internal class ChooseVaultViewModel @Inject constructor(
     }
 
     fun start() {
-        viewModelScope.launch { //TODO: move to success generation
-            when (state.value.vaultType) {
-                VaultType.Fast -> navigator.route(Route.VaultInfo.Name(Route.VaultInfo.VaultType.Fast))
-                VaultType.Secure -> {
-                    val onboardingState = onboardingSecureBackupRepository.readOnboardingState().first()
-                    if (onboardingState == OnboardingSecureBackupState.NotCompleted) {
-                        navigator.route(Route.Onboarding.SecurityVaultBackup)
-                    } else {
-                        navigator.route(Route.VaultInfo.Name(Route.VaultInfo.VaultType.Secure))
+        viewModelScope.launch {
+            navigator.route(
+                Route.VaultInfo.Name(
+                    when (state.value.vaultType) {
+                        VaultType.Secure -> Route.VaultInfo.VaultType.Secure
+                        VaultType.Fast -> Route.VaultInfo.VaultType.Fast
                     }
-                }
-            }
-//            navigator.route(
-//                Route.VaultInfo.Name(
-//                    when (state.value.vaultType) {
-//                        VaultType.Secure -> Route.VaultInfo.VaultType.Secure
-//                        VaultType.Fast -> Route.VaultInfo.VaultType.Fast
-//                    }
-//                )
-//            )
+                )
+            )
         }
     }
 

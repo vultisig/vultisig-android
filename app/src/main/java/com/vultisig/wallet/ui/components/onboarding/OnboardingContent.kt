@@ -25,7 +25,6 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.buttons.VsIconButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.onboarding.components.ONBOARDING_STATE_MACHINE_NAME
-import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import kotlinx.coroutines.delay
 
@@ -35,17 +34,17 @@ internal fun OnboardingContent(
     paddingValues: PaddingValues,
     riveAnimation: Int,
     nextClick: () -> Unit,
-    textDescription: @Composable (OnboardingPage) -> Unit,
+    textDescription: @Composable (Int) -> Unit,
 ) {
     var buttonVisibility by remember { mutableStateOf(false) }
     var textVisibility by remember { mutableStateOf(false) }
-    var currentPageText: OnboardingPage by remember { mutableStateOf(state.currentPage) }
+    var currentPageIndex: Int by remember { mutableStateOf(state.pageIndex) }
 
     LaunchedEffect(state) {
         textVisibility = false
         buttonVisibility = false
         delay(1000)
-        currentPageText = state.currentPage
+        currentPageIndex = state.pageIndex
         textVisibility = true
         delay(1000)
         buttonVisibility = true
@@ -77,7 +76,7 @@ internal fun OnboardingContent(
             exit = fadeOut(tween(200)),
         ) {
             textDescription(
-                currentPageText,
+                currentPageIndex,
             )
         }
 

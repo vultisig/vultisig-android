@@ -52,12 +52,12 @@ internal fun SequenceOfGradientText(
     )
 }
 
-class PartiallyGradientTextItem(
+internal class PartiallyGradientTextItem(
     @StringRes val resId: Int,
     val coloring: GradientColoring,
 )
 
-sealed class GradientColoring {
+internal sealed class GradientColoring {
     data class VsColor(val color: Color) : GradientColoring()
     data class Gradient(val brush: Brush) : GradientColoring()
 }

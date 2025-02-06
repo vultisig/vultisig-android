@@ -1,8 +1,6 @@
 package com.vultisig.wallet.ui.screens.onboarding
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -16,21 +14,20 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
-import com.vultisig.wallet.ui.models.onboarding.OnboardingSecurityVaultBackupViewModel
-import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
+import com.vultisig.wallet.ui.models.onboarding.OnboardingSecureVaultBackupViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun OnboardingSecurityVaultBackupScreen(
-    viewModel: OnboardingSecurityVaultBackupViewModel = hiltViewModel(),
+internal fun OnboardingSecureVaultBackupScreen(
+    model: OnboardingSecureVaultBackupViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by model.state.collectAsState()
     BackHandler { }
-    OnboardingSecurityVaultBackupScreen(state, viewModel::back, viewModel::next)
+    OnboardingSecureVaultBackupScreen(state, model::back, model::next)
 }
 @Composable
-private fun OnboardingSecurityVaultBackupScreen(
+private fun OnboardingSecureVaultBackupScreen(
     state: OnboardingUiModel,
     onBackClick: () -> Unit,
     onNextClick: () -> Unit,
@@ -40,7 +37,7 @@ private fun OnboardingSecurityVaultBackupScreen(
         topBar = {
             VsTopAppProgressBar(
                 title = stringResource(R.string.onboarding_security_backup_title),
-                progress = state.currentPage.index + 1,
+                progress = state.pageIndex + 1,
                 total = state.pageTotal,
             )
         },
@@ -51,19 +48,19 @@ private fun OnboardingSecurityVaultBackupScreen(
             paddingValues = paddingValues,
             riveAnimation = R.raw.securevault_overview,
             nextClick = onNextClick,
-            textDescription = { page ->
-                Description(page = page)
+            textDescription = { index ->
+                Description(index = index)
             },
         )
     }
 }
 @Composable
 private fun Description(
-    page: OnboardingPage,
+    index: Int,
     modifier: Modifier = Modifier,
 ) {
     SequenceOfGradientText(
-        listTextItems = when (page.index) {
+        listTextItems = when (index) {
             0 -> {
                 listOf(
                     PartiallyGradientTextItem(

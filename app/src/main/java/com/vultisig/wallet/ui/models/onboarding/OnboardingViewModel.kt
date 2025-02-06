@@ -21,17 +21,19 @@ internal class OnboardingViewModel @Inject constructor(
     val state = MutableStateFlow(
         OnboardingUiModel(
             currentPage = pages.first(),
+            pageIndex = 0,
             pageTotal = pages.size
         )
     )
 
     fun next() {
         viewModelScope.launch {
-            val nextAnimation = pages.getOrNull(state.value.currentPage.index + 1)
+            val nextAnimation = pages.getOrNull(state.value.pageIndex + 1)
             if (nextAnimation != null) {
                 state.update {
                     it.copy(
                         currentPage = nextAnimation,
+                        pageIndex = it.pageIndex + 1
                     )
                 }
             } else {
@@ -50,10 +52,10 @@ internal class OnboardingViewModel @Inject constructor(
 }
 
 private val pages = listOf(
-    OnboardingPage(0),
-    OnboardingPage(1),
-    OnboardingPage(2),
-    OnboardingPage(3),
-    OnboardingPage(4),
-    OnboardingPage(5),
+    OnboardingPage(),
+    OnboardingPage(),
+    OnboardingPage(),
+    OnboardingPage(),
+    OnboardingPage(),
+    OnboardingPage(),
 )
