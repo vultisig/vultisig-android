@@ -3,8 +3,6 @@ package com.vultisig.wallet.ui.models.keygen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupRepository
-import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupState
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -12,7 +10,6 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,7 +41,6 @@ internal sealed class VaultType(
 
 @HiltViewModel
 internal class ChooseVaultViewModel @Inject constructor(
-    private val onboardingSecureBackupRepository: OnboardingSecureBackupRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 

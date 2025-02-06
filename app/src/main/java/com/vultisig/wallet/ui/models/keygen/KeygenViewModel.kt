@@ -357,7 +357,11 @@ internal class KeygenViewModel @Inject constructor(
         // }
 
         val onboardingSecureState = onboardingSecureBackupRepository.readOnboardingState().first()
-        if (!vault.isFastVault() && !isReshareMode && onboardingSecureState == OnboardingSecureBackupState.NOT_COMPLETED) {
+        if (
+            !vault.isFastVault()
+            && !isReshareMode
+            && onboardingSecureState == OnboardingSecureBackupState.NOT_COMPLETED
+        ) {
             navigator.route(Route.Onboarding.SecureVaultBackup)
         } else {
             navigator.navigate(
