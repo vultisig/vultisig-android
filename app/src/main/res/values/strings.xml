@@ -535,6 +535,14 @@
     <string name="onboarding_desc_page_6_part_1" translatable="false">These shares collaborate to</string>
     <string name="onboarding_desc_page_6_part_2" translatable="false">unlock your vault</string>
     <string name="onboarding_summary_button" translatable="false">Create your vault</string>
+    <string name="onboarding_security_backup_title" translatable="false">Vault Overview</string>
+    <string name="onboarding_security_backup_desc_page_1_part_1" translatable="false">Your vault holds 3 shares,</string>
+    <string name="onboarding_security_backup_desc_page_1_part_2" translatable="false">each device needs its own backup.</string>
+    <string name="onboarding_security_backup_desc_page_2_part_1" translatable="false">Back up</string>
+    <string name="onboarding_security_backup_desc_page_2_part_2" translatable="false">this vault share</string>
+    <string name="onboarding_security_backup_desc_page_2_part_3" translatable="false">to ensure access, preferably</string>
+    <string name="onboarding_security_backup_desc_page_2_part_4" translatable="false">online.</string>
+
 
 
     <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
