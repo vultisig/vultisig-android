@@ -2,7 +2,7 @@ package com.vultisig.wallet.ui.models.keygen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.repositories.OnboardingRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -23,7 +23,7 @@ internal class StartViewModel @Inject constructor(
             if (isUserPassedOnboarding) {
                 navigator.navigate(Destination.SelectVaultType)
             } else {
-                navigator.route(Route.Onboarding)
+                navigator.route(Route.Onboarding.VaultCreation)
             }
         }
     }
