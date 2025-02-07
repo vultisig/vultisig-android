@@ -475,6 +475,11 @@ internal sealed class Destination(
 internal sealed class Route {
 
     @Serializable
+    data class VaultBackup(
+        val email: String,
+    ) : Route()
+
+    @Serializable
     data object Secret : Route()
 
     object VaultInfo {
