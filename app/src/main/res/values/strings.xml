@@ -214,7 +214,7 @@
     <string name="circular_progress_indicator_done">Done</string>
     <string name="vault_already_exist">Vault with name %s already exist</string>
     <string name="vault_detail_this_device">%1$s (This Device)</string>
-    <string name="join_keygen_screen_reshare" >reshare</string>
+    <string name="join_keygen_screen_reshare">reshare</string>
     <string name="join_keygen_screen_keygen">keygen</string>
     <string name="join_keygen_wrong_reshare">Wrong ReShare</string>
     <string name="join_keysign_wrong_reshare">Wrong ReShare</string>
@@ -248,24 +248,24 @@
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Node Address</string>
     <string name="verify_deposit_gas_title" translatable="false">Gas</string>
-    <string name="onboard_intro1_title" >Meeting</string>
-    <string name="onboard_intro1_desc" >Vultisig is a secure, multi-device crypto vault, compatible with 30+ chains and 10,000+ tokens. Vultisig is fully self-custodial.</string>
-    <string name="onboard_intro2_title" >Coordination</string>
-    <string name="onboard_intro2_desc" >Vultisig does not track your activities or require any registrations. Vultisig is fully open-source, ensuring transparency and trust.</string>
-    <string name="onboard_intro3_title" >Dialogue</string>
-    <string name="onboard_intro3_desc" >Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets.</string>
-    <string name="onboard_intro4_title" >Collaboration</string>
-    <string name="onboard_intro4_desc" >Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
-    <string name="token_selection_screen_custom_token" >Custom Token</string>
-    <string name="custom_token_find_your_custom_token" >Find Your Custom Token</string>
-    <string name="custom_token_enter_contract_address" >Enter Contract Address</string>
-    <string name="custom_token_token_not_found" >Token not found</string>
-    <string name="custom_token_add_token" >Add %1$s Token</string>
-    <string name="deposit_form_amount_title" >Amount</string>
-    <string name="share_vault_qr_title" >Share Vault QR</string>
-    <string name="share_vault_qr_save" >Save</string>
-    <string name="vault_settings_enable_biometrics_save" >Save</string>
-    <string name="share_vault_qr_share" >Share</string>
+    <string name="onboard_intro1_title">Meeting</string>
+    <string name="onboard_intro1_desc">Vultisig is a secure, multi-device crypto vault, compatible with 30+ chains and 10,000+ tokens. Vultisig is fully self-custodial.</string>
+    <string name="onboard_intro2_title">Coordination</string>
+    <string name="onboard_intro2_desc">Vultisig does not track your activities or require any registrations. Vultisig is fully open-source, ensuring transparency and trust.</string>
+    <string name="onboard_intro3_title">Dialogue</string>
+    <string name="onboard_intro3_desc">Vultisig is audited and secure. Join thousands of users who trust Vultisig with their digital assets.</string>
+    <string name="onboard_intro4_title">Collaboration</string>
+    <string name="onboard_intro4_desc">Vultisig is a wallet without seed phrases. It uses easy-to-manage vault shares instead.</string>
+    <string name="token_selection_screen_custom_token">Custom Token</string>
+    <string name="custom_token_find_your_custom_token">Find Your Custom Token</string>
+    <string name="custom_token_enter_contract_address">Enter Contract Address</string>
+    <string name="custom_token_token_not_found">Token not found</string>
+    <string name="custom_token_add_token">Add %1$s Token</string>
+    <string name="deposit_form_amount_title">Amount</string>
+    <string name="share_vault_qr_title">Share Vault QR</string>
+    <string name="share_vault_qr_save">Save</string>
+    <string name="vault_settings_enable_biometrics_save">Save</string>
+    <string name="share_vault_qr_share">Share</string>
     <string name="deposit_form_node_address_title">Node Address</string>
     <string name="deposit_form_provider_title">Provider (optional)</string>
     <string name="deposit_form_provider_hint">Provider</string>
@@ -294,7 +294,7 @@
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
-    <string name="import_file_not_supported" >File type is not supported</string>
+    <string name="import_file_not_supported">File type is not supported</string>
 
     <string-array name="keygen_tip_title" translatable="false">
         <item>Did You Know?</item>
@@ -325,14 +325,13 @@
     </string-array>
 
 
-
     <string name="backup_password_screen_warning">Never store Vault Shares from different devices in the same location</string>
     <string name="backup_password_screen_confirm_password_error_message">Please make sure your passwords match</string>
     <string name="token_selection_selected_tokens_title">Selected</string>
     <string name="failed_to_resolve_address">Failed to resolve address</string>
     <string name="vault_settings_success_backup_message">File saved successfully</string>
     <string name="vault_settings_error_extension_backup_file">Extension not supported. Backup failed. Supported file extensions are: %s</string>
-    <string name="default_error" >Default error</string>
+    <string name="default_error">Default error</string>
     <string name="join_keygen_invalid_qr_code">Failed to parse QR code</string>
     <string name="join_keygen_failed">Failed to join %1$s</string>
     <string name="reshare_start_screen_title">Reshare your vault</string>
@@ -360,8 +359,8 @@
     <string name="current_vaults">Current Vaults</string>
     <string name="select_vaults_to_add_to_the_folder">Select Vaults to add to the folder.</string>
     <string name="create_folder_placeholder">Savings</string>
-    <string name="vault_settings_biometrics_title" >Biometrics for Fast Sign</string>
-    <string name="vault_settings_biometrics_description" >Enable Biometrics for Fast Sign</string>
+    <string name="vault_settings_biometrics_title">Biometrics for Fast Sign</string>
+    <string name="vault_settings_biometrics_description">Enable Biometrics for Fast Sign</string>
     <string name="create_folder_list_title">Select Vaults to add to the folder.</string>
     <string name="generating_key_retry">Retry</string>
     <string name="generating_key_screen_reshare_failed">Reshare Failed</string>
@@ -369,14 +368,14 @@
 
     <string name="folders_list_title">Folders</string>
 
-<!--    fast&active vaults are temporarily disabled -->
-<!--    <string name="select_vault_type_fast_title" translatable="false">FAST</string>-->
-<!--    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>-->
-<!--    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>-->
-<!--    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>-->
-<!--    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>-->
-<!--    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>-->
-<!--    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>-->
+    <!--    fast&active vaults are temporarily disabled -->
+    <!--    <string name="select_vault_type_fast_title" translatable="false">FAST</string>-->
+    <!--    <string name="select_vault_type_fast_description" translatable="false">• Single Device Setup\n• Transaction Alerts &amp; Policies\n• Vault Backup Emailed\n\nUse as a “hot vault”</string>-->
+    <!--    <string name="select_vault_type_active_title" translatable="false">ACTIVE</string>-->
+    <!--    <string name="select_vault_type_active_description" translatable="false">• Fast Signing On The Move\n• Transaction Alerts &amp; Policies\n• Fully self-custodial\n\nUse as a “main vault”</string>-->
+    <!--    <string name="reshare_start_start_with_vultisigner_button" translatable="false">Start Reshare with Vultiserver</string>-->
+    <!--    <string name="select_vault_type_secure_title" translatable="false">SECURE</string>-->
+    <!--    <string name="select_vault_type_secure_description" translatable="false">• Only Your Devices\n• No Alerts or Policies\n• Fully self-custodial\n\nUse as a “cold vault”</string>-->
 
     <string name="select_vault_type_start">START</string>
     <string name="keygen_email_screen_title">EMAIL</string>
@@ -427,8 +426,8 @@
     <string name="keygen_vultiserver_peer_discovery_waiting">Looking for Vultiserver to connect…</string>
     <string name="scan_qr_upload_from_gallery">Upload from\nGallery</string>
     <string name="reshare_start_join_reshare_button">Join Reshare</string>
-    <string name="deposit_error_invalid_lpunits" >LP units is invalid</string>
-    <string name="deposit_error_invalid_assets" >Assets is invalid</string>
+    <string name="deposit_error_invalid_lpunits">LP units is invalid</string>
+    <string name="deposit_error_invalid_assets">Assets is invalid</string>
     <string name="deposit_form_screen_assets">Assets</string>
     <string name="deposit_form_screen_lpunits">LP units</string>
     <string name="eth_gas_settings_title">Advanced</string>
@@ -465,9 +464,9 @@
     <string name="scan_qr_code_error_button">Back</string>
     <string name="form_token_selection_balance">Balance: %s</string>
     <string name="form_token_selection_asset">Asset</string>
-    <string name="insufficient_native_token" >Insufficient %1$s</string>
-    <string name="swap_error_amount_too_low" >Swap Amount too low</string>
-    <string name="swap_error_time_out" >Swap request timed out. Please try again</string>
+    <string name="insufficient_native_token">Insufficient %1$s</string>
+    <string name="swap_error_amount_too_low">Swap Amount too low</string>
+    <string name="swap_error_time_out">Swap request timed out. Please try again</string>
     <string name="keygen_verify_server_backup_caption">Enter the code received with your backup via email :</string>
     <string name="keygen_verify_server_backup_code_hint">Enter code</string>
     <string name="keygen_verify_server_backup_warning">This code verifies receiving the server backup via email</string>
@@ -544,7 +543,6 @@
     <string name="onboarding_security_backup_desc_page_2_part_4" translatable="false">online.</string>
 
 
-
     <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
     <string name="select_vault_type_secure_desc_1" translatable="false">Full control, only your devices</string>
     <string name="select_vault_type_secure_desc_2" translatable="false">Multiple devices to sign transactions</string>
@@ -580,18 +578,23 @@
     <string name="keygen_benefit_2_emphasized" translatable="false">Self-custodial,</string>
     <string name="keygen_benefit_3_template" translatable="false">Swap your favorite tokens all in one vault</string>
     <string name="keygen_benefit_3_emphasized" translatable="false">Cross-chain,</string>
-    <string name="keygen_while_you_wait_title">While you wait, Vultisig is...</string>
-    <string name="keygen_top_bar_title">Creating Vault</string>
-    <string name="keygen_step_preparing_vault">Preparing Vault</string>
-    <string name="keygen_step_generating_ecdsa">Generating ECDSA Key</string>
-    <string name="keygen_step_generating_eddsa">Generating EdDSA Key</string>
-    <string name="keygen_connecting_with_server">Connecting with server...</string>
-    <string name="keygen_connecting_with_server_take_a_minute">This should only take a minute</string>
-    <string name="peer_discovery_switch_network_mode_want_to_sign_privately">Want to sign privately?</string>
-    <string name="peer_discovery_switch_network_mode_switch_to_local">Switch to local mode</string>
-    <string name="peer_discovery_switch_network_mode_switch_to_internet">Switch back to internet mode</string>
-    <string name="peer_discovery_local_mode_hint">You’re in local mode</string>
-    <string name="peer_discovery_recommended_devices_hint">Scan QR with other device. 3-device setup recommended, 2 is sufficient.</string>
+    <string name="keygen_benefit_4_template" translatable="false">on Android, iOS, macOS and Windows</string>
+    <string name="keygen_benefit_4_emphasized" translatable="false">Available</string>
+    <string name="keygen_benefit_5_template" translatable="false">do not get scammed again</string>
+    <string name="keygen_benefit_5_emphasized" translatable="false">A seedless wallet,</string>
+
+    <string name="keygen_while_you_wait_title" translatable="false">While you wait, Vultisig is...</string>
+    <string name="keygen_top_bar_title" translatable="false">Creating Vault</string>
+    <string name="keygen_step_preparing_vault" translatable="false">Preparing Vault</string>
+    <string name="keygen_step_generating_ecdsa" translatable="false">Generating ECDSA Key</string>
+    <string name="keygen_step_generating_eddsa" translatable="false">Generating EdDSA Key</string>
+    <string name="keygen_connecting_with_server" translatable="false">Connecting with server...</string>
+    <string name="keygen_connecting_with_server_take_a_minute" translatable="false">This should only take a minute</string>
+    <string name="peer_discovery_switch_network_mode_want_to_sign_privately" translatable="false">Want to sign privately?</string>
+    <string name="peer_discovery_switch_network_mode_switch_to_local" translatable="false">Switch to local mode</string>
+    <string name="peer_discovery_switch_network_mode_switch_to_internet" translatable="false">Switch back to internet mode</string>
+    <string name="peer_discovery_local_mode_hint" translatable="false">You’re in local mode</string>
+    <string name="peer_discovery_recommended_devices_hint" translatable="false">Scan QR with other device. 3-device setup recommended, 2 is sufficient.</string>
     <string name="fast_vault_name_screen_title" translatable="false">Name your vault</string>
     <string name="fast_vault_name_screen_desc" translatable="false">You can always rename your vault later in settings</string>
     <string name="enter_email_screen_title" translatable="false">Enter your e-mail</string>
@@ -609,8 +612,13 @@
     <string name="fast_vault_password_screen_password_hint" translatable="false">Enter password</string>
     <string name="fast_vault_password_screen_reenter_password_hint" translatable="false">Re-enter password</string>
     <string name="fast_vault_name_screen_next" translatable="false">Next</string>
-    <string name="enter_email_screen_next"  translatable="false">Next</string>
-    <string name="error_view_try_again_button">Try again</string>
-    <string name="error_view_default_title">Something went wrong</string>
-    <string name="error_view_default_description">An error occurred</string>
+    <string name="enter_email_screen_next" translatable="false">Next</string>
+    <string name="error_view_try_again_button" translatable="false">Try again</string>
+    <string name="error_view_default_title" translatable="false">Something went wrong</string>
+    <string name="error_view_default_description" translatable="false">An error occurred</string>
+    <string name="keygen_vault_created_success_part_1" translatable="false">Vault created</string>
+    <string name="vault_created_success_part_2" translatable="false">successfully</string>
+    <string name="backup_vault_backup_now_button" translatable="false">Back-up now</string>
+    <string name="backup_vault_backup_vault_share_title" translatable="false">Back-up your vault share online</string>
+    <string name="backup_vault_topbar_title" translatable="false">Back-up Vault</string>
 </resources>
