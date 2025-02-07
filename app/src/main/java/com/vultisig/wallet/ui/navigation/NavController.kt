@@ -10,7 +10,7 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
         popBackStack()
     } else {
         navigate(route) {
-            launchSingleTop=true
+            launchSingleTop = true
             if (opts != null) {
                 if (opts.popUpTo != null) {
                     popUpTo(opts.popUpTo) {
@@ -27,8 +27,23 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
     }
 }
 
-internal fun NavController.route(route: Any) {
+internal fun NavController.route(route: NavigateAction<Any>) {
     Timber.d("route($route)")
 
-    navigate(route)
+    val (dst, opts) = route
+
+    navigate(dst) {
+        if (opts != null) {
+            if (opts.popUpTo != null) {
+                popUpTo(opts.popUpTo) {
+                    inclusive = opts.inclusive
+                }
+            }
+            if (opts.clearBackStack) {
+                popUpTo(graph.id) {
+                    inclusive = true
+                }
+            }
+        }
+    }
 }

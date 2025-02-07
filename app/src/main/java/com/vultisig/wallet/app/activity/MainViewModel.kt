@@ -39,7 +39,7 @@ internal class MainViewModel @Inject constructor(
 
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
 
-    val route: Flow<Any> = navigator.route
+    val route: Flow<NavigateAction<Any>> = navigator.route
 
     val snakeBarHostState = SnackbarHostState()
 

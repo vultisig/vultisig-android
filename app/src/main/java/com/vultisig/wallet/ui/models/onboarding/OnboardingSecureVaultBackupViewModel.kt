@@ -48,7 +48,12 @@ internal class OnboardingSecureVaultBackupViewModel @Inject constructor(
                     )
                 }
             } else {
-                navigator.route(Route.BackupVault(vaultId = vaultId))
+                navigator.route(
+                    Route.BackupVault(
+                        vaultId = vaultId,
+                        vaultType = Route.VaultInfo.VaultType.Secure,
+                    )
+                )
             }
         }
     }

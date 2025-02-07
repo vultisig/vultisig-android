@@ -9,9 +9,11 @@ internal interface Navigator<Dest> {
 
     val destination: Flow<NavigateAction<Dest>>
 
-    val route: Flow<Any>
+    val route: Flow<NavigateAction<Any>>
 
     suspend fun route(route: Any)
+
+    suspend fun route(route: Any, opts: NavigationOptions)
 
     suspend fun navigate(destination: Dest)
 
@@ -34,10 +36,14 @@ internal class NavigatorImpl<Dst> @Inject constructor() : Navigator<Dst> {
 
     override val destination = MutableSharedFlow<NavigateAction<Dst>>()
 
-    override val route = MutableSharedFlow<Any>()
+    override val route = MutableSharedFlow<NavigateAction<Any>>()
 
     override suspend fun route(route: Any) {
-        this.route.emit(route)
+        this.route.emit(NavigateAction(route))
+    }
+
+    override suspend fun route(route: Any, opts: NavigationOptions) {
+        this.route.emit(NavigateAction(route, opts))
     }
 
     override suspend fun navigate(destination: Dst) {
