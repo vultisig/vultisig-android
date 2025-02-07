@@ -41,11 +41,13 @@ import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
+import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
 import com.vultisig.wallet.ui.utils.ShareType
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -83,6 +85,7 @@ data class PeerDiscoveryUiModel(
     val isQrHelpModalVisited: Boolean = true,
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
+    val error: ErrorUiModel? = null,
 )
 
 data class ConnectingToServerUiModel(
@@ -207,6 +210,10 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         }
     }
 
+    fun tryAgain() {
+        loadData()
+    }
+
     fun next() {
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
@@ -236,6 +243,8 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     private fun loadData() {
         viewModelScope.launch {
             setupLibType()
+
+            state.update { it.copy(error = null) }
 
             if (email != null && password != null) {
                 startVultiServerConnection()
@@ -281,20 +290,32 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     private suspend fun startVultiServerConnection() {
         state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
 
-        startSession()
+        try {
+            startSession()
 
-        requestVultiServerConnection()
+            requestVultiServerConnection()
 
-        startParticipantDiscovery(
-            onDiscovered = { devices ->
-                if (devices.size == 1) {
-                    state.update {
-                        it.copy(connectingToServer = ConnectingToServerUiModel(true))
+            startParticipantDiscovery(
+                onDiscovered = { devices ->
+                    if (devices.size == 1) {
+                        state.update {
+                            it.copy(connectingToServer = ConnectingToServerUiModel(true))
+                        }
+                        next()
                     }
-                    next()
                 }
+            )
+        } catch (e: Exception) {
+            // TODO handle exceptions more precisely
+            state.update {
+                it.copy(
+                    error = ErrorUiModel(
+                        title = UiText.StringResource(R.string.error_view_default_title),
+                        description = UiText.StringResource(R.string.error_view_default_description),
+                    )
+                )
             }
-        )
+        }
     }
 
     private fun startParticipantDiscovery(
