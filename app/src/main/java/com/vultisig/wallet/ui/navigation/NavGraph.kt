@@ -44,7 +44,6 @@ import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
-import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
@@ -55,6 +54,7 @@ import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
+import com.vultisig.wallet.ui.screens.keygen.VaultConfirmationScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSecureVaultBackupScreen
@@ -101,22 +101,6 @@ internal fun SetupNavGraph(
         popEnterTransition = slideInFromStartEnterTransition(),
         popExitTransition = slideOutToEndExitTransition(),
     ) {
-        composable<Route.Onboarding.VaultCreation>(
-            enterTransition = slideInFromBottomEnterTransition(),
-        ) {
-            OnboardingScreen()
-        }
-
-        composable<Route.Onboarding.VaultCreationSummary> {
-            OnboardingSummaryScreen()
-        }
-
-        composable<Route.Onboarding.SecureVaultBackup> (
-            enterTransition = slideInFromBottomEnterTransition(),
-        ) {
-            OnboardingSecureVaultBackupScreen()
-        }
-
         composable(
             route = Destination.Home.STATIC_ROUTE,
             arguments = listOf(
@@ -194,14 +178,6 @@ internal fun SetupNavGraph(
             )
         ) {
             KeygenPasswordScreen(navController)
-        }
-
-        composable<Keygen.PeerDiscovery> {
-            PeerDiscoveryScreen()
-        }
-
-        composable<Keygen.Generating> {
-            KeygenScreen()
         }
 
         composable(
@@ -563,43 +539,6 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.BackupPassword.STATIC_ROUTE,
-        ) {
-            BackupPasswordScreen(navController)
-        }
-
-        composable(
-            route = Destination.BackupSuggestion.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                }
-            )
-        ) {
-            BackupSuggestionScreen()
-        }
-
-        /*
-        disabled for now, as there's no use for it, should be removed in the future
-
-        composable(
-            route = Destination.VerifyServerBackup.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                },
-                navArgument(Destination.VerifyServerBackup.ARG_SHOULD_SUGGEST_BACKUP) {
-                    type = NavType.BoolType
-                }
-            )
-        ) {
-            KeygenVerifyServerBackupScreen(
-                navController = navController,
-            )
-        }
-         */
-
-        composable(
             route = Destination.ShareVaultQr.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
@@ -653,6 +592,18 @@ internal fun SetupNavGraph(
             SecretScreen(navController)
         }
 
+        // onboarding
+        composable<Route.Onboarding.VaultCreation>(
+            enterTransition = slideInFromBottomEnterTransition(),
+        ) {
+            OnboardingScreen()
+        }
+
+        composable<Route.Onboarding.VaultCreationSummary> {
+            OnboardingSummaryScreen()
+        }
+
+        // keygen vault info
         composable<VaultInfo.Name> {
             NameVaultScreen()
         }
@@ -669,8 +620,32 @@ internal fun SetupNavGraph(
             FastVaultPasswordHintScreen()
         }
 
+        // keygen
+        composable<Keygen.PeerDiscovery> {
+            PeerDiscoveryScreen()
+        }
+
+        composable<Keygen.Generating> {
+            KeygenScreen()
+        }
+
+        // vault backup
+        composable<Route.Onboarding.SecureVaultBackup> (
+            enterTransition = slideInFromBottomEnterTransition(),
+        ) {
+            OnboardingSecureVaultBackupScreen()
+        }
+
         composable<Route.BackupVault> {
             BackupVaultScreen()
+        }
+
+        composable<Route.BackupPassword> {
+            BackupPasswordScreen(navController)
+        }
+
+        composable<Route.VaultConfirmation> {
+            VaultConfirmationScreen()
         }
     }
 }

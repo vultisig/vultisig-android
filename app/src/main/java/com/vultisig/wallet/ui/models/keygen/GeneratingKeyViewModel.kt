@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -322,9 +323,10 @@ internal class GeneratingKeyViewModel(
             vaultPasswordRepository.savePassword(vaultId, password)
         }
 
-        navigator.navigate(
-            dst = Destination.BackupSuggestion(
-                vaultId = vaultId
+        navigator.route(
+            route = Route.BackupVault(
+                vaultId = vaultId,
+                vaultType = null,
             ),
             opts = NavigationOptions(
                 popUpTo = Destination.Home().route,

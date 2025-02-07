@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,8 +58,11 @@ internal class KeygenVerifyServerBackupViewModel @Inject constructor(
                 vaultMetadataRepo.setServerBackupVerified(vaultId)
 
                 if (shouldSuggestBackup) {
-                    navigator.navigate(
-                        dst = Destination.BackupSuggestion(vaultId),
+                    navigator.route(
+                        route = Route.BackupVault(
+                            vaultId = vaultId,
+                            vaultType = null,
+                        ),
                         opts = NavigationOptions(
                             popUpTo = Destination.VerifyServerBackup.STATIC_ROUTE,
                         )
