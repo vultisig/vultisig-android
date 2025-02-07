@@ -507,6 +507,11 @@ internal sealed class Route {
     }
 
     @Serializable
+    data class BackupVault(
+        val vaultId: VaultId,
+    )
+
+    @Serializable
     data object Keygen {
 
         @Serializable
@@ -515,6 +520,7 @@ internal sealed class Route {
 
             val email: String? = null,
             val password: String? = null,
+            val hint: String? = null,
         )
 
         @Serializable
@@ -531,6 +537,9 @@ internal sealed class Route {
             val oldResharePrefix: String,
             val isInitiatingDevice: Boolean,
             val libType: SigningLibType,
+
+            val password: String?,
+            val hint: String?,
         )
 
     }
@@ -544,7 +553,7 @@ internal sealed class Route {
 
         @Serializable
         data class SecureVaultBackup(
-            val vaultId: String,
+            val vaultId: VaultId,
         )
     }
 }

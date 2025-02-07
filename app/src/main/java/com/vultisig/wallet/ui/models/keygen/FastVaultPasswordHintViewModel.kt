@@ -36,35 +36,40 @@ internal class FastVaultPasswordHintViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             passwordHintFieldState.textAsFlow().collect {
-                validateHint(it)
+                validateHint(it.toString())
             }
         }
     }
 
     fun next() {
-        openPeerDiscovery()
+        val hint = passwordHintFieldState.text.toString()
+        if (isHintValid(hint)) {
+            openPeerDiscovery(hint = hint)
+        }
     }
 
     fun skip() {
-        openPeerDiscovery()
+        openPeerDiscovery(hint = null)
     }
 
-    private fun openPeerDiscovery() {
-        // TODO save hint
+    private fun openPeerDiscovery(
+        hint: String?
+    ) {
         viewModelScope.launch {
             navigator.route(
                 Route.Keygen.PeerDiscovery(
                     vaultName = args.name,
                     email = args.email,
                     password = args.password,
+                    hint = hint,
                 )
             )
         }
     }
 
-    private fun validateHint(hint: CharSequence) {
+    private fun validateHint(hint: String) {
         val errorMessage =
-            if (hint.length > HINT_MAX_LENGTH)
+            if (!isHintValid(hint))
                 UiText.StringResource(R.string.vault_password_hint_to_long)
             else null
 
@@ -72,6 +77,9 @@ internal class FastVaultPasswordHintViewModel @Inject constructor(
             it.copy(errorMessage = errorMessage)
         }
     }
+
+    private fun isHintValid(hint: String) =
+        hint.length <= HINT_MAX_LENGTH
 
     fun back() {
         viewModelScope.launch {

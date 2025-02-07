@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models.keygen
 
-import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.SavedStateHandle
@@ -80,11 +79,9 @@ internal class NameVaultViewModel @Inject constructor(
         if (!isNameValid(expectedName))
             return
         viewModelScope.launch {
-            val name = Uri.encode(
-                uniqueName(
-                    expectedName,
-                    vaultNamesList
-                )
+            val name = uniqueName(
+                expectedName,
+                vaultNamesList
             )
 
             when (args.vaultType) {
@@ -93,6 +90,7 @@ internal class NameVaultViewModel @Inject constructor(
                         Route.VaultInfo.Email(name)
                     )
                 }
+
                 VaultType.Secure -> {
                     navigator.route(
                         Route.Keygen.PeerDiscovery(

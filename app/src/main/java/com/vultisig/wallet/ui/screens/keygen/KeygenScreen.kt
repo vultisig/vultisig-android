@@ -49,7 +49,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -235,6 +234,8 @@ private fun benefits() = listOf(
     BenefitsDescription(R.string.keygen_benefit_1_template, R.string.keygen_benefit_1_emphasized),
     BenefitsDescription(R.string.keygen_benefit_2_template, R.string.keygen_benefit_2_emphasized),
     BenefitsDescription(R.string.keygen_benefit_3_template, R.string.keygen_benefit_3_emphasized),
+    BenefitsDescription(R.string.keygen_benefit_4_template, R.string.keygen_benefit_4_emphasized),
+    BenefitsDescription(R.string.keygen_benefit_5_template, R.string.keygen_benefit_5_emphasized),
 )
 
 @Composable
@@ -285,21 +286,14 @@ private fun Success() {
             .fillMaxSize()
             .background(Theme.colors.backgrounds.primary),
     ) {
-        RiveAnimation(
-            animation = R.raw.circles,
-            fit = Fit.FIT_HEIGHT,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 128.dp),
-        )
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             RiveAnimation(
-                animation = R.raw.checkmark,
+                animation = R.raw.riv_vault_created,
                 modifier = Modifier
-                    .size(96.dp),
+                    .fillMaxWidth()
+                    .weight(1f),
             )
 
             var isSuccessVisible by remember { mutableStateOf(false) }
@@ -317,12 +311,38 @@ private fun Success() {
                         ) +
                         scaleIn(tween(SUCCESS_ENTER_DURATION_MS)),
             ) {
-                Text(
-                    text = "Success",
-                    style = Theme.brockmann.headings.title1,
-                    color = Theme.colors.alerts.success,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val successText = buildAnnotatedString {
+                        append(stringResource(R.string.keygen_vault_created_success_part_1))
+                        appendLine(" ")
+                        withStyle(
+                            SpanStyle(brush = Theme.colors.gradients.primary)
+                        ) {
+                            append(stringResource(R.string.vault_created_success_part_2))
+                        }
+                    }
+
+                    Text(
+                        text = successText,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.colors.text.primary,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    RiveAnimation(
+                        animation = R.raw.riv_connecting_with_server,
+                        modifier = Modifier
+                            .size(24.dp),
+                    )
+                }
             }
+
+            UiSpacer(60.dp)
+
         }
     }
 }
