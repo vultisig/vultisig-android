@@ -403,21 +403,6 @@ internal sealed class Destination(
     }
 
 
-    data class BackupPassword(val vaultId: String) :
-        Destination(route = "backup_password/$vaultId") {
-        companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val STATIC_ROUTE = "backup_password/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data class BackupSuggestion(val vaultId: String) :
-        Destination(route = "backup_suggestion/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "backup_suggestion/{$ARG_VAULT_ID}"
-        }
-    }
-
     data class VerifyServerBackup(
         val vaultId: VaultId,
         val shouldSuggestBackup: Boolean,
@@ -509,6 +494,19 @@ internal sealed class Route {
     @Serializable
     data class BackupVault(
         val vaultId: VaultId,
+        val vaultType: VaultInfo.VaultType?,
+    )
+
+    @Serializable
+    data class BackupPassword(
+        val vaultId: VaultId,
+        // vault type only provided if vault confirmation screen is required
+        val vaultType: VaultInfo.VaultType? = null,
+    )
+
+    @Serializable
+    data class VaultConfirmation(
+        val vaultType: VaultInfo.VaultType,
     )
 
     @Serializable
@@ -529,7 +527,7 @@ internal sealed class Route {
             val sessionId: String,
             val serverUrl: String,
             val localPartyId: String,
-            val name: String,
+            val vaultName: String,
             val hexChainCode: String,
             val keygenCommittee: List<String>,
             val oldCommittee: List<String>,

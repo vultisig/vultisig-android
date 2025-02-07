@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.onboarding
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,6 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
+import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
@@ -23,9 +23,15 @@ internal fun OnboardingSecureVaultBackupScreen(
     model: OnboardingSecureVaultBackupViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
-    BackHandler { }
-    OnboardingSecureVaultBackupScreen(state, model::back, model::next)
+    BlockBackClick()
+
+    OnboardingSecureVaultBackupScreen(
+        state = state,
+        onBackClick = model::back,
+        onNextClick = model::next,
+    )
 }
+
 @Composable
 private fun OnboardingSecureVaultBackupScreen(
     state: OnboardingUiModel,
@@ -54,6 +60,7 @@ private fun OnboardingSecureVaultBackupScreen(
         )
     }
 }
+
 @Composable
 private fun Description(
     index: Int,
