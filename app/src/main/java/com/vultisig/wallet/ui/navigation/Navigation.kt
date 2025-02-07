@@ -475,6 +475,9 @@ internal sealed class Destination(
 internal sealed class Route {
 
     @Serializable
+    data object VaultBackup : Route()
+
+    @Serializable
     data object Secret : Route()
 
     object VaultInfo {
