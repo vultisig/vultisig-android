@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -55,6 +56,7 @@ internal data class KeygenUiModel(
     val progress: Float = 0f,
     val isSuccess: Boolean = false,
     val steps: List<KeygenStepUiModel> = emptyList(),
+    val error: ErrorUiModel? = null,
 )
 
 internal data class KeygenStepUiModel(
@@ -125,25 +127,19 @@ internal class KeygenViewModel @Inject constructor(
         generateKey()
     }
 
-    private suspend fun startKeygen() {
-        try {
-            sessionApi.startWithCommittee(
-                serverUrl, sessionId, keygenCommittee
-            )
-            Timber.d("startKeygen: Keygen started")
-
-        } catch (e: Exception) {
-            Timber.e(e, "startKeygen")
-        }
+    fun tryAgain() {
+        generateKey()
     }
 
     private fun generateKey() {
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
 
-            startKeygen()
+            state.update { it.copy(error = null) }
 
             try {
+                startKeygen()
+
                 when (libType) {
                     SigningLibType.DKLS -> startKeygenDkls()
                     SigningLibType.GG20 -> startKeygenGG20()
@@ -157,8 +153,11 @@ internal class KeygenViewModel @Inject constructor(
             } catch (e: Exception) {
                 Timber.d(e, "generateKey error")
 
-                // TODO handle keygen error
-                // state.value = resolveKeygenErrorFromException(e)
+                state.update {
+                    it.copy(
+                        error = resolveKeygenErrorFromException(e)
+                    )
+                }
 
                 stopService()
             }
@@ -391,16 +390,15 @@ internal class KeygenViewModel @Inject constructor(
         Timber.d("stop MediatorService: Mediator service stopped")
     }
 
-    private fun resolveKeygenErrorFromException(e: Exception): KeygenState.Error {
+    private fun resolveKeygenErrorFromException(e: Exception): ErrorUiModel {
         val isThresholdError = checkIsThresholdError(e)
 
-        return KeygenState.Error(
+        return ErrorUiModel(
             title = when {
-                isThresholdError -> null
                 isReshareMode -> UiText.StringResource(R.string.generating_key_screen_reshare_failed)
                 else -> UiText.StringResource(R.string.generating_key_screen_keygen_failed)
             },
-            message = if (isThresholdError) {
+            description = if (isThresholdError) {
                 UiText.StringResource(R.string.threshold_error)
             } else {
                 UiText.DynamicString(e.message ?: "Unknown error")
@@ -451,6 +449,12 @@ internal class KeygenViewModel @Inject constructor(
                 )
             )
         }
+    }
+
+    private suspend fun startKeygen() {
+        sessionApi.startWithCommittee(
+            serverUrl, sessionId, keygenCommittee
+        )
     }
 
 }
