@@ -231,6 +231,9 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     isInitiatingDevice = true,
                     libType = libType,
 
+                    password = password,
+                    hint = params.hint,
+
                     // TODO vault.signers.filter { uiState.value.selection.contains(it) }
                     //  maybe we can do it in keygen view model
                     oldCommittee = emptyList(),

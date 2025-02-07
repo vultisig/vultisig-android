@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.TextObfuscationMode
@@ -48,12 +48,14 @@ import com.vultisig.wallet.ui.theme.cursorBrush
 
 internal sealed interface VsTextInputFieldType {
     data object Text : VsTextInputFieldType
+
     data class Password(
         val isVisible: Boolean,
         val onVisibilityClick: () -> Unit
     ) : VsTextInputFieldType
 
     data object Number : VsTextInputFieldType
+
     data class MultiLine(
         val minLines: Int,
         val maxLines: Int = Int.MAX_VALUE
@@ -83,13 +85,14 @@ internal fun VsTextInputField(
     @DrawableRes trailingIcon2: Int? = null,
     onTrailingIcon2Click: (() -> Unit)? = null,
     @DrawableRes labelIcon: Int? = null,
-    onKeyboardAction: () -> Unit = {},
+    onKeyboardAction: KeyboardActionHandler? = null,
     imeAction: ImeAction = ImeAction.Unspecified,
     keyboardType: KeyboardType = KeyboardType.Unspecified,
 ) {
     var focused by remember {
         mutableStateOf(false)
     }
+
     Column(
         modifier = modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -114,6 +117,9 @@ internal fun VsTextInputField(
                 )
             }
         }
+
+        val textFieldBackgroundShape = RoundedCornerShape(12.dp)
+
         Row(
             modifier = Modifier
                 .border(
@@ -127,23 +133,32 @@ internal fun VsTextInputField(
                                 else Theme.colors.borders.light
                         }
                     ),
-                    shape = RoundedCornerShape(corner = CornerSize(12.dp))
+                    shape = textFieldBackgroundShape,
                 )
-                .clip(RoundedCornerShape(corner = CornerSize(12.dp)))
+                .clip(textFieldBackgroundShape)
                 .background(Theme.colors.backgrounds.secondary)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val inputTextStyle = Theme.brockmann.body.m.medium.copy(
+                color = Theme.colors.text.primary
+            )
+
             when (type) {
                 is VsTextInputFieldType.Password -> {
                     BasicSecureTextField(
                         state = textFieldState,
-                        textStyle = Theme.brockmann.body.m.medium.copy(
-                            color = Theme.colors.text.primary
-                        ),
+                        textStyle = inputTextStyle,
                         cursorBrush = Theme.cursorBrush,
+                        keyboardOptions = KeyboardOptions(
+                            autoCorrectEnabled = false,
+                            keyboardType = KeyboardType.Password,
+                            imeAction = imeAction
+                        ),
+                        onKeyboardAction = onKeyboardAction,
                         textObfuscationMode = if (type.isVisible)
-                            TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
+                            TextObfuscationMode.Visible
+                        else TextObfuscationMode.RevealLastTyped,
                         modifier = Modifier
                             .then(
                                 if (focusRequester != null)
@@ -155,18 +170,17 @@ internal fun VsTextInputField(
                                 onFocusChanged?.invoke(it.isFocused)
                             },
                         decorator = { textField ->
-                            if (textFieldState.text.isEmpty() && hint != null) {
-                                Text(
-                                    text = hint,
-                                    color = Theme.colors.text.extraLight,
-                                    style = Theme.brockmann.body.m.medium,
-                                )
-                            }
+                            TextInputFieldHint(
+                                textFieldState = textFieldState,
+                                hint = hint,
+                            )
                             textField()
                         }
                     )
+
                     UiSpacer(1f)
-                    if(textFieldState.text.isNotEmpty()) {
+
+                    if (textFieldState.text.isNotEmpty()) {
                         Icon(
                             painter = painterResource(
                                 if (type.isVisible)
@@ -190,17 +204,16 @@ internal fun VsTextInputField(
                             TextFieldLineLimits.MultiLine(
                                 type.minLines,
                                 type.maxLines
-                            ) else TextFieldLineLimits.SingleLine,
-                        textStyle = Theme.brockmann.body.m.medium.copy(color = Theme.colors.text.primary),
+                            )
+                        else TextFieldLineLimits.SingleLine,
+                        textStyle = inputTextStyle,
                         cursorBrush = Theme.cursorBrush,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = if (type is VsTextInputFieldType.Number)
                                 KeyboardType.Number else keyboardType,
                             imeAction = imeAction,
                         ),
-                        onKeyboardAction = {
-                            onKeyboardAction()
-                        },
+                        onKeyboardAction = onKeyboardAction,
                         modifier = Modifier
                             .then(
                                 if (focusRequester != null)
@@ -219,23 +232,23 @@ internal fun VsTextInputField(
                                 onFocusChanged?.invoke(it.isFocused)
                             },
                         decorator = { textField ->
-                            if (textFieldState.text.isEmpty() && hint != null) {
-                                Text(
-                                    text = hint,
-                                    color = Theme.colors.text.extraLight,
-                                    style = Theme.brockmann.body.m.medium,
-                                )
-                            }
+                            TextInputFieldHint(
+                                textFieldState = textFieldState,
+                                hint = hint,
+                            )
                             textField()
-                        })
+                        }
+                    )
 
                     if (type !is VsTextInputFieldType.MultiLine) {
-                        if (trailingText != null)
+                        if (trailingText != null) {
                             Text(
                                 text = trailingText,
                                 color = Theme.colors.text.light,
                                 style = Theme.brockmann.body.s.medium,
                             )
+                        }
+
                         if (trailingIcon != null) {
                             UiSpacer(8.dp)
                             Icon(
@@ -250,6 +263,7 @@ internal fun VsTextInputField(
                                     )
                             )
                         }
+
                         if (trailingIcon2 != null) {
                             UiSpacer(8.dp)
                             Icon(
@@ -268,6 +282,7 @@ internal fun VsTextInputField(
                 }
             }
         }
+
         if (footNote != null) {
             Text(
                 text = footNote,
@@ -279,6 +294,20 @@ internal fun VsTextInputField(
                 style = Theme.brockmann.supplementary.footnote
             )
         }
+    }
+}
+
+@Composable
+private fun TextInputFieldHint(
+    textFieldState: TextFieldState,
+    hint: String?,
+) {
+    if (textFieldState.text.isEmpty() && hint != null) {
+        Text(
+            text = hint,
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.body.m.medium,
+        )
     }
 }
 
