@@ -8,25 +8,35 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+
+internal data class VaultConfirmationUiModel(
+    val vaultInfo: Route.VaultInfo.VaultType,
+)
 
 @HiltViewModel
-internal class BackupVaultViewModel @Inject constructor(
+internal class VaultConfirmationViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.BackupVault>()
+    private val args = savedStateHandle.toRoute<Route.VaultConfirmation>()
 
-    fun backup() {
+    val state = MutableStateFlow(
+        VaultConfirmationUiModel(
+            vaultInfo = args.vaultType,
+        )
+    )
+
+    init {
         viewModelScope.launch {
-            navigator.route(
-                Route.BackupPassword(
-                    vaultId = args.vaultId,
-                    vaultType = args.vaultType,
-                )
-            )
+            delay(5.seconds)
+
+            navigator.navigate(Destination.Home()) // TODO clear backstack?
         }
     }
 

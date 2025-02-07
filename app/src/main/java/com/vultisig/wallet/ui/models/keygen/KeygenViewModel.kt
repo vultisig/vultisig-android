@@ -83,7 +83,7 @@ internal class KeygenViewModel @Inject constructor(
 
     private val vault = Vault(
         id = Uuid.random().toHexString(),
-        name = args.name,
+        name = args.vaultName,
         hexChainCode = args.hexChainCode,
         localPartyID = args.localPartyId,
         signers = args.keygenCommittee,
@@ -135,7 +135,9 @@ internal class KeygenViewModel @Inject constructor(
             state.update { it.copy(error = null) }
 
             try {
-                startKeygen()
+                if (isInitiatingDevice) {
+                    startKeygen()
+                }
 
                 when (libType) {
                     SigningLibType.DKLS -> startKeygenDkls()
@@ -441,6 +443,7 @@ internal class KeygenViewModel @Inject constructor(
         }
     }
 
+    // TODO peer discovery might be a better place for that method
     private suspend fun startKeygen() {
         sessionApi.startWithCommittee(
             serverUrl, sessionId, keygenCommittee
