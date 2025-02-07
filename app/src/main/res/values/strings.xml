@@ -610,4 +610,7 @@
     <string name="fast_vault_password_screen_reenter_password_hint" translatable="false">Re-enter password</string>
     <string name="fast_vault_name_screen_next" translatable="false">Next</string>
     <string name="enter_email_screen_next"  translatable="false">Next</string>
+    <string name="error_view_try_again_button">Try again</string>
+    <string name="error_view_default_title">Something went wrong</string>
+    <string name="error_view_default_description">An error occurred</string>
 </resources>

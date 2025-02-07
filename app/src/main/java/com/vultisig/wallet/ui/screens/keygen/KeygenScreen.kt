@@ -53,6 +53,7 @@ import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.loader.VsHorizontalProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -74,6 +75,7 @@ internal fun KeygenScreen(
     } else {
         KeygenScreen(
             state = state,
+            onTryAgainClick = model::tryAgain,
         )
     }
 }
@@ -81,6 +83,7 @@ internal fun KeygenScreen(
 @Composable
 private fun KeygenScreen(
     state: KeygenUiModel,
+    onTryAgainClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -91,121 +94,131 @@ private fun KeygenScreen(
         },
         content = { contentPadding ->
             Column(
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .padding(contentPadding)
                     .fillMaxSize(),
             ) {
-
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(
-                            all = 40.dp,
-                        ),
-                ) {
-                    Text(
-                        text = stringResource(R.string.keygen_while_you_wait_title),
-                        style = Theme.brockmann.headings.subtitle,
-                        color = Theme.colors.text.extraLight,
-                        textAlign = TextAlign.Center,
-                    )
-
-                    UiSpacer(12.dp)
-
-                    val benefits = remember { benefits() }
-
-                    val transition = rememberInfiniteTransition(label = "")
-
-                    val currentIndex by transition.animateFloat(
-                        initialValue = 0f,
-                        targetValue = (benefits.size).toFloat(),
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(10000, easing = LinearEasing),
-                            repeatMode = RepeatMode.Restart,
-                        ),
-                        label = ""
-                    )
-
-                    val currentBenefit =
-                        benefits[currentIndex.toInt().coerceIn(0..benefits.lastIndex)]
-
-                    val annotatedString = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                brush = Theme.colors.gradients.primary,
+                val error = state.error
+                if (error == null) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(
+                                all = 40.dp,
                             ),
-                        ) {
-                            append(stringResource(currentBenefit.emphasized))
-                        }
-                        appendLine()
-                        append(stringResource(currentBenefit.template))
-                    }
-
-                    AnimatedContent(
-                        targetState = annotatedString, label = "",
-                        transitionSpec = {
-                            (fadeIn(animationSpec = tween(550, delayMillis = 250)))
-                                .togetherWith(fadeOut(animationSpec = tween(250)))
-                        }
-                    ) { text ->
+                    ) {
                         Text(
-                            text = text,
-                            style = Theme.brockmann.headings.title2,
-                            color = Theme.colors.text.primary,
+                            text = stringResource(R.string.keygen_while_you_wait_title),
+                            style = Theme.brockmann.headings.subtitle,
+                            color = Theme.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                         )
-                    }
-                }
 
-                val shape = RoundedCornerShape(24.dp)
+                        UiSpacer(12.dp)
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(all = 36.dp),
-                ) {
-                    LazyColumn(
-                        userScrollEnabled = false,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .background(
-                                color = Theme.colors.backgrounds.secondary,
-                                shape = shape,
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Theme.colors.borders.light,
-                                shape = shape,
-                            )
-                            .padding(
-                                vertical = 28.dp,
-                                horizontal = 36.dp,
-                            )
-                            .defaultMinSize(minHeight = 64.dp)
-                    ) {
-                        items(state.steps.takeLast(2)) { step ->
-                            LoadingStageItem(
-                                text = step.title.asString(),
-                                isLoading = step.isLoading,
-                                modifier = Modifier.animateItem()
+                        val benefits = remember { benefits() }
+
+                        val transition = rememberInfiniteTransition(label = "")
+
+                        val currentIndex by transition.animateFloat(
+                            initialValue = 0f,
+                            targetValue = (benefits.size).toFloat(),
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(10000, easing = LinearEasing),
+                                repeatMode = RepeatMode.Restart,
+                            ),
+                            label = ""
+                        )
+
+                        val currentBenefit =
+                            benefits[currentIndex.toInt().coerceIn(0..benefits.lastIndex)]
+
+                        val annotatedString = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    brush = Theme.colors.gradients.primary,
+                                ),
+                            ) {
+                                append(stringResource(currentBenefit.emphasized))
+                            }
+                            appendLine()
+                            append(stringResource(currentBenefit.template))
+                        }
+
+                        AnimatedContent(
+                            targetState = annotatedString, label = "",
+                            transitionSpec = {
+                                (fadeIn(animationSpec = tween(550, delayMillis = 250)))
+                                    .togetherWith(fadeOut(animationSpec = tween(250)))
+                            }
+                        ) { text ->
+                            Text(
+                                text = text,
+                                style = Theme.brockmann.headings.title2,
+                                color = Theme.colors.text.primary,
+                                textAlign = TextAlign.Center,
                             )
                         }
                     }
 
-                    VsHorizontalProgressIndicator(
-                        progress = state.progress,
+                    val shape = RoundedCornerShape(24.dp)
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .padding(
-                                horizontal = 24.dp
-                            ),
+                            .padding(all = 36.dp),
+                    ) {
+                        LazyColumn(
+                            userScrollEnabled = false,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .background(
+                                    color = Theme.colors.backgrounds.secondary,
+                                    shape = shape,
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Theme.colors.borders.light,
+                                    shape = shape,
+                                )
+                                .padding(
+                                    vertical = 28.dp,
+                                    horizontal = 36.dp,
+                                )
+                                .defaultMinSize(minHeight = 64.dp)
+                        ) {
+                            items(state.steps.takeLast(2)) { step ->
+                                LoadingStageItem(
+                                    text = step.title.asString(),
+                                    isLoading = step.isLoading,
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
+
+                        VsHorizontalProgressIndicator(
+                            progress = state.progress,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .padding(
+                                    horizontal = 24.dp
+                                ),
+                        )
+                    }
+                } else {
+                    ErrorView(
+                        title = error.title.asString(),
+                        description = error.description.asString(),
+                        onTryAgainClick = onTryAgainClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
                     )
                 }
             }
@@ -332,5 +345,6 @@ private fun KeygenScreenPreview() {
                 ),
             )
         ),
+        onTryAgainClick = {},
     )
 }
