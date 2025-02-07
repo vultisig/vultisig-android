@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalUuidApi::class, ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class)
 
 package com.vultisig.wallet.ui.models.keygen
 
@@ -22,15 +22,15 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
-import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupRepository
-import com.vultisig.wallet.data.repositories.onboarding.OnboardingSecureBackupState
+import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessorImpl
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.ui.components.canAuthenticateBiometric
+import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
-import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
@@ -39,7 +39,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,6 +54,7 @@ internal data class KeygenUiModel(
     val progress: Float = 0f,
     val isSuccess: Boolean = false,
     val steps: List<KeygenStepUiModel> = emptyList(),
+    val error: ErrorUiModel? = null,
 )
 
 internal data class KeygenStepUiModel(
@@ -71,7 +71,7 @@ internal class KeygenViewModel @Inject constructor(
     private val saveVault: SaveVaultUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
-    private val onboardingSecureBackupRepository: OnboardingSecureBackupRepository,
+    private val vaultPasswordRepository: VaultPasswordRepository,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
@@ -79,36 +79,35 @@ internal class KeygenViewModel @Inject constructor(
 
     val state = MutableStateFlow(KeygenUiModel())
 
-    private val params = savedStateHandle.toRoute<Route.Keygen.Generating>()
+    private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
 
     private val vault = Vault(
         id = Uuid.random().toHexString(),
-        name = params.name,
-        hexChainCode = params.hexChainCode,
-        localPartyID = params.localPartyId,
-        signers = params.keygenCommittee,
+        name = args.name,
+        hexChainCode = args.hexChainCode,
+        localPartyID = args.localPartyId,
+        signers = args.keygenCommittee,
         // todo check if value correct or if we can get it here
-        resharePrefix = params.oldResharePrefix,
-        libType = params.libType,
+        resharePrefix = args.oldResharePrefix,
+        libType = args.libType,
     )
 
-    private val action: TssAction = params.action
-    private val keygenCommittee: List<String> = params.keygenCommittee + vault.localPartyID
-    private val oldCommittee: List<String> = params.oldCommittee
-    private val serverUrl: String = params.serverUrl
-    private val sessionId: String = params.sessionId
-    private val encryptionKeyHex: String = params.encryptionKeyHex
-    private val oldResharePrefix: String = params.oldResharePrefix
-    private val isInitiatingDevice: Boolean = params.isInitiatingDevice
-    private val libType = params.libType
+    private val action: TssAction = args.action
+    private val keygenCommittee: List<String> = args.keygenCommittee + vault.localPartyID
+    private val oldCommittee: List<String> = args.oldCommittee
+    private val serverUrl: String = args.serverUrl
+    private val sessionId: String = args.sessionId
+    private val encryptionKeyHex: String = args.encryptionKeyHex
+    private val oldResharePrefix: String = args.oldResharePrefix
+    private val isInitiatingDevice: Boolean = args.isInitiatingDevice
+    private val libType = args.libType
 
     private val keyshares = mutableListOf<KeyShare>()
 
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessorImpl(keyshares)
     private var featureFlag: FeatureFlagJson? = null
 
-    // TODO check if this is required when we add reshare
-    private val isReshareMode: Boolean = false
+    private val isReshareMode: Boolean = action == TssAction.ReShare
 
     private val dklsKeygen = DKLSKeygen(
         localPartyId = vault.localPartyID,
@@ -125,25 +124,19 @@ internal class KeygenViewModel @Inject constructor(
         generateKey()
     }
 
-    private suspend fun startKeygen() {
-        try {
-            sessionApi.startWithCommittee(
-                serverUrl, sessionId, keygenCommittee
-            )
-            Timber.d("startKeygen: Keygen started")
-
-        } catch (e: Exception) {
-            Timber.e(e, "startKeygen")
-        }
+    fun tryAgain() {
+        generateKey()
     }
 
     private fun generateKey() {
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
 
-            startKeygen()
+            state.update { it.copy(error = null) }
 
             try {
+                startKeygen()
+
                 when (libType) {
                     SigningLibType.DKLS -> startKeygenDkls()
                     SigningLibType.GG20 -> startKeygenGG20()
@@ -157,8 +150,11 @@ internal class KeygenViewModel @Inject constructor(
             } catch (e: Exception) {
                 Timber.d(e, "generateKey error")
 
-                // TODO handle keygen error
-                // state.value = resolveKeygenErrorFromException(e)
+                state.update {
+                    it.copy(
+                        error = resolveKeygenErrorFromException(e)
+                    )
+                }
 
                 stopService()
             }
@@ -336,52 +332,45 @@ internal class KeygenViewModel @Inject constructor(
         return@withContext Tss.newService(messenger, localStateAccessor, true)
     }
 
-    // TODO consider saving vault only on backup screens after backups verified
     private suspend fun saveVault() {
-        val vaultId = Uuid.random().toHexString()
+        val vaultId = vault.id
 
-        saveVault(
-            this.vault,
-            this.action == TssAction.ReShare
-        )
+        // TODO fast vault should not be saved without verification
+
+        saveVault(vault, isReshareMode)
+
         vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
-        // hint?.let { vaultDataStoreRepository.setFastSignHint(vaultId = vaultId, hint = it) }
+        args.hint?.let { vaultDataStoreRepository.setFastSignHint(vaultId = vaultId, hint = it) }
+        lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
+
+        val password = args.password
+        if (password != null && context.canAuthenticateBiometric()) {
+            vaultPasswordRepository.savePassword(vaultId, password)
+        }
+
         delay(2.seconds)
 
         stopService()
 
-        lastOpenedVaultRepository.setLastOpenedVaultId(vaultId)
-
-        // if (password?.isNotEmpty() == true && context.canAuthenticateBiometric()) {
-        //     vaultPasswordRepository.savePassword(vaultId, password)
-        // }
-
-        val onboardingSecureState = onboardingSecureBackupRepository.readOnboardingState().first()
-        if (
-            !vault.isFastVault()
-            && !isReshareMode
-            && onboardingSecureState == OnboardingSecureBackupState.NOT_COMPLETED
-        ) {
-            navigator.route(Route.Onboarding.SecureVaultBackup)
-        } else {
-            navigator.navigate(
-                dst = Destination.BackupSuggestion(
-                    vaultId = vaultId
-                ),
-                opts = NavigationOptions(
-                    popUpTo = Destination.Home().route,
+        if (!isReshareMode) {
+            if (vault.isFastVault()) {
+                // TODO go to fast vault backup
+                navigator.route(
+                    Route.Onboarding.SecureVaultBackup(
+                        vaultId = vaultId,
+                    )
                 )
-            )
+            } else {
+                navigator.route(
+                    Route.Onboarding.SecureVaultBackup(
+                        vaultId = vaultId,
+                    )
+                )
+            }
+        } else {
+            // TODO add reshare action
         }
 
-        navigator.navigate(
-            dst = Destination.BackupSuggestion(
-                vaultId = vaultId
-            ),
-            opts = NavigationOptions(
-                popUpTo = Destination.Home().route,
-            )
-        )
     }
 
     private fun stopService() {
@@ -391,16 +380,15 @@ internal class KeygenViewModel @Inject constructor(
         Timber.d("stop MediatorService: Mediator service stopped")
     }
 
-    private fun resolveKeygenErrorFromException(e: Exception): KeygenState.Error {
+    private fun resolveKeygenErrorFromException(e: Exception): ErrorUiModel {
         val isThresholdError = checkIsThresholdError(e)
 
-        return KeygenState.Error(
+        return ErrorUiModel(
             title = when {
-                isThresholdError -> null
                 isReshareMode -> UiText.StringResource(R.string.generating_key_screen_reshare_failed)
                 else -> UiText.StringResource(R.string.generating_key_screen_keygen_failed)
             },
-            message = if (isThresholdError) {
+            description = if (isThresholdError) {
                 UiText.StringResource(R.string.threshold_error)
             } else {
                 UiText.DynamicString(e.message ?: "Unknown error")
@@ -451,6 +439,12 @@ internal class KeygenViewModel @Inject constructor(
                 )
             )
         }
+    }
+
+    private suspend fun startKeygen() {
+        sessionApi.startWithCommittee(
+            serverUrl, sessionId, keygenCommittee
+        )
     }
 
 }

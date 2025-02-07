@@ -49,10 +49,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import app.rive.runtime.kotlin.core.Fit
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.loader.VsHorizontalProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -74,6 +74,7 @@ internal fun KeygenScreen(
     } else {
         KeygenScreen(
             state = state,
+            onTryAgainClick = model::tryAgain,
         )
     }
 }
@@ -81,6 +82,7 @@ internal fun KeygenScreen(
 @Composable
 private fun KeygenScreen(
     state: KeygenUiModel,
+    onTryAgainClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
@@ -91,121 +93,131 @@ private fun KeygenScreen(
         },
         content = { contentPadding ->
             Column(
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .padding(contentPadding)
                     .fillMaxSize(),
             ) {
-
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(
-                            all = 40.dp,
-                        ),
-                ) {
-                    Text(
-                        text = stringResource(R.string.keygen_while_you_wait_title),
-                        style = Theme.brockmann.headings.subtitle,
-                        color = Theme.colors.text.extraLight,
-                        textAlign = TextAlign.Center,
-                    )
-
-                    UiSpacer(12.dp)
-
-                    val benefits = remember { benefits() }
-
-                    val transition = rememberInfiniteTransition(label = "")
-
-                    val currentIndex by transition.animateFloat(
-                        initialValue = 0f,
-                        targetValue = (benefits.size).toFloat(),
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(10000, easing = LinearEasing),
-                            repeatMode = RepeatMode.Restart,
-                        ),
-                        label = ""
-                    )
-
-                    val currentBenefit =
-                        benefits[currentIndex.toInt().coerceIn(0..benefits.lastIndex)]
-
-                    val annotatedString = buildAnnotatedString {
-                        withStyle(
-                            style = SpanStyle(
-                                brush = Theme.colors.gradients.primary,
+                val error = state.error
+                if (error == null) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(
+                                all = 40.dp,
                             ),
-                        ) {
-                            append(stringResource(currentBenefit.emphasized))
-                        }
-                        appendLine()
-                        append(stringResource(currentBenefit.template))
-                    }
-
-                    AnimatedContent(
-                        targetState = annotatedString, label = "",
-                        transitionSpec = {
-                            (fadeIn(animationSpec = tween(550, delayMillis = 250)))
-                                .togetherWith(fadeOut(animationSpec = tween(250)))
-                        }
-                    ) { text ->
+                    ) {
                         Text(
-                            text = text,
-                            style = Theme.brockmann.headings.title2,
-                            color = Theme.colors.text.primary,
+                            text = stringResource(R.string.keygen_while_you_wait_title),
+                            style = Theme.brockmann.headings.subtitle,
+                            color = Theme.colors.text.extraLight,
                             textAlign = TextAlign.Center,
                         )
-                    }
-                }
 
-                val shape = RoundedCornerShape(24.dp)
+                        UiSpacer(12.dp)
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(all = 36.dp),
-                ) {
-                    LazyColumn(
-                        userScrollEnabled = false,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .background(
-                                color = Theme.colors.backgrounds.secondary,
-                                shape = shape,
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = Theme.colors.borders.light,
-                                shape = shape,
-                            )
-                            .padding(
-                                vertical = 28.dp,
-                                horizontal = 36.dp,
-                            )
-                            .defaultMinSize(minHeight = 64.dp)
-                    ) {
-                        items(state.steps.takeLast(2)) { step ->
-                            LoadingStageItem(
-                                text = step.title.asString(),
-                                isLoading = step.isLoading,
-                                modifier = Modifier.animateItem()
+                        val benefits = remember { benefits() }
+
+                        val transition = rememberInfiniteTransition(label = "")
+
+                        val currentIndex by transition.animateFloat(
+                            initialValue = 0f,
+                            targetValue = (benefits.size).toFloat(),
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(10000, easing = LinearEasing),
+                                repeatMode = RepeatMode.Restart,
+                            ),
+                            label = ""
+                        )
+
+                        val currentBenefit =
+                            benefits[currentIndex.toInt().coerceIn(0..benefits.lastIndex)]
+
+                        val annotatedString = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    brush = Theme.colors.gradients.primary,
+                                ),
+                            ) {
+                                append(stringResource(currentBenefit.emphasized))
+                            }
+                            appendLine()
+                            append(stringResource(currentBenefit.template))
+                        }
+
+                        AnimatedContent(
+                            targetState = annotatedString, label = "",
+                            transitionSpec = {
+                                (fadeIn(animationSpec = tween(550, delayMillis = 250)))
+                                    .togetherWith(fadeOut(animationSpec = tween(250)))
+                            }
+                        ) { text ->
+                            Text(
+                                text = text,
+                                style = Theme.brockmann.headings.title2,
+                                color = Theme.colors.text.primary,
+                                textAlign = TextAlign.Center,
                             )
                         }
                     }
 
-                    VsHorizontalProgressIndicator(
-                        progress = state.progress,
+                    val shape = RoundedCornerShape(24.dp)
+
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .align(Alignment.BottomCenter)
-                            .padding(
-                                horizontal = 24.dp
-                            ),
+                            .padding(all = 36.dp),
+                    ) {
+                        LazyColumn(
+                            userScrollEnabled = false,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .background(
+                                    color = Theme.colors.backgrounds.secondary,
+                                    shape = shape,
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = Theme.colors.borders.light,
+                                    shape = shape,
+                                )
+                                .padding(
+                                    vertical = 28.dp,
+                                    horizontal = 36.dp,
+                                )
+                                .defaultMinSize(minHeight = 64.dp)
+                        ) {
+                            items(state.steps.takeLast(2)) { step ->
+                                LoadingStageItem(
+                                    text = step.title.asString(),
+                                    isLoading = step.isLoading,
+                                    modifier = Modifier.animateItem()
+                                )
+                            }
+                        }
+
+                        VsHorizontalProgressIndicator(
+                            progress = state.progress,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .padding(
+                                    horizontal = 24.dp
+                                ),
+                        )
+                    }
+                } else {
+                    ErrorView(
+                        title = error.title.asString(),
+                        description = error.description.asString(),
+                        onTryAgainClick = onTryAgainClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
                     )
                 }
             }
@@ -222,6 +234,8 @@ private fun benefits() = listOf(
     BenefitsDescription(R.string.keygen_benefit_1_template, R.string.keygen_benefit_1_emphasized),
     BenefitsDescription(R.string.keygen_benefit_2_template, R.string.keygen_benefit_2_emphasized),
     BenefitsDescription(R.string.keygen_benefit_3_template, R.string.keygen_benefit_3_emphasized),
+    BenefitsDescription(R.string.keygen_benefit_4_template, R.string.keygen_benefit_4_emphasized),
+    BenefitsDescription(R.string.keygen_benefit_5_template, R.string.keygen_benefit_5_emphasized),
 )
 
 @Composable
@@ -272,21 +286,14 @@ private fun Success() {
             .fillMaxSize()
             .background(Theme.colors.backgrounds.primary),
     ) {
-        RiveAnimation(
-            animation = R.raw.circles,
-            fit = Fit.FIT_HEIGHT,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 128.dp),
-        )
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             RiveAnimation(
-                animation = R.raw.checkmark,
+                animation = R.raw.riv_vault_created,
                 modifier = Modifier
-                    .size(96.dp),
+                    .fillMaxWidth()
+                    .weight(1f),
             )
 
             var isSuccessVisible by remember { mutableStateOf(false) }
@@ -304,12 +311,38 @@ private fun Success() {
                         ) +
                         scaleIn(tween(SUCCESS_ENTER_DURATION_MS)),
             ) {
-                Text(
-                    text = "Success",
-                    style = Theme.brockmann.headings.title1,
-                    color = Theme.colors.alerts.success,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    val successText = buildAnnotatedString {
+                        append(stringResource(R.string.keygen_vault_created_success_part_1))
+                        appendLine(" ")
+                        withStyle(
+                            SpanStyle(brush = Theme.colors.gradients.primary)
+                        ) {
+                            append(stringResource(R.string.vault_created_success_part_2))
+                        }
+                    }
+
+                    Text(
+                        text = successText,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.colors.text.primary,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    UiSpacer(12.dp)
+
+                    RiveAnimation(
+                        animation = R.raw.riv_connecting_with_server,
+                        modifier = Modifier
+                            .size(24.dp),
+                    )
+                }
             }
+
+            UiSpacer(60.dp)
+
         }
     }
 }
@@ -332,5 +365,6 @@ private fun KeygenScreenPreview() {
                 ),
             )
         ),
+        onTryAgainClick = {},
     )
 }

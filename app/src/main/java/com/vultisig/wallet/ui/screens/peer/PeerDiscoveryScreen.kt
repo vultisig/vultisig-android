@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -58,6 +59,8 @@ import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.errors.ErrorUiModel
+import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
@@ -66,6 +69,7 @@ import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun PeerDiscoveryScreen(
@@ -76,22 +80,35 @@ internal fun PeerDiscoveryScreen(
     val state by model.state.collectAsState()
 
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     val connectingToServer = state.connectingToServer
-    if (connectingToServer != null) {
-        ConnectingToServer(connectingToServer.isSuccess)
-    } else {
-        PeerDiscoveryScreen(
-            state = state,
-            onBackClick = model::back,
-            onHelpClick = model::openHelp,
-            onShareQrClick = { model.shareQr(context) },
-            onCloseHintClick = model::closeDevicesHint,
-            onSwitchModeClick = model::switchMode,
-            onDeviceClick = model::selectDevice,
-            onNextClick = model::next,
-            onDismissQrHelpModal = model::dismissQrHelpModal
-        )
+    val error = state.error
+    when {
+        error != null -> {
+            Error(
+                state = error,
+                onTryAgainClick = model::tryAgain,
+            )
+        }
+        connectingToServer != null -> {
+            ConnectingToServer(connectingToServer.isSuccess)
+        }
+        else -> {
+            PeerDiscoveryScreen(
+                state = state,
+                onBackClick = model::back,
+                onHelpClick = {
+                    uriHandler.openUri("https://docs.vultisig.com/vultisig-user-actions/creating-a-vault")
+                },
+                onShareQrClick = { model.shareQr(context) },
+                onCloseHintClick = model::closeDevicesHint,
+                onSwitchModeClick = model::switchMode,
+                onDeviceClick = model::selectDevice,
+                onNextClick = model::next,
+                onDismissQrHelpModal = model::dismissQrHelpModal
+            )
+        }
     }
 }
 
@@ -563,12 +580,12 @@ private fun ConnectingToServer(
             .padding(all = 24.dp),
     ) {
         RiveAnimation(
-            animation = R.raw.connecting_with_server,
+            animation = R.raw.riv_connecting_with_server,
             modifier = Modifier
                 .size(24.dp),
             onInit = {
                 if (isSuccess) {
-                    it.fireState("State Machine 1", "Connected")
+                    it.fireState("State Machine 1", "Succes")
                 }
             }
         )
@@ -589,6 +606,28 @@ private fun ConnectingToServer(
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.light,
             textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun Error(
+    state: ErrorUiModel,
+    onTryAgainClick: () -> Unit,
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Theme.colors.backgrounds.primary)
+            .padding(all = 24.dp),
+    ) {
+        ErrorView(
+            title = state.title.asString(),
+            description = state.description.asString(),
+            onTryAgainClick = onTryAgainClick,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
