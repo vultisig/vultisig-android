@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.fileName
 import com.vultisig.wallet.data.common.saveContentToUri
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -63,8 +65,10 @@ internal class BackupPasswordViewModel @Inject constructor(
     val passwordTextFieldState = TextFieldState()
     val confirmPasswordTextFieldState = TextFieldState()
 
-    private val vaultId: String =
-        requireNotNull(savedStateHandle.get<String>(Destination.BackupPassword.ARG_VAULT_ID))
+    private val args = savedStateHandle.toRoute<Route.BackupPassword>()
+
+    private val vaultId: String = args.vaultId
+    private val vaultType = args.vaultType
 
     private val vault = MutableStateFlow<Vault?>(null)
 
@@ -223,10 +227,18 @@ internal class BackupPasswordViewModel @Inject constructor(
                         R.string.vault_settings_success_backup_message
                     )
                 )
-                navigator.navigate(
-                    Destination.Home(vaultId),
-                    NavigationOptions(clearBackStack = true)
-                )
+                if (vaultType != null) {
+                    navigator.route(
+                        Route.VaultConfirmation(
+                            vaultType = vaultType,
+                        )
+                    )
+                } else {
+                    navigator.navigate(
+                        Destination.Home(vaultId),
+                        NavigationOptions(clearBackStack = true)
+                    )
+                }
             } else {
                 snackbarFlow.showMessage(
                     context.getString(R.string.vault_settings_error_backup_file)
