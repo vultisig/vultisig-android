@@ -84,7 +84,9 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val vault = vaultRepository.get(vaultId)
+                ?: error("Vault with id $vaultId not found")
+
             this@BackupPasswordViewModel.vault.value = vault
             if (!hasWritePermission) {
                 permissionChannel.send(true)
@@ -145,9 +147,11 @@ internal class BackupPasswordViewModel @Inject constructor(
                 passwordTextFieldState.text.toString().isEmpty() -> {
                     UiText.StringResource(R.string.backup_password_screen_empty_password)
                 }
+
                 passwordTextFieldState.text.toString() != confirmPasswordTextFieldState.text.toString() -> {
                     UiText.StringResource(R.string.backup_password_screen_confirm_password_error_message)
                 }
+
                 else -> null
             }
 

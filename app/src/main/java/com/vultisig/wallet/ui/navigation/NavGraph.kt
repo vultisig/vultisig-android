@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
 import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
+import com.vultisig.wallet.ui.screens.keygen.BackupVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
@@ -666,6 +667,10 @@ internal fun SetupNavGraph(
 
         composable<VaultInfo.PasswordHint> {
             FastVaultPasswordHintScreen()
+        }
+
+        composable<Route.BackupVault> {
+            BackupVaultScreen()
         }
     }
 }

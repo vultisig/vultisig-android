@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -79,6 +80,7 @@ internal fun PeerDiscoveryScreen(
     val state by model.state.collectAsState()
 
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     val connectingToServer = state.connectingToServer
     val error = state.error
@@ -96,7 +98,9 @@ internal fun PeerDiscoveryScreen(
             PeerDiscoveryScreen(
                 state = state,
                 onBackClick = model::back,
-                onHelpClick = model::openHelp,
+                onHelpClick = {
+                    uriHandler.openUri("https://docs.vultisig.com/vultisig-user-actions/creating-a-vault")
+                },
                 onShareQrClick = { model.shareQr(context) },
                 onCloseHintClick = model::closeDevicesHint,
                 onSwitchModeClick = model::switchMode,
@@ -576,12 +580,12 @@ private fun ConnectingToServer(
             .padding(all = 24.dp),
     ) {
         RiveAnimation(
-            animation = R.raw.connecting_with_server,
+            animation = R.raw.riv_connecting_with_server,
             modifier = Modifier
                 .size(24.dp),
             onInit = {
                 if (isSuccess) {
-                    it.fireState("State Machine 1", "Connected")
+                    it.fireState("State Machine 1", "Succes")
                 }
             }
         )

@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -128,14 +129,16 @@ private fun FastVaultPasswordScreen(
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
                 ) {
                     val focusRequester = remember {
                         FocusRequester()
                     }
+
                     LaunchedEffect(Unit) {
                         focusRequester.requestFocus()
                     }
+
                     VsTextInputField(
                         textFieldState = passwordTextFieldState,
                         hint = stringResource(R.string.fast_vault_password_screen_password_hint),
@@ -144,9 +147,9 @@ private fun FastVaultPasswordScreen(
                             isVisible = state.isPasswordVisible,
                             onVisibilityClick = onTogglePasswordVisibilityClick
                         ),
-                        focusRequester = focusRequester
+                        focusRequester = focusRequester,
+                        imeAction = ImeAction.Next,
                     )
-                    UiSpacer(10.dp)
 
                     VsTextInputField(
                         textFieldState = confirmPasswordTextFieldState,
@@ -156,6 +159,10 @@ private fun FastVaultPasswordScreen(
                             isVisible = state.isConfirmPasswordVisible,
                             onVisibilityClick = onToggleConfirmPasswordVisibilityClick
                         ),
+                        imeAction = ImeAction.Go,
+                        onKeyboardAction = {
+                            onNextClick()
+                        },
                     )
                 }
 
