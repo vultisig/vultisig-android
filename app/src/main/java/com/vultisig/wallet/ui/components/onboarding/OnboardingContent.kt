@@ -60,9 +60,10 @@ internal fun OnboardingContent(
                 .fillMaxWidth()
                 .align(Alignment.TopCenter),
             onInit = { riveAnimationView ->
-                riveAnimationView.fireState(
+                riveAnimationView.setNumberState(
                     stateMachineName = ONBOARDING_STATE_MACHINE_NAME,
                     inputName = state.currentPage.triggerName,
+                    value = state.pageIndex.toFloat()
                 )
             }
         )
