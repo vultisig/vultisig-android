@@ -362,7 +362,6 @@ internal class KeygenFlowViewModel @Inject constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
         } else {
-            //Todo Handle older Android versions if needed
             context.registerReceiver(serviceStartedReceiver, filter)
         }
 
