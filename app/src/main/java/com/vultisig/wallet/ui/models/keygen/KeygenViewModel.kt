@@ -355,11 +355,13 @@ internal class KeygenViewModel @Inject constructor(
         stopService()
 
         if (!isReshareMode) {
-            if (vault.isFastVault()) {
-                // TODO go to fast vault backup
+            if (vault.isFastVault() && args.email != null) {
+                // TODO go to fast vault backup onboarding
                 navigator.route(
-                    Route.Onboarding.SecureVaultBackup(
+                    Route.FastVaultVerification(
                         vaultId = vaultId,
+                        pubKeyEcdsa = vault.pubKeyECDSA,
+                        email = args.email,
                     )
                 )
             } else {
@@ -372,7 +374,6 @@ internal class KeygenViewModel @Inject constructor(
         } else {
             // TODO add reshare action
         }
-
     }
 
     private fun stopService() {

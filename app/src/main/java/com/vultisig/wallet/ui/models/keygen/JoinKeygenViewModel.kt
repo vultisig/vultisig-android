@@ -339,6 +339,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                                     oldResharePrefix = _oldResharePrefix,
                                     isInitiatingDevice = false,
                                     libType = _vault.libType,
+                                    email = null,
                                     password = null,
                                     hint = null,
                                 )
