@@ -565,6 +565,11 @@ internal sealed class Route {
     )
 
     @Serializable
+    data class VaultBackupSummary(
+        val vaultType: VaultInfo.VaultType,
+    )
+
+    @Serializable
     data class VaultConfirmation(
         val vaultType: VaultInfo.VaultType,
     )
