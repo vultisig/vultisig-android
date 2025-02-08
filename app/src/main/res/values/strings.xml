@@ -622,4 +622,13 @@
     <string name="backup_vault_backup_now_button" translatable="false">Back-up now</string>
     <string name="backup_vault_backup_vault_share_title" translatable="false">Back-up your vault share online</string>
     <string name="backup_vault_topbar_title" translatable="false">Back-up Vault</string>
+    <string name="vault_backup_screen_paste" translatable="false">Paste</string>
+    <string name="enter_backup_screen_title" translatable="false">Enter the 4 digit code\nwe emailed you</string>
+    <string name="enter_backup_screen_desc" translatable="false">This code will confirm that you’ve received your vault share 1 via email</string>
+    <string name="vault_backup_error_pin" translatable="false">Error verifying code, please re-try</string>
+    <string name="vault_backup_verifying_pin" translatable="false">Verifying code, please wait</string>
+    <string name="vault_backup_screen_change_email" translatable="false">Change email and restart keygen</string>
+    <string name="vault_backup_screen_email_sent_to" translatable="false">Sent to %s.</string>
+    <string name="vault_backup_screen_donot_recieve_email" translatable="false">Didn’t receive an email?</string>
+    <string name="vault_backup_screen_restart_keygen" translatable="false">Restart keygen</string>
 </resources>
