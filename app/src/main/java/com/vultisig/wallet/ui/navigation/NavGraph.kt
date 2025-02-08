@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
@@ -634,6 +635,10 @@ internal fun SetupNavGraph(
             enterTransition = slideInFromBottomEnterTransition(),
         ) {
             OnboardingSecureVaultBackupScreen()
+        }
+
+        composable<Route.FastVaultVerification> {
+            FastVaultVerificationScreen()
         }
 
         composable<Route.BackupVault> {
