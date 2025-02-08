@@ -14,18 +14,19 @@ import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
-import com.vultisig.wallet.ui.models.onboarding.OnboardingSecureVaultBackupViewModel
+import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
-internal fun OnboardingSecureVaultBackupScreen(
-    model: OnboardingSecureVaultBackupViewModel = hiltViewModel(),
+internal fun VaultBackupOnboardingScreen(
+    model: VaultBackupOnboardingViewModel = hiltViewModel(),
 ) {
     val state by model.state.collectAsState()
+
     BlockBackClick()
 
-    OnboardingSecureVaultBackupScreen(
+    VaultBackupOnboardingScreen(
         state = state,
         onBackClick = model::back,
         onNextClick = model::next,
@@ -33,7 +34,7 @@ internal fun OnboardingSecureVaultBackupScreen(
 }
 
 @Composable
-private fun OnboardingSecureVaultBackupScreen(
+private fun VaultBackupOnboardingScreen(
     state: OnboardingUiModel,
     onBackClick: () -> Unit,
     onNextClick: () -> Unit,

@@ -127,7 +127,7 @@ private fun KeygenScreen(
                             initialValue = 0f,
                             targetValue = (benefits.size).toFloat(),
                             animationSpec = infiniteRepeatable(
-                                animation = tween(10000, easing = LinearEasing),
+                                animation = tween(benefits.size * 3333, easing = LinearEasing),
                                 repeatMode = RepeatMode.Restart,
                             ),
                             label = ""

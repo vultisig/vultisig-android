@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -26,8 +27,8 @@ internal class OnboardingSummaryViewModel @Inject constructor(
     fun createVault() = viewModelScope.launch {
         if (!checkState.value) return@launch
         onboardingRepository.saveOnboardingState(true)
-        navigator.navigate(
-            dst = Destination.SelectVaultType,
+        navigator.route(
+            route = Route.ChooseVaultType,
             opts = NavigationOptions(
                 popUpTo = Destination.AddVault.route,
             )

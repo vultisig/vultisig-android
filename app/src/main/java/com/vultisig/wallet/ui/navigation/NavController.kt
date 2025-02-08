@@ -1,6 +1,8 @@
 package com.vultisig.wallet.ui.navigation
 
+import android.annotation.SuppressLint
 import androidx.navigation.NavController
+import androidx.navigation.NavOptionsBuilder
 import timber.log.Timber
 
 internal fun NavController.route(route: String, opts: NavigationOptions? = null) {
@@ -11,18 +13,7 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
     } else {
         navigate(route) {
             launchSingleTop = true
-            if (opts != null) {
-                if (opts.popUpTo != null) {
-                    popUpTo(opts.popUpTo) {
-                        inclusive = opts.inclusive
-                    }
-                }
-                if (opts.clearBackStack) {
-                    popUpTo(graph.id) {
-                        inclusive = true
-                    }
-                }
-            }
+            buildOptions(this, opts)
         }
     }
 }
@@ -33,9 +24,24 @@ internal fun NavController.route(route: NavigateAction<Any>) {
     val (dst, opts) = route
 
     navigate(dst) {
+        buildOptions(this, opts)
+    }
+}
+
+@SuppressLint("RestrictedApi")
+private fun NavController.buildOptions(
+    builder: NavOptionsBuilder,
+    opts: NavigationOptions?
+) {
+    with(builder) {
         if (opts != null) {
             if (opts.popUpTo != null) {
                 popUpTo(opts.popUpTo) {
+                    inclusive = opts.inclusive
+                }
+            }
+            if (opts.popUpToRoute != null) {
+                popUpTo(klass = opts.popUpToRoute) {
                     inclusive = opts.inclusive
                 }
             }
