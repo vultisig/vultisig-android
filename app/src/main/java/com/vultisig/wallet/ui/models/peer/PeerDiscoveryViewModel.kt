@@ -226,7 +226,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     localPartyId = localPartyId,
                     vaultName = vaultName,
                     hexChainCode = hexChainCode,
-                    keygenCommittee = state.value.selectedDevices,
+                    keygenCommittee = state.value.selectedDevices + localPartyId,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
                     libType = libType,

@@ -93,7 +93,7 @@ internal class KeygenViewModel @Inject constructor(
     )
 
     private val action: TssAction = args.action
-    private val keygenCommittee: List<String> = args.keygenCommittee + vault.localPartyID
+    private val keygenCommittee: List<String> = args.keygenCommittee
     private val oldCommittee: List<String> = args.oldCommittee
     private val serverUrl: String = args.serverUrl
     private val sessionId: String = args.sessionId
