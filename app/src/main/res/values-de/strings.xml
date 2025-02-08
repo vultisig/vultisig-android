@@ -375,6 +375,7 @@
     <string name="eth_gas_settings_priority_title">Priorität</string>
     <string name="eth_gas_setting_total_fee_title">Gesamtgebühr (Gwei)</string>
     <string name="vault_details_screen_vault_part">Tresorteil</string>
+    <string name="vault_details_screen_vault_type">Tresortyp</string>
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
     <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
     <string name="vault_details_screen_vault_part_desc">Teil %s von %s</string>

@@ -375,6 +375,7 @@
     <string name="eth_gas_settings_priority_title">Prioritet</string>
     <string name="eth_gas_setting_total_fee_title">Ukupna naknada (Gwei)</string>
     <string name="vault_details_screen_vault_part">Trezorski dio</string>
+    <string name="vault_details_screen_vault_type">Vrsta trezoraا</string>
     <string name="vault_settings_delete_vault_part">Dio trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Dio %s od %s</string>
