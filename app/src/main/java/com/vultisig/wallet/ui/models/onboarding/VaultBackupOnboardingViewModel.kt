@@ -16,12 +16,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-internal class OnboardingSecureVaultBackupViewModel @Inject constructor(
+internal class VaultBackupOnboardingViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.Onboarding.SecureVaultBackup>()
+    private val args = savedStateHandle.toRoute<Route.Onboarding.VaultBackup>()
     private val vaultId = args.vaultId
 
     private val pages = listOf(
@@ -48,12 +48,26 @@ internal class OnboardingSecureVaultBackupViewModel @Inject constructor(
                     )
                 }
             } else {
-                navigator.route(
-                    Route.BackupVault(
-                        vaultId = vaultId,
-                        vaultType = Route.VaultInfo.VaultType.Secure,
-                    )
-                )
+                when (args.vaultType) {
+                    Route.VaultInfo.VaultType.Fast -> {
+                        navigator.route(
+                            Route.FastVaultVerification(
+                                vaultId = vaultId,
+                                pubKeyEcdsa = args.pubKeyEcdsa,
+                                email = requireNotNull(args.email),
+                            )
+                        )
+                    }
+
+                    Route.VaultInfo.VaultType.Secure -> {
+                        navigator.route(
+                            Route.BackupVault(
+                                vaultId = vaultId,
+                                vaultType = args.vaultType,
+                            )
+                        )
+                    }
+                }
             }
         }
     }

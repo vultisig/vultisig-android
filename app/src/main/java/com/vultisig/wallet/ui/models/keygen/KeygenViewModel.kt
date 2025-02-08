@@ -31,8 +31,10 @@ import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -355,22 +357,20 @@ internal class KeygenViewModel @Inject constructor(
         stopService()
 
         if (!isReshareMode) {
-            if (vault.isFastVault() && args.email != null) {
-                // TODO go to fast vault backup onboarding
-                navigator.route(
-                    Route.FastVaultVerification(
-                        vaultId = vaultId,
-                        pubKeyEcdsa = vault.pubKeyECDSA,
-                        email = args.email,
-                    )
-                )
-            } else {
-                navigator.route(
-                    Route.Onboarding.SecureVaultBackup(
-                        vaultId = vaultId,
-                    )
-                )
-            }
+            navigator.route(
+                route = Route.Onboarding.VaultBackup(
+                    vaultId = vaultId,
+                    pubKeyEcdsa = vault.pubKeyECDSA,
+                    email = args.email,
+                    vaultType = if (vault.isFastVault())
+                        VaultType.Fast
+                    else VaultType.Secure
+                ),
+                opts = NavigationOptions(
+                    popUpToRoute = Route.Keygen.Generating::class,
+                    inclusive = true,
+                ),
+            )
         } else {
             // TODO add reshare action
         }

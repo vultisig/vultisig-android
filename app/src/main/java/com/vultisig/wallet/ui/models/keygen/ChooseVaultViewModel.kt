@@ -75,10 +75,4 @@ internal class ChooseVaultViewModel @Inject constructor(
         }
     }
 
-    fun pair() {
-        viewModelScope.launch {
-            navigator.navigate(Destination.JoinThroughQr(null))
-        }
-    }
-
 }
