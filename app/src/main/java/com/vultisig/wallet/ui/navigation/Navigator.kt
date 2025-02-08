@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
 internal interface Navigator<Dest> {
 
@@ -28,6 +29,7 @@ internal data class NavigateAction<Dst>(
 
 internal data class NavigationOptions(
     val popUpTo: String? = null,
+    val popUpToRoute: KClass<*>? = null,
     val inclusive: Boolean = false,
     val clearBackStack: Boolean = false,
 )

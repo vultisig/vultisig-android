@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class FastVaultPasswordHintUiModel(
+    val isNextAvailable: Boolean = false,
     val errorMessage: UiText? = null,
 )
 
@@ -68,13 +69,18 @@ internal class FastVaultPasswordHintViewModel @Inject constructor(
     }
 
     private fun validateHint(hint: String) {
+        val isNextAvailable = hint.isNotEmpty()
+
         val errorMessage =
             if (!isHintValid(hint))
                 UiText.StringResource(R.string.vault_password_hint_to_long)
             else null
 
         state.update {
-            it.copy(errorMessage = errorMessage)
+            it.copy(
+                isNextAvailable = isNextAvailable,
+                errorMessage = errorMessage
+            )
         }
     }
 

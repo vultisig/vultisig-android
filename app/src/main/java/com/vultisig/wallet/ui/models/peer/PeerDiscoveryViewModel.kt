@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.NeutralsColors
@@ -235,6 +236,10 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     //  maybe we can do it in keygen view model
                     oldCommittee = emptyList(),
                     oldResharePrefix = "",//oldResharePrefix,
+                ),
+                opts = NavigationOptions(
+                    popUpToRoute = Route.Keygen.PeerDiscovery::class,
+                    inclusive = true,
                 )
             )
         }
