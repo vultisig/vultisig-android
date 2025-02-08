@@ -631,4 +631,5 @@
     <string name="vault_backup_screen_email_sent_to" translatable="false">Sent to %s.</string>
     <string name="vault_backup_screen_donot_recieve_email" translatable="false">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen" translatable="false">Restart keygen</string>
+    <string name="vault_backup_summary_start_using_vault">Start using vault</string>
 </resources>

@@ -66,6 +66,7 @@ import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
+import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
@@ -645,6 +646,10 @@ internal fun SetupNavGraph(
 
         composable<BackupPassword> {
             BackupPasswordScreen(navController)
+        }
+
+        composable<Route.VaultBackupSummary> {
+            VaultBackupSummaryScreen()
         }
 
         composable<VaultConfirmation> {

@@ -10,15 +10,15 @@ import com.vultisig.wallet.ui.models.onboarding.OnboardingSummaryViewModel
 
 @Composable
 internal fun OnboardingSummaryScreen(
-    viewModel: OnboardingSummaryViewModel = hiltViewModel(),
+    model: OnboardingSummaryViewModel = hiltViewModel(),
 ) {
-    val checkState by viewModel.checkState.collectAsState()
+    val checkState by model.checkState.collectAsState()
 
     SummaryScreen(
         checkState = checkState,
         animationRes = R.raw.quick_summary,
         buttonText = R.string.onboarding_summary_button,
-        onCheckChange = viewModel::toggleCheck,
-        onButtonClicked = viewModel::createVault,
+        onCheckChange = model::toggleCheck,
+        onButtonClicked = model::createVault,
     )
 }

@@ -37,12 +37,14 @@ internal class VaultConfirmationViewModel @Inject constructor(
         viewModelScope.launch {
             delay(5.seconds)
 
-            navigator.navigate(
-                dst = Destination.Home(),
+            navigator.route(
+                route = Route.VaultBackupSummary(
+                    vaultType = args.vaultType,
+                ),
                 opts = NavigationOptions(
                     popUpToRoute = Route.ChooseVaultType::class,
                     inclusive = true,
-                ),
+                )
             )
         }
     }
