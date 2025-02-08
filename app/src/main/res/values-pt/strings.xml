@@ -242,7 +242,7 @@
     <string name="custom_token_enter_contract_address">Introduza o endereço do contrato</string>
     <string name="custom_token_token_not_found">Token não encontrado</string>
     <string name="custom_token_add_token">Adicionar token %1$s</string>
-    <string name="deposit_form_amount_title">Montante</string>
+    <string name="deposit_form_amount_title">Valor (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Partilhar QR do cofre</string>
     <string name="share_vault_qr_save" >Guardar</string>
     <string name="vault_settings_enable_biometrics_save" >Guardar</string>

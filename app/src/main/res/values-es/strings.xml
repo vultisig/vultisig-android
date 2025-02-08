@@ -241,7 +241,7 @@
     <string name="custom_token_enter_contract_address">Introducir la dirección del contrato</string>
     <string name="custom_token_token_not_found">Token no encontrado</string>
     <string name="custom_token_add_token">Agregar %1$s token</string>
-    <string name="deposit_form_amount_title">Cantidad</string>
+    <string name="deposit_form_amount_title">Importe (Saldo: %1$s)</string>
     <string name="share_vault_qr_title">Compartir Bóveda QR</string>
     <string name="share_vault_qr_save" >Guardar</string>
     <string name="vault_settings_enable_biometrics_save" >Guardar</string>

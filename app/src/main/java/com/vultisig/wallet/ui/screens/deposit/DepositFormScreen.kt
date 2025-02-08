@@ -185,7 +185,10 @@ internal fun DepositFormScreen(
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
                     ) {
                         FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_amount_title),
+                            title = stringResource(
+                                R.string.deposit_form_amount_title,
+                                state.balance.asString()
+                            ),
                             hint = stringResource(R.string.send_amount_currency_hint),
                             keyboardType = KeyboardType.Number,
                             textFieldState = tokenAmountFieldState,

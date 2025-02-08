@@ -261,7 +261,7 @@
     <string name="custom_token_enter_contract_address" >Enter Contract Address</string>
     <string name="custom_token_token_not_found" >Token not found</string>
     <string name="custom_token_add_token" >Add %1$s Token</string>
-    <string name="deposit_form_amount_title" >Amount</string>
+    <string name="deposit_form_amount_title" >Amount (Balance: %1$s)</string>
     <string name="share_vault_qr_title" >Share Vault QR</string>
     <string name="share_vault_qr_save" >Save</string>
     <string name="vault_settings_enable_biometrics_save" >Save</string>
