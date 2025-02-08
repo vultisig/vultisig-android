@@ -14,12 +14,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 
 @Composable
-internal fun rememberClipboardText(): State<AnnotatedString?> {
+internal fun rememberClipboardText(
+    filter: (AnnotatedString?) -> Boolean = { true },
+): State<AnnotatedString?> {
     val clipboardManager = LocalClipboardManager.current
-    val text = remember { mutableStateOf(clipboardManager.getText()) }
-    onClipDataChanged {
-        text.value = clipboardManager.getText()
+
+    val text = remember {
+        val clipText = clipboardManager.getText()
+        mutableStateOf(
+            if (filter(clipText)) {
+                clipText
+            } else null
+        )
     }
+
+    onClipDataChanged {
+        val clipText = clipboardManager.getText()
+        if (filter(clipText)) {
+            text.value = clipboardManager.getText()
+        }
+    }
+
     return text
 }
 
