@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
@@ -64,18 +66,25 @@ private fun FastVaultPasswordHintScreen(
             )
         },
         bottomBar = {
-            Row(Modifier.padding(24.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .padding(24.dp),
+            ) {
                 VsButton(
                     label = stringResource(R.string.fast_vault_password_hint_skip),
-                    modifier = Modifier.weight(1f),
                     onClick = onSkipClick,
-                    variant = VsButtonVariant.Secondary
+                    variant = VsButtonVariant.Secondary,
+                    modifier = Modifier.weight(1f)
                 )
-                UiSpacer(8.dp)
+
                 VsButton(
                     label = stringResource(R.string.fast_vault_password_hint_next),
-                    modifier = Modifier.weight(1f),
+                    state = if (state.isNextAvailable)
+                        VsButtonState.Enabled
+                    else VsButtonState.Disabled,
                     onClick = onNextClick,
+                    modifier = Modifier.weight(1f),
                 )
             }
         }

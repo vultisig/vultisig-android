@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +37,13 @@ internal class VaultConfirmationViewModel @Inject constructor(
         viewModelScope.launch {
             delay(5.seconds)
 
-            navigator.navigate(Destination.Home()) // TODO clear backstack?
+            navigator.navigate(
+                dst = Destination.Home(),
+                opts = NavigationOptions(
+                    popUpToRoute = Route.ChooseVaultType::class,
+                    inclusive = true,
+                ),
+            )
         }
     }
 

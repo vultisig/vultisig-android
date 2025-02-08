@@ -21,7 +21,7 @@ internal class StartViewModel @Inject constructor(
         viewModelScope.launch {
             val isUserPassedOnboarding = onBoardingRepository.readOnboardingState().first()
             if (isUserPassedOnboarding) {
-                navigator.navigate(Destination.SelectVaultType)
+                navigator.route(Route.ChooseVaultType)
             } else {
                 navigator.route(Route.Onboarding.VaultCreation)
             }

@@ -462,6 +462,9 @@ internal sealed class Route {
     @Serializable
     data object Secret : Route()
 
+    @Serializable
+    data object ChooseVaultType
+
     object VaultInfo {
 
         @Serializable
@@ -533,8 +536,11 @@ internal sealed class Route {
         data object VaultCreationSummary
 
         @Serializable
-        data class SecureVaultBackup(
+        data class VaultBackup(
             val vaultId: VaultId,
+            val pubKeyEcdsa: String,
+            val email: String?,
+            val vaultType: VaultInfo.VaultType,
         )
     }
 
