@@ -12,7 +12,6 @@ internal fun NavController.route(route: String, opts: NavigationOptions? = null)
         popBackStack()
     } else {
         navigate(route) {
-            launchSingleTop = true
             buildOptions(this, opts)
         }
     }
@@ -34,6 +33,7 @@ private fun NavController.buildOptions(
     opts: NavigationOptions?
 ) {
     with(builder) {
+        launchSingleTop = true
         if (opts != null) {
             if (opts.popUpTo != null) {
                 popUpTo(opts.popUpTo) {
