@@ -460,11 +460,6 @@ internal sealed class Destination(
 internal sealed class Route {
 
     @Serializable
-    data class VaultBackup(
-        val email: String,
-    ) : Route()
-
-    @Serializable
     data object Secret : Route()
 
     object VaultInfo {
@@ -497,24 +492,6 @@ internal sealed class Route {
     }
 
     @Serializable
-    data class BackupVault(
-        val vaultId: VaultId,
-        val vaultType: VaultInfo.VaultType?,
-    )
-
-    @Serializable
-    data class BackupPassword(
-        val vaultId: VaultId,
-        // vault type only provided if vault confirmation screen is required
-        val vaultType: VaultInfo.VaultType? = null,
-    )
-
-    @Serializable
-    data class VaultConfirmation(
-        val vaultType: VaultInfo.VaultType,
-    )
-
-    @Serializable
     data object Keygen {
 
         @Serializable
@@ -541,6 +518,7 @@ internal sealed class Route {
             val isInitiatingDevice: Boolean,
             val libType: SigningLibType,
 
+            val email: String?,
             val password: String?,
             val hint: String?,
         )
@@ -559,4 +537,30 @@ internal sealed class Route {
             val vaultId: VaultId,
         )
     }
+
+    @Serializable
+    data class FastVaultVerification(
+        val vaultId: VaultId,
+        val pubKeyEcdsa: String,
+        val email: String,
+    )
+
+    @Serializable
+    data class BackupVault(
+        val vaultId: VaultId,
+        val vaultType: VaultInfo.VaultType?,
+    )
+
+    @Serializable
+    data class BackupPassword(
+        val vaultId: VaultId,
+        // vault type only provided if vault confirmation screen is required
+        val vaultType: VaultInfo.VaultType? = null,
+    )
+
+    @Serializable
+    data class VaultConfirmation(
+        val vaultType: VaultInfo.VaultType,
+    )
+
 }

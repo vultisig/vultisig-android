@@ -40,7 +40,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -56,8 +55,6 @@ internal sealed interface VsTextInputFieldType {
         val isVisible: Boolean,
         val onVisibilityClick: () -> Unit,
     ) : VsTextInputFieldType
-
-    data object Number : VsTextInputFieldType
 
     data class MultiLine(
         val minLines: Int,
@@ -143,13 +140,9 @@ internal fun VsTextInputField(
                 )
                 .clip(textFieldBackgroundShape)
                 .background(Theme.colors.backgrounds.secondary)
-                .padding(
-                    if (type is VsTextInputFieldType.Number)
-                        10.dp else 16.dp
-                ),
+                .padding(all = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = if (type is VsTextInputFieldType.Number)
-                Arrangement.Center else Arrangement.Start
+            horizontalArrangement = Arrangement.Start,
         ) {
             val inputTextStyle = Theme.brockmann.body.m.medium.copy(
                 color = Theme.colors.text.primary
@@ -225,15 +218,15 @@ internal fun VsTextInputField(
                                 type.maxLines
                             )
                         else TextFieldLineLimits.SingleLine,
-                        textStyle = inputTextStyle.copy(textAlign = TextAlign.Center),
+                        textStyle = inputTextStyle,
                         cursorBrush = Theme.cursorBrush,
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = if (type is VsTextInputFieldType.Number)
-                                KeyboardType.Number else keyboardType,
+                            keyboardType = keyboardType,
                             imeAction = imeAction,
                         ),
                         onKeyboardAction = onKeyboardAction,
                         modifier = Modifier
+                            .weight(1f)
                             .then(
                                 if (focusRequester != null)
                                     Modifier.focusRequester(focusRequester)
@@ -243,13 +236,6 @@ internal fun VsTextInputField(
                                 if (onKeyEvent != null)
                                     Modifier.onKeyEvent(onKeyEvent)
                                 else Modifier
-                            )
-                            .then(
-                                if (type !is VsTextInputFieldType.Number)
-                                    Modifier.weight(1f)
-                                else {
-                                    Modifier.size(fontSizeInDp * 1.5f)
-                                }
                             )
                             .onFocusChanged {
                                 focused = it.isFocused
@@ -410,32 +396,6 @@ private fun MultiLineTypePreview() {
         VsTextInputPreviewMaker(
             type = VsTextInputFieldType.MultiLine(minLines = 5),
             innerState = VsTextInputFieldInnerState.Error,
-        )
-    }
-}
-
-@Preview(widthDp = 400)
-@Composable
-private fun NumberTypePreview() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        VsTextInputForNumberPreviewMaker(
-            type = VsTextInputFieldType.Number,
-            innerState = VsTextInputFieldInnerState.Default,
-        )
-        VsTextInputForNumberPreviewMaker(
-            type = VsTextInputFieldType.Number,
-            innerState = VsTextInputFieldInnerState.Default,
-            initialText = "1"
-        )
-        VsTextInputForNumberPreviewMaker(
-            type = VsTextInputFieldType.Number,
-            innerState = VsTextInputFieldInnerState.Success,
-            initialText = "1"
-        )
-        VsTextInputForNumberPreviewMaker(
-            type = VsTextInputFieldType.Number,
-            innerState = VsTextInputFieldInnerState.Error,
-            initialText = "1"
         )
     }
 }

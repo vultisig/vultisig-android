@@ -151,10 +151,6 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         }
     }
 
-    fun openHelp() {
-        // TODO open help bottom sheet
-    }
-
     fun shareQr(activity: Context) {
         val qr = qrBitmap.value ?: return
 
@@ -231,6 +227,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     isInitiatingDevice = true,
                     libType = libType,
 
+                    email = email,
                     password = password,
                     hint = params.hint,
 
