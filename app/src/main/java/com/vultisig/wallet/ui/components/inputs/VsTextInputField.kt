@@ -8,7 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,9 +34,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -51,14 +54,14 @@ internal sealed interface VsTextInputFieldType {
 
     data class Password(
         val isVisible: Boolean,
-        val onVisibilityClick: () -> Unit
+        val onVisibilityClick: () -> Unit,
     ) : VsTextInputFieldType
 
     data object Number : VsTextInputFieldType
 
     data class MultiLine(
         val minLines: Int,
-        val maxLines: Int = Int.MAX_VALUE
+        val maxLines: Int = Int.MAX_VALUE,
     ) : VsTextInputFieldType
 }
 
@@ -73,6 +76,7 @@ internal fun VsTextInputField(
     modifier: Modifier = Modifier,
     textFieldState: TextFieldState,
     onFocusChanged: ((isFocused: Boolean) -> Unit)? = null,
+    onKeyEvent: ((KeyEvent) -> Boolean)? = null,
     type: VsTextInputFieldType = VsTextInputFieldType.Text,
     innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
     focusRequester: FocusRequester? = null,
@@ -97,24 +101,26 @@ internal fun VsTextInputField(
         modifier = modifier.animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            if (label != null) {
-                Text(
-                    text = label,
-                    color = Theme.colors.text.primary,
-                    style = Theme.brockmann.body.s.medium,
-                )
-            }
-            if (labelIcon != null) {
-                Icon(
-                    painter = painterResource(labelIcon),
-                    tint = Theme.colors.text.extraLight,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
+        if (label != null || labelIcon != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (label != null) {
+                    Text(
+                        text = label,
+                        color = Theme.colors.text.primary,
+                        style = Theme.brockmann.body.s.medium,
+                    )
+                }
+                if (labelIcon != null) {
+                    Icon(
+                        painter = painterResource(labelIcon),
+                        tint = Theme.colors.text.extraLight,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
 
@@ -137,8 +143,13 @@ internal fun VsTextInputField(
                 )
                 .clip(textFieldBackgroundShape)
                 .background(Theme.colors.backgrounds.secondary)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(
+                    if (type is VsTextInputFieldType.Number)
+                        10.dp else 16.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = if (type is VsTextInputFieldType.Number)
+                Arrangement.Center else Arrangement.Start
         ) {
             val inputTextStyle = Theme.brockmann.body.m.medium.copy(
                 color = Theme.colors.text.primary
@@ -163,6 +174,11 @@ internal fun VsTextInputField(
                             .then(
                                 if (focusRequester != null)
                                     Modifier.focusRequester(focusRequester)
+                                else Modifier
+                            )
+                            .then(
+                                if (onKeyEvent != null)
+                                    Modifier.onKeyEvent(onKeyEvent)
                                 else Modifier
                             )
                             .onFocusChanged {
@@ -198,6 +214,9 @@ internal fun VsTextInputField(
                 }
 
                 else -> {
+                    val fontSizeInDp = with(LocalDensity.current) {
+                        inputTextStyle.fontSize.toDp()
+                    }
                     BasicTextField(
                         state = textFieldState,
                         lineLimits = if (type is VsTextInputFieldType.MultiLine)
@@ -206,7 +225,7 @@ internal fun VsTextInputField(
                                 type.maxLines
                             )
                         else TextFieldLineLimits.SingleLine,
-                        textStyle = inputTextStyle,
+                        textStyle = inputTextStyle.copy(textAlign = TextAlign.Center),
                         cursorBrush = Theme.cursorBrush,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = if (type is VsTextInputFieldType.Number)
@@ -221,10 +240,15 @@ internal fun VsTextInputField(
                                 else Modifier
                             )
                             .then(
+                                if (onKeyEvent != null)
+                                    Modifier.onKeyEvent(onKeyEvent)
+                                else Modifier
+                            )
+                            .then(
                                 if (type !is VsTextInputFieldType.Number)
                                     Modifier.weight(1f)
                                 else {
-                                    Modifier.width(IntrinsicSize.Min)
+                                    Modifier.size(fontSizeInDp * 1.5f)
                                 }
                             )
                             .onFocusChanged {
@@ -401,14 +425,17 @@ private fun NumberTypePreview() {
         VsTextInputForNumberPreviewMaker(
             type = VsTextInputFieldType.Number,
             innerState = VsTextInputFieldInnerState.Default,
+            initialText = "1"
         )
         VsTextInputForNumberPreviewMaker(
             type = VsTextInputFieldType.Number,
             innerState = VsTextInputFieldInnerState.Success,
+            initialText = "1"
         )
         VsTextInputForNumberPreviewMaker(
             type = VsTextInputFieldType.Number,
             innerState = VsTextInputFieldInnerState.Error,
+            initialText = "1"
         )
     }
 }
@@ -444,11 +471,13 @@ private fun VsTextInputPreviewMaker(
 private fun VsTextInputForNumberPreviewMaker(
     type: VsTextInputFieldType,
     innerState: VsTextInputFieldInnerState,
+    hint: String? = null,
+    initialText: String = "",
 ) {
     VsTextInputField(
         modifier = Modifier,
-        hint = "hint",
-        textFieldState = rememberTextFieldState(),
+        hint = hint,
+        textFieldState = rememberTextFieldState(initialText),
         onFocusChanged = {},
         type = type,
         innerState = innerState,
