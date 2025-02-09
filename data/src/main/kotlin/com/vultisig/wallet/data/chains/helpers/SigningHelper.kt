@@ -2,6 +2,8 @@
 
 package com.vultisig.wallet.data.chains.helpers
 
+import com.vultisig.wallet.data.common.isHex
+import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
@@ -18,16 +20,23 @@ import vultisig.keysign.v1.CustomMessagePayload
 import java.math.BigInteger
 
 object SigningHelper {
-
     @OptIn(ExperimentalStdlibApi::class)
     fun getKeysignMessages(
         messagePayload: CustomMessagePayload
-    ): List<String> = listOf(
-        messagePayload.message
-            .toByteArray()
-            .toKeccak256ByteArray()
-            .toHexString()
-    )
+    ): List<String> {
+        val processedBytes = if (messagePayload.message.isHex()) {
+            messagePayload.message.toHexBytes()
+        } else {
+            messagePayload.message.toByteArray()
+        }
+        return listOf(
+            processedBytes
+                .toKeccak256ByteArray()
+                .toHexString()
+        )
+    }
+
+
 
     fun getKeysignMessages(
         payload: KeysignPayload,
@@ -298,5 +307,5 @@ object SigningHelper {
         }
 
 
-}
+    }
 }
