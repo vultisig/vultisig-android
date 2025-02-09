@@ -546,6 +546,13 @@
     <string name="onboarding_security_backup_desc_page_2_part_3" translatable="false">to ensure access, preferably</string>
     <string name="onboarding_security_backup_desc_page_2_part_4" translatable="false">online.</string>
 
+    <string name="onboarding_fast_backup_desc_page_1_part_1" translatable="false">Your vault holds 2 shares,</string>
+    <string name="onboarding_fast_backup_desc_page_1_part_2" translatable="false">back them up  now</string>
+    <string name="onboarding_fast_backup_desc_page_2_part_1" translatable="false">Part 1 of the vault shares will be</string>
+    <string name="onboarding_fast_backup_desc_page_2_part_2" translatable="false">held by the server.</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_1" translatable="false">It is sent to you for complete self-custody!</string>
+    <string name="onboarding_fast_backup_desc_page_3_part_2" translatable="false">Check your e-mail to verify</string>
+
 
     <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
     <string name="select_vault_type_secure_desc_1" translatable="false">Full control, only your devices</string>
