@@ -14,8 +14,10 @@ import com.vultisig.wallet.ui.components.util.BlockBackClick
 import com.vultisig.wallet.ui.components.util.GradientColoring
 import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
+import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingUiModel
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingViewModel
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -35,7 +37,7 @@ internal fun VaultBackupOnboardingScreen(
 
 @Composable
 private fun VaultBackupOnboardingScreen(
-    state: OnboardingUiModel,
+    state: VaultBackupOnboardingUiModel,
     onBackClick: () -> Unit,
     onNextClick: () -> Unit,
 ) {
@@ -50,59 +52,106 @@ private fun VaultBackupOnboardingScreen(
         },
     ) { paddingValues ->
 
+        val textItems = buildOnboardingPagesText(state.vaultType)
+
         OnboardingContent(
-            state = state,
+            state = OnboardingUiModel(
+                currentPage = state.currentPage,
+                pageIndex = state.pageIndex,
+                pageTotal = state.pageTotal
+            ),
             paddingValues = paddingValues,
-            riveAnimation = R.raw.securevault_overview,
+            riveAnimation = when (state.vaultType) {
+                Route.VaultInfo.VaultType.Fast -> R.raw.fastvault_overview
+                Route.VaultInfo.VaultType.Secure -> R.raw.securevault_overview
+            },
             nextClick = onNextClick,
             textDescription = { index ->
-                Description(index = index)
+                Description(
+                    textItems = textItems[index]
+                )
             },
         )
     }
 }
 
 @Composable
+private fun buildOnboardingPagesText(
+    vaultType: Route.VaultInfo.VaultType,
+) = when (vaultType) {
+    Route.VaultInfo.VaultType.Secure -> listOf(
+        listOf(
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_security_backup_desc_page_1_part_1,
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+            ),
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_security_backup_desc_page_1_part_2,
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+            ),
+        ),
+        listOf(
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_security_backup_desc_page_2_part_1,
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+            ),
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_security_backup_desc_page_2_part_2,
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+            ),
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_security_backup_desc_page_2_part_3,
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+            ),
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_security_backup_desc_page_2_part_4,
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+            ),
+        )
+    )
+
+    Route.VaultInfo.VaultType.Fast -> listOf(
+        listOf(
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_fast_backup_desc_page_1_part_1,
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+            ),
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_fast_backup_desc_page_1_part_2,
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+            ),
+        ),
+        listOf(
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_fast_backup_desc_page_2_part_1,
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+            ),
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_fast_backup_desc_page_2_part_2,
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+            ),
+        ),
+        listOf(
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_fast_backup_desc_page_3_part_1,
+                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+            ),
+            PartiallyGradientTextItem(
+                resId = R.string.onboarding_fast_backup_desc_page_3_part_2,
+                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+            ),
+        )
+    )
+}
+
+
+@Composable
 private fun Description(
-    index: Int,
+    textItems: List<PartiallyGradientTextItem>,
     modifier: Modifier = Modifier,
 ) {
     SequenceOfGradientText(
-        listTextItems = when (index) {
-            0 -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_security_backup_desc_page_1_part_1,
-                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_security_backup_desc_page_1_part_2,
-                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
-                    ),
-                )
-            }
-
-            else -> {
-                listOf(
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_security_backup_desc_page_2_part_1,
-                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_security_backup_desc_page_2_part_2,
-                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_security_backup_desc_page_2_part_3,
-                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
-                    ),
-                    PartiallyGradientTextItem(
-                        resId = R.string.onboarding_security_backup_desc_page_2_part_4,
-                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
-                    ),
-                )
-            }
-        },
+        listTextItems = textItems,
         style = Theme.brockmann.headings.title1,
         modifier = modifier
     )
