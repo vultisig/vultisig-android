@@ -375,6 +375,7 @@
     <string name="eth_gas_settings_priority_title">Priorità</string>
     <string name="eth_gas_setting_total_fee_title">Tariffa totale (Gwei)</string>
     <string name="vault_details_screen_vault_part">Parte del caveau</string>
+    <string name="vault_details_screen_vault_type">Tipo di caveau</string>
     <string name="vault_settings_delete_vault_part">Parte del caveau:</string>
     <string name="vault_password_hint_to_long">Il suggerimento è troppo lungo</string>
     <string name="vault_details_screen_vault_part_desc">Parte %s di %s</string>

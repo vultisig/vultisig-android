@@ -440,6 +440,7 @@
     <string name="eth_gas_settings_priority_title">Priority</string>
     <string name="eth_gas_setting_total_fee_title">Total Fee (Gwei)</string>
     <string name="vault_details_screen_vault_part">Vault Part</string>
+    <string name="vault_details_screen_vault_type">Vault Type</string>
     <string name="vault_settings_delete_vault_part">Vault Part:</string>
     <string name="vault_password_hint_to_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Part %s of %s</string>
