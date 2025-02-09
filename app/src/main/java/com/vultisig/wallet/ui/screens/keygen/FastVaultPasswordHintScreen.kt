@@ -3,9 +3,7 @@ package com.vultisig.wallet.ui.screens.keygen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
@@ -127,8 +125,7 @@ private fun FastVaultPasswordHintScreen(
                     onNextClick()
                 },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentHeight()
+                    .padding(top = 16.dp)
             )
         }
     }

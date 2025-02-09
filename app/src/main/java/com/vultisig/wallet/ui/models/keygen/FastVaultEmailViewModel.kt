@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class FastVaultEmailState(
-    val errorMessage: UiText? = null,
+    val errorMessage: UiText = UiText.Empty,
     val innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
 )
 
@@ -46,7 +46,7 @@ internal class FastVaultEmailViewModel @Inject constructor(
                 val isEmailValid = validateEmail(typingEmail)
                 val errorMessage =
                     UiText.StringResource(R.string.keygen_email_caption)
-                        .takeIf { typingEmail.isNotEmpty() && !isEmailValid }
+                        .takeIf { typingEmail.isNotEmpty() && !isEmailValid } ?: UiText.Empty
                 val innerState = getInnerState(
                     email = typingEmail.toString(),
                     isEmailValid = isEmailValid

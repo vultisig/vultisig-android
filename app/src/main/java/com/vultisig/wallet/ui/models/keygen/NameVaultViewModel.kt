@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
+import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.SavedStateHandle
@@ -18,6 +19,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
@@ -36,6 +38,7 @@ internal class NameVaultViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val uniqueName: GenerateRandomUniqueName,
     private val isNameLengthValid: IsVaultNameValid,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     val state = MutableStateFlow(NameVaultUiModel())
@@ -61,7 +64,7 @@ internal class NameVaultViewModel @Inject constructor(
         val errorMessage = if (!isNameValid(name))
             StringResource(R.string.naming_vault_screen_invalid_name)
         else null
-        val isNextButtonEnabled = name.isNotEmpty() && errorMessage == null
+        val isNextButtonEnabled = errorMessage == null
         state.update {
             it.copy(
                 errorMessage = errorMessage,
@@ -80,7 +83,9 @@ internal class NameVaultViewModel @Inject constructor(
             return
         viewModelScope.launch {
             val name = uniqueName(
-                expectedName,
+                expectedName.ifEmpty {
+                    context.getString(R.string.naming_vault_placeholder_fast_vault)
+                },
                 vaultNamesList
             )
 
