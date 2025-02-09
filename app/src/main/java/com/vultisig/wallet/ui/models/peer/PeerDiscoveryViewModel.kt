@@ -69,6 +69,7 @@ import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -304,8 +305,15 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                 onDiscovered = { devices ->
                     if (devices.size == 1) {
                         state.update {
-                            it.copy(connectingToServer = ConnectingToServerUiModel(true))
+                            it.copy(
+                                connectingToServer = it.connectingToServer?.copy(
+                                    isSuccess = true
+                                )
+                            )
                         }
+
+                        delay(2.seconds)
+
                         next()
                     }
                 }
@@ -324,7 +332,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     }
 
     private fun startParticipantDiscovery(
-        onDiscovered: ((devices: List<ParticipantName>) -> Unit)? = null,
+        onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null,
     ) {
         discoverParticipantsJob?.cancel()
         discoverParticipantsJob = viewModelScope.launch {
