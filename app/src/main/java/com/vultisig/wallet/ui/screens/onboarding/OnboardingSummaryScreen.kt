@@ -16,7 +16,7 @@ internal fun OnboardingSummaryScreen(
 
     SummaryScreen(
         checkState = checkState,
-        animationRes = R.raw.quick_summary,
+        animationRes = R.raw.riv_quick_summary,
         buttonText = R.string.onboarding_summary_button,
         onCheckChange = model::toggleCheck,
         onButtonClicked = model::createVault,
