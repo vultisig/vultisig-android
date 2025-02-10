@@ -13,6 +13,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,6 +28,8 @@ internal data class VaultBackupState(
     val verifyPinState: VerifyPinState = VerifyPinState.Idle,
     val sentEmailTo: String,
 )
+
+private const val FAST_VAULT_VERIFICATION_SUCCESS_DELAY = 400L
 
 @HiltViewModel
 internal class FastVaultVerificationViewModel @Inject constructor(
@@ -79,6 +82,8 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                 )
 
                 if (isCodeValid) {
+                    updateVerifyState(VerifyPinState.Success)
+                    delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
                     navigator.route(
                         route = Route.BackupVault(
                             vaultId = args.vaultId,
