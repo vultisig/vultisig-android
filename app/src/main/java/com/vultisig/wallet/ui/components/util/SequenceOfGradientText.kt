@@ -26,7 +26,7 @@ internal fun SequenceOfGradientText(
             when (textItem.coloring) {
                 is GradientColoring.VsColor -> {
                     withStyle(style = SpanStyle(color = textItem.coloring.color)) {
-                        append(stringResource(textItem.resId))
+                        append(stringResource(textItem.resId, textItem.formatArgs))
                     }
                 }
                 is GradientColoring.Gradient -> {
@@ -35,7 +35,7 @@ internal fun SequenceOfGradientText(
                             brush = textItem.coloring.brush,
                         )
                     ) {
-                        append(stringResource(textItem.resId))
+                        append(stringResource(textItem.resId, textItem.formatArgs))
                     }
                 }
             }
@@ -54,6 +54,7 @@ internal fun SequenceOfGradientText(
 
 internal class PartiallyGradientTextItem(
     @StringRes val resId: Int,
+    val formatArgs: Any = emptyArray<Any>(),
     val coloring: GradientColoring,
 )
 
