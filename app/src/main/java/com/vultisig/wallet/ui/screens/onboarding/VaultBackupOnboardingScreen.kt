@@ -62,8 +62,8 @@ private fun VaultBackupOnboardingScreen(
             ),
             paddingValues = paddingValues,
             riveAnimation = when (state.vaultType) {
-                Route.VaultInfo.VaultType.Fast -> R.raw.fastvault_overview
-                Route.VaultInfo.VaultType.Secure -> R.raw.securevault_overview
+                Route.VaultInfo.VaultType.Fast -> R.raw.riv_fastvault_overview
+                Route.VaultInfo.VaultType.Secure -> R.raw.riv_securevault_overview
             },
             nextClick = onNextClick,
             textDescription = { index ->

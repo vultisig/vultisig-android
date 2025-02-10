@@ -133,7 +133,7 @@ private fun OnboardingScreen(
         OnboardingContent(
             state = state,
             paddingValues = paddingValues,
-            riveAnimation = R.raw.onboarding,
+            riveAnimation = R.raw.riv_onboarding,
             nextClick = onNextClick,
             textDescription = { index ->
                 Description(index = index)

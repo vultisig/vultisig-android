@@ -503,7 +503,7 @@ private fun PeerDeviceItem(
     ) {
         if (state == PeerDeviceState.Waiting) {
             RiveAnimation(
-                animation = R.raw.waiting_on_device,
+                animation = R.raw.riv_waiting_on_device,
                 modifier = Modifier
                     .size(24.dp)
             )

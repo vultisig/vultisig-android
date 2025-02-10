@@ -133,7 +133,7 @@ private fun ChooseVaultScreen(
                 onIconRightClick = onHelpClick,
             )
             RiveAnimation(
-                animation = R.raw.choose_vault,
+                animation = R.raw.riv_choose_vault,
                 modifier = Modifier
                     .padding(24.dp)
                     .weight(1f),
