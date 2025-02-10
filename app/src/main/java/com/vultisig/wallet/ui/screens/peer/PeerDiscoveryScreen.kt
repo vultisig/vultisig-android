@@ -373,8 +373,8 @@ private fun buildNetworkModeText(
 
 @Composable
 private fun QrCodeContainer(
-    qrCode: BitmapPainter? = null,
     modifier: Modifier = Modifier,
+    qrCode: BitmapPainter? = null,
 ) {
     Box(
         modifier = modifier

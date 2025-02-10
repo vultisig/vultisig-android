@@ -102,6 +102,7 @@ private fun NameVaultScreen(
             )
             VsTextInputField(
                 textFieldState = textFieldState,
+                hint = state.vaultNameHint.asString(),
                 trailingIcon = R.drawable.close_circle,
                 onTrailingIconClick = onClearClick,
                 focusRequester = focusRequester,
