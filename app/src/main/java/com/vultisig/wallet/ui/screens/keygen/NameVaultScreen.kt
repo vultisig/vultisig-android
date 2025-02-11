@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.NameVaultUiModel
 import com.vultisig.wallet.ui.models.keygen.NameVaultViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -102,12 +103,12 @@ private fun NameVaultScreen(
             )
             VsTextInputField(
                 textFieldState = textFieldState,
-                hint = state.vaultNameHint.asString(),
                 trailingIcon = R.drawable.close_circle,
                 onTrailingIconClick = onClearClick,
                 focusRequester = focusRequester,
                 footNote = state.errorMessage?.asString(),
                 imeAction = ImeAction.Go,
+                hint = state.hint.asString(),
                 onKeyboardAction = {
                     onNextClick()
                 },
@@ -124,7 +125,7 @@ private fun NameVaultScreen(
 @Composable
 private fun FastVaultNameScreenPreview() {
     NameVaultScreen(
-        state = NameVaultUiModel(),
+        state = NameVaultUiModel(hint = UiText.DynamicString("Fast Vault")),
         textFieldState = rememberTextFieldState(),
         onNextClick = {},
         onClearClick = {},
