@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keygen
 
+import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.lifecycle.SavedStateHandle
@@ -16,8 +17,10 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.UiText.StringResource
+import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
@@ -25,7 +28,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class NameVaultUiModel(
-    val vaultNameHint: UiText = UiText.Empty,
+    val hint: UiText,
     val errorMessage: UiText? = null,
     val isNextButtonEnabled: Boolean = false,
 )
@@ -37,20 +40,19 @@ internal class NameVaultViewModel @Inject constructor(
     private val vaultRepository: VaultRepository,
     private val uniqueName: GenerateRandomUniqueName,
     private val isNameLengthValid: IsVaultNameValid,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VaultInfo.Name>()
 
-    val state = MutableStateFlow(
-        NameVaultUiModel(
-            vaultNameHint = when (args.vaultType) {
-                VaultType.Fast -> StringResource(R.string.naming_vault_placeholder_fast_vault)
-                VaultType.Secure -> StringResource(R.string.naming_vault_placeholder_secure_vault)
-            }
-        )
-    )
-
     val nameFieldState = TextFieldState()
+
+    val hint = when(args.vaultType){
+        VaultType.Fast -> R.string.naming_vault_placeholder_fast_vault
+        VaultType.Secure -> R.string.naming_vault_placeholder_secure_vault
+    }
+
+    val state = MutableStateFlow(NameVaultUiModel(hint = hint.asUiText()))
 
     private var vaultNamesList = emptyList<String>()
 
@@ -88,7 +90,9 @@ internal class NameVaultViewModel @Inject constructor(
             return
         viewModelScope.launch {
             val name = uniqueName(
-                expectedName,
+                expectedName.ifEmpty {
+                    context.getString(hint)
+                },
                 vaultNamesList
             )
 

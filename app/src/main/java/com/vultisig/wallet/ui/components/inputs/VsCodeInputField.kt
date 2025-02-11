@@ -39,6 +39,10 @@ import com.vultisig.wallet.ui.theme.Theme
 
 private const val FAST_VAULT_VERIFICATION_CODE_CHARS = 4
 
+internal enum class VsCodeInputFieldState {
+    Default, Success, Error
+}
+
 @Composable
 internal fun VsCodeInputField(
     textFieldState: TextFieldState,
@@ -46,6 +50,7 @@ internal fun VsCodeInputField(
     modifier: Modifier = Modifier,
     onKeyboardAction: KeyboardActionHandler? = null,
     maxCharacters: Int = FAST_VAULT_VERIFICATION_CODE_CHARS,
+    state: VsCodeInputFieldState = VsCodeInputFieldState.Default,
 ) {
     val focusedState = remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -100,7 +105,11 @@ internal fun VsCodeInputField(
                     modifier = Modifier
                         .size(46.dp)
                         .background(
-                            color = Theme.colors.backgrounds.secondary,
+                            color = when(state) {
+                                VsCodeInputFieldState.Default -> Theme.colors.backgrounds.secondary
+                                VsCodeInputFieldState.Success -> Theme.colors.backgrounds.success
+                                VsCodeInputFieldState.Error -> Theme.colors.backgrounds.error
+                            },
                             shape = inputBoxShape,
                         )
                         .border(
@@ -110,7 +119,11 @@ internal fun VsCodeInputField(
                             },
                             color = when {
                                 isActiveBox -> Theme.colors.borders.normal
-                                else -> Theme.colors.borders.light
+                                else -> when (state) {
+                                    VsCodeInputFieldState.Default -> Theme.colors.borders.light
+                                    VsCodeInputFieldState.Success -> Theme.colors.alerts.success
+                                    VsCodeInputFieldState.Error -> Theme.colors.alerts.error
+                                }
                             },
                             shape = inputBoxShape,
                         )

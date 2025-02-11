@@ -285,8 +285,6 @@
     <string name="add_address_title_title">Title</string>
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
-    <string name="deposit_form_remove_from_pool">Remove from RUNEPool</string>
-    <string name="deposit_form_add_to_pool">Add to RUNEPool</string>
     <string name="blowfish_approve">Transaction verified by Blowfish.</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
     <string name="join_keysign_failed_to_start">Failed to join keysign</string>
@@ -539,7 +537,7 @@
     <string name="onboarding_summary_button" translatable="false">Create your vault</string>
     <string name="onboarding_summary_check" translatable="false">I have read and understand what to do</string>
     <string name="onboarding_security_backup_title" translatable="false">Vault Overview</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1" translatable="false">Your vault holds 3 shares,</string>
+    <string name="onboarding_security_backup_desc_page_1_part_1" translatable="false">Your vault holds %s shares,</string>
     <string name="onboarding_security_backup_desc_page_1_part_2" translatable="false">each device needs its own backup.</string>
     <string name="onboarding_security_backup_desc_page_2_part_1" translatable="false">Back up</string>
     <string name="onboarding_security_backup_desc_page_2_part_2" translatable="false">this vault share</string>
@@ -555,14 +553,14 @@
 
 
     <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
-    <string name="select_vault_type_secure_desc_1" translatable="false">Full control, only your devices</string>
-    <string name="select_vault_type_secure_desc_2" translatable="false">Multiple devices to sign transactions</string>
-    <string name="select_vault_type_secure_desc_3" translatable="false">Use as cold vault</string>
+    <string name="select_vault_type_secure_desc_1" translatable="false">Maximum security with multiple devices</string>
+    <string name="select_vault_type_secure_desc_2" translatable="false">Always accessible with device backups</string>
+    <string name="select_vault_type_secure_desc_3" translatable="false">Secure any amount of assets</string>
 
-    <string name="select_vault_type_fast_title" translatable="false">Fast set-up</string>
+    <string name="select_vault_type_fast_title" translatable="false">Quick, 1 device setup</string>
     <string name="select_vault_type_fast_desc_1" translatable="false">Only 1 device needed</string>
-    <string name="select_vault_type_fast_desc_2" translatable="false">Use as cold vault</string>
-    <string name="select_vault_type_fast_desc_3" translatable="false">Vault operations rely on server</string>
+    <string name="select_vault_type_fast_desc_2" translatable="false">Store smaller funds for daily use</string>
+    <string name="select_vault_type_fast_desc_3" translatable="false">Vultiserver co-signs instantly</string>
 
 
     <string name="peer_discovery_topbar_title" translatable="false">Scan QR</string>

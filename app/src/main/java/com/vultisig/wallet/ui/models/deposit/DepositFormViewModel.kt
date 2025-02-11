@@ -43,8 +43,6 @@ internal enum class DepositOption {
     Bond,
     Unbond,
     Leave,
-    DepositPool,
-    WithdrawPool,
     Stake,
     Unstake,
     Custom,
@@ -130,8 +128,6 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.Bond,
                     DepositOption.Unbond,
                     DepositOption.Leave,
-                    DepositOption.DepositPool,
-                    DepositOption.WithdrawPool,
                     DepositOption.Custom,
                 )
                 Chain.MayaChain -> listOf(
@@ -249,8 +245,6 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.Unbond -> createUnbondTransaction()
                     DepositOption.Leave -> createLeaveTransaction()
                     DepositOption.Custom -> createCustomTransaction()
-                    DepositOption.DepositPool -> createDepositPoolTransaction()
-                    DepositOption.WithdrawPool -> createWithdrawPoolTransaction()
                     DepositOption.Stake -> createStakeTransaction()
                     DepositOption.Unstake -> createUnstakeTransaction()
                 }
@@ -494,7 +488,8 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
-                value = 1.toBigInteger(),
+                value = (chain == Chain.MayaChain)
+                    .let { if (it) 1.toBigInteger() else BigInteger.ZERO },
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
@@ -552,123 +547,8 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
-                value = 1.toBigInteger(),
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            blockChainSpecific = specific.blockChainSpecific,
-        )
-    }
-
-    private suspend fun createDepositPoolTransaction(): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        val address = accountsRepository.loadAddress(vaultId, chain)
-            .first()
-
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
-
-        val tokenAmountInt =
-            tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
-
-        val srcAddress = selectedToken.address
-
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-
-        val memo = DepositMemo.DepositPool
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-            )
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = "",
-
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(
-                value = tokenAmountInt,
-                token = selectedToken,
-            ),
-            estimatedFees = gasFee,
-            blockChainSpecific = specific.blockChainSpecific,
-        )
-    }
-
-    private suspend fun createWithdrawPoolTransaction(): DepositTransaction {
-        val chain = chain
-            ?: throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-
-        val address = accountsRepository.loadAddress(vaultId, chain)
-            .first()
-
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
-
-        val srcAddress = selectedToken.address
-
-        val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-
-        val basisPoints = basisPointsFieldState.text.toString()
-            .toIntOrNull()
-
-        validateBasisPoints(basisPoints)?.let {
-            throw InvalidTransactionDataException(it)
-        }
-
-        val memo = DepositMemo.WithdrawPool(
-            basisPoints = basisPoints!! * 100, // 10000 BP = 100%; basisPoints in 0..100
-        )
-
-        val specific = blockChainSpecificRepository
-            .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-            )
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = "",
-
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(
-                value = BigInteger.ZERO,
+                value = (chain == Chain.MayaChain)
+                    .let { if (it) 1.toBigInteger() else BigInteger.ZERO },
                 token = selectedToken,
             ),
             estimatedFees = gasFee,

@@ -23,7 +23,7 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.tss.LocalStateAccessorImpl
+import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessagePuller
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
@@ -104,9 +104,7 @@ internal class KeygenViewModel @Inject constructor(
     private val isInitiatingDevice: Boolean = args.isInitiatingDevice
     private val libType = args.libType
 
-    private val keyshares = mutableListOf<KeyShare>()
-
-    private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessorImpl(keyshares)
+    private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     private var featureFlag: FeatureFlagJson? = null
 
     private val isReshareMode: Boolean = action == TssAction.ReShare

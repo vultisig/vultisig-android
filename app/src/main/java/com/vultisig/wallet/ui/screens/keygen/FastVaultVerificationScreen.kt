@@ -38,6 +38,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCircularLoading
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputField
+import com.vultisig.wallet.ui.components.inputs.VsCodeInputFieldState
 import com.vultisig.wallet.ui.components.rememberClipboardText
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.FastVaultVerificationViewModel
@@ -174,6 +175,11 @@ private fun FastVaultVerificationScreen(
                             textFieldState = codeFieldState,
                             onFinishedInput = onCodeInputFinished,
                             maxCharacters = FAST_VAULT_VERIFICATION_CODE_LENGTH,
+                            state = when (state.verifyPinState) {
+                                VerifyPinState.Success -> VsCodeInputFieldState.Success
+                                VerifyPinState.Error -> VsCodeInputFieldState.Error
+                                else -> VsCodeInputFieldState.Default
+                            },
                         )
 
                         val hasClipContent = textToPaste != null
@@ -224,9 +230,7 @@ private fun FastVaultVerificationScreen(
                                 )
                             }
 
-                            VerifyPinState.Success -> {
-                                // TODO success
-                            }
+                            VerifyPinState.Success -> Unit
 
                             VerifyPinState.Error -> {
                                 Text(
