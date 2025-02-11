@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -32,9 +33,10 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
                 from.dstToken
 
             SwapProvider.LIFI, SwapProvider.ONEINCH ->
-                tokenRepository.getNativeToken(from.srcToken.chain.id)
-            SwapProvider.JUPITER ->
-                from.srcToken
+                if (from.srcToken.chain == Chain.Solana && from.dstToken.chain == Chain.Solana) {
+                    from.srcToken
+                } else
+                    tokenRepository.getNativeToken(from.srcToken.chain.id)
         }
 
         val fiatFees = convertTokenValueToFiat(

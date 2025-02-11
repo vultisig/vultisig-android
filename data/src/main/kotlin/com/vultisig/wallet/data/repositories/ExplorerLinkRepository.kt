@@ -45,11 +45,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         is SwapPayload.MayaChain -> "https://www.xscanner.org/tx/${tx.removePrefix("0x")}"
         is SwapPayload.OneInch -> {
             if (payload.data.quote.tx.swapFee.toBigIntegerOrNull() != null) {
-                if (payload.data.fromCoin.chain == payload.data.toCoin.chain && payload.data.fromCoin.chain == Chain.Solana) {
-                    "https://solana.fm/tx/${tx}"
-
-                } else
-                    "https://scan.li.fi/tx/${tx}"
+                "https://scan.li.fi/tx/${tx}"
             } else {
                 null
             }
