@@ -265,8 +265,6 @@
     <string name="add_address_title_title">Título</string>
     <string name="add_address_address_title">DIRECCIÓN</string>
     <string name="add_address_type_hint">Escribe aquí</string>
-    <string name="deposit_form_remove_from_pool">Quitar de la RUNEPool</string>
-    <string name="deposit_form_add_to_pool">Añadir al pool</string>
     <string name="blowfish_approve">Transacción verificada por Blowfish.</string>
     <string name="join_keysign_invalid_qr">Contenido de código QR no válido</string>
     <string name="join_keysign_failed_to_start">No se pudo unir a keysign</string>
@@ -376,6 +374,7 @@
     <string name="eth_gas_settings_priority_title">Prioridad</string>
     <string name="eth_gas_setting_total_fee_title">Tarifa total (Gwei)</string>
     <string name="vault_details_screen_vault_part">Parte de la bóveda</string>
+    <string name="vault_details_screen_vault_type">Tipo de bóveda</string>
     <string name="vault_settings_delete_vault_part">Parte de la bóveda:</string>
     <string name="vault_password_hint_to_long">La pista es demasiado larga</string>
     <string name="vault_details_screen_vault_part_desc">Parte %s de %s</string>

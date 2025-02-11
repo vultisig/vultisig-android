@@ -276,8 +276,6 @@
     <string name="add_address_title_title">Titel</string>
     <string name="add_address_address_title">Adres</string>
     <string name="add_address_type_hint">Typ hier</string>
-    <string name="deposit_form_remove_from_pool">Verwijderen uit RUNEPool</string>
-    <string name="deposit_form_add_to_pool">Toevoegen aan pool</string>
     <string name="blowfish_approve">Transactie geverifieerd door Blowfish.</string>
     <string name="join_keysign_invalid_qr">Ongeldige QR-code-inhoud</string>
     <string name="join_keysign_failed_to_start">Kan geen keysign joinen</string>
@@ -385,6 +383,7 @@
     <string name="eth_gas_settings_priority_title">Prioriteit</string>
     <string name="eth_gas_setting_total_fee_title">Totale vergoeding (Gwei)</string>
     <string name="vault_details_screen_vault_part">Kluisgedeelte</string>
+    <string name="vault_details_screen_vault_type">Kluistype</string>
     <string name="vault_settings_delete_vault_part">Kluisgedeelte:</string>
     <string name="vault_password_hint_to_long">De hint is te lang</string>
     <string name="vault_details_screen_vault_part_desc">Deel %s van %s</string>

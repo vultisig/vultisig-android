@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
@@ -323,7 +324,29 @@ internal class JoinKeygenViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 while (isActive) {
                     if (checkKeygenStarted()) {
-                        currentState.value = JoinKeygenState.Keygen
+                        if (_action == TssAction.KEYGEN) {
+                            navigator.route(
+                                Route.Keygen.Generating(
+                                    action = _action,
+                                    sessionId = _sessionID,
+                                    serverUrl = _serverAddress,
+                                    localPartyId = _localPartyID,
+                                    vaultName = _vault.name,
+                                    hexChainCode = _hexChainCode,
+                                    keygenCommittee = _keygenCommittee,
+                                    oldCommittee = _oldCommittee,
+                                    encryptionKeyHex = _encryptionKeyHex,
+                                    oldResharePrefix = _oldResharePrefix,
+                                    isInitiatingDevice = false,
+                                    libType = _vault.libType,
+                                    email = null,
+                                    password = null,
+                                    hint = null,
+                                )
+                            )
+                        } else {
+                            currentState.value = JoinKeygenState.Keygen
+                        }
                         return@withContext
                     }
                     // backoff 1s

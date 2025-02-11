@@ -25,6 +25,14 @@ internal fun <T> slideInFromStartEnterTransition(): ContentTransitionFactory<T, 
         )
     }
 
+internal fun <T> slideInFromBottomEnterTransition(): ContentTransitionFactory<T, EnterTransition> =
+    {
+        slideIntoContainer(
+            towards = AnimatedContentTransitionScope.SlideDirection.Up,
+            animationSpec = screenTransitionSpec(),
+        )
+    }
+
 internal fun <T> slideOutToStartExitTransition(): ContentTransitionFactory<T, ExitTransition> =
     {
         slideOutOfContainer(
@@ -41,6 +49,7 @@ internal fun <T> slideOutToEndExitTransition(): ContentTransitionFactory<T, Exit
             animationSpec = screenTransitionSpec(),
         )
     }
+
 
 internal const val SLIDE_OUT_TO = 0.1f
 
