@@ -41,3 +41,13 @@ fun clickOnce(onClick: () -> Unit): () -> Unit {
         }
     }
 }
+
+fun clickOnce(coolDownPeriod: Long = COOL_DOWN_PERIOD, onClick: () -> Unit): () -> Unit {
+    return {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime >= coolDownPeriod) {
+            lastClickTime = currentTime
+            onClick()
+        }
+    }
+}

@@ -22,6 +22,15 @@ import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_SETUP_T
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
+import com.vultisig.wallet.ui.navigation.Route.BackupPassword
+import com.vultisig.wallet.ui.navigation.Route.BackupVault
+import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
+import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
+import com.vultisig.wallet.ui.navigation.Route.Keygen
+import com.vultisig.wallet.ui.navigation.Route.Onboarding
+import com.vultisig.wallet.ui.navigation.Route.Secret
+import com.vultisig.wallet.ui.navigation.Route.VaultConfirmation
+import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
@@ -37,17 +46,28 @@ import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
-import com.vultisig.wallet.ui.screens.WelcomeScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
 import com.vultisig.wallet.ui.screens.home.HomeScreen
-import com.vultisig.wallet.ui.screens.keygen.AddVaultScreen
-import com.vultisig.wallet.ui.screens.keygen.BackupSuggestionScreen
+import com.vultisig.wallet.ui.screens.keygen.BackupVaultScreen
+import com.vultisig.wallet.ui.screens.keygen.ChooseVaultScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
+import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
-import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreen
+import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
+import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
+import com.vultisig.wallet.ui.screens.keygen.StartScreen
+import com.vultisig.wallet.ui.screens.keygen.VaultConfirmationScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
+import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
+import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
+import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
+import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
@@ -68,6 +88,7 @@ import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.biometrics.BiometricsEnableScreen
 import com.vultisig.wallet.ui.screens.vault_settings.components.delete.ConfirmDeleteScreen
+import com.vultisig.wallet.ui.theme.slideInFromBottomEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -88,9 +109,6 @@ internal fun SetupNavGraph(
         popEnterTransition = slideInFromStartEnterTransition(),
         popExitTransition = slideOutToEndExitTransition(),
     ) {
-        composable(route = Destination.Welcome.route) {
-            WelcomeScreen(navController = navController)
-        }
         composable(
             route = Destination.Home.STATIC_ROUTE,
             arguments = listOf(
@@ -117,20 +135,6 @@ internal fun SetupNavGraph(
             JoinKeygenView(
                 navController = navController,
                 qrCodeResult = qrCodeResult,
-            )
-        }
-
-        composable(
-            route = Destination.SelectVaultType.route,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            ),
-        ) {
-            SelectVaultTypeScreen(
-                navController = navController
             )
         }
 
@@ -272,7 +276,7 @@ internal fun SetupNavGraph(
         composable(
             route = Destination.AddVault.route,
         ) {
-            AddVaultScreen(navController)
+            StartScreen()
         }
         composable(
             route = Destination.ChainTokens.STATIC_ROUTE,
@@ -531,43 +535,6 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.BackupPassword.STATIC_ROUTE,
-        ) {
-            BackupPasswordScreen(navController)
-        }
-
-        composable(
-            route = Destination.BackupSuggestion.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                }
-            )
-        ) {
-            BackupSuggestionScreen()
-        }
-
-        /*
-        disabled for now, as there's no use for it, should be removed in the future
-
-        composable(
-            route = Destination.VerifyServerBackup.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                },
-                navArgument(Destination.VerifyServerBackup.ARG_SHOULD_SUGGEST_BACKUP) {
-                    type = NavType.BoolType
-                }
-            )
-        ) {
-            KeygenVerifyServerBackupScreen(
-                navController = navController,
-            )
-        }
-         */
-
-        composable(
             route = Destination.ShareVaultQr.STATIC_ROUTE,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
@@ -617,8 +584,76 @@ internal fun SetupNavGraph(
             RegisterVaultScreen(navController)
         }
 
-        composable<Route.Secret> {
+        composable<Secret> {
             SecretScreen(navController)
+        }
+
+        // onboarding
+        composable<Onboarding.VaultCreation>(
+            enterTransition = slideInFromBottomEnterTransition(),
+        ) {
+            OnboardingScreen()
+        }
+
+        composable<Onboarding.VaultCreationSummary> {
+            OnboardingSummaryScreen()
+        }
+
+        // keygen vault info
+        composable<ChooseVaultType> {
+            ChooseVaultScreen()
+        }
+
+        composable<VaultInfo.Name> {
+            NameVaultScreen()
+        }
+
+        composable<VaultInfo.Email> {
+            FastVaultEmailScreen()
+        }
+
+        composable<VaultInfo.Password> {
+            FastVaultPasswordScreen()
+        }
+
+        composable<VaultInfo.PasswordHint> {
+            FastVaultPasswordHintScreen()
+        }
+
+        // keygen
+        composable<Keygen.PeerDiscovery> {
+            PeerDiscoveryScreen()
+        }
+
+        composable<Keygen.Generating> {
+            KeygenScreen()
+        }
+
+        // vault backup
+        composable<Onboarding.VaultBackup> (
+            enterTransition = slideInFromBottomEnterTransition(),
+        ) {
+            VaultBackupOnboardingScreen()
+        }
+
+        composable<FastVaultVerification> {
+            FastVaultVerificationScreen()
+        }
+
+        composable<BackupVault> {
+            BackupVaultScreen()
+        }
+
+        composable<BackupPassword> {
+            BackupPasswordScreen(navController)
+        }
+
+        composable<Route.VaultBackupSummary> {
+            VaultBackupSummaryScreen()
+        }
+
+        composable<VaultConfirmation> {
+            VaultConfirmationScreen()
         }
     }
 }

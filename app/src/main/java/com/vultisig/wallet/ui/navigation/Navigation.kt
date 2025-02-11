@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.navigation
 
 import android.net.Uri
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import kotlinx.serialization.Serializable
@@ -28,8 +30,6 @@ internal sealed class Destination(
         const val ARG_EMAIL = "email"
         const val ARG_PASSWORD = "password"
     }
-
-    data object Welcome : Destination(route = "welcome_screen")
 
     data object AddVault : Destination(
         route = "vault/new"
@@ -93,7 +93,12 @@ internal sealed class Destination(
                 "{$ARG_DST_TOKEN_ID}",
             )
 
-            fun buildRoute(vaultId: String, chainId: String?,srcTokenId: String?, dstTokenId: String?) =
+            fun buildRoute(
+                vaultId: String,
+                chainId: String?,
+                srcTokenId: String?,
+                dstTokenId: String?
+            ) =
                 "vault_detail/$vaultId/account/$chainId/swap?$ARG_SRC_TOKEN_ID=$srcTokenId&$ARG_DST_TOKEN_ID=$dstTokenId"
         }
     }
@@ -272,8 +277,10 @@ internal sealed class Destination(
         val address: String,
         val chainName: String,
     ) :
-        Destination(route = "vault_details/${vaultId}/qr_address_screen/$address" +
-                "?${ARG_CHAIN_NAME}=${chainName}") {
+        Destination(
+            route = "vault_details/${vaultId}/qr_address_screen/$address" +
+                    "?${ARG_CHAIN_NAME}=${chainName}"
+        ) {
         companion object {
             const val ARG_COIN_ADDRESS = "coin_address"
             const val ARG_CHAIN_NAME = "chain_name"
@@ -291,9 +298,10 @@ internal sealed class Destination(
         val setupType: VaultSetupType,
     ) : Destination(route = buildRoute(vaultId, name, setupType.raw)) {
         companion object {
-            const val STATIC_ROUTE = "keygen/email?${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
-                    "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
-                    "&${ARG_VAULT_ID}={$ARG_VAULT_ID}"
+            const val STATIC_ROUTE =
+                "keygen/email?${ARG_VAULT_SETUP_TYPE}={$ARG_VAULT_SETUP_TYPE}" +
+                        "&${ARG_VAULT_NAME}={$ARG_VAULT_NAME}" +
+                        "&${ARG_VAULT_ID}={$ARG_VAULT_ID}"
 
             fun buildRoute(vaultId: String?, name: String?, setupType: Int) =
                 "keygen/email?${ARG_VAULT_NAME}=${name}" +
@@ -356,17 +364,6 @@ internal sealed class Destination(
                     "&${ARG_PASSWORD}={$ARG_PASSWORD}" +
                     "&${ARG_PASSWORD_HINT}={$ARG_PASSWORD_HINT}"
 
-            fun generateNewVault(
-                name: String,
-                setupType: VaultSetupType
-            ) = KeygenFlow(
-                vaultId = null,
-                vaultName = name,
-                vaultSetupType = setupType,
-                email = null,
-                password = null,
-            )
-
             private fun buildRoute(
                 vaultId: String?,
                 name: String?,
@@ -406,21 +403,6 @@ internal sealed class Destination(
     }
 
 
-    data class BackupPassword(val vaultId: String) :
-        Destination(route = "backup_password/$vaultId") {
-        companion object {
-            const val ARG_VAULT_ID = "vault_id"
-            const val STATIC_ROUTE = "backup_password/{$ARG_VAULT_ID}"
-        }
-    }
-
-    data class BackupSuggestion(val vaultId: String) :
-        Destination(route = "backup_suggestion/$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "backup_suggestion/{$ARG_VAULT_ID}"
-        }
-    }
-
     data class VerifyServerBackup(
         val vaultId: VaultId,
         val shouldSuggestBackup: Boolean,
@@ -445,15 +427,12 @@ internal sealed class Destination(
 
     data object CreateFolder : Destination(route = "create_folder")
 
-    data class Folder(val folderId: String): Destination(route = "folder/$folderId") {
+    data class Folder(val folderId: String) : Destination(route = "folder/$folderId") {
         companion object {
             const val ARG_FOLDER_ID = "folder_id"
             const val STATIC_ROUTE = "folder/{$ARG_FOLDER_ID}"
         }
     }
-
-    data class AddChainAccount(val vaultId: String) :
-        Destination(route = "vault_detail/$vaultId/add_account")
 
     data class ReshareStartScreen(val vaultId: String) :
         Destination(route = "reshare_start_screen/$vaultId") {
@@ -478,9 +457,121 @@ internal sealed class Destination(
     }
 }
 
-sealed class Route {
+internal sealed class Route {
 
     @Serializable
     data object Secret : Route()
+
+    @Serializable
+    data object ChooseVaultType
+
+    object VaultInfo {
+
+        @Serializable
+        enum class VaultType {
+            Fast, Secure
+        }
+
+        // required by both vault types
+        @Serializable
+        data class Name(
+            val vaultType: VaultType,
+        )
+
+        // required only by fast vault
+        @Serializable
+        data class Email(val name: String)
+        @Serializable
+        data class Password(
+            val name: String,
+            val email: String,
+        )
+        @Serializable
+        data class PasswordHint(
+            val name: String,
+            val email: String,
+            val password: String,
+        )
+    }
+
+    @Serializable
+    data object Keygen {
+
+        @Serializable
+        data class PeerDiscovery(
+            val vaultName: String,
+
+            val email: String? = null,
+            val password: String? = null,
+            val hint: String? = null,
+        )
+
+        @Serializable
+        data class Generating(
+            val action: TssAction,
+            val sessionId: String,
+            val serverUrl: String,
+            val localPartyId: String,
+            val vaultName: String,
+            val hexChainCode: String,
+            val keygenCommittee: List<String>,
+            val oldCommittee: List<String>,
+            val encryptionKeyHex: String,
+            val oldResharePrefix: String,
+            val isInitiatingDevice: Boolean,
+            val libType: SigningLibType,
+
+            val email: String?,
+            val password: String?,
+            val hint: String?,
+        )
+
+    }
+
+    data object Onboarding {
+        @Serializable
+        data object VaultCreation
+
+        @Serializable
+        data object VaultCreationSummary
+
+        @Serializable
+        data class VaultBackup(
+            val vaultId: VaultId,
+            val pubKeyEcdsa: String,
+            val email: String?,
+            val vaultType: VaultInfo.VaultType,
+        )
+    }
+
+    @Serializable
+    data class FastVaultVerification(
+        val vaultId: VaultId,
+        val pubKeyEcdsa: String,
+        val email: String,
+    )
+
+    @Serializable
+    data class BackupVault(
+        val vaultId: VaultId,
+        val vaultType: VaultInfo.VaultType?,
+    )
+
+    @Serializable
+    data class BackupPassword(
+        val vaultId: VaultId,
+        // vault type only provided if vault confirmation screen is required
+        val vaultType: VaultInfo.VaultType? = null,
+    )
+
+    @Serializable
+    data class VaultBackupSummary(
+        val vaultType: VaultInfo.VaultType,
+    )
+
+    @Serializable
+    data class VaultConfirmation(
+        val vaultType: VaultInfo.VaultType,
+    )
 
 }

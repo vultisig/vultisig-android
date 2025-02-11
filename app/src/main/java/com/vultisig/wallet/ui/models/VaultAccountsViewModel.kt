@@ -21,6 +21,7 @@ import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -221,7 +222,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun backupVault() {
         viewModelScope.launch {
             dismissBackupReminder()
-            navigator.navigate(Destination.BackupPassword(vaultId!!))
+            navigator.route(Route.BackupPassword(vaultId!!))
         }
     }
 

@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.usecases.IsVaultHasFastSignUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils.HINT_MAX_LENGTH
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -113,14 +114,11 @@ internal class KeygenPasswordViewModel @Inject constructor(
                     }
                 }
 
-                navigator.navigate(
-                    Destination.KeygenFlow(
-                        vaultId = vaultId,
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
                         vaultName = Uri.encode(name),
-                        vaultSetupType = setupType,
                         email = email,
                         password = password,
-                        hint = hint,
                     )
                 )
             }
