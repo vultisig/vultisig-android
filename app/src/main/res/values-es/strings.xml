@@ -265,8 +265,6 @@
     <string name="add_address_title_title">Título</string>
     <string name="add_address_address_title">DIRECCIÓN</string>
     <string name="add_address_type_hint">Escribe aquí</string>
-    <string name="deposit_form_remove_from_pool">Quitar de la RUNEPool</string>
-    <string name="deposit_form_add_to_pool">Añadir al pool</string>
     <string name="blowfish_approve">Transacción verificada por Blowfish.</string>
     <string name="join_keysign_invalid_qr">Contenido de código QR no válido</string>
     <string name="join_keysign_failed_to_start">No se pudo unir a keysign</string>
