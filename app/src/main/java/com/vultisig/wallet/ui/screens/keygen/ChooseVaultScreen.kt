@@ -36,17 +36,25 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +70,7 @@ import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.launch
 
@@ -198,12 +207,7 @@ private fun ChooseVaultScreen(
                                     .wrapContentWidth(CenterHorizontally)
                             )
 
-                            TextAndIcon(
-                                text = stringResource(R.string.select_vault_type_fast),
-                                icon = painterResource(R.drawable.thunder),
-                                tint = if (isSecureTypeSelected)
-                                    Theme.colors.text.primary else Theme.colors.alerts.warning,
-                                contentDescription = stringResource(R.string.select_vault_type_fast),
+                            Row(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(CircleShape)
@@ -212,7 +216,33 @@ private fun ChooseVaultScreen(
                                     }
                                     .padding(16.dp)
                                     .wrapContentWidth(CenterHorizontally)
-                            )
+                            ) {
+                                val brushGradient = Theme.colors.gradients.primary
+                                val iconModifier = if (!isSecureTypeSelected) {
+                                    Modifier
+                                        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                                        .drawWithCache {
+                                            onDrawWithContent {
+                                                drawContent()
+                                                drawRect(brushGradient, blendMode = BlendMode.SrcAtop)
+                                            }
+                                        }
+                                } else {
+                                    Modifier
+                                }
+                                Icon(
+                                    modifier = iconModifier,
+                                    painter = painterResource(R.drawable.thunder),
+                                    contentDescription = stringResource(R.string.select_vault_type_fast),
+                                    tint = Theme.colors.text.primary,
+                                )
+                                UiSpacer(8.dp)
+                                Text(
+                                    text = stringResource(R.string.select_vault_type_fast),
+                                    color = Theme.colors.text.primary,
+                                    style = Theme.brockmann.body.s.medium,
+                                )
+                            }
                         }
                     }
                 }
@@ -232,10 +262,13 @@ private fun ChooseVaultScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = state.vaultType.title.asString(),
-                        color = if (isSecureTypeSelected)
-                            Theme.colors.alerts.success else Theme.colors.alerts.warning,
-                        style = Theme.brockmann.headings.title3,
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(brush = Theme.colors.gradients.primary)) {
+                                append(state.vaultType.title.asString())
+                            }
+                        },
+                        color = Theme.colors.alerts.success,
+                        style = Theme.brockmann.headings.subtitle,
                         modifier = Modifier
                             .background(Theme.colors.backgrounds.tertiary)
                             .fillMaxWidth()
@@ -271,12 +304,8 @@ private fun ChooseVaultScreen(
                     )
                     TextAndIcon(
                         text = state.vaultType.desc3.asString(),
-                        icon = painterResource(
-                            if (isSecureTypeSelected)
-                                R.drawable.check else R.drawable.minus_small
-                        ),
-                        tint = if (isSecureTypeSelected)
-                            Theme.colors.alerts.success else Theme.colors.alerts.warning,
+                        icon = painterResource(R.drawable.check),
+                        tint = Theme.colors.alerts.success,
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
                     )
