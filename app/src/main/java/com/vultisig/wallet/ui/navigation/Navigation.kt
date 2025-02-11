@@ -290,8 +290,6 @@ internal sealed class Destination(
         }
     }
 
-    data object SelectVaultType : Destination(route = "setup")
-
     data class KeygenEmail(
         val vaultId: String?,
         val name: String?,
