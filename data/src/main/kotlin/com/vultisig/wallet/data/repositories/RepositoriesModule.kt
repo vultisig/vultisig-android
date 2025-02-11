@@ -9,6 +9,8 @@ import com.vultisig.wallet.data.repositories.order.AddressBookOrderRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
+import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
+import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepositoryImpl
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepoImpl
 import dagger.Binds
@@ -254,5 +256,12 @@ internal interface RepositoriesModule {
     fun bindQrHelperModalRepository(
         impl: QrHelperModalRepositoryImpl
     ): QrHelperModalRepository
+
+    @Binds
+    @Singleton
+    fun bindTemporaryVaultRepository(
+        impl: TemporaryVaultRepositoryImpl
+    ): TemporaryVaultRepository
+
 
 }

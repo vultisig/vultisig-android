@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.errors.ErrorView
@@ -67,6 +68,8 @@ import com.vultisig.wallet.ui.utils.asString
 internal fun KeygenScreen(
     model: KeygenViewModel = hiltViewModel(),
 ) {
+    KeepScreenOn()
+
     val state by model.state.collectAsState()
 
     if (state.isSuccess) {
