@@ -281,10 +281,11 @@ class SchnorrKeysign(
                             Base64.encodeToByteArray(keysignSetupMsg),
                             Numeric.hexStringToByteArray(encryptionKeyHex)
                         )
-                    )
+                    ),
+                    messageId = msgHash
                 )
             } else {
-                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID)
+                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID,msgHash)
                     .let {
                         encryption.decrypt(
                             Base64.Default.decode(it),

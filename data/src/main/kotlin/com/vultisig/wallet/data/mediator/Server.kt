@@ -137,7 +137,11 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             response.status(HttpStatusCode.BadRequest.value)
             return
         }
-        val key = "setup-$sessionID"
+        val messageID = request.headers("message_id")
+        var key = "setup-$sessionID"
+        messageID?.let {
+            key = "$key-$it"
+        }
         cache[key]?.let {
             val content = it as? String
             response.body(content)
@@ -154,8 +158,12 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
             response.status(HttpStatusCode.BadRequest.value)
             return
         }
+        val messageID = request.headers("message_id")
         Timber.d("upload setup message: %s", sessionID)
-        val key = "setup-$sessionID"
+        var key = "setup-$sessionID"
+        messageID?.let {
+            key = "$key-$it"
+        }
         cache.put(key, request.body())
         response.status(HttpStatusCode.Created.value)
     }
