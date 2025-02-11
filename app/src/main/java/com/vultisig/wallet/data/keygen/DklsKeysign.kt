@@ -289,7 +289,6 @@ class DKLSKeysign(
                     ),
                     messageId = msgHash
                 )
-                Timber.d("****Uploaded setup message****")
             } else {
                 keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID,msgHash)
                     .let {
