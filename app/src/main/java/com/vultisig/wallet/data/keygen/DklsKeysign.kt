@@ -286,10 +286,12 @@ class DKLSKeysign(
                             Base64.encodeToByteArray(keysignSetupMsg),
                             Numeric.hexStringToByteArray(encryptionKeyHex)
                         )
-                    )
+                    ),
+                    messageId = msgHash
                 )
+                Timber.d("****Uploaded setup message****")
             } else {
-                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID)
+                keysignSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID,msgHash)
                     .let {
                         encryption.decrypt(
                             Base64.Default.decode(it),
