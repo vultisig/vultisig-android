@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -19,16 +20,26 @@ internal data class VaultBackupOnboardingUiModel(
     val currentPage: OnboardingPage,
     val pageIndex: Int,
     val pageTotal: Int,
+    val vaultShares: Int = 0,
 )
 
 @HiltViewModel
 internal class VaultBackupOnboardingViewModel @Inject constructor(
+    vaultRepository: VaultRepository,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Onboarding.VaultBackup>()
     private val vaultId = args.vaultId
+
+    init {
+        viewModelScope.launch {
+            vaultRepository.get(vaultId).let { vault ->
+                state.update { it.copy(vaultShares = vault?.signers?.size?: 0) }
+            }
+        }
+    }
 
     // TODO refactor this into actually configurable model
     private val pages = when (args.vaultType) {

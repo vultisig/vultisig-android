@@ -52,7 +52,7 @@ private fun VaultBackupOnboardingScreen(
         },
     ) { paddingValues ->
 
-        val textItems = buildOnboardingPagesText(state.vaultType)
+        val textItems = buildOnboardingPagesText(state.vaultType, state.vaultShares)
 
         OnboardingContent(
             state = OnboardingUiModel(
@@ -78,11 +78,13 @@ private fun VaultBackupOnboardingScreen(
 @Composable
 private fun buildOnboardingPagesText(
     vaultType: Route.VaultInfo.VaultType,
+    vaultShares: Int = 2,
 ) = when (vaultType) {
     Route.VaultInfo.VaultType.Secure -> listOf(
         listOf(
             PartiallyGradientTextItem(
                 resId = R.string.onboarding_security_backup_desc_page_1_part_1,
+                formatArgs = vaultShares,
                 coloring = GradientColoring.VsColor(Theme.colors.text.primary),
             ),
             PartiallyGradientTextItem(

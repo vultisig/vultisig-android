@@ -539,7 +539,7 @@
     <string name="onboarding_summary_button" translatable="false">Create your vault</string>
     <string name="onboarding_summary_check" translatable="false">I have read and understand what to do</string>
     <string name="onboarding_security_backup_title" translatable="false">Vault Overview</string>
-    <string name="onboarding_security_backup_desc_page_1_part_1" translatable="false">Your vault holds 3 shares,</string>
+    <string name="onboarding_security_backup_desc_page_1_part_1" translatable="false">Your vault holds %s shares,</string>
     <string name="onboarding_security_backup_desc_page_1_part_2" translatable="false">each device needs its own backup.</string>
     <string name="onboarding_security_backup_desc_page_2_part_1" translatable="false">Back up</string>
     <string name="onboarding_security_backup_desc_page_2_part_2" translatable="false">this vault share</string>
