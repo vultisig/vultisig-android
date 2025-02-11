@@ -5,11 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Folder
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.FolderRepository
-import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
+import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -32,7 +33,7 @@ internal class VaultListViewModel @Inject constructor(
     val state = MutableStateFlow(VaultListUiModel())
     private var reIndexJob: Job? = null
 
-    init {
+    fun initVaultListData() {
         collectFolders()
         collectVaults()
     }
@@ -88,5 +89,9 @@ internal class VaultListViewModel @Inject constructor(
             val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id
             vaultOrderRepository.updateItemOrder(null,upperOrder, midOrder, lowerOrder)
         }
+    }
+
+    fun stopCollectingData(){
+        viewModelScope.coroutineContext.cancelChildren()
     }
 }
