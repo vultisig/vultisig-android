@@ -13,13 +13,13 @@ import kotlinx.coroutines.delay
 private const val COOL_DOWN_PERIOD = 375L
 private var lastClickTime = 0L
 
-fun Modifier.clickOnce(enabled: Boolean = true, onClick: () -> Unit): Modifier = this.composed {
+fun Modifier.clickOnce(coolDownPeriod: Long = COOL_DOWN_PERIOD,enabled: Boolean = true, onClick: () -> Unit): Modifier = this.composed {
     var enableAgain by remember { mutableStateOf(true) }
 
     LaunchedEffect(enableAgain) {
         if (enableAgain)
             return@LaunchedEffect
-        delay(timeMillis = COOL_DOWN_PERIOD)
+        delay(timeMillis = coolDownPeriod)
         enableAgain = true
     }
 

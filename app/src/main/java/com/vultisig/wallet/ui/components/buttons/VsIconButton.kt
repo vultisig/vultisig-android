@@ -21,6 +21,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Secondary
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
 
@@ -49,7 +50,7 @@ fun VsIconButton(
                     },
                 shape = RoundedCornerShape(percent = 100)
             )
-            .clickable(enabled = state == Enabled, onClick = onClick)
+            .clickable(enabled = state == Enabled, onClick = clickOnce(onClick = onClick))
             .then(
                 when (size) {
                     Medium -> Modifier.padding(
