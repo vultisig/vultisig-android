@@ -135,6 +135,7 @@ dependencies {
     implementation(libs.play.update)
     implementation(libs.play.review)
     implementation(libs.androidx.work.ktx)
+    implementation(libs.bcprov.jdk15on)
 
     // test
     testImplementation(libs.junit)
