@@ -612,6 +612,7 @@
     <string name="fast_vault_password_screen_hint" translatable="false">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
     <string name="fast_vault_password_screen_hint_title" translatable="false">More Info</string>
     <string name="fast_vault_password_screen_warning" translatable="false">Password cannot be reset or recovered</string>
+    <string name="fast_vault_password_screen_error" translatable="false">Passwords do not match</string>
     <string name="fast_vault_password_screen_next" translatable="false">Next</string>
     <string name="fast_vault_password_hint_screen_title" translatable="false">Add a optional hint</string>
     <string name="fast_vault_password_hint_screen_desc" translatable="false">This will be shown in case your forget your password</string>
