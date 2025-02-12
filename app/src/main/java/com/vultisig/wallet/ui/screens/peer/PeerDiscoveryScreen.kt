@@ -124,8 +124,9 @@ private fun PeerDiscoveryScreen(
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
 ) {
-    val devicesSize = state.selectedDevices.size + 1 // we always have our device
-    val hasEnoughDevices = devicesSize >= state.minimumDevices
+    val selectedDevicesSize = state.selectedDevices.size + 1 // we always have our device
+    val devicesSize = state.devices.size + 1
+    val hasEnoughDevices = selectedDevicesSize >= state.minimumDevices
 
     val ordinalFormatter = remember { MessageFormat("{0,ordinal}") }
 
@@ -225,7 +226,7 @@ private fun PeerDiscoveryScreen(
                 Text(
                     text = stringResource(
                         R.string.peer_discovery_devices_n_of_n,
-                        devicesSize,
+                        selectedDevicesSize,
                         state.minimumDevicesDisplayed,
                     ),
                     style = Theme.brockmann.headings.title2,
