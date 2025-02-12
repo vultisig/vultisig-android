@@ -627,9 +627,9 @@
     <string name="error_view_default_description" translatable="false">An error occurred</string>
     <string name="keygen_vault_created_success_part_1" translatable="false">Vault created</string>
     <string name="vault_created_success_part_2" translatable="false">successfully</string>
-    <string name="backup_vault_backup_now_button" translatable="false">Back-up now</string>
-    <string name="backup_vault_backup_vault_share_title" translatable="false">Back-up your vault share online</string>
-    <string name="backup_vault_topbar_title" translatable="false">Back-up Vault</string>
+    <string name="backup_vault_backup_now_button" translatable="false">Backup now</string>
+    <string name="backup_vault_backup_vault_share_title" translatable="false">Backup your vault share online</string>
+    <string name="backup_vault_topbar_title" translatable="false">Backup Vault</string>
     <string name="vault_backup_screen_paste" translatable="false">Paste</string>
     <string name="enter_backup_screen_title" translatable="false">Enter the 4 digit code\nwe emailed you</string>
     <string name="enter_backup_screen_desc" translatable="false">This code will confirm that you’ve received your vault share 1 via email</string>
