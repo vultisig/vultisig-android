@@ -279,14 +279,8 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
         if (isRelayEnabled) {
             serverUrl = VULTISIG_RELAY_URL
-
-            try {
-                startSession()
-                startParticipantDiscovery()
-            } catch (e: Exception) {
-                Timber.e("Failed to start session", e)
-                // TODO display error, retry
-            }
+            startSessionWithRetry()
+            startParticipantDiscovery()
         } else {
             serverUrl = LOCAL_MEDIATOR_SERVER_URL
             startMediatorService()
@@ -297,7 +291,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
 
         try {
-            startSession()
+            startSessionWithRetry()
 
             requestVultiServerConnection()
 
@@ -452,7 +446,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                 // send a request to local mediator server to start the session
                 GlobalScope.launch(Dispatchers.IO) {
                     delay(1000) // back off a second
-                    startSession()
+                    startSessionWithRetry()
                 }
 
                 startParticipantDiscovery()
@@ -460,8 +454,41 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         }
     }
 
-    private suspend fun startSession() {
-        sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
+    private suspend fun startSessionWithRetry() {
+        repeat(3) { attempt ->
+            try {
+                delay(1000)
+                if (isSessionStarted().not() )
+                    sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
+                return
+            } catch (e: Exception) {
+                Timber.tag("startSessionAndDiscovery").e(
+                    e,
+                    "Attempt ${attempt + 1} failed"
+                )
+                if (attempt >= 2) {
+                    Timber.tag("startSessionAndDiscovery").e("All attempts to start session failed")
+                    state.update {
+                        it.copy(
+                            error = ErrorUiModel(
+                                title = UiText.StringResource(R.string.error_view_default_title),
+                                description = UiText.StringResource(R.string.error_view_default_description),
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+    private suspend fun isSessionStarted(): Boolean {
+        try {
+            return sessionApi.getParticipants(
+                serverUrl,
+                sessionId
+            ).size > 0
+        } catch (e: Exception) {
+            return false
+        }
     }
 
 }
