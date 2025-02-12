@@ -57,6 +57,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun FastVaultPasswordScreen(
@@ -159,6 +160,8 @@ private fun FastVaultPasswordScreen(
                             isVisible = state.isConfirmPasswordVisible,
                             onVisibilityClick = onToggleConfirmPasswordVisibilityClick
                         ),
+                        innerState = state.innerState,
+                        footNote = state.errorMessage?.asString(),
                         imeAction = ImeAction.Go,
                         onKeyboardAction = {
                             onNextClick()

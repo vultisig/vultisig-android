@@ -5,9 +5,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +25,8 @@ internal data class FastVaultPasswordUiModel(
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false,
     val isNextButtonEnabled: Boolean = false,
+    val errorMessage: UiText = UiText.Empty,
+    val innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
 )
 
 @HiltViewModel
@@ -63,8 +68,22 @@ internal class FastVaultPasswordViewModel @Inject constructor(
                     confirmPasswordTextFieldState.textAsFlow()
                 ) { password, confirmPassword ->
                     val isValidPassword = validatePassword(password, confirmPassword)
+                    val isShowError = isShowError(password, confirmPassword)
+                    val errorMessage = if (isShowError) {
+                        UiText.StringResource(R.string.fast_vault_password_screen_error)
+                    } else {
+                        UiText.Empty
+                    }
                     state.update {
-                        it.copy(isNextButtonEnabled = isValidPassword)
+                        it.copy(
+                            isNextButtonEnabled = isValidPassword,
+                            errorMessage = errorMessage,
+                            innerState = if (isShowError) {
+                                VsTextInputFieldInnerState.Error
+                            } else {
+                                VsTextInputFieldInnerState.Default
+                            }
+                        )
                     }
 
                 }.launchIn(this)
@@ -73,6 +92,10 @@ internal class FastVaultPasswordViewModel @Inject constructor(
 
     private fun validatePassword(password: CharSequence, confirmPassword: CharSequence) =
         password.isNotEmpty() && password.toString() == confirmPassword.toString()
+
+    private fun isShowError(password: CharSequence, confirmPassword: CharSequence) =
+        password.isNotEmpty() && confirmPassword.isNotEmpty()
+                && password.toString() != confirmPassword.toString()
 
     fun showMoreInfo() {
         isMoreInfoVisible = true
