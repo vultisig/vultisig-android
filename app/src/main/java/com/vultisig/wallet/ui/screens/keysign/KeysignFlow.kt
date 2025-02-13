@@ -1,10 +1,10 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
@@ -18,7 +18,7 @@ fun KeysignFlowView(
     onKeysignFinished: (() -> Unit)? = null,
 ) {
     val viewModel: KeysignFlowViewModel = hiltViewModel()
-    val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalContext.current as MainActivity)
+    val sharedViewModel: KeysignShareViewModel = hiltViewModel(LocalActivity.current as MainActivity)
     val keysignFlowState by viewModel.currentState.collectAsState()
     if (!sharedViewModel.hasAllData) {
         // information is not available, go back
