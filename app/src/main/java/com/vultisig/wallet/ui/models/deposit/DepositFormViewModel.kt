@@ -579,7 +579,7 @@ internal class DepositFormViewModel @Inject constructor(
             .toString()
             .toBigDecimalOrNull()
 
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+        if (tokenAmount == null || tokenAmount < BigDecimal.ZERO) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_amount)
             )
