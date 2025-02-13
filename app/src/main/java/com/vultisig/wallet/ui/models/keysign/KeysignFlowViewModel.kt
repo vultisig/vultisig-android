@@ -18,7 +18,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
-import com.vultisig.wallet.data.api.ParticipantDiscovery
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -45,6 +44,7 @@ import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
+import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
@@ -59,6 +59,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -107,11 +108,11 @@ internal class KeysignFlowViewModel @Inject constructor(
     private val broadcastTx: BroadcastTxUseCase,
     private val solanaApi: SolanaApi,
     private val payloadToProtoMapper: PayloadToProtoMapper,
+    private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
     private var _serverAddress: String = LOCAL_MEDIATOR_SERVER_URL
-    private var _participantDiscovery: ParticipantDiscovery? = null
     private val _encryptionKeyHex: String = Utils.encryptionKeyHex
     private var _currentVault: Vault? = null
     private var _keysignPayload: KeysignPayload? = null
@@ -127,9 +128,7 @@ internal class KeysignFlowViewModel @Inject constructor(
     val keysignMessage: MutableState<String>
         get() = _keysignMessage
 
-    val participants: MutableLiveData<List<String>>
-        get() = _participantDiscovery?.participants ?: MutableLiveData(listOf())
-
+    val participants = MutableStateFlow<List<String>>(emptyList())
     val networkOption: MutableState<NetworkPromptOption> =
         mutableStateOf(NetworkPromptOption.INTERNET)
 
@@ -149,6 +148,9 @@ internal class KeysignFlowViewModel @Inject constructor(
 
     private val tssKeysignType: TssKeyType
         get() = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA
+
+
+    private var discoverParticipantsJob: Job? = null
 
     val keysignViewModel: KeysignViewModel
         get() = KeysignViewModel(
@@ -237,12 +239,6 @@ internal class KeysignFlowViewModel @Inject constructor(
             return
         }
         val vault = _currentVault!!
-        _participantDiscovery = ParticipantDiscovery(
-            _serverAddress,
-            _sessionID,
-            vault.localPartyID,
-            sessionApi
-        )
 
         if (!isRelayEnabled) {
             startMediatorService(context)
@@ -251,7 +247,8 @@ internal class KeysignFlowViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 startSession(_serverAddress, _sessionID, vault.localPartyID)
             }
-            _participantDiscovery?.discoveryParticipants()
+
+            startParticipantDiscovery(vault)
         }
 
         val keysignPayload = _keysignPayload
@@ -294,6 +291,22 @@ internal class KeysignFlowViewModel @Inject constructor(
 
         addressProvider.update(_keysignMessage.value)
 
+    }
+
+    private fun startParticipantDiscovery(vault: Vault) {
+        discoverParticipantsJob?.cancel()
+        discoverParticipantsJob = viewModelScope.launch {
+            discoverParticipantsUseCase(
+                _serverAddress,
+                _sessionID,
+                vault.localPartyID
+            ).collect { participants ->
+                val existingParticipants = this@KeysignFlowViewModel.participants.value.toSet()
+                val newParticipants = participants - existingParticipants
+                this@KeysignFlowViewModel.participants.update { participants }
+                newParticipants.forEach(::addParticipant)
+            }
+        }
     }
 
     private fun updateTransactionUiModel(
@@ -358,7 +371,7 @@ internal class KeysignFlowViewModel @Inject constructor(
                     startSession(_serverAddress, _sessionID, _currentVault!!.localPartyID)
                 }
                 // kick off discovery
-                _participantDiscovery?.discoveryParticipants()
+                startParticipantDiscovery(_currentVault!!)
             }
         }
     }
@@ -442,14 +455,14 @@ internal class KeysignFlowViewModel @Inject constructor(
     fun moveToKeysignState() {
         viewModelScope.launch {
             isLoading.value = true
-            _participantDiscovery?.stop()
+            stopParticipantDiscovery()
             moveToState(KeysignFlowState.Keysign)
             isLoading.value = false
         }
     }
 
-    fun stopParticipantDiscovery() = viewModelScope.launch {
-        _participantDiscovery?.stop()
+    fun stopParticipantDiscovery() {
+        discoverParticipantsJob?.cancel()
     }
 
     private fun cleanQrAddress() {
