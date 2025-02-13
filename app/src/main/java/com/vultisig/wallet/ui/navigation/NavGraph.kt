@@ -7,7 +7,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.vultisig.wallet.ui.models.keygen.JoinKeygenView
 import com.vultisig.wallet.ui.models.keygen.KeygenFlowView
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
@@ -56,6 +55,7 @@ import com.vultisig.wallet.ui.screens.keygen.FastVaultEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordHintScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
+import com.vultisig.wallet.ui.screens.keygen.JoinKeygenScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenEmailScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenPasswordScreen
 import com.vultisig.wallet.ui.screens.keygen.KeygenScreen
@@ -123,19 +123,6 @@ internal fun SetupNavGraph(
             )
         ) {
             HomeScreen(navController)
-        }
-        composable(
-            route = Destination.JoinKeygen.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_QR) { type = NavType.StringType }
-            )
-        ) { entry ->
-            val qrCodeResult = entry.arguments?.getString(ARG_QR)!!
-
-            JoinKeygenView(
-                navController = navController,
-                qrCodeResult = qrCodeResult,
-            )
         }
 
         composable(
@@ -621,6 +608,10 @@ internal fun SetupNavGraph(
         }
 
         // keygen
+        composable<Keygen.Join> {
+            JoinKeygenScreen()
+        }
+
         composable<Keygen.PeerDiscovery> {
             PeerDiscoveryScreen()
         }
