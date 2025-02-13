@@ -92,7 +92,6 @@ internal class KeygenViewModel @Inject constructor(
         hexChainCode = args.hexChainCode,
         localPartyID = args.localPartyId,
         signers = args.keygenCommittee,
-        // todo check if value correct or if we can get it here
         resharePrefix = args.oldResharePrefix,
         libType = args.libType,
     )
@@ -106,7 +105,6 @@ internal class KeygenViewModel @Inject constructor(
     private val oldResharePrefix: String = args.oldResharePrefix
     private val isInitiatingDevice: Boolean = args.isInitiatingDevice
     private val libType = args.libType
-    private val isFastVault = args.email != null && args.password != null
 
     private val localStateAccessor: tss.LocalStateAccessor = LocalStateAccessor(vault)
     private var featureFlag: FeatureFlagJson? = null
@@ -367,24 +365,20 @@ internal class KeygenViewModel @Inject constructor(
 
         stopService()
 
-        if (!isReshareMode) {
-            navigator.route(
-                route = Route.Onboarding.VaultBackup(
-                    vaultId = vaultId,
-                    pubKeyEcdsa = vault.pubKeyECDSA,
-                    email = args.email,
-                    vaultType = if (vault.isFastVault())
-                        VaultType.Fast
-                    else VaultType.Secure
-                ),
-                opts = NavigationOptions(
-                    popUpToRoute = Route.Keygen.Generating::class,
-                    inclusive = true,
-                ),
-            )
-        } else {
-            // TODO add reshare action
-        }
+        navigator.route(
+            route = Route.Onboarding.VaultBackup(
+                vaultId = vaultId,
+                pubKeyEcdsa = vault.pubKeyECDSA,
+                email = args.email,
+                vaultType = if (vault.isFastVault())
+                    VaultType.Fast
+                else VaultType.Secure
+            ),
+            opts = NavigationOptions(
+                popUpToRoute = Route.Keygen.Generating::class,
+                inclusive = true,
+            ),
+        )
     }
 
     private fun stopService() {
