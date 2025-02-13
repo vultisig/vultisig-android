@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
 import com.vultisig.wallet.data.usecases.GetOrderedVaults
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -30,34 +29,44 @@ internal class VaultListViewModel @Inject constructor(
     private val folderOrderRepository: FolderOrderRepository,
     private val getOrderedVaults: GetOrderedVaults,
 ) : ViewModel() {
+
     val state = MutableStateFlow(VaultListUiModel())
+
     private var reIndexJob: Job? = null
+    private var collectVaultsJob: Job? = null
+    private var collectFoldersJob: Job? = null
 
     fun initVaultListData() {
         collectFolders()
         collectVaults()
     }
 
-    private fun collectVaults() = viewModelScope.launch {
-        getOrderedVaults(null).collect { orderedVaults ->
-            state.update { it.copy(vaults = orderedVaults) }
+    private fun collectVaults() {
+        collectVaultsJob?.cancel()
+        collectVaultsJob = viewModelScope.launch {
+            getOrderedVaults(null).collect { orderedVaults ->
+                state.update { it.copy(vaults = orderedVaults) }
+            }
         }
     }
 
-    private fun collectFolders() = viewModelScope.launch {
-        combine(
-            folderOrderRepository.loadOrders(null),
-            folderRepository.getAll()
-        ) { orders, folders ->
-            val addressAndOrderMap = mutableMapOf<Folder, Float>()
-            folders.forEach { eachFolder ->
-                addressAndOrderMap[eachFolder] =
-                    orders.find { it.value == eachFolder.id.toString() }?.order
-                        ?: folderOrderRepository.insert(null,eachFolder.id.toString())
+    private fun collectFolders() {
+        collectFoldersJob?.cancel()
+        collectFoldersJob = viewModelScope.launch {
+            combine(
+                folderOrderRepository.loadOrders(null),
+                folderRepository.getAll()
+            ) { orders, folders ->
+                val addressAndOrderMap = mutableMapOf<Folder, Float>()
+                folders.forEach { eachFolder ->
+                    addressAndOrderMap[eachFolder] =
+                        orders.find { it.value == eachFolder.id.toString() }?.order
+                            ?: folderOrderRepository.insert(null, eachFolder.id.toString())
+                }
+                addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
+            }.collect { orderedFolders ->
+                state.update { it.copy(folders = orderedFolders) }
             }
-            addressAndOrderMap.entries.sortedByDescending { it.value }.map { it.key }
-        }.collect { orderedFolders ->
-            state.update { it.copy(folders = orderedFolders) }
         }
     }
 
@@ -72,7 +81,7 @@ internal class VaultListViewModel @Inject constructor(
             val midOrder = updatedPositionsList[newOrder].id.toString()
             val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.id.toString()
             val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id.toString()
-            folderOrderRepository.updateItemOrder(null,upperOrder, midOrder, lowerOrder)
+            folderOrderRepository.updateItemOrder(null, upperOrder, midOrder, lowerOrder)
         }
     }
 
@@ -87,11 +96,8 @@ internal class VaultListViewModel @Inject constructor(
             val midOrder = updatedPositionsList[newOrder].id
             val upperOrder = updatedPositionsList.getOrNull(newOrder + 1)?.id
             val lowerOrder = updatedPositionsList.getOrNull(newOrder - 1)?.id
-            vaultOrderRepository.updateItemOrder(null,upperOrder, midOrder, lowerOrder)
+            vaultOrderRepository.updateItemOrder(null, upperOrder, midOrder, lowerOrder)
         }
     }
 
-    fun stopCollectingData(){
-        viewModelScope.coroutineContext.cancelChildren()
-    }
 }
