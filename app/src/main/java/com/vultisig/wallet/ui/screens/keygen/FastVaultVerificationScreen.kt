@@ -37,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCircularLoading
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputField
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputFieldState
 import com.vultisig.wallet.ui.components.rememberClipboardText
@@ -108,7 +109,7 @@ private fun FastVaultVerificationScreen(
                                 color = Theme.colors.text.light,
                                 textDecoration = TextDecoration.Underline,
                                 style = Theme.brockmann.supplementary.footnote,
-                                modifier = Modifier.clickable(onClick = onChangeEmailClick),
+                                modifier = Modifier.clickOnce(onClick = onChangeEmailClick, coolDownPeriod = 1500L),
                             )
                         }
                     }
