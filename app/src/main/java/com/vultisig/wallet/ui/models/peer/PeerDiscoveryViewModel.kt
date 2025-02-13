@@ -491,4 +491,8 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         }
     }
 
+    override fun onCleared() {
+        MediatorService.stop(context)
+    }
+
 }
