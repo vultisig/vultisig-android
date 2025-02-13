@@ -392,13 +392,7 @@ internal sealed class Destination(
     data class JoinKeygen(
         val qr: String,
         val isReshare: Boolean,
-    ) : Destination(route = "join_keygen?qr=$qr") {
-
-        companion object {
-            const val STATIC_ROUTE = "join_keygen?qr={$ARG_QR}"
-        }
-
-    }
+    ) : Destination(route = "join_keygen?qr=$qr")
 
 
     data class VerifyServerBackup(
@@ -494,6 +488,11 @@ internal sealed class Route {
 
     @Serializable
     data object Keygen {
+
+        @Serializable
+        data class Join(
+            val qr: String,
+        )
 
         @Serializable
         data class PeerDiscovery(
