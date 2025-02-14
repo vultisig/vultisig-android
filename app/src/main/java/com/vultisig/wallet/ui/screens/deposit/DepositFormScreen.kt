@@ -135,161 +135,131 @@ internal fun DepositFormScreen(
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 48.dp)
                         .padding(
-                            horizontal = 12.dp, vertical = 16.dp
+                            horizontal = 12.dp,
+                            vertical = 16.dp
                         ),
                 )
             }
 
-            val withdrawPoolTitle = stringResource(R.string.deposit_form_remove_from_pool)
-            val depositPoolTitle = stringResource(R.string.deposit_form_add_to_pool)
-
             FormSelection(
                 selected = state.depositOption,
                 options = state.depositOptions,
-                mapTypeToString = {
-                    when (it) {
-                        DepositOption.WithdrawPool -> withdrawPoolTitle
-                        DepositOption.DepositPool -> depositPoolTitle
-                        else -> it.name
-                    }
-                },
+                mapTypeToString = { it.name },
                 onSelectOption = onSelectDepositOption,
             )
 
-            when (val depositOption = state.depositOption) {
-                DepositOption.DepositPool, DepositOption.WithdrawPool -> {
-                    if (depositOption != DepositOption.WithdrawPool) {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_amount_title),
-                            hint = stringResource(R.string.send_amount_currency_hint),
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = tokenAmountFieldState,
-                            onLostFocus = onTokenAmountLostFocus,
-                            error = state.tokenAmountError,
-                        )
-                    } else {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_percentage_to_remove_title),
-                            hint = "0",
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = basisPointsFieldState,
-                            onLostFocus = onBasisPointsLostFocus,
-                            error = state.basisPointsError,
-                        )
-                    }
+            val depositOption = state.depositOption
+
+
+            if (depositOption != DepositOption.Leave && depositChain == DepositChain.Thor ||
+                depositOption == DepositOption.Custom && depositChain == DepositChain.Maya ||
+                depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
+            ) {
+                FormTextFieldCard(
+                    title = stringResource(
+                        R.string.deposit_form_amount_title,
+                        state.balance.asString()
+                    ),
+                    hint = stringResource(R.string.send_amount_currency_hint),
+                    keyboardType = KeyboardType.Number,
+                    textFieldState = tokenAmountFieldState,
+                    onLostFocus = onTokenAmountLostFocus,
+                    error = state.tokenAmountError,
+                )
+            }
+
+            if (depositOption != DepositOption.Custom) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_node_address_title),
+                    hint = stringResource(R.string.deposit_form_node_address_title),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = nodeAddressFieldState,
+                    onLostFocus = onNodeAddressLostFocus,
+                    error = state.nodeAddressError,
+                ) {
+                    val clipboard = LocalClipboardManager.current
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_paste,
+                        size = 20.dp,
+                        onClick = {
+                            clipboard.getText()
+                                ?.toString()
+                                ?.let(onSetNodeAddress)
+                        }
+                    )
+
+                    UiSpacer(size = 8.dp)
+                }
+            }
+
+            if (depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_provider_title),
+                    hint = stringResource(R.string.deposit_form_provider_hint),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = providerFieldState,
+                    onLostFocus = onProviderLostFocus,
+                    error = state.providerError,
+                ) {
+                    val clipboard = LocalClipboardManager.current
+
+                    UiIcon(
+                        drawableResId = R.drawable.ic_paste,
+                        size = 20.dp,
+                        onClick = {
+                            clipboard.getText()
+                                ?.toString()
+                                ?.let(onSetProvider)
+                        }
+                    )
+
+                    UiSpacer(size = 8.dp)
                 }
 
-                else -> {
-                    if (depositOption != DepositOption.Leave && depositChain == DepositChain.Thor ||
-                        depositOption == DepositOption.Custom && depositChain == DepositChain.Maya ||
-                        depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
-                    ) {
-                        FormTextFieldCard(
-                            title = stringResource(
-                                R.string.deposit_form_amount_title,
-                                state.balance.asString()
-                            ),
-                            hint = stringResource(R.string.send_amount_currency_hint),
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = tokenAmountFieldState,
-                            onLostFocus = onTokenAmountLostFocus,
-                            error = state.tokenAmountError,
-                        )
-                    }
+                if (depositChain == DepositChain.Maya) {
 
-                    if (depositOption != DepositOption.Custom) {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_node_address_title),
-                            hint = stringResource(R.string.deposit_form_node_address_title),
-                            keyboardType = KeyboardType.Text,
-                            textFieldState = nodeAddressFieldState,
-                            onLostFocus = onNodeAddressLostFocus,
-                            error = state.nodeAddressError,
-                        ) {
-                            val clipboard = LocalClipboardManager.current
+                    FormTextFieldCard(
+                        title = stringResource(R.string.deposit_form_screen_assets),
+                        hint = "Enter Assets",
+                        keyboardType = KeyboardType.Text,
+                        textFieldState = assetsFieldState,
+                        onLostFocus = onAssetsLostFocus,
+                        error = state.assetsError,
+                    )
 
-                            UiIcon(
-                                drawableResId = R.drawable.ic_paste,
-                                size = 20.dp,
-                                onClick = {
-                                    clipboard.getText()
-                                        ?.toString()
-                                        ?.let(onSetNodeAddress)
-                                }
-                            )
-
-                            UiSpacer(size = 8.dp)
-                        }
-                    }
-
-                    if (depositOption in listOf(DepositOption.Bond, DepositOption.Unbond)) {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_provider_title),
-                            hint = stringResource(R.string.deposit_form_provider_hint),
-                            keyboardType = KeyboardType.Text,
-                            textFieldState = providerFieldState,
-                            onLostFocus = onProviderLostFocus,
-                            error = state.providerError,
-                        ) {
-                            val clipboard = LocalClipboardManager.current
-
-                            UiIcon(
-                                drawableResId = R.drawable.ic_paste,
-                                size = 20.dp,
-                                onClick = {
-                                    clipboard.getText()
-                                        ?.toString()
-                                        ?.let(onSetProvider)
-                                }
-                            )
-
-                            UiSpacer(size = 8.dp)
-                        }
-
-                        if (depositChain == DepositChain.Maya) {
-
-                            FormTextFieldCard(
-                                title = stringResource(R.string.deposit_form_screen_assets),
-                                hint = "Enter Assets",
-                                keyboardType = KeyboardType.Text,
-                                textFieldState = assetsFieldState,
-                                onLostFocus = onAssetsLostFocus,
-                                error = state.assetsError,
-                            )
-
-                            FormTextFieldCard(
-                                title = stringResource(R.string.deposit_form_screen_lpunits),
-                                hint = "LP units",
-                                keyboardType = KeyboardType.Number,
-                                textFieldState = lpUnitsFieldState,
-                                onLostFocus = onLpUnitsLostFocus,
-                                error = state.lpUnitsError,
-                            )
-                        }
-                    }
-
-                    if (depositOption == DepositOption.Bond && depositChain == DepositChain.Thor) {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_operator_fee_title),
-                            hint = "0.0",
-                            keyboardType = KeyboardType.Number,
-                            textFieldState = operatorFeeFieldState,
-                            onLostFocus = onOperatorFeeLostFocus,
-                            error = state.operatorFeeError,
-                        )
-                    }
-
-                    if (depositOption == DepositOption.Custom) {
-                        FormTextFieldCard(
-                            title = stringResource(R.string.deposit_form_custom_memo_title),
-                            hint = stringResource(R.string.deposit_form_custom_memo_title),
-                            keyboardType = KeyboardType.Text,
-                            textFieldState = customMemoFieldState,
-                            onLostFocus = onCustomMemoLostFocus,
-                            error = state.customMemoError,
-                        )
-                    }
+                    FormTextFieldCard(
+                        title = stringResource(R.string.deposit_form_screen_lpunits),
+                        hint = "LP units",
+                        keyboardType = KeyboardType.Number,
+                        textFieldState = lpUnitsFieldState,
+                        onLostFocus = onLpUnitsLostFocus,
+                        error = state.lpUnitsError,
+                    )
                 }
+            }
+
+            if (depositOption == DepositOption.Bond && depositChain == DepositChain.Thor) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_operator_fee_title),
+                    hint = "0.0",
+                    keyboardType = KeyboardType.Number,
+                    textFieldState = operatorFeeFieldState,
+                    onLostFocus = onOperatorFeeLostFocus,
+                    error = state.operatorFeeError,
+                )
+            }
+
+            if (depositOption == DepositOption.Custom) {
+                FormTextFieldCard(
+                    title = stringResource(R.string.deposit_form_custom_memo_title),
+                    hint = stringResource(R.string.deposit_form_custom_memo_title),
+                    keyboardType = KeyboardType.Text,
+                    textFieldState = customMemoFieldState,
+                    onLostFocus = onCustomMemoLostFocus,
+                    error = state.customMemoError,
+                )
+
             }
 
             UiSpacer(size = 80.dp)

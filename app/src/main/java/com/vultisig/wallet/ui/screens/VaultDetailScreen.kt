@@ -62,6 +62,10 @@ internal fun VaultDetailScreen(
                 stringResource(R.string.vault_details_screen_vault_part),
                 stringResource(R.string.vault_details_screen_vault_part_desc, state.vaultPart, state.vaultSize),
             )
+            VaultDetailMainScreenItem(
+                stringResource(R.string.vault_details_screen_vault_type),
+                state.libType
+            )
             VaultDetailScreenItem(
                 stringResource(R.string.vault_detail_screen_ecdsa),
                 state.pubKeyECDSA

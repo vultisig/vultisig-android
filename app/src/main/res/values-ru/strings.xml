@@ -269,8 +269,6 @@
     <string name="add_address_title_title">Заголовок</string>
     <string name="add_address_address_title">Адрес</string>
     <string name="add_address_type_hint">Введите здесь</string>
-    <string name="deposit_form_remove_from_pool">Удалить из RUNEPool</string>
-    <string name="deposit_form_add_to_pool">Добавить в пул</string>
     <string name="blowfish_approve">Транзакция проверена Blowfish.</string>
     <string name="join_keysign_invalid_qr">Недействительное содержимое QR-кода</string>
     <string name="join_keysign_failed_to_start">Не удалось присоединиться к keysign</string>
@@ -386,6 +384,7 @@
     <string name="eth_gas_settings_priority_title">Приоритет</string>
     <string name="eth_gas_setting_total_fee_title">Общая сумма (Gwei)</string>
     <string name="vault_details_screen_vault_part">Часть хранилища</string>
+    <string name="vault_details_screen_vault_type">Тип хранилища</string>
     <string name="vault_settings_delete_vault_part">Часть хранилища:</string>
     <string name="vault_password_hint_to_long">Подсказка слишком длинная</string>
     <string name="vault_details_screen_vault_part_desc">Часть %s из %s</string>

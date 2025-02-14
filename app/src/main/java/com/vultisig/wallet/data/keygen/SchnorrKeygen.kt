@@ -18,7 +18,6 @@ import com.silencelaboratories.goschnorr.lib_error.LIB_OK
 import com.silencelaboratories.goschnorr.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
-import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
@@ -34,7 +33,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 class SchnorrKeygen(
-    val vault: Vault,
+    val localPartyId: String,
     val keygenCommittee: List<String>,
     val mediatorURL: String,
     val sessionID: String,
@@ -44,7 +43,7 @@ class SchnorrKeygen(
     private val encryption: Encryption,
     private val sessionApi: SessionApi,
 ) {
-    var messenger: TssMessenger =
+    private var messenger: TssMessenger =
         TssMessenger(
             serverAddress = mediatorURL,
             sessionID = sessionID,
@@ -57,7 +56,6 @@ class SchnorrKeygen(
 
     var keygenDoneIndicator = false
     val keyGenLock = ReentrantLock()
-    val localPartyID: String = vault.localPartyID
     val cache = mutableMapOf<String, Any>()
     var keyshare: DKLSKeyshare? = null
 
@@ -125,8 +123,8 @@ class SchnorrKeygen(
                     break
                 }
                 val receiverString = String(receiverArray, Charsets.UTF_8)
-                Timber.d("sending message from $localPartyID to: $receiverString")
-                messenger.send(localPartyID, receiverString, encodedOutboundMessage)
+                Timber.d("sending message from $localPartyId to: $receiverString")
+                messenger.send(localPartyId, receiverString, encodedOutboundMessage)
             }
         }
     }
@@ -138,7 +136,7 @@ class SchnorrKeygen(
         while (true) {
             try {
                 val msgs = sessionApi
-                    .getTssMessages(mediatorURL, sessionID, localPartyID)
+                    .getTssMessages(mediatorURL, sessionID, localPartyId)
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs)) {
@@ -166,7 +164,7 @@ class SchnorrKeygen(
         }
         val sortedMsgs = msgs.sortedBy { it.sequenceNo }
         for (msg in sortedMsgs) {
-            val key = "$sessionID-$localPartyID-${msg.hash}"
+            val key = "$sessionID-$localPartyId-${msg.hash}"
             if (cache[key] != null) {
                 Timber.d("message with key: $key has been applied before")
                 continue
@@ -195,7 +193,7 @@ class SchnorrKeygen(
     }
 
     suspend fun deleteMessageFromServer(hash: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyID, hash, null)
+        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, null)
     }
 
     suspend fun schnorrKeygenWithRetry(attempt: Int) {
@@ -204,7 +202,7 @@ class SchnorrKeygen(
         try {
             val decodedSetupMsg = setupMessage.toGoSlice()
             val handler = Handle()
-            val localPartyIDArr = localPartyID.toByteArray()
+            val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
             val result = schnorr_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
             if (result != LIB_OK) {

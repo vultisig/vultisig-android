@@ -266,8 +266,6 @@
     <string name="add_address_title_title">Título</string>
     <string name="add_address_address_title">Morada</string>
     <string name="add_address_type_hint">Digite aqui</string>
-    <string name="deposit_form_remove_from_pool">Remover da RUNEPool</string>
-    <string name="deposit_form_add_to_pool">Adicionar ao pool</string>
     <string name="blowfish_approve">Transação verificada pela Blowfish.</string>
     <string name="join_keysign_invalid_qr">Conteúdo de código QR inválido</string>
     <string name="join_keysign_failed_to_start">Falha ao aderir ao keysign</string>
@@ -376,6 +374,7 @@
     <string name="eth_gas_settings_priority_title">Prioridade</string>
     <string name="eth_gas_setting_total_fee_title">Taxa total (Gwei)</string>
     <string name="vault_details_screen_vault_part">Parte do cofre</string>
+    <string name="vault_details_screen_vault_type">Tipo de cofre</string>
     <string name="vault_settings_delete_vault_part">Parte do cofre:</string>
     <string name="vault_password_hint_to_long">A dica é demasiado longa</string>
     <string name="vault_details_screen_vault_part_desc">Parte %s de %s</string>

@@ -3,10 +3,14 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.db.models.FolderOrderEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepository
+import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepositoryImpl
 import com.vultisig.wallet.data.repositories.order.AddressBookOrderRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
+import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
+import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepositoryImpl
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepoImpl
 import dagger.Binds
@@ -202,8 +206,8 @@ internal interface RepositoriesModule {
     @Singleton
     @Binds
     fun bindOnBoardRepository(
-        impl: OnBoardRepositoryImpl,
-    ): OnBoardRepository
+        impl: OnboardingRepositoryImpl,
+    ): OnboardingRepository
 
     @Singleton
     @Binds
@@ -246,5 +250,18 @@ internal interface RepositoriesModule {
     fun bindRefreshQuoteUiRepository(
         impl: RefreshQuoteUiRepositoryImpl
     ): RefreshQuoteUiRepository
+
+    @Binds
+    @Singleton
+    fun bindQrHelperModalRepository(
+        impl: QrHelperModalRepositoryImpl
+    ): QrHelperModalRepository
+
+    @Binds
+    @Singleton
+    fun bindTemporaryVaultRepository(
+        impl: TemporaryVaultRepositoryImpl
+    ): TemporaryVaultRepository
+
 
 }

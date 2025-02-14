@@ -25,6 +25,12 @@
 -dontwarn javax.naming.ldap.LdapName
 -dontwarn javax.naming.ldap.Rdn
 
+# Serializable routes
+-keep class com.vultisig.wallet.ui.navigation.Route { *; }
+-keep class com.vultisig.wallet.ui.navigation.Route$* { *; }
+-keep class com.vultisig.wallet.data.models.TssAction { *; }
+-keep class com.vultisig.wallet.data.models.SigningLibType { *; }
+
 # TrustWallet Core rules
 -keep class wallet.core.jni.** { *; }
 -keep class wallet.core.jni.proto.** { *; }

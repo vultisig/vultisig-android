@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -51,7 +52,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     fun navigateToBackupPasswordScreen() {
         viewModelScope.launch {
-            navigator.navigate(Destination.BackupPassword(vaultId))
+            navigator.route(Route.BackupPassword(vaultId))
         }
     }
 

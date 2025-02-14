@@ -1,6 +1,10 @@
 package com.vultisig.wallet.data.keygen
 
 import kotlin.math.ceil
+import org.bouncycastle.asn1.ASN1EncodableVector
+import org.bouncycastle.asn1.DERSequence
+import org.bouncycastle.asn1.ASN1Integer
+import java.math.BigInteger
 
 object DklsHelper {
     fun getThreshold(input: Int): Long {
@@ -23,31 +27,15 @@ object DklsHelper {
         return byteArray.toByteArray()
     }
 
-    // Function to encode an integer as ASN.1 DER
-    fun encodeASN1Integer(value: ByteArray): ByteArray {
-        val encoded = mutableListOf<Byte>()
-        encoded.add(0x02) // ASN.1 INTEGER tag
-        if (value.first() >= 0x80.toByte()) {
-            encoded.add((value.size + 1).toByte())
-            encoded.add(0x00)
-        } else {
-            encoded.add(value.size.toByte())
-        }
-        encoded.addAll(value.toList())
-        return encoded.toByteArray()
-    }
 
-    // Function to create a DER-encoded ECDSA signature
     fun createDERSignature(r: ByteArray, s: ByteArray): ByteArray {
-        val encodedR = encodeASN1Integer(r)
-        val encodedS = encodeASN1Integer(s)
-
-        val derSignature = mutableListOf<Byte>()
-        derSignature.add(0x30) // ASN.1 SEQUENCE tag
-        derSignature.add((encodedR.size + encodedS.size).toByte())
-        derSignature.addAll(encodedR.toList())
-        derSignature.addAll(encodedS.toList())
-
-        return derSignature.toByteArray()
+        val vector = ASN1EncodableVector()
+        // Ensure R and S are positive and correctly formatted
+        vector.add(ASN1Integer(BigInteger(1,r)))
+        vector.add(ASN1Integer(BigInteger(1,s)))
+        // Create DER sequence
+        val derSequence = DERSequence(vector)
+        return derSequence.encoded
     }
+
 }

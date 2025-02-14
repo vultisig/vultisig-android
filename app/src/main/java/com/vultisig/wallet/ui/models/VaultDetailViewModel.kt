@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -18,12 +19,13 @@ import javax.inject.Inject
 
 
 internal data class VaultDetailUiModel(
-    val name:String = "",
-    val vaultPart:String = "",
-    val vaultSize:String = "",
-    val pubKeyECDSA:String = "",
-    val pubKeyEDDSA:String = "",
-    val deviceList: List<String> = emptyList()
+    val name: String = "",
+    val vaultPart: String = "",
+    val vaultSize: String = "",
+    val pubKeyECDSA: String = "",
+    val pubKeyEDDSA: String = "",
+    val deviceList: List<String> = emptyList(),
+    val libType: String? = "",
 )
 
 @HiltViewModel
@@ -46,6 +48,7 @@ internal class VaultDetailViewModel @Inject constructor(
                     it.copy(
                         name = vault.name,
                         vaultPart = vault.getVaultPart().toString(),
+                        libType = vault.libType.toString(),
                         vaultSize = vault.signers.size.toString(),
                         pubKeyECDSA = vault.pubKeyECDSA,
                         pubKeyEDDSA = vault.pubKeyEDDSA,

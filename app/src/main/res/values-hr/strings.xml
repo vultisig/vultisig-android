@@ -265,8 +265,6 @@
     <string name="add_address_title_title">Titula</string>
     <string name="add_address_address_title">Adresa</string>
     <string name="add_address_type_hint">Upišite ovdje</string>
-    <string name="deposit_form_remove_from_pool">Ukloni iz RUNEPool</string>
-    <string name="deposit_form_add_to_pool">Dodaj u bazen</string>
     <string name="blowfish_approve">Transakciju je potvrdio Blowfish.</string>
     <string name="join_keysign_invalid_qr">Nevažeći sadržaj QR koda</string>
     <string name="join_keysign_failed_to_start">Pridruživanje znaku ključa nije uspjelo</string>
@@ -375,6 +373,7 @@
     <string name="eth_gas_settings_priority_title">Prioritet</string>
     <string name="eth_gas_setting_total_fee_title">Ukupna naknada (Gwei)</string>
     <string name="vault_details_screen_vault_part">Trezorski dio</string>
+    <string name="vault_details_screen_vault_type">Vrsta trezoraا</string>
     <string name="vault_settings_delete_vault_part">Dio trezora:</string>
     <string name="vault_password_hint_to_long">Savjet je predug</string>
     <string name="vault_details_screen_vault_part_desc">Dio %s od %s</string>
