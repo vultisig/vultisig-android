@@ -28,6 +28,9 @@ internal fun Int.asUiText(vararg args: Any): UiText =
 fun Int.asUiText(): UiText =
     StringResource(this)
 
+fun String.asUiText(): UiText =
+    DynamicString(this)
+
 @Composable
 fun UiText.asString(): String {
     val context = LocalContext.current

@@ -135,7 +135,8 @@ internal fun DepositFormScreen(
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 48.dp)
                         .padding(
-                            horizontal = 12.dp, vertical = 16.dp
+                            horizontal = 12.dp,
+                            vertical = 16.dp
                         ),
                 )
             }
@@ -155,7 +156,10 @@ internal fun DepositFormScreen(
                 depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
             ) {
                 FormTextFieldCard(
-                    title = stringResource(R.string.deposit_form_amount_title),
+                    title = stringResource(
+                        R.string.deposit_form_amount_title,
+                        state.balance.asString()
+                    ),
                     hint = stringResource(R.string.send_amount_currency_hint),
                     keyboardType = KeyboardType.Number,
                     textFieldState = tokenAmountFieldState,
