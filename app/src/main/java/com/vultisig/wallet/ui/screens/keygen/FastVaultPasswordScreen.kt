@@ -8,13 +8,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -24,7 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,7 +39,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
@@ -44,6 +49,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -90,6 +96,9 @@ private fun FastVaultPasswordScreen(
     onTogglePasswordVisibilityClick: () -> Unit,
     onToggleConfirmPasswordVisibilityClick: () -> Unit,
 ) {
+    var hintBoxOffset by remember { mutableIntStateOf(0) }
+    val statusBarHeight = WindowInsets.statusBars.getTop(LocalDensity.current)
+
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
@@ -125,9 +134,17 @@ private fun FastVaultPasswordScreen(
             )
             UiSpacer(16.dp)
 
-            Box(
+            Column(
                 modifier = Modifier.fillMaxSize()
             ) {
+                WarningCard(
+                    onShowMoreInfo = onShowMoreInfo,
+                    modifier = Modifier
+                        .onGloballyPositioned { position ->
+                            hintBoxOffset = position.boundsInRoot().bottom.toInt()
+                        }
+                )
+                UiSpacer(24.dp)
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
@@ -161,76 +178,71 @@ private fun FastVaultPasswordScreen(
                             onVisibilityClick = onToggleConfirmPasswordVisibilityClick
                         ),
                         innerState = state.innerState,
-                        footNote = state.errorMessage?.asString(),
+                        footNote = state.errorMessage.asString(),
                         imeAction = ImeAction.Go,
                         onKeyboardAction = {
                             onNextClick()
                         },
                     )
                 }
-
-                WarningCard(
-                    isMoreInfoVisible = state.isMoreInfoVisible,
-                    onShowMoreInfo = onShowMoreInfo,
-                    onHideMoreInfo = onHideMoreInfo,
-                )
             }
         }
-    }
-}
 
-
-@Composable
-private fun WarningCard(
-    isMoreInfoVisible: Boolean,
-    onShowMoreInfo: () -> Unit,
-    onHideMoreInfo: () -> Unit,
-) {
-    val warningColor = Theme.colors.alerts.warning
-    val lightWarningColor = Theme.colors.alerts.warning.copy(alpha = 0.25f)
-    Box {
-        // TODO replace with Banner
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .onGloballyPositioned {
-                    it.size
-                }
-                .background(lightWarningColor)
-                .border(
-                    width = 1.dp,
-                    shape = RoundedCornerShape(12.dp),
-                    color = lightWarningColor
-                )
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        AnimatedVisibility(
+            visible = state.isMoreInfoVisible,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
-            Text(
-                stringResource(R.string.fast_vault_password_screen_warning),
-                style = Theme.brockmann.supplementary.footnote,
-                color = warningColor
-            )
-            UiIcon(
-                R.drawable.alert,
-                size = 16.dp,
-                tint = warningColor,
-                onClick = onShowMoreInfo
-            )
-        }
-
-
-        AnimatedVisibility(isMoreInfoVisible, enter = fadeIn(), exit = fadeOut()) {
             PasswordMoreInfo(
                 text = stringResource(R.string.fast_vault_password_screen_hint),
                 title = stringResource(R.string.fast_vault_password_screen_hint_title),
                 modifier = Modifier
-                    .offset(y = 24.dp)
+                    .padding(horizontal = 24.dp)
+                    .offset {
+                        IntOffset(
+                            x = 0,
+                            y = hintBoxOffset - statusBarHeight
+                        )
+                    }
                     .clickable(onClick = onHideMoreInfo)
             )
         }
+    }
+}
 
+@Composable
+private fun WarningCard(
+    modifier: Modifier,
+    onShowMoreInfo: () -> Unit,
+) {
+    val warningColor = Theme.colors.alerts.warning
+    val lightWarningColor = Theme.colors.alerts.warning.copy(alpha = 0.25f)
+    // TODO replace with Banner
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(lightWarningColor)
+            .border(
+                width = 1.dp,
+                shape = RoundedCornerShape(12.dp),
+                color = lightWarningColor
+            )
+            .padding(16.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            stringResource(R.string.fast_vault_password_screen_warning),
+            style = Theme.brockmann.supplementary.footnote,
+            color = warningColor
+        )
+        UiIcon(
+            R.drawable.alert,
+            size = 16.dp,
+            tint = warningColor,
+            onClick = onShowMoreInfo
+        )
     }
 }
 
@@ -282,7 +294,7 @@ private fun PasswordMoreInfo(
         val lineHeight = 40f
         val spaceBetweenTitleAndHint = 10
         val lines = mutableListOf<String>()
-        val pointerHeight = 100f
+        val pointerHeight = 50f
         val closeIconSize = 16.dp.toPx()
         val cornerRadius = 12.dp.toPx()
         val measurementTitle = textMeasurer.measure(
@@ -326,7 +338,7 @@ private fun PasswordMoreInfo(
             lines.add(currentLine.toString())
             totalHeight += fontSize + lineHeight
         }
-        val startPointerX = size.width - pointerHeight - backgroundPadding
+        val startPointerX = size.width - 2 * pointerHeight - backgroundPadding
 
         val backgroundPath = Path().apply {
             addRoundRect(
@@ -339,8 +351,8 @@ private fun PasswordMoreInfo(
                 )
             )
             moveTo(0f + startPointerX, pointerHeight)
-            lineTo(pointerHeight / 2 + startPointerX, pointerHeight / 2)
-            lineTo(pointerHeight + startPointerX, pointerHeight)
+            lineTo(pointerHeight + startPointerX, 0f)
+            lineTo(2 * pointerHeight + startPointerX, pointerHeight)
             close()
         }
         drawPath(backgroundPath, color = backgroundColor)
@@ -348,9 +360,13 @@ private fun PasswordMoreInfo(
             textMeasurer = textMeasurer,
             text = title,
             style = titleTextStyle,
-            topLeft = Offset(backgroundPadding + startBoxFromX, pointerHeight + backgroundPadding)
+            topLeft = Offset(
+                x = backgroundPadding + startBoxFromX,
+                y = pointerHeight + backgroundPadding
+            )
         )
-        var currentY = backgroundPadding + pointerHeight + titleHeight + spaceBetweenTitleAndHint
+        var currentY =
+            backgroundPadding + pointerHeight + titleHeight + spaceBetweenTitleAndHint
         lines.forEach { line ->
             drawText(
                 textMeasurer = textMeasurer,
