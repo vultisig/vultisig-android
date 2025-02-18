@@ -23,6 +23,10 @@ class MediatorService : Service() {
             Timber.d("startMediatorService: Mediator service started")
         }
 
+        fun stop(context: Context) {
+            val intent = Intent(context, MediatorService::class.java)
+            context.stopService(intent)
+        }
     }
 
     override fun onCreate() {
