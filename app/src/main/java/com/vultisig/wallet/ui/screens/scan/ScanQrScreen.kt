@@ -40,6 +40,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -64,6 +71,7 @@ import com.vultisig.wallet.data.common.JOIN_SEND_ON_ADDRESS_FLOW
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
@@ -181,10 +189,30 @@ internal fun ScanQrScreen(
                 )
                 Image(
                     modifier = Modifier
+                        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                        .drawWithContent {
+                            val colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.5f),
+                                Color.Transparent
+                            )
+                            drawContent()
+                            drawRect(
+                                brush = Brush.verticalGradient(colors),
+                                blendMode = BlendMode.DstIn
+                            )
+                        }
+                        .fillMaxWidth(),
+                    contentScale = ContentScale.FillWidth,
+                    painter = painterResource(id = R.drawable.scan_background),
+                    contentDescription = null,
+                )
+                Image(
+                    modifier = Modifier
                         .align(Alignment.Center)
                         .fillMaxWidth()
                         .padding(40.dp),
-                    painter = painterResource(id = R.drawable.camera_frame),
+                    painter = painterResource(id = R.drawable.vs_camera_frame),
                     contentDescription = null,
                 )
                 Row(
@@ -193,38 +221,31 @@ internal fun ScanQrScreen(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    MultiColorButton(
+                    VsButton(
                         modifier = Modifier
                             .weight(1f)
                             .padding(
                                 horizontal = 12.dp,
                                 vertical = 16.dp,
                             ),
-                        iconSize = 0.dp,
                         onClick = {
                             pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
                         },
                         content = {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
+                            Row {
                                 UiIcon(
                                     modifier = Modifier
-                                        .padding(start = 16.dp),
-                                    size = 35.dp,
-                                    drawableResId = R.drawable.ic_gallery_min,
-                                    tint = Theme.colors.oxfordBlue600Main,
+                                        .padding(end = 16.dp),
+                                    size = 20.dp,
+                                    drawableResId = R.drawable.ic_qr_upload,
+                                    tint = Theme.colors.text.button.dark,
                                 )
                                 Text(
-                                    modifier = Modifier
-                                        .weight(1f),
                                     textAlign = TextAlign.Center,
                                     text = stringResource(id = R.string.scan_qr_upload_from_gallery),
-                                    style = Theme.montserrat.subtitle2,
-                                    color = Theme.colors.oxfordBlue600Main,
+                                    style = Theme.brockmann.button.semibold,
+                                    color = Theme.colors.text.button.dark,
                                 )
-                                UiSpacer(size = 41.dp)
                             }
                         }
                     )

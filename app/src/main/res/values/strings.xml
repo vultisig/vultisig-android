@@ -422,7 +422,7 @@
     <string name="backup_password_screen_hint_field">Enter a hint</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
     <string name="keygen_vultiserver_peer_discovery_waiting">Looking for Vultiserver to connect…</string>
-    <string name="scan_qr_upload_from_gallery">Upload from\nGallery</string>
+    <string name="scan_qr_upload_from_gallery">Upload QR</string>
     <string name="reshare_start_join_reshare_button">Join Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP units is invalid</string>
     <string name="deposit_error_invalid_assets">Assets is invalid</string>
