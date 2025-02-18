@@ -30,6 +30,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -99,16 +100,19 @@ internal fun VsCodeInputField(
                 val isActiveBox = focusedState.value && index == value.length
 
                 val inputBoxShape = RoundedCornerShape(12.dp)
-
+                var inputManager= LocalSoftwareKeyboardController.current
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .size(46.dp)
                         .background(
-                            color = when(state) {
-                                VsCodeInputFieldState.Default -> Theme.colors.backgrounds.secondary
-                                VsCodeInputFieldState.Success -> Theme.colors.backgrounds.success
-                                VsCodeInputFieldState.Error -> Theme.colors.backgrounds.error
+                            color = when {
+                                value.length <= index   ->Theme.colors.backgrounds.secondary
+                                else -> when (state) {
+                                    VsCodeInputFieldState.Default -> Theme.colors.backgrounds.secondary
+                                    VsCodeInputFieldState.Success -> Theme.colors.backgrounds.success
+                                    VsCodeInputFieldState.Error -> Theme.colors.backgrounds.error
+                                }
                             },
                             shape = inputBoxShape,
                         )
@@ -119,6 +123,7 @@ internal fun VsCodeInputField(
                             },
                             color = when {
                                 isActiveBox -> Theme.colors.borders.normal
+                                value.length <= index -> Theme.colors.borders.light
                                 else -> when (state) {
                                     VsCodeInputFieldState.Default -> Theme.colors.borders.light
                                     VsCodeInputFieldState.Success -> Theme.colors.alerts.success
@@ -130,7 +135,10 @@ internal fun VsCodeInputField(
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
-                        ) { focusRequester.requestFocus() },
+                        ) {
+                            focusRequester.requestFocus()
+                            inputManager?.show()
+                        },
                 ) {
                     val displayChar = value.getOrElse(index) { ' ' }
 
