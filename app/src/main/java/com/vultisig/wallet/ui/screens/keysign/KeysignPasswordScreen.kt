@@ -107,6 +107,7 @@ private fun KeysignPasswordScreen(
                     textColor = Theme.colors.oxfordBlue800,
                     iconColor = Theme.colors.turquoise800,
                     textStyle = Theme.montserrat.subtitle1,
+                    coolDownPeriod = 1500L,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
