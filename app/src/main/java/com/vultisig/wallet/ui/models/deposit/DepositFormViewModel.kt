@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositMemo.Bond
@@ -22,6 +23,7 @@ import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.ui.models.deposit.DepositChain.Maya
 import com.vultisig.wallet.ui.models.deposit.DepositChain.Thor
+import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -30,6 +32,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -77,13 +80,14 @@ internal data class DepositFormUiModel(
     val assetsError: UiText? = null,
     val lpUnitsError: UiText? = null,
     val isLoading: Boolean = false,
+    val balance :UiText= UiText.Empty,
 )
 
 @HiltViewModel
 internal class DepositFormViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
-
+    private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val gasFeeRepository: GasFeeRepository,
     private val accountsRepository: AccountsRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
@@ -149,6 +153,20 @@ internal class DepositFormViewModel @Inject constructor(
                 depositOption = depositOption,
                 depositChain = depositChain
             )
+        }
+
+        viewModelScope.launch {
+            accountsRepository.loadAddress(
+                vaultId,
+                chain
+            ).collect { addresses ->
+                    addresses.accounts.firstOrNull { it.token.isNativeToken }?.tokenValue?.let(mapTokenValueToStringWithUnit)
+                        ?.let { tokenValue ->
+                            state.update {
+                                it.copy(balance = tokenValue.asUiText())
+                            }
+                        }
+                }
         }
     }
 

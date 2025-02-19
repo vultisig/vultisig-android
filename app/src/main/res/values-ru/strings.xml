@@ -245,7 +245,7 @@
     <string name="custom_token_enter_contract_address">Введите адрес контракта</string>
     <string name="custom_token_token_not_found">Токен не найден</string>
     <string name="custom_token_add_token">Добавить %1$s токен</string>
-    <string name="deposit_form_amount_title">Количество</string>
+    <string name="deposit_form_amount_title">Сумма (Баланс: %1$s)</string>
     <string name="share_vault_qr_title">Поделиться хранилищем QR</string>
     <string name="share_vault_qr_save" >Сохранить</string>
     <string name="vault_settings_enable_biometrics_save" >Сохранить</string>
