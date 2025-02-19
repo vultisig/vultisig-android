@@ -67,7 +67,9 @@ internal fun Keysign(
         state = state,
         transactionTypeUiModel = wrapperViewModel.transactionUiModel.collectAsState().value,
         txHash = keysignViewModel.txHash.collectAsState().value,
+        approveTransactionHash = keysignViewModel.approveTxHash.collectAsState().value,
         transactionLink = keysignViewModel.txLink.collectAsState().value,
+        approveTransactionLink = keysignViewModel.approveTxLink.collectAsState().value,
         onComplete = onComplete,
         progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
         onBack = {
@@ -80,7 +82,9 @@ internal fun Keysign(
 internal fun KeysignScreen(
     state: KeysignState,
     txHash: String,
+    approveTransactionHash: String,
     transactionLink: String,
+    approveTransactionLink: String,
     onComplete: () -> Unit,
     onBack: () -> Unit = {},
     progressLink: String?,
@@ -105,7 +109,9 @@ internal fun KeysignScreen(
             KeysignState.KeysignFinished -> {
                 TransactionDoneView(
                     transactionHash = txHash,
+                    approveTransactionHash = approveTransactionHash,
                     transactionLink = transactionLink,
+                    approveTransactionLink = approveTransactionLink,
                     onComplete = onComplete,
                     progressLink = progressLink,
                     onBack = onBack,
@@ -156,7 +162,9 @@ private fun KeysignPreview() {
         state = KeysignState.CreatingInstance,
         progressLink = null,
         txHash = "0x1234567890",
+        approveTransactionHash = "0x1234567890",
         transactionLink = "",
+        approveTransactionLink = "",
         transactionTypeUiModel = TransactionTypeUiModel.Send(
             TransactionUiModel(
                 srcAddress = "0x1234567890",

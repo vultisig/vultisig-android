@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
+import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.Vault
@@ -91,7 +92,9 @@ internal class KeysignViewModel(
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
     val txHash = MutableStateFlow("")
+    val approveTxHash = MutableStateFlow("")
     val txLink = MutableStateFlow("")
+    val approveTxLink = MutableStateFlow("")
     val swapProgressLink = MutableStateFlow<String?>(null)
 
     private var tssInstance: ServiceImpl? = null
@@ -316,7 +319,7 @@ internal class KeysignViewModel(
 
         val approvePayload = payload.approvePayload
         if (approvePayload != null) {
-            val signedTransaction = THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
+            val signedApproveTransaction = THORChainSwaps(vault.pubKeyECDSA, vault.hexChainCode)
                 .getSignedApproveTransaction(
                     approvePayload,
                     payload,
@@ -324,7 +327,7 @@ internal class KeysignViewModel(
                 )
 
             val evmApi = evmApiFactory.createEvmApi(payload.coin.chain)
-            evmApi.sendTransaction(signedTransaction.rawTransaction)
+            approveTxHash.value = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
 
             nonceAcc++
         }
@@ -346,6 +349,9 @@ internal class KeysignViewModel(
             this.txHash.value = txHash
             txLink.value = explorerLinkRepository.getTransactionLink(payload.coin.chain, txHash)
             swapProgressLink.value = explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
+        }
+        if(approveTxHash.value.isNotEmpty()) {
+            approveTxLink.value = explorerLinkRepository.getTransactionLink(payload.coin.chain, approveTxHash.value)
         }
     }
 

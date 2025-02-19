@@ -133,7 +133,9 @@ internal fun JoinKeysignView(
                 KeysignScreen(
                     state = kState,
                     txHash = keysignViewModel.txHash.collectAsState().value,
+                    approveTransactionHash = keysignViewModel.approveTxHash.collectAsState().value,
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
+                    approveTransactionLink = keysignViewModel.approveTxLink.collectAsState().value,
                     progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
                     onComplete = {
                         navController.navigate(Destination.Home().route)
