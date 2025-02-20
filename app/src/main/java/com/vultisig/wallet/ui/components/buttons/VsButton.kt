@@ -39,13 +39,11 @@ enum class VsButtonSize {
 @Composable
 fun VsButton(
     modifier: Modifier = Modifier,
-    label: String? = null,
-    iconLeft: Int? = null,
-    iconRight: Int? = null,
     variant: VsButtonVariant = Primary,
     state: VsButtonState = Enabled,
     size: VsButtonSize = Medium,
     onClick: () -> Unit,
+    content: @Composable () -> Unit,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -81,6 +79,27 @@ fun VsButton(
                     )
                 }
             )
+    ) {
+        content()
+    }
+}
+@Composable
+fun VsButton(
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    iconLeft: Int? = null,
+    iconRight: Int? = null,
+    variant: VsButtonVariant = Primary,
+    state: VsButtonState = Enabled,
+    size: VsButtonSize = Medium,
+    onClick: () -> Unit,
+) {
+    VsButton(
+        modifier = modifier,
+        variant = variant,
+        state = state,
+        size = size,
+        onClick = onClick,
     ) {
         val contentColor = when (state) {
             Enabled -> when (variant) {
