@@ -51,7 +51,9 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun TransactionDoneScreen(
     navController: NavController,
     transactionHash: String,
+    approveTransactionHash: String,
     transactionLink: String,
+    approveTransactionLink: String,
     progressLink: String?,
     transactionTypeUiModel: TransactionTypeUiModel,
 ) {
@@ -61,7 +63,9 @@ internal fun TransactionDoneScreen(
     ) {
         TransactionDoneView(
             transactionHash = transactionHash,
+            approveTransactionHash = approveTransactionHash,
             transactionLink = transactionLink,
+            approveTransactionLink = approveTransactionLink,
             onComplete = navController::popBackStack,
             progressLink = progressLink,
             transactionTypeUiModel = transactionTypeUiModel,
@@ -72,7 +76,9 @@ internal fun TransactionDoneScreen(
 @Composable
 internal fun TransactionDoneView(
     transactionHash: String,
+    approveTransactionHash: String,
     transactionLink: String,
+    approveTransactionLink: String,
     onComplete: () -> Unit,
     progressLink: String?,
     onBack: () -> Unit = {},
@@ -96,7 +102,20 @@ internal fun TransactionDoneView(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
-                        TxLinkAndHash(transactionLink, uriHandler, transactionHash)
+                        if (approveTransactionHash.isNotEmpty()) {
+                            TxLinkAndHash(
+                                approveTransactionLink,
+                                uriHandler,
+                                approveTransactionHash,
+                                isApproved = true
+                            )
+                            UiHorizontalDivider()
+                        }
+                        TxLinkAndHash(
+                            transactionLink,
+                            uriHandler,
+                            transactionHash
+                        )
                     }
 
                     when (transactionTypeUiModel) {
@@ -145,17 +164,18 @@ private fun TxLinkAndHash(
     transactionLink: String,
     uriHandler: UriHandler,
     transactionHash: String,
+    isApproved: Boolean = false,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = stringResource(R.string.transaction_done_form_title),
+            text = stringResource(if (isApproved) R.string.transaction_done_form_approve else R.string.transaction_done_form_title),
             color = Theme.colors.neutral0,
             style = Theme.montserrat.heading5,
         )
-
+        
         val clipboard = LocalClipboardManager.current
 
         UiIcon(drawableResId = R.drawable.copy, size = 20.dp, onClick = {
@@ -258,7 +278,6 @@ private fun ColumnScope.SwapTransactionDetail(
 private fun TransactionDetail(transaction: TransactionUiModel?) {
     if (transaction != null) {
 
-        UiSpacer(size = 12.dp)
         UiHorizontalDivider()
 
         AddressField(
@@ -355,7 +374,9 @@ private fun TransactionDoneScreenPreview() {
     TransactionDoneScreen(
         navController = rememberNavController(),
         transactionHash = "0x1234567890",
+        approveTransactionHash = "0x1234567890",
         transactionLink = "",
+        approveTransactionLink = "",
         progressLink = "https://track.ninerealms.com/",
         transactionTypeUiModel = TransactionTypeUiModel.Send(
             TransactionUiModel(

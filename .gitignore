@@ -35,3 +35,4 @@ google-services.json
 app/release/*
 fastlane/metadata/*
 fastlane/report.xml
+/.kotlin/sessions
