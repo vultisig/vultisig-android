@@ -39,6 +39,7 @@ internal fun MultiColorButton(
     textColor: Color? = null,
     modifier: Modifier,
     onClick: () -> Unit,
+    coolDownPeriod: Long = 375L,
     content : (@Composable ()->Unit)? = null,
 ) {
     var innerModifier = modifier
@@ -71,6 +72,7 @@ internal fun MultiColorButton(
                 minHeight = minHeight ?: 44.dp
             )
             .clickOnce(
+                coolDownPeriod =coolDownPeriod ,
                 onClick = onClick,
                 enabled = !disabled && !isLoading,
             )
