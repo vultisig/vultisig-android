@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignUseCase
@@ -116,6 +117,7 @@ internal class KeygenPasswordViewModel @Inject constructor(
 
                 navigator.route(
                     Route.Keygen.PeerDiscovery(
+                        action = TssAction.KEYGEN,
                         vaultName = Uri.encode(name),
                         email = email,
                         password = password,

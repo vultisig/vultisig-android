@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateRandomUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
@@ -106,6 +107,7 @@ internal class NameVaultViewModel @Inject constructor(
                 VaultType.Secure -> {
                     navigator.route(
                         Route.Keygen.PeerDiscovery(
+                            action = TssAction.KEYGEN,
                             vaultName = name,
                         )
                     )
