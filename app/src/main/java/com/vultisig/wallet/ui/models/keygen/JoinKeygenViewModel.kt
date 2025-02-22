@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -156,10 +157,12 @@ internal class JoinKeygenViewModel @Inject constructor(
                             encryptionKeyHex = message.encryptionKeyHex,
                             vaultName = existingVault?.name ?: message.vaultName,
                             libType = message.libType,
-                            localPartyId = Utils.deviceName(context),
+                            localPartyId = existingVault?.localPartyID
+                                ?: Utils.deviceName(context),
                             serverUrl = serverUrl,
                             oldCommittee = message.oldParties,
                             oldResharePrefix = message.oldResharePrefix,
+                            vaultId = existingVault?.id,
                         )
                     }
 
@@ -217,6 +220,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                     delay(1.5.seconds)
 
+
                     navigator.route(
                         Route.Keygen.Generating(
                             action = session.action,
@@ -230,6 +234,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                             libType = session.libType,
                             isInitiatingDevice = false,
 
+                            vaultId = session.vaultId,
                             oldCommittee = session.oldCommittee,
                             oldResharePrefix = session.oldResharePrefix,
 
@@ -264,6 +269,7 @@ internal class JoinKeygenViewModel @Inject constructor(
         val vaultName: String,
         val libType: SigningLibType,
         val localPartyId: String,
+        val vaultId: VaultId? = null,
     )
 
 }

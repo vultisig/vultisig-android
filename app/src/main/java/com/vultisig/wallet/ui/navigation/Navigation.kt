@@ -496,11 +496,15 @@ internal sealed class Route {
 
         @Serializable
         data class PeerDiscovery(
+            val action: TssAction,
             val vaultName: String,
 
             val email: String? = null,
             val password: String? = null,
             val hint: String? = null,
+
+            // reshare
+            val vaultId: VaultId? = null,
         )
 
         @Serializable
@@ -512,11 +516,14 @@ internal sealed class Route {
             val vaultName: String,
             val hexChainCode: String,
             val keygenCommittee: List<String>,
-            val oldCommittee: List<String>,
             val encryptionKeyHex: String,
-            val oldResharePrefix: String,
             val isInitiatingDevice: Boolean,
             val libType: SigningLibType,
+
+            // reshare
+            val vaultId: VaultId? = null,
+            val oldCommittee: List<String>,
+            val oldResharePrefix: String,
 
             val email: String?,
             val password: String?,

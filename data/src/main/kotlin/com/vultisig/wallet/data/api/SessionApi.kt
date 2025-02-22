@@ -9,7 +9,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
@@ -17,7 +16,12 @@ interface SessionApi {
     suspend fun checkCommittee(serverUrl: String, sessionId: String): List<String>
     suspend fun startSession(serverUrl: String, sessionId: String, localPartyId: List<String>)
     suspend fun startWithCommittee(serverUrl: String, sessionId: String, committee: List<String>)
-    suspend fun markLocalPartyComplete(serverUrl: String, sessionId: String, localPartyId: List<String>)
+    suspend fun markLocalPartyComplete(
+        serverUrl: String,
+        sessionId: String,
+        localPartyId: List<String>
+    )
+
     suspend fun getCompletedParties(serverUrl: String, sessionId: String): List<String>
     suspend fun getParticipants(serverUrl: String, sessionId: String): List<String>
     suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message)
@@ -28,6 +32,7 @@ interface SessionApi {
         localPartyId: String,
         messageId: String? = null,
     ): List<Message>
+
     suspend fun deleteTssMessage(
         serverUrl: String,
         sessionId: String,
@@ -36,11 +41,28 @@ interface SessionApi {
         messageId: String?,
     )
 
-    suspend fun markLocalPartyKeysignComplete(serverUrl: String, messageId: String, sig: tss.KeysignResponse)
+    suspend fun markLocalPartyKeysignComplete(
+        serverUrl: String,
+        messageId: String,
+        sig: tss.KeysignResponse
+    )
+
     suspend fun checkKeysignComplete(serverUrl: String, messageId: String): tss.KeysignResponse
 
-    suspend fun getSetupMessage(serverUrl: String, sessionId: String, messageId: String): String
-    suspend fun uploadSetupMessage(serverUrl: String, sessionId: String, message: String,messageId: String)
+    suspend fun getSetupMessage(
+        serverUrl: String,
+        sessionId: String,
+        messageId: String?,
+        messageId2: String? = null
+    ): String
+
+    suspend fun uploadSetupMessage(
+        serverUrl: String,
+        sessionId: String,
+        message: String,
+        messageId: String?,
+        messageId2: String? = null
+    )
 
 }
 
@@ -51,7 +73,7 @@ internal class SessionApiImpl @Inject constructor(
     override suspend fun checkCommittee(
         serverUrl: String,
         sessionId: String,
-    ) : List<String> {
+    ): List<String> {
         return httpClient.get("$serverUrl/start/$sessionId")
             .throwIfUnsuccessful()
             .body<List<String>>()
@@ -62,7 +84,7 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        httpClient.post("$serverUrl/$sessionId"){
+        httpClient.post("$serverUrl/$sessionId") {
             setBody(localPartyId)
         }.throwIfUnsuccessful()
     }
@@ -72,7 +94,7 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         committee: List<String>,
     ) {
-        httpClient.post("$serverUrl/start/$sessionId"){
+        httpClient.post("$serverUrl/start/$sessionId") {
             setBody(committee)
         }.throwIfUnsuccessful()
     }
@@ -82,7 +104,7 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        httpClient.post("$serverUrl/complete/$sessionId"){
+        httpClient.post("$serverUrl/complete/$sessionId") {
             setBody(localPartyId)
         }.throwIfUnsuccessful()
     }
@@ -90,7 +112,7 @@ internal class SessionApiImpl @Inject constructor(
     override suspend fun getCompletedParties(
         serverUrl: String,
         sessionId: String,
-    ) : List<String> {
+    ): List<String> {
         return httpClient.get("$serverUrl/complete/$sessionId")
             .throwIfUnsuccessful()
             .body<List<String>>()
@@ -151,28 +173,53 @@ internal class SessionApiImpl @Inject constructor(
         }.throwIfUnsuccessful()
     }
 
-    override suspend fun checkKeysignComplete(serverUrl: String, messageId: String): tss.KeysignResponse {
+    override suspend fun checkKeysignComplete(
+        serverUrl: String,
+        messageId: String
+    ): tss.KeysignResponse {
         return httpClient.get(serverUrl) {
             header(MESSAGE_ID_HEADER_TITLE, messageId)
         }.throwIfUnsuccessful().body<tss.KeysignResponse>()
     }
 
-    override suspend fun getSetupMessage(serverUrl: String, sessionId: String,messageId: String): String {
-        return httpClient.get("$serverUrl/setup-message/$sessionId"){
-            header(MESSAGE_ID_HEADER_TITLE, messageId)
+    override suspend fun getSetupMessage(
+        serverUrl: String,
+        sessionId: String,
+        messageId: String?,
+        messageId2: String?
+    ): String {
+        return httpClient.get("$serverUrl/setup-message/$sessionId") {
+            if (messageId != null) {
+                header(MESSAGE_ID_HEADER_TITLE, messageId)
+            }
+            if (messageId2 != null) {
+                header(MESSAGE_ID_2_HEADER_TITLE, messageId2)
+            }
         }
             .throwIfUnsuccessful()
             .body()
     }
 
-    override suspend fun uploadSetupMessage(serverUrl: String, sessionId: String, message: String,messageId: String) {
+    override suspend fun uploadSetupMessage(
+        serverUrl: String,
+        sessionId: String,
+        message: String,
+        messageId: String?,
+        messageId2: String?
+    ) {
         httpClient.post("$serverUrl/setup-message/$sessionId") {
-            header(MESSAGE_ID_HEADER_TITLE, messageId)
+            if (messageId != null) {
+                header(MESSAGE_ID_HEADER_TITLE, messageId)
+            }
+            if (messageId2 != null) {
+                header(MESSAGE_ID_2_HEADER_TITLE, messageId2)
+            }
             setBody(message)
         }.throwIfUnsuccessful()
     }
 
     companion object {
         private const val MESSAGE_ID_HEADER_TITLE = "message_id"
+        private const val MESSAGE_ID_2_HEADER_TITLE = "message-id"
     }
 }

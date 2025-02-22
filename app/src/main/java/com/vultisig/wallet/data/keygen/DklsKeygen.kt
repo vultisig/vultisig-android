@@ -5,7 +5,6 @@ package com.vultisig.wallet.data.keygen
 import com.silencelaboratories.godkls.BufferUtilJNI
 import com.silencelaboratories.godkls.Handle
 import com.silencelaboratories.godkls.go_slice
-import com.silencelaboratories.godkls.godkls
 import com.silencelaboratories.godkls.godkls.dkls_keygen_session_finish
 import com.silencelaboratories.godkls.godkls.dkls_keygen_session_from_setup
 import com.silencelaboratories.godkls.godkls.dkls_keygen_session_input_message
@@ -13,14 +12,23 @@ import com.silencelaboratories.godkls.godkls.dkls_keygen_session_message_receive
 import com.silencelaboratories.godkls.godkls.dkls_keygen_session_output_message
 import com.silencelaboratories.godkls.godkls.dkls_keygen_setupmsg_new
 import com.silencelaboratories.godkls.godkls.dkls_keyshare_chaincode
-import com.silencelaboratories.godkls.godkls.dkls_keyshare_free
+import com.silencelaboratories.godkls.godkls.dkls_keyshare_from_bytes
 import com.silencelaboratories.godkls.godkls.dkls_keyshare_public_key
 import com.silencelaboratories.godkls.godkls.dkls_keyshare_to_bytes
+import com.silencelaboratories.godkls.godkls.dkls_qc_session_finish
+import com.silencelaboratories.godkls.godkls.dkls_qc_session_from_setup
+import com.silencelaboratories.godkls.godkls.dkls_qc_session_input_message
+import com.silencelaboratories.godkls.godkls.dkls_qc_session_message_receiver
+import com.silencelaboratories.godkls.godkls.dkls_qc_session_output_message
+import com.silencelaboratories.godkls.godkls.dkls_qc_setupmsg_new
+import com.silencelaboratories.godkls.godkls.tss_buffer_free
 import com.silencelaboratories.godkls.lib_error
 import com.silencelaboratories.godkls.lib_error.LIB_OK
 import com.silencelaboratories.godkls.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
+import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
@@ -47,6 +55,9 @@ class DKLSKeygen(
     val sessionID: String,
     val encryptionKeyHex: String,
     val isInitiateDevice: Boolean,
+    val action: TssAction,
+    val oldCommittee: List<String>,
+    val vault: Vault,
 
     private val encryption: Encryption,
     private val sessionApi: SessionApi,
@@ -83,21 +94,25 @@ class DKLSKeygen(
             setupMessage = BufferUtilJNI.get_bytes_from_tss_buffer(buf)
             return setupMessage
         } finally {
-            godkls.tss_buffer_free(buf)
+            tss_buffer_free(buf)
         }
     }
 
     fun getDKLSOutboundMessage(handle: Handle): Pair<lib_error, ByteArray> {
         val buf = tss_buffer()
         try {
-            val result = dkls_keygen_session_output_message(handle, buf)
+            val result = when (action) {
+                TssAction.KEYGEN -> dkls_keygen_session_output_message(handle, buf)
+                TssAction.ReShare -> dkls_qc_session_output_message(handle, buf)
+            }
+
             if (result != LIB_OK) {
                 Timber.d("fail to get outbound message: $result")
                 return Pair(result, byteArrayOf())
             }
             return Pair(result, BufferUtilJNI.get_bytes_from_tss_buffer(buf))
         } finally {
-            godkls.tss_buffer_free(buf)
+            tss_buffer_free(buf)
         }
     }
 
@@ -122,15 +137,18 @@ class DKLSKeygen(
     fun getOutboundMessageReceiver(handle: Handle, message: go_slice, idx: Long): ByteArray {
         val bufReceiver = tss_buffer()
         try {
-            val receiverResult =
-                dkls_keygen_session_message_receiver(handle, message, idx, bufReceiver)
+            val receiverResult = when (action) {
+                TssAction.KEYGEN -> dkls_keygen_session_message_receiver(handle, message, idx, bufReceiver)
+                TssAction.ReShare -> dkls_qc_session_message_receiver(handle, message, idx, bufReceiver)
+            }
+
             if (receiverResult != LIB_OK) {
                 Timber.d("fail to get receiver message, error: $receiverResult")
                 return byteArrayOf()
             }
             return BufferUtilJNI.get_bytes_from_tss_buffer(bufReceiver)
         } finally {
-            godkls.tss_buffer_free(bufReceiver)
+            tss_buffer_free(bufReceiver)
         }
     }
 
@@ -140,7 +158,7 @@ class DKLSKeygen(
         while (true) {
             val (result, outboundMessage) = getDKLSOutboundMessage(handle)
             if (result != LIB_OK) {
-                Timber.d("fail to get outbound message, $result")
+                Timber.d("pdom fail to get outbound message, $result")
             }
             if (outboundMessage.isEmpty()) {
                 if (isKeygenDone()) {
@@ -151,15 +169,14 @@ class DKLSKeygen(
                 continue
             }
 
-            val message = go_slice()
-            BufferUtilJNI.set_bytes_on_go_slice(message, outboundMessage)
+            val message = outboundMessage.toGoSlice()
             val encodedOutboundMessage = Base64.Default.encode(outboundMessage)
             for (i in keygenCommittee.indices) {
                 val receiverArray = getOutboundMessageReceiver(handle, message, i.toLong())
                 if (receiverArray.isEmpty()) {
                     break
                 }
-                val receiverString = String(receiverArray, Charsets.UTF_8)
+                val receiverString = receiverArray.toString(Charsets.UTF_8)
                 Timber.d("sending message from ${this.localPartyId} to: $receiverString")
 
                 messenger.send(this.localPartyId, receiverString, encodedOutboundMessage)
@@ -220,7 +237,11 @@ class DKLSKeygen(
 
             val isFinished = intArrayOf(0)
 
-            val result = dkls_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
+            val result = when (action) {
+                TssAction.KEYGEN -> dkls_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
+                TssAction.ReShare -> dkls_qc_session_input_message(handle, decryptedBodySlice, isFinished)
+            }
+
             if (result != LIB_OK) {
                 error("fail to apply message to dkls, $result")
             }
@@ -306,7 +327,7 @@ class DKLSKeygen(
                 )
                 Timber.d("publicKeyECDSA: ${publicKeyECDSA.toHexString()}")
                 Timber.d("chaincode: ${chainCodeBytes.toHexString()}")
-                dkls_keyshare_free(keyshareHandler)
+                // dkls_keyshare_free(keyshareHandler)
             }
         } catch (e: Exception) {
             Timber.d("Failed to generate key, error: ${e.localizedMessage}")
@@ -315,6 +336,154 @@ class DKLSKeygen(
             if (attempt < 3) {
                 Timber.d("keygen/reshare retry, attempt: $attempt")
                 dklsKeygenWithRetry(attempt + 1)
+            } else {
+                throw e
+            }
+        }
+    }
+
+    fun processReshareCommittee(
+        oldCommittee: List<String>,
+        newCommittee: List<String>,
+    ): Triple<List<String>, List<Byte>, List<Byte>> {
+        val allParties = oldCommittee.toMutableList()
+        val oldPartiesIdx = mutableListOf<Byte>()
+        val newPartiesIdx = mutableListOf<Byte>()
+
+        for (item in newCommittee) {
+            if (!allParties.contains(item)) {
+                allParties.add(item)
+            }
+        }
+
+        for ((idx, item) in allParties.withIndex()) {
+            if (oldCommittee.contains(item)) {
+                oldPartiesIdx.add(idx.toByte())
+            }
+            if (newCommittee.contains(item)) {
+                newPartiesIdx.add(idx.toByte())
+            }
+        }
+        return Triple(allParties, newPartiesIdx, oldPartiesIdx)
+    }
+
+    fun getKeyshareString(): String? {
+        for (ks in vault.keyshares) {
+            if (ks.pubKey == vault.pubKeyECDSA) {
+                return ks.keyShare
+            }
+        }
+        return null
+    }
+
+    @Throws(Exception::class)
+    fun getKeyshareBytesFromVault(): ByteArray {
+        val localKeyshare = getKeyshareString() ?: throw RuntimeException("fail to get local keyshare")
+        return Base64.Default.decode(localKeyshare)
+    }
+
+    @Throws(Exception::class)
+    private fun getDklsReshareSetupMessage(keyshareHandle: Handle): ByteArray {
+        val buf = tss_buffer()
+        return try {
+            val threshold = DklsHelper.getThreshold(keygenCommittee.size)
+            val (allParties, newPartiesIdx, oldPartiesIdx) = processReshareCommittee(oldCommittee, keygenCommittee)
+            val byteArray = DklsHelper.arrayToBytes(allParties)
+            val ids = byteArray.toGoSlice()
+            val newPartiesIdxSlice = newPartiesIdx.toByteArray().toGoSlice()
+            val oldPartiesIdxSlice = oldPartiesIdx.toByteArray().toGoSlice()
+            val result = dkls_qc_setupmsg_new(keyshareHandle, ids, oldPartiesIdxSlice, threshold, newPartiesIdxSlice, buf)
+            if (result != LIB_OK) {
+                throw RuntimeException("fail to get qc setup message, $result")
+            }
+            BufferUtilJNI.get_bytes_from_tss_buffer(buf)
+        } finally {
+            tss_buffer_free(buf)
+        }
+    }
+
+    suspend fun DKLSReshareWithRetry(attempt: Int) {
+        setKeygenDone(false)
+        var task: Job? = null
+        try {
+            val keyshareHandle = Handle()
+            if (vault.pubKeyECDSA.isNotEmpty()) {
+                val keyshare = getKeyshareBytesFromVault()
+                val keyshareSlice = keyshare.toGoSlice()
+                val result = dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
+                if (result != LIB_OK) {
+                    throw RuntimeException("fail to get keyshare, $result")
+                }
+            }
+
+            val reshareSetupMsg: ByteArray
+            if (isInitiateDevice) {
+                reshareSetupMsg = getDklsReshareSetupMessage(keyshareHandle)
+
+                sessionApi.uploadSetupMessage(
+                    serverUrl = mediatorURL,
+                    sessionId = sessionID,
+                    message = Base64.encode(
+                        encryption.encrypt(
+                            Base64.encodeToByteArray(reshareSetupMsg),
+                            Numeric.hexStringToByteArray(encryptionKeyHex)
+                        )
+                    ),
+                    messageId = null
+                )
+            } else {
+                reshareSetupMsg = sessionApi.getSetupMessage(mediatorURL, sessionID, null)
+                    .let {
+                        encryption.decrypt(
+                            Base64.Default.decode(it),
+                            Numeric.hexStringToByteArray(encryptionKeyHex)
+                        )!!
+                    }.let {
+                        Base64.decode(it)
+                    }
+            }
+
+            val decodedSetupMsg = reshareSetupMsg.toGoSlice()
+            val handler = Handle()
+            val localPartyIDArr = localPartyId.toByteArray()
+            val localPartySlice = localPartyIDArr.toGoSlice()
+
+            val result = dkls_qc_session_from_setup(decodedSetupMsg, localPartySlice, keyshareHandle, handler)
+            if (result != LIB_OK) {
+                throw RuntimeException("fail to create session from reshare setup message, error: $result")
+            }
+
+            task = CoroutineScope(Dispatchers.IO).launch {
+                processDKLSOutboundMessage(handler)
+            }
+            val isFinished = pullInboundMessages(handler)
+            if (isFinished) {
+                setKeygenDone(true)
+                task.cancel()
+                val newKeyshareHandler = Handle()
+                val keyShareResult = dkls_qc_session_finish(handler, newKeyshareHandler)
+                if (keyShareResult != LIB_OK) {
+                    throw RuntimeException("fail to get new keyshare, $keyShareResult")
+                }
+                val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
+                val publicKeyECDSA = getPublicKeyBytes(newKeyshareHandler)
+                val chainCodeBytes = getChainCode(newKeyshareHandler)
+                keyshare = DKLSKeyshare(
+                    pubKey = publicKeyECDSA.toHexString(),
+                    keyshare = Base64.Default.encode(keyshareBytes),
+                    chaincode = chainCodeBytes.toHexString()
+                )
+                Timber.d("reshare ECDSA key successfully")
+                Timber.d("publicKeyECDSA: ${publicKeyECDSA.toHexString()}")
+                Timber.d("chaincode: ${chainCodeBytes.toHexString()}")
+            }
+        } catch (e: Exception) {
+            Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
+            setKeygenDone(true)
+            task?.cancel()
+            if (attempt < 3) {
+                Timber.d("keygen/reshare retry, attempt: $attempt")
+                DKLSReshareWithRetry(attempt + 1)
             } else {
                 throw e
             }
@@ -350,7 +519,7 @@ class DKLSKeygen(
             }
             return BufferUtilJNI.get_bytes_from_tss_buffer(buf)
         } finally {
-            godkls.tss_buffer_free(buf)
+            tss_buffer_free(buf)
         }
     }
 

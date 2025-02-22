@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.TempVaultDto
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.tss.LocalStateAccessor
@@ -77,6 +78,7 @@ internal class KeygenViewModel @Inject constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val temporaryVaultRepository: TemporaryVaultRepository,
+    private val vaultRepository: VaultRepository,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     private val featureFlagApi: FeatureFlagApi,
@@ -87,7 +89,7 @@ internal class KeygenViewModel @Inject constructor(
     private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
 
     private val vault = Vault(
-        id = Uuid.random().toHexString(),
+        id = args.vaultId ?: Uuid.random().toHexString(),
         name = args.vaultName,
         hexChainCode = args.hexChainCode,
         localPartyID = args.localPartyId,
@@ -120,6 +122,10 @@ internal class KeygenViewModel @Inject constructor(
         isInitiateDevice = isInitiatingDevice,
         encryption = encryption,
         sessionApi = sessionApi,
+
+        action = action,
+        oldCommittee = oldCommittee,
+        vault = vault,
     )
 
     init {
@@ -133,6 +139,15 @@ internal class KeygenViewModel @Inject constructor(
     private fun generateKey() {
         viewModelScope.launch {
             updateStep(KeygenState.CreatingInstance)
+
+            args.vaultId?.let { vaultId ->
+                val cachedVault = vaultRepository.get(vaultId)
+                if (cachedVault != null) {
+                    vault.pubKeyECDSA = cachedVault.pubKeyECDSA
+                    vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
+                    vault.keyshares = cachedVault.keyshares
+                }
+            }
 
             state.update { it.copy(error = null) }
 
@@ -169,23 +184,33 @@ internal class KeygenViewModel @Inject constructor(
 
         updateStep(KeygenState.KeygenECDSA)
 
-        dklsKeygen.dklsKeygenWithRetry(0)
+        when (action) {
+            TssAction.KEYGEN -> dklsKeygen.dklsKeygenWithRetry(0)
+            TssAction.ReShare -> dklsKeygen.DKLSReshareWithRetry(0)
+        }
 
         updateStep(KeygenState.KeygenEdDSA)
 
         val schnorr = SchnorrKeygen(
             localPartyId = vault.localPartyID,
             keygenCommittee = keygenCommittee,
+            vault = vault,
+            oldCommittee = oldCommittee,
             mediatorURL = serverUrl,
             sessionID = sessionId,
             encryptionKeyHex = encryptionKeyHex,
+            action = action,
 
             encryption = encryption,
             sessionApi = sessionApi,
             setupMessage = dklsKeygen.setupMessage,
+            isInitiatingDevice = isInitiatingDevice
         )
 
-        schnorr.schnorrKeygenWithRetry(0)
+        when (action) {
+            TssAction.KEYGEN -> schnorr.schnorrKeygenWithRetry(0)
+            TssAction.ReShare -> schnorr.schnorrReshareWithRetry(0)
+        }
 
         val keyshareEcdsa = dklsKeygen.keyshare!!
         val keyshareEddsa = schnorr.keyshare!!

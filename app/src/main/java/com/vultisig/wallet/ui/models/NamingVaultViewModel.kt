@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateRandomUniqueName
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
@@ -105,6 +106,7 @@ internal class NamingVaultViewModel @Inject constructor(
                 else -> {
                     navigator.route(
                         Route.Keygen.PeerDiscovery(
+                            action = TssAction.KEYGEN,
                             vaultName = name,
                         )
                     )

@@ -102,6 +102,9 @@ internal class GeneratingKeyViewModel(
         isInitiateDevice = isInitiatingDevice,
         encryption = encryption,
         sessionApi = sessionApi,
+        action = action,
+        oldCommittee = oldCommittee,
+        vault = vault,
     )
 
 
@@ -137,7 +140,10 @@ internal class GeneratingKeyViewModel(
 
         state.value = KeygenState.KeygenECDSA
 
-        dklsKeygen.dklsKeygenWithRetry(0)
+        when (action) {
+            TssAction.KEYGEN -> dklsKeygen.dklsKeygenWithRetry(0)
+            TssAction.ReShare -> dklsKeygen.DKLSReshareWithRetry(0)
+        }
 
         state.value = KeygenState.KeygenEdDSA
 
@@ -151,9 +157,17 @@ internal class GeneratingKeyViewModel(
             encryption = encryption,
             sessionApi = sessionApi,
             setupMessage = dklsKeygen.setupMessage,
+
+            action = action,
+            vault = vault,
+            oldCommittee = oldCommittee,
+            isInitiatingDevice = isInitiatingDevice,
         )
 
-        schnorr.schnorrKeygenWithRetry(0)
+        when (action) {
+            TssAction.KEYGEN -> schnorr.schnorrKeygenWithRetry(0)
+            TssAction.ReShare -> schnorr.schnorrReshareWithRetry(0)
+        }
 
         val keyshareEcdsa = dklsKeygen.keyshare!!
         val keyshareEddsa = schnorr.keyshare!!
