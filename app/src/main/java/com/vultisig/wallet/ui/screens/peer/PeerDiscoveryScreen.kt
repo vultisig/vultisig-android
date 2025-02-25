@@ -171,7 +171,6 @@ private fun PeerDiscoveryScreen(
                     modifier = Modifier
                         .padding(
                             vertical = 36.dp,
-                            horizontal = 46.dp,
                         )
                         .fillMaxWidth(),
                     devicesSize = devicesSize,
