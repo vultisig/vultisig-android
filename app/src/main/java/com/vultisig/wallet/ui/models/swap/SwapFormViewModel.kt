@@ -809,20 +809,14 @@ internal class SwapFormViewModel @Inject constructor(
                                 }
                             }
 
-                            SwapProvider.LIFI, SwapProvider.JUPITER -> {
-                                val quote =
-                                    if (provider == SwapProvider.LIFI) swapQuoteRepository.getLiFiSwapQuote(
-                                        srcAddress = src.address.address,
-                                        dstAddress = dst.address.address,
-                                        srcToken = srcToken,
-                                        dstToken = dstToken,
-                                        tokenValue = tokenValue,
-                                    ) else swapQuoteRepository.getJupiterSwapQuote(
-                                        srcAddress = src.address.address,
-                                        srcToken = srcToken,
-                                        dstToken = dstToken,
-                                        tokenValue = tokenValue
-                                    )
+                            SwapProvider.LIFI -> {
+                                val quote = swapQuoteRepository.getLiFiSwapQuote(
+                                    srcAddress = src.address.address,
+                                    dstAddress = dst.address.address,
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                )
 
                                 val expectedDstValue = TokenValue(
                                     value = quote.dstAmount.toBigInteger(),
@@ -854,11 +848,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                                 uiState.update {
                                     it.copy(
-                                        provider = if (provider == SwapProvider.LIFI) {
-                                            R.string.swap_for_provider_li_fi.asUiText()
-                                        } else {
-                                            R.string.swap_for_provider_jupiter.asUiText()
-                                        },
+                                        provider = R.string.swap_for_provider_li_fi.asUiText(),
                                         srcFiatValue = srcFiatValueText,
                                         estimatedDstTokenValue = estimatedDstTokenValue,
                                         estimatedDstFiatValue = fiatValueToString.map(

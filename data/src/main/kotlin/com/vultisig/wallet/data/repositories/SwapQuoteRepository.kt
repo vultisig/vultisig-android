@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.api.JupiterApi
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.OneInchApi
@@ -54,12 +53,6 @@ interface SwapQuoteRepository {
         tokenValue: TokenValue,
     ): OneInchSwapQuoteJson
 
-    suspend fun getJupiterSwapQuote(
-        srcAddress: String,
-        srcToken: Coin,
-        dstToken: Coin,
-        tokenValue: TokenValue,
-    ): OneInchSwapQuoteJson
 
     fun resolveProvider(
         srcToken: Coin,
@@ -73,7 +66,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
     private val mayaChainApi: MayaChainApi,
     private val oneInchApi: OneInchApi,
     private val liFiChainApi: LiFiChainApi,
-    private val jupiterApi: JupiterApi,
 ) : SwapQuoteRepository {
 
     override suspend fun getOneInchSwapQuote(
@@ -256,52 +248,6 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getJupiterSwapQuote(
-        srcAddress: String,
-        srcToken: Coin,
-        dstToken: Coin,
-        tokenValue: TokenValue,
-    ): OneInchSwapQuoteJson {
-
-        val fromToken =
-            srcToken.contractAddress.ifEmpty { SOLANA_DEFAULT_CONTRACT_ADDRESS }
-
-        val toToken =
-            dstToken.contractAddress.ifEmpty { SOLANA_DEFAULT_CONTRACT_ADDRESS }
-
-        val jupiterQuote = try {
-            jupiterApi.getSwapQuote(
-                fromToken = fromToken,
-                toToken = toToken,
-                fromAmount = tokenValue.value.toString(),
-                fromAddress = srcAddress,
-            )
-        } catch (e: Exception) {
-            throw SwapException.handleSwapException(e.message ?: "Unknown error")
-        }
-
-        val swapFee = jupiterQuote.routePlan
-            .firstOrNull { it.swapInfo.feeMint == fromToken }?.let {
-                it.swapInfo.feeAmount
-            } ?: "0"
-
-
-        return OneInchSwapQuoteJson(
-            dstAmount = jupiterQuote.dstAmount,
-            tx = OneInchSwapTxJson(
-                from = "",
-                to = "",
-                data = jupiterQuote.swapTransaction.data,
-                gas = 0,
-                value = "0",
-                gasPrice = "0",
-                swapFee = swapFee,
-            )
-        )
-    }
-
-
-
     private val Coin.streamingInterval: String
         get() = when (chain) {
             Chain.MayaChain -> "3"
@@ -457,7 +403,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
             ) else setOf(SwapProvider.LIFI)
 
             Chain.Blast, Chain.CronosChain-> setOf(SwapProvider.LIFI)
-            Chain.Solana -> setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
+            Chain.Solana -> setOf(SwapProvider.LIFI)
 
             Chain.Polkadot, Chain.Dydx, Chain.Sui, Chain.Ton, Chain.Osmosis,
             Chain.Terra, Chain.TerraClassic, Chain.Noble, Chain.Ripple, Chain.Akash, Chain.Tron-> emptySet()

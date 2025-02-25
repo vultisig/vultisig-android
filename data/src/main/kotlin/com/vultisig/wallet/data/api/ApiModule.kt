@@ -136,12 +136,6 @@ internal interface ApiModule {
 
     @Binds
     @Singleton
-    fun bindJupiterApi(
-        impl: JupiterApiImpl,
-    ): JupiterApi
-
-    @Binds
-    @Singleton
     fun bindTronApi(
         impl: TronApiImpl,
     ): TronApi
