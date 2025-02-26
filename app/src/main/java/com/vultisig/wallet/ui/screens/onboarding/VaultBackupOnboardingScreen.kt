@@ -63,7 +63,27 @@ private fun VaultBackupOnboardingScreen(
             paddingValues = paddingValues,
             riveAnimation = when (state.vaultType) {
                 Route.VaultInfo.VaultType.Fast -> R.raw.riv_fastvault_overview
-                Route.VaultInfo.VaultType.Secure -> R.raw.riv_securevault_overview
+                Route.VaultInfo.VaultType.Secure -> when {
+                    state.vaultShares < 2 -> R.raw.riv_securevault_overview
+                    state.vaultShares == 3 -> {
+                        when (state.deviceIndex) {
+                            1 -> R.raw.riv_2of3_securevault_overview_device2
+                            2 -> R.raw.riv_2of3_securevault_overview_device3
+                            else -> R.raw.riv_2of3_securevault_overview
+                        }
+                    }
+                    state.vaultShares == 4 -> {
+                        when (state.deviceIndex) {
+                            1 -> R.raw.riv_3of4_securevault_overview_device2
+                            2 -> R.raw.riv_3of4_securevault_overview_device3
+                            3 -> R.raw.riv_3of4_securevault_overview_device3
+                            else -> R.raw.riv_3of4_securevault_overview
+                        }
+                    }
+                    else -> {
+                        R.raw.riv_5plus_securevault_overview
+                    }
+                }
             },
             nextClick = onNextClick,
             textDescription = { index ->

@@ -17,6 +17,7 @@ import javax.inject.Inject
 
 internal data class VaultBackupOnboardingUiModel(
     val vaultType: Route.VaultInfo.VaultType,
+    val deviceIndex: Int = 0,
     val currentPage: OnboardingPage,
     val pageIndex: Int,
     val pageTotal: Int,
@@ -35,8 +36,13 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            vaultRepository.get(vaultId).let { vault ->
-                state.update { it.copy(vaultShares = vault?.signers?.size?: 0) }
+            vaultRepository.get(vaultId)?.let { vault ->
+                state.update {
+                    it.copy(
+                        deviceIndex = vault.signers.indexOf(vault.localPartyID),
+                        vaultShares = vault.signers.size,
+                    )
+                }
             }
         }
     }
