@@ -42,7 +42,6 @@ internal fun ReshareStartScreen(
 
     ReshareStartScreen(
         onStartClick = model::start,
-        onStartWithServerClick = model::startWithServer,
         onJoinClick = model::join,
         navController = navController,
     )
@@ -52,7 +51,6 @@ internal fun ReshareStartScreen(
 private fun ReshareStartScreen(
     navController: NavController,
     onStartClick: () -> Unit,
-    onStartWithServerClick: () -> Unit,
     onJoinClick: () -> Unit,
 ) {
     Scaffold(
@@ -171,7 +169,6 @@ private fun ReshareStartScreen(
 private fun PreviewReshareScreen() {
     ReshareStartScreen(
         onStartClick = {},
-        onStartWithServerClick = {},
         onJoinClick = {},
         navController = rememberNavController(),
     )

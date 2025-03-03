@@ -30,9 +30,11 @@ import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
+import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.CompressQrUseCase
 import com.vultisig.wallet.data.usecases.CreateQrCodeSharingBitmapUseCase
@@ -114,6 +116,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     private val secretSettingsRepository: SecretSettingsRepository,
     private val vultiSignerRepository: VultiSignerRepository,
     private val qrHelperModalRepository: QrHelperModalRepository,
+    private val vaultRepository: VaultRepository,
 
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
@@ -126,12 +129,15 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     private val sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
 
-    private val hexChainCode: String = Utils.encryptionKeyHex
     private val encryptionKeyHex = Utils.encryptionKeyHex
-    private val localPartyId = Utils.deviceName(context)
 
+    private var hexChainCode: String = Utils.encryptionKeyHex
+    private var localPartyId = Utils.deviceName(context)
     private val vaultName: String = params.vaultName
     private var libType = SigningLibType.GG20
+    private var pubKeyEcdsa = ""
+    private var signers: List<String> = emptyList()
+    private var resharePrefix: String = ""
 
     // fast vault data
     private val email = params.email
@@ -215,10 +221,13 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     fun next() {
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
+            val existingVault = params.vaultId?.let {
+                vaultRepository.get(it)
+            }
+
             navigator.route(
                 Route.Keygen.Generating(
-                    // TODO change to reshare when reshare is added
-                    action = TssAction.KEYGEN,
+                    action = params.action,
                     sessionId = sessionId,
                     serverUrl = serverUrl,
                     localPartyId = localPartyId,
@@ -233,10 +242,11 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     password = password,
                     hint = params.hint,
 
-                    // TODO vault.signers.filter { uiState.value.selection.contains(it) }
-                    //  maybe we can do it in keygen view model
-                    oldCommittee = emptyList(),
-                    oldResharePrefix = "",//oldResharePrefix,
+                    vaultId = params.vaultId,
+                    oldCommittee = existingVault?.signers
+                        ?.filter { state.value.selectedDevices.contains(it) || it == localPartyId }
+                        ?: emptyList(),
+                    oldResharePrefix = existingVault?.resharePrefix ?: "",
                 ),
                 opts = NavigationOptions(
                     popUpToRoute = Route.Keygen.PeerDiscovery::class,
@@ -249,6 +259,19 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     private fun loadData() {
         viewModelScope.launch {
             setupLibType()
+
+            val existingVault = params.vaultId?.let {
+                vaultRepository.get(it)
+            }
+
+            if (existingVault != null) {
+                libType = existingVault.libType
+                hexChainCode = existingVault.hexChainCode
+                localPartyId = existingVault.localPartyID
+                pubKeyEcdsa = existingVault.pubKeyECDSA
+                resharePrefix = existingVault.resharePrefix
+                signers = existingVault.signers
+            }
 
             state.update { it.copy(error = null) }
 
@@ -382,20 +405,41 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
     private fun createKeygenPayload(
         isRelayEnabled: Boolean,
-    ) = "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
-            compressQr(
-                protoBuf.encodeToByteArray(
-                    KeygenMessageProto(
-                        sessionId = sessionId,
-                        hexChainCode = hexChainCode,
-                        serviceName = serviceName,
-                        encryptionKeyHex = encryptionKeyHex,
-                        useVultisigRelay = isRelayEnabled,
-                        vaultName = vaultName,
-                        libType = libType.toProto(),
-                    )
-                )
-            ).encodeBase64()
+    ) = when (params.action) {
+        TssAction.KEYGEN ->
+            "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
+                    compressQr(
+                        protoBuf.encodeToByteArray(
+                            KeygenMessageProto(
+                                sessionId = sessionId,
+                                hexChainCode = hexChainCode,
+                                serviceName = serviceName,
+                                encryptionKeyHex = encryptionKeyHex,
+                                useVultisigRelay = isRelayEnabled,
+                                vaultName = vaultName,
+                                libType = libType.toProto(),
+                            )
+                        )
+                    ).encodeBase64()
+        TssAction.ReShare ->
+            "https://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" +
+                    compressQr(
+                        protoBuf.encodeToByteArray(
+                            ReshareMessageProto(
+                                sessionId = sessionId,
+                                hexChainCode = hexChainCode,
+                                serviceName = serviceName,
+                                publicKeyEcdsa = pubKeyEcdsa,
+                                oldParties = signers,
+                                encryptionKeyHex = encryptionKeyHex,
+                                useVultisigRelay = isRelayEnabled,
+                                oldResharePrefix = resharePrefix,
+                                vaultName = params.vaultName,
+                                libType = libType.toProto(),
+                            )
+                        )
+                    ).encodeBase64()
+    }
 
     private suspend fun requestVultiServerConnection() {
         if (email != null && password != null) {
@@ -458,7 +502,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         repeat(3) { attempt ->
             try {
                 delay(1000)
-                if (isSessionStarted().not() )
+                if (isSessionStarted().not())
                     sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
                 return
             } catch (e: Exception) {
@@ -480,14 +524,15 @@ internal class PeerDiscoveryViewModel @Inject constructor(
             }
         }
     }
+
     private suspend fun isSessionStarted(): Boolean {
-        try {
-            return sessionApi.getParticipants(
+        return try {
+            sessionApi.getParticipants(
                 serverUrl,
                 sessionId
-            ).size > 0
+            ).isNotEmpty()
         } catch (e: Exception) {
-            return false
+            false
         }
     }
 

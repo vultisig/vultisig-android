@@ -3,10 +3,11 @@ package com.vultisig.wallet.ui.models.reshare
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.models.keygen.VaultSetupType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,25 +23,13 @@ internal class ReshareStartViewModel @Inject constructor(
 
     fun start() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.KeygenFlow(
-                    vaultId = vaultId,
-                    vaultName = null,
-                    vaultSetupType = VaultSetupType.SECURE,
-                    email = null,
-                    password = null,
-                )
-            )
-        }
-    }
+            val vault = vaultRepository.get(vaultId) ?: error("Vault $vaultId does not exist")
 
-    fun startWithServer() {
-        viewModelScope.launch {
-            navigator.navigate(
-                Destination.KeygenEmail(
+            navigator.route(
+                Route.Keygen.PeerDiscovery(
+                    action = TssAction.ReShare,
                     vaultId = vaultId,
-                    name = null,
-                    setupType = VaultSetupType.ACTIVE,
+                    vaultName = vault.name,
                 )
             )
         }
