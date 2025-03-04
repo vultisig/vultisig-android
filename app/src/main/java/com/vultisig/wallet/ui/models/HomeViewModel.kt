@@ -97,13 +97,6 @@ internal class HomeViewModel @Inject constructor(
         }
     }
 
-    fun importVault() {
-        viewModelScope.launch {
-            hideVaultList()
-            navigator.navigate(Destination.ImportVault)
-        }
-    }
-
     fun shareVaultQr(){
         viewModelScope.launch {
             uiState.value.selectedVaultId?.let { vaultId ->
