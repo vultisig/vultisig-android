@@ -55,6 +55,21 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+internal sealed interface KeygenState {
+    data object CreatingInstance : KeygenState
+    data object KeygenECDSA : KeygenState
+    data object KeygenEdDSA : KeygenState
+    data object ReshareECDSA : KeygenState
+    data object ReshareEdDSA : KeygenState
+    data object Success : KeygenState
+
+    data class Error(
+        val title: UiText?,
+        val message: UiText,
+    ) : KeygenState
+}
+
+
 internal data class KeygenUiModel(
     val progress: Float = 0f,
     val isSuccess: Boolean = false,
