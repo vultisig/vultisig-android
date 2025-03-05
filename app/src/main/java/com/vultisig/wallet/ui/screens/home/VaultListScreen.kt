@@ -35,7 +35,6 @@ internal fun VaultListScreen(
     onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onCreateNewFolder: () -> Unit = {},
-    onImportVaultClick: () -> Unit = {},
     viewModel: VaultListViewModel = hiltViewModel(),
     isRearrangeMode: Boolean,
 ) {
@@ -54,7 +53,6 @@ internal fun VaultListScreen(
         onSelectVault = onSelectVault,
         onSelectFolder = onSelectFolder,
         onCreateNewVault = onCreateNewVault,
-        onImportVaultClick = onImportVaultClick,
         onCreateNewFolder = onCreateNewFolder,
     )
 }
@@ -68,7 +66,6 @@ private fun VaultListScreen(
     onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onCreateNewFolder: () -> Unit = {},
-    onImportVaultClick: () -> Unit = {},
     onMoveVaults: (from: Int, to: Int) -> Unit = { _, _ -> },
     onMoveFolders: (from: Int, to: Int) -> Unit = { _, _ -> },
 ) {
@@ -149,19 +146,6 @@ private fun VaultListScreen(
                         textStyle = Theme.montserrat.subtitle1,
                         modifier = Modifier.fillMaxWidth(),
                         onClick = onCreateNewVault,
-                    )
-
-                    UiSpacer(size = 12.dp)
-
-                    MultiColorButton(
-                        text = stringResource(R.string.home_screen_import_vault),
-                        backgroundColor = Theme.colors.oxfordBlue800,
-                        textColor = Theme.colors.turquoise800,
-                        iconColor = Theme.colors.oxfordBlue800,
-                        borderSize = 1.dp,
-                        textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = onImportVaultClick,
                     )
                 } else if (vaults.isNotEmpty()) {
                     MultiColorButton(

@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -222,7 +223,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
 
                     navigator.route(
-                        Route.Keygen.Generating(
+                        route = Route.Keygen.Generating(
                             action = session.action,
                             sessionId = session.sessionId,
                             serverUrl = session.serverUrl,
@@ -241,6 +242,10 @@ internal class JoinKeygenViewModel @Inject constructor(
                             email = null,
                             password = null,
                             hint = null,
+                        ),
+                        opts = NavigationOptions(
+                            popUpToRoute = Route.Keygen.Join::class,
+                            inclusive = true,
                         )
                     )
 

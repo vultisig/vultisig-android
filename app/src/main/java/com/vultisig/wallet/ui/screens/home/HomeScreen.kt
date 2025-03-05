@@ -59,7 +59,6 @@ internal fun HomeScreen(
         onSelectFolder = viewModel::selectFolder,
         onCreateNewVault = viewModel::addVault,
         onCreateNewFolder = viewModel::addFolder,
-        onImportVaultClick = viewModel::importVault,
         onShareVaultQr = viewModel::shareVaultQr,
         isEditMode = viewModel.isEditMode
     )
@@ -78,7 +77,6 @@ private fun HomeScreen(
     onSelectFolder: (folderId: String) -> Unit = {},
     onCreateNewVault: () -> Unit = {},
     onCreateNewFolder: () -> Unit = {},
-    onImportVaultClick: () -> Unit = {},
     onShareVaultQr: () -> Unit = {},
 ) {
     val caretRotation by animateFloatAsState(
@@ -190,7 +188,6 @@ private fun HomeScreen(
                     onSelectFolder = onSelectFolder,
                     onCreateNewVault = onCreateNewVault,
                     onCreateNewFolder = onCreateNewFolder,
-                    onImportVaultClick = onImportVaultClick,
                     isRearrangeMode = state.isVaultRearrangeMode,
                 )
             }
