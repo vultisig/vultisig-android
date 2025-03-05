@@ -50,11 +50,11 @@ import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
-import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -129,8 +129,8 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = _keysignMessage
 
     val participants = MutableStateFlow<List<String>>(emptyList())
-    val networkOption: MutableState<NetworkPromptOption> =
-        mutableStateOf(NetworkPromptOption.INTERNET)
+    val networkOption: MutableState<NetworkOption> =
+        mutableStateOf(NetworkOption.Internet)
 
     val password = savedStateHandle.get<String?>(SendDst.ARG_PASSWORD)
     val transactionId = savedStateHandle.get<String>(SendDst.ARG_TRANSACTION_ID)
@@ -139,7 +139,7 @@ internal class KeysignFlowViewModel @Inject constructor(
         get() = password != null
 
     private val isRelayEnabled by derivedStateOf {
-        networkOption.value == NetworkPromptOption.INTERNET || isFastSign
+        networkOption.value == NetworkOption.Internet || isFastSign
     }
 
     val isLoading = MutableStateFlow(false)
@@ -469,15 +469,15 @@ internal class KeysignFlowViewModel @Inject constructor(
         addressProvider.clean()
     }
 
-    fun changeNetworkPromptOption(option: NetworkPromptOption, context: Context) {
+    fun changeNetworkPromptOption(option: NetworkOption, context: Context) {
         if (networkOption.value == option) return
         networkOption.value = option
         _serverAddress = when (option) {
-            NetworkPromptOption.LOCAL -> {
+            NetworkOption.Local -> {
                 LOCAL_MEDIATOR_SERVER_URL
             }
 
-            NetworkPromptOption.INTERNET -> {
+            NetworkOption.Internet -> {
                 Endpoints.VULTISIG_RELAY_URL
             }
         }

@@ -59,6 +59,7 @@ internal class KeysignShareViewModel @Inject constructor(
     val toAmount = MutableStateFlow("")
 
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
+    private var qrBitmap: Bitmap? = null
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
@@ -189,6 +190,7 @@ internal class KeysignShareViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val qrBitmap = generateQrBitmap(address, Color.Black, Color.White, null)
+                this@KeysignShareViewModel.qrBitmap = qrBitmap
                 val bitmapPainter = BitmapPainter(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
                 )
@@ -208,12 +210,12 @@ internal class KeysignShareViewModel @Inject constructor(
     }
 
     internal fun saveShareQrBitmap(
-        bitmap: Bitmap,
         color: Int,
         title: String,
         description: String,
         logo: Bitmap,
     ) = viewModelScope.launch {
+        val bitmap = qrBitmap ?: return@launch
         val qrBitmap = withContext(Dispatchers.IO) {
             makeQrCodeBitmapShareFormat(bitmap, color, logo, title, description)
         }

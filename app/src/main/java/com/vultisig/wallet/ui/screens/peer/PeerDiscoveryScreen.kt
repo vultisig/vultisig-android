@@ -113,7 +113,7 @@ internal fun PeerDiscoveryScreen(
 }
 
 @Composable
-private fun PeerDiscoveryScreen(
+internal fun PeerDiscoveryScreen(
     state: PeerDiscoveryUiModel,
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit,
@@ -123,6 +123,8 @@ private fun PeerDiscoveryScreen(
     onDeviceClick: (ParticipantName) -> Unit,
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
+
+    showToolbar: Boolean = true,
 ) {
     val selectedDevicesSize = state.selectedDevices.size + 1 // we always have our device
     val devicesSize = state.devices.size + 1
@@ -133,29 +135,32 @@ private fun PeerDiscoveryScreen(
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
-            VsTopAppBar(
-                title = stringResource(R.string.peer_discovery_topbar_title),
-                iconLeft = R.drawable.ic_caret_left,
-                onIconLeftClick = onBackClick,
-                actions = {
-                    VsTopAppBarAction(
-                        icon = R.drawable.ic_question_mark,
-                        onClick = onHelpClick,
-                    )
+            if (showToolbar) {
+                VsTopAppBar(
+                    title = stringResource(R.string.peer_discovery_topbar_title),
+                    iconLeft = R.drawable.ic_caret_left,
+                    onIconLeftClick = onBackClick,
+                    actions = {
+                        VsTopAppBarAction(
+                            icon = R.drawable.ic_question_mark,
+                            onClick = onHelpClick,
+                        )
 
-                    VsTopAppBarAction(
-                        icon = R.drawable.ic_share,
-                        onClick = onShareQrClick,
-                    )
-                },
-            )
+                        VsTopAppBarAction(
+                            icon = R.drawable.ic_share,
+                            onClick = onShareQrClick,
+                        )
+                    },
+                )
+            }
         },
         content = { contentPadding ->
 
-            if (!state.isQrHelpModalVisited)
+            if (state.showQrHelpModal) {
                 ShowQrHelperBottomSheet(
                     onDismiss = onDismissQrHelpModal
                 )
+            }
 
             Column(
                 modifier = Modifier
