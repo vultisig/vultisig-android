@@ -189,7 +189,7 @@ internal class KeysignShareViewModel @Inject constructor(
     fun loadQrPainter(address: String) =
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val qrBitmap = generateQrBitmap(address, Color.Black, Color.White, null)
+                val qrBitmap = generateQrBitmap(address, Color.White, Color.Transparent, null)
                 this@KeysignShareViewModel.qrBitmap = qrBitmap
                 val bitmapPainter = BitmapPainter(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
@@ -219,7 +219,6 @@ internal class KeysignShareViewModel @Inject constructor(
         val qrBitmap = withContext(Dispatchers.IO) {
             makeQrCodeBitmapShareFormat(bitmap, color, logo, title, description)
         }
-//        shareQrBitmap.value?.recycle()
         shareQrBitmap.value = qrBitmap
     }
 

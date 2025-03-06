@@ -95,6 +95,5 @@ private fun Bitmap.getResizedBitmap(
         this, 0, 0,
         width, height, matrix, false
     )
-    recycle()
     return resizedBitmap
 }
