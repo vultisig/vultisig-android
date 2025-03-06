@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenUiModel
@@ -27,6 +28,8 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun JoinKeygenScreen(
     model: JoinKeygenViewModel = hiltViewModel()
 ) {
+    KeepScreenOn()
+
     val state by model.state.collectAsState()
 
     JoinKeygenScreen(
