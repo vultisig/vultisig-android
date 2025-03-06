@@ -16,14 +16,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.utils.NetworkPromptOption
+import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 internal fun NetworkPrompts(
     modifier: Modifier = Modifier,
-    networkPromptOption: NetworkPromptOption = NetworkPromptOption.LOCAL,
-    onChange: (NetworkPromptOption) -> Unit = {},
+    networkPromptOption: NetworkOption = NetworkOption.Local,
+    onChange: (NetworkOption) -> Unit = {},
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -33,9 +33,9 @@ internal fun NetworkPrompts(
             modifier = Modifier.weight(1f),
             title = stringResource(R.string.network_prompts_internet),
             drawableResId = R.drawable.baseline_signal_cellular_alt_24,
-            isSelected = networkPromptOption == NetworkPromptOption.INTERNET,
+            isSelected = networkPromptOption == NetworkOption.Internet,
             onClick = {
-                onChange(NetworkPromptOption.INTERNET)
+                onChange(NetworkOption.Internet)
             },
         )
 
@@ -43,9 +43,9 @@ internal fun NetworkPrompts(
             modifier = Modifier.weight(1f),
             title = stringResource(R.string.network_prompts_local),
             drawableResId = R.drawable.wifi,
-            isSelected = networkPromptOption == NetworkPromptOption.LOCAL,
+            isSelected = networkPromptOption == NetworkOption.Local,
             onClick = {
-                onChange(NetworkPromptOption.LOCAL)
+                onChange(NetworkOption.Local)
             },
         )
     }

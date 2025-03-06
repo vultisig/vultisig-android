@@ -86,7 +86,7 @@ data class PeerDiscoveryUiModel(
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
     // we're trying to promote minimum of three devices
     val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1,
-    val isQrHelpModalVisited: Boolean = true,
+    val showQrHelpModal: Boolean = false,
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
     val error: ErrorUiModel? = null,
@@ -375,10 +375,10 @@ internal class PeerDiscoveryViewModel @Inject constructor(
     }
 
     private suspend fun checkQrHelperModalIsVisited() {
-        val isQrHelpModalVisited = qrHelperModalRepository.isVisited()
+        val showQrHelpModal = !qrHelperModalRepository.isVisited()
         state.update {
             it.copy(
-                isQrHelpModalVisited = isQrHelpModalVisited
+                showQrHelpModal = showQrHelpModal
             )
         }
     }
@@ -463,7 +463,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
             qrHelperModalRepository.visited()
             state.update {
                 it.copy(
-                    isQrHelpModalVisited = true
+                    showQrHelpModal = false
                 )
             }
         }
