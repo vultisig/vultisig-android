@@ -36,8 +36,8 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.UiCirclesLoader
 import com.vultisig.wallet.ui.models.keygen.components.DeviceInfo
+import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.NetworkPromptOption
 import com.vultisig.wallet.ui.utils.extractBitmap
 
 @Composable
@@ -47,8 +47,8 @@ internal fun PeerDiscoveryView(
     selectionState: List<String>,
     participants: List<String>,
     bitmapPainter: BitmapPainter?,
-    networkPromptOption: NetworkPromptOption,
-    onChangeNetwork: (NetworkPromptOption) -> Unit = {},
+    networkPromptOption: NetworkOption,
+    onChangeNetwork: (NetworkOption) -> Unit = {},
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
     extractBitmap: (Bitmap) -> Unit = {},
@@ -96,8 +96,8 @@ private fun HorizontalView(
     modifier: Modifier,
     textColor: Color,
     bitmapPainter: BitmapPainter?,
-    networkPromptOption: NetworkPromptOption,
-    onChangeNetwork: (NetworkPromptOption) -> Unit,
+    networkPromptOption: NetworkOption,
+    onChangeNetwork: (NetworkOption) -> Unit,
     participants: List<String>,
     selectionState: List<String>,
     onAddParticipant: (String) -> Unit,
@@ -198,9 +198,9 @@ private fun VerticalView(
     modifier: Modifier,
     textColor: Color,
     bitmapPainter: BitmapPainter?,
-    networkPromptOption: NetworkPromptOption,
+    networkPromptOption: NetworkOption,
     hasNetworkPrompt: Boolean,
-    onChangeNetwork: (NetworkPromptOption) -> Unit,
+    onChangeNetwork: (NetworkOption) -> Unit,
     participants: List<String>,
     selectionState: List<String>,
     onAddParticipant: (String) -> Unit,
@@ -279,11 +279,11 @@ private fun VerticalView(
 }
 
 @Composable
-private fun NetworkPromptHint(networkPromptOption: NetworkPromptOption) {
+private fun NetworkPromptHint(networkPromptOption: NetworkOption) {
     UiIcon(
         drawableResId = when (networkPromptOption) {
-            NetworkPromptOption.LOCAL -> R.drawable.wifi
-            NetworkPromptOption.INTERNET -> R.drawable.baseline_signal_cellular_alt_24
+            NetworkOption.Local -> R.drawable.wifi
+            NetworkOption.Internet -> R.drawable.baseline_signal_cellular_alt_24
         },
         size = 20.dp,
         tint = Theme.colors.turquoise600Main,
@@ -291,8 +291,8 @@ private fun NetworkPromptHint(networkPromptOption: NetworkPromptOption) {
     UiSpacer(size = 10.dp)
     Text(
         text = when (networkPromptOption) {
-            NetworkPromptOption.LOCAL -> stringResource(R.string.peer_discovery_hint_connect_to_internet)
-            NetworkPromptOption.INTERNET -> stringResource(R.string.peer_discovery_hint_connect_to_same_wifi)
+            NetworkOption.Local -> stringResource(R.string.peer_discovery_hint_connect_to_internet)
+            NetworkOption.Internet -> stringResource(R.string.peer_discovery_hint_connect_to_same_wifi)
         },
         style = Theme.menlo.body1,
         color = Theme.colors.neutral0,
@@ -311,7 +311,7 @@ private fun PeerDiscoveryPreview() {
             Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
             filterQuality = FilterQuality.None
         ),
-        networkPromptOption = NetworkPromptOption.LOCAL,
+        networkPromptOption = NetworkOption.Local,
         hasNetworkPrompt = true,
         modifier = Modifier,
     )

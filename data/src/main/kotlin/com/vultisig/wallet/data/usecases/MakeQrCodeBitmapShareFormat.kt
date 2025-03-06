@@ -85,7 +85,6 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
             paint
         )
 
-        qrCodeBitmap.recycle()
         return bitmap
     }
 }
