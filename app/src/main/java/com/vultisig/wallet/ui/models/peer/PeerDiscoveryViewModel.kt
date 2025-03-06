@@ -463,7 +463,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
             qrHelperModalRepository.visited()
             state.update {
                 it.copy(
-                    showQrHelpModal = true
+                    showQrHelpModal = false
                 )
             }
         }
