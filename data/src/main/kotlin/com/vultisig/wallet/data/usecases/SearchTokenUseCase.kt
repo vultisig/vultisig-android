@@ -37,7 +37,7 @@ internal class SearchTokenUseCaseImpl @Inject constructor(
             chain.standard == EVM -> searchEvmToken(chainId, contractAddress)
             chain.standard == SOL -> searchSolToken(contractAddress)
             chain == Chain.Kujira -> searchKujiToken(contractAddress)
-            else -> error("search token not supported for $chain")
+            else -> return null
         } ?: return null
 
         val rawPrice = searchedToken.price
