@@ -15,7 +15,7 @@ internal class SecretSettingsRepositoryImpl @Inject constructor(
 ) : SecretSettingsRepository {
 
     override val isDklsEnabled: Flow<Boolean>
-        get() = dataStore.readData(IS_DKLS_ENABLED_KEY, false)
+        get() = dataStore.readData(IS_DKLS_ENABLED_KEY, true)
 
     override suspend fun setDklsEnabled(isEnabled: Boolean) {
         dataStore.set(IS_DKLS_ENABLED_KEY, isEnabled)
