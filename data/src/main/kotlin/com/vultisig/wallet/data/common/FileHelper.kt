@@ -167,12 +167,11 @@ fun Uri.fileContent(context: Context): String? {
 
 fun Uri.fileName(context: Context): String {
     val cursor = context.contentResolver.query(this, null, null, null, null)
-    cursor.use {
-        val nameColumnIndex = it!!.getColumnIndex(DISPLAY_NAME)
+    return cursor?.use {
+        val nameColumnIndex = it.getColumnIndex(DISPLAY_NAME)
         it.moveToFirst()
-        val fileName = it.getString(nameColumnIndex)
-        return fileName ?: ""
-    }
+        it.getString(nameColumnIndex)
+    } ?: ""
 }
 
 internal fun Bitmap.compressPng(stream: OutputStream) =
