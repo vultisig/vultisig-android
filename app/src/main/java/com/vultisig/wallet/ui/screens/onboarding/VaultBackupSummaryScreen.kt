@@ -27,5 +27,10 @@ internal fun VaultBackupSummaryScreen(
         buttonText = R.string.vault_backup_summary_start_using_vault,
         onCheckChange = model::toggleCheck,
         onButtonClicked = model::next,
+        onAnimationInit = {
+            if (state.vaultType == VaultType.Secure) {
+                it.setTextRunValue("numberOfVaults", state.vaultShares.toString())
+            }
+        }
     )
 }

@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.rive.runtime.kotlin.RiveAnimationView
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
@@ -27,6 +28,7 @@ internal fun SummaryScreen(
     @StringRes buttonText: Int,
     onCheckChange: (Boolean) -> Unit,
     onButtonClicked: () -> Unit,
+    onAnimationInit: (RiveAnimationView) -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -43,6 +45,7 @@ internal fun SummaryScreen(
                 modifier = Modifier
                     .align(Alignment.Center),
                 animation = animationRes,
+                onInit = onAnimationInit
             )
 
         }
