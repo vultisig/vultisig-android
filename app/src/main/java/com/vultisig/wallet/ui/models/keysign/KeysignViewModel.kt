@@ -123,8 +123,9 @@ internal class KeysignViewModel(
     }
 
     private suspend fun startKeysignDkls() {
-        val keysignPayload = keysignPayload ?: error("Keysign payload is null")
-
+        if (keysignPayload == null && customMessagePayload == null) {
+            error("Keysign payload is null")
+        }
         when (keyType){
             TssKeyType.ECDSA -> {
                 currentState.value = KeysignState.KeysignECDSA
@@ -136,7 +137,7 @@ internal class KeysignViewModel(
                     sessionID = sessionId,
                     encryptionKeyHex = encryptionKeyHex,
                     messageToSign = messagesToSign,
-                    chainPath = keysignPayload.coin.coinType.derivationPath(),
+                    chainPath = this.keysignPayload?.coin?.coinType?.derivationPath()?:"m/44'/60'/0'/0/0",
                     isInitiateDevice = isInitiatingDevice,
                     sessionApi = sessionApi,
                     encryption = encryption,
@@ -145,7 +146,7 @@ internal class KeysignViewModel(
                 dkls.DKLSKeysignWithRetry(0)
 
                 this.signatures += dkls.signatures
-
+                calculateCustomMessageSignature(this.signatures.values.first())
                 if (signatures.isEmpty()) {
                     error("Failed to sign transaction, signatures empty")
                 }

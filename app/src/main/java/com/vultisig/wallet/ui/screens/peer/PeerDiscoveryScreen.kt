@@ -518,6 +518,8 @@ private fun PeerDeviceItem(
             )
 
             if (caption != null) {
+                UiSpacer(4.dp)
+
                 Text(
                     text = caption,
                     style = Theme.brockmann.supplementary.caption,
