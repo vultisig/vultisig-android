@@ -39,6 +39,7 @@ internal class VaultConfirmationViewModel @Inject constructor(
 
             navigator.route(
                 route = Route.VaultBackupSummary(
+                    vaultId = args.vaultId,
                     vaultType = args.vaultType,
                 ),
                 opts = NavigationOptions(

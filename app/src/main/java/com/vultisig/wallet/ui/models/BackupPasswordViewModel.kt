@@ -67,7 +67,7 @@ internal class BackupPasswordViewModel @Inject constructor(
 
     private val args = savedStateHandle.toRoute<Route.BackupPassword>()
 
-    private val vaultId: String = args.vaultId
+    private val vaultId = args.vaultId
     private val vaultType = args.vaultType
 
     private val vault = MutableStateFlow<Vault?>(null)
@@ -230,6 +230,7 @@ internal class BackupPasswordViewModel @Inject constructor(
                 if (vaultType != null) {
                     navigator.route(
                         Route.VaultConfirmation(
+                            vaultId = vaultId,
                             vaultType = vaultType,
                         )
                     )
