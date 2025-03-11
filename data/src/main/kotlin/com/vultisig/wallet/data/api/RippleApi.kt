@@ -51,7 +51,7 @@ internal class RippleApiImp @Inject constructor(
 
             if (rpcResp.result.engineResult != "tesSUCCESS") {
                 if (rpcResp.result.engineResultMessage.equals(
-                        "This sequence number has already passed",
+                        "This sequence number has already passed.",
                         ignoreCase = true
                     )
                 ) {
