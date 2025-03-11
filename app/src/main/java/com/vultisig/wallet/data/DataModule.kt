@@ -23,6 +23,7 @@ import io.ktor.client.plugins.logging.ANDROID
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
@@ -62,8 +63,9 @@ internal interface DataModule {
                 )
             }
             install(ContentNegotiation) {
-                json(json)
+                json(json, ContentType.Any)
             }
+
             install(HttpTimeout) {
                 requestTimeoutMillis = 15000
                 connectTimeoutMillis = 15000
