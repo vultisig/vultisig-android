@@ -19,18 +19,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
       - name: git submodule update
         run: git submodule update --init --recursive
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
