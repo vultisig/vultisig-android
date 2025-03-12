@@ -380,17 +380,17 @@ internal class KeygenViewModel @Inject constructor(
         val vaultId = vault.id
 
         val password = args.password
-        if (args.email != null && args.password != null) {
+        if (args.email != null && password != null) {
             temporaryVaultRepository.add(
                 TempVaultDto(
                     vault = vault,
                     email = args.email,
-                    password = args.password,
+                    password = password,
                     hint = args.hint,
                 )
             )
 
-            if (password != null && context.canAuthenticateBiometric()) {
+            if (context.canAuthenticateBiometric()) {
                 vaultPasswordRepository.savePassword(vaultId, password)
             }
         } else {

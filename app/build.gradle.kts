@@ -35,13 +35,6 @@ android {
             )
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -61,6 +54,10 @@ android {
         absolutePaths = false
         lintConfig = file("$rootDir/config/lint/lint.xml")
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {
