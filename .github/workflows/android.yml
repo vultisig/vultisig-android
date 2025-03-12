@@ -19,7 +19,15 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
       - name: git submodule update
         run: git submodule update --init --recursive
 
@@ -29,7 +37,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew clean build
+        run: ./gradlew clean build test --parallel --build-cache
       - name: Archive code analysis reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,9 +46,3 @@ jobs:
           path: |
             app/build/reports/lint-results-debug.html
             app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
-
-      - name: Run tests
-        env:
-          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
-          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew clean test
