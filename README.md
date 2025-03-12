@@ -1,5 +1,5 @@
 # vultisig-android
-
+[![Android CI](https://github.com/vultisig/vultisig-android/actions/workflows/android.yml/badge.svg)](https://github.com/vultisig/vultisig-android/actions/workflows/android.yml)
 vultisig android app
 
 ## Setup GITHUB personal token
