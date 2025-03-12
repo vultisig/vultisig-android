@@ -1476,7 +1476,7 @@ object Coins {
         ),
         Coin(
             chain = Chain.Kujira,
-            ticker="fuzion",
+            ticker="FUZN",
             logo="fuzion",
             address = "",
             decimal = 6,
