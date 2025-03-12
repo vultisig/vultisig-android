@@ -297,15 +297,15 @@
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Import Vault</string>
     <string name="keysign_password_incorrect_password">Password is incorrect</string>
-    <string name="vault_list_part_n_of_t">Part %dof%d</string>
-    <string name="vault_part_n_of_t">Part %d of %d</string>
+    <string name="vault_list_part_n_of_t">Part %1$dof%2$d</string>
+    <string name="vault_part_n_of_t">Part %1$d of %2$d</string>
     <string name="vault_list_fast_badge">Fast</string>
     <string name="qr_title_join_keygen">Join Keygen</string>
     <string name="qr_title_join_keysign">Join Keysign</string>
     <string name="qr_title_join_swap_keysign">Join Swap</string>
     <string name="qr_title_join_keygen_description">Scan with devices to join the\nvault generation</string>
-    <string name="qr_title_join_keysign_description">Vault: %s\nAmount: %s\n To: %s</string>
-    <string name="qr_title_join_keysign_swap_description">Vault: %s\nFrom: %s\n To: %s</string>
+    <string name="qr_title_join_keysign_description">Vault: %1$s\nAmount: %2$s\n To: %3$s</string>
+    <string name="qr_title_join_keysign_swap_description">Vault: %1$s\nFrom: %2$s\n To: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
 
     <string name="naming_vault_placeholder_fast_vault">Fast Vault</string>
@@ -331,8 +331,8 @@
     <string name="vault_details_screen_vault_type">Vault Type</string>
     <string name="vault_settings_delete_vault_part">Vault Part:</string>
     <string name="vault_password_hint_to_long">Hint is too long</string>
-    <string name="vault_details_screen_vault_part_desc">Part %s of %s</string>
-    <string name="vault_details_screen_signer">Signer %s: %s</string>
+    <string name="vault_details_screen_vault_part_desc">Part %1$s of %2$s</string>
+    <string name="vault_details_screen_signer">Signer %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Register your Vaults</string>
     <string name="register_vault_screen_title">Register Vault</string>
     <string name="register_vault_screen_step_3">3. Upload your Vault QR Code</string>
@@ -344,7 +344,7 @@
     <string name="send_form_gas_token_balance">Gas token balance</string>
     <string name="monthly_backup_reminder_title">Don\'t forget to backup your vault shares and verify the completeness.</string>
     <string name="transaction_complete_screen_title">Transaction complete</string>
-    <string name="qr_address_screen_description">%s address:\n%s</string>
+    <string name="qr_address_screen_description">%1$s address:\n%2$s</string>
     <string name="join_keysign_wrong_vault">Wrong vault selected</string>
     <string name="register_vault_screen_save_qr_code">Save QR Code</string>
     <string name="verify_swap_screen_total_fees">Total Fees</string>

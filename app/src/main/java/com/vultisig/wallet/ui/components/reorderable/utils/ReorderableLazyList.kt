@@ -202,7 +202,7 @@ fun LazyItemScope.ReorderableItem(
                 }
             })
     } else {
-        Modifier.animateItemPlacement()
+        Modifier.animateItem()
     }
 
     ReorderableCollectionItem(
