@@ -19,17 +19,15 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
-
       - name: git submodule update
         run: git submodule update --init --recursive
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
         env:
           GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
           GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew clean build
+        run: ./gradlew clean build test --parallel --build-cache --no-daemon
       - name: Archive code analysis reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -38,9 +36,3 @@ jobs:
           path: |
             app/build/reports/lint-results-debug.html
             app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
-
-      - name: Run tests
-        env:
-          GITHUB_TOKEN: ${{ secrets.TRUSTWALLET_PAT }}
-          GITHUB_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew clean test
