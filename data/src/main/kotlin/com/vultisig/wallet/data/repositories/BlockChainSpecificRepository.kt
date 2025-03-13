@@ -170,7 +170,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                 BlockChainSpecificAndUtxo(
                     BlockChainSpecific.Ethereum(
                         maxFeePerGasWei = gasFee.value,
-                        priorityFeeWei = maxPriorityFee,
+                        priorityFeeWei = minOf(maxPriorityFee, gasFee.value),
                         nonce = nonce,
                         gasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit),
                     )
