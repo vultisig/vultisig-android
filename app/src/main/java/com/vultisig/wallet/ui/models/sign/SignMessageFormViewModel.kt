@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadDto
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,7 @@ internal data class SignMessageFormUiModel(
 internal class SignMessageFormViewModel @Inject constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val customMessagePayloadRepo: CustomMessagePayloadRepo,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
     val state = MutableStateFlow(SignMessageFormUiModel())
@@ -40,12 +42,16 @@ internal class SignMessageFormViewModel @Inject constructor(
         val vaultId = vaultId ?: return
 
         viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+
             val payload = CustomMessagePayloadDto(
                 id = UUID.randomUUID().toString(),
                 vaultId = vaultId,
                 payload = CustomMessagePayload(
                     method = methodFieldState.text.toString(),
                     message = messageFieldState.text.toString(),
+                    vaultPublicKeyEcdsa = vault.pubKeyECDSA,
+                    vaultLocalPartyId = vault.localPartyID,
                 )
             )
             customMessagePayloadRepo.add(payload)
