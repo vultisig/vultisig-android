@@ -254,7 +254,9 @@ internal class JoinKeysignViewModel @Inject constructor(
 
                 val customMessagePayload = payloadProto.customMessagePayload
                 if (customMessagePayload != null) {
-                    handleCustomMessage(customMessagePayload)
+                    if (!handleCustomMessage(customMessagePayload)) {
+                        return@launch
+                    }
                 } else {
                     // when the payload is in the QRCode
                     if (payloadProto.keysignPayload != null && payloadProto.payloadId.isEmpty()) {
@@ -305,9 +307,46 @@ internal class JoinKeysignViewModel @Inject constructor(
         }
     }
 
-    private fun handleCustomMessage(
+    private suspend fun checkIsVaultCorrect(
+        pubKeyEcdsa: String,
+        localPartyId: String,
+    ): Boolean {
+        if (_currentVault.pubKeyECDSA != pubKeyEcdsa) {
+            val matchingVault = vaultRepository.getAll().firstOrNull {
+                it.pubKeyECDSA == pubKeyEcdsa
+            }
+            currentState.value = JoinKeysignState.Error(
+                if (matchingVault != null)
+                    JoinKeysignError.WrongVault
+                else
+                    JoinKeysignError.MissingRequiredVault
+            )
+
+            return false
+        }
+
+        if (localPartyId == _localPartyID) {
+            currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
+            return false
+        }
+
+        return true
+    }
+
+    private suspend fun handleCustomMessage(
         customMessage: CustomMessagePayload
-    ) {
+    ): Boolean {
+        // supports old versions which have no vaultPublicKeyEcdsa or localPartyId
+        if (customMessage.vaultPublicKeyEcdsa.isNotEmpty()) {
+            if (!checkIsVaultCorrect(
+                    customMessage.vaultPublicKeyEcdsa,
+                    customMessage.vaultLocalPartyId
+                )
+            ) {
+                return false
+            }
+        }
+
         customMessagePayload = customMessage
 
         val model = SignMessageTransactionUiModel(
@@ -322,6 +361,8 @@ internal class JoinKeysignViewModel @Inject constructor(
                 model = model,
             ),
         )
+
+        return true
     }
 
     private suspend fun handleKeysignMessage(
@@ -333,21 +374,7 @@ internal class JoinKeysignViewModel @Inject constructor(
     }
 
     private suspend fun loadKeysignMessage(ksPayload: KeysignPayload): Boolean {
-        if (_currentVault.pubKeyECDSA != ksPayload.vaultPublicKeyECDSA) {
-            val matchingVault = vaultRepository.getAll().firstOrNull {
-                it.pubKeyECDSA == ksPayload.vaultPublicKeyECDSA
-            }
-            currentState.value = JoinKeysignState.Error(
-                if (matchingVault != null)
-                    JoinKeysignError.WrongVault
-                else
-                    JoinKeysignError.MissingRequiredVault
-            )
-
-            return false
-        }
-        if (ksPayload.vaultLocalPartyID == _localPartyID) {
-            currentState.value = JoinKeysignState.Error(JoinKeysignError.WrongVaultShare)
+        if (!checkIsVaultCorrect(ksPayload.vaultPublicKeyECDSA, ksPayload.vaultLocalPartyID)) {
             return false
         }
 
