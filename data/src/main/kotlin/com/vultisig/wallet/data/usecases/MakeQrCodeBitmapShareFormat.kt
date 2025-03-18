@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.usecases
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
 import javax.inject.Inject
 
@@ -20,9 +21,13 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         title: String,
         description: String?,
     ): Bitmap {
-        val width = qrCodeBitmap.width
-        val height = qrCodeBitmap.height
-        val config = qrCodeBitmap.config
+        val qrBitmap = if (qrCodeBitmap.width < 600)
+            qrCodeBitmap.scale(600, 600, false)
+        else qrCodeBitmap
+
+        val width = qrBitmap.width
+        val height = qrBitmap.height
+        val config = qrBitmap.config
         val padding = (width * SHARE_QR_CODE_REGULAR_PADDING_WIDTH_SCALE).toInt()
         val textSize = width * SHARE_QR_CODE_REGULAR_TEXT_SIZE_WIDTH_SCALE
         val logoWidth = (width * SHARE_QR_CODE_LOGO_SCALE_SCALE).toInt()
@@ -40,14 +45,11 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         finalHeight += (textSize * 2).toInt()
 
         val finalWidth = width + 2 * padding
-        val bitmap = Bitmap.createBitmap(
-            finalWidth,
-            finalHeight,
-            config ?: Bitmap.Config.ARGB_8888
-        )
+        val bitmap = createBitmap(finalWidth, finalHeight, config ?: Bitmap.Config.ARGB_8888)
+
         val canvas = android.graphics.Canvas(bitmap)
         canvas.drawColor(color)
-        canvas.drawBitmap(qrCodeBitmap, padding.toFloat(), padding.toFloat(), null)
+        canvas.drawBitmap(qrBitmap, padding.toFloat(), padding.toFloat(), null)
 
         val paint = android.graphics.Paint()
         paint.textSize = textSize
