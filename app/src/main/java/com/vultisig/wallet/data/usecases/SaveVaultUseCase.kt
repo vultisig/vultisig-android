@@ -19,9 +19,9 @@ internal class SaveVaultUseCaseImpl @Inject constructor(
     private val defaultChainsRepository: DefaultChainsRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SaveVaultUseCase {
-    override suspend fun invoke(vault: Vault, isReshare: Boolean) {
+    override suspend fun invoke(vault: Vault, shouldOverrideVault: Boolean) {
         Timber.d("saveVault(vault = $vault)")
-        if (isReshare) {
+        if (shouldOverrideVault) {
             vaultRepository.upsert(vault)
         } else {
             vaultRepository.getByEcdsa(vault.pubKeyECDSA)?.let {

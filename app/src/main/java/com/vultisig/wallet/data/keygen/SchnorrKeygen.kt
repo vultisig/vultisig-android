@@ -5,6 +5,7 @@ package com.vultisig.wallet.data.keygen
 import com.silencelaboratories.goschnorr.BufferUtilJNI
 import com.silencelaboratories.goschnorr.Handle
 import com.silencelaboratories.goschnorr.go_slice
+import com.silencelaboratories.goschnorr.goschnorr.schnorr_key_migration_session_from_setup
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_finish
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_from_setup
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_keygen_session_input_message
@@ -44,6 +45,8 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 class SchnorrKeygen(
     val localPartyId: String,
     val keygenCommittee: List<String>,
+    val hexChainCode: String,
+    val localUi: String,
     val vault: Vault,
     val oldCommittee: List<String>,
     val mediatorURL: String,
@@ -75,7 +78,7 @@ class SchnorrKeygen(
         val buf = tss_buffer()
         return try {
             val result = when (action) {
-                TssAction.KEYGEN -> schnorr_keygen_session_output_message(handle, buf)
+                TssAction.KEYGEN, TssAction.Migrate -> schnorr_keygen_session_output_message(handle, buf)
                 TssAction.ReShare -> schnorr_qc_session_output_message(handle, buf)
             }
             if (result != LIB_OK) {
@@ -105,7 +108,7 @@ class SchnorrKeygen(
         val bufReceiver = tss_buffer()
         return try {
             val receiverResult = when (action) {
-                TssAction.KEYGEN -> schnorr_keygen_session_message_receiver(
+                TssAction.KEYGEN, TssAction.Migrate -> schnorr_keygen_session_message_receiver(
                     handle, message, idx, bufReceiver
                 )
 
@@ -201,7 +204,7 @@ class SchnorrKeygen(
 
             val isFinished = intArrayOf(0)
             val result = when (action) {
-                TssAction.KEYGEN -> schnorr_keygen_session_input_message(
+                TssAction.KEYGEN, TssAction.Migrate -> schnorr_keygen_session_input_message(
                     handle, decryptedBodySlice, isFinished
                 )
 
@@ -234,11 +237,40 @@ class SchnorrKeygen(
             val handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
-            val result =
-                schnorr_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
-            if (result != LIB_OK) {
-                error("fail to create session from setup message, error: $result")
+
+            when (action) {
+                TssAction.KEYGEN -> {
+                    val result =
+                        schnorr_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
+                    if (result != LIB_OK) {
+                        error("fail to create session from setup message, error: $result")
+                    }
+                }
+                TssAction.Migrate -> {
+                    val localUI = this.localUi ?: throw RuntimeException("can't migrate, local UI is empty")
+                    val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyEDDSA)
+                    val publicKeySlice = publicKeyArray.toGoSlice()
+                    val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
+                    val chainCodeSlice = chainCodeArray.toGoSlice()
+                    val localUIArray = Numeric.hexStringToByteArray(localUI)
+                    val localUISlice = localUIArray.toGoSlice()
+
+                    val result = schnorr_key_migration_session_from_setup(
+                        decodedSetupMsg,
+                        localPartySlice,
+                        publicKeySlice,
+                        chainCodeSlice,
+                        localUISlice,
+                        handler
+                    )
+
+                    if (result != LIB_OK) {
+                        throw RuntimeException("fail to create migration session from setup message, error: $result")
+                    }
+                }
+                TssAction.ReShare -> error("This method shouldn't be used with $action")
             }
+
             task = CoroutineScope(Dispatchers.IO).launch {
                 processSchnorrOutboundMessage(handler)
             }

@@ -17,7 +17,12 @@ data class Vault(
     var keyshares: List<KeyShare> = listOf(),
     val coins: List<Coin> = emptyList(),
     var libType: SigningLibType = SigningLibType.GG20,
-)
+) {
+
+    fun getKeyshare(pubKey: String): String? =
+        keyshares.firstOrNull { it.pubKey == pubKey }?.keyShare
+
+}
 
 @Serializable
 enum class SigningLibType { DKLS, GG20 }
