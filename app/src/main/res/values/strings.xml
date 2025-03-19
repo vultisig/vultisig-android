@@ -521,4 +521,6 @@
     <string name="vault_backup_screen_restart_keygen" translatable="false">Restart keygen</string>
     <string name="vault_backup_summary_start_using_vault" translatable="false">Start using your Vault</string>
     <string name="transaction_done_form_approve" translatable="false">Approve</string>
+    <string name="vault_settings_migration_title" translatable="false">Migrate</string>
+    <string name="vault_settings_migration_subtitle" translatable="false">Migrate GG20 vault to DKLS</string>
 </resources>

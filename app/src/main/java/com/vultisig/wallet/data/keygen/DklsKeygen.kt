@@ -5,6 +5,7 @@ package com.vultisig.wallet.data.keygen
 import com.silencelaboratories.godkls.BufferUtilJNI
 import com.silencelaboratories.godkls.Handle
 import com.silencelaboratories.godkls.go_slice
+import com.silencelaboratories.godkls.godkls.dkls_key_migration_session_from_setup
 import com.silencelaboratories.godkls.godkls.dkls_keygen_session_finish
 import com.silencelaboratories.godkls.godkls.dkls_keygen_session_from_setup
 import com.silencelaboratories.godkls.godkls.dkls_keygen_session_input_message
@@ -57,6 +58,9 @@ class DKLSKeygen(
     val isInitiateDevice: Boolean,
     val action: TssAction,
     val oldCommittee: List<String>,
+    val localUi: String,
+    val hexChainCode: String,
+
     val vault: Vault,
 
     private val encryption: Encryption,
@@ -102,7 +106,7 @@ class DKLSKeygen(
         val buf = tss_buffer()
         try {
             val result = when (action) {
-                TssAction.KEYGEN -> dkls_keygen_session_output_message(handle, buf)
+                TssAction.KEYGEN, TssAction.Migrate -> dkls_keygen_session_output_message(handle, buf)
                 TssAction.ReShare -> dkls_qc_session_output_message(handle, buf)
             }
 
@@ -138,7 +142,7 @@ class DKLSKeygen(
         val bufReceiver = tss_buffer()
         try {
             val receiverResult = when (action) {
-                TssAction.KEYGEN -> dkls_keygen_session_message_receiver(handle, message, idx, bufReceiver)
+                TssAction.KEYGEN, TssAction.Migrate -> dkls_keygen_session_message_receiver(handle, message, idx, bufReceiver)
                 TssAction.ReShare -> dkls_qc_session_message_receiver(handle, message, idx, bufReceiver)
             }
 
@@ -238,7 +242,7 @@ class DKLSKeygen(
             val isFinished = intArrayOf(0)
 
             val result = when (action) {
-                TssAction.KEYGEN -> dkls_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
+                TssAction.KEYGEN, TssAction.Migrate -> dkls_keygen_session_input_message(handle, decryptedBodySlice, isFinished)
                 TssAction.ReShare -> dkls_qc_session_input_message(handle, decryptedBodySlice, isFinished)
             }
 
@@ -301,10 +305,38 @@ class DKLSKeygen(
             val localPartyIDArr = this.localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
 
-            val result = dkls_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
-            if (result != LIB_OK) {
-                error("fail to create session from setup message, error: $result")
+            when (action) {
+                TssAction.KEYGEN -> {
+                    val result = dkls_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
+                    if (result != LIB_OK) {
+                        error("fail to create session from setup message, error: $result")
+                    }
+                }
+                TssAction.Migrate -> {
+                    val localUI = this.localUi ?: error("can't migrate, local UI is empty")
+                    val publicKeyArray = Numeric.hexStringToByteArray(vault.pubKeyECDSA)
+                    val publicKeySlice = publicKeyArray.toGoSlice()
+                    val chainCodeArray = Numeric.hexStringToByteArray(this.hexChainCode)
+                    val chainCodeSlice = chainCodeArray.toGoSlice()
+                    val localUIArray = Numeric.hexStringToByteArray(localUI)
+                    val localUISlice = localUIArray.toGoSlice()
+
+                    val result = dkls_key_migration_session_from_setup(
+                        decodedSetupMsg,
+                        localPartySlice,
+                        publicKeySlice,
+                        chainCodeSlice,
+                        localUISlice,
+                        handler
+                    )
+
+                    if (result != LIB_OK) {
+                        throw RuntimeException("fail to create migration session from setup message, error: $result")
+                    }
+                }
+                TssAction.ReShare -> error("Shouldn't use this method with $action")
             }
+
             task = CoroutineScope(Dispatchers.IO).launch {
                 processDKLSOutboundMessage(handler)
             }
