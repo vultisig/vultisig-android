@@ -128,21 +128,6 @@ internal class KeygenViewModel @Inject constructor(
 
     private val isReshareMode: Boolean = action == TssAction.ReShare
 
-    private val dklsKeygen = DKLSKeygen(
-        localPartyId = vault.localPartyID,
-        keygenCommittee = keygenCommittee,
-        mediatorURL = serverUrl,
-        sessionID = sessionId,
-        encryptionKeyHex = encryptionKeyHex,
-        isInitiateDevice = isInitiatingDevice,
-        encryption = encryption,
-        sessionApi = sessionApi,
-
-        action = action,
-        oldCommittee = oldCommittee,
-        vault = vault,
-    )
-
     init {
         generateKey()
     }
@@ -199,8 +184,49 @@ internal class KeygenViewModel @Inject constructor(
 
         updateStep(KeygenState.KeygenECDSA)
 
+        var localUiEcdsa = ""
+        var localUiEddsa = ""
+
+        if (action == TssAction.Migrate) {
+            try {
+                // Verify both key shares exist before attempting migration
+                val ecdsaShare = vault.getKeyshare(vault.pubKeyECDSA)
+                val eddsaShare = vault.getKeyshare(vault.pubKeyEDDSA)
+
+                if (ecdsaShare == null || eddsaShare == null) {
+                    throw RuntimeException("Missing key shares required for migration")
+                }
+
+                val ecdsaUIResp = Tss.getLocalUIEcdsa(ecdsaShare)
+                localUiEcdsa = ecdsaUIResp.padEnd(64, '0')
+
+                val eddsaUIResp = Tss.getLocalUIEddsa(eddsaShare)
+                localUiEddsa = eddsaUIResp.padEnd(64, '0')
+
+            } catch (e: Exception) {
+                error("Can't get local ui for migration")
+            }
+        }
+
+        val dklsKeygen = DKLSKeygen(
+            localPartyId = vault.localPartyID,
+            keygenCommittee = keygenCommittee,
+            mediatorURL = serverUrl,
+            sessionID = sessionId,
+            encryptionKeyHex = encryptionKeyHex,
+            isInitiateDevice = isInitiatingDevice,
+            encryption = encryption,
+            sessionApi = sessionApi,
+            hexChainCode = vault.hexChainCode,
+            localUi = localUiEcdsa,
+
+            action = action,
+            oldCommittee = oldCommittee,
+            vault = vault,
+        )
+
         when (action) {
-            TssAction.KEYGEN -> dklsKeygen.dklsKeygenWithRetry(0)
+            TssAction.KEYGEN, TssAction.Migrate -> dklsKeygen.dklsKeygenWithRetry(0)
             TssAction.ReShare -> dklsKeygen.DKLSReshareWithRetry(0)
         }
 
@@ -219,11 +245,13 @@ internal class KeygenViewModel @Inject constructor(
             encryption = encryption,
             sessionApi = sessionApi,
             setupMessage = dklsKeygen.setupMessage,
-            isInitiatingDevice = isInitiatingDevice
+            isInitiatingDevice = isInitiatingDevice,
+            hexChainCode = vault.hexChainCode,
+            localUi = localUiEddsa
         )
 
         when (action) {
-            TssAction.KEYGEN -> schnorr.schnorrKeygenWithRetry(0)
+            TssAction.KEYGEN, TssAction.Migrate -> schnorr.schnorrKeygenWithRetry(0)
             TssAction.ReShare -> schnorr.schnorrReshareWithRetry(0)
         }
 
@@ -243,6 +271,10 @@ internal class KeygenViewModel @Inject constructor(
                 keyShare = keyshareEddsa.keyshare
             )
         )
+
+        if (action == TssAction.Migrate) {
+            vault.libType = SigningLibType.DKLS
+        }
 
         sessionApi.markLocalPartyComplete(
             serverUrl,
@@ -278,7 +310,7 @@ internal class KeygenViewModel @Inject constructor(
                 messagePuller.pullMessages(null)
 
                 when (action) {
-                    TssAction.KEYGEN -> {
+                    TssAction.KEYGEN, TssAction.Migrate -> {
                         // generate ECDSA
                         updateStep(KeygenState.KeygenECDSA)
                         val keygenRequest = tss.KeygenRequest()
@@ -394,7 +426,9 @@ internal class KeygenViewModel @Inject constructor(
                 vaultPasswordRepository.savePassword(vaultId, password)
             }
         } else {
-            saveVault(vault, isReshareMode)
+            val shouldOverrideVault = isReshareMode || action == TssAction.Migrate
+
+            saveVault(vault, shouldOverrideVault)
 
             vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
         }

@@ -36,6 +36,7 @@ class DeepLinkHelper(input: String) {
             when (it.uppercase()) {
                 "KEYGEN" -> return TssAction.KEYGEN
                 "RESHARE" -> return TssAction.ReShare
+                "MIGRATE" -> return TssAction.Migrate
                 else -> return null
             }
         }

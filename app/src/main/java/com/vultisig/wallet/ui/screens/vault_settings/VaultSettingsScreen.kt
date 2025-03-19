@@ -47,6 +47,7 @@ internal fun VaultSettingsScreen(
         onSignMessageClick = viewModel::signMessage,
         onBiometricsClick = viewModel::navigateToBiometricsScreen,
         onDeleteClick = viewModel::navigateToConfirmDeleteScreen,
+        onMigrateClick = viewModel::migrate,
     )
 }
 
@@ -62,6 +63,7 @@ private fun VaultSettingsScreen(
     onSignMessageClick: () -> Unit = {},
     onBiometricsClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
+    onMigrateClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val canAuthenticateBiometric = remember { context.canAuthenticateBiometric() }
@@ -115,6 +117,15 @@ private fun VaultSettingsScreen(
                 icon = R.drawable.share,
                 onClick = onReshareClick
             )
+
+            if (uiModel.hasMigration) {
+                SettingsItem(
+                    title = stringResource(R.string.vault_settings_migration_title),
+                    subtitle = stringResource(R.string.vault_settings_migration_subtitle),
+                    icon = R.drawable.ic_swap_arrows,
+                    onClick = onMigrateClick,
+                )
+            }
 
             SettingsItem(
                 title = stringResource(R.string.vault_settings_sign_message_title),

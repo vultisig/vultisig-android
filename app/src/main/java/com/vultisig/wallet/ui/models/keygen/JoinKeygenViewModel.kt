@@ -91,7 +91,7 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                 val existingVaults = vaultRepository.getAll()
 
-                val session = when (deepLink.getTssAction()) {
+                val session = when (val action = deepLink.getTssAction()) {
                     TssAction.KEYGEN -> {
                         val message = mapKeygenMessageFromProto(
                             protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
@@ -122,7 +122,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                         )
                     }
 
-                    TssAction.ReShare -> {
+                    TssAction.ReShare, TssAction.Migrate -> {
                         val message = mapReshareMessageFromProto(
                             protoBuf.decodeFromByteArray<ReshareMessageProto>(bytes)
                         )
@@ -151,13 +151,15 @@ internal class JoinKeygenViewModel @Inject constructor(
 
                         Session(
                             sessionId = message.sessionID,
-                            action = TssAction.ReShare,
+                            action = action,
                             hexChainCode = existingVault?.hexChainCode ?: message.hexChainCode,
                             serviceName = message.serviceName,
                             useVultisigRelay = message.useVultisigRelay,
                             encryptionKeyHex = message.encryptionKeyHex,
                             vaultName = existingVault?.name ?: message.vaultName,
-                            libType = message.libType,
+                            libType = if (action == TssAction.Migrate)
+                                SigningLibType.DKLS
+                            else message.libType,
                             localPartyId = existingVault?.localPartyID
                                 ?: Utils.deviceName(context),
                             serverUrl = serverUrl,

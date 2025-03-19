@@ -236,7 +236,9 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                     keygenCommittee = state.value.selectedDevices + localPartyId,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
-                    libType = libType,
+                    libType = if (params.action == TssAction.Migrate)
+                        SigningLibType.DKLS
+                    else libType,
 
                     email = email,
                     password = password,
@@ -421,8 +423,8 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                             )
                         )
                     ).encodeBase64()
-        TssAction.ReShare ->
-            "https://vultisig.com?type=NewVault&tssType=Reshare&jsonData=" +
+        TssAction.ReShare, TssAction.Migrate ->
+            "https://vultisig.com?type=NewVault&tssType=${params.action.toLinkTssType()}&jsonData=" +
                     compressQr(
                         protoBuf.encodeToByteArray(
                             ReshareMessageProto(
@@ -440,6 +442,13 @@ internal class PeerDiscoveryViewModel @Inject constructor(
                         )
                     ).encodeBase64()
     }
+
+    private fun TssAction.toLinkTssType(): String =
+        when (this) {
+            TssAction.KEYGEN -> "Keygen"
+            TssAction.ReShare -> "Reshare"
+            TssAction.Migrate -> "Migrate"
+        }
 
     private suspend fun requestVultiServerConnection() {
         if (email != null && password != null) {

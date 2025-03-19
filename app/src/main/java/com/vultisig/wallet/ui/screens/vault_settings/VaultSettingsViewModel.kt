@@ -3,6 +3,9 @@ package com.vultisig.wallet.ui.screens.vault_settings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
@@ -19,6 +22,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val vaultRepository: VaultRepository,
 ) : ViewModel() {
 
 
@@ -29,9 +33,12 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId)
+            val hasMigration = vault?.libType == SigningLibType.GG20
             val hasFastSign = isVaultHasFastSignById(vaultId)
             uiModel.update {
                 it.copy(
+                    hasMigration = hasMigration,
                     hasFastSign = hasFastSign
                 )
             }
@@ -77,6 +84,21 @@ internal open class VaultSettingsViewModel @Inject constructor(
     fun signMessage() {
         viewModelScope.launch {
             navigator.navigate(Destination.SignMessage(vaultId))
+        }
+    }
+
+    fun migrate() {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId)
+                ?: error("Vault with $vaultId doesn't exist")
+
+            navigator.route(
+                Route.Keygen.PeerDiscovery(
+                    action = TssAction.Migrate,
+                    vaultName = vault.name,
+                    vaultId = vaultId,
+                )
+            )
         }
     }
 
