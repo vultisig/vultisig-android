@@ -166,6 +166,17 @@ object Coins {
         ),
         Coin(
             chain = Chain.Ethereum,
+            ticker = "VULT",
+            logo = "vult",
+            address = "",
+            decimal = 18,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "0xb788144DF611029C60b859DF47e79B7726C4DEBa",
+            isNativeToken = false,
+        ),
+        Coin(
+            chain = Chain.Ethereum,
             ticker = "USDT",
             logo = "usdt",
             address = "",
