@@ -126,63 +126,71 @@ internal class KeysignViewModel(
         if (keysignPayload == null && customMessagePayload == null) {
             error("Keysign payload is null")
         }
-        when (keyType){
-            TssKeyType.ECDSA -> {
-                currentState.value = KeysignState.KeysignECDSA
+        try {
+            when (keyType) {
+                TssKeyType.ECDSA -> {
+                    currentState.value = KeysignState.KeysignECDSA
 
-                val dkls = DKLSKeysign(
-                    vault = vault,
-                    keysignCommittee = keysignCommittee,
-                    mediatorURL = serverUrl,
-                    sessionID = sessionId,
-                    encryptionKeyHex = encryptionKeyHex,
-                    messageToSign = messagesToSign,
-                    chainPath = this.keysignPayload?.coin?.coinType?.derivationPath()?:"m/44'/60'/0'/0/0",
-                    isInitiateDevice = isInitiatingDevice,
-                    sessionApi = sessionApi,
-                    encryption = encryption,
-                )
+                    val dkls = DKLSKeysign(
+                        vault = vault,
+                        keysignCommittee = keysignCommittee,
+                        mediatorURL = serverUrl,
+                        sessionID = sessionId,
+                        encryptionKeyHex = encryptionKeyHex,
+                        messageToSign = messagesToSign,
+                        chainPath = this.keysignPayload?.coin?.coinType?.derivationPath()
+                            ?: "m/44'/60'/0'/0/0",
+                        isInitiateDevice = isInitiatingDevice,
+                        sessionApi = sessionApi,
+                        encryption = encryption,
+                    )
 
-                dkls.DKLSKeysignWithRetry(0)
+                    dkls.DKLSKeysignWithRetry(0)
 
-                this.signatures += dkls.signatures
-                calculateCustomMessageSignature(this.signatures.values.first())
-                if (signatures.isEmpty()) {
-                    error("Failed to sign transaction, signatures empty")
+                    this.signatures += dkls.signatures
+                    calculateCustomMessageSignature(this.signatures.values.first())
+                    if (signatures.isEmpty()) {
+                        error("Failed to sign transaction, signatures empty")
+                    }
+                }
+
+                TssKeyType.EDDSA -> {
+                    currentState.value = KeysignState.KeysignEdDSA
+
+                    val schnorr = SchnorrKeysign(
+                        vault = vault,
+                        keysignCommittee = keysignCommittee,
+                        mediatorURL = serverUrl,
+                        sessionID = sessionId,
+                        encryptionKeyHex = encryptionKeyHex,
+                        messageToSign = messagesToSign,
+                        isInitiateDevice = isInitiatingDevice,
+                        sessionApi = sessionApi,
+                        encryption = encryption,
+                    )
+
+                    schnorr.keysignWithRetry(0)
+
+                    this.signatures += schnorr.signatures
+
+                    if (signatures.isEmpty()) {
+                        error("Failed to sign transaction, signatures empty")
+                    }
                 }
             }
-            TssKeyType.EDDSA -> {
-                currentState.value = KeysignState.KeysignEdDSA
 
-                val schnorr = SchnorrKeysign(
-                    vault = vault,
-                    keysignCommittee = keysignCommittee,
-                    mediatorURL = serverUrl,
-                    sessionID = sessionId,
-                    encryptionKeyHex = encryptionKeyHex,
-                    messageToSign = messagesToSign,
-                    isInitiateDevice = isInitiatingDevice,
-                    sessionApi = sessionApi,
-                    encryption = encryption,
-                )
+            Timber.d("All messages signed, broadcasting transaction")
 
-                schnorr.keysignWithRetry(0)
+            broadcastTransaction()
+            checkThorChainTxResult()
 
-                this.signatures += schnorr.signatures
-
-                if (signatures.isEmpty()) {
-                    error("Failed to sign transaction, signatures empty")
-                }
-            }
+            currentState.value = KeysignState.KeysignFinished
+            isNavigateToHome = true
         }
-
-        Timber.d("All messages signed, broadcasting transaction")
-
-        broadcastTransaction()
-        checkThorChainTxResult()
-
-        currentState.value = KeysignState.KeysignFinished
-        isNavigateToHome = true
+        catch (e: Exception) {
+            Timber.e(e)
+            currentState.value = KeysignState.Error( e.message ?: "Unknown error")
+        }
     }
 
     @Suppress("ReplaceNotNullAssertionWithElvisReturn")
