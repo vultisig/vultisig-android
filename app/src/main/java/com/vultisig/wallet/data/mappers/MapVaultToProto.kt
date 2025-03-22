@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.mappers
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.proto.v1.KeyShareProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
+import com.vultisig.wallet.data.models.proto.v1.toProto
 import google.protobuf.Timestamp
 import kotlinx.datetime.Clock
 import javax.inject.Inject
@@ -26,6 +27,6 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
             )
         },
         createdAt = Timestamp(Clock.System.now().epochSeconds),
+        libType = from.libType.toProto()
     )
-
 }
