@@ -587,6 +587,59 @@ internal fun FormDetails(
 }
 
 @Composable
+internal fun FormDetails2(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = title,
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.supplementary.caption,
+            textAlign = TextAlign.Start,
+        )
+
+        Text(
+            text = value,
+            color = Theme.colors.text.light,
+            style = Theme.brockmann.supplementary.caption,
+            textAlign = TextAlign.End,
+        )
+    }
+}
+
+@Composable
+internal fun FormDetails2(
+    title: AnnotatedString,
+    value: AnnotatedString,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = title,
+            color = Theme.colors.text.extraLight,
+            style = Theme.brockmann.supplementary.caption,
+            textAlign = TextAlign.Start,
+        )
+
+        Text(
+            text = value,
+            color = Theme.colors.text.light,
+            style = Theme.brockmann.supplementary.caption,
+            textAlign = TextAlign.End,
+        )
+    }
+}
+
+@Composable
 internal fun FormDetails(
     title: AnnotatedString,
     value: AnnotatedString,
@@ -615,12 +668,15 @@ internal fun FormDetails(
 internal fun FormError(
     errorMessage: String,
 ) {
-    Column {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         UiHorizontalDivider()
+
         Text(
             text = errorMessage,
-            color = Theme.colors.red,
-            style = Theme.montserrat.body1,
+            color = Theme.colors.alerts.error,
+            style = Theme.brockmann.supplementary.footnote,
             modifier = Modifier.fillMaxWidth(),
         )
     }

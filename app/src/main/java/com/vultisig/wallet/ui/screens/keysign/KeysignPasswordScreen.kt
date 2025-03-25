@@ -145,18 +145,6 @@ private fun VisibilityToggle(
 @Composable
 private fun KeysignPasswordScreenPreview() {
     KeysignPasswordScreen(
-        state = KeysignPasswordUiModel(),
-        passwordFieldState = TextFieldState(),
-        onPasswordLostFocus = {},
-        onPasswordVisibilityToggle = {},
-        onContinueClick = {},
-    )
-}
-
-@Preview
-@Composable
-private fun KeysignPasswordWithHintScreenPreview() {
-    KeysignPasswordScreen(
         state = KeysignPasswordUiModel(passwordHint = UiText.DynamicString("Hint")),
         passwordFieldState = TextFieldState(),
         onPasswordLostFocus = {},

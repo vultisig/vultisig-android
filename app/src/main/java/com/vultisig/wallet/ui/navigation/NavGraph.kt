@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
@@ -25,6 +26,9 @@ import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
 import com.vultisig.wallet.ui.navigation.Route.Keygen
 import com.vultisig.wallet.ui.navigation.Route.Onboarding
 import com.vultisig.wallet.ui.navigation.Route.Secret
+import com.vultisig.wallet.ui.navigation.Route.SelectAsset
+import com.vultisig.wallet.ui.navigation.Route.SelectNetwork
+import com.vultisig.wallet.ui.navigation.Route.VaultBackupSummary
 import com.vultisig.wallet.ui.navigation.Route.VaultConfirmation
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
@@ -67,6 +71,8 @@ import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
+import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
+import com.vultisig.wallet.ui.screens.select.SelectNetworkScreen
 import com.vultisig.wallet.ui.screens.send.SendScreen
 import com.vultisig.wallet.ui.screens.settings.CurrencyUnitSettingScreen
 import com.vultisig.wallet.ui.screens.settings.DefaultChainSetting
@@ -557,12 +563,23 @@ internal fun SetupNavGraph(
             BackupPasswordScreen(navController)
         }
 
-        composable<Route.VaultBackupSummary> {
+        composable<VaultBackupSummary> {
             VaultBackupSummaryScreen()
         }
 
         composable<VaultConfirmation> {
             VaultConfirmationScreen()
+        }
+
+        // transactions
+
+        // select asset / network
+        dialog<SelectAsset> {
+            SelectAssetScreen()
+        }
+
+        dialog<SelectNetwork> {
+            SelectNetworkScreen()
         }
     }
 }
