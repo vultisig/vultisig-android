@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
@@ -112,6 +113,12 @@ internal class ImportFileViewModel @Inject constructor(
     }
 
     private suspend fun insertVaultToDb(vault: Vault) {
+        // if the backup didn't set libtype correctly , then we need a way to override it manually
+        // when the backup file has share\d+of\d+ in the filename, then it's a DKLS vault
+        val regex = "share\\d+of\\d+".toRegex()
+        if(uiModel.value.fileName?.contains(regex) == true) {
+            vault.libType = SigningLibType.DKLS
+        }
         saveVault(vault, false)
         vaultDataStoreRepository.setBackupStatus(vault.id, true)
         discoverToken(vault.id, null)
