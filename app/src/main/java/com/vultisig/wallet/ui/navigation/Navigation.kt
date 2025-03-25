@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.navigation
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
@@ -351,8 +352,50 @@ internal sealed class Destination(
 
 internal sealed class Route {
 
+    data object Onboarding {
+        @Serializable
+        data object VaultCreation
+
+        @Serializable
+        data object VaultCreationSummary
+
+        @Serializable
+        data class VaultBackup(
+            val vaultId: VaultId,
+            val pubKeyEcdsa: String,
+            val email: String?,
+            val vaultType: VaultInfo.VaultType,
+        )
+    }
+
     @Serializable
     data object Secret : Route()
+
+    // transactions
+
+    // select asset / network
+    @Serializable
+    data class SelectAsset(
+        val vaultId: VaultId,
+        val preselectedNetworkId: ChainId,
+        val networkFilters: SelectNetwork.Filters,
+        val requestId: String,
+    )
+
+    @Serializable
+    data class SelectNetwork(
+        val vaultId: VaultId,
+        val selectedNetworkId: ChainId,
+        val requestId: String,
+        val filters: Filters,
+    ) {
+        @Serializable
+        enum class Filters {
+            SwapAvailable,
+        }
+    }
+
+    // vault creation / keygen
 
     @Serializable
     data object ChooseVaultType
@@ -373,11 +416,13 @@ internal sealed class Route {
         // required only by fast vault
         @Serializable
         data class Email(val name: String)
+
         @Serializable
         data class Password(
             val name: String,
             val email: String,
         )
+
         @Serializable
         data class PasswordHint(
             val name: String,
@@ -430,22 +475,6 @@ internal sealed class Route {
             val hint: String?,
         )
 
-    }
-
-    data object Onboarding {
-        @Serializable
-        data object VaultCreation
-
-        @Serializable
-        data object VaultCreationSummary
-
-        @Serializable
-        data class VaultBackup(
-            val vaultId: VaultId,
-            val pubKeyEcdsa: String,
-            val email: String?,
-            val vaultType: VaultInfo.VaultType,
-        )
     }
 
     @Serializable

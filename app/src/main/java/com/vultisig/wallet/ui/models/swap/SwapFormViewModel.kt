@@ -45,6 +45,7 @@ import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -441,11 +442,16 @@ internal class SwapFormViewModel @Inject constructor(
         targetArg: String,
     ) {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.SelectToken(
+            navigator.route(
+                Route.SelectAsset(
                     vaultId = vaultId ?: return@launch,
-                    targetArg = targetArg,
-                    swapSelect = true,
+                    requestId = targetArg,
+                    preselectedNetworkId = (when (targetArg) {
+                        Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc.value?.address?.chain
+                        Destination.Swap.ARG_SELECTED_DST_TOKEN_ID -> selectedDst.value?.address?.chain
+                        else -> Chain.ThorChain
+                    })?.id ?: Chain.ThorChain.id,
+                    networkFilters = Route.SelectNetwork.Filters.SwapAvailable,
                 )
             )
             checkTokenSelectionResponse(targetArg)
@@ -453,7 +459,7 @@ internal class SwapFormViewModel @Inject constructor(
     }
 
     private suspend fun checkTokenSelectionResponse(targetArg: String) {
-        val result = requestResultRepository.request<Coin>(targetArg).id
+        val result = requestResultRepository.request<Coin>(targetArg)?.id
         if (targetArg == Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID) {
             selectedSrcId.value = result
         } else {

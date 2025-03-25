@@ -64,6 +64,7 @@ internal data class VsTypography(
     @Immutable
     data class Supplementary(
         val caption: TextStyle,
+        val captionSmall: TextStyle,
         val footnote: TextStyle,
     )
 
@@ -190,6 +191,14 @@ internal data class VsTypography(
                         fontWeight = FontWeight.Medium,
                         fontSize = 12.sp,
                         lineHeight = 16.sp,
+                        letterSpacing = 0.12.sp,
+                        fontFamily = fontFamily,
+                        lineHeightStyle = lineHeightStyle,
+                    ),
+                    captionSmall = TextStyle(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp,
                         letterSpacing = 0.12.sp,
                         fontFamily = fontFamily,
                         lineHeightStyle = lineHeightStyle,

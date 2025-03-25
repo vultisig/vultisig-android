@@ -314,6 +314,7 @@ internal class SendFormViewModel @Inject constructor(
                 )
             )
             val address: AddressBookEntry = requestResultRepository.request(REQUEST_ADDRESS_ID)
+                ?: return@launch
 
             val vaultId = vaultId
             val selectedChain = address.chain

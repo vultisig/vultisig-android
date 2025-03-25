@@ -6,9 +6,9 @@ import javax.inject.Inject
 
 interface RequestResultRepository {
 
-    suspend fun <T> request(requestId: String): T
+    suspend fun <T> request(requestId: String): T?
 
-    suspend fun respond(requestId: String, result: Any)
+    suspend fun respond(requestId: String, result: Any?)
 
 }
 
@@ -16,16 +16,16 @@ internal class RequestResultRepositoryImpl @Inject constructor() : RequestResult
 
     private data class Response(
         val requestId: String,
-        val result: Any
+        val result: Any?
     )
 
     private val results = MutableSharedFlow<Response>()
 
     @Suppress("UNCHECKED_CAST")
-    override suspend fun <T> request(requestId: String): T =
-        results.first { it.requestId == requestId }.result as T
+    override suspend fun <T> request(requestId: String): T? =
+        results.first { it.requestId == requestId }.result as? T
 
-    override suspend fun respond(requestId: String, result: Any) {
+    override suspend fun respond(requestId: String, result: Any?) {
         results.emit(Response(requestId, result))
     }
 
