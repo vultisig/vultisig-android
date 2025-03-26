@@ -48,7 +48,7 @@ internal fun VsBasicTextField(
                     style = hintStyle,
                     textAlign = textAlign,
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
                 )
             }
 
