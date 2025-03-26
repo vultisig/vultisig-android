@@ -563,7 +563,7 @@ private fun PeerDeviceItem(
 }
 
 @Composable
-private fun ConnectingToServer(
+internal fun ConnectingToServer(
     isSuccess: Boolean,
 ) {
     Column(

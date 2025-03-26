@@ -24,9 +24,9 @@ import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
-import com.vultisig.wallet.ui.models.peer.ConnectingToServerUiModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
+import com.vultisig.wallet.ui.screens.peer.ConnectingToServer
 import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.forCanvasMinify
@@ -152,47 +152,49 @@ internal fun KeysignPeerDiscovery(
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
 ) {
-    PeerDiscoveryScreen(
-        state = PeerDiscoveryUiModel(
-            qr = bitmapPainter,
-            network = networkPromptOption,
-            localPartyId = localPartyId,
-            devices = participants.filter { it != localPartyId },
-            selectedDevices = selectionState.filter { it != localPartyId },
-            minimumDevices = minimumDevices,
-            minimumDevicesDisplayed = minimumDevices,
-            showQrHelpModal = false,
-            showDevicesHint = false,
-            connectingToServer = if (isLookingForVultiServer) {
-                ConnectingToServerUiModel(false)
-            } else null,
-            error = null,
-        ),
-        showToolbar = false,
+    if (isLookingForVultiServer) {
+        ConnectingToServer(false)
+    } else {
+        PeerDiscoveryScreen(
+            state = PeerDiscoveryUiModel(
+                qr = bitmapPainter,
+                network = networkPromptOption,
+                localPartyId = localPartyId,
+                devices = participants.filter { it != localPartyId },
+                selectedDevices = selectionState.filter { it != localPartyId },
+                minimumDevices = minimumDevices,
+                minimumDevicesDisplayed = minimumDevices,
+                showQrHelpModal = false,
+                showDevicesHint = false,
+                connectingToServer = null,
+                error = null,
+            ),
+            showToolbar = false,
 
-        onBackClick = {},
-        onHelpClick = {},
-        onShareQrClick = {},
-        onCloseHintClick = {},
-        onDismissQrHelpModal = {},
+            onBackClick = {},
+            onHelpClick = {},
+            onShareQrClick = {},
+            onCloseHintClick = {},
+            onDismissQrHelpModal = {},
 
-        onSwitchModeClick = {
-            onChangeNetwork(
-                when (networkPromptOption) {
-                    NetworkOption.Internet -> NetworkOption.Local
-                    NetworkOption.Local -> NetworkOption.Internet
+            onSwitchModeClick = {
+                onChangeNetwork(
+                    when (networkPromptOption) {
+                        NetworkOption.Internet -> NetworkOption.Local
+                        NetworkOption.Local -> NetworkOption.Internet
+                    }
+                )
+            },
+            onDeviceClick = { device ->
+                if (device in selectionState) {
+                    onRemoveParticipant(device)
+                } else {
+                    onAddParticipant(device)
                 }
-            )
-        },
-        onDeviceClick = { device ->
-            if (device in selectionState) {
-                onRemoveParticipant(device)
-            } else {
-                onAddParticipant(device)
-            }
-        },
-        onNextClick = onStopParticipantDiscovery,
-    )
+            },
+            onNextClick = onStopParticipantDiscovery,
+        )
+    }
 }
 
 @Preview
