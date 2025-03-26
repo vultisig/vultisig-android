@@ -365,6 +365,7 @@ internal sealed class Route {
             val pubKeyEcdsa: String,
             val email: String?,
             val vaultType: VaultInfo.VaultType,
+            val tssAction: TssAction,
         )
     }
 
@@ -415,12 +416,16 @@ internal sealed class Route {
 
         // required only by fast vault
         @Serializable
-        data class Email(val name: String)
+        data class Email(val name: String,
+                         val tssAction: TssAction,
+                         val vaultId: VaultId? = null)
 
         @Serializable
         data class Password(
             val name: String,
             val email: String,
+            val tssAction: TssAction,
+            val vaultId: VaultId? = null,
         )
 
         @Serializable
@@ -428,6 +433,8 @@ internal sealed class Route {
             val name: String,
             val email: String,
             val password: String,
+            val tssAction: TssAction,
+            val vaultId: VaultId? = null,
         )
     }
 
@@ -482,6 +489,7 @@ internal sealed class Route {
         val vaultId: VaultId,
         val pubKeyEcdsa: String,
         val email: String,
+        val tssAction: TssAction,
     )
 
     @Serializable

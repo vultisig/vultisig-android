@@ -60,11 +60,12 @@ internal class FastVaultPasswordHintViewModel @Inject constructor(
         viewModelScope.launch {
             navigator.route(
                 Route.Keygen.PeerDiscovery(
-                    action = TssAction.KEYGEN,
+                    action = args.tssAction,
                     vaultName = args.name,
                     email = args.email,
                     password = args.password,
                     hint = hint,
+                    vaultId = args.vaultId
                 )
             )
         }

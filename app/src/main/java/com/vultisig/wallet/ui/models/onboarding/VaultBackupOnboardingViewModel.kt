@@ -89,6 +89,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
                                 vaultId = vaultId,
                                 pubKeyEcdsa = args.pubKeyEcdsa,
                                 email = requireNotNull(args.email),
+                                tssAction = args.tssAction
                             )
                         )
                     }

@@ -446,7 +446,8 @@ internal class KeygenViewModel @Inject constructor(
                 email = args.email,
                 vaultType = if (vault.isFastVault())
                     VaultType.Fast
-                else VaultType.Secure
+                else VaultType.Secure,
+                tssAction = action,
             ),
             opts = NavigationOptions(
                 popUpToRoute = Route.Keygen.Generating::class,

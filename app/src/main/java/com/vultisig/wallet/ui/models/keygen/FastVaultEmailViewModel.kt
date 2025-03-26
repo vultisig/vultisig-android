@@ -34,6 +34,8 @@ internal class FastVaultEmailViewModel @Inject constructor(
     val state = MutableStateFlow(FastVaultEmailState())
     val emailFieldState = TextFieldState()
     val vaultName = savedStateHandle.toRoute<Route.VaultInfo.Email>().name
+    val tssAction = savedStateHandle.toRoute<Route.VaultInfo.Email>().tssAction
+    val vaultId = savedStateHandle.toRoute<Route.VaultInfo.Email>().vaultId
 
     init {
         collectEmailInput()
@@ -84,6 +86,8 @@ internal class FastVaultEmailViewModel @Inject constructor(
                 Route.VaultInfo.Password(
                     name = vaultName,
                     email = enteredEmail,
+                    tssAction = tssAction,
+                    vaultId = vaultId,
                 )
             )
         }

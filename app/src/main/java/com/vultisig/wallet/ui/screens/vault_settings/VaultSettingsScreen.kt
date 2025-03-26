@@ -110,14 +110,14 @@ private fun VaultSettingsScreen(
                 icon = R.drawable.pencil,
                 onClick = onRenameClick,
             )
-
-            SettingsItem(
-                title = stringResource(R.string.vault_settings_reshare_title),
-                subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
-                icon = R.drawable.share,
-                onClick = onReshareClick
-            )
-
+            if(!uiModel.hasFastSign) {
+                SettingsItem(
+                    title = stringResource(R.string.vault_settings_reshare_title),
+                    subtitle = stringResource(R.string.vault_settings_reshare_subtitle),
+                    icon = R.drawable.share,
+                    onClick = onReshareClick
+                )
+            }
             if (uiModel.hasMigration) {
                 SettingsItem(
                     title = stringResource(R.string.vault_settings_migration_title),

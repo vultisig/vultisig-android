@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
@@ -98,8 +99,8 @@ internal class FastVaultVerificationViewModel @Inject constructor(
 
                     val vaultId = args.vaultId
                     val vault = temporaryVaultRepository.getById(vaultId)
-
-                    saveVault(vault.vault, false)
+                    val shouldOverride = args.tssAction == TssAction.Migrate
+                    saveVault(vault.vault, shouldOverride)
 
                     vault.hint?.let {
                         vaultDataStoreRepository.setFastSignHint(
