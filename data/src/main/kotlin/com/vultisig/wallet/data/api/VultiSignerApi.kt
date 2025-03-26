@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
+import com.vultisig.wallet.data.api.models.signer.MigrateRequest
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -40,6 +41,10 @@ internal interface VultiSignerApi {
     suspend fun verifyBackupCode(
         publicKeyEcdsa: String,
         code: String,
+    )
+
+    suspend fun migrate(
+        request: MigrateRequest,
     )
 
 }
@@ -90,6 +95,12 @@ internal class VultiSignerApiImpl @Inject constructor(
     override suspend fun verifyBackupCode(publicKeyEcdsa: String, code: String) {
         http.get("$URL/verify/$publicKeyEcdsa/$code")
             .throwIfUnsuccessful()
+    }
+
+    override suspend fun migrate(request: MigrateRequest) {
+        http.post("$URL/migrate") {
+            setBody(request)
+        }.throwIfUnsuccessful()
     }
 
     companion object {

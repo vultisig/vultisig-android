@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
@@ -91,14 +92,17 @@ internal open class VaultSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
                 ?: error("Vault with $vaultId doesn't exist")
-
-            navigator.route(
-                Route.Keygen.PeerDiscovery(
-                    action = TssAction.Migrate,
-                    vaultName = vault.name,
-                    vaultId = vaultId,
+            if(vault.isFastVault()){
+                navigator.route(Route.VaultInfo.Email(vault.name, tssAction = TssAction.Migrate,vaultId = vaultId))
+            } else {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        action = TssAction.Migrate,
+                        vaultName = vault.name,
+                        vaultId = vaultId,
+                    )
                 )
-            )
+            }
         }
     }
 

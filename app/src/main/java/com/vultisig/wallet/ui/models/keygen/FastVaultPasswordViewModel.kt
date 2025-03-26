@@ -37,6 +37,8 @@ internal class FastVaultPasswordViewModel @Inject constructor(
 
     val vaultName = savedStateHandle.toRoute<Route.VaultInfo.Password>().name
     val email = savedStateHandle.toRoute<Route.VaultInfo.Password>().email
+    val tssAction = savedStateHandle.toRoute<Route.VaultInfo.Password>().tssAction
+    val vaultId = savedStateHandle.toRoute<Route.VaultInfo.Password>().vaultId
 
     val state = MutableStateFlow(FastVaultPasswordUiModel())
     val passwordTextFieldState = TextFieldState()
@@ -124,6 +126,8 @@ internal class FastVaultPasswordViewModel @Inject constructor(
                     name = vaultName,
                     email = email,
                     password = enteredPassword,
+                    tssAction = tssAction,
+                    vaultId = vaultId
                 )
             )
         }

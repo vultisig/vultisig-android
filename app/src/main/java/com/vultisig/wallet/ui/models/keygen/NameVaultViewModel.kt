@@ -100,7 +100,7 @@ internal class NameVaultViewModel @Inject constructor(
             when (args.vaultType) {
                 VaultType.Fast -> {
                     navigator.route(
-                        Route.VaultInfo.Email(name)
+                        Route.VaultInfo.Email(name, TssAction.KEYGEN)
                     )
                 }
 

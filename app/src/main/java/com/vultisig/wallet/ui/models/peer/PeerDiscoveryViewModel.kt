@@ -21,6 +21,8 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
+import com.vultisig.wallet.data.api.models.signer.MigrateRequest
 import com.vultisig.wallet.data.api.models.signer.toJson
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
@@ -452,18 +454,49 @@ internal class PeerDiscoveryViewModel @Inject constructor(
 
     private suspend fun requestVultiServerConnection() {
         if (email != null && password != null) {
-            vultiSignerRepository.joinKeygen(
-                JoinKeygenRequestJson(
-                    vaultName = vaultName,
-                    sessionId = sessionId,
-                    hexEncryptionKey = encryptionKeyHex,
-                    hexChainCode = hexChainCode,
-                    localPartyId = generateServerPartyId(),
-                    encryptionPassword = password,
-                    email = email,
-                    libType = libType.toJson()
-                )
-            )
+            when(params.action) {
+                TssAction.ReShare -> {
+                    vultiSignerRepository.joinReshare(
+                        JoinReshareRequestJson(
+                            vaultName = vaultName,
+                            publicKeyEcdsa = pubKeyEcdsa,
+                            sessionId = sessionId,
+                            hexEncryptionKey = encryptionKeyHex,
+                            hexChainCode = hexChainCode,
+                            localPartyId = localPartyId,
+                            encryptionPassword = password,
+                            email = email,
+                            oldParties = signers,
+                            oldResharePrefix = resharePrefix,
+                        )
+                    )
+                }
+                TssAction.KEYGEN -> {
+                    vultiSignerRepository.joinKeygen(
+                        JoinKeygenRequestJson(
+                            vaultName = vaultName,
+                            sessionId = sessionId,
+                            hexEncryptionKey = encryptionKeyHex,
+                            hexChainCode = hexChainCode,
+                            localPartyId = generateServerPartyId(),
+                            encryptionPassword = password,
+                            email = email,
+                            libType = libType.toJson()
+                        )
+                    )
+                }
+                TssAction.Migrate -> {
+                    vultiSignerRepository.migrate(
+                        MigrateRequest(
+                            publicKeyEcdsa = pubKeyEcdsa,
+                            sessionId = sessionId,
+                            hexEncryptionKey = encryptionKeyHex,
+                            encryptionPassword = password,
+                            email = email
+                        )
+                    )
+                }
+            }
         }
     }
 
