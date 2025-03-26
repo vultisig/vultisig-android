@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -175,7 +176,9 @@ internal fun SwapFormScreen(
                                     keyboardOptions = KeyboardOptions(
                                         keyboardType = KeyboardType.Number,
                                         imeAction = ImeAction.Done,
-                                    )
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
                                 )
                             }
                         )
@@ -347,7 +350,7 @@ private fun TokenInput(
     focused: Boolean,
     modifier: Modifier = Modifier,
     @SuppressLint("ComposableLambdaParameterNaming")
-    textFieldContent: @Composable () -> Unit,
+    textFieldContent: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
