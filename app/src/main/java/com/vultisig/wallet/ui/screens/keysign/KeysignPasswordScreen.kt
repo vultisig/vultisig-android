@@ -1,30 +1,30 @@
 package com.vultisig.wallet.ui.screens.keysign
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
-import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.library.form.FormBasicSecureTextField
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -40,7 +40,6 @@ internal fun KeysignPasswordScreen(
     KeysignPasswordScreen(
         state = state,
         passwordFieldState = model.passwordFieldState,
-        onPasswordLostFocus = model::verifyPassword,
         onPasswordVisibilityToggle = model::togglePasswordVisibility,
         onContinueClick = model::proceed,
     )
@@ -50,95 +49,82 @@ internal fun KeysignPasswordScreen(
 private fun KeysignPasswordScreen(
     state: KeysignPasswordUiModel,
     passwordFieldState: TextFieldState,
-    onPasswordLostFocus: () -> Unit,
     onPasswordVisibilityToggle: () -> Unit,
     onContinueClick: () -> Unit,
 ) {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Scaffold(
+        containerColor = Theme.colors.backgrounds.primary,
         content = { contentPadding ->
             Column(
                 modifier = Modifier
                     .padding(contentPadding)
-                    .background(Theme.colors.oxfordBlue800)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
                     .padding(
-                        horizontal = 12.dp,
-                        vertical = 16.dp,
+                        horizontal = 24.dp,
+                        vertical = 12.dp,
                     ),
             ) {
-                UiSpacer(size = 8.dp)
-
-                FormBasicSecureTextField(
-                    hint = stringResource(R.string.backup_password_screen_enter_password),
-                    error = state.passwordError,
-                    isObfuscationMode = !state.isPasswordVisible,
-                    textFieldState = passwordFieldState,
-                    onLostFocus = onPasswordLostFocus,
-                    content = {
-                        VisibilityToggle(
-                            isChecked = state.isPasswordVisible,
-                            onClick = onPasswordVisibilityToggle,
-                        )
-                    },
+                Text(
+                    text = "Enter server password",
+                    color = Theme.colors.text.primary,
+                    style = Theme.brockmann.headings.largeTitle,
                 )
 
-                UiSpacer(size = 12.dp)
+                UiSpacer(16.dp)
 
-                if (state.passwordHint != null) {
-                    UiSpacer(size = 8.dp)
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = state.passwordHint.asString(),
-                        color = Theme.colors.neutral0,
-                        style = Theme.menlo.body2,
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .weight(1f),
+                ) {
+                    VsTextInputField(
+                        textFieldState = passwordFieldState,
+                        hint = stringResource(R.string.backup_password_screen_enter_password),
+                        type = VsTextInputFieldType.Password(
+                            isVisible = state.isPasswordVisible,
+                            onVisibilityClick = onPasswordVisibilityToggle,
+                        ),
+                        focusRequester = focusRequester,
+                        imeAction = ImeAction.Go,
+                        onKeyboardAction = {
+                            onContinueClick()
+                        },
+                        innerState = if (state.passwordError != null)
+                            VsTextInputFieldInnerState.Error
+                        else VsTextInputFieldInnerState.Default,
+                        footNote = state.passwordError?.asString(),
                     )
+
+                    UiSpacer(size = 12.dp)
+
+                    if (state.passwordHint != null) {
+                        Text(
+                            text = state.passwordHint.asString(),
+                            color = Theme.colors.text.light,
+                            style = Theme.brockmann.supplementary.footnote,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         },
         bottomBar = {
-            Column(
-                Modifier
-                    .imePadding()
-                    .padding(horizontal = 16.dp)
-            ) {
-                MultiColorButton(
-                    backgroundColor = Theme.colors.turquoise800,
-                    textColor = Theme.colors.oxfordBlue800,
-                    iconColor = Theme.colors.turquoise800,
-                    textStyle = Theme.montserrat.subtitle1,
-                    coolDownPeriod = 1500L,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            bottom = 16.dp,
-                        ),
-                    text = stringResource(R.string.keygen_email_continue_button),
-                    onClick = onContinueClick,
-                )
-            }
+            VsButton(
+                label = stringResource(R.string.keygen_email_continue_button),
+                onClick = onContinueClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        all = 24.dp,
+                    )
+            )
         },
     )
-}
-
-@Composable
-private fun VisibilityToggle(
-    isChecked: Boolean,
-    onClick: () -> Unit,
-) {
-    IconButton(
-        onClick = onClick,
-    ) {
-        UiIcon(
-            drawableResId = if (isChecked)
-                R.drawable.hidden
-            else R.drawable.visible,
-            size = 20.dp,
-            contentDescription = "toggle password visibility"
-        )
-    }
 }
 
 @Preview
@@ -147,7 +133,6 @@ private fun KeysignPasswordScreenPreview() {
     KeysignPasswordScreen(
         state = KeysignPasswordUiModel(passwordHint = UiText.DynamicString("Hint")),
         passwordFieldState = TextFieldState(),
-        onPasswordLostFocus = {},
         onPasswordVisibilityToggle = {},
         onContinueClick = {},
     )

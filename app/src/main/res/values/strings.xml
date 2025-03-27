@@ -528,4 +528,5 @@
     <string name="select_asset_chain_title" translatable="false">Chain</string>
     <string name="select_network_network_title" translatable="false">Network</string>
     <string name="select_network_title" translatable="false">Select network</string>
+    <string name="verify_swap_youre_swapping_title" translatable="false">You\'re swapping</string>
 </resources>

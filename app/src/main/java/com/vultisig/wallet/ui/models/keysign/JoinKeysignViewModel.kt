@@ -455,12 +455,14 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     srcToken.chain
                                 )
                             ),
+                            srcToken = srcToken,
                             dstTokenValue = mapTokenValueAndChainMapperWithUnit(
                                 Pair(
                                     dstTokenValue,
                                     dstToken.chain
                                 )
                             ),
+                            dstToken = dstToken,
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -500,12 +502,14 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     srcToken.chain
                                 )
                             ),
+                            srcToken = srcToken,
                             dstTokenValue = mapTokenValueAndChainMapperWithUnit(
                                 Pair(
                                     dstTokenValue,
                                     dstToken.chain
                                 )
                             ),
+                            dstToken = dstToken,
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
@@ -545,12 +549,14 @@ internal class JoinKeysignViewModel @Inject constructor(
                                     srcToken.chain
                                 )
                             ),
+                            srcToken = srcToken,
                             dstTokenValue = mapTokenValueAndChainMapperWithUnit(
                                 Pair(
                                     dstTokenValue,
                                     dstToken.chain
                                 )
                             ),
+                            dstToken = dstToken,
                             totalFee = fiatValueToStringMapper.map(
                                 estimatedFee + gasFeeFiatValue
                             ),
