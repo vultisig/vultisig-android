@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.buttons
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,19 +47,24 @@ fun VsButton(
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+    val backgroundColor by animateColorAsState(
+        when (state) {
+            Enabled -> when (variant) {
+                Primary -> Theme.colors.buttons.primary
+                Secondary -> Theme.colors.buttons.secondary
+            }
+
+            Disabled -> Theme.colors.buttons.disabled
+        },
+        label = "VsButton.backgroundColor"
+    )
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         modifier = modifier
             .background(
-                color = when (state) {
-                    Enabled -> when (variant) {
-                        Primary -> Theme.colors.buttons.primary
-                        Secondary -> Theme.colors.buttons.secondary
-                    }
-
-                    Disabled -> Theme.colors.buttons.disabled
-                },
+                color = backgroundColor,
                 shape = RoundedCornerShape(percent = 100)
             )
             .clickable(enabled = state == Enabled, onClick = onClick)
@@ -101,14 +108,17 @@ fun VsButton(
         size = size,
         onClick = onClick,
     ) {
-        val contentColor = when (state) {
-            Enabled -> when (variant) {
-                Primary -> Theme.colors.text.button.dark
-                Secondary -> Theme.colors.text.button.light
-            }
+        val contentColor by animateColorAsState(
+            when (state) {
+                Enabled -> when (variant) {
+                    Primary -> Theme.colors.text.button.dark
+                    Secondary -> Theme.colors.text.button.light
+                }
 
-            Disabled -> Theme.colors.text.button.disabled
-        }
+                Disabled -> Theme.colors.text.button.disabled
+            },
+            label = "VsButton.contentColor"
+        )
 
         val iconSize = when (size) {
             Medium -> 20.dp

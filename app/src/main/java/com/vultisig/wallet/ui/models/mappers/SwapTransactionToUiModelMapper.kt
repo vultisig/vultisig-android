@@ -44,7 +44,9 @@ internal class SwapTransactionToUiModelMapperImpl @Inject constructor(
         )
         return SwapTransactionUiModel(
             srcTokenValue = "${mapTokenValueToStringWithUnit(from.srcTokenValue)} (${from.srcToken.chain})",
+            srcToken = from.srcToken,
             dstTokenValue = "${mapTokenValueToStringWithUnit(from.expectedDstTokenValue)} (${from.dstToken.chain})",
+            dstToken = from.dstToken,
             hasConsentAllowance = from.isApprovalRequired,
             totalFee = fiatValueToStringMapper.map(fiatFees + from.gasFeeFiatValue)
         )

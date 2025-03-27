@@ -51,7 +51,7 @@ internal class KeysignPasswordViewModel @Inject constructor(
     private val password: String
         get() = passwordFieldState.text.toString()
 
-    fun verifyPassword() {
+    private fun verifyPassword() {
         val error = if (isPasswordEmpty()) {
             UiText.StringResource(R.string.password_should_not_be_empty)
         } else null

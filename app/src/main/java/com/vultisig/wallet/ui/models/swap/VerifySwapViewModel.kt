@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -24,7 +26,9 @@ import javax.inject.Inject
 
 internal data class SwapTransactionUiModel(
     val srcTokenValue: String = "",
+    val srcToken: Coin = Coins.wewe,
     val dstTokenValue: String = "",
+    val dstToken: Coin = Coins.wewe,
     val totalFee: String = "",
     val hasConsentAllowance: Boolean = false,
 )
