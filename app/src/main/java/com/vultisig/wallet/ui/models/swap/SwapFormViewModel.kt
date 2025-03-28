@@ -825,7 +825,7 @@ internal class SwapFormViewModel @Inject constructor(
 
                                 val tokenFees = TokenValue(
                                     value = quote.tx.swapFee.toBigInteger(),
-                                    token = srcToken
+                                    token = srcNativeToken
                                 )
 
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
@@ -835,7 +835,7 @@ internal class SwapFormViewModel @Inject constructor(
                                 )
 
                                 val fiatFees =
-                                    convertTokenValueToFiat(srcToken, tokenFees, currency)
+                                    convertTokenValueToFiat(srcNativeToken, tokenFees, currency)
                                 swapFeeFiat.value = fiatFees
                                 val estimatedDstTokenValue =
                                     mapTokenValueToDecimalUiString(expectedDstValue)
