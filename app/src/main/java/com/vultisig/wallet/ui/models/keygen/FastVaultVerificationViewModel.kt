@@ -93,32 +93,36 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                     publicKeyEcdsa = args.pubKeyEcdsa,
                     code = code,
                 )
-
                 if (isCodeValid) {
-                    updateVerifyState(VerifyPinState.Success)
+                    try {
+                        updateVerifyState(VerifyPinState.Success)
 
-                    val vaultId = args.vaultId
-                    val vault = temporaryVaultRepository.getById(vaultId)
-                    val shouldOverride = args.tssAction == TssAction.Migrate
-                    saveVault(vault.vault, shouldOverride)
+                        val vaultId = args.vaultId
+                        val vault = temporaryVaultRepository.getById(vaultId)
+                        val shouldOverride = args.tssAction == TssAction.Migrate
+                        saveVault(vault.vault, shouldOverride)
 
-                    vault.hint?.let {
-                        vaultDataStoreRepository.setFastSignHint(
-                            vaultId = vaultId, hint = it
+                        vault.hint?.let {
+                            vaultDataStoreRepository.setFastSignHint(
+                                vaultId = vaultId, hint = it
+                            )
+                        }
+
+                        if (context.canAuthenticateBiometric()) {
+                            vaultPasswordRepository.savePassword(vaultId, vault.password)
+                        }
+
+                        delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
+                        navigator.route(
+                            route = Route.BackupVault(
+                                vaultId = args.vaultId,
+                                vaultType = VaultType.Fast,
+                            )
                         )
-                    }
 
-                    if (context.canAuthenticateBiometric()) {
-                        vaultPasswordRepository.savePassword(vaultId, vault.password)
+                    } catch (e: Exception) {
+                        updateVerifyState(VerifyPinState.Error)
                     }
-
-                    delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
-                    navigator.route(
-                        route = Route.BackupVault(
-                            vaultId = args.vaultId,
-                            vaultType = VaultType.Fast,
-                        )
-                    )
                 } else {
                     updateVerifyState(VerifyPinState.Error)
                 }
