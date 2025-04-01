@@ -3,7 +3,7 @@
     <string name="signing_error_please_try_again_s">Fehler beim Unterschreiben. Bitte versuchen Sie es erneut. %s</string>
     <string name="try_again">Erneut versuchen</string>
     <string name="vault_choose_chains">Ketten wählen</string>
-    <string name="vault_settings_title">Tresor bearbeiten</string>
+    <string name="vault_settings_title">Tresoreinstellungen</string>
     <string name="vault_settings_details_title">Details</string>
     <string name="vault_settings_details_subtitle">Sehen Sie die Details Ihres Tresors</string>
     <string name="vault_settings_backup_title">Backup</string>
@@ -266,8 +266,8 @@
     <string name="keysign_password_title">Passwort</string>
     <string name="home_screen_import_vault">Tresor importieren</string>
     <string name="keysign_password_incorrect_password">Das Passwort ist falsch</string>
-    <string name="vault_list_part_n_of_t">Teil %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Teil %1$d von %2$d</string>
+    <string name="vault_list_part_n_of_t">Teilen %1$dof%2$d</string>
+    <string name="vault_part_n_of_t">Teilen %1$d von %2$d</string>
     <string name="vault_list_fast_badge">Schnell</string>
     <string name="qr_title_join_keygen">Keygen beitreten</string>
     <string name="qr_title_join_keysign">Keysign beitreten</string>
@@ -297,7 +297,7 @@
     <string name="vault_details_screen_vault_type">Tresortyp</string>
     <string name="vault_settings_delete_vault_part">Tresorteil:</string>
     <string name="vault_password_hint_to_long">Der Hinweis ist zu lang</string>
-    <string name="vault_details_screen_vault_part_desc">Teil %1$s von %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Teilen %1$s von %2$s</string>
     <string name="vault_details_screen_signer">Sänger %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registrieren Sie Ihre Tresore</string>
     <string name="register_vault_screen_title">Tresor registrieren</string>

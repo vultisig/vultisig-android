@@ -2,7 +2,7 @@
 <resources>
     <string name="try_again">Riprova</string>
     <string name="vault_choose_chains">Scegli Catene</string>
-    <string name="vault_settings_title">Modifica Cassaforte</string>
+    <string name="vault_settings_title">Impostazioni del Vault</string>
     <string name="vault_settings_details_title">Dettagli</string>
     <string name="vault_settings_details_subtitle">Visualizza i dettagli della tua cassaforte</string>
     <string name="vault_settings_backup_title">Backup</string>
@@ -266,8 +266,8 @@
     <string name="keysign_password_title">Password</string>
     <string name="home_screen_import_vault">Importa Vault</string>
     <string name="keysign_password_incorrect_password">La password è errata</string>
-    <string name="vault_list_part_n_of_t">Parte %1$dof%2$d</string>
-    <string name="vault_part_n_of_t">Parte %1$d di %2$d</string>
+    <string name="vault_list_part_n_of_t">Condividi %1$dof%2$d</string>
+    <string name="vault_part_n_of_t">Condividi %1$d di %2$d</string>
     <string name="vault_list_fast_badge">Veloce</string>
     <string name="qr_title_join_keygen">Unisciti a Keygen</string>
     <string name="qr_title_join_keysign">Unisciti a Keysign</string>
@@ -293,11 +293,11 @@
     <string name="eth_gas_settings_gas_limit_title">Limite del gas</string>
     <string name="eth_gas_settings_priority_title">Priorità</string>
     <string name="eth_gas_setting_total_fee_title">Tariffa totale (Gwei)</string>
-    <string name="vault_details_screen_vault_part">Parte del caveau</string>
+    <string name="vault_details_screen_vault_part">Condividi del caveau</string>
     <string name="vault_details_screen_vault_type">Tipo di caveau</string>
-    <string name="vault_settings_delete_vault_part">Parte del caveau:</string>
+    <string name="vault_settings_delete_vault_part">Condividi del caveau:</string>
     <string name="vault_password_hint_to_long">Il suggerimento è troppo lungo</string>
-    <string name="vault_details_screen_vault_part_desc">Parte %1$s di %2$s</string>
+    <string name="vault_details_screen_vault_part_desc">Condividi %1$s di %2$s</string>
     <string name="vault_details_screen_signer">Cantante %1$s: %2$s</string>
     <string name="settings_screen_register_your_vaults">Registra i tuoi Vault</string>
     <string name="register_vault_screen_title">Registra Vault</string>
