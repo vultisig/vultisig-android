@@ -318,7 +318,7 @@ private fun SwapToken(
 }
 
 @Composable
-private fun VerifyCardDivider(
+internal fun VerifyCardDivider(
     size: Dp,
 ) {
     HorizontalDivider(
