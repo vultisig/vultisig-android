@@ -29,6 +29,7 @@ import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.KeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
+import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.showReviewPopUp
 
@@ -107,16 +108,33 @@ internal fun KeysignScreen(
     ) {
         when (state) {
             KeysignState.KeysignFinished -> {
-                TransactionDoneView(
-                    transactionHash = txHash,
-                    approveTransactionHash = approveTransactionHash,
-                    transactionLink = transactionLink,
-                    approveTransactionLink = approveTransactionLink,
-                    onComplete = onComplete,
-                    progressLink = progressLink,
-                    onBack = onBack,
-                    transactionTypeUiModel = transactionTypeUiModel,
-                )
+                when (transactionTypeUiModel) {
+                    is TransactionTypeUiModel.Swap -> {
+                        SwapTransactionOverviewScreen(
+                            showToolbar = false,
+                            transactionHash = txHash,
+                            approveTransactionHash = approveTransactionHash,
+                            transactionLink = transactionLink,
+                            approveTransactionLink = approveTransactionLink,
+                            onComplete = onComplete,
+                            progressLink = progressLink ?: "",
+                            onBack = onBack,
+                            transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
+                        )
+                    }
+                    else -> {
+                        TransactionDoneView(
+                            transactionHash = txHash,
+                            approveTransactionHash = approveTransactionHash,
+                            transactionLink = transactionLink,
+                            approveTransactionLink = approveTransactionLink,
+                            onComplete = onComplete,
+                            progressLink = progressLink,
+                            onBack = onBack,
+                            transactionTypeUiModel = transactionTypeUiModel,
+                        )
+                    }
+                }
             }
 
             is KeysignState.Error -> {
