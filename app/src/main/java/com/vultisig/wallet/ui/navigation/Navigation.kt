@@ -316,8 +316,6 @@ internal sealed class Destination(
         }
     }
 
-    data object ImportVault : Destination(route = "import_file")
-
     data object CreateFolder : Destination(route = "create_folder")
 
     data class Folder(val folderId: String) : Destination(route = "folder/$folderId") {
@@ -397,6 +395,11 @@ internal sealed class Route {
     }
 
     // vault creation / keygen
+
+    @Serializable
+    data class ImportVault(
+        val uri: String? = null,
+    )
 
     @Serializable
     data object ChooseVaultType

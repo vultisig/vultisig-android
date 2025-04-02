@@ -1,5 +1,6 @@
 package com.vultisig.wallet.app.activity
 
+import android.net.Uri
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
@@ -14,17 +15,20 @@ import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 
 @HiltViewModel
 internal class MainViewModel @Inject constructor(
-    navigator: Navigator<Destination>,
+    private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
     private val appUpdateManager: AppUpdateManager,
@@ -63,6 +67,17 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
+    fun openUri(uri: Uri) {
+        viewModelScope.launch {
+            delay(1.seconds)
+            navigator.route(
+                Route.ImportVault(
+                    uri = uri.toString()
+                )
+            )
+        }
+    }
+
     fun checkUpdates(onUpdateAvailable: (AppUpdateInfo) -> Unit) {
         try {
             appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
@@ -70,6 +85,7 @@ internal class MainViewModel @Inject constructor(
                     UpdateAvailability.UPDATE_AVAILABLE -> {
                         onUpdateAvailable(appUpdateInfo)
                     }
+
                     else -> Unit
                 }
             }

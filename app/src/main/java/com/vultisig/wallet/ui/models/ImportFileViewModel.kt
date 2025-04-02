@@ -3,8 +3,11 @@ package com.vultisig.wallet.ui.models
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.core.net.toUri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
@@ -18,6 +21,7 @@ import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -46,6 +50,7 @@ internal val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat","vult")
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     @ApplicationContext private val context: Context,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
@@ -53,6 +58,9 @@ internal class ImportFileViewModel @Inject constructor(
     private val parseVaultFromString: ParseVaultFromStringUseCase,
     private val discoverToken: DiscoverTokenUseCase,
 ) : ViewModel() {
+
+    private val args = savedStateHandle.toRoute<Route.ImportVault>()
+
     val uiModel = MutableStateFlow(ImportFileState())
 
     val passwordTextFieldState = TextFieldState()
@@ -60,6 +68,11 @@ internal class ImportFileViewModel @Inject constructor(
     private val snackBarChannel = Channel<UiText?>()
     val snackBarChannelFlow = snackBarChannel.receiveAsFlow()
 
+    init {
+        args.uri?.toUri()?.let {
+            fetchFileName(it)
+        }
+    }
 
     fun hidePasswordPromptDialog() {
         uiModel.update {

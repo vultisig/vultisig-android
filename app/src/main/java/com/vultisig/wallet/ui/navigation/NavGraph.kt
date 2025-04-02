@@ -125,7 +125,7 @@ internal fun SetupNavGraph(
             HomeScreen(navController)
         }
 
-        composable(route = Destination.ImportVault.route) {
+        composable<Route.ImportVault> {
             ImportFileScreen(navController)
         }
         composable(route = Destination.CreateFolder.route) {

@@ -36,7 +36,7 @@ internal class StartViewModel @Inject constructor(
 
     fun navigateToImportVault(){
         viewModelScope.launch {
-            navigator.navigate(Destination.ImportVault)
+            navigator.route(Route.ImportVault())
         }
     }
 
