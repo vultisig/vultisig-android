@@ -58,6 +58,12 @@ internal class MainActivity : AppCompatActivity() {
                 )
             }
         }
+
+        val uri = intent.data
+        if (uri != null) {
+            mainViewModel.openUri(uri)
+        }
+
         val systemBarStyle = SystemBarStyle.auto(
             Colors.Default.oxfordBlue800.toArgb(),
             Colors.Default.oxfordBlue800.toArgb(),
