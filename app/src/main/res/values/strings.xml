@@ -529,4 +529,6 @@
     <string name="select_network_network_title" translatable="false">Network</string>
     <string name="select_network_title" translatable="false">Select network</string>
     <string name="verify_swap_youre_swapping_title" translatable="false">You\'re swapping</string>
+    <string name="keysign_make_sure_devices_are_on_the_same_network" translatable="false">Make sure devices are on the same network</string>
+    <string name="keysign_app_version_text" translatable="false">Version %1$s (%2$s)</string>
 </resources>
