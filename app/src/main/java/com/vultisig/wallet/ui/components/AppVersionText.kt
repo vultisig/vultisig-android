@@ -1,11 +1,10 @@
 package com.vultisig.wallet.ui.components
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
@@ -15,12 +14,14 @@ internal fun AppVersionText(
     modifier: Modifier = Modifier,
 ) {
     Text(
-        modifier = modifier.padding(12.dp),
         text = stringResource(
-            R.string.vultisig_app_version,
-            "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+            R.string.keysign_app_version_text,
+            BuildConfig.VERSION_NAME,
+            BuildConfig.VERSION_CODE
         ),
-        style = Theme.menlo.body2,
-        color = Theme.colors.turquoise600Main,
+        color = Theme.colors.text.extraLight,
+        style = Theme.brockmann.supplementary.caption,
+        textAlign = TextAlign.Center,
+        modifier = modifier,
     )
 }

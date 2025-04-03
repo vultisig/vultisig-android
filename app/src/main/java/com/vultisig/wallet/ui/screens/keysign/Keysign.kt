@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,10 +20,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.AppVersionText
-import com.vultisig.wallet.ui.components.DevicesOnSameNetworkHint
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.library.UiCirclesLoader
+import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
@@ -147,27 +147,37 @@ internal fun KeysignScreen(
             else -> {
                 KeepScreenOn()
 
-                UiSpacer(weight = 1f)
-                Text(
-                    text = text,
-                    color = Theme.colors.neutral0,
-                    style = Theme.menlo.subtitle1,
-                    textAlign = TextAlign.Center,
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = Theme.colors.backgrounds.primary,
+                        )
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 24.dp,
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Banner(
+                        text = stringResource(R.string.keysign_make_sure_devices_are_on_the_same_network),
+                    )
 
-                UiSpacer(size = 32.dp)
+                    UiSpacer(weight = 1f)
 
-                UiCirclesLoader()
+                    Text(
+                        text = text,
+                        color = Theme.colors.text.primary,
+                        style = Theme.brockmann.headings.title2,
+                        textAlign = TextAlign.Center,
+                    )
 
-                UiSpacer(weight = 1f)
+                    UiSpacer(weight = 1f)
 
-                DevicesOnSameNetworkHint(
-                    title = stringResource(id = R.string.keysign_screen_keep_devices_on_the_same_wifi_network_with_vultisig_open)
-                )
+                    UiSpacer(size = 60.dp)
 
-                UiSpacer(size = 60.dp)
-
-                AppVersionText(Modifier.padding(bottom = 24.dp))
+                    AppVersionText()
+                }
             }
         }
     }

@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,6 +17,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -25,59 +28,63 @@ internal fun ErrorView(
     infoText: String? = null,
     onButtonClick: () -> Unit,
 ) {
-    Column(Modifier.background(Theme.colors.oxfordBlue800)) {
-        UiSpacer(weight = 1f)
-
+    Column(
+        modifier = Modifier
+            .background(
+                color = Theme.colors.backgrounds.primary,
+            )
+            .padding(
+                vertical = 24.dp,
+                horizontal = 16.dp,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Column(
-            Modifier
+            horizontalAlignment = CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = 81.dp,
-                    end = 81.dp,
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .weight(1f),
         ) {
             Image(
                 painter = painterResource(id = R.drawable.danger),
                 contentDescription = stringResource(R.string.danger_icon),
                 alignment = Alignment.Center
             )
+
+            UiSpacer(24.dp)
+
             Text(
-                modifier = Modifier.padding(top = 9.dp),
                 text = errorLabel,
-                style = Theme.menlo.subtitle1,
-                color = Theme.colors.neutral0,
+                style = Theme.brockmann.headings.title2,
+                color = Theme.colors.alerts.warning,
                 textAlign = TextAlign.Center
             )
-        }
 
-        UiSpacer(weight = 1f)
+            UiSpacer(12.dp)
 
-        Column (
-            horizontalAlignment = CenterHorizontally,
-        ){
-            if (!infoText.isNullOrEmpty()) {
-                InformationNote(
-                    modifier = Modifier.padding(horizontal = 8.dp),
+            if (infoText != null) {
+                Text(
                     text = infoText,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.colors.text.extraLight,
+                    textAlign = TextAlign.Center
                 )
-            } else {
-                AppVersionText()
+
+                UiSpacer(10.dp)
             }
 
-            MultiColorButton(
-                text = buttonText,
-                minHeight = 44.dp,
-                backgroundColor = Theme.colors.turquoise800,
-                textColor = Theme.colors.oxfordBlue800,
-                iconColor = Theme.colors.turquoise800,
-                textStyle = Theme.montserrat.subtitle1,
+
+            VsButton(
+                label = buttonText,
+                variant = VsButtonVariant.Secondary,
                 onClick = onButtonClick,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
+                    .fillMaxWidth(),
             )
         }
+
+        AppVersionText()
     }
 }
 
