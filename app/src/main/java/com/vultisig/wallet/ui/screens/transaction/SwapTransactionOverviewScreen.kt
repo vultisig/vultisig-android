@@ -280,6 +280,8 @@ private fun SwapToken(
             style = Theme.brockmann.body.s.medium,
             color = Theme.colors.text.primary,
             textAlign = TextAlign.Center,
+            minLines = 2,
+            maxLines = 2,
         )
 
         /*
@@ -349,7 +351,7 @@ private fun SwapTransactionOverviewScreenPreview() {
         onComplete = {},
         progressLink = "",
         transactionTypeUiModel = SwapTransactionUiModel(
-            srcTokenValue = "1.00 RUNE",
+            srcTokenValue = "1.00 RUNE (ThorChain)",
             dstTokenValue = "1.00 RUNE",
         )
     )
