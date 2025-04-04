@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,6 +24,7 @@ import com.vultisig.wallet.ui.components.AppVersionText
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.banners.Banner
+import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
@@ -164,6 +166,14 @@ internal fun KeysignScreen(
                     )
 
                     UiSpacer(weight = 1f)
+
+                    RiveAnimation(
+                        animation = R.raw.riv_connecting_with_server,
+                        modifier = Modifier
+                            .size(24.dp)
+                    )
+
+                    UiSpacer(16.dp)
 
                     Text(
                         text = text,
