@@ -50,8 +50,8 @@ internal class TonApiImpl @Inject constructor(
         if (response.result == null) {
             return null
         }
+        // The API returns a Base64-encoded hash that needs to be converted to hex format
         val decodedBytes = Base64.getDecoder().decode(response.result.hash)
-
         return decodedBytes.toHexString()
     }
 
