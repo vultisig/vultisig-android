@@ -11,6 +11,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 import java.math.BigInteger
+import java.util.Base64
 import javax.inject.Inject
 
 interface TonApi {
@@ -35,6 +36,7 @@ internal class TonApiImpl @Inject constructor(
         }.body<TonBalanceResponseJson>()
             .balance
 
+    @OptIn(ExperimentalStdlibApi::class)
     override suspend fun broadcastTransaction(transaction: String): String? {
         val response = http.post("$baseUrl/v2/sendBocReturnHash") {
             setBody(TonBroadcastTransactionRequestJson(transaction))
@@ -45,8 +47,12 @@ internal class TonApiImpl @Inject constructor(
             }
             throw Exception("Error broadcasting transaction: ${response.error}")
         }
-        return response.result?.hash
+        if (response.result == null) {
+            return null
+        }
+        val decodedBytes = Base64.getDecoder().decode(response.result.hash)
 
+        return decodedBytes.toHexString()
     }
 
     override suspend fun getSpecificTransactionInfo(
