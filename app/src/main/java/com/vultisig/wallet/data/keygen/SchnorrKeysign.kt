@@ -15,8 +15,8 @@ import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_session_message_
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_session_output_message
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_sign_setupmsg_new
 import com.silencelaboratories.goschnorr.goschnorr.tss_buffer_free
-import com.silencelaboratories.goschnorr.lib_error
-import com.silencelaboratories.goschnorr.lib_error.LIB_OK
+import com.silencelaboratories.goschnorr.schnorr_lib_error
+import com.silencelaboratories.goschnorr.schnorr_lib_error.LIB_OK
 import com.silencelaboratories.goschnorr.tss_buffer
 import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
@@ -150,7 +150,7 @@ class SchnorrKeysign(
         }
     }
 
-    fun getSchnorrOutboundMessage(handle: Handle): Pair<lib_error, ByteArray> {
+    fun getSchnorrOutboundMessage(handle: Handle): Pair<schnorr_lib_error, ByteArray> {
         val buf = tss_buffer()
         try {
             val result = schnorr_sign_session_output_message(handle, buf)
