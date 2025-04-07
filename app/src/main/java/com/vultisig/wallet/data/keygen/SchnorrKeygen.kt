@@ -21,8 +21,8 @@ import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_session_message_re
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_session_output_message
 import com.silencelaboratories.goschnorr.goschnorr.schnorr_qc_setupmsg_new
 import com.silencelaboratories.goschnorr.goschnorr.tss_buffer_free
-import com.silencelaboratories.goschnorr.lib_error
-import com.silencelaboratories.goschnorr.lib_error.LIB_OK
+import com.silencelaboratories.goschnorr.schnorr_lib_error
+import com.silencelaboratories.goschnorr.schnorr_lib_error.LIB_OK
 import com.silencelaboratories.goschnorr.tss_buffer
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.mediator.Message
@@ -74,7 +74,7 @@ class SchnorrKeygen(
     val cache = mutableMapOf<String, Any>()
     var keyshare: DKLSKeyshare? = null
 
-    fun getSchnorrOutboundMessage(handle: Handle): Pair<lib_error, ByteArray> {
+    fun getSchnorrOutboundMessage(handle: Handle): Pair<schnorr_lib_error, ByteArray> {
         val buf = tss_buffer()
         return try {
             val result = when (action) {
