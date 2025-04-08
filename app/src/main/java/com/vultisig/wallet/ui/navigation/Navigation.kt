@@ -3,6 +3,8 @@ package com.vultisig.wallet.ui.navigation
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.TokenId
+import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.VaultId
 import kotlinx.serialization.Serializable
@@ -20,14 +22,8 @@ internal sealed class Destination(
         const val ARG_CHAIN_ID = "chain_id"
         const val ARG_ADDRESS = "address"
         const val ARG_TOKEN_ID = "token_id"
-        const val ARG_SRC_TOKEN_ID = "src_token_id"
-        const val ARG_DST_TOKEN_ID = "dst_token_id"
         const val ARG_REQUEST_ID = "request_id"
         const val ARG_QR = "qr"
-        const val ARG_VAULT_SETUP_TYPE = "vault_setup_type"
-        const val ARG_VAULT_NAME = "vault_name"
-        const val ARG_EMAIL = "email"
-        const val ARG_PASSWORD = "password"
     }
 
     data object AddVault : Destination(
@@ -70,35 +66,6 @@ internal sealed class Destination(
         companion object {
             const val STATIC_ROUTE =
                 "vault_detail/{$ARG_VAULT_ID}/account/{$ARG_CHAIN_ID}/send?qr={$ARG_QR}&$ARG_TOKEN_ID={$ARG_TOKEN_ID}"
-        }
-    }
-
-    data class Swap(
-        val vaultId: String,
-        val chainId: String? = null,
-        val srcTokenId: String? = null,
-        val dstTokenId: String? = null,
-    ) : Destination(
-        route = buildRoute(vaultId, chainId, srcTokenId, dstTokenId)
-    ) {
-        companion object {
-            const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
-            const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
-
-            val staticRoute = buildRoute(
-                "{$ARG_VAULT_ID}",
-                "{$ARG_CHAIN_ID}",
-                "{$ARG_SRC_TOKEN_ID}",
-                "{$ARG_DST_TOKEN_ID}",
-            )
-
-            fun buildRoute(
-                vaultId: String,
-                chainId: String?,
-                srcTokenId: String?,
-                dstTokenId: String?
-            ) =
-                "vault_detail/$vaultId/account/$chainId/swap?$ARG_SRC_TOKEN_ID=$srcTokenId&$ARG_DST_TOKEN_ID=$dstTokenId"
         }
     }
 
@@ -392,6 +359,47 @@ internal sealed class Route {
         enum class Filters {
             SwapAvailable,
         }
+    }
+
+    // swap
+
+    @Serializable
+    data class Swap(
+        val vaultId: VaultId,
+        val chainId: ChainId? = null,
+        val srcTokenId: TokenId? = null,
+        val dstTokenId: TokenId? = null,
+    )
+
+    @Serializable
+    data class VerifySwap(
+        val vaultId: VaultId,
+        val transactionId: String,
+    )
+
+    // keysign
+
+    data object Keysign {
+
+        @Serializable
+        data class Password(
+            val transactionId: TransactionId,
+            val vaultId: VaultId,
+            val txType: Keysign.TxType,
+        )
+
+        @Serializable
+        data class Keysign(
+            val transactionId: TransactionId,
+            val password: String? = null,
+            val txType: TxType,
+        ) {
+            @Serializable
+            enum class TxType {
+                Send, Swap, Deposit, Sign
+            }
+        }
+
     }
 
     // vault creation / keygen

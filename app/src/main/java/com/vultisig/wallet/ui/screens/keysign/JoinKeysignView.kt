@@ -94,6 +94,8 @@ internal fun JoinKeysignView(
                     is VerifyUiModel.Swap -> {
                         VerifySwapScreen(
                             state = model.model,
+                            showToolbar = false,
+                            onBackClick = {},
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
                             isConsentsEnabled = false,
                             onFastSignClick = {},
@@ -130,7 +132,7 @@ internal fun JoinKeysignView(
                 val keysignViewModel = wrapperViewModel.viewModel
                 val kState = keysignViewModel.currentState.collectAsState().value
                 keysignState = kState
-                KeysignScreen(
+                KeysignView(
                     state = kState,
                     txHash = keysignViewModel.txHash.collectAsState().value,
                     approveTransactionHash = keysignViewModel.approveTxHash.collectAsState().value,

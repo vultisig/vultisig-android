@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,8 +112,8 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun swap() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Swap(
+            navigator.route(
+                Route.Swap(
                     vaultId = vaultId,
                     chainId = chainRaw,
                 )
@@ -172,8 +173,8 @@ internal class ChainTokensViewModel @Inject constructor(
             if (!tokens.value.contains(Coins.wewe)) {
                 enableTokenUseCase(vaultId, Coins.wewe)
             }
-            navigator.navigate(
-                Destination.Swap(
+            navigator.route(
+                Route.Swap(
                     vaultId = vaultId,
                     chainId = chainRaw,
                     dstTokenId = Coins.wewe.id,

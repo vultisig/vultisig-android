@@ -124,7 +124,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun swap() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            navigator.navigate(Destination.Swap(vaultId = vaultId))
+            navigator.route(Route.Swap(vaultId = vaultId))
         }
     }
 

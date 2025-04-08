@@ -4,17 +4,15 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TransactionId
-import com.vultisig.wallet.data.repositories.DepositTransactionRepository
-import com.vultisig.wallet.data.repositories.SwapTransactionRepository
-import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.SendDst
-import com.vultisig.wallet.ui.navigation.SendDst.Companion.ARG_TRANSACTION_ID
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,17 +30,14 @@ internal data class KeysignPasswordUiModel(
 @HiltViewModel
 internal class KeysignPasswordViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val navigator: Navigator<SendDst>,
+    private val navigator: Navigator<Destination>,
     private val vultiSignerRepository: VultiSignerRepository,
     private val vaultRepository: VaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
-
-    private val transactionRepository: TransactionRepository,
-    private val swapTransactionRepository: SwapTransactionRepository,
-    private val depositTransaction: DepositTransactionRepository,
 ) : ViewModel() {
 
-    private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
+    private val args = savedStateHandle.toRoute<Route.Keysign.Password>()
+    private val transactionId: TransactionId = args.transactionId
 
     val state = MutableStateFlow(KeysignPasswordUiModel())
 
@@ -68,7 +63,7 @@ internal class KeysignPasswordViewModel @Inject constructor(
         val password = password
         if (!isPasswordEmpty()) {
             viewModelScope.launch {
-                val vaultId = getTransactionVaultId(transactionId)
+                val vaultId = args.vaultId
                 val vault = vaultRepository.get(vaultId)
                     ?: error("No vault with id $vaultId exists")
 
@@ -78,10 +73,11 @@ internal class KeysignPasswordViewModel @Inject constructor(
                 )
 
                 if (isPasswordValid) {
-                    navigator.navigate(
-                        SendDst.Keysign(
+                    navigator.route(
+                        Route.Keysign.Keysign(
                             transactionId = transactionId,
                             password = password,
+                            txType = args.txType,
                         )
                     )
                 } else {
@@ -112,23 +108,6 @@ internal class KeysignPasswordViewModel @Inject constructor(
             R.string.import_file_password_hint_text,
             listOf(passwordHintString)
         )
-    }
-
-    // FIXME forgive me god, this is terrible, but i need this asap;
-    private suspend fun getTransactionVaultId(transactionId: String): String {
-        return try {
-            transactionRepository.getTransaction(transactionId)
-                .first()
-                .vaultId
-        } catch (e: Exception) {
-            try {
-                swapTransactionRepository.getTransaction(transactionId)
-                    .vaultId
-            } catch (e: Exception) {
-                depositTransaction.getTransaction(transactionId)
-                    .vaultId
-            }
-        }
     }
 
     private fun isPasswordEmpty() = password.isEmpty()

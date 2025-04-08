@@ -1,8 +1,10 @@
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
@@ -39,14 +41,12 @@ import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
-import com.vultisig.wallet.ui.models.mappers.ZeroValueCurrencyToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
@@ -92,12 +92,11 @@ internal data class SwapFormUiModel(
 
 @HiltViewModel
 internal class SwapFormViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val sendNavigator: Navigator<SendDst>,
     private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
-    private val zeroValueCurrencyToString: ZeroValueCurrencyToStringMapper,
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
 
     private val allowanceRepository: AllowanceRepository,
@@ -113,6 +112,8 @@ internal class SwapFormViewModel @Inject constructor(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val refreshQuoteUiRepository: RefreshQuoteUiRepository,
 ) : ViewModel() {
+
+    private val args = savedStateHandle.toRoute<Route.Swap>()
 
     val uiState = MutableStateFlow(SwapFormUiModel())
 
@@ -150,12 +151,27 @@ internal class SwapFormViewModel @Inject constructor(
         }
 
     init {
+        viewModelScope.launch {
+            loadData(
+                vaultId = args.vaultId,
+                chainId = args.chainId,
+                srcTokenId = args.srcTokenId,
+                dstTokenId = args.dstTokenId,
+            )
+        }
+
         collectSelectedAccounts()
         collectSelectedTokens()
 
         calculateGas()
         calculateFees()
         collectTotalFee()
+    }
+
+    fun back() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
     }
 
     fun swap() {
@@ -393,8 +409,8 @@ internal class SwapFormViewModel @Inject constructor(
 
                 swapTransactionRepository.addTransaction(transaction)
 
-                sendNavigator.navigate(
-                    SendDst.VerifyTransaction(
+                navigator.route(
+                    Route.VerifySwap(
                         transactionId = transaction.id,
                         vaultId = vaultId,
                     )
@@ -431,11 +447,11 @@ internal class SwapFormViewModel @Inject constructor(
 
 
     fun selectSrcToken() {
-        navigateToSelectToken(Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID)
+        navigateToSelectToken(ARG_SELECTED_SRC_TOKEN_ID)
     }
 
     fun selectDstToken() {
-        navigateToSelectToken(Destination.Swap.ARG_SELECTED_DST_TOKEN_ID)
+        navigateToSelectToken(ARG_SELECTED_DST_TOKEN_ID)
     }
 
     private fun navigateToSelectToken(
@@ -447,8 +463,8 @@ internal class SwapFormViewModel @Inject constructor(
                     vaultId = vaultId ?: return@launch,
                     requestId = targetArg,
                     preselectedNetworkId = (when (targetArg) {
-                        Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc.value?.address?.chain
-                        Destination.Swap.ARG_SELECTED_DST_TOKEN_ID -> selectedDst.value?.address?.chain
+                        ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc.value?.address?.chain
+                        ARG_SELECTED_DST_TOKEN_ID -> selectedDst.value?.address?.chain
                         else -> Chain.ThorChain
                     })?.id ?: Chain.ThorChain.id,
                     networkFilters = Route.SelectNetwork.Filters.SwapAvailable,
@@ -460,7 +476,7 @@ internal class SwapFormViewModel @Inject constructor(
 
     private suspend fun checkTokenSelectionResponse(targetArg: String) {
         val result = requestResultRepository.request<Coin>(targetArg)?.id
-        if (targetArg == Destination.Swap.ARG_SELECTED_SRC_TOKEN_ID) {
+        if (targetArg == ARG_SELECTED_SRC_TOKEN_ID) {
             selectedSrcId.value = result
         } else {
             selectedDstId.value = result
@@ -953,6 +969,10 @@ internal class SwapFormViewModel @Inject constructor(
         const val AFFILIATE_FEE_USD_THRESHOLD = 100
         const val ETH_GAS_LIMIT: Long = 40_000
         const val ARB_GAS_LIMIT: Long = 400_000
+
+        private const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
+        private const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
+
     }
 
 }

@@ -20,8 +20,6 @@ import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.models.send.SendViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
-import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
-import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -75,18 +73,6 @@ internal fun SendScreen(
             progress = 0.5f
             title = stringResource(R.string.verify_transaction_screen_title)
         }
-        route == SendDst.Password.staticRoute -> {
-            progress = 0.65f
-            title = stringResource(R.string.keysign_password_title)
-        }
-        route == SendDst.Keysign.staticRoute && isKeysignFinished -> {
-            progress = 1f
-            title = stringResource(R.string.transaction_complete_screen_title)
-        }
-        route == SendDst.Keysign.staticRoute -> {
-            progress = 0.75f
-            title = stringResource(R.string.keysign)
-        }
         else -> {
             progress = 0.0f
             title = stringResource(R.string.send_screen_title)
@@ -138,29 +124,6 @@ internal fun SendScreen(
                 arguments = SendDst.transactionArgs,
             ) {
                 VerifyTransactionScreen()
-            }
-            composable(
-                route = SendDst.Password.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) {
-                KeysignPasswordScreen()
-            }
-            composable(
-                route = SendDst.Keysign.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) { entry ->
-                val transactionId = entry.arguments
-                    ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-                keysignShareViewModel.loadTransaction(transactionId)
-
-                KeysignFlowView(
-                    onComplete = {
-                        viewModel.navigateToHome(useMainNavigator)
-                    },
-                    onKeysignFinished = {
-                        viewModel.finishKeysign()
-                    }
-                )
             }
         }
     }

@@ -16,6 +16,7 @@ import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,8 +86,8 @@ internal class TokenDetailViewModel @Inject constructor(
 
     fun swap() {
         viewModelScope.launch {
-            navigator.navigate(
-                Destination.Swap(
+            navigator.route(
+                Route.Swap(
                     vaultId = vaultId,
                     chainId = chainRaw,
                     srcTokenId = tokenId,

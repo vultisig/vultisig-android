@@ -1,210 +1,470 @@
 package com.vultisig.wallet.ui.screens.swap
 
+import android.annotation.SuppressLint
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.components.ProgressScreen
-import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
-import com.vultisig.wallet.ui.models.swap.SwapViewModel
-import com.vultisig.wallet.ui.navigation.SendDst
-import com.vultisig.wallet.ui.navigation.route
-import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
-import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
-import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
-import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
-import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
-import com.vultisig.wallet.ui.theme.slideOutToStartExitTransition
+import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiAlertDialog
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
+import com.vultisig.wallet.ui.components.library.form.FormDetails2
+import com.vultisig.wallet.ui.components.library.form.FormError
+import com.vultisig.wallet.ui.components.selectors.ChainSelector
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.components.util.CutoutPosition
+import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
+import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
+import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
+import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
+import java.math.BigInteger
 
 @Composable
 internal fun SwapScreen(
-    navController: NavController,
-    vaultId: String,
-    chainId: String?,
-    srcTokenId: String? = null,
-    dstTokenId: String? = null,
-    viewModel: SwapViewModel = hiltViewModel(),
+    viewModel: SwapFormViewModel = hiltViewModel(),
 ) {
-    val swapNavHostController = rememberNavController()
-
-    val isKeysignFinished by viewModel.isKeysignFinished.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.dst.collect {
-            swapNavHostController.route(it.dst.route, it.opts)
-        }
-    }
-
-    val navBackStackEntry by swapNavHostController.currentBackStackEntryAsState()
-
-    val route = navBackStackEntry?.destination?.route
-
-    val useMainNavigator = route == SendDst.Send.route
-
-    val topBarNavController = if (useMainNavigator) {
-        navController
-    } else {
-        swapNavHostController
-    }
-
-    val progress: Float
-    val title: String
-
-    when {
-        route == SendDst.Send.route -> {
-            progress = 0.25f
-            title = stringResource(R.string.swap_screen_title)
-        }
-        route == SendDst.VerifyTransaction.staticRoute -> {
-            progress = 0.5f
-            title = stringResource(R.string.verify_transaction_screen_title)
-        }
-        route == SendDst.Password.staticRoute -> {
-            progress = 0.65f
-            title = stringResource(id = R.string.keygen_password_title)
-        }
-        route == SendDst.Keysign.staticRoute && isKeysignFinished -> {
-            progress = 1f
-            title = stringResource(R.string.transaction_complete_screen_title)
-        }
-        route == SendDst.Keysign.staticRoute -> {
-            progress = 0.75f
-            title = stringResource(R.string.keysign)
-        }
-        else -> {
-            progress = 0.0f
-            title = stringResource(R.string.swap_screen_title)
-        }
-    }
+    val state by viewModel.uiState.collectAsState()
 
     SwapScreen(
-        topBarNavController = topBarNavController,
-        navHostController = swapNavHostController,
-        vaultId = vaultId,
-        chainId = chainId,
-        srcTokenId = srcTokenId,
-        dstTokenId = dstTokenId,
-        title = title,
-        progress = progress,
-        qrCodeResult = viewModel.addressProvider.address.collectAsState().value,
-        navigateToHome = { viewModel.navigateToHome(useMainNavigator) },
-        finishKeysign = viewModel::finishKeysign,
-        onRefreshQuoteClick = viewModel::requestToRefreshQuote
+        state = state,
+        srcAmountTextFieldState = viewModel.srcAmountState,
+        onBackClick = viewModel::back,
+        onAmountLostFocus = viewModel::validateAmount,
+        onSwap = viewModel::swap,
+        onSelectSrcToken = viewModel::selectSrcToken,
+        onDismissError = viewModel::hideError,
+        onSelectDstToken = viewModel::selectDstToken,
+        onFlipSelectedTokens = viewModel::flipSelectedTokens,
     )
 }
 
-@Suppress("ReplaceNotNullAssertionWithElvisReturn")
+
 @Composable
-private fun SwapScreen(
-    topBarNavController: NavController,
-    navHostController: NavHostController,
-    title: String,
-    progress: Float,
-    vaultId: String,
-    chainId: String?,
-    srcTokenId: String?,
-    dstTokenId: String?,
-    qrCodeResult: String?,
-    navigateToHome: () -> Unit = {},
-    finishKeysign: (() -> Unit)? = null,
-    onRefreshQuoteClick: () -> Unit = {},
+internal fun SwapScreen(
+    state: SwapFormUiModel,
+    srcAmountTextFieldState: TextFieldState,
+    onBackClick: () -> Unit = {},
+    onAmountLostFocus: () -> Unit = {},
+    onSelectSrcToken: () -> Unit = {},
+    onSelectDstToken: () -> Unit = {},
+    onDismissError: () -> Unit = {},
+    onFlipSelectedTokens: () -> Unit = {},
+    onSwap: () -> Unit = {},
 ) {
-    val context = LocalContext.current
-
-    val keysignShareViewModel: KeysignShareViewModel =
-        hiltViewModel(context as MainActivity)
-
-    val showRefreshQuoteIcon = progress == 0.25f
-
-    ProgressScreen(
-        navController = topBarNavController,
-        title = title,
-        progress = progress,
-        endIcon =
-        if (showRefreshQuoteIcon)
-            R.drawable.arrow_clockwise
-        else
-            qrCodeResult?.takeIf { it.isNotEmpty() }?.let { R.drawable.qr_share },
-        onStartIconClick = navigateToHome,
-        onEndIconClick = if (showRefreshQuoteIcon) {
-            onRefreshQuoteClick
-        } else qrCodeResult?.let {
-            {
-                keysignShareViewModel.shareQRCode(context)
-            }
-        } ?: {}
-    ) {
-        NavHost(
-            navController = navHostController,
-            startDestination = SendDst.Send.route,
-            enterTransition = slideInFromEndEnterTransition(),
-            exitTransition = slideOutToStartExitTransition(),
-            popEnterTransition = slideInFromStartEnterTransition(),
-            popExitTransition = slideOutToEndExitTransition(),
-        ) {
-            composable(
-                route = SendDst.Send.route,
-            ) {
-                SwapFormScreen(
-                    vaultId = vaultId,
-                    chainId = chainId,
-                    srcTokenId = srcTokenId,
-                    dstTokenId = dstTokenId,
+    val focusManager = LocalFocusManager.current
+    Scaffold(
+        containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            VsTopAppBar(
+                title = "Swap",
+                onBackClick = onBackClick,
+            )
+        },
+        content = { contentPadding ->
+            val errorText = state.error
+            if (errorText != null) {
+                UiAlertDialog(
+                    title = stringResource(R.string.dialog_default_error_title),
+                    text = errorText.asString(),
+                    confirmTitle = stringResource(R.string.try_again),
+                    onDismiss = onDismissError,
                 )
             }
-            composable(
-                route = SendDst.VerifyTransaction.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) {
-                VerifySwapScreen()
-            }
-            composable(
-                route = SendDst.Password.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) {
-                KeysignPasswordScreen()
-            }
-            composable(
-                route = SendDst.Keysign.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) { entry ->
-                val transactionId = entry.arguments
-                    ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-                keysignShareViewModel.loadSwapTransaction(transactionId)
 
-                KeysignFlowView(
-                    onComplete = navigateToHome,
-                    onKeysignFinished = finishKeysign,
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(contentPadding)
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 16.dp
+                    ),
+            ) {
+                Box {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        TokenInput(
+                            title = "From",
+                            selectedToken = state.selectedSrcToken,
+                            fiatValue = state.srcFiatValue,
+                            onSelectNetworkClick = onSelectSrcToken,
+                            onSelectTokenClick = onSelectSrcToken,
+                            shape = RoundedWithCutoutShape(
+                                cutoutPosition = CutoutPosition.Bottom,
+                                cutoutOffsetY = (-4).dp,
+                                cutoutRadius = 28.dp,
+                            ),
+                            focused = true,
+                            textFieldContent = {
+                                VsBasicTextField(
+                                    textFieldState = srcAmountTextFieldState,
+                                    style = Theme.brockmann.headings.title2,
+                                    color = Theme.colors.text.light,
+                                    textAlign = TextAlign.End,
+                                    hint = "0",
+                                    hintColor = Theme.colors.text.extraLight,
+                                    hintStyle = Theme.brockmann.headings.title2,
+                                    lineLimits = TextFieldLineLimits.SingleLine,
+                                    // TODO onAmountLostFocus
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Number,
+                                        imeAction = ImeAction.Done,
+                                    ),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                )
+                            }
+                        )
+
+                        TokenInput(
+                            title = "To",
+                            selectedToken = state.selectedDstToken,
+                            fiatValue = state.estimatedDstFiatValue,
+                            onSelectNetworkClick = onSelectDstToken,
+                            onSelectTokenClick = onSelectDstToken,
+                            shape = RoundedWithCutoutShape(
+                                cutoutPosition = CutoutPosition.Top,
+                                cutoutOffsetY = (-4).dp,
+                                cutoutRadius = 28.dp,
+                            ),
+                            focused = false,
+                            textFieldContent = {
+                                Text(
+                                    text = state.estimatedDstTokenValue,
+                                    style = Theme.brockmann.headings.title2,
+                                    color = Theme.colors.text.light,
+                                    textAlign = TextAlign.End,
+                                    maxLines = 1,
+                                )
+                            }
+                        )
+                    }
+
+                    val rotation = remember { Animatable(0f) }
+
+                    // Trigger spin when this is incremented
+                    var spinTrigger by remember { mutableStateOf(0) }
+
+                    // Launch the animation every time trigger changes
+                    LaunchedEffect(spinTrigger) {
+                        rotation.snapTo(0f)
+                        rotation.animateTo(
+                            targetValue = 180f,
+                            animationSpec = tween(
+                                durationMillis = 600,
+                                easing = FastOutSlowInEasing
+                            )
+                        )
+                    }
+
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_bottom_top),
+                        contentDescription = null,
+                        tint = Theme.colors.text.primary,
+                        modifier = Modifier
+                            .clickable {
+                                spinTrigger++
+                                onFlipSelectedTokens()
+                            }
+                            .background(
+                                color = Theme.colors.persianBlue400,
+                                shape = CircleShape,
+                            )
+                            .padding(all = 8.dp)
+                            .align(Alignment.Center)
+                            .size(24.dp)
+                            .graphicsLayer {
+                                rotationZ = rotation.value
+                            },
+                    )
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 8.dp,
+                        )
+                ) {
+                    FormDetails2(
+                        title = stringResource(R.string.swap_screen_provider_title),
+                        value = state.provider.asString(),
+                    )
+
+                    FormDetails2(
+                        title = stringResource(R.string.swap_form_estimated_fees_title),
+                        value = state.fee
+                    )
+
+                    FormDetails2(
+                        modifier = Modifier.fillMaxWidth(),
+                        title = buildAnnotatedString {
+                            append(stringResource(R.string.swap_form_gas_title))
+                        },
+                        value = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral100,
+                                )
+                            ) {
+                                append(state.gas)
+                            }
+                            append(" ")
+                            withStyle(
+                                style = SpanStyle(
+                                    color = Theme.colors.neutral400,
+                                )
+                            ) {
+                                append(
+                                    if (state.fiatGas.isNotEmpty())
+                                        "(~${state.fiatGas})"
+                                    else ""
+                                )
+                            }
+                        }
+                    )
+
+                    FormDetails2(
+                        title = stringResource(R.string.swap_form_total_fees_title),
+                        value = state.totalFee
+                    )
+                }
+
+                when {
+                    state.formError != null -> {
+                        FormError(
+                            errorMessage = state.formError.asString()
+                        )
+                    }
+
+                    state.minimumAmount != BigInteger.ZERO.toString() -> {
+                        FormError(
+                            errorMessage = stringResource(
+                                R.string.swap_form_minimum_amount,
+                                state.minimumAmount,
+                                state.selectedSrcToken?.title ?: ""
+                            )
+                        )
+                    }
+                }
+            }
+
+        },
+        bottomBar = {
+            VsButton(
+                label = stringResource(R.string.swap_swap_button),
+                variant = VsButtonVariant.Primary,
+                state = if (state.isSwapDisabled)
+                    VsButtonState.Disabled
+                else VsButtonState.Enabled,
+                onClick = {
+                    focusManager.clearFocus(true)
+                    onSwap()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = 12.dp,
+                        horizontal = 24.dp,
+                    )
+            )
+        }
+    )
+}
+
+@Composable
+private fun TokenInput(
+    title: String,
+    selectedToken: TokenBalanceUiModel?,
+    fiatValue: String,
+    onSelectNetworkClick: () -> Unit,
+    onSelectTokenClick: () -> Unit,
+    shape: Shape,
+    focused: Boolean,
+    modifier: Modifier = Modifier,
+    @SuppressLint("ComposableLambdaParameterNaming")
+    textFieldContent: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = modifier
+            .background(
+                color = if (focused)
+                    Theme.colors.backgrounds.secondary
+                else
+                    Theme.colors.backgrounds.disabled,
+                shape = shape
+            )
+            .border(
+                width = 1.dp,
+                color = Theme.colors.borders.light,
+                shape = shape,
+            )
+            .padding(
+                all = 16.dp,
+            )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            val selectedChain = selectedToken?.model?.address?.chain
+
+            if (selectedChain != null) {
+                ChainSelector(
+                    title = title,
+                    chain = selectedChain,
+                    onClick = onSelectNetworkClick
+                )
+            }
+
+            // TODO loader if empty
+            Text(
+                text = selectedToken?.let { "${it.balance} ${it.title}" } ?: "",
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.colors.text.extraLight,
+                textAlign = TextAlign.End,
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clickable(onClick = onSelectTokenClick)
+                    .background(
+                        color = Theme.colors.backgrounds.tertiary,
+                        shape = RoundedCornerShape(99.dp)
+                    )
+                    .padding(
+                        all = 6.dp,
+                    )
+            ) {
+                TokenLogo(
+                    errorLogoModifier = Modifier
+                        .size(32.dp)
+                        .background(Theme.colors.neutral100),
+                    logo = selectedToken?.tokenLogo ?: "",
+                    title = selectedToken?.title ?: "",
+                    modifier = Modifier
+                        .size(32.dp)
+                )
+
+                UiSpacer(8.dp)
+
+                Column {
+                    Text(
+                        // TODO loader
+                        text = selectedToken?.title ?: "",
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.colors.text.primary,
+                    )
+
+                    if (selectedToken?.isNativeToken == true) {
+                        Text(
+                            text = "Native",
+                            style = Theme.brockmann.supplementary.captionSmall,
+                            color = Theme.colors.text.extraLight,
+                        )
+                    }
+                }
+
+                UiSpacer(4.dp)
+
+                UiIcon(
+                    drawableResId = R.drawable.ic_chevron_right_small,
+                    size = 20.dp,
+                    tint = Theme.colors.text.primary,
+                )
+
+                UiSpacer(6.dp)
+            }
+
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalAlignment = Alignment.End,
+            ) {
+                textFieldContent()
+
+                Text(
+                    text = fiatValue,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.colors.text.extraLight,
+                    textAlign = TextAlign.End,
                 )
             }
         }
     }
 }
 
+
 @Preview
 @Composable
-internal fun SwapScreenPreview() {
+internal fun SwapFormScreenPreview() {
     SwapScreen(
-        topBarNavController = rememberNavController(),
-        navHostController = rememberNavController(),
-        vaultId = "",
-        chainId = null,
-        srcTokenId = null,
-        dstTokenId = null,
-        title = stringResource(id = R.string.swap_screen_title),
-        progress = 0.35f,
-        qrCodeResult = "0x1234567890",
+        state = SwapFormUiModel(
+            estimatedDstTokenValue = "0",
+        ),
+        srcAmountTextFieldState = TextFieldState(),
     )
 }

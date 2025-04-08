@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
+import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -72,9 +74,9 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
-    fun bindGetSendDstByKeysignInitType(
-        impl: GetSendDstByKeysignInitTypeImpl
-    ): GetSendDstByKeysignInitType
+    fun bindLaunchKeysignUseCase(
+        impl: LaunchKeysignUseCaseImpl
+    ): LaunchKeysignUseCase
 
     @Binds
     @Singleton

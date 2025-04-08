@@ -5,11 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
-import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,10 +31,9 @@ internal data class VerifySignMessageUiModel(
 @HiltViewModel
 internal class VerifySignMessageViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val sendNavigator: Navigator<SendDst>,
     private val customMessagePayloadRepo: CustomMessagePayloadRepo,
     private val vaultPasswordRepository: VaultPasswordRepository,
-    private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    private val launchKeysignUseCase: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
 
@@ -42,7 +41,7 @@ internal class VerifySignMessageViewModel @Inject constructor(
     private val password = MutableStateFlow<String?>(null)
 
     private val transactionId: String = requireNotNull(savedStateHandle[SendDst.ARG_TRANSACTION_ID])
-    private val vaultId: String? = savedStateHandle[SendDst.ARG_VAULT_ID]
+    private val vaultId: String = requireNotNull(savedStateHandle[SendDst.ARG_VAULT_ID])
 
     init {
         viewModelScope.launch {
@@ -87,25 +86,19 @@ internal class VerifySignMessageViewModel @Inject constructor(
         keysignInitType: KeysignInitType,
     ) {
         viewModelScope.launch {
-
-            sendNavigator.navigate(
-                getSendDstByKeysignInitType(keysignInitType, transactionId, password.value)
-            )
+            launchKeysignUseCase(keysignInitType, transactionId, password.value,
+                Route.Keysign.Keysign.TxType.Sign, vaultId)
         }
     }
 
     private fun loadPassword() {
         viewModelScope.launch {
-            password.value = if (vaultId == null)
-                null
-            else
-                vaultPasswordRepository.getPassword(vaultId)
+            password.value = vaultPasswordRepository.getPassword(vaultId)
         }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
-            if (vaultId == null) return@launch
             val hasFastSign = isVaultHasFastSignById(vaultId)
             state.update {
                 it.copy(
