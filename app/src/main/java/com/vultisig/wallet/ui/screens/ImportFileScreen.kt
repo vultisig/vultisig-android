@@ -109,7 +109,8 @@ private fun ImportFileScreen(
             Column(horizontalAlignment = CenterHorizontally) {
                 Text(
                     text = stringResource(id = R.string.import_file_screen_enter_password),
-                    style = Theme.menlo.subtitle1
+                    style = Theme.menlo.subtitle1,
+                    color = Theme.colors.text.primary,
                 )
                 UiSpacer(size = 16.dp)
                 FormBasicSecureTextField(

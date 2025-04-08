@@ -6,7 +6,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -16,13 +15,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.ui.screens.keysign.KeysignFlowView
-import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.components.ProgressScreen
 import com.vultisig.wallet.ui.models.deposit.DepositViewModel
+import com.vultisig.wallet.ui.models.keysign.KeysignShareViewModel
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.navigation.route
-import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.theme.slideInFromEndEnterTransition
 import com.vultisig.wallet.ui.theme.slideInFromStartEnterTransition
 import com.vultisig.wallet.ui.theme.slideOutToEndExitTransition
@@ -70,18 +67,6 @@ internal fun DepositScreen(
         route == SendDst.VerifyTransaction.staticRoute -> {
             progress = 0.5f
             title = stringResource(R.string.verify_transaction_screen_title)
-        }
-        route == SendDst.Password.staticRoute -> {
-            progress = 0.65f
-            title = stringResource(id = R.string.keygen_password_title)
-        }
-        route == SendDst.Keysign.staticRoute && isKeysignFinished -> {
-            progress = 1f
-            title = stringResource(R.string.transaction_complete_screen_title)
-        }
-        route == SendDst.Keysign.staticRoute -> {
-            progress = 0.75f
-            title = stringResource(R.string.keysign)
         }
         else -> {
             progress = 0.0f
@@ -155,28 +140,6 @@ private fun DepositScreen(
                 arguments = SendDst.transactionArgs,
             ) {
                 VerifyDepositScreen()
-            }
-            composable(
-                route = SendDst.Password.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) {
-                KeysignPasswordScreen()
-            }
-            composable(
-                route = SendDst.Keysign.staticRoute,
-                arguments = SendDst.transactionArgs,
-            ) { entry ->
-                val transactionId = entry.arguments
-                    ?.getString(SendDst.ARG_TRANSACTION_ID)!!
-
-                keysignShareViewModel.loadDepositTransaction(transactionId)
-
-                KeysignFlowView(
-                    onComplete = {
-                        onKeysignFinished()
-                    },
-                    onKeysignFinished = finishKeysign,
-                )
             }
         }
     }

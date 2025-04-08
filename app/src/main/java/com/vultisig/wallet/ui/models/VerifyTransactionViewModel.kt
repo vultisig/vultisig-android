@@ -8,13 +8,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
-import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst.Companion.ARG_TRANSACTION_ID
+import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,17 +58,16 @@ internal data class VerifyTransactionUiModel(
 @HiltViewModel
 internal class VerifyTransactionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val navigator: Navigator<SendDst>,
     private val mapTransactionToUiModel: TransactionToUiModelMapper,
 
     transactionRepository: TransactionRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
-    private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
 
     private val transactionId: TransactionId = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
-    private val vaultId: String? = savedStateHandle["vault_id"]
+    private val vaultId: String = requireNotNull(savedStateHandle["vault_id"])
 
     private val transaction = transactionRepository.getTransaction(transactionId)
         .stateIn(
@@ -132,9 +130,10 @@ internal class VerifyTransactionViewModel @Inject constructor(
     ) {
         if (uiState.value.hasAllConsents) {
             viewModelScope.launch {
-                val transaction = transaction.filterNotNull().first()
-                navigator.navigate (
-                    getSendDstByKeysignInitType(keysignInitType, transaction.id, password.value)
+                launchKeysign(
+                    keysignInitType, transactionId, password.value,
+                    Route.Keysign.Keysign.TxType.Send,
+                    vaultId
                 )
             }
         } else {

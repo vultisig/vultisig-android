@@ -8,12 +8,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_ADDRESS
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_CHAIN_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_DST_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_QR
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_REQUEST_ID
-import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_SRC_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAULT_LIST
@@ -61,11 +60,13 @@ import com.vultisig.wallet.ui.screens.keygen.NameVaultScreen
 import com.vultisig.wallet.ui.screens.keygen.StartScreen
 import com.vultisig.wallet.ui.screens.keygen.VaultConfirmationScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
+import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
+import com.vultisig.wallet.ui.screens.keysign.KeysignScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
-import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
+import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
 import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
 import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
@@ -83,6 +84,7 @@ import com.vultisig.wallet.ui.screens.settings.SettingsScreen
 import com.vultisig.wallet.ui.screens.settings.VultisigTokenScreen
 import com.vultisig.wallet.ui.screens.sign.SignMessageScreen
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
+import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.AddAddressEntryScreen
 import com.vultisig.wallet.ui.screens.transaction.AddressBookScreen
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsScreen
@@ -346,36 +348,6 @@ internal fun SetupNavGraph(
         }
 
         composable(
-            route = Destination.Swap.staticRoute,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) { type = NavType.StringType },
-                navArgument(ARG_CHAIN_ID) {
-                    type = NavType.StringType
-                    // if chainId = null show all tokens
-                    // else only tokens from chain
-                    nullable = true
-                },
-                navArgument(ARG_DST_TOKEN_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                },
-                navArgument(ARG_SRC_TOKEN_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
-        ) { entry ->
-            val args = requireNotNull(entry.arguments)
-            SwapScreen(
-                navController = navController,
-                vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
-                chainId = args.getString(ARG_CHAIN_ID),
-                srcTokenId = args.getString(ARG_SRC_TOKEN_ID),
-                dstTokenId = args.getString(ARG_DST_TOKEN_ID),
-            )
-        }
-
-        composable(
             route = Destination.Deposit.staticRoute,
             arguments = listOf(
                 navArgument(ARG_VAULT_ID) { type = NavType.StringType },
@@ -537,7 +509,7 @@ internal fun SetupNavGraph(
         }
 
         composable<Keygen.PeerDiscovery> {
-            PeerDiscoveryScreen()
+            KeygenPeerDiscoveryScreen()
         }
 
         composable<Keygen.Generating> {
@@ -545,7 +517,7 @@ internal fun SetupNavGraph(
         }
 
         // vault backup
-        composable<Onboarding.VaultBackup> (
+        composable<Onboarding.VaultBackup>(
             enterTransition = slideInFromBottomEnterTransition(),
         ) {
             VaultBackupOnboardingScreen()
@@ -581,5 +553,28 @@ internal fun SetupNavGraph(
         dialog<SelectNetwork> {
             SelectNetworkScreen()
         }
+
+        // swap
+        composable<Route.Swap> {
+            SwapScreen()
+        }
+
+        composable<Route.VerifySwap> {
+            VerifySwapScreen()
+        }
+
+        // keysign
+        composable<Route.Keysign.Password> {
+            KeysignPasswordScreen()
+        }
+
+        composable<Route.Keysign.Keysign> { entry ->
+            val args = entry.toRoute<Route.Keysign.Keysign>()
+            KeysignScreen(
+                txType = args.txType,
+                transactionId = args.transactionId,
+            )
+        }
+
     }
 }

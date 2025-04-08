@@ -64,6 +64,7 @@ internal fun SwapTransactionOverviewScreen(
             if (showToolbar) {
                 VsTopAppBar(
                     title = "Overview",
+                    onBackClick = onBack,
                 )
             }
         },

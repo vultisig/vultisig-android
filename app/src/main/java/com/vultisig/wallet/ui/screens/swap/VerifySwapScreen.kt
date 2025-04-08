@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.swap.VerifySwapViewModel
@@ -77,11 +78,13 @@ internal fun VerifySwapScreen(
 
     VerifySwapScreen(
         state = state,
+        showToolbar = true,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
         onConfirm = viewModel::confirm,
         onConsentAllowance = viewModel::consentAllowance,
+        onBackClick = viewModel::back,
         onFastSignClick = {
             if (!viewModel.tryToFastSignWithPassword()) {
                 authorize()
@@ -93,6 +96,7 @@ internal fun VerifySwapScreen(
 @Composable
 internal fun VerifySwapScreen(
     state: VerifySwapUiModel,
+    showToolbar: Boolean,
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
     onConsentReceiveAmount: (Boolean) -> Unit = {},
@@ -100,9 +104,11 @@ internal fun VerifySwapScreen(
     onConsentAllowance: (Boolean) -> Unit = {},
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     VerifySwapScreen(
         provider = state.provider.asString(),
+        showToolbar = showToolbar,
         swapTransactionUiModel = state.swapTransactionUiModel,
         hasAllConsents = state.hasAllConsents,
         consentAmount = state.consentAmount,
@@ -116,12 +122,14 @@ internal fun VerifySwapScreen(
         onConsentAllowance = onConsentAllowance,
         onFastSignClick = onFastSignClick,
         onConfirm = onConfirm,
+        onBackClick = onBackClick,
     )
 }
 
 @Composable
 private fun VerifySwapScreen(
     provider: String,
+    showToolbar: Boolean,
     swapTransactionUiModel: SwapTransactionUiModel,
     hasAllConsents: Boolean,
     consentAmount: Boolean,
@@ -135,9 +143,18 @@ private fun VerifySwapScreen(
     onConsentAllowance: (Boolean) -> Unit,
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            if (showToolbar) {
+                VsTopAppBar(
+                    title = "Swap overview",
+                    onBackClick = onBackClick,
+                )
+            }
+        },
         content = { contentPadding ->
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
@@ -364,6 +381,8 @@ private fun VerifyCardDetails(
 private fun VerifySwapScreenPreview() {
     VerifySwapScreen(
         provider = "THORChain",
+        showToolbar = true,
+        onBackClick = {},
         hasAllConsents = false,
         consentAmount = true,
         consentReceiveAmount = false,

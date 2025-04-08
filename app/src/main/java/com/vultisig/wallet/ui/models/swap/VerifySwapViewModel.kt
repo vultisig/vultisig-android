@@ -3,19 +3,21 @@ package com.vultisig.wallet.ui.models.swap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
+import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.SendDst
-import com.vultisig.wallet.ui.navigation.SendDst.Companion.ARG_TRANSACTION_ID
+import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,20 +51,22 @@ internal data class VerifySwapUiModel(
 @HiltViewModel
 internal class VerifySwapViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val sendNavigator: Navigator<SendDst>,
+    private val navigator: Navigator<Destination>,
     private val mapTransactionToUiModel: SwapTransactionToUiModelMapper,
 
     private val swapTransactionRepository: SwapTransactionRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
-    private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySwapUiModel())
     private val password = MutableStateFlow<String?>(null)
 
-    private val transactionId: String = requireNotNull(savedStateHandle[ARG_TRANSACTION_ID])
-    private val vaultId: String? = savedStateHandle["vault_id"]
+    private val args = savedStateHandle.toRoute<Route.VerifySwap>()
+
+    private val vaultId: VaultId = args.vaultId
+    private val transactionId: String = args.transactionId
 
     init {
         viewModelScope.launch {
@@ -83,6 +87,12 @@ internal class VerifySwapViewModel @Inject constructor(
         }
         loadFastSign()
         loadPassword()
+    }
+
+    fun back() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
     }
 
     fun consentReceiveAmount(consent: Boolean) {
@@ -127,9 +137,8 @@ internal class VerifySwapViewModel @Inject constructor(
 
         if (hasAllConsents) {
             viewModelScope.launch {
-                sendNavigator.navigate(
-                    getSendDstByKeysignInitType(keysignInitType, transactionId, password.value)
-                )
+                launchKeysign(keysignInitType, transactionId, password.value,
+                    Route.Keysign.Keysign.TxType.Swap, vaultId)
             }
         } else {
             state.update {
@@ -144,16 +153,12 @@ internal class VerifySwapViewModel @Inject constructor(
 
     private fun loadPassword() {
         viewModelScope.launch {
-            password.value = if (vaultId == null)
-                null
-            else
-                vaultPasswordRepository.getPassword(vaultId)
+            password.value = vaultPasswordRepository.getPassword(vaultId)
         }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
-            if (vaultId == null) return@launch
             val hasFastSign = isVaultHasFastSignById(vaultId)
             state.update {
                 it.copy(

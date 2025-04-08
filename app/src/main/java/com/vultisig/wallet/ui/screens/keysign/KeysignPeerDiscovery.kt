@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.keysign
 
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
@@ -15,6 +14,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.createBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.asFlow
 import com.vultisig.wallet.R
@@ -37,6 +37,8 @@ internal fun KeysignPeerDiscovery(
     viewModel: KeysignFlowViewModel,
 ) {
     KeepScreenOn()
+
+    val activity = LocalContext.current
 
     val selectionState = viewModel.selection.asFlow().collectAsState(initial = emptyList()).value
     val participants = viewModel.participants.collectAsState(initial = emptyList()).value
@@ -134,12 +136,14 @@ internal fun KeysignPeerDiscovery(
         onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
         onAddParticipant = { viewModel.addParticipant(it) },
         onRemoveParticipant = { viewModel.removeParticipant(it) },
+        onShareQrClick = { sharedViewModel.shareQRCode(activity) },
         onStopParticipantDiscovery = viewModel::moveToKeysignState,
+        onBackClick = viewModel::back,
     )
 }
 
 @Composable
-internal fun KeysignPeerDiscovery(
+private fun KeysignPeerDiscovery(
     isLookingForVultiServer: Boolean,
     localPartyId: String,
     minimumDevices: Int,
@@ -151,6 +155,8 @@ internal fun KeysignPeerDiscovery(
     onAddParticipant: (String) -> Unit = {},
     onRemoveParticipant: (String) -> Unit = {},
     onStopParticipantDiscovery: () -> Unit = {},
+    onShareQrClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
 ) {
     if (isLookingForVultiServer) {
         ConnectingToServer(false)
@@ -169,11 +175,13 @@ internal fun KeysignPeerDiscovery(
                 connectingToServer = null,
                 error = null,
             ),
-            showToolbar = false,
 
-            onBackClick = {},
+            onBackClick = onBackClick,
+
+            showHelp = false,
             onHelpClick = {},
-            onShareQrClick = {},
+            onShareQrClick = onShareQrClick,
+
             onCloseHintClick = {},
             onDismissQrHelpModal = {},
 
@@ -207,7 +215,7 @@ private fun KeysignPeerDiscoveryPreview() {
         minimumDevices = 2,
         participants = listOf("1", "2", "3"),
         bitmapPainter = BitmapPainter(
-            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
+            createBitmap(1, 1).asImageBitmap(),
             filterQuality = FilterQuality.None
         ),
         networkPromptOption = NetworkOption.Local,

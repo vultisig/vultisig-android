@@ -5,12 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.usecases.GetSendDstByKeysignInitType
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
-import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,11 +35,10 @@ internal data class VerifyDepositUiModel(
 @HiltViewModel
 internal class VerifyDepositViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val sendNavigator: Navigator<SendDst>,
     private val mapTransactionToUiModel: DepositTransactionToUiModelMapper,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
-    private val getSendDstByKeysignInitType: GetSendDstByKeysignInitType,
+    private val launchKeysign: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     ) : ViewModel() {
 
@@ -47,7 +46,7 @@ internal class VerifyDepositViewModel @Inject constructor(
     private val password = MutableStateFlow<String?>(null)
 
     private val transactionId: String = requireNotNull(savedStateHandle[SendDst.ARG_TRANSACTION_ID])
-    private val vaultId: String? = savedStateHandle["vault_id"]
+    private val vaultId: String = requireNotNull(savedStateHandle["vault_id"])
 
     init {
         viewModelScope.launch {
@@ -89,10 +88,8 @@ internal class VerifyDepositViewModel @Inject constructor(
         keysignInitType: KeysignInitType,
     ) {
         viewModelScope.launch {
-
-            sendNavigator.navigate (
-                getSendDstByKeysignInitType(keysignInitType, transactionId, password.value)
-            )
+            launchKeysign(keysignInitType, transactionId, password.value,
+                Route.Keysign.Keysign.TxType.Deposit, vaultId)
         }
     }
 

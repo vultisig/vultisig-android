@@ -16,6 +16,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.RouterApi
@@ -53,8 +54,9 @@ import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
-import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.encodeBase64
@@ -123,8 +125,6 @@ internal class KeysignFlowViewModel @Inject constructor(
     val currentState: MutableStateFlow<KeysignFlowState> =
         MutableStateFlow(KeysignFlowState.PeerDiscovery)
     val selection = MutableLiveData<List<String>>()
-    val localPartyID: String?
-        get() = _currentVault?.localPartyID
     val keysignMessage: MutableState<String>
         get() = _keysignMessage
 
@@ -132,8 +132,9 @@ internal class KeysignFlowViewModel @Inject constructor(
     val networkOption: MutableState<NetworkOption> =
         mutableStateOf(NetworkOption.Internet)
 
-    val password = savedStateHandle.get<String?>(SendDst.ARG_PASSWORD)
-    val transactionId = savedStateHandle.get<String>(SendDst.ARG_TRANSACTION_ID)
+    private val args = savedStateHandle.toRoute<Route.Keysign.Keysign>()
+    private val password = args.password
+    private val transactionId = args.transactionId
 
     val isFastSign: Boolean
         get() = password != null
@@ -506,8 +507,23 @@ internal class KeysignFlowViewModel @Inject constructor(
     }
 
     fun tryAgain() {
+        back()
+    }
+
+    fun back() {
         viewModelScope.launch {
             navigator.navigate(Destination.Back)
+        }
+    }
+
+    fun complete() {
+        viewModelScope.launch {
+            navigator.navigate(
+                Destination.Home(),
+                NavigationOptions(
+                    clearBackStack = true
+                )
+            )
         }
     }
 }

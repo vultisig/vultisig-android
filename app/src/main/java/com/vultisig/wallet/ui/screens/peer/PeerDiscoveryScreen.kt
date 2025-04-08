@@ -65,15 +65,15 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBarAction
 import com.vultisig.wallet.ui.components.util.dashedBorder
+import com.vultisig.wallet.ui.models.peer.KeygenPeerDiscoveryViewModel
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
-import com.vultisig.wallet.ui.models.peer.PeerDiscoveryViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun PeerDiscoveryScreen(
-    model: PeerDiscoveryViewModel = hiltViewModel(),
+internal fun KeygenPeerDiscoveryScreen(
+    model: KeygenPeerDiscoveryViewModel = hiltViewModel(),
 ) {
     KeepScreenOn()
 
@@ -91,9 +91,11 @@ internal fun PeerDiscoveryScreen(
                 onTryAgainClick = model::tryAgain,
             )
         }
+
         connectingToServer != null -> {
             ConnectingToServer(connectingToServer.isSuccess)
         }
+
         else -> {
             PeerDiscoveryScreen(
                 state = state,
@@ -123,8 +125,7 @@ internal fun PeerDiscoveryScreen(
     onDeviceClick: (ParticipantName) -> Unit,
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
-
-    showToolbar: Boolean = true,
+    showHelp: Boolean = true,
 ) {
     val selectedDevicesSize = state.selectedDevices.size + 1 // we always have our device
     val devicesSize = state.devices.size + 1
@@ -135,24 +136,24 @@ internal fun PeerDiscoveryScreen(
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
-            if (showToolbar) {
-                VsTopAppBar(
-                    title = stringResource(R.string.peer_discovery_topbar_title),
-                    iconLeft = R.drawable.ic_caret_left,
-                    onIconLeftClick = onBackClick,
-                    actions = {
+            VsTopAppBar(
+                title = stringResource(R.string.peer_discovery_topbar_title),
+                iconLeft = R.drawable.ic_caret_left,
+                onIconLeftClick = onBackClick,
+                actions = {
+                    if (showHelp) {
                         VsTopAppBarAction(
                             icon = R.drawable.ic_question_mark,
                             onClick = onHelpClick,
                         )
+                    }
 
-                        VsTopAppBarAction(
-                            icon = R.drawable.ic_share,
-                            onClick = onShareQrClick,
-                        )
-                    },
-                )
-            }
+                    VsTopAppBarAction(
+                        icon = R.drawable.ic_share,
+                        onClick = onShareQrClick,
+                    )
+                },
+            )
         },
         content = { contentPadding ->
 

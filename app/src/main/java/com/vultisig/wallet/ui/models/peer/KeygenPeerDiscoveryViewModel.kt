@@ -103,7 +103,7 @@ enum class NetworkOption {
 }
 
 @HiltViewModel
-internal class PeerDiscoveryViewModel @Inject constructor(
+internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
@@ -392,7 +392,7 @@ internal class PeerDiscoveryViewModel @Inject constructor(
         val qrBitmap = withContext(Dispatchers.IO) {
             generateQrBitmap(data, NeutralsColors.Default.n50, Color.Transparent, null)
         }
-        this@PeerDiscoveryViewModel.qrBitmap.value = qrBitmap
+        this@KeygenPeerDiscoveryViewModel.qrBitmap.value = qrBitmap
         val bitmapPainter = BitmapPainter(
             qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None
         )
