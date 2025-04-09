@@ -66,7 +66,7 @@ object RippleHelper {
         val preSigningOutput =
             wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
                 .checkError()
-        return listOf(Numeric.toHexString(preSigningOutput.dataHash.toByteArray()))
+        return listOf(Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray()))
     }
 
     fun getSignedTransaction(
@@ -91,7 +91,7 @@ object RippleHelper {
 
         val allSignatures = DataVector()
         val publicKeys = DataVector()
-        val key = Numeric.toHexString(preSigningOutput.dataHash.toByteArray())
+        val key = Numeric.toHexStringNoPrefix(preSigningOutput.dataHash.toByteArray())
         signatures[key]
             ?.getSignature()
             ?: error("Signature not found")
