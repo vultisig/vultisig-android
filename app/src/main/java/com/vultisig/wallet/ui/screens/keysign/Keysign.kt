@@ -80,6 +80,7 @@ internal fun KeysignView(
                             progressLink = progressLink,
                             onBack = onBack,
                             transactionTypeUiModel = transactionTypeUiModel,
+                            showToolbar = showToolbar,
                         )
                     }
                 }
