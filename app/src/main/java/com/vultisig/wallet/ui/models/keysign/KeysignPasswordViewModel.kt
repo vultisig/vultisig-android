@@ -59,6 +59,12 @@ internal class KeysignPasswordViewModel @Inject constructor(
         state.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
 
+    fun back() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
+    }
+
     fun proceed() {
         val password = password
         if (!isPasswordEmpty()) {
