@@ -27,17 +27,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.MultiColorButton
-import com.vultisig.wallet.ui.components.UiBarContainer
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.TransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -46,32 +43,6 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.send.AddressField
 import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
-
-@Composable
-internal fun TransactionDoneScreen(
-    navController: NavController,
-    transactionHash: String,
-    approveTransactionHash: String,
-    transactionLink: String,
-    approveTransactionLink: String,
-    progressLink: String?,
-    transactionTypeUiModel: TransactionTypeUiModel,
-) {
-    UiBarContainer(
-        navController = navController,
-        title = stringResource(R.string.transaction_done_title)
-    ) {
-        TransactionDoneView(
-            transactionHash = transactionHash,
-            approveTransactionHash = approveTransactionHash,
-            transactionLink = transactionLink,
-            approveTransactionLink = approveTransactionLink,
-            onComplete = navController::popBackStack,
-            progressLink = progressLink,
-            transactionTypeUiModel = transactionTypeUiModel,
-        )
-    }
-}
 
 @Composable
 internal fun TransactionDoneView(
@@ -83,12 +54,20 @@ internal fun TransactionDoneView(
     progressLink: String?,
     onBack: () -> Unit = {},
     transactionTypeUiModel: TransactionTypeUiModel?,
+    showToolbar: Boolean,
 ) {
     val uriHandler = LocalUriHandler.current
     BackHandler(onBack = onBack)
 
     Scaffold(
         containerColor = Theme.colors.oxfordBlue800,
+        topBar = {
+            if (showToolbar) {
+                VsTopAppBar(
+                    title = "Overview",
+                )
+            }
+        },
         content = { contentPadding ->
             FormCard(
                 modifier = Modifier
@@ -371,13 +350,14 @@ private fun CustomMessageDetail(
 @Preview
 @Composable
 private fun TransactionDoneScreenPreview() {
-    TransactionDoneScreen(
-        navController = rememberNavController(),
+    TransactionDoneView(
+        showToolbar = true,
         transactionHash = "0x1234567890",
         approveTransactionHash = "0x1234567890",
         transactionLink = "",
         approveTransactionLink = "",
         progressLink = "https://track.ninerealms.com/",
+        onComplete = {},
         transactionTypeUiModel = TransactionTypeUiModel.Send(
             TransactionUiModel(
                 srcAddress = "0x1234567890",
