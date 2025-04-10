@@ -63,6 +63,7 @@ import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
@@ -72,6 +73,7 @@ internal fun FastVaultPasswordScreen(
     val state by model.state.collectAsState()
 
     FastVaultPasswordScreen(
+        title = stringResource(R.string.fast_vault_password_screen_title),
         state = state,
         passwordTextFieldState = model.passwordTextFieldState,
         confirmPasswordTextFieldState = model.confirmPasswordTextFieldState,
@@ -85,10 +87,11 @@ internal fun FastVaultPasswordScreen(
 }
 
 @Composable
-private fun FastVaultPasswordScreen(
+internal fun FastVaultPasswordScreen(
     state: FastVaultPasswordUiModel,
     passwordTextFieldState: TextFieldState,
     confirmPasswordTextFieldState: TextFieldState,
+    title: String,
     onNextClick: () -> Unit,
     onBackClick: () -> Unit,
     onShowMoreInfo: () -> Unit,
@@ -128,7 +131,7 @@ private fun FastVaultPasswordScreen(
                 )
         ) {
             Text(
-                text = stringResource(R.string.fast_vault_password_screen_title),
+                text = title,
                 style = Theme.brockmann.headings.largeTitle,
                 color = Theme.colors.text.primary,
             )
@@ -178,7 +181,7 @@ private fun FastVaultPasswordScreen(
                             onVisibilityClick = onToggleConfirmPasswordVisibilityClick
                         ),
                         innerState = state.innerState,
-                        footNote = state.errorMessage.asString(),
+                        footNote = (state.errorMessage ?: UiText.Empty).asString(),
                         imeAction = ImeAction.Go,
                         onKeyboardAction = {
                             onNextClick()
@@ -255,6 +258,7 @@ private fun FastVaultPasswordScreenPreview() {
         ),
         passwordTextFieldState = rememberTextFieldState(),
         confirmPasswordTextFieldState = rememberTextFieldState(),
+        title = stringResource(R.string.fast_vault_password_screen_title),
         onNextClick = {},
         onBackClick = {},
         onShowMoreInfo = {},

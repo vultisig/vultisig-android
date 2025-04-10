@@ -510,6 +510,13 @@ internal sealed class Route {
     )
 
     @Serializable
+    data class BackupPasswordRequest(
+        val vaultId: VaultId,
+        // vault type only provided if vault confirmation screen is required
+        val vaultType: VaultInfo.VaultType? = null,
+    )
+
+    @Serializable
     data class BackupPassword(
         val vaultId: VaultId,
         // vault type only provided if vault confirmation screen is required

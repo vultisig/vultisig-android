@@ -487,7 +487,7 @@
     <string name="fast_vault_name_screen_desc" translatable="false">You can always rename your vault later in settings</string>
     <string name="enter_email_screen_title" translatable="false">Enter your e-mail</string>
     <string name="enter_email_screen_desc" translatable="false">This email is only used to send the server backup</string>
-    <string name="fast_vault_password_screen_title" translatable="false">Password</string>
+    <string name="fast_vault_password_screen_title" translatable="false">Vultiserver Password</string>
     <string name="fast_vault_password_screen_hint" translatable="false">This occurs because the password is used to locally encrypt the backup file, similar to how a hard drive is encrypted. In the following step, you have the option to add a hint.</string>
     <string name="fast_vault_password_screen_hint_title" translatable="false">More Info</string>
     <string name="fast_vault_password_screen_warning" translatable="false">Password cannot be reset or recovered</string>
@@ -531,4 +531,9 @@
     <string name="verify_swap_youre_swapping_title" translatable="false">You\'re swapping</string>
     <string name="keysign_make_sure_devices_are_on_the_same_network" translatable="false">Make sure devices are on the same network</string>
     <string name="keysign_app_version_text" translatable="false">Version %1$s (%2$s)</string>
+    <string name="backup_password_request_title" translatable="false">Do you want to add a password to your device vault shares?</string>
+    <string name="backup_password_request_description" translatable="false">We recommend that you do not set a backup password for device vault shares-your data is safe if the backups are properly stored in different locations, which is already a significant protection. Remember, backup passwords can\'t be recovered if you forget them. Your choice!</string>
+    <string name="backup_password_request_no_password_action" translatable="false">Backup without password</string>
+    <string name="backup_password_request_with_password_action" translatable="false">Use password</string>
+    <string name="backup_password_topbar_title" translatable="false">Password</string>
 </resources>

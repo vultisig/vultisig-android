@@ -52,6 +52,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -597,6 +598,8 @@ internal class SendFormViewModel @Inject constructor(
                 )
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
+            } catch (e: Exception) {
+                showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
                 hideLoading()
             }

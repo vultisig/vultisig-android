@@ -222,7 +222,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun backupVault() {
         viewModelScope.launch {
             dismissBackupReminder()
-            navigator.route(Route.BackupPassword(vaultId!!))
+            navigator.route(Route.BackupPasswordRequest(vaultId!!))
         }
     }
 

@@ -19,17 +19,22 @@ import com.vultisig.wallet.ui.navigation.Destination.Home.Companion.ARG_SHOW_VAU
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_SWAP_SELECT
 import com.vultisig.wallet.ui.navigation.Destination.SelectToken.Companion.ARG_TARGET_ARG
 import com.vultisig.wallet.ui.navigation.Route.BackupPassword
+import com.vultisig.wallet.ui.navigation.Route.BackupPasswordRequest
 import com.vultisig.wallet.ui.navigation.Route.BackupVault
 import com.vultisig.wallet.ui.navigation.Route.ChooseVaultType
 import com.vultisig.wallet.ui.navigation.Route.FastVaultVerification
+import com.vultisig.wallet.ui.navigation.Route.ImportVault
 import com.vultisig.wallet.ui.navigation.Route.Keygen
+import com.vultisig.wallet.ui.navigation.Route.Keysign
 import com.vultisig.wallet.ui.navigation.Route.Onboarding
 import com.vultisig.wallet.ui.navigation.Route.Secret
 import com.vultisig.wallet.ui.navigation.Route.SelectAsset
 import com.vultisig.wallet.ui.navigation.Route.SelectNetwork
+import com.vultisig.wallet.ui.navigation.Route.Swap
 import com.vultisig.wallet.ui.navigation.Route.VaultBackupSummary
 import com.vultisig.wallet.ui.navigation.Route.VaultConfirmation
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo
+import com.vultisig.wallet.ui.navigation.Route.VerifySwap
 import com.vultisig.wallet.ui.navigation.Screen.AddChainAccount
 import com.vultisig.wallet.ui.screens.BackupPasswordScreen
 import com.vultisig.wallet.ui.screens.ChainSelectionScreen
@@ -44,6 +49,7 @@ import com.vultisig.wallet.ui.screens.TokenDetailScreen
 import com.vultisig.wallet.ui.screens.TokenSelectionScreen
 import com.vultisig.wallet.ui.screens.VaultDetailScreen
 import com.vultisig.wallet.ui.screens.VaultRenameScreen
+import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.folder.CreateFolderScreen
 import com.vultisig.wallet.ui.screens.folder.FolderScreen
@@ -127,7 +133,7 @@ internal fun SetupNavGraph(
             HomeScreen(navController)
         }
 
-        composable<Route.ImportVault> {
+        composable<ImportVault> {
             ImportFileScreen(navController)
         }
         composable(route = Destination.CreateFolder.route) {
@@ -531,8 +537,12 @@ internal fun SetupNavGraph(
             BackupVaultScreen()
         }
 
+        composable<BackupPasswordRequest> {
+            BackupPasswordRequestScreen()
+        }
+
         composable<BackupPassword> {
-            BackupPasswordScreen(navController)
+            BackupPasswordScreen()
         }
 
         composable<VaultBackupSummary> {
@@ -555,21 +565,21 @@ internal fun SetupNavGraph(
         }
 
         // swap
-        composable<Route.Swap> {
+        composable<Swap> {
             SwapScreen()
         }
 
-        composable<Route.VerifySwap> {
+        composable<VerifySwap> {
             VerifySwapScreen()
         }
 
         // keysign
-        composable<Route.Keysign.Password> {
+        composable<Keysign.Password> {
             KeysignPasswordScreen()
         }
 
-        composable<Route.Keysign.Keysign> { entry ->
-            val args = entry.toRoute<Route.Keysign.Keysign>()
+        composable<Keysign.Keysign> { entry ->
+            val args = entry.toRoute<Keysign.Keysign>()
             KeysignScreen(
                 txType = args.txType,
                 transactionId = args.transactionId,
