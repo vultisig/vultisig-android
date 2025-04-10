@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordViewModel
 import com.vultisig.wallet.ui.theme.Theme
@@ -42,6 +43,7 @@ internal fun KeysignPasswordScreen(
         passwordFieldState = model.passwordFieldState,
         onPasswordVisibilityToggle = model::togglePasswordVisibility,
         onContinueClick = model::proceed,
+        onBackClick = model::back,
     )
 }
 
@@ -51,6 +53,7 @@ private fun KeysignPasswordScreen(
     passwordFieldState: TextFieldState,
     onPasswordVisibilityToggle: () -> Unit,
     onContinueClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -60,6 +63,11 @@ private fun KeysignPasswordScreen(
 
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            VsTopAppBar(
+                onBackClick = onBackClick,
+            )
+        },
         content = { contentPadding ->
             Column(
                 modifier = Modifier
@@ -135,5 +143,6 @@ private fun KeysignPasswordScreenPreview() {
         passwordFieldState = TextFieldState(),
         onPasswordVisibilityToggle = {},
         onContinueClick = {},
+        onBackClick = {},
     )
 }
