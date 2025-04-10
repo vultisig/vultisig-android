@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -46,7 +47,6 @@ internal data class ImportFileState(
 )
 
 internal val FILE_ALLOWED_MIME_TYPES = arrayOf("application/*")
-internal val FILE_ALLOWED_EXTENSIONS = listOf("bak", "dat","vult")
 
 @HiltViewModel
 internal class ImportFileViewModel @Inject constructor(

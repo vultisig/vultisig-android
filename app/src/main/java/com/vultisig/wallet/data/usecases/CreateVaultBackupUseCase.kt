@@ -10,6 +10,8 @@ import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import javax.inject.Inject
 
+const val MIME_TYPE_VAULT = "application/octet-stream"
+
 internal interface CreateVaultBackupUseCase : (VaultProto, String?) -> String?
 
 internal class CreateVaultBackupUseCaseImpl @Inject constructor(
