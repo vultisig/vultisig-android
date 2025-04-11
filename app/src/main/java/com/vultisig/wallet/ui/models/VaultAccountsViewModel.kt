@@ -24,7 +24,6 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -166,22 +165,19 @@ internal class VaultAccountsViewModel @Inject constructor(
         loadAccountsJob = viewModelScope.launch {
             accountsRepository
                 .loadAddresses(vaultId, isRefresh)
-                .updateUiStateFromFlow()
+                .map { it ->
+                    it.sortByAccountsTotalFiatValue()
+                }
+                .catch {
+                    updateRefreshing(false)
+
+                    // TODO handle error
+                    Timber.e(it)
+                }.collect { accounts ->
+                    accounts.updateUiStateFromList()
+                }
         }
     }
-
-    private suspend fun Flow<List<Address>>.updateUiStateFromFlow() =
-        this.map { it ->
-            it.sortByAccountsTotalFiatValue()
-        }
-            .catch {
-                updateRefreshing(false)
-
-                // TODO handle error
-                Timber.e(it)
-            }.collect { accounts ->
-                accounts.updateUiStateFromList()
-            }
 
     private fun List<Address>.sortByAccountsTotalFiatValue() =
         sortedWith(compareBy({
