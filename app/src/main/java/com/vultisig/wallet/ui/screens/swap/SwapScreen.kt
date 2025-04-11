@@ -72,20 +72,22 @@ import java.math.BigInteger
 
 @Composable
 internal fun SwapScreen(
-    viewModel: SwapFormViewModel = hiltViewModel(),
+    model: SwapFormViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by model.uiState.collectAsState()
 
     SwapScreen(
         state = state,
-        srcAmountTextFieldState = viewModel.srcAmountState,
-        onBackClick = viewModel::back,
-        onAmountLostFocus = viewModel::validateAmount,
-        onSwap = viewModel::swap,
-        onSelectSrcToken = viewModel::selectSrcToken,
-        onDismissError = viewModel::hideError,
-        onSelectDstToken = viewModel::selectDstToken,
-        onFlipSelectedTokens = viewModel::flipSelectedTokens,
+        srcAmountTextFieldState = model.srcAmountState,
+        onBackClick = model::back,
+        onAmountLostFocus = model::validateAmount,
+        onSwap = model::swap,
+        onSelectSrcNetworkClick = model::selectSrcNetwork,
+        onSelectSrcToken = model::selectSrcToken,
+        onSelectDstNetworkClick = model::selectDstNetwork,
+        onDismissError = model::hideError,
+        onSelectDstToken = model::selectDstToken,
+        onFlipSelectedTokens = model::flipSelectedTokens,
     )
 }
 
@@ -96,7 +98,9 @@ internal fun SwapScreen(
     srcAmountTextFieldState: TextFieldState,
     onBackClick: () -> Unit = {},
     onAmountLostFocus: () -> Unit = {},
+    onSelectSrcNetworkClick: () -> Unit = {},
     onSelectSrcToken: () -> Unit = {},
+    onSelectDstNetworkClick: () -> Unit = {},
     onSelectDstToken: () -> Unit = {},
     onDismissError: () -> Unit = {},
     onFlipSelectedTokens: () -> Unit = {},
@@ -141,7 +145,7 @@ internal fun SwapScreen(
                             title = "From",
                             selectedToken = state.selectedSrcToken,
                             fiatValue = state.srcFiatValue,
-                            onSelectNetworkClick = onSelectSrcToken,
+                            onSelectNetworkClick = onSelectSrcNetworkClick,
                             onSelectTokenClick = onSelectSrcToken,
                             shape = RoundedWithCutoutShape(
                                 cutoutPosition = CutoutPosition.Bottom,
@@ -174,7 +178,7 @@ internal fun SwapScreen(
                             title = "To",
                             selectedToken = state.selectedDstToken,
                             fiatValue = state.estimatedDstFiatValue,
-                            onSelectNetworkClick = onSelectDstToken,
+                            onSelectNetworkClick = onSelectDstNetworkClick,
                             onSelectTokenClick = onSelectDstToken,
                             shape = RoundedWithCutoutShape(
                                 cutoutPosition = CutoutPosition.Top,

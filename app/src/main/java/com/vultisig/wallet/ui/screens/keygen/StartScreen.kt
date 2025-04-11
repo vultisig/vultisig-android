@@ -16,6 +16,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -30,6 +32,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.StartViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
@@ -38,7 +41,11 @@ import com.vultisig.wallet.ui.utils.startScreenAnimations
 internal fun StartScreen(
     model: StartViewModel = hiltViewModel()
 ) {
+    val state by model.state.collectAsState()
+
     StartScreen(
+        hasBackButton = state.hasBackButton,
+        onBackClick = model::back,
         onCreateNewVaultClick = model::navigateToCreateVault,
         onScanQrCodeClick = model::navigateToScanQrCode,
         onImportVaultClick = model::navigateToImportVault,
@@ -47,9 +54,11 @@ internal fun StartScreen(
 
 @Composable
 private fun StartScreen(
+    hasBackButton: Boolean,
     onCreateNewVaultClick: () -> Unit,
     onScanQrCodeClick: () -> Unit,
-    onImportVaultClick: () -> Unit
+    onImportVaultClick: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     val logoScale = remember {
         Animatable(0f)
@@ -67,6 +76,13 @@ private fun StartScreen(
 
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
+        topBar = {
+            if (hasBackButton) {
+                VsTopAppBar(
+                    onBackClick = onBackClick,
+                )
+            }
+        }
     ) {
         Column(
             modifier = Modifier
@@ -183,8 +199,10 @@ private fun SeparatorWithText(
 @Composable
 private fun StartScreenPreview() {
     StartScreen(
+        hasBackButton = true,
         onCreateNewVaultClick = {},
         onScanQrCodeClick = {},
-        onImportVaultClick = {}
+        onImportVaultClick = {},
+        onBackClick = {},
     )
 }
