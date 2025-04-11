@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.OneInchApi
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.OneInchTokenJson
 import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
 import com.vultisig.wallet.data.common.stripHexPrefix
@@ -46,6 +47,7 @@ interface TokenRepository {
 internal class TokenRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val evmApiFactory: EvmApiFactory,
+    private val thorApi: ThorChainApi,
     private val splTokenRepository: SplTokenRepository,
     private val coinGeckoApi: CoinGeckoApi,
     private val currencyRepository: AppCurrencyRepository,
@@ -130,6 +132,44 @@ internal class TokenRepositoryImpl @Inject constructor(
 
     override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
         return when (chain) {
+            Chain.ThorChain -> {
+                thorApi.getBalance(address)
+                    .mapNotNull {
+                        val denom = it.denom
+                        var symbol = ""
+
+                        if (denom.contains(".")) {
+                            val parts = denom.split(".")
+                            if (parts.size >= 2) {
+                                symbol = parts[1].uppercase()
+                            }
+                        } else if (denom.contains("-")) {
+                            val parts = denom.split("-")
+                            if (parts.size >= 2) {
+                                symbol = parts[1].uppercase()
+                            }
+                        } else {
+                            symbol = denom.uppercase()
+                        }
+
+                        if (denom == "rune") {
+                            null
+                        } else {
+                            Coin(
+                                contractAddress = it.denom,
+                                chain = chain,
+                                ticker = symbol,
+                                logo = symbol,
+                                decimal = 8,
+                                isNativeToken = false,
+                                priceProviderID = "",
+
+                                address = "",
+                                hexPublicKey = "",
+                            )
+                        }
+                    }
+            }
             Chain.BscChain, Chain.Avalanche,
             Chain.Ethereum, Chain.Arbitrum,
                 -> {

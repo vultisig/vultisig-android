@@ -66,7 +66,7 @@ internal class TokenRefreshWorker @AssistedInject constructor(
         }
 
     companion object {
-        val ARG_VAULT_ID = "vault_id"
-        val ARG_CHAIN = "chain_id"
+        const val ARG_VAULT_ID = "vault_id"
+        const val ARG_CHAIN = "chain_id"
     }
 }
