@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -21,6 +23,7 @@ import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.settings.AppCurrency
@@ -71,6 +74,8 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
@@ -445,6 +450,54 @@ internal class SwapFormViewModel @Inject constructor(
         )
     }
 
+    fun selectSrcNetwork() {
+        viewModelScope.launch {
+            val newSendSrc = selectNetwork(
+                vaultId = vaultId ?: return@launch,
+                selectedChain = selectedSrc.value?.address?.chain ?: return@launch,
+            ) ?: return@launch
+
+            selectedSrcId.value = newSendSrc.account.token.id
+        }
+    }
+
+    fun selectDstNetwork() {
+        viewModelScope.launch {
+            val newSendSrc = selectNetwork(
+                vaultId = vaultId ?: return@launch,
+                selectedChain = selectedDst.value?.address?.chain ?: return@launch,
+            ) ?: return@launch
+
+            selectedDstId.value = newSendSrc.account.token.id
+        }
+    }
+
+    private suspend fun selectNetwork(
+        vaultId: VaultId,
+        selectedChain: Chain,
+    ): SendSrc? {
+        val requestId = Uuid.random().toString()
+        navigator.route(
+            Route.SelectNetwork(
+                vaultId = vaultId,
+                selectedNetworkId = selectedChain.id,
+                requestId = requestId,
+                filters = Route.SelectNetwork.Filters.SwapAvailable,
+            )
+        )
+
+        val chain: Chain = requestResultRepository.request(requestId)
+            ?: return null
+
+        if (chain == selectedChain) {
+            return null
+        }
+
+        return addresses.value.firstSendSrc(
+            selectedTokenId = null,
+            filterByChain = chain,
+        )
+    }
 
     fun selectSrcToken() {
         navigateToSelectToken(ARG_SELECTED_SRC_TOKEN_ID)
@@ -609,6 +662,7 @@ internal class SwapFormViewModel @Inject constructor(
                             )
                         }
                     } catch (e: Exception) {
+                        Timber.e(e)
                         showError(UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation))
                     }
                 }
