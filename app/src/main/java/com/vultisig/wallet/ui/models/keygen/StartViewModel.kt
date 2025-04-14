@@ -2,22 +2,45 @@ package com.vultisig.wallet.ui.models.keygen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+internal data class StartUiModel(
+    val hasBackButton: Boolean = false,
+)
 
 @HiltViewModel
 internal class StartViewModel @Inject constructor(
     private val onBoardingRepository: OnboardingRepository,
+    private val vaultRepository: VaultRepository,
     private val navigator: Navigator<Destination>
-) : ViewModel(){
+) : ViewModel() {
 
-    fun navigateToCreateVault(){
+    val state = MutableStateFlow(StartUiModel())
+
+    init {
+        viewModelScope.launch {
+            val hasVaults = vaultRepository.hasVaults()
+            state.update { it.copy(hasBackButton = hasVaults) }
+        }
+    }
+
+    fun back() {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Back)
+        }
+    }
+
+    fun navigateToCreateVault() {
         viewModelScope.launch {
             val isUserPassedOnboarding = onBoardingRepository.readOnboardingState().first()
             if (isUserPassedOnboarding) {
@@ -28,13 +51,13 @@ internal class StartViewModel @Inject constructor(
         }
     }
 
-    fun navigateToScanQrCode(){
+    fun navigateToScanQrCode() {
         viewModelScope.launch {
             navigator.navigate(Destination.JoinThroughQr(null))
         }
     }
 
-    fun navigateToImportVault(){
+    fun navigateToImportVault() {
         viewModelScope.launch {
             navigator.route(Route.ImportVault())
         }

@@ -218,7 +218,10 @@ internal class BalanceRepositoryImpl @Inject constructor(
             ThorChain -> {
                 val listCosmosBalance = thorChainApi.getBalance(address)
                 val balance = listCosmosBalance
-                    .find { it.denom.equals(coin.ticker, ignoreCase = true) }
+                    .find {
+                        it.denom.equals(coin.ticker, ignoreCase = true) ||
+                                it.denom.equals(coin.contractAddress, ignoreCase = true)
+                    }
                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
             }
 

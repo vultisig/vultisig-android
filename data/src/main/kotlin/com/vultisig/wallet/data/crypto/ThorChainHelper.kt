@@ -132,7 +132,9 @@ class ThorChainHelper(
             }.data()
 
             val sendAmount = Cosmos.Amount.newBuilder().apply {
-                this.denom = keysignPayload.coin.ticker.lowercase()
+                this.denom = if (keysignPayload.coin.isNativeToken)
+                    keysignPayload.coin.ticker.lowercase()
+                else keysignPayload.coin.contractAddress
                 this.amount = keysignPayload.toAmount.toString()
             }.build()
 
