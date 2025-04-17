@@ -55,12 +55,6 @@ private fun KeysignPasswordScreen(
     onContinueClick: () -> Unit,
     onBackClick: () -> Unit,
 ) {
-    val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
-
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
@@ -90,6 +84,12 @@ private fun KeysignPasswordScreen(
                     modifier = Modifier
                         .weight(1f),
                 ) {
+                    val focusRequester = remember { FocusRequester() }
+
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
+                    }
+
                     VsTextInputField(
                         textFieldState = passwordFieldState,
                         hint = stringResource(R.string.backup_password_screen_enter_password),

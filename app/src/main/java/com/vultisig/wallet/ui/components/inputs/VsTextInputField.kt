@@ -36,7 +36,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -207,9 +206,6 @@ internal fun VsTextInputField(
                 }
 
                 else -> {
-                    val fontSizeInDp = with(LocalDensity.current) {
-                        inputTextStyle.fontSize.toDp()
-                    }
                     BasicTextField(
                         state = textFieldState,
                         lineLimits = if (type is VsTextInputFieldType.MultiLine)
