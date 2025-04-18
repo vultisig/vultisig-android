@@ -73,6 +73,7 @@ import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import java.util.UUID
 import javax.inject.Inject
@@ -317,13 +318,24 @@ internal class KeysignFlowViewModel @Inject constructor(
         if (keysignPayload != null) {
             transactionId?.let {
                 val isSwap = keysignPayload.swapPayload != null
-                val isDeposit = when (val specific = keysignPayload.blockChainSpecific) {
-                    is BlockChainSpecific.MayaChain -> specific.isDeposit
-                    is BlockChainSpecific.THORChain -> specific.isDeposit
-                    is BlockChainSpecific.Ton -> specific.isDeposit
-                    else -> false
-                }
                 viewModelScope.launch {
+                    val isDeposit = when (val specific = keysignPayload.blockChainSpecific) {
+                        is BlockChainSpecific.MayaChain -> specific.isDeposit
+                        is BlockChainSpecific.THORChain -> specific.isDeposit
+                        is BlockChainSpecific.Ton -> specific.isDeposit
+                        is BlockChainSpecific.Cosmos ->
+                            specific.transactionType ==
+                                    TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||
+                                    try {
+                                        depositTransactionRepository.getTransaction(transactionId)
+                                        true
+                                    } catch (e: Exception) {
+                                        false
+                                    }
+
+                        else -> false
+                    }
+
                     transactionTypeUiModel = when {
                         isSwap -> TransactionTypeUiModel.Swap(
                             mapSwapTransactionToUiModel(

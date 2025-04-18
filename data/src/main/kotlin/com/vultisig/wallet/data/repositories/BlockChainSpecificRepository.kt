@@ -25,10 +25,12 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import timber.log.Timber
 import vultisig.keysign.v1.CosmosIbcDenomTrace
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.Base58
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 data class BlockChainSpecificAndUtxo(
@@ -50,6 +52,7 @@ interface BlockChainSpecificRepository {
         dstAddress: String? = null,
         tokenAmountValue: BigInteger? = null,
         memo: String? = null,
+        transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
     ): BlockChainSpecificAndUtxo
 
 }
@@ -80,6 +83,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         dstAddress: String?,
         tokenAmountValue: BigInteger?,
         memo: String?,
+        transactionType: TransactionType,
     ): BlockChainSpecificAndUtxo = when (chain.standard) {
         TokenStandard.THORCHAIN -> {
             val account = if (chain == Chain.MayaChain) {
@@ -242,14 +246,21 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val denomTrace = if (token.contractAddress.startsWith("ibc/")) {
                 val denomTrace = api.getIbcDenomTraces(token.contractAddress)
                 val timeout = Clock.System.now().plus(10.minutes)
-                    .nanosecondsOfSecond
+                    .toEpochMilliseconds().milliseconds.inWholeNanoseconds
+
                 CosmosIbcDenomTrace(
                     path = denomTrace.path,
                     baseDenom = denomTrace.baseDenom,
                     latestBlock = "${api.getLatestBlock()}_$timeout",
                 )
             } else {
-                null
+                val timeout = Clock.System.now().plus(10.minutes)
+                    .toEpochMilliseconds().milliseconds.inWholeNanoseconds
+                CosmosIbcDenomTrace(
+                    path = "",
+                    baseDenom = "",
+                    latestBlock = "${api.getLatestBlock()}_$timeout",
+                )
             }
 
             BlockChainSpecificAndUtxo(
@@ -261,6 +272,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     sequence = BigInteger(account.sequence ?: "0"),
                     gas = gasFee.value,
                     ibcDenomTraces = denomTrace,
+                    transactionType = transactionType,
                 )
             )
         }

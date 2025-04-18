@@ -143,4 +143,39 @@ internal interface DepositMemo {
         override fun toString(): String = memo
     }
 
+    data class TransferIbc(
+        val srcChain: Chain,
+        val dstChain: Chain,
+        val dstAddress: String,
+
+        val memo: String?,
+    ) : DepositMemo {
+        override fun toString(): String =
+            buildString {
+                append("${dstChain.raw}:${ibcChannel}:${dstAddress}")
+                if (memo != null) {
+                    append(":$memo")
+                }
+            }
+
+        private val ibcChannel: String = when (srcChain) {
+            Chain.Kujira -> when (dstChain) {
+                Chain.GaiaChain -> "channel-0"
+                Chain.Akash -> "channel-64"
+                Chain.Dydx -> "channel-118"
+                Chain.Noble -> "channel-62"
+                Chain.Osmosis -> "channel-3"
+                else -> error("Unsupported chain $dstChain")
+            }
+
+            Chain.Osmosis -> when (dstChain) {
+                Chain.GaiaChain -> "channel-141"
+                else -> error("Unsupported chain $dstChain")
+            }
+
+            else -> error("Unsupported chain $srcChain")
+        }
+    }
+
+
 }

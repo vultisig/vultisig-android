@@ -972,7 +972,7 @@ internal class SendFormViewModel @Inject constructor(
                 accounts,
             ) { token, accounts ->
                 val address = token.address
-                val hasMemo = token.isNativeToken
+                val hasMemo = token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
 
                 val uiModel = accountToTokenBalanceUiModelMapper.map(SendSrc(
                     Address(
