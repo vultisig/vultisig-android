@@ -108,10 +108,6 @@ internal fun KeysignView(
                         ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Banner(
-                        text = stringResource(R.string.keysign_make_sure_devices_are_on_the_same_network),
-                    )
-
                     UiSpacer(weight = 1f)
 
                     RiveAnimation(

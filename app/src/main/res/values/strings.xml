@@ -529,7 +529,6 @@
     <string name="select_network_network_title" translatable="false">Network</string>
     <string name="select_network_title" translatable="false">Select network</string>
     <string name="verify_swap_youre_swapping_title" translatable="false">You\'re swapping</string>
-    <string name="keysign_make_sure_devices_are_on_the_same_network" translatable="false">Make sure devices are on the same network</string>
     <string name="keysign_app_version_text" translatable="false">Version %1$s (%2$s)</string>
     <string name="backup_password_request_title" translatable="false">Do you want to add a password to your device vault shares?</string>
     <string name="backup_password_request_description" translatable="false">We recommend that you do not set a backup password for device vault shares-your data is safe if the backups are properly stored in different locations, which is already a significant protection. Remember, backup passwords can\'t be recovered if you forget them. Your choice!</string>
