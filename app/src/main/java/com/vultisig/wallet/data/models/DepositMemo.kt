@@ -165,15 +165,15 @@ internal interface DepositMemo {
                 Chain.Dydx -> "channel-118"
                 Chain.Noble -> "channel-62"
                 Chain.Osmosis -> "channel-3"
-                else -> error("Unsupported chain $dstChain")
+                else -> ""
             }
 
             Chain.Osmosis -> when (dstChain) {
                 Chain.GaiaChain -> "channel-141"
-                else -> error("Unsupported chain $dstChain")
+                else -> ""
             }
 
-            else -> error("Unsupported chain $srcChain")
+            else -> ""
         }
     }
 
