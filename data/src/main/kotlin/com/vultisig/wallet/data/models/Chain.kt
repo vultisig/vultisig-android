@@ -9,8 +9,8 @@ import com.vultisig.wallet.data.models.TokenStandard.SUBSTRATE
 import com.vultisig.wallet.data.models.TokenStandard.SUI
 import com.vultisig.wallet.data.models.TokenStandard.THORCHAIN
 import com.vultisig.wallet.data.models.TokenStandard.TON
-import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.data.models.TokenStandard.TRC20
+import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import wallet.core.jni.CoinType
 
 typealias ChainId = String
@@ -138,7 +138,7 @@ val Chain.IsSwapSupported: Boolean
 
 val Chain.isDepositSupported: Boolean
     get() = when (this) {
-        Chain.ThorChain, Chain.MayaChain, Chain.Ton -> true
+        Chain.ThorChain, Chain.MayaChain, Chain.Ton, Chain.Kujira, Chain.GaiaChain -> true
         else -> false
     }
 

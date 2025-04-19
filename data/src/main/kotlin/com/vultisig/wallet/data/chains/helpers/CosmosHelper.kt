@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import kotlinx.serialization.json.Json
 import tss.KeysignResponse
+import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
 import wallet.core.jni.PublicKey
@@ -95,55 +96,123 @@ class CosmosHelper(
             ?: error("Invalid blockChainSpecific for Cosmos")
         val publicKey =
             PublicKey(keysignPayload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.SECP256K1)
-        var input = Cosmos.SigningInput.newBuilder()
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
-            .setSigningMode(Cosmos.SigningMode.Protobuf)
-            .setChainId(coinType.chainId())
-            .setAccountNumber(atomData.accountNumber.toLong())
-            .setSequence(atomData.sequence.toLong())
-            .setMode(Cosmos.BroadcastMode.SYNC)
-            .addAllMessages(
-                listOf(
-                    Cosmos.Message.newBuilder()
-                        .setSendCoinsMessage(
-                            Cosmos.Message.Send.newBuilder()
-                                .setFromAddress(keysignPayload.coin.address)
-                                .setToAddress(keysignPayload.toAddress)
-                                .addAllAmounts(
-                                    listOf(
-                                        Cosmos.Amount.newBuilder()
-                                            .setDenom(
-                                                if (keysignPayload.coin.contractAddress.contains("factory/") || keysignPayload.coin.contractAddress.contains("ibc/"))
-                                                    keysignPayload.coin.contractAddress
-                                                else
-                                                    denom
+
+        return when (atomData.transactionType) {
+            TransactionType.TRANSACTION_TYPE_IBC_TRANSFER -> {
+                val memoParts = keysignPayload.memo?.split(":")
+                    ?: throw Exception("To send IBC transaction, memo should be specified")
+                val sourceChannel = memoParts.getOrNull(1) ?: ""
+
+                val memo = if (memoParts.size == 4) memoParts[3] else ""
+
+                val timeouts = atomData.ibcDenomTraces?.latestBlock?.split("_") ?: emptyList()
+                val timeout = timeouts.lastOrNull()?.toLongOrNull() ?: 0L
+
+                val transferMessage = Cosmos.Message.Transfer.newBuilder()
+                    .setSourcePort("transfer")
+                    .setSourceChannel(sourceChannel)
+                    .setSender(keysignPayload.coin.address)
+                    .setReceiver(keysignPayload.toAddress)
+                    .setToken(
+                        Cosmos.Amount.newBuilder()
+                            .setDenom(if (keysignPayload.coin.isNativeToken) denom else keysignPayload.coin.contractAddress)
+                            .setAmount(keysignPayload.toAmount.toString())
+                            .build()
+                    )
+                    .setTimeoutHeight(
+                        Cosmos.Height.newBuilder()
+                            .setRevisionNumber(0)
+                            .setRevisionHeight(0)
+                            .build()
+                    )
+                    .setTimeoutTimestamp(timeout)
+                    .build()
+
+                val input = Cosmos.SigningInput.newBuilder()
+                    .setPublicKey(ByteString.copyFrom(publicKey.data()))
+                    .setSigningMode(Cosmos.SigningMode.Protobuf)
+                    .setChainId(coinType.chainId())
+                    .setAccountNumber(atomData.accountNumber.toLong())
+                    .setSequence(atomData.sequence.toLong())
+                    .setMode(Cosmos.BroadcastMode.SYNC)
+                    .addMessages(
+                        Cosmos.Message.newBuilder()
+                            .setTransferTokensMessage(transferMessage)
+                            .build()
+                    )
+                    .setFee(
+                        Cosmos.Fee.newBuilder()
+                            .setGas(gasLimit)
+                            .addAllAmounts(
+                                listOf(
+                                    Cosmos.Amount.newBuilder()
+                                        .setDenom(denom)
+                                        .setAmount(atomData.gas.toString())
+                                        .build()
+                                )
+                            )
+                    )
+                    .apply {
+                        if (memo.isNotEmpty()) {
+                            this.memo = memo
+                        }
+                    }
+                    .build()
+
+                input.toByteArray()
+            }
+            else -> {
+                var input = Cosmos.SigningInput.newBuilder()
+                    .setPublicKey(ByteString.copyFrom(publicKey.data()))
+                    .setSigningMode(Cosmos.SigningMode.Protobuf)
+                    .setChainId(coinType.chainId())
+                    .setAccountNumber(atomData.accountNumber.toLong())
+                    .setSequence(atomData.sequence.toLong())
+                    .setMode(Cosmos.BroadcastMode.SYNC)
+                    .addAllMessages(
+                        listOf(
+                            Cosmos.Message.newBuilder()
+                                .setSendCoinsMessage(
+                                    Cosmos.Message.Send.newBuilder()
+                                        .setFromAddress(keysignPayload.coin.address)
+                                        .setToAddress(keysignPayload.toAddress)
+                                        .addAllAmounts(
+                                            listOf(
+                                                Cosmos.Amount.newBuilder()
+                                                    .setDenom(
+                                                        if (keysignPayload.coin.contractAddress.contains("factory/") || keysignPayload.coin.contractAddress.contains("ibc/"))
+                                                            keysignPayload.coin.contractAddress
+                                                        else
+                                                            denom
+                                                    )
+                                                    .setAmount(keysignPayload.toAmount.toString())
+                                                    .build()
                                             )
-                                            .setAmount(keysignPayload.toAmount.toString())
-                                            .build()
-                                    )
+                                        )
+                                        .build()
                                 )
                                 .build()
                         )
-                        .build()
-                )
-            )
-            .setFee(
-                Cosmos.Fee.newBuilder()
-                    .setGas(gasLimit)
-                    .addAllAmounts(
-                        listOf(
-                            Cosmos.Amount.newBuilder()
-                                .setDenom(denom)
-                                .setAmount(atomData.gas.toString())
-                                .build()
-                        )
                     )
-            )
-        keysignPayload.memo?.let {
-            input = input.setMemo(it)
-        }
+                    .setFee(
+                        Cosmos.Fee.newBuilder()
+                            .setGas(gasLimit)
+                            .addAllAmounts(
+                                listOf(
+                                    Cosmos.Amount.newBuilder()
+                                        .setDenom(denom)
+                                        .setAmount(atomData.gas.toString())
+                                        .build()
+                                )
+                            )
+                    )
+                keysignPayload.memo?.let {
+                    input = input.setMemo(it)
+                }
 
-        return input.build().toByteArray()
+                input.build().toByteArray()
+            }
+        }
     }
 
     fun getSignedTransaction(

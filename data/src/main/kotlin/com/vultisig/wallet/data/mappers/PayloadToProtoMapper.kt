@@ -82,6 +82,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     accountNumber = specific.accountNumber.toString().toULong(),
                     sequence = specific.sequence.toString().toULong(),
                     gas = specific.gas.toString().toULong(),
+                    transactionType = specific.transactionType,
+                    ibcDenomTraces = specific.ibcDenomTraces,
                 )
             } else null,
             solanaSpecific = if (specific is BlockChainSpecific.Solana) {
