@@ -95,7 +95,7 @@ internal class VerifyDepositViewModel @Inject constructor(
 
     private fun loadPassword() {
         viewModelScope.launch {
-            vaultPasswordRepository.getPassword(vaultId)
+            password.value = vaultPasswordRepository.getPassword(vaultId)
         }
     }
 
