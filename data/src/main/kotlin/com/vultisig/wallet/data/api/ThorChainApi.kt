@@ -63,6 +63,7 @@ interface ThorChainApi {
     ): String?
 
     suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson
+    suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress>
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -109,6 +110,8 @@ internal class ThorChainApiImpl @Inject constructor(
                 response.body<String>()
             )
         } catch (e: Exception) {
+            Timber.tag("THORChainService")
+                .e("Error deserializing THORChain swap quote: ${e.message}")
             THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(
                     HttpStatusCode.fromValue(response.status.value).description
@@ -202,6 +205,19 @@ internal class ThorChainApiImpl @Inject constructor(
             )
         return response.body()
     }
+
+    override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
+       val response =  httpClient
+            .get("https://thornode.ninerealms.com/thorchain/inbound_addresses") {
+                header(xClientID, xClientIDValue)
+            }
+        if (!response.status.isSuccess()) {
+            Timber.tag("THORChainService")
+                .e("Error getting THORChain inbound addresses: ${response.bodyAsText()}")
+            throw Exception("Error getting THORChain inbound addresses")
+        }
+        return response.body()
+    }
 }
 
 @Serializable
@@ -226,4 +242,23 @@ data class ThorChainTransactionJson(
     val codeSpace: String?,
     @SerialName("raw_log")
     val rawLog: String,
+)
+@Serializable
+data class THORChainInboundAddress(
+    @SerialName("chain")
+    val chain: String,
+    @SerialName("address")
+    val address: String,
+    @SerialName("halted")
+    val halted: Boolean,
+    @SerialName("global_trading_paused")
+    val globalTradingPaused: Boolean,
+    @SerialName("chain_trading_paused")
+    val chainTradingPaused: Boolean,
+    @SerialName("chain_lp_actions_paused")
+    val chainLPActionsPaused : Boolean,
+    @SerialName("gas_rate")
+    val gasRate: String,
+    @SerialName("gas_rate_units")
+    val gasRateUnits: String,
 )

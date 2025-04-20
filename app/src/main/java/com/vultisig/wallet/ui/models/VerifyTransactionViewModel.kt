@@ -149,16 +149,12 @@ internal class VerifyTransactionViewModel @Inject constructor(
 
     private fun loadPassword() {
         viewModelScope.launch {
-            password.value = if (vaultId == null)
-                null
-            else
-                vaultPasswordRepository.getPassword(vaultId)
+            password.value = vaultPasswordRepository.getPassword(vaultId)
         }
     }
 
     private fun loadFastSign() {
         viewModelScope.launch {
-            if (vaultId == null) return@launch
             val hasFastSign = isVaultHasFastSignById(vaultId)
             uiState.update {
                 it.copy(

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositMemo.Bond
@@ -91,6 +92,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
+    private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -192,12 +194,28 @@ internal class DepositFormViewModel @Inject constructor(
                 Timber.e(e)
             }
         }
+
     }
 
     fun selectDepositOption(option: DepositOption) = viewModelScope.launch {
         resetTextFields()
         state.update {
             it.copy(depositOption = option)
+        }
+
+        if(option == DepositOption.Switch){
+            viewModelScope.launch {
+                val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+                val inboundAddress = inboundAddresses
+                    .firstOrNull { it.chain == "GAIA" }
+                if(inboundAddress != null && inboundAddress.halted.not() && inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()) {
+                    val gaiaAddress = inboundAddress.address
+                    nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
+                }
+                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect { addresses ->
+                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                }
+            }
         }
     }
 
@@ -710,7 +728,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val tokenAmountInt =
             tokenAmount
-                ?.movePointRight(selectedToken.decimal)
+                .movePointRight(selectedToken.decimal)
                 ?.toBigInteger() ?: BigInteger.ONE
 
         val srcAddress = selectedToken.address

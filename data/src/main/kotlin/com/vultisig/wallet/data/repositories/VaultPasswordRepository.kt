@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import android.content.SharedPreferences
 import jakarta.inject.Inject
+import androidx.core.content.edit
 
 private const val PREFIX = "vault_password_"
 
@@ -17,7 +18,7 @@ internal class VaultPasswordRepositoryImpl @Inject constructor(
 ): VaultPasswordRepository {
 
     override fun savePassword(vaultId: String, password: String) {
-        encryptedSharedPreferences.edit().putString(PREFIX + vaultId, password).apply()
+        encryptedSharedPreferences.edit() { putString(PREFIX + vaultId, password) }
     }
 
     override fun getPassword(vaultId: String): String? {
@@ -25,6 +26,6 @@ internal class VaultPasswordRepositoryImpl @Inject constructor(
     }
 
     override fun clearPassword(vaultId: String) {
-        encryptedSharedPreferences.edit().remove(PREFIX + vaultId).apply()
+        encryptedSharedPreferences.edit() { remove(PREFIX + vaultId) }
     }
 }
