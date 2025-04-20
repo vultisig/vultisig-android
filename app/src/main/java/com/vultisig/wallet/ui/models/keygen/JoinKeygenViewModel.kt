@@ -215,6 +215,7 @@ internal class JoinKeygenViewModel @Inject constructor(
                 val keygenCommittee = try {
                     fetchKeygenCommittee(session)
                 } catch (e: Exception) {
+                    Timber.e("Error fetching keygen committee: $e")
                     emptyList()
                 }
 
@@ -335,11 +336,6 @@ class MediatorServiceDiscoveryListener(
                 return
             }
             address.hostAddress?.let {
-                // This is a workaround for the emulator
-                if (it == "10.0.2.16") {
-                    onServerAddressDiscovered("http://192.168.1.35:18080")
-                    return
-                }
                 onServerAddressDiscovered("http://${it}:${serviceInfo.port}")
             }
         }
