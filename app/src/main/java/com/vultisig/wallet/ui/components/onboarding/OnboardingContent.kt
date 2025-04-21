@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
@@ -95,7 +96,13 @@ internal fun OnboardingContent(
                 size = VsButtonSize.Medium,
                 icon = R.drawable.ic_caret_right,
                 onClick = nextClick,
+                modifier = Modifier
+                    .testTag(OnboardingContentTags.NEXT)
             )
         }
     }
+}
+
+internal object OnboardingContentTags {
+    const val NEXT = "OnboardingContent.next"
 }

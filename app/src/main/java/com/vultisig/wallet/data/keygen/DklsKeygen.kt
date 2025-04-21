@@ -102,7 +102,7 @@ class DKLSKeygen(
         }
     }
 
-    fun getDKLSOutboundMessage(handle: Handle): Pair<lib_error, ByteArray> {
+    private fun getDKLSOutboundMessage(handle: Handle): Pair<lib_error, ByteArray> {
         val buf = tss_buffer()
         try {
             val result = when (action) {
@@ -120,7 +120,7 @@ class DKLSKeygen(
         }
     }
 
-    suspend fun isKeygenDone(): Boolean {
+    private suspend fun isKeygenDone(): Boolean {
         keyGenLock.lock()
         return try {
             keygenDoneIndicator
@@ -129,7 +129,7 @@ class DKLSKeygen(
         }
     }
 
-    suspend fun setKeygenDone(status: Boolean) {
+    private suspend fun setKeygenDone(status: Boolean) {
         keyGenLock.lock()
         try {
             keygenDoneIndicator = status
@@ -138,7 +138,7 @@ class DKLSKeygen(
         }
     }
 
-    fun getOutboundMessageReceiver(handle: Handle, message: go_slice, idx: Long): ByteArray {
+    private fun getOutboundMessageReceiver(handle: Handle, message: go_slice, idx: Long): ByteArray {
         val bufReceiver = tss_buffer()
         try {
             val receiverResult = when (action) {
@@ -157,7 +157,7 @@ class DKLSKeygen(
     }
 
     @Throws(Exception::class)
-    suspend fun processDKLSOutboundMessage(handle: Handle) {
+    private suspend fun processDKLSOutboundMessage(handle: Handle) {
 
         while (true) {
             val (result, outboundMessage) = getDKLSOutboundMessage(handle)
@@ -189,7 +189,7 @@ class DKLSKeygen(
     }
 
     @Throws(Exception::class)
-    suspend fun pullInboundMessages(handle: Handle): Boolean {
+    private suspend fun pullInboundMessages(handle: Handle): Boolean {
         Timber.d("start pulling inbound messages")
 
         val start = System.nanoTime()
@@ -219,7 +219,7 @@ class DKLSKeygen(
     }
 
     @Throws(Exception::class)
-    suspend fun processInboundMessage(handle: Handle, msgs: List<Message>): Boolean {
+    private suspend fun processInboundMessage(handle: Handle, msgs: List<Message>): Boolean {
         if (msgs.isEmpty()) {
             return false
         }
@@ -260,7 +260,7 @@ class DKLSKeygen(
     }
 
     @Throws(Exception::class)
-    suspend fun deleteMessageFromServer(hash: String) {
+    private suspend fun deleteMessageFromServer(hash: String) {
         sessionApi.deleteTssMessage(mediatorURL, sessionID, this.localPartyId, hash, null)
     }
 
@@ -374,7 +374,7 @@ class DKLSKeygen(
         }
     }
 
-    fun processReshareCommittee(
+    private fun processReshareCommittee(
         oldCommittee: List<String>,
         newCommittee: List<String>,
     ): Triple<List<String>, List<Byte>, List<Byte>> {
@@ -399,7 +399,7 @@ class DKLSKeygen(
         return Triple(allParties, newPartiesIdx, oldPartiesIdx)
     }
 
-    fun getKeyshareString(): String? {
+    private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
             if (ks.pubKey == vault.pubKeyECDSA) {
                 return ks.keyShare
@@ -409,7 +409,7 @@ class DKLSKeygen(
     }
 
     @Throws(Exception::class)
-    fun getKeyshareBytesFromVault(): ByteArray {
+    private fun getKeyshareBytesFromVault(): ByteArray {
         val localKeyshare = getKeyshareString() ?: throw RuntimeException("fail to get local keyshare")
         return Base64.Default.decode(localKeyshare)
     }
@@ -522,19 +522,19 @@ class DKLSKeygen(
         }
     }
 
-    fun getKeyshareBytes(handle: Handle): ByteArray =
+    private fun getKeyshareBytes(handle: Handle): ByteArray =
         executeIntoBytes(
             block = { dkls_keyshare_to_bytes(handle, it) },
             errorMessage = { "fail to get keyshare from handler" }
         )
 
-    fun getPublicKeyBytes(handle: Handle): ByteArray =
+    private fun getPublicKeyBytes(handle: Handle): ByteArray =
         executeIntoBytes(
             block = { dkls_keyshare_public_key(handle, it) },
             errorMessage = { "fail to get ECDSA public key from handler" }
         )
 
-    fun getChainCode(handle: Handle): ByteArray = executeIntoBytes(
+    private fun getChainCode(handle: Handle): ByteArray = executeIntoBytes(
         block = { dkls_keyshare_chaincode(handle, it) },
         errorMessage = { "fail to get ECDSA chaincode from handler" }
     )

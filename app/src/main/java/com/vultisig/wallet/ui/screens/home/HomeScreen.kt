@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -99,7 +100,8 @@ private fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier
-                            .clickable(onClick = onToggleVaults),
+                            .clickable(onClick = onToggleVaults)
+                            .testTag("HomeScreen.title"),
                     ) {
                         AnimatedContent(
                             targetState = screenTitle,
@@ -112,7 +114,6 @@ private fun HomeScreen(
                                 color = Theme.colors.neutral0,
                             )
                         }
-
 
                         UiIcon(
                             drawableResId = R.drawable.ic_small_caret_right,

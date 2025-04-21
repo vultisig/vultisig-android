@@ -74,7 +74,7 @@ class SchnorrKeygen(
     val cache = mutableMapOf<String, Any>()
     var keyshare: DKLSKeyshare? = null
 
-    fun getSchnorrOutboundMessage(handle: Handle): Pair<schnorr_lib_error, ByteArray> {
+    private fun getSchnorrOutboundMessage(handle: Handle): Pair<schnorr_lib_error, ByteArray> {
         val buf = tss_buffer()
         return try {
             val result = when (action) {
@@ -104,7 +104,7 @@ class SchnorrKeygen(
         }
     }
 
-    fun getOutboundMessageReceiver(handle: Handle, message: go_slice, idx: Long): ByteArray {
+    private fun getOutboundMessageReceiver(handle: Handle, message: go_slice, idx: Long): ByteArray {
         val bufReceiver = tss_buffer()
         return try {
             val receiverResult = when (action) {
@@ -126,7 +126,7 @@ class SchnorrKeygen(
         }
     }
 
-    suspend fun processSchnorrOutboundMessage(handle: Handle) {
+    private suspend fun processSchnorrOutboundMessage(handle: Handle) {
         while (true) {
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
             if (result != LIB_OK) {
@@ -134,7 +134,7 @@ class SchnorrKeygen(
             }
             if (outboundMessage.isEmpty()) {
                 if (isKeygenDone()) {
-                    Timber.d("DKLS ECDSA keygen finished")
+                    Timber.d("Schnorr keygen finished")
                     return
                 }
                 delay(100)
@@ -155,7 +155,7 @@ class SchnorrKeygen(
         }
     }
 
-    suspend fun pullInboundMessages(handle: Handle): Boolean {
+    private suspend fun pullInboundMessages(handle: Handle): Boolean {
         Timber.d("start pulling inbound messages")
 
         val start = System.nanoTime()
@@ -183,7 +183,7 @@ class SchnorrKeygen(
         return false
     }
 
-    suspend fun processInboundMessage(handle: Handle, msgs: List<Message>): Boolean {
+    private suspend fun processInboundMessage(handle: Handle, msgs: List<Message>): Boolean {
         if (msgs.isEmpty()) {
             return false
         }
@@ -216,7 +216,7 @@ class SchnorrKeygen(
                 Timber.d("fail to apply message to schnorr, $result")
                 error("fail to apply message to schnorr, $result")
             }
-            cache.put(key, Any())
+            cache[key] = Any()
             deleteMessageFromServer(msg.hash)
             if (isFinished[0] != 0) {
                 return true
@@ -225,7 +225,7 @@ class SchnorrKeygen(
         return false
     }
 
-    suspend fun deleteMessageFromServer(hash: String) {
+    private suspend fun deleteMessageFromServer(hash: String) {
         sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, null)
     }
 
@@ -281,7 +281,7 @@ class SchnorrKeygen(
                 val keyshareHandler = Handle()
                 val keyShareResult = schnorr_keygen_session_finish(handler, keyshareHandler)
                 if (keyShareResult != LIB_OK) {
-                    error("fail to get keyshare, $keyShareResult")
+                    error("Failed to get keyshare for $action, $keyShareResult")
                 }
                 val keyshareBytes = getKeyshareBytes(keyshareHandler)
                 val publicKeyEdDSA = getPublicKeyBytes(keyshareHandler)
@@ -297,7 +297,7 @@ class SchnorrKeygen(
             setKeygenDone(true)
             task?.cancel()
             if (attempt < 3) {
-                Timber.d("keygen/reshare retry, attempt: $attempt")
+                Timber.d("Retry $action, attempt: $attempt")
                 schnorrKeygenWithRetry(attempt + 1)
             } else {
                 throw e
@@ -305,7 +305,7 @@ class SchnorrKeygen(
         }
     }
 
-    fun processReshareCommittee(
+    private fun processReshareCommittee(
         oldCommittee: List<String>,
         newCommittee: List<String>
     ): Triple<List<String>, List<Byte>, List<Byte>> {
@@ -330,7 +330,7 @@ class SchnorrKeygen(
         return Triple(allParties, newPartiesIdx, oldPartiesIdx)
     }
 
-    fun getKeyshareString(): String? {
+    private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
             if (ks.pubKey == vault.pubKeyEDDSA) {
                 return ks.keyShare
@@ -340,7 +340,7 @@ class SchnorrKeygen(
     }
 
     @Throws(Exception::class)
-    fun getKeyshareBytesFromVault(): ByteArray {
+    private fun getKeyshareBytesFromVault(): ByteArray {
         val localKeyshare =
             getKeyshareString() ?: throw RuntimeException("fail to get local keyshare")
         return Base64.Default.decode(localKeyshare)
@@ -463,7 +463,7 @@ class SchnorrKeygen(
     }
 
 
-    fun getKeyshareBytes(handle: Handle): ByteArray {
+    private fun getKeyshareBytes(handle: Handle): ByteArray {
         val buf = tss_buffer()
         return try {
             val result = schnorr_keyshare_to_bytes(handle, buf)
@@ -476,7 +476,7 @@ class SchnorrKeygen(
         }
     }
 
-    fun getPublicKeyBytes(handle: Handle): ByteArray {
+    private fun getPublicKeyBytes(handle: Handle): ByteArray {
         val buf = tss_buffer()
         return try {
             val result = schnorr_keyshare_public_key(handle, buf)

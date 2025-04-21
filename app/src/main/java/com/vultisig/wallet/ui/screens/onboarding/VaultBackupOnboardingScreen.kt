@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
@@ -16,6 +17,7 @@ import com.vultisig.wallet.ui.components.util.PartiallyGradientTextItem
 import com.vultisig.wallet.ui.components.util.SequenceOfGradientText
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingUiModel
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingViewModel
+import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingUiModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.theme.Theme
@@ -72,6 +74,7 @@ private fun VaultBackupOnboardingScreen(
                             else -> R.raw.riv_2of3_securevault_overview
                         }
                     }
+
                     state.vaultShares == 4 -> {
                         when (state.deviceIndex) {
                             1 -> R.raw.riv_3of4_securevault_overview_device2
@@ -80,6 +83,7 @@ private fun VaultBackupOnboardingScreen(
                             else -> R.raw.riv_3of4_securevault_overview
                         }
                     }
+
                     else -> {
                         R.raw.riv_5plus_securevault_overview
                     }
@@ -176,5 +180,22 @@ private fun Description(
         listTextItems = textItems,
         style = Theme.brockmann.headings.title1,
         modifier = modifier
+    )
+}
+
+@Preview
+@Composable
+private fun VaultBackupOnboardingScreenPreview() {
+    VaultBackupOnboardingScreen(
+        state = VaultBackupOnboardingUiModel(
+            vaultType = Route.VaultInfo.VaultType.Secure,
+            vaultShares = 2,
+            deviceIndex = 0,
+            pageIndex = 0,
+            pageTotal = 2,
+            currentPage = OnboardingPage()
+        ),
+        onBackClick = {},
+        onNextClick = {}
     )
 }

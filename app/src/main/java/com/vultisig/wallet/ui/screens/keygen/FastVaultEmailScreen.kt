@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,7 +69,8 @@ private fun FastVaultEmailScreen(
                 label = stringResource(R.string.enter_email_screen_next),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .testTag("FastVaultEmailScreen.next"),
                 onClick = onNextClick,
                 state = if (state.innerState == VsTextInputFieldInnerState.Success)
                     VsButtonState.Enabled else VsButtonState.Disabled
@@ -115,6 +117,7 @@ private fun FastVaultEmailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .wrapContentHeight()
+                    .testTag("FastVaultEmailScreen.emailField")
             )
         }
     }

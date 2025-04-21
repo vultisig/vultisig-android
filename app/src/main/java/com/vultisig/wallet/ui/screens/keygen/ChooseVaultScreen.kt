@@ -43,12 +43,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -70,7 +69,6 @@ import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.theme.cursorBrush
 import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.launch
 
@@ -216,6 +214,7 @@ private fun ChooseVaultScreen(
                                     }
                                     .padding(16.dp)
                                     .wrapContentWidth(CenterHorizontally)
+                                    .testTag("ChooseVaultScreen.selectFastVault")
                             ) {
                                 val brushGradient = Theme.colors.gradients.primary
                                 val iconModifier = if (!isSecureTypeSelected) {
@@ -321,6 +320,7 @@ private fun ChooseVaultScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
+                    .testTag("ChooseVaultScreen.continue")
             )
             UiSpacer(32.dp)
         }

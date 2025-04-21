@@ -8,6 +8,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -109,6 +110,7 @@ private fun BackupVaultScreen(
                         horizontal = 24.dp,
                         vertical = 10.dp,
                     )
+                    .testTag(BackupVaultScreenTags.BACKUP_NOW)
             )
         }
     )
@@ -121,4 +123,8 @@ private fun BackupVaultScreenPreview() {
     BackupVaultScreen(
         onBackupClick = {},
     )
+}
+
+internal object BackupVaultScreenTags {
+    const val BACKUP_NOW = "BackupVaultScreen.backup"
 }

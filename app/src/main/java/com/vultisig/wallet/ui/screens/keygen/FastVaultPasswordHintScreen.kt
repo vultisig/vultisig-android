@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,6 +75,7 @@ private fun FastVaultPasswordHintScreen(
                     onClick = onSkipClick,
                     variant = VsButtonVariant.Secondary,
                     modifier = Modifier.weight(1f)
+                        .testTag("FastVaultPasswordHintScreen.skip")
                 )
 
                 VsButton(
