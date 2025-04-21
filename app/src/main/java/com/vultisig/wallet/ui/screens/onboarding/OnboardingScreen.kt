@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -123,7 +124,9 @@ private fun OnboardingScreen(
                         text = stringResource(R.string.welcome_screen_skip),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.colors.text.extraLight,
-                        modifier = Modifier.clickable(onClick = onSkipClick)
+                        modifier = Modifier
+                            .clickable(onClick = onSkipClick)
+                            .testTag("OnboardingScreen.skip")
                     )
                 },
             )

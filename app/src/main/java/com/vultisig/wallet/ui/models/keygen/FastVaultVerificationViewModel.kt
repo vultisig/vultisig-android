@@ -10,9 +10,9 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
-import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.usecases.fast.VerifyFastVaultBackupCodeUseCase
 import com.vultisig.wallet.ui.components.canAuthenticateBiometric
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -45,7 +45,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val saveVault: SaveVaultUseCase,
-    private val vultiSignerRepository: VultiSignerRepository,
+    private val verifyFastVaultBackupCode: VerifyFastVaultBackupCodeUseCase,
     private val temporaryVaultRepository: TemporaryVaultRepository,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val vaultPasswordRepository: VaultPasswordRepository,
@@ -89,7 +89,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
             if (isCodeTemplateValid(code)) {
                 updateVerifyState(VerifyPinState.Loading)
 
-                val isCodeValid = vultiSignerRepository.isBackupCodeValid(
+                val isCodeValid = verifyFastVaultBackupCode(
                     publicKeyEcdsa = args.pubKeyEcdsa,
                     code = code,
                 )

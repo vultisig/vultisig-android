@@ -32,7 +32,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-internal class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 

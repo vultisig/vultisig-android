@@ -31,6 +31,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -87,7 +88,8 @@ internal fun VsCodeInputField(
                 .onFocusChanged {
                     focusedState.value = it.isFocused
                 }
-                .focusRequester(focusRequester),
+                .focusRequester(focusRequester)
+                .testTag(CODE_INPUT_FIELD_TAG),
             textStyle = TextStyle.Default.copy(color = Color.Transparent),
         )
 
@@ -163,3 +165,5 @@ private fun VsCodeInputFieldPreview() {
         onFinishedInput = {},
     )
 }
+
+internal const val CODE_INPUT_FIELD_TAG = "codeInputField"

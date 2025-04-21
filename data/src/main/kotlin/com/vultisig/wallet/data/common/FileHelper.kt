@@ -147,15 +147,19 @@ internal fun Context.saveBitmapToDownloadsDirLegacy(bitmap: Bitmap, fileName: St
                 bitmap.compressPng(it)
             }
             bitmap.recycle()
-            FileProvider.getUriForFile(
-                this, "$packageName.provider", file
-            )
+            provideFileUri(file)
         } catch (e: Exception) {
             null
         }
     }
     return null
 }
+
+fun Context.provideFileUri(file: File): Uri = FileProvider.getUriForFile(
+    this,
+    "$packageName.provider",
+    file
+)
 
 
 fun Uri.fileContent(context: Context): String? {

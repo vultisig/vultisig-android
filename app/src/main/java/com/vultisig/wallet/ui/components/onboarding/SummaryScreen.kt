@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.rive.runtime.kotlin.RiveAnimationView
@@ -50,7 +51,8 @@ internal fun SummaryScreen(
 
         }
         VsCheckField(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(20.dp)
+                .testTag("SummaryScreen.agree"),
             title = stringResource(id = R.string.onboarding_summary_check),
             isChecked = checkState,
             onCheckedChange = onCheckChange,
@@ -62,6 +64,7 @@ internal fun SummaryScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
+                .testTag("SummaryScreen.continue")
         )
         UiSpacer(32.dp)
     }

@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
@@ -116,7 +117,8 @@ internal fun FastVaultPasswordScreen(
                     VsButtonState.Enabled else VsButtonState.Disabled,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .testTag("FastVaultPasswordScreen.next"),
                 onClick = onNextClick,
             )
         }
@@ -170,6 +172,8 @@ internal fun FastVaultPasswordScreen(
                         ),
                         focusRequester = focusRequester,
                         imeAction = ImeAction.Next,
+                        modifier = Modifier
+                            .testTag("FastVaultPasswordScreen.passwordField")
                     )
 
                     VsTextInputField(
@@ -186,6 +190,8 @@ internal fun FastVaultPasswordScreen(
                         onKeyboardAction = {
                             onNextClick()
                         },
+                        modifier = Modifier
+                            .testTag("FastVaultPasswordScreen.confirmPasswordField")
                     )
                 }
             }

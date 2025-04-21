@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -181,6 +182,8 @@ private fun FastVaultVerificationScreen(
                                 VerifyPinState.Error -> VsCodeInputFieldState.Error
                                 else -> VsCodeInputFieldState.Default
                             },
+                            modifier = Modifier
+                                .testTag("FastVaultVerificationScreen.codeField")
                         )
 
                         val hasClipContent = textToPaste != null

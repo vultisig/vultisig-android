@@ -2,12 +2,12 @@ package com.vultisig.wallet.app.startup
 
 import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
-import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.EarlyEntryPoint
+import dagger.hilt.android.EarlyEntryPoints
 import dagger.hilt.components.SingletonComponent
 
-@EntryPoint
+@EarlyEntryPoint
 @InstallIn(SingletonComponent::class)
 internal interface InitializerEntryPoint {
 
@@ -16,7 +16,7 @@ internal interface InitializerEntryPoint {
     companion object {
         //a helper method to resolve the InitializerEntryPoint from the context
         fun resolve(context: Context): InitializerEntryPoint {
-            return EntryPointAccessors.fromApplication(
+            return EarlyEntryPoints.get(
                 context,
                 InitializerEntryPoint::class.java
             )
