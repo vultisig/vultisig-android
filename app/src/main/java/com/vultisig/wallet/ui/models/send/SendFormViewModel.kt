@@ -993,8 +993,10 @@ internal class SendFormViewModel @Inject constructor(
                         from = address,
                         selectedCoin = uiModel,
                         hasMemo = hasMemo,
+
                     )
                 }
+                addressFieldState.setTextAndPlaceCursorAtEnd("")
             }.collect()
         }
     }
