@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,7 +69,8 @@ private fun NameVaultScreen(
                 label = stringResource(R.string.fast_vault_name_screen_next),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .testTag("NameVaultScreen.continue"),
                 state = if (state.isNextButtonEnabled)
                     VsButtonState.Enabled else VsButtonState.Disabled,
                 onClick = onNextClick,
@@ -115,6 +117,7 @@ private fun NameVaultScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .wrapContentHeight()
+                    .testTag("NameVaultScreen.nameField")
             )
         }
     }

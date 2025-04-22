@@ -1,14 +1,12 @@
 package com.vultisig.wallet.app
 
 import android.app.Application
-import app.rive.runtime.kotlin.core.RendererType
 import app.rive.runtime.kotlin.core.Rive
 import com.vultisig.wallet.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
-@HiltAndroidApp
-internal class VultisigApplication : Application() {
+internal open class VsBaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         WalletCoreLoader
@@ -20,3 +18,6 @@ internal class VultisigApplication : Application() {
         Rive.init(this)
     }
 }
+
+@HiltAndroidApp
+internal class VultisigApplication : VsBaseApplication()

@@ -36,6 +36,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -176,7 +177,8 @@ internal fun VsTextInputField(
                             .onFocusChanged {
                                 focused = it.isFocused
                                 onFocusChanged?.invoke(it.isFocused)
-                            },
+                            }
+                            .testTag(TEXT_INPUT_FIELD_TAG),
                         decorator = { textField ->
                             TextInputFieldHint(
                                 textFieldState = textFieldState,
@@ -222,6 +224,7 @@ internal fun VsTextInputField(
                         ),
                         onKeyboardAction = onKeyboardAction,
                         modifier = Modifier
+                            .testTag(TEXT_INPUT_FIELD_TAG)
                             .weight(1f)
                             .then(
                                 if (focusRequester != null)
@@ -423,23 +426,7 @@ private fun VsTextInputPreviewMaker(
     )
 }
 
-@Composable
-private fun VsTextInputForNumberPreviewMaker(
-    type: VsTextInputFieldType,
-    innerState: VsTextInputFieldInnerState,
-    hint: String? = null,
-    initialText: String = "",
-) {
-    VsTextInputField(
-        modifier = Modifier,
-        hint = hint,
-        textFieldState = rememberTextFieldState(initialText),
-        onFocusChanged = {},
-        type = type,
-        innerState = innerState,
-        footNote = "foot note",
-    )
-}
 
 
+internal const val TEXT_INPUT_FIELD_TAG = "textInputField"
 

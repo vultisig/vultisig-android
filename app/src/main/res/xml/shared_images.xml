@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!--  TODO only here for tests; maybe we should remove this  -->
+    <cache-path name="cache" path="." />
+
     <cache-path name="shared_images" path="images/"/>
     <external-path name="qr_codes" path="./Download/Vultisig/QRCodes/"/>
 </paths>

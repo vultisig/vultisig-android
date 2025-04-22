@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -228,6 +229,8 @@ private fun VaultAccountsScreen(
                     UiPlusButton(
                         title = stringResource(R.string.vault_choose_chains),
                         onClick = onChooseChains,
+                        modifier = Modifier
+                            .testTag("VaultAccountsScreen.chooseChains")
                     )
                     UiSpacer(
                         size = 64.dp,
