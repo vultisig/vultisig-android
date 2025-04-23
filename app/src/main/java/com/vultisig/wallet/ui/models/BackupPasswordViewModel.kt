@@ -186,6 +186,7 @@ internal class BackupPasswordViewModel @Inject constructor(
                         Route.VaultConfirmation(
                             vaultId = vaultId,
                             vaultType = vaultType,
+                            action = args.action,
                         )
                     )
                 } else {

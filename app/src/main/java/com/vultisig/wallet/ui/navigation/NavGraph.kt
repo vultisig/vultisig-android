@@ -2,6 +2,8 @@ package com.vultisig.wallet.ui.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -68,6 +70,7 @@ import com.vultisig.wallet.ui.screens.keygen.VaultConfirmationScreen
 import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignScreen
+import com.vultisig.wallet.ui.screens.migration.MigrationOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
@@ -269,9 +272,12 @@ internal fun SetupNavGraph(
             val savedStateHandle = entry.savedStateHandle
             val args = requireNotNull(entry.arguments)
 
+            val qr by savedStateHandle.getStateFlow<String?>(ARG_QR_CODE, null)
+                .collectAsState()
+
             SendScreen(
                 navController = navController,
-                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR),
+                qrCodeResult = qr ?: args.getString(ARG_QR),
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
                 startWithTokenId = args.getString(ARG_TOKEN_ID),
@@ -586,5 +592,9 @@ internal fun SetupNavGraph(
             )
         }
 
+        // migration
+        composable<Route.MigrationOnboarding> {
+            MigrationOnboardingScreen()
+        }
     }
 }

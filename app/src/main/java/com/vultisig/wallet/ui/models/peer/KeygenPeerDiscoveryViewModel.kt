@@ -126,7 +126,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     val state = MutableStateFlow(PeerDiscoveryUiModel())
 
-    private val params = savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>()
+    private val args = savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>()
 
     private val sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
@@ -135,15 +135,15 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private var hexChainCode: String = Utils.encryptionKeyHex
     private var localPartyId = Utils.deviceName(context)
-    private val vaultName: String = params.vaultName
+    private val vaultName: String = args.vaultName
     private var libType = SigningLibType.GG20
     private var pubKeyEcdsa = ""
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
 
     // fast vault data
-    private val email = params.email
-    private val password = params.password
+    private val email = args.email
+    private val password = args.password
 
     private val qrBitmap = MutableStateFlow<Bitmap?>(null)
 
@@ -223,13 +223,13 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
     fun next() {
         discoverParticipantsJob?.cancel()
         viewModelScope.launch {
-            val existingVault = params.vaultId?.let {
+            val existingVault = args.vaultId?.let {
                 vaultRepository.get(it)
             }
 
             navigator.route(
                 Route.Keygen.Generating(
-                    action = params.action,
+                    action = args.action,
                     sessionId = sessionId,
                     serverUrl = serverUrl,
                     localPartyId = localPartyId,
@@ -238,15 +238,15 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                     keygenCommittee = state.value.selectedDevices + localPartyId,
                     encryptionKeyHex = encryptionKeyHex,
                     isInitiatingDevice = true,
-                    libType = if (params.action == TssAction.Migrate)
+                    libType = if (args.action == TssAction.Migrate)
                         SigningLibType.DKLS
                     else libType,
 
                     email = email,
                     password = password,
-                    hint = params.hint,
+                    hint = args.hint,
 
-                    vaultId = params.vaultId,
+                    vaultId = args.vaultId,
                     oldCommittee = existingVault?.signers
                         ?.filter { state.value.selectedDevices.contains(it) || it == localPartyId }
                         ?: emptyList(),
@@ -264,7 +264,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
         viewModelScope.launch {
             setupLibType()
 
-            val existingVault = params.vaultId?.let {
+            val existingVault = args.vaultId?.let {
                 vaultRepository.get(it)
             }
 
@@ -275,6 +275,15 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                 pubKeyEcdsa = existingVault.pubKeyECDSA
                 resharePrefix = existingVault.resharePrefix
                 signers = existingVault.signers
+
+                if (args.action == TssAction.Migrate) {
+                    state.update {
+                        it.copy(
+                            minimumDevices = existingVault.signers.size,
+                            minimumDevicesDisplayed = existingVault.signers.size + 1,
+                        )
+                    }
+                }
             }
 
             state.update { it.copy(error = null) }
@@ -409,7 +418,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private fun createKeygenPayload(
         isRelayEnabled: Boolean,
-    ) = when (params.action) {
+    ) = when (args.action) {
         TssAction.KEYGEN ->
             "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
                     compressQr(
@@ -426,7 +435,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                         )
                     ).encodeBase64()
         TssAction.ReShare, TssAction.Migrate ->
-            "https://vultisig.com?type=NewVault&tssType=${params.action.toLinkTssType()}&jsonData=" +
+            "https://vultisig.com?type=NewVault&tssType=${args.action.toLinkTssType()}&jsonData=" +
                     compressQr(
                         protoBuf.encodeToByteArray(
                             ReshareMessageProto(
@@ -438,7 +447,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
                                 encryptionKeyHex = encryptionKeyHex,
                                 useVultisigRelay = isRelayEnabled,
                                 oldResharePrefix = resharePrefix,
-                                vaultName = params.vaultName,
+                                vaultName = args.vaultName,
                                 libType = libType.toProto(),
                             )
                         )
@@ -454,7 +463,7 @@ internal class KeygenPeerDiscoveryViewModel @Inject constructor(
 
     private suspend fun requestVultiServerConnection() {
         if (email != null && password != null) {
-            when(params.action) {
+            when(args.action) {
                 TssAction.ReShare -> {
                     vultiSignerRepository.joinReshare(
                         JoinReshareRequestJson(

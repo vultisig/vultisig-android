@@ -25,6 +25,7 @@ internal class BackupVaultViewModel @Inject constructor(
                 Route.BackupPasswordRequest(
                     vaultId = args.vaultId,
                     vaultType = args.vaultType,
+                    action = args.action,
                 )
             )
         }

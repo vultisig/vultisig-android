@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.components.onboarding.OnboardingContent
 import com.vultisig.wallet.ui.components.topbar.VsTopAppProgressBar
 import com.vultisig.wallet.ui.components.util.BlockBackClick
@@ -46,15 +47,17 @@ private fun VaultBackupOnboardingScreen(
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
-            VsTopAppProgressBar(
-                title = stringResource(R.string.onboarding_security_backup_title),
-                progress = state.pageIndex + 1,
-                total = state.pageTotal,
-            )
+            if (state.pageTotal != 1) {
+                VsTopAppProgressBar(
+                    title = stringResource(R.string.onboarding_security_backup_title),
+                    progress = state.pageIndex + 1,
+                    total = state.pageTotal,
+                )
+            }
         },
     ) { paddingValues ->
 
-        val textItems = buildOnboardingPagesText(state.vaultType, state.vaultShares)
+        val textItems = buildOnboardingPagesText(state.vaultType, state.vaultShares, state.action)
 
         OnboardingContent(
             state = OnboardingUiModel(
@@ -103,6 +106,7 @@ private fun VaultBackupOnboardingScreen(
 private fun buildOnboardingPagesText(
     vaultType: Route.VaultInfo.VaultType,
     vaultShares: Int = 2,
+    action: TssAction,
 ) = when (vaultType) {
     Route.VaultInfo.VaultType.Secure -> listOf(
         listOf(
@@ -136,38 +140,56 @@ private fun buildOnboardingPagesText(
         )
     )
 
-    Route.VaultInfo.VaultType.Fast -> listOf(
-        listOf(
-            PartiallyGradientTextItem(
-                resId = R.string.onboarding_fast_backup_desc_page_1_part_1,
-                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
-            ),
-            PartiallyGradientTextItem(
-                resId = R.string.onboarding_fast_backup_desc_page_1_part_2,
-                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
-            ),
-        ),
-        listOf(
-            PartiallyGradientTextItem(
-                resId = R.string.onboarding_fast_backup_desc_page_2_part_1,
-                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
-            ),
-            PartiallyGradientTextItem(
-                resId = R.string.onboarding_fast_backup_desc_page_2_part_2,
-                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
-            ),
-        ),
-        listOf(
-            PartiallyGradientTextItem(
-                resId = R.string.onboarding_fast_backup_desc_page_3_part_1,
-                coloring = GradientColoring.VsColor(Theme.colors.text.primary),
-            ),
-            PartiallyGradientTextItem(
-                resId = R.string.onboarding_fast_backup_desc_page_3_part_2,
-                coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
-            ),
-        )
-    )
+    Route.VaultInfo.VaultType.Fast ->
+        when (action) {
+            TssAction.Migrate -> {
+                listOf(
+                    listOf(
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_fast_backup_migration_desc_page_1_part_1,
+                            coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                        ),
+                        PartiallyGradientTextItem(
+                            resId = R.string.onboarding_fast_backup_migration_desc_page_1_part_2,
+                            coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                        ),
+                    ),
+                )
+            }
+
+            else -> listOf(
+                listOf(
+                    PartiallyGradientTextItem(
+                        resId = R.string.onboarding_fast_backup_desc_page_1_part_1,
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.onboarding_fast_backup_desc_page_1_part_2,
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                    ),
+                ),
+                listOf(
+                    PartiallyGradientTextItem(
+                        resId = R.string.onboarding_fast_backup_desc_page_2_part_1,
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.onboarding_fast_backup_desc_page_2_part_2,
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                    ),
+                ),
+                listOf(
+                    PartiallyGradientTextItem(
+                        resId = R.string.onboarding_fast_backup_desc_page_3_part_1,
+                        coloring = GradientColoring.VsColor(Theme.colors.text.primary),
+                    ),
+                    PartiallyGradientTextItem(
+                        resId = R.string.onboarding_fast_backup_desc_page_3_part_2,
+                        coloring = GradientColoring.Gradient(Theme.colors.gradients.primary),
+                    ),
+                )
+            )
+        }
 }
 
 
@@ -193,7 +215,8 @@ private fun VaultBackupOnboardingScreenPreview() {
             deviceIndex = 0,
             pageIndex = 0,
             pageTotal = 2,
-            currentPage = OnboardingPage()
+            currentPage = OnboardingPage(),
+            action = TssAction.KEYGEN,
         ),
         onBackClick = {},
         onNextClick = {}

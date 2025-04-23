@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.onboarding.components.OnboardingPage
 import com.vultisig.wallet.ui.navigation.Destination
@@ -17,6 +18,7 @@ import javax.inject.Inject
 
 internal data class VaultBackupOnboardingUiModel(
     val vaultType: Route.VaultInfo.VaultType,
+    val action: TssAction,
     val deviceIndex: Int = 0,
     val currentPage: OnboardingPage,
     val pageIndex: Int,
@@ -49,11 +51,19 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
 
     // TODO refactor this into actually configurable model
     private val pages = when (args.vaultType) {
-        Route.VaultInfo.VaultType.Fast -> listOf(
-            OnboardingPage(),
-            OnboardingPage(),
-            OnboardingPage(),
-        )
+        Route.VaultInfo.VaultType.Fast -> {
+            when (args.action) {
+                TssAction.Migrate -> listOf(
+                    OnboardingPage(),
+                )
+
+                else -> listOf(
+                    OnboardingPage(),
+                    OnboardingPage(),
+                    OnboardingPage(),
+                )
+            }
+        }
 
         Route.VaultInfo.VaultType.Secure -> listOf(
             OnboardingPage(),
@@ -67,7 +77,8 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
             vaultType = args.vaultType,
             currentPage = pages.first(),
             pageIndex = 0,
-            pageTotal = pages.size
+            pageTotal = pages.size,
+            action = args.action,
         )
     )
 
@@ -89,7 +100,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
                                 vaultId = vaultId,
                                 pubKeyEcdsa = args.pubKeyEcdsa,
                                 email = requireNotNull(args.email),
-                                tssAction = args.tssAction
+                                tssAction = args.action
                             )
                         )
                     }
@@ -99,6 +110,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
                             Route.BackupVault(
                                 vaultId = vaultId,
                                 vaultType = args.vaultType,
+                                action = args.action,
                             )
                         )
                     }
