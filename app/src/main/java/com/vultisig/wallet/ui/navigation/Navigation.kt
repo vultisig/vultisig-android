@@ -330,7 +330,7 @@ internal sealed class Route {
             val pubKeyEcdsa: String,
             val email: String?,
             val vaultType: VaultInfo.VaultType,
-            val tssAction: TssAction,
+            val action: TssAction,
         )
     }
 
@@ -507,6 +507,7 @@ internal sealed class Route {
     data class BackupVault(
         val vaultId: VaultId,
         val vaultType: VaultInfo.VaultType?,
+        val action: TssAction? = null,
     )
 
     @Serializable
@@ -514,6 +515,7 @@ internal sealed class Route {
         val vaultId: VaultId,
         // vault type only provided if vault confirmation screen is required
         val vaultType: VaultInfo.VaultType? = null,
+        val action: TssAction? = null,
     )
 
     @Serializable
@@ -521,6 +523,7 @@ internal sealed class Route {
         val vaultId: VaultId,
         // vault type only provided if vault confirmation screen is required
         val vaultType: VaultInfo.VaultType? = null,
+        val action: TssAction? = null,
     )
 
     @Serializable
@@ -533,6 +536,14 @@ internal sealed class Route {
     data class VaultConfirmation(
         val vaultId: VaultId,
         val vaultType: VaultInfo.VaultType,
+        val action: TssAction? = null,
+    )
+
+    // vault migration
+
+    @Serializable
+    data class MigrationOnboarding(
+        val vaultId: VaultId,
     )
 
 }

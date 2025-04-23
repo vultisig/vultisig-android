@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 
 internal data class VaultConfirmationUiModel(
     val vaultInfo: Route.VaultInfo.VaultType,
+    val action: TssAction?,
 )
 
 @HiltViewModel
@@ -30,6 +32,7 @@ internal class VaultConfirmationViewModel @Inject constructor(
     val state = MutableStateFlow(
         VaultConfirmationUiModel(
             vaultInfo = args.vaultType,
+            action = args.action,
         )
     )
 
@@ -37,16 +40,30 @@ internal class VaultConfirmationViewModel @Inject constructor(
         viewModelScope.launch {
             delay(5.seconds)
 
-            navigator.route(
-                route = Route.VaultBackupSummary(
-                    vaultId = args.vaultId,
-                    vaultType = args.vaultType,
-                ),
-                opts = NavigationOptions(
-                    popUpToRoute = Route.ChooseVaultType::class,
-                    inclusive = true,
-                )
-            )
+            when (args.action) {
+                TssAction.Migrate -> {
+                    navigator.navigate(
+                        dst = Destination.Home(),
+                        opts = NavigationOptions(
+                            popUpToRoute = Route.VaultBackupSummary::class,
+                            inclusive = true,
+                        )
+                    )
+                }
+
+                else -> {
+                    navigator.route(
+                        route = Route.VaultBackupSummary(
+                            vaultId = args.vaultId,
+                            vaultType = args.vaultType,
+                        ),
+                        opts = NavigationOptions(
+                            popUpToRoute = Route.ChooseVaultType::class,
+                            inclusive = true,
+                        )
+                    )
+                }
+            }
         }
     }
 

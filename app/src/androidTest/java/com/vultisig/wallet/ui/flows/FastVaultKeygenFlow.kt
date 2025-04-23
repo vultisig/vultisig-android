@@ -2,20 +2,11 @@
 
 package com.vultisig.wallet.ui.flows
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.Context
-import android.content.Intent
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.test.core.app.ActivityScenario
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import com.vultisig.wallet.app.activity.MainActivity
-import com.vultisig.wallet.data.common.provideFileUri
-import com.vultisig.wallet.data.usecases.MIME_TYPE_VAULT
 import com.vultisig.wallet.ui.pages.NameVaultPage
 import com.vultisig.wallet.ui.pages.keygen.BackupVaultPage
 import com.vultisig.wallet.ui.pages.keygen.ChooseVaultPage
@@ -30,7 +21,7 @@ import com.vultisig.wallet.ui.pages.onboarding.VaultBackupOnboardingPage
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreenTags
 import com.vultisig.wallet.ui.utils.click
 import com.vultisig.wallet.ui.utils.waitUntilShown
-import java.io.File
+import com.vultisig.wallet.util.intendingBackup
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -40,9 +31,9 @@ class FastVaultKeygenFlow(
     private val compose: ComposeTestRule,
 ) {
 
-    fun execute() {
-        val vaultName = "aqa test vault 123"
-
+    fun execute(
+        vaultName: String = TEST_VAULT_NAME
+    ) {
         ActivityScenario.launch(MainActivity::class.java)
 
         val start = StartPage(compose)
@@ -75,14 +66,14 @@ class FastVaultKeygenFlow(
         val email = FastVaultEmailPage(compose)
 
         email.waitUntilShown()
-        email.inputEmail("test@email.com")
+        email.inputEmail(TEST_VAULT_EMAIL)
         email.next()
 
         val password = FastVaultPasswordPage(compose)
 
         password.waitUntilShown()
-        password.inputPassword("password123")
-        password.inputConfirmPassword("password123")
+        password.inputPassword(TEST_VAULT_PASSWORD)
+        password.inputConfirmPassword(TEST_VAULT_PASSWORD)
         password.next()
 
         val hint = FastVaultHintPage(compose)
@@ -90,11 +81,11 @@ class FastVaultKeygenFlow(
         hint.waitUntilShown()
         hint.skip()
 
-        // wait until keygen is finished; 1 minute max
+        // wait until keygen is finished; 1.5 minute max
         val backupOnboarding = VaultBackupOnboardingPage(compose)
 
-        backupOnboarding.waitUntilShown(60.seconds)
-        backupOnboarding.skip()
+        backupOnboarding.waitUntilShown(90.seconds)
+        backupOnboarding.skipFastVault()
 
         // input code
         val verification = FastVaultVerificationPage(compose)
@@ -108,23 +99,7 @@ class FastVaultKeygenFlow(
         backupVault.waitUntilShown()
         backupVault.backupNow()
 
-        // create backup file & send respond with it to create document intent
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val uri = context.provideFileUri(
-            File(context.cacheDir, "backup.vult")
-                .apply { createNewFile() }
-        )
-
-        val result = Instrumentation.ActivityResult(
-            Activity.RESULT_OK,
-            Intent().apply {
-                setDataAndType(uri, MIME_TYPE_VAULT)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-        )
-
-        intending(hasAction(Intent.ACTION_CREATE_DOCUMENT))
-            .respondWith(result)
+        intendingBackup()
 
         compose.waitUntilShown(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
         compose.click(BackupPasswordRequestScreenTags.BACKUP_WITHOUT_PASSWORD)
@@ -143,6 +118,12 @@ class FastVaultKeygenFlow(
 
         // assume it's home screens toolbar title with newly created vault
         compose.waitUntilAtLeastOneExists(hasText(vaultName), timeoutMillis = 5000)
+    }
+
+    companion object {
+        const val TEST_VAULT_NAME = "aqa test vault 123"
+        const val TEST_VAULT_EMAIL = "test@email.com"
+        const val TEST_VAULT_PASSWORD = "password123"
     }
 
 }

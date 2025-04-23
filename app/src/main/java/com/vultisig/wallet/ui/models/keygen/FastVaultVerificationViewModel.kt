@@ -117,6 +117,7 @@ internal class FastVaultVerificationViewModel @Inject constructor(
                             route = Route.BackupVault(
                                 vaultId = args.vaultId,
                                 vaultType = VaultType.Fast,
+                                action = args.tssAction,
                             )
                         )
 

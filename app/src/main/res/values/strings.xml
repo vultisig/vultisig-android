@@ -431,6 +431,9 @@
     <string name="onboarding_fast_backup_desc_page_3_part_1" translatable="false">It is sent to you for complete self-custody!</string>
     <string name="onboarding_fast_backup_desc_page_3_part_2" translatable="false">Check your e-mail to verify</string>
 
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_1" translatable="false">We’ve sent you your new server share!</string>
+    <string name="onboarding_fast_backup_migration_desc_page_1_part_2" translatable="false">Check your e-mail to verify</string>
+
 
     <string name="select_vault_type_secure_title" translatable="false">Ultimate security</string>
     <string name="select_vault_type_secure_desc_1" translatable="false">Maximum security with multiple devices</string>
@@ -537,4 +540,15 @@
     <string name="backup_password_topbar_title" translatable="false">Password</string>
     <string name="function_transfer_ibc_dst_address_input_title" translatable="false">Destination Address</string>
     <string name="function_switch_thorchain_address" translatable="false">THORChain Address</string>
+    <string name="migration_onboarding_step_1_text_start" translatable="false">Upgrade this vault to the</string>
+    <string name="migration_onboarding_step_1_text_emphasized" translatable="false">world’s fastest MPC protocol</string>
+    <string name="migration_onboarding_step_1_text_end" translatable="false">and sign faster than ever before</string>
+    <string name="migration_onboarding_step_2_text_start" translatable="false">You’ll create new Vault Share backups,</string>
+    <string name="migration_onboarding_step_2_text_end" translatable="false">store them as you did before</string>
+    <string name="migration_onboarding_step_3_text_start" translatable="false">Make sure that</string>
+    <string name="migration_onboarding_step_3_text_emphasize" translatable="false">all initial devices are present</string>
+    <string name="migration_onboarding_step_3_text_end" translatable="false">when upgrading</string>
+    <string name="migration_onboarding_upgrade_your_vault" translatable="false">Upgrade your vault</string>
+    <string name="migration_onboarding_upgrade_now" translatable="false">Upgrade now</string>
+    <string name="upgrade_banner_title" translatable="false">Upgrade your vault now</string>
 </resources>
