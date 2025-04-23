@@ -50,7 +50,7 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
     private val mapVaultToProto: MapVaultToProto,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.BackupPassword>()
+    private val args = savedStateHandle.toRoute<Route.BackupPasswordRequest>()
 
     private val vaultId = args.vaultId
     private val vaultType = args.vaultType
@@ -130,6 +130,7 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
                         Route.VaultConfirmation(
                             vaultId = vaultId,
                             vaultType = vaultType,
+                            action = args.action,
                         )
                     )
                 } else {
@@ -158,7 +159,8 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
             navigator.route(
                 Route.BackupPassword(
                     vaultId = vaultId,
-                    vaultType = vaultType
+                    vaultType = vaultType,
+                    action = args.action,
                 )
             )
         }

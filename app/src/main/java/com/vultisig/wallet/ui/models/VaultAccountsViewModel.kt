@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
@@ -38,6 +39,7 @@ internal data class VaultAccountsUiModel(
     val vaultName: String = "",
     val showBackupWarning: Boolean = false,
     val showMonthlyBackupReminder: Boolean = false,
+    val showMigration: Boolean = false,
     val isRefreshing: Boolean = false,
     val totalFiatValue: String? = null,
     val isBalanceValueVisible: Boolean = true,
@@ -153,6 +155,8 @@ internal class VaultAccountsViewModel @Inject constructor(
             uiState.update { it.copy(vaultName = vault.name) }
             val isVaultBackedUp = vaultDataStoreRepository.readBackupStatus(vaultId).first()
             uiState.update { it.copy(showBackupWarning = !isVaultBackedUp) }
+            val showMigration = vault.libType == SigningLibType.GG20
+            uiState.update { it.copy(showMigration = showMigration) }
         }
     }
 
@@ -219,6 +223,13 @@ internal class VaultAccountsViewModel @Inject constructor(
         viewModelScope.launch {
             dismissBackupReminder()
             navigator.route(Route.BackupPasswordRequest(vaultId!!))
+        }
+    }
+
+    fun migrate() {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            navigator.route(Route.MigrationOnboarding(vaultId))
         }
     }
 

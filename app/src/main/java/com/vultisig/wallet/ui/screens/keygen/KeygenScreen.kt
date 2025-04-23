@@ -50,11 +50,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.loader.VsHorizontalProgressIndicator
+import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.keygen.KeygenStepUiModel
@@ -75,10 +77,20 @@ internal fun KeygenScreen(
     if (state.isSuccess) {
         Success()
     } else {
-        KeygenScreen(
-            state = state,
-            onTryAgainClick = model::tryAgain,
-        )
+        when (state.action) {
+            TssAction.KEYGEN, TssAction.ReShare -> {
+                KeygenScreen(
+                    state = state,
+                    onTryAgainClick = model::tryAgain,
+                )
+            }
+
+            TssAction.Migrate -> {
+                VsSigningProgressIndicator(
+                    text = "Upgrading vault",
+                )
+            }
+        }
     }
 }
 

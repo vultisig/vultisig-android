@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithText
+import com.vultisig.wallet.ui.screens.home.VaultAccountsScreenTags
 import com.vultisig.wallet.ui.utils.click
 import com.vultisig.wallet.ui.utils.waitUntilShown
 
@@ -28,6 +29,10 @@ internal class VaultAccountsPage(
     fun assertNotExist(chain: String) {
         compose.onNodeWithText(chain)
             .assertDoesNotExist()
+    }
+
+    fun migrate() {
+        compose.click(VaultAccountsScreenTags.MIGRATE)
     }
 
 }

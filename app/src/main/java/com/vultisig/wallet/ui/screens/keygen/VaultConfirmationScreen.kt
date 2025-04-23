@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.BlockBackClick
@@ -37,12 +38,14 @@ internal fun VaultConfirmationScreen(
 
     VaultConfirmationScreen(
         vaultInfo = state.vaultInfo,
+        action = state.action,
     )
 }
 
 @Composable
 private fun VaultConfirmationScreen(
     vaultInfo: VaultType,
+    action: TssAction?,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -51,24 +54,40 @@ private fun VaultConfirmationScreen(
             .background(Theme.colors.backgrounds.primary),
     ) {
         RiveAnimation(
-            animation = when (vaultInfo) {
-                VaultType.Secure -> R.raw.riv_fastvault_backup_succes
-                VaultType.Fast -> R.raw.riv_fastvault_backup_succes
+            animation = when (action) {
+                TssAction.Migrate -> R.raw.riv_upgrade_succes
+                else -> when (vaultInfo) {
+                    VaultType.Secure -> R.raw.riv_fastvault_backup_succes
+                    VaultType.Fast -> R.raw.riv_fastvault_backup_succes
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
         )
 
-        val wellDoneText = buildAnnotatedString {
-            withStyle(
-                SpanStyle(
-                    brush = Theme.colors.gradients.primary,
-                )
-            ) {
-                appendLine("Well done.")
+        val wellDoneText = when (action) {
+            TssAction.Migrate -> buildAnnotatedString {
+                appendLine("Vault upgraded ")
+                withStyle(
+                    SpanStyle(
+                        brush = Theme.colors.gradients.primary,
+                    )
+                ) {
+                    append("successfully")
+                }
             }
-            append("You’re ready to use a new wallet standard.")
+
+            else -> buildAnnotatedString {
+                withStyle(
+                    SpanStyle(
+                        brush = Theme.colors.gradients.primary,
+                    )
+                ) {
+                    appendLine("Well done.")
+                }
+                append("You’re ready to use a new wallet standard.")
+            }
         }
 
         Text(
@@ -95,6 +114,9 @@ private fun VaultConfirmationScreen(
 @Preview
 @Composable
 private fun VaultConfirmationScreenPreview() {
-    VaultConfirmationScreen()
+    VaultConfirmationScreen(
+        vaultInfo = VaultType.Secure,
+        action = TssAction.Migrate,
+    )
 }
 

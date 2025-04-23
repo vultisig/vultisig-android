@@ -15,13 +15,17 @@ class VaultBackupOnboardingPage(
         compose.waitUntilShown(OnboardingContentTags.NEXT, timeout)
     }
 
-    fun skip() {
+    fun skipFastVault() {
         // skip through vault backup onboarding
         val nextTimeout = 3.seconds
         compose.click(OnboardingContentTags.NEXT)
         compose.waitUntilShown(OnboardingContentTags.NEXT, nextTimeout)
         compose.click(OnboardingContentTags.NEXT)
         compose.waitUntilShown(OnboardingContentTags.NEXT, nextTimeout)
+        compose.click(OnboardingContentTags.NEXT)
+    }
+
+    fun skipMigration() {
         compose.click(OnboardingContentTags.NEXT)
     }
 

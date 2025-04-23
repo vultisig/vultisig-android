@@ -75,6 +75,7 @@ internal data class KeygenUiModel(
     val isSuccess: Boolean = false,
     val steps: List<KeygenStepUiModel> = emptyList(),
     val error: ErrorUiModel? = null,
+    val action: TssAction = TssAction.KEYGEN,
 )
 
 internal data class KeygenStepUiModel(
@@ -99,9 +100,13 @@ internal class KeygenViewModel @Inject constructor(
     private val featureFlagApi: FeatureFlagApi,
 ) : ViewModel() {
 
-    val state = MutableStateFlow(KeygenUiModel())
-
     private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
+
+    val state = MutableStateFlow(
+        KeygenUiModel(
+            action = args.action
+        )
+    )
 
     private val vault = Vault(
         id = args.vaultId ?: Uuid.random().toHexString(),
@@ -439,16 +444,37 @@ internal class KeygenViewModel @Inject constructor(
 
         stopService()
 
+        val vaultType = if (vault.isFastVault())
+            VaultType.Fast
+        else VaultType.Secure
+
         navigator.route(
-            route = Route.Onboarding.VaultBackup(
-                vaultId = vaultId,
-                pubKeyEcdsa = vault.pubKeyECDSA,
-                email = args.email,
-                vaultType = if (vault.isFastVault())
-                    VaultType.Fast
-                else VaultType.Secure,
-                tssAction = action,
-            ),
+            route = when (action) {
+                TssAction.KEYGEN, TssAction.ReShare ->
+                    Route.Onboarding.VaultBackup(
+                        vaultId = vaultId,
+                        pubKeyEcdsa = vault.pubKeyECDSA,
+                        email = args.email,
+                        vaultType = vaultType,
+                        action = action,
+                    )
+
+                TssAction.Migrate -> if (vault.isFastVault()) {
+                    Route.Onboarding.VaultBackup(
+                        vaultId = vaultId,
+                        pubKeyEcdsa = vault.pubKeyECDSA,
+                        email = args.email,
+                        vaultType = vaultType,
+                        action = action,
+                    )
+                } else {
+                    Route.BackupVault(
+                        vaultId = vaultId,
+                        vaultType = vaultType,
+                        action = args.action,
+                    )
+                }
+            },
             opts = NavigationOptions(
                 popUpToRoute = Route.Keygen.Generating::class,
                 inclusive = true,
