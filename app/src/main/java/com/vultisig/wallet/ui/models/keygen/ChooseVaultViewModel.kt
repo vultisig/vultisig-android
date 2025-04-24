@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 internal data class SelectVaultTypeUiModel(
-    val vaultType: VaultType = VaultType.Secure,
+    val vaultType: VaultType = VaultType.Fast,
 )
 
 internal sealed class VaultType(
