@@ -86,7 +86,7 @@ internal class ChainSelectionViewModel @Inject constructor(
                     .filter {
                         query.isBlank() ||
                                 it.ticker.contains(query, ignoreCase = true) ||
-                                it.chain.name.contains(query, ignoreCase = true)
+                                it.chain.raw.contains(query, ignoreCase = true)
                     }
                     .map { token ->
                         ChainUiModel(

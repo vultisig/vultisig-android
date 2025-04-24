@@ -54,8 +54,7 @@ internal class VaultBackupSummaryViewModel @Inject constructor(
                 navigator.navigate(
                     dst = Destination.Home(),
                     opts = NavigationOptions(
-                        popUpToRoute = Route.VaultBackupSummary::class,
-                        inclusive = true,
+                        clearBackStack = true,
                     ),
                 )
             }
