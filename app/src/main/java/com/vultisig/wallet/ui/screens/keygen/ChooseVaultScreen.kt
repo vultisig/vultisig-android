@@ -126,10 +126,12 @@ private fun ChooseVaultScreen(
             }
 
             LaunchedEffect(state.vaultType) {
+                /* was used to not switch animation when secure vault was first selection
                 if (initAnimation) {
                     initAnimation = false
                     return@LaunchedEffect
                 }
+                 */
                 animation = { it.fireState("State Machine 1", "Switch") }
             }
 
