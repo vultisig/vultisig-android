@@ -109,7 +109,7 @@ private fun ChooseVaultScreen(
 
             var initAnimation by remember { mutableStateOf(true) }
 
-            var animation: (RiveAnimationView) -> Unit by remember { mutableStateOf ({}) }
+            var animation: (RiveAnimationView) -> Unit by remember { mutableStateOf({}) }
 
             val fadeAnimation = remember {
                 Animatable(0f)
@@ -126,10 +126,12 @@ private fun ChooseVaultScreen(
             }
 
             LaunchedEffect(state.vaultType) {
+                /* was used to not switch animation when secure vault was first selection
                 if (initAnimation) {
                     initAnimation = false
                     return@LaunchedEffect
                 }
+                 */
                 animation = { it.fireState("State Machine 1", "Switch") }
             }
 
@@ -174,7 +176,7 @@ private fun ChooseVaultScreen(
                                 .fillMaxWidth()
                                 .fillMaxHeight(),
                             contentAlignment = if (isSecureTypeSelected)
-                                Alignment.TopStart else Alignment.TopEnd
+                                Alignment.TopEnd else Alignment.TopStart
                         ) {
                             Box(
                                 modifier = Modifier
@@ -189,22 +191,6 @@ private fun ChooseVaultScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            TextAndIcon(
-                                text = stringResource(R.string.select_vault_type_secure),
-                                icon = painterResource(R.drawable.ic_shield),
-                                tint = if (isSecureTypeSelected)
-                                    Theme.colors.alerts.success else Theme.colors.text.primary,
-                                contentDescription = stringResource(R.string.select_vault_type_secure),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(CircleShape)
-                                    .clickable {
-                                        onTabClick(VaultType.Secure)
-                                    }
-                                    .padding(16.dp)
-                                    .wrapContentWidth(CenterHorizontally)
-                            )
-
                             Row(
                                 modifier = Modifier
                                     .weight(1f)
@@ -223,7 +209,10 @@ private fun ChooseVaultScreen(
                                         .drawWithCache {
                                             onDrawWithContent {
                                                 drawContent()
-                                                drawRect(brushGradient, blendMode = BlendMode.SrcAtop)
+                                                drawRect(
+                                                    brushGradient,
+                                                    blendMode = BlendMode.SrcAtop
+                                                )
                                             }
                                         }
                                 } else {
@@ -242,6 +231,23 @@ private fun ChooseVaultScreen(
                                     style = Theme.brockmann.body.s.medium,
                                 )
                             }
+
+                            TextAndIcon(
+                                text = stringResource(R.string.select_vault_type_secure),
+                                icon = painterResource(R.drawable.ic_shield),
+                                tint = if (isSecureTypeSelected)
+                                    Theme.colors.alerts.success
+                                else Theme.colors.text.primary,
+                                contentDescription = stringResource(R.string.select_vault_type_secure),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(CircleShape)
+                                    .clickable {
+                                        onTabClick(VaultType.Secure)
+                                    }
+                                    .padding(16.dp)
+                                    .wrapContentWidth(CenterHorizontally)
+                            )
                         }
                     }
                 }
