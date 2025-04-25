@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -40,10 +41,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.reorderable.VerticalReorderList
 import com.vultisig.wallet.ui.models.transaction.AddressBookEntryUiModel
@@ -111,50 +112,67 @@ internal fun AddressBookScreen(
                     }
                 },
                 actions = {
-                    Box(
-                        modifier = Modifier.padding(
-                            horizontal = 8.dp,
-                        )
-                    ) {
-                        if (isEditModeEnabled) {
-                            Text(
-                                text = stringResource(R.string.address_book_edit_mode_done),
-                                style = Theme.menlo.subtitle1,
-                                fontWeight = FontWeight.Bold,
-                                color = Theme.colors.neutral0,
-                                modifier = Modifier.clickOnce(onClick = onToggleEditMode)
+                    if (state.entries.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier.padding(
+                                horizontal = 8.dp,
                             )
-                        } else {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_edit_square_24),
-                                contentDescription = "edit",
-                                tint = Theme.colors.neutral0,
-                                modifier = Modifier.clickOnce(onClick = onToggleEditMode)
-                            )
+                        ) {
+                            if (isEditModeEnabled) {
+                                Text(
+                                    text = stringResource(R.string.address_book_edit_mode_done),
+                                    style = Theme.menlo.subtitle1,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Theme.colors.neutral0,
+                                    modifier = Modifier.clickOnce(onClick = onToggleEditMode)
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_edit_square_24),
+                                    contentDescription = "edit",
+                                    tint = Theme.colors.neutral0,
+                                    modifier = Modifier.clickOnce(onClick = onToggleEditMode)
+                                )
+                            }
                         }
                     }
                 }
             )
         },
         content = { scaffoldPadding ->
-            VerticalReorderList(
-                data = state.entries,
-                onMove = onMove,
-                key = { it.model.id },
-                isReorderEnabled = state.isEditModeEnabled,
-                modifier = Modifier.padding(scaffoldPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) { entry ->
-                AddressItem(
-                    image = entry.image,
-                    name = entry.name,
-                    network = entry.network,
-                    address = entry.address,
-                    isEditModeEnabled = isEditModeEnabled,
-                    onClick = { onAddressClick(entry) },
-                    onDeleteClick = { onDeleteAddressClick(entry) }
-                )
+            if (state.entries.isNotEmpty()) {
+                VerticalReorderList(
+                    data = state.entries,
+                    onMove = onMove,
+                    key = { it.model.id },
+                    isReorderEnabled = state.isEditModeEnabled,
+                    modifier = Modifier.padding(scaffoldPadding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) { entry ->
+                    AddressItem(
+                        image = entry.image,
+                        name = entry.name,
+                        network = entry.network,
+                        address = entry.address,
+                        isEditModeEnabled = isEditModeEnabled,
+                        onClick = { onAddressClick(entry) },
+                        onDeleteClick = { onDeleteAddressClick(entry) }
+                    )
+                }
+            } else {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    Text(
+                        text = "No saved addresses",
+                        style = Theme.menlo.body1,
+                        color = Theme.colors.alerts.warning,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         },
         bottomBar = {
