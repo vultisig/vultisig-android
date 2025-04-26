@@ -243,24 +243,28 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
             val api = cosmosApiFactory.createCosmosApi(chain)
             val account = api.getAccountNumber(address)
 
-            val denomTrace = if (token.contractAddress.startsWith("ibc/")) {
-                val denomTrace = api.getIbcDenomTraces(token.contractAddress)
-                val timeout = Clock.System.now().plus(10.minutes)
-                    .toEpochMilliseconds().milliseconds.inWholeNanoseconds
+            val denomTrace = when (chain) {
+                Chain.Kujira, Chain.Terra -> if (token.contractAddress.startsWith("ibc/")) {
+                    val denomTrace = api.getIbcDenomTraces(token.contractAddress)
+                    val timeout = Clock.System.now().plus(10.minutes)
+                        .toEpochMilliseconds().milliseconds.inWholeNanoseconds
 
-                CosmosIbcDenomTrace(
-                    path = denomTrace.path,
-                    baseDenom = denomTrace.baseDenom,
-                    latestBlock = "${api.getLatestBlock()}_$timeout",
-                )
-            } else {
-                val timeout = Clock.System.now().plus(10.minutes)
-                    .toEpochMilliseconds().milliseconds.inWholeNanoseconds
-                CosmosIbcDenomTrace(
-                    path = "",
-                    baseDenom = "",
-                    latestBlock = "${api.getLatestBlock()}_$timeout",
-                )
+                    CosmosIbcDenomTrace(
+                        path = denomTrace.path,
+                        baseDenom = denomTrace.baseDenom,
+                        latestBlock = "${api.getLatestBlock()}_$timeout",
+                    )
+                } else {
+                    val timeout = Clock.System.now().plus(10.minutes)
+                        .toEpochMilliseconds().milliseconds.inWholeNanoseconds
+                    CosmosIbcDenomTrace(
+                        path = "",
+                        baseDenom = "",
+                        latestBlock = "${api.getLatestBlock()}_$timeout",
+                    )
+                }
+
+                else -> null
             }
 
             BlockChainSpecificAndUtxo(

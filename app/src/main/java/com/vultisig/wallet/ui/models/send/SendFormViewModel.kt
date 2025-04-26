@@ -996,7 +996,6 @@ internal class SendFormViewModel @Inject constructor(
 
                     )
                 }
-                addressFieldState.setTextAndPlaceCursorAtEnd("")
             }.collect()
         }
     }

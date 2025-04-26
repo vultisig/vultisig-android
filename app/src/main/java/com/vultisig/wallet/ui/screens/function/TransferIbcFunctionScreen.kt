@@ -38,7 +38,7 @@ fun TransferIbcFunctionScreen(
     FormSelection(
         selected = selectedChain,
         options = chainList,
-        mapTypeToString = { it.name },
+        mapTypeToString = { "${it.raw} ${it.feeUnit.uppercase()}" },
         onSelectOption = onSelectChain,
     )
 
@@ -78,8 +78,8 @@ fun TransferIbcFunctionScreen(
     )
 
     FormTextFieldCard(
-        title = stringResource(R.string.deposit_form_custom_memo_title),
-        hint = stringResource(R.string.deposit_form_custom_memo_title),
+        title = stringResource(R.string.deposit_form_custom_memo_optional_title),
+        hint = stringResource(R.string.deposit_form_custom_memo_optional_title),
         keyboardType = KeyboardType.Text,
         textFieldState = memoFieldState,
         onLostFocus = onMemoLostFocus,

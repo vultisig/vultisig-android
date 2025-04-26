@@ -90,4 +90,10 @@ internal interface UseCasesModule {
         impl: CreateQrCodeSharingBitmapUseCaseImpl
     ): CreateQrCodeSharingBitmapUseCase
 
+    @Binds
+    @Singleton
+    fun bindGetFlowTypeUseCase(
+        impl: GetFlowTypeUseCaseImpl
+    ): GetFlowTypeUseCase
+
 }

@@ -88,6 +88,7 @@ internal fun DepositFormScreen(
         onAmountLostFocus = model::validateTokenAmount,
         memoFieldState = model.customMemoFieldState,
         onMemoLostFocus = {  },
+        onSelectCoin = model::selectMergeToken,
 
         thorAddress = model.thorAddressFieldState,
         onThorAddressLostFocus = {  },
@@ -207,6 +208,10 @@ internal fun DepositFormScreen(
 
                 DepositOption.Switch -> {
                     SwitchFunctionScreen(
+                        selectedToken = state.selectedCoin,
+                        coinList = state.coinList,
+                        onSelectCoin = onSelectCoin,
+
                         dstAddress = dstAddress,
                         onDstAddressLostFocus = onDstAddressLostFocus,
                         dstAddressError = state.dstAddressError,
