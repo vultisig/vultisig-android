@@ -173,6 +173,14 @@ internal interface DepositMemo {
                 else -> ""
             }
 
+            Chain.GaiaChain -> when (dstChain) {
+                Chain.Kujira -> "channel-343"
+                Chain.Osmosis -> "channel-141"
+                Chain.Noble -> "channel-536"
+                Chain.Akash -> "channel-184"
+                else -> ""
+            }
+
             else -> ""
         }
     }
