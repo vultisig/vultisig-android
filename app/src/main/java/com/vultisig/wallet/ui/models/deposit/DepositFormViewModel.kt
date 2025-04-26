@@ -939,7 +939,10 @@ internal class DepositFormViewModel @Inject constructor(
         val address = accountsRepository.loadAddress(vaultId, chain)
             .first()
 
-        val selectedToken = address.accounts.first { it.token.isNativeToken }.token
+        val selecteMergeToken = state.value.selectedCoin
+        val selectedToken = address.accounts
+            .first { it.token.ticker == selecteMergeToken.ticker }
+            .token
 
         val srcAddress = selectedToken.address
 

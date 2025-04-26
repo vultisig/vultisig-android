@@ -190,6 +190,10 @@ internal fun DepositFormScreen(
                         chainList = state.dstChainList,
                         onSelectChain = onSelectChain,
 
+                        selectedToken = state.selectedCoin,
+                        coinList = state.coinList,
+                        onSelectCoin = onSelectCoin,
+
                         dstAddress = dstAddress,
                         onDstAddressLostFocus = onDstAddressLostFocus,
                         dstAddressError = state.dstAddressError,
