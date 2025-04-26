@@ -164,12 +164,6 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindGetFlowTypeUseCase(
-        impl: GetFlowTypeUseCaseImpl
-    ): GetFlowTypeUseCase
-
-    @Binds
-    @Singleton
     fun bindSearchKujiraTokenUseCase(
         impl: SearchKujiraTokenUseCaseImpl
     ): SearchKujiraTokenUseCase

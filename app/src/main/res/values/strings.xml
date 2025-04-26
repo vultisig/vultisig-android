@@ -215,6 +215,7 @@
     <string name="custom_token_token_not_found">Token not found</string>
     <string name="custom_token_add_token">Add %1$s Token</string>
     <string name="deposit_form_amount_title">Amount (Balance: %1$s)</string>
+    <string name="deposit_form_amount_title_without_balance" translatable="false">Amount</string>
     <string name="share_vault_qr_title">Share Vault QR</string>
     <string name="share_vault_qr_save">Save</string>
     <string name="vault_settings_enable_biometrics_save">Save</string>
@@ -551,4 +552,5 @@
     <string name="migration_onboarding_upgrade_your_vault" translatable="false">Upgrade your vault</string>
     <string name="migration_onboarding_upgrade_now" translatable="false">Upgrade now</string>
     <string name="upgrade_banner_title" translatable="false">Upgrade your vault now</string>
+    <string name="deposit_form_custom_memo_optional_title" translatable="false">Custom Memo (optional)</string>
 </resources>
