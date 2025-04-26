@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
+import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.utils.Numeric
 import timber.log.Timber
 import wallet.core.jni.CoinType
@@ -97,15 +98,15 @@ object RippleHelper {
             ?: error("Signature not found")
 
         signatures[key]?.let {
-            if (!publicKey.verifyAsDER(
-                    it.derSignature.hexToByteArray(),
+            if (!publicKey.verify(
+                    it.getSignatureWithRecoveryID(),
                     preSigningOutput.dataHash.toByteArray()
                 )
             ) {
                 Timber.e("Invalid signature")
                 error("Invalid signature")
             }
-            allSignatures.add(it.derSignature.hexToByteArray())
+            allSignatures.add(it.getSignatureWithRecoveryID())
             publicKeys.add(publicKey.data())
         }
 
