@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
+import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
@@ -33,6 +34,7 @@ internal data class AddAddressEntryUiModel(
 internal class AddressEntryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
+    private val requestQrScan: RequestQrScanUseCase,
     private val addressBookRepository: AddressBookRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val orderRepository: OrderRepository<AddressBookOrderEntity>,
@@ -126,7 +128,10 @@ internal class AddressEntryViewModel @Inject constructor(
 
     fun scanAddress() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ScanQr)
+            val qr = requestQrScan()
+            if (qr != null) {
+                setOutputAddress(qr)
+            }
         }
     }
 

@@ -96,4 +96,10 @@ internal interface UseCasesModule {
         impl: GetFlowTypeUseCaseImpl
     ): GetFlowTypeUseCase
 
+    @Binds
+    @Singleton
+    fun bindRequestQrScanUseCase(
+        impl: RequestQrScanUseCaseImpl
+    ): RequestQrScanUseCase
+
 }

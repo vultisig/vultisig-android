@@ -37,7 +37,7 @@ internal class ReshareStartViewModel @Inject constructor(
 
     fun join() {
         viewModelScope.launch {
-            navigator.navigate(Destination.JoinThroughQr(null))
+            navigator.route(Route.ScanQr())
         }
     }
 

@@ -6,6 +6,8 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
+internal typealias VsNavigator = Navigator<Destination>
+
 internal interface Navigator<Dest> {
 
     val destination: Flow<NavigateAction<Dest>>

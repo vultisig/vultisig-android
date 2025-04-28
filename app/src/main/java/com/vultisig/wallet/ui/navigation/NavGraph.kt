@@ -2,8 +2,6 @@ package com.vultisig.wallet.ui.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -77,8 +75,6 @@ import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.reshare.ReshareStartScreen
-import com.vultisig.wallet.ui.screens.scan.ARG_QR_CODE
-import com.vultisig.wallet.ui.screens.scan.ScanQrAndJoin
 import com.vultisig.wallet.ui.screens.scan.ScanQrErrorScreen
 import com.vultisig.wallet.ui.screens.scan.ScanQrScreen
 import com.vultisig.wallet.ui.screens.select.SelectAssetScreen
@@ -269,24 +265,15 @@ internal fun SetupNavGraph(
                 }
             )
         ) { entry ->
-            val savedStateHandle = entry.savedStateHandle
             val args = requireNotNull(entry.arguments)
-
-            val qr by savedStateHandle.getStateFlow<String?>(ARG_QR_CODE, null)
-                .collectAsState()
 
             SendScreen(
                 navController = navController,
-                qrCodeResult = qr ?: args.getString(ARG_QR),
+                qrCodeResult = args.getString(ARG_QR),
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
                 chainId = args.getString(ARG_CHAIN_ID),
                 startWithTokenId = args.getString(ARG_TOKEN_ID),
             )
-        }
-        composable(
-            route = Destination.ScanQr.route,
-        ) {
-            ScanQrScreen(navController = navController)
         }
 
         composable(
@@ -301,18 +288,6 @@ internal fun SetupNavGraph(
                 navController = navController,
                 vaultId = requireNotNull(args.getString(ARG_VAULT_ID)),
             )
-        }
-
-        composable(
-            route = Destination.JoinThroughQr.STATIC_ROUTE,
-            arguments = listOf(
-                navArgument(ARG_VAULT_ID) {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
-        ) {
-            ScanQrAndJoin(navController = navController)
         }
 
         composable(
@@ -349,13 +324,9 @@ internal fun SetupNavGraph(
                     nullable = true
                 }
             )
-        ) { entry ->
-            val savedStateHandle = entry.savedStateHandle
-            val args = requireNotNull(entry.arguments)
-
+        ) {
             AddAddressEntryScreen(
                 navController = navController,
-                qrCodeResult = savedStateHandle.remove(ARG_QR_CODE) ?: args.getString(ARG_QR),
             )
         }
 
@@ -492,6 +463,12 @@ internal fun SetupNavGraph(
 
         composable<Onboarding.VaultCreationSummary> {
             OnboardingSummaryScreen()
+        }
+
+        // scan
+
+        composable<Route.ScanQr> {
+            ScanQrScreen()
         }
 
         // keygen vault info

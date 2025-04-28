@@ -10,7 +10,6 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,13 +42,8 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun AddAddressEntryScreen(
     navController: NavController,
     model: AddressEntryViewModel = hiltViewModel(),
-    qrCodeResult: String?,
 ) {
     val state by model.state.collectAsState()
-
-    LaunchedEffect(key1 = Unit) {
-        model.setOutputAddress(qrCodeResult ?: "")
-    }
 
     AddAddressEntryScreen(
         navController = navController,
