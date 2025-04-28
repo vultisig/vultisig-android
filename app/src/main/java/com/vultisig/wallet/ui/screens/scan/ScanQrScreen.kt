@@ -49,7 +49,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -60,7 +59,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.JOIN_SEND_ON_ADDRESS_FLOW
 import com.vultisig.wallet.ui.components.MultiColorButton
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -68,41 +66,19 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.models.ScanQrViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.addWhiteBorder
-import com.vultisig.wallet.ui.utils.getAddressFromQrCode
 import com.vultisig.wallet.ui.utils.uriToBitmap
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-internal const val ARG_QR_CODE = "qr_code"
-
-@Composable
-internal fun ScanQrAndJoin(
-    navController: NavController,
-    viewModel: ScanQrViewModel = hiltViewModel(),
-) {
-    ScanQrScreen(
-        onDismiss = { navController.popBackStack() },
-        onScanSuccess = viewModel::joinOrSend,
-    )
-}
-
 @Composable
 internal fun ScanQrScreen(
-    navController: NavController,
     viewModel: ScanQrViewModel = hiltViewModel(),
 ) {
     ScanQrScreen(
-        onDismiss = { navController.popBackStack() },
-        onScanSuccess = { qr ->
-            if (viewModel.getFlowType(qr) == JOIN_SEND_ON_ADDRESS_FLOW) {
-                navController.previousBackStackEntry
-                    ?.savedStateHandle
-                    ?.set(ARG_QR_CODE, qr.getAddressFromQrCode())
-            }
-            navController.popBackStack()
-        }
+        onDismiss = viewModel::back,
+        onScanSuccess = viewModel::process,
     )
 }
 

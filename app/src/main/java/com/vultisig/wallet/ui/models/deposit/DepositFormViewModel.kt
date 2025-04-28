@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
+import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
@@ -86,6 +87,8 @@ internal data class DepositFormUiModel(
 internal class DepositFormViewModel @Inject constructor(
     private val navigator: Navigator<Destination>,
     private val sendNavigator: Navigator<SendDst>,
+
+    private val requestQrScan: RequestQrScanUseCase,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val gasFeeRepository: GasFeeRepository,
     private val accountsRepository: AccountsRepository,
@@ -320,7 +323,10 @@ internal class DepositFormViewModel @Inject constructor(
 
     fun scan() {
         viewModelScope.launch {
-            navigator.navigate(Destination.ScanQr)
+            val qr = requestQrScan()
+            if (qr != null) {
+                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(qr)
+            }
         }
     }
 

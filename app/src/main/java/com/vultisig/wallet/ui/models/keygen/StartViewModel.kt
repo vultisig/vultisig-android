@@ -53,7 +53,7 @@ internal class StartViewModel @Inject constructor(
 
     fun navigateToScanQrCode() {
         viewModelScope.launch {
-            navigator.navigate(Destination.JoinThroughQr(null))
+            navigator.route(Route.ScanQr())
         }
     }
 

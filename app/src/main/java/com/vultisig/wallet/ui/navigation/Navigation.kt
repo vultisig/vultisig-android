@@ -125,16 +125,6 @@ internal sealed class Destination(
         }
     }
 
-    data object ScanQr : Destination(route = "scan_qr")
-
-    data class JoinThroughQr(
-        val vaultId: String?,
-    ) : Destination(route = "join/qr?vault_id=$vaultId") {
-        companion object {
-            const val STATIC_ROUTE = "join/qr?vault_id={$ARG_VAULT_ID}"
-        }
-    }
-
     data object ScanError : Destination(route = "scan_error")
 
     data class AddressBook(
@@ -336,6 +326,17 @@ internal sealed class Route {
 
     @Serializable
     data object Secret : Route()
+
+    // scan
+
+    @Serializable
+    data class ScanQr(
+        // non null if used for join flow
+        val vaultId: VaultId? = null,
+        // non null if used for respond flow
+        val requestId: String? = null,
+    )
+
 
     // transactions
 
