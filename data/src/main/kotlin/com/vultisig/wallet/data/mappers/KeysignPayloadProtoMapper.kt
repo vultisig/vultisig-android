@@ -173,6 +173,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 from.rippleSpecific != null -> from.rippleSpecific.let {
                     BlockChainSpecific.Ripple(
                         sequence = it.sequence,
+                        lastLedgerSequence = it.lastLedgerSequence,
                         gas = it.gas,
                     )
                 }

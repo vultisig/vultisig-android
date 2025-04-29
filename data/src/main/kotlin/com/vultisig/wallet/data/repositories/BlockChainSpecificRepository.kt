@@ -335,10 +335,13 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
         }
 
         TokenStandard.RIPPLE -> {
-
+            val accountInfo = rippleApi.fetchAccountsInfo(address)
             BlockChainSpecificAndUtxo(
                 blockChainSpecific = BlockChainSpecific.Ripple(
-                    sequence = rippleApi.fetchAccountsInfo(address)?.result?.accountData?.sequence?.toULong()
+                    sequence = accountInfo?.result?.accountData?.sequence?.toULong()
+                        ?: 0UL,
+                    lastLedgerSequence = accountInfo?.result?.ledgerCurrentIndex?.toULong()
+                        ?.plus(60UL)
                         ?: 0UL,
                     gas = gasFee.value.toLong().toULong(),
                 ),

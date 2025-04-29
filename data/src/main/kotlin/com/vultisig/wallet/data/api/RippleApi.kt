@@ -128,8 +128,12 @@ data class RippleAccountInfoResponseJson(
 data class RippleAccountInfoResponseResultJson(
     @SerialName("account_data")
     val accountData: RippleAccountInfoResponseAccountDataJson? = null,
+    @SerialName("status")
     val status: String? = null,
-    val validated: Boolean? = null
+    @SerialName("validated")
+    val validated: Boolean? = null,
+    @SerialName("ledger_current_index")
+    val ledgerCurrentIndex: Int? = null,
 )
 
 @Serializable
