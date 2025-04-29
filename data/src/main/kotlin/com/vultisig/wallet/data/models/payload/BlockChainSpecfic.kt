@@ -70,7 +70,8 @@ sealed class BlockChainSpecific {
 
     data class Ripple(
         val sequence: ULong,
-        val gas: ULong
+        val gas: ULong,
+        val lastLedgerSequence: ULong,
     ) : BlockChainSpecific()
 
     data class Tron(

@@ -114,6 +114,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             rippleSpecific = if (specific is BlockChainSpecific.Ripple) {
                 RippleSpecific(
                     sequence = specific.sequence,
+                    lastLedgerSequence = specific.lastLedgerSequence,
                     gas = specific.gas,
                 )
             } else null,

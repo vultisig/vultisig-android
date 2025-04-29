@@ -26,7 +26,7 @@ object RippleHelper {
         require(keysignPayload.coin.chain == Chain.Ripple) { "Coin is not XRP" }
 
 
-        val (sequence, gas) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
+        val (sequence, gas,lastLedgerSequence) = keysignPayload.blockChainSpecific as? BlockChainSpecific.Ripple
             ?: error("getPreSignedInputData: fail to get account number and sequence")
 
         val publicKey = PublicKey(
@@ -46,6 +46,7 @@ object RippleHelper {
         val input = Ripple.SigningInput.newBuilder()
             .setFee(gas.toLong())
             .setSequence(sequence.toInt())
+            .setLastLedgerSequence(lastLedgerSequence.toInt())
             .setAccount(keysignPayload.coin.address)
             .setPublicKey(
                 ByteString.copyFrom(publicKey.data())
