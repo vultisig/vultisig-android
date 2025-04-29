@@ -1712,17 +1712,6 @@ object Coins {
             ),
             Coin(
                 chain = Chain.GaiaChain,
-                ticker = "KUJI",
-                logo = "kuji",
-                decimal = 6,
-                priceProviderID = "kujira",
-                contractAddress = "ibc/4CC44260793F84006656DD868E017578F827A492978161DA31D7572BCB3F4289",
-                isNativeToken = false,
-                address = "",
-                hexPublicKey = "",
-            ),
-            Coin(
-                chain = Chain.GaiaChain,
                 ticker = "WINK",
                 logo = "wink",
                 decimal = 6,
@@ -1735,7 +1724,7 @@ object Coins {
             Coin(
                 chain = Chain.GaiaChain,
                 ticker = "LVN",
-                logo = "levana",
+                logo = "lvn",
                 decimal = 6,
                 priceProviderID = "levana-protocol",
                 contractAddress = "ibc/B64A07C006C0F5E260A8AD50BD53568F1FD4A0D75B7A9F8765C81BEAFDA62053",
