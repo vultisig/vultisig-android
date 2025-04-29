@@ -428,9 +428,13 @@ internal sealed class Route {
 
         // required only by fast vault
         @Serializable
-        data class Email(val name: String,
-                         val tssAction: TssAction,
-                         val vaultId: VaultId? = null)
+        data class Email(
+            val name: String,
+            val action: TssAction,
+            val vaultId: VaultId? = null,
+            // if password is not null, then it's migration flow
+            val password: String? = null,
+        )
 
         @Serializable
         data class Password(
@@ -542,9 +546,18 @@ internal sealed class Route {
 
     // vault migration
 
-    @Serializable
-    data class MigrationOnboarding(
-        val vaultId: VaultId,
-    )
+    object Migration {
+
+        @Serializable
+        data class Onboarding(
+            val vaultId: VaultId,
+        )
+
+        @Serializable
+        data class Password(
+            val vaultId: VaultId,
+        )
+
+    }
 
 }
