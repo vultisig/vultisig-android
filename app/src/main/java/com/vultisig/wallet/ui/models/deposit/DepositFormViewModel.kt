@@ -8,7 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositMemo
 import com.vultisig.wallet.data.models.DepositMemo.Bond
 import com.vultisig.wallet.data.models.DepositMemo.Unbond
@@ -31,8 +34,13 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -121,6 +129,8 @@ internal class DepositFormViewModel @Inject constructor(
             }
         }
 
+    private val address = MutableStateFlow<Address?>(null)
+
     fun loadData(
         vaultId: String,
         chainId: String,
@@ -183,24 +193,38 @@ internal class DepositFormViewModel @Inject constructor(
         selectDstChain(dstChainList.first())
 
         viewModelScope.launch {
-            try {
-                accountsRepository.loadAddress(vaultId, chain)
-                    .collect { addresses ->
-                        addresses.accounts
-                            .firstOrNull { it.token.isNativeToken }
-                            ?.tokenValue
-                            ?.let(mapTokenValueToStringWithUnit)
-                            ?.let { tokenValue ->
-                                state.update {
-                                    it.copy(balance = tokenValue.asUiText())
-                                }
-                            }
-                    }
-            } catch (e: Exception) {
-                Timber.e(e)
-            }
+            accountsRepository.loadAddress(vaultId, chain)
+                .collect { address ->
+                    this@DepositFormViewModel.address.value = address
+                }
         }
 
+        viewModelScope.launch {
+            combine(
+                state.map { it.selectedCoin }.distinctUntilChanged(),
+                address.filterNotNull(),
+                state.map { it.depositOption }.distinctUntilChanged(),
+            ) { selectedMergeToken, address, depositOption ->
+                when (depositOption) {
+                    DepositOption.Switch, DepositOption.TransferIbc, DepositOption.Merge ->
+                        address.accounts.find {
+                            it.token.ticker.equals(
+                                selectedMergeToken.ticker, ignoreCase = true
+                            )
+                        }
+
+                    else -> address.accounts.find { it.token.isNativeToken }
+                }?.tokenValue
+                    ?.let(mapTokenValueToStringWithUnit)
+                    .let { tokenValue ->
+                        state.update {
+                            it.copy(
+                                balance = tokenValue?.asUiText() ?: UiText.Empty
+                            )
+                        }
+                    }
+            }.collect()
+        }
     }
 
     fun selectDepositOption(option: DepositOption) {
@@ -228,6 +252,7 @@ internal class DepositFormViewModel @Inject constructor(
                             }
                     }
                 }
+
                 else -> Unit
             }
         }
@@ -809,12 +834,19 @@ internal class DepositFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
-        val address = accountsRepository.loadAddress(vaultId, chain)
-            .first()
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
 
         val mergeToken = state.value.selectedCoin
 
-        val selectedToken = address.accounts.first { it.token.ticker == mergeToken.ticker }.token
+        val selectedAccount = address.accounts
+            .find { it.token.ticker.equals(mergeToken.ticker, ignoreCase = true) }
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.merge_account_doesnt_exist)
+            )
+
+        val selectedToken = selectedAccount.token
 
         val srcAddress = selectedToken.address
 
@@ -824,20 +856,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val memo = "merge:${mergeToken.denom}"
 
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount < BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        val tokenAmountInt =
-            tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
+        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -861,7 +880,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo,
             srcTokenValue = TokenValue(
-                value = tokenAmountInt,
+                value = tokenAmount,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
@@ -875,13 +894,14 @@ internal class DepositFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
-        val address = accountsRepository.loadAddress(vaultId, chain)
-            .first()
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
 
         val selectedMergeToken = state.value.selectedCoin
-        val selectedToken = address.accounts
-            .first { it.token.ticker == selectedMergeToken.ticker }
-            .token
+        val selectedAccount = address.accounts
+            .first { it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true) }
+        val selectedToken = selectedAccount.token
 
         val srcAddress = selectedToken.address
 
@@ -891,20 +911,7 @@ internal class DepositFormViewModel @Inject constructor(
 
         val memo = "SWITCH:${thorAddressFieldState.text}"
 
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount < BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        val tokenAmountInt =
-            tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
+        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
         val specific = blockChainSpecificRepository
             .getSpecific(
@@ -928,7 +935,7 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo,
             srcTokenValue = TokenValue(
-                value = tokenAmountInt,
+                value = tokenAmount,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
@@ -942,13 +949,14 @@ internal class DepositFormViewModel @Inject constructor(
                 UiText.StringResource(R.string.send_error_no_address)
             )
 
-        val address = accountsRepository.loadAddress(vaultId, chain)
-            .first()
+        val address = address.value ?: throw InvalidTransactionDataException(
+            UiText.StringResource(R.string.send_error_no_address)
+        )
 
-        val selecteMergeToken = state.value.selectedCoin
-        val selectedToken = address.accounts
-            .first { it.token.ticker == selecteMergeToken.ticker }
-            .token
+        val selectedMergeToken = state.value.selectedCoin
+        val selectedAccount = address.accounts
+            .first { it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true) }
+        val selectedToken = selectedAccount.token
 
         val srcAddress = selectedToken.address
 
@@ -965,27 +973,14 @@ internal class DepositFormViewModel @Inject constructor(
                 .takeIf { it.isNotBlank() },
         )
 
-        val tokenAmount = tokenAmountFieldState.text
-            .toString()
-            .toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount < BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        val tokenAmountInt =
-            tokenAmount
-                .movePointRight(selectedToken.decimal)
-                .toBigInteger()
+        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
 
         val specific = blockChainSpecificRepository
             .getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
+                chain = chain,
+                address = srcAddress,
+                token = selectedToken,
+                gasFee = gasFee,
                 isSwap = false,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
@@ -1002,12 +997,58 @@ internal class DepositFormViewModel @Inject constructor(
 
             memo = memo.toString(),
             srcTokenValue = TokenValue(
-                value = tokenAmountInt,
+                value = tokenAmount,
                 token = selectedToken,
             ),
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
         )
+    }
+
+    private fun requireTokenAmount(
+        selectedToken: Coin,
+        selectedAccount: Account,
+        address: Address,
+        gas: TokenValue,
+    ): BigInteger {
+        val tokenAmount = tokenAmountFieldState.text
+            .toString()
+            .toBigDecimalOrNull()
+
+        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_amount)
+            )
+        }
+
+        val tokenAmountInt =
+            tokenAmount
+                .movePointRight(selectedToken.decimal)
+                .toBigInteger()
+
+        val nativeTokenAccount = address.accounts
+            .find { it.token.isNativeToken && it.token.chain == chain }
+        val nativeTokenValue = nativeTokenAccount?.tokenValue?.value
+            ?: throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_token)
+            )
+
+        if ((selectedAccount.tokenValue?.value ?: BigInteger.ZERO) < tokenAmountInt) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_insufficient_balance)
+            )
+        }
+
+        if (nativeTokenValue < gas.value) {
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.insufficient_native_token,
+                    listOf(nativeTokenAccount.token.ticker)
+                )
+            )
+        }
+
+        return tokenAmountInt
     }
 
     private fun showError(text: UiText) {
@@ -1090,7 +1131,7 @@ private val tokensToMerge = listOf(
         contract = "thor14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s3p2nzy"
     ),
     TokenMergeInfo(
-        ticker = "RKUJI",
+        ticker = "rKUJI",
         contract = "thor1yyca08xqdgvjz0psg56z67ejh9xms6l436u8y58m82npdqqhmmtqrsjrgh"
     ),
     TokenMergeInfo(
