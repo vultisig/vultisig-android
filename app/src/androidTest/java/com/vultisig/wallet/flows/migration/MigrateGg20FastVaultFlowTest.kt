@@ -4,20 +4,20 @@ package com.vultisig.wallet.flows.migration
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.intent.rule.IntentsRule
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.fast.FastVaultModule
 import com.vultisig.wallet.data.usecases.fast.VerifyFastVaultBackupCodeUseCase
+import com.vultisig.wallet.ui.components.textField
 import com.vultisig.wallet.ui.flows.FastVaultKeygenFlow
 import com.vultisig.wallet.ui.flows.FastVaultKeygenFlow.Companion.TEST_VAULT_EMAIL
 import com.vultisig.wallet.ui.flows.FastVaultKeygenFlow.Companion.TEST_VAULT_PASSWORD
 import com.vultisig.wallet.ui.pages.home.VaultAccountsPage
 import com.vultisig.wallet.ui.pages.keygen.BackupVaultPage
 import com.vultisig.wallet.ui.pages.keygen.FastVaultEmailPage
-import com.vultisig.wallet.ui.pages.keygen.FastVaultHintPage
-import com.vultisig.wallet.ui.pages.keygen.FastVaultPasswordPage
 import com.vultisig.wallet.ui.pages.keygen.FastVaultVerificationPage
 import com.vultisig.wallet.ui.pages.onboarding.VaultBackupOnboardingPage
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreenTags
@@ -85,23 +85,18 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
         compose.click(MigrationOnboardingScreenTags.NEXT)
         compose.click(MigrationOnboardingScreenTags.NEXT)
 
+
+        compose.waitUntilShown("InputPasswordScreen.password")
+        compose.textField("InputPasswordScreen.password")
+            .performTextInput(TEST_VAULT_PASSWORD)
+
+        compose.click("InputPasswordScreen.next")
+
         val email = FastVaultEmailPage(compose)
 
         email.waitUntilShown()
         email.inputEmail(TEST_VAULT_EMAIL)
         email.next()
-
-        val password = FastVaultPasswordPage(compose)
-
-        password.waitUntilShown()
-        password.inputPassword(TEST_VAULT_PASSWORD)
-        password.inputConfirmPassword(TEST_VAULT_PASSWORD)
-        password.next()
-
-        val hint = FastVaultHintPage(compose)
-
-        hint.waitUntilShown()
-        hint.skip()
 
 
         // wait until migration is finished; 1 minute max

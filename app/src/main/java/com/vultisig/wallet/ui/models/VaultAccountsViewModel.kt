@@ -229,7 +229,7 @@ internal class VaultAccountsViewModel @Inject constructor(
     fun migrate() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            navigator.route(Route.MigrationOnboarding(vaultId))
+            navigator.route(Route.Migration.Onboarding(vaultId))
         }
     }
 

@@ -88,7 +88,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
 
     fun migrate() {
         viewModelScope.launch {
-            navigator.route(Route.MigrationOnboarding(vaultId = vaultId))
+            navigator.route(Route.Migration.Onboarding(vaultId = vaultId))
         }
     }
 

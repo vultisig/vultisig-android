@@ -29,7 +29,7 @@ internal class MigrationOnboardingViewModel @Inject constructor(
 
     val state = MutableStateFlow(MigrationOnboardingUiModel())
 
-    private val args = savedStateHandle.toRoute<Route.MigrationOnboarding>()
+    private val args = savedStateHandle.toRoute<Route.Migration.Onboarding>()
     private val vaultId = args.vaultId
 
     init {
@@ -55,9 +55,7 @@ internal class MigrationOnboardingViewModel @Inject constructor(
 
             if (vault.isFastVault()) {
                 navigator.route(
-                    Route.VaultInfo.Email(
-                        tssAction = TssAction.Migrate,
-                        name = vault.name,
+                    Route.Migration.Password(
                         vaultId = vaultId
                     )
                 )
