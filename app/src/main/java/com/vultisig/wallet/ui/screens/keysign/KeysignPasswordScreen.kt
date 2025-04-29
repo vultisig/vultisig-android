@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,8 +39,9 @@ internal fun KeysignPasswordScreen(
 ) {
     val state by model.state.collectAsState()
 
-    KeysignPasswordScreen(
+    InputPasswordScreen(
         state = state,
+        subtitle = null,
         passwordFieldState = model.passwordFieldState,
         onPasswordVisibilityToggle = model::togglePasswordVisibility,
         onContinueClick = model::proceed,
@@ -48,8 +50,9 @@ internal fun KeysignPasswordScreen(
 }
 
 @Composable
-private fun KeysignPasswordScreen(
+internal fun InputPasswordScreen(
     state: KeysignPasswordUiModel,
+    subtitle: String?,
     passwordFieldState: TextFieldState,
     onPasswordVisibilityToggle: () -> Unit,
     onContinueClick: () -> Unit,
@@ -72,10 +75,20 @@ private fun KeysignPasswordScreen(
                     ),
             ) {
                 Text(
-                    text = "Enter server password",
+                    text = "Enter your password",
                     color = Theme.colors.text.primary,
                     style = Theme.brockmann.headings.largeTitle,
                 )
+
+                UiSpacer(16.dp)
+
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        color = Theme.colors.text.extraLight,
+                        style = Theme.brockmann.body.s.medium,
+                    )
+                }
 
                 UiSpacer(16.dp)
 
@@ -106,6 +119,8 @@ private fun KeysignPasswordScreen(
                             VsTextInputFieldInnerState.Error
                         else VsTextInputFieldInnerState.Default,
                         footNote = state.passwordError?.asString(),
+                        modifier = Modifier
+                            .testTag("InputPasswordScreen.password")
                     )
 
                     UiSpacer(size = 12.dp)
@@ -130,6 +145,7 @@ private fun KeysignPasswordScreen(
                     .padding(
                         all = 24.dp,
                     )
+                    .testTag("InputPasswordScreen.next")
             )
         },
     )
@@ -138,7 +154,8 @@ private fun KeysignPasswordScreen(
 @Preview
 @Composable
 private fun KeysignPasswordScreenPreview() {
-    KeysignPasswordScreen(
+    InputPasswordScreen(
+        subtitle = "Enter your password to unlock your Server Share and start the upgrade",
         state = KeysignPasswordUiModel(passwordHint = UiText.DynamicString("Hint")),
         passwordFieldState = TextFieldState(),
         onPasswordVisibilityToggle = {},

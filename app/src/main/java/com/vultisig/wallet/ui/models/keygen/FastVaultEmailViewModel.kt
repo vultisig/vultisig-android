@@ -33,9 +33,12 @@ internal class FastVaultEmailViewModel @Inject constructor(
 
     val state = MutableStateFlow(FastVaultEmailState())
     val emailFieldState = TextFieldState()
-    val vaultName = savedStateHandle.toRoute<Route.VaultInfo.Email>().name
-    val tssAction = savedStateHandle.toRoute<Route.VaultInfo.Email>().tssAction
-    val vaultId = savedStateHandle.toRoute<Route.VaultInfo.Email>().vaultId
+
+    private val args = savedStateHandle.toRoute<Route.VaultInfo.Email>()
+
+    private val vaultName = args.name
+    private val action = args.action
+    private val vaultId = args.vaultId
 
     init {
         collectEmailInput()
@@ -82,14 +85,27 @@ internal class FastVaultEmailViewModel @Inject constructor(
             if (!validateEmail(emailFieldState.text.toString()))
                 return@launch
             val enteredEmail = emailFieldState.text.toString()
-            navigator.route(
-                Route.VaultInfo.Password(
-                    name = vaultName,
-                    email = enteredEmail,
-                    tssAction = tssAction,
-                    vaultId = vaultId,
+
+            if (args.password != null) {
+                navigator.route(
+                    Route.Keygen.PeerDiscovery(
+                        vaultName = vaultName,
+                        email = enteredEmail,
+                        action = action,
+                        vaultId = vaultId,
+                        password = args.password,
+                    )
                 )
-            )
+            } else {
+                navigator.route(
+                    Route.VaultInfo.Password(
+                        name = vaultName,
+                        email = enteredEmail,
+                        tssAction = action,
+                        vaultId = vaultId,
+                    )
+                )
+            }
         }
     }
 

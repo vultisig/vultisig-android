@@ -69,6 +69,7 @@ import com.vultisig.wallet.ui.screens.keysign.JoinKeysignView
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordScreen
 import com.vultisig.wallet.ui.screens.keysign.KeysignScreen
 import com.vultisig.wallet.ui.screens.migration.MigrationOnboardingScreen
+import com.vultisig.wallet.ui.screens.migration.MigrationPasswordScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
@@ -570,8 +571,13 @@ internal fun SetupNavGraph(
         }
 
         // migration
-        composable<Route.MigrationOnboarding> {
+
+        composable<Route.Migration.Onboarding> {
             MigrationOnboardingScreen()
+        }
+
+        composable<Route.Migration.Password> {
+            MigrationPasswordScreen()
         }
     }
 }
