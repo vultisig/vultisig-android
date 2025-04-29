@@ -9,6 +9,7 @@ import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun MergeFunctionScreen(
@@ -30,7 +31,10 @@ internal fun MergeFunctionScreen(
 
 
     FormTextFieldCard(
-        title = stringResource(R.string.deposit_form_amount_title_without_balance),
+        title = stringResource(
+            R.string.deposit_form_amount_title,
+            balance.asString()
+        ),
         hint = stringResource(R.string.send_amount_currency_hint),
         keyboardType = KeyboardType.Number,
         textFieldState = amountFieldState,

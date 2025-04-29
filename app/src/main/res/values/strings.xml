@@ -553,4 +553,6 @@
     <string name="migration_onboarding_upgrade_now" translatable="false">Upgrade now</string>
     <string name="upgrade_banner_title" translatable="false">Upgrade your vault now</string>
     <string name="deposit_form_custom_memo_optional_title" translatable="false">Custom Memo (optional)</string>
+    <string name="transfer_ibc_function_memo_title" translatable="false">Memo</string>
+    <string name="merge_account_doesnt_exist" translatable="false">Selected token is not found for this address</string>
 </resources>

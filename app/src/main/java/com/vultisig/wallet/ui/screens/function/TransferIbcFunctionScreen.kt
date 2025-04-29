@@ -10,10 +10,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.models.deposit.TokenMergeInfo
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun TransferIbcFunctionScreen(
@@ -39,19 +41,27 @@ internal fun TransferIbcFunctionScreen(
     onMemoLostFocus: () -> Unit,
     memoError: UiText?,
 ) {
-    FormSelection(
-        selected = selectedChain,
-        options = chainList,
-        mapTypeToString = { "${it.raw} ${it.feeUnit.uppercase()}" },
-        onSelectOption = onSelectChain,
-    )
+    FormEntry(
+        title = "Destination Chain",
+    ) {
+        FormSelection(
+            selected = selectedChain,
+            options = chainList,
+            mapTypeToString = { "${it.raw} ${it.feeUnit.uppercase()}" },
+            onSelectOption = onSelectChain,
+        )
+    }
 
-    FormSelection(
-        selected = selectedToken,
-        options = coinList,
-        mapTypeToString = { it.ticker.uppercase() },
-        onSelectOption = onSelectCoin,
-    )
+    FormEntry(
+        title = "Asset"
+    ) {
+        FormSelection(
+            selected = selectedToken,
+            options = coinList,
+            mapTypeToString = { it.ticker },
+            onSelectOption = onSelectCoin,
+        )
+    }
 
     FormTextFieldCard(
         title = stringResource(R.string.function_transfer_ibc_dst_address_input_title),
@@ -77,7 +87,10 @@ internal fun TransferIbcFunctionScreen(
     }
 
     FormTextFieldCard(
-        title = stringResource(R.string.deposit_form_amount_title_without_balance),
+        title = stringResource(
+            R.string.deposit_form_amount_title,
+            balance.asString()
+        ),
         hint = stringResource(R.string.send_amount_currency_hint),
         keyboardType = KeyboardType.Number,
         textFieldState = amountFieldState,
@@ -87,7 +100,7 @@ internal fun TransferIbcFunctionScreen(
 
     FormTextFieldCard(
         title = stringResource(R.string.deposit_form_custom_memo_optional_title),
-        hint = stringResource(R.string.deposit_form_custom_memo_optional_title),
+        hint = stringResource(R.string.transfer_ibc_function_memo_title),
         keyboardType = KeyboardType.Text,
         textFieldState = memoFieldState,
         onLostFocus = onMemoLostFocus,
