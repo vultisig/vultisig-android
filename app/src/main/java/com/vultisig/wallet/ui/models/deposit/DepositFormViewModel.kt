@@ -155,7 +155,7 @@ internal class DepositFormViewModel @Inject constructor(
                 DepositOption.Custom,
             )
 
-            Chain.Kujira -> listOf(
+            Chain.Kujira, Chain.Osmosis -> listOf(
                 DepositOption.TransferIbc,
             )
 
@@ -179,18 +179,19 @@ internal class DepositFormViewModel @Inject constructor(
             )
         }
 
-        val dstChainList = listOf(
-            Chain.GaiaChain, Chain.Kujira, Chain.Osmosis,
-            Chain.Noble, Chain.Akash, Chain.Dydx
-        ).filter { it != chain }
-
+        val coinList = tokensToMerge
+            .let {
+                if (chain == Chain.Osmosis)
+                    it.filter { it.ticker.equals("LVN", ignoreCase = true) }
+                else
+                    it
+            }
         state.update {
             it.copy(
-                dstChainList = dstChainList,
+                selectedCoin = coinList.first(),
+                coinList = coinList
             )
         }
-
-        selectDstChain(dstChainList.first())
 
         viewModelScope.launch {
             accountsRepository.loadAddress(vaultId, chain)
@@ -223,6 +224,27 @@ internal class DepositFormViewModel @Inject constructor(
                             )
                         }
                     }
+
+                // special case, because of all supported merge tokens only lvn is osmosis native
+                val dstChainList = if (selectedMergeToken.ticker == "LVN") {
+                    when (chain) {
+                        Chain.Osmosis -> listOf(Chain.GaiaChain)
+                        else -> listOf(Chain.Osmosis)
+                    }
+                } else {
+                    listOf(
+                        Chain.GaiaChain, Chain.Kujira, Chain.Osmosis,
+                        Chain.Noble, Chain.Akash,
+                    ).filter { it != chain }
+                }
+
+                state.update {
+                    it.copy(
+                        dstChainList = dstChainList,
+                    )
+                }
+
+                selectDstChain(dstChainList.first())
             }.collect()
         }
     }

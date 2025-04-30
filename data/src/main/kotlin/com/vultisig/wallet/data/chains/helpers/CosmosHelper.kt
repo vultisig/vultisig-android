@@ -33,7 +33,7 @@ class CosmosHelper(
         private const val DEFAULT_GAS_LIMIT = 200000L
 
         fun getChainGasLimit(chain: Chain): Long = when (chain) {
-            Chain.Terra, Chain.TerraClassic -> 300000L
+            Chain.Terra, Chain.TerraClassic, Chain.Osmosis -> 300000L
             else -> DEFAULT_GAS_LIMIT
         }
 

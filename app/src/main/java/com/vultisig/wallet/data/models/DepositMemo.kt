@@ -169,7 +169,7 @@ internal interface DepositMemo {
             }
 
             Chain.Osmosis -> when (dstChain) {
-                Chain.GaiaChain -> "channel-141"
+                Chain.GaiaChain -> "channel-0"
                 else -> ""
             }
 
