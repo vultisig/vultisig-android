@@ -141,7 +141,8 @@ val Chain.IsSwapSupported: Boolean
 
 val Chain.isDepositSupported: Boolean
     get() = when (this) {
-        Chain.ThorChain, Chain.MayaChain, Chain.Ton, Chain.Kujira, Chain.GaiaChain -> true
+        Chain.ThorChain, Chain.MayaChain, Chain.Ton,
+        Chain.Kujira, Chain.GaiaChain, Chain.Osmosis -> true
         else -> false
     }
 
