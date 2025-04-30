@@ -1701,6 +1701,17 @@ object Coins {
             ),
             Coin(
                 chain = Chain.GaiaChain,
+                ticker = "rKUJI",
+                logo = "rkuji",
+                decimal = 6,
+                priceProviderID = "kujira",
+                contractAddress = "ibc/50A69DC508ACCADE2DAC4B8B09AA6D9C9062FCBFA72BB4C6334367DECD972B06",
+                isNativeToken = false,
+                address = "",
+                hexPublicKey = "",
+            ),
+            Coin(
+                chain = Chain.GaiaChain,
                 ticker = "USDC",
                 logo = "usdc",
                 decimal = 6,
