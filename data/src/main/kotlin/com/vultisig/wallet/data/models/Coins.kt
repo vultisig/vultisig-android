@@ -1727,7 +1727,7 @@ object Coins {
                 logo = "lvn",
                 decimal = 6,
                 priceProviderID = "levana-protocol",
-                contractAddress = "ibc/B64A07C006C0F5E260A8AD50BD53568F1FD4A0D75B7A9F8765C81BEAFDA62053",
+                contractAddress = "ibc/CE26C8060F437C6F2157D7A7AF2B2ECA6CBFAA268755504E038A4D085BA70EFC",
                 isNativeToken = false,
                 address = "",
                 hexPublicKey = "",
