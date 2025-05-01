@@ -71,6 +71,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -560,6 +561,7 @@ internal class SwapFormViewModel @Inject constructor(
 
         val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
             .multiply(percentage.toBigDecimal())
+            .setScale(6, RoundingMode.DOWN)
 
         srcAmountState.setTextAndPlaceCursorAtEnd(amount.toString())
     }
