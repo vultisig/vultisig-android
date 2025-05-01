@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -70,6 +71,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -542,7 +544,26 @@ internal class SwapFormViewModel @Inject constructor(
             selectedSrc.value = selectedDst.value
             selectedDst.value = buffer
         }
+    }
 
+    fun selectSrcPercentage(percentage: Float) {
+        val selectedSrcAccount = selectedSrc.value?.account ?: return
+        val srcTokenValue = selectedSrcAccount.tokenValue ?: return
+
+        val srcToken = selectedSrcAccount.token
+
+        val swapFee =
+            quote?.fees?.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
+
+        val maxUsableTokenAmount =
+            srcTokenValue.value - swapFee - (gasFee.value?.value?.takeIf { srcToken.isNativeToken }
+                ?: BigInteger.ZERO)
+
+        val amount = TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
+            .multiply(percentage.toBigDecimal())
+            .setScale(6, RoundingMode.DOWN)
+
+        srcAmountState.setTextAndPlaceCursorAtEnd(amount.toString())
     }
 
     fun loadData(
