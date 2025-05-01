@@ -5,8 +5,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isDepositSupported
 import com.vultisig.wallet.data.models.logo
@@ -137,7 +137,7 @@ internal class TokenDetailViewModel @Inject constructor(
                                 ?: "",
                             fiatBalance = account.fiatValue
                                 ?.let(fiatValueToStringMapper::map),
-                            tokenLogo = Coins.getCoinLogo(token.logo),
+                            tokenLogo = Tokens.getCoinLogo(token.logo),
                             chainLogo = chain.logo,
                         )
                     }

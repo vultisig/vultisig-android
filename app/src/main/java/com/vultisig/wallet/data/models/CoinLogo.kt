@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.R
 
-internal fun Coins.getCoinLogo(logoName: String): ImageModel {
+internal fun Tokens.getCoinLogo(logoName: String): ImageModel {
     return when (logoName) {
         "btc" -> R.drawable.bitcoin
         "bch" -> R.drawable.bitcoincash
@@ -11,14 +11,14 @@ internal fun Coins.getCoinLogo(logoName: String): ImageModel {
         "dash" -> R.drawable.dash
         "rune" -> R.drawable.rune
         "eth" -> R.drawable.ethereum
-        "sol" -> R.drawable.solana
+        "sol", "solana" -> R.drawable.solana
         "cacao" -> R.drawable.cacao
         "maya" -> R.drawable.maya_token_02
         "usdc" -> R.drawable.usdc
         "usdt" -> R.drawable.usdt
         "link" -> R.drawable.link
         "uni" -> R.drawable.uni
-        "pol" -> R.drawable.polygon
+        "pol", "matic" -> R.drawable.polygon
         "wbtc" -> R.drawable.wbtc
         "flip" -> R.drawable.chainflip
         "avax" -> R.drawable.avax
@@ -73,16 +73,17 @@ internal fun Coins.getCoinLogo(logoName: String): ImageModel {
         "usdb" -> R.drawable.usdb
         "weth" -> R.drawable.weth
         "zero" -> R.drawable.zero
-        "zksync" -> R.drawable.zksync
+        "zksync", "zsync-era" -> R.drawable.zksync
         "sui" -> R.drawable.sui
         "ton" -> R.drawable.ton
         "osmo" -> R.drawable.osmo
-        "wif" -> R.drawable.wif
-        "ray" -> R.drawable.ray
-        "jup" -> R.drawable.jup
+        "wif", "dogwifhat-wif-logo" -> R.drawable.wif
+        "ray", "raydium-ray-seeklogo-2" -> R.drawable.ray
+        "jupiter" -> R.drawable.jup
         "luna" -> R.drawable.luna
         "lunc" -> R.drawable.lunc
         "astro" -> R.drawable.astro
+        "terra-astroport" -> R.drawable.astro
         "mnta" -> R.drawable.mnta
         "nstk" -> R.drawable.nstk
         "usk" -> R.drawable.usk
@@ -94,7 +95,7 @@ internal fun Coins.getCoinLogo(logoName: String): ImageModel {
         "akash" -> R.drawable.akash
         "rkuji" -> R.drawable.rkuji
         "tron" -> R.drawable.tron
-        "lvn" -> R.drawable.lvn
+        "lvn", "levana" -> R.drawable.lvn
         "fuzion" -> R.drawable.fuzion
         "vult" -> R.drawable.vult
         "tcy" -> R.drawable.tcy
