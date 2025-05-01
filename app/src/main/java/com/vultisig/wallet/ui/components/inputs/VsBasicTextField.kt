@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.components.inputs
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,6 +29,7 @@ internal fun VsBasicTextField(
     lineLimits: TextFieldLineLimits = TextFieldLineLimits.Default,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onKeyboardAction: KeyboardActionHandler? = null,
+    interactionSource: MutableInteractionSource? = null,
 ) {
     BasicTextField(
         state = textFieldState,
@@ -54,6 +56,7 @@ internal fun VsBasicTextField(
 
             textField()
         },
+        interactionSource = interactionSource,
         modifier = modifier,
     )
 }
