@@ -20,8 +20,7 @@ data class TokenValue(
     val decimals: Int,
 ) {
     val decimal: BigDecimal
-        get() = BigDecimal(value)
-            .divide(BigDecimal(10).pow(decimals))
+        get() = createDecimal(value, decimals)
 
     constructor(
         value: BigInteger,
@@ -31,6 +30,14 @@ data class TokenValue(
         unit = token.ticker,
         decimals = token.decimal
     )
+
+    companion object {
+        fun createDecimal(
+            value: BigInteger,
+            decimals: Int,
+        ) = BigDecimal(value)
+            .divide(BigDecimal(10).pow(decimals))
+    }
 
 }
 
