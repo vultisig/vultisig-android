@@ -1,18 +1,27 @@
 package com.vultisig.wallet.ui.screens.swap
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -22,20 +31,24 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,6 +59,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -88,6 +102,7 @@ internal fun SwapScreen(
         onDismissError = model::hideError,
         onSelectDstToken = model::selectDstToken,
         onFlipSelectedTokens = model::flipSelectedTokens,
+        onSelectSrcPercentage = model::selectSrcPercentage,
     )
 }
 
@@ -105,8 +120,15 @@ internal fun SwapScreen(
     onDismissError: () -> Unit = {},
     onFlipSelectedTokens: () -> Unit = {},
     onSwap: () -> Unit = {},
+    onSelectSrcPercentage: (Float) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isSrcAmountFocused by interactionSource.collectIsFocusedAsState()
+
+    val isShowingKeyboard by keyboardAsState()
+
     Scaffold(
         containerColor = Theme.colors.backgrounds.primary,
         topBar = {
@@ -163,6 +185,7 @@ internal fun SwapScreen(
                                     hintColor = Theme.colors.text.extraLight,
                                     hintStyle = Theme.brockmann.headings.title2,
                                     lineLimits = TextFieldLineLimits.SingleLine,
+                                    interactionSource = interactionSource,
                                     // TODO onAmountLostFocus
                                     keyboardOptions = KeyboardOptions(
                                         keyboardType = KeyboardType.Number,
@@ -309,25 +332,110 @@ internal fun SwapScreen(
 
         },
         bottomBar = {
-            VsButton(
-                label = stringResource(R.string.swap_swap_button),
-                variant = VsButtonVariant.Primary,
-                state = if (state.isSwapDisabled)
-                    VsButtonState.Disabled
-                else VsButtonState.Enabled,
-                onClick = {
-                    focusManager.clearFocus(true)
-                    onSwap()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        vertical = 12.dp,
-                        horizontal = 24.dp,
+            AnimatedContent(
+                targetState = isSrcAmountFocused && isShowingKeyboard,
+                transitionSpec = {
+                    val animationSpec = tween<IntOffset>(durationMillis = 60)
+                    slideInVertically(animationSpec) { it } togetherWith
+                            slideOutVertically(animationSpec) { it }
+                }
+            ) { showPercentagePicker ->
+                if (showPercentagePicker) {
+                    Column {
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = Theme.colors.borders.light
+                        )
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    color = Theme.colors.backgrounds.secondary,
+                                )
+                                .padding(
+                                    vertical = 12.dp,
+                                    horizontal = 8.dp,
+                                ),
+                        ) {
+                            PercentageItem(
+                                title = "25%",
+                                onClick = {
+                                    onSelectSrcPercentage(0.25f)
+                                },
+                            )
+                            PercentageItem(
+                                title = "50%",
+                                onClick = {
+                                    onSelectSrcPercentage(0.5f)
+                                },
+                            )
+                            PercentageItem(
+                                title = "75%",
+                                onClick = {
+                                    onSelectSrcPercentage(0.75f)
+                                },
+                            )
+                            PercentageItem(
+                                title = "MAX",
+                                onClick = {
+                                    onSelectSrcPercentage(1f)
+                                },
+                            )
+                        }
+                    }
+                } else {
+                    VsButton(
+                        label = stringResource(R.string.swap_swap_button),
+                        variant = VsButtonVariant.Primary,
+                        state = if (state.isSwapDisabled)
+                            VsButtonState.Disabled
+                        else VsButtonState.Enabled,
+                        onClick = {
+                            focusManager.clearFocus(true)
+                            onSwap()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                vertical = 12.dp,
+                                horizontal = 24.dp,
+                            )
                     )
-            )
+                }
+            }
         }
     )
+}
+
+@Composable
+private fun RowScope.PercentageItem(
+    title: String,
+    onClick: () -> Unit,
+) {
+    Text(
+        text = title,
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.colors.text.primary,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .background(
+                color = Theme.colors.backgrounds.tertiary,
+                shape = RoundedCornerShape(99.dp),
+            )
+            .padding(
+                all = 8.dp,
+            )
+            .weight(1f)
+            .clickable(onClick = onClick)
+    )
+}
+
+@Composable
+fun keyboardAsState(): State<Boolean> {
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    return rememberUpdatedState(isImeVisible)
 }
 
 @Composable
