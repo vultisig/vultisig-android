@@ -1935,7 +1935,7 @@ object Coins {
                 logo = "tcy",
                 decimal = 8,
                 priceProviderID = "tcy",
-                contractAddress = "",
+                contractAddress = "tcy",
                 isNativeToken = false,
                 hexPublicKey = "",
                 address = "",

@@ -157,13 +157,22 @@ class ThorChainHelper(
 
                 return input.toByteArray()
             }
-
+            val symbol = if (keysignPayload.coin.isNativeToken) {
+                ticker
+            } else {
+                keysignPayload.coin.ticker
+            }
+            val assetTicker = if (keysignPayload.coin.isNativeToken) {
+                ticker
+            } else {
+                keysignPayload.coin.ticker
+            }
             val coin = Cosmos.THORChainCoin.newBuilder()
                 .setAsset(
                     Cosmos.THORChainAsset.newBuilder()
                         .setChain(chainName)
-                        .setSymbol(ticker)
-                        .setTicker(ticker)
+                        .setSymbol(symbol)
+                        .setTicker(assetTicker)
                         .setSynth(false)
                         .build()
                 )
