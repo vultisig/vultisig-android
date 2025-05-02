@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.IsSwapSupported
+import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
@@ -170,14 +170,14 @@ internal class ChainTokensViewModel @Inject constructor(
 
     fun buyWewe() {
         viewModelScope.launch {
-            if (!tokens.value.contains(Coins.wewe)) {
-                enableTokenUseCase(vaultId, Coins.wewe)
+            if (!tokens.value.contains(Tokens.wewe)) {
+                enableTokenUseCase(vaultId, Tokens.wewe)
             }
             navigator.route(
                 Route.Swap(
                     vaultId = vaultId,
                     chainId = chainRaw,
-                    dstTokenId = Coins.wewe.id,
+                    dstTokenId = Tokens.wewe.id,
                 )
             )
         }
@@ -220,7 +220,7 @@ internal class ChainTokensViewModel @Inject constructor(
                             ?: "",
                         fiatBalance = account.fiatValue
                             ?.let(fiatValueToStringMapper::map),
-                        tokenLogo = Coins.getCoinLogo(token.logo),
+                        tokenLogo = Tokens.getCoinLogo(token.logo),
                         chainLogo = chain.logo,
                     )
                 }

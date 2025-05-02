@@ -9,7 +9,7 @@ import com.vultisig.wallet.data.api.models.VultisigBalanceResultJson
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins.SupportedCoins
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -233,11 +233,11 @@ internal class TokenRepositoryImpl @Inject constructor(
             }
             .map { json ->
                 val supportedCoin =
-                    SupportedCoins.firstOrNull {
+                    Coins.coins.getOrDefault(chain, emptyList()).firstOrNull {
                         json.contractAddress.equals(
                             it.contractAddress,
                             true
-                        ) && it.chain == chain
+                        )
                     }
                 json.contractAddress to supportedCoin?.let {
                     createCoin(
@@ -272,7 +272,7 @@ internal class TokenRepositoryImpl @Inject constructor(
         hexPublicKey = "",
     )
 
-    override val builtInTokens: Flow<List<Coin>> = flowOf(SupportedCoins)
+    override val builtInTokens: Flow<List<Coin>> = flowOf(Coins.coins.flatMap { it.value })
 
     override val nativeTokens: Flow<List<Coin>> = builtInTokens
         .map { it.filterNatives() }
@@ -305,7 +305,8 @@ internal class TokenRepositoryImpl @Inject constructor(
         asSequence()
             .map { it.value }
             .map {
-                val supportedCoin = SupportedCoins.firstOrNull { coin -> coin.id == "${it.symbol}-${chain.id}" }
+                val supportedCoin = Coins.coins.getOrDefault(chain, emptyList())
+                    .firstOrNull { coin -> coin.id == "${it.symbol}-${chain.id}" }
                 Coin(
                     contractAddress = it.address,
                     chain = chain,
