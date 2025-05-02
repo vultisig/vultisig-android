@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    kotlin("kapt")
     alias(libs.plugins.daggerHiltAndroid)
     id("org.jetbrains.kotlin.plugin.parcelize")
     alias(libs.plugins.ksp)
@@ -46,7 +45,6 @@ android {
             excludes += "/META-INF/LICENSE*.md"
         }
     }
-
     tasks.withType<Test> {
         useJUnitPlatform()
     }
@@ -108,10 +106,10 @@ dependencies {
     // hilt di
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.work)
     androidTestImplementation(libs.hilt.android.testing)
-    kaptAndroidTest(libs.hilt.android.compiler)
+    kspAndroidTest(libs.hilt.android.compiler)
 
     // ktor
     implementation(libs.ktor.client.core)
