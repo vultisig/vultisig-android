@@ -120,7 +120,7 @@ val Chain.canSelectTokens: Boolean
         Chain.Kujira,
         Chain.GaiaChain,
         Chain.Osmosis, Chain.Tron -> true
-
+        Chain.ThorChain -> true
         Chain.CronosChain, Chain.ZkSync -> false
         else -> when {
             standard == EVM -> true

@@ -9,8 +9,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.ImageModel
+import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
@@ -132,7 +132,7 @@ internal class SelectAssetViewModel @Inject constructor(
                 .map {
                     AssetUiModel(
                         token = it.token,
-                        logo = Coins.getCoinLogo(it.token.logo),
+                        logo = Tokens.getCoinLogo(it.token.logo),
                         title = it.token.ticker,
                         subtitle = it.token.chain.raw,
                         amount = it.tokenValue?.let(mapTokenValueToDecimalUiString) ?: "0",
