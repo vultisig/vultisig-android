@@ -92,6 +92,9 @@ internal class SelectNetworkViewModel @Inject constructor(
                     when (args.filters) {
                         Route.SelectNetwork.Filters.SwapAvailable ->
                             it.filter { it.IsSwapSupported }
+
+                        Route.SelectNetwork.Filters.DisableNetworkSelection ->
+                            it.filter { it.id == selectedNetwork.id }
                     }
                 }
                 .sortedWith(compareBy { it.raw })
