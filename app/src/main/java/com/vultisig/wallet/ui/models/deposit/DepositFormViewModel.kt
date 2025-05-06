@@ -204,10 +204,14 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            accountsRepository.loadAddress(vaultId, chain)
-                .collect { address ->
-                    this@DepositFormViewModel.address.value = address
-                }
+            try {
+                accountsRepository.loadAddress(vaultId, chain)
+                    .collect { address ->
+                        this@DepositFormViewModel.address.value = address
+                    }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
         }
 
         viewModelScope.launch {
@@ -215,7 +219,8 @@ internal class DepositFormViewModel @Inject constructor(
                 state.map { it.selectedCoin }.distinctUntilChanged(),
                 address.filterNotNull(),
                 state.map { it.depositOption }.distinctUntilChanged(),
-            ) { selectedMergeToken, address, depositOption ->
+                state.map { it.selectedToken }.distinctUntilChanged(),
+            ) { selectedMergeToken, address, depositOption, selectedToken ->
                 when (depositOption) {
                     DepositOption.Switch, DepositOption.TransferIbc, DepositOption.Merge ->
                         address.accounts.find {
@@ -223,6 +228,10 @@ internal class DepositFormViewModel @Inject constructor(
                                 selectedMergeToken.ticker, ignoreCase = true
                             )
                         }
+
+                    DepositOption.StakeTcy, DepositOption.UnstakeTcy,
+                    DepositOption.Custom ->
+                        address.accounts.find { it.token.id == selectedToken.id }
 
                     else -> address.accounts.find { it.token.isNativeToken }
                 }?.tokenValue
@@ -234,27 +243,41 @@ internal class DepositFormViewModel @Inject constructor(
                             )
                         }
                     }
+            }.collect()
+        }
 
-                // special case, because of all supported merge tokens only lvn is osmosis native
-                val dstChainList = if (selectedMergeToken.ticker == "LVN") {
-                    when (chain) {
-                        Chain.Osmosis -> listOf(Chain.GaiaChain)
-                        else -> listOf(Chain.Osmosis)
+        viewModelScope.launch {
+            combine(
+                state.map { it.selectedCoin }
+                    .distinctUntilChanged(),
+                state.map { it.depositOption }
+                    .distinctUntilChanged()
+            ) { selectedMergeToken, depositOption ->
+                when (depositOption) {
+                    DepositOption.TransferIbc, DepositOption.Switch -> {
+                        // special case, because of all supported merge tokens only lvn is osmosis native
+                        val dstChainList = if (selectedMergeToken.ticker == "LVN") {
+                            when (chain) {
+                                Chain.Osmosis -> listOf(Chain.GaiaChain)
+                                else -> listOf(Chain.Osmosis)
+                            }
+                        } else {
+                            listOf(
+                                Chain.GaiaChain, Chain.Kujira, Chain.Osmosis,
+                                Chain.Noble, Chain.Akash,
+                            ).filter { it != chain }
+                        }
+
+                        state.update {
+                            it.copy(
+                                dstChainList = dstChainList,
+                            )
+                        }
+
+                        selectDstChain(dstChainList.first())
                     }
-                } else {
-                    listOf(
-                        Chain.GaiaChain, Chain.Kujira, Chain.Osmosis,
-                        Chain.Noble, Chain.Akash,
-                    ).filter { it != chain }
+                    else -> Unit
                 }
-
-                state.update {
-                    it.copy(
-                        dstChainList = dstChainList,
-                    )
-                }
-
-                selectDstChain(dstChainList.first())
             }.collect()
         }
     }
@@ -294,21 +317,36 @@ internal class DepositFormViewModel @Inject constructor(
             when (option) {
                 DepositOption.Switch -> {
                     viewModelScope.launch {
-                        val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-                        val inboundAddress = inboundAddresses
-                            .firstOrNull { it.chain.equals("GAIA", ignoreCase = true) }
-                        if (inboundAddress != null && inboundAddress.halted.not() &&
-                            inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
-                        ) {
-                            val gaiaAddress = inboundAddress.address
-                            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
-                        }
-                        accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                            .collect { addresses ->
-                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                        try {
+                            val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+                            val inboundAddress = inboundAddresses
+                                .firstOrNull { it.chain.equals("GAIA", ignoreCase = true) }
+                            if (inboundAddress != null && inboundAddress.halted.not() &&
+                                inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
+                            ) {
+                                val gaiaAddress = inboundAddress.address
+                                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
                             }
+                            accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                                .collect { addresses ->
+                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                                }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                        }
                     }
+
                 }
+
+                DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave ->
+                    state.update {
+                        it.copy(selectedToken = Tokens.rune)
+                    }
+
+                DepositOption.StakeTcy, DepositOption.UnstakeTcy ->
+                    state.update {
+                        it.copy(selectedToken = Tokens.tcy)
+                    }
 
                 else -> Unit
             }

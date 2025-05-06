@@ -252,7 +252,11 @@ internal fun DepositFormScreen(
                 }
 
                 else -> {
-                    if (depositChain == Chain.ThorChain) {
+                    if (depositChain == Chain.ThorChain && depositOption !in arrayOf(
+                            DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
+                            DepositOption.StakeTcy, DepositOption.UnstakeTcy,
+                        )
+                    ) {
                         FormCard {
                             SelectionCard(
                                 title = state.selectedToken.ticker,

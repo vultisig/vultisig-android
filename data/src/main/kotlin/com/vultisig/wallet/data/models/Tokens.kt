@@ -15,6 +15,17 @@ object Tokens {
         contractAddress = "",
         isNativeToken = true,
     )
+    val tcy = Coin(
+        chain = Chain.ThorChain,
+        ticker = "TCY",
+        logo = "tcy",
+        address = "",
+        decimal = 8,
+        hexPublicKey = "",
+        priceProviderID = "tcy",
+        contractAddress = "tcy",
+        isNativeToken = false,
+    )
     val wewe = Coin(
         chain = Chain.Base,
         ticker = "WEWE",
