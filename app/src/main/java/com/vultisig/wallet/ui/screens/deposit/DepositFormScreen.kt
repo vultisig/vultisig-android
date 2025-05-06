@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormSelection
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
+import com.vultisig.wallet.ui.components.library.form.SelectionCard
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
@@ -93,6 +94,8 @@ internal fun DepositFormScreen(
         thorAddress = model.thorAddressFieldState,
         onThorAddressLostFocus = {  },
         onSetThorAddress = {  },
+
+        onOpenSelectToken = model::selectToken,
     )
 }
 
@@ -138,6 +141,8 @@ internal fun DepositFormScreen(
     onSetThorAddress: (String) -> Unit = {},
 
     onSelectCoin: (TokenMergeInfo) -> Unit = {},
+
+    onOpenSelectToken: () -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
     val errorText = state.errorText
@@ -247,6 +252,20 @@ internal fun DepositFormScreen(
                 }
 
                 else -> {
+                    if (depositChain == Chain.ThorChain && depositOption !in arrayOf(
+                            DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave,
+                            DepositOption.StakeTcy, DepositOption.UnstakeTcy,
+                        )
+                    ) {
+                        FormCard {
+                            SelectionCard(
+                                title = state.selectedToken.ticker,
+                                actionIcon = R.drawable.ic_caret_down,
+                                onClick = onOpenSelectToken,
+                            )
+                        }
+                    }
+
                     if (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain ||
                         depositOption == DepositOption.Custom && depositChain == Chain.MayaChain ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
@@ -264,7 +283,11 @@ internal fun DepositFormScreen(
                         )
                     }
 
-                    if (depositOption != DepositOption.Custom) {
+                    if (depositOption !in arrayOf(
+                            DepositOption.Custom, DepositOption.StakeTcy,
+                            DepositOption.UnstakeTcy
+                        )
+                    ) {
                         FormTextFieldCard(
                             title = stringResource(R.string.deposit_form_node_address_title),
                             hint = stringResource(R.string.deposit_form_node_address_title),

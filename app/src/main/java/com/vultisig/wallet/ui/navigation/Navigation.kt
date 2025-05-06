@@ -359,6 +359,7 @@ internal sealed class Route {
         @Serializable
         enum class Filters {
             SwapAvailable,
+            DisableNetworkSelection,
         }
     }
 

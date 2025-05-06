@@ -4,6 +4,28 @@ import com.vultisig.wallet.data.models.Chain.Ripple
 
 object Tokens {
 
+    val rune = Coin(
+        chain = Chain.ThorChain,
+        ticker = "RUNE",
+        logo = "rune",
+        address = "",
+        decimal = 8,
+        hexPublicKey = "",
+        priceProviderID = "thorchain",
+        contractAddress = "",
+        isNativeToken = true,
+    )
+    val tcy = Coin(
+        chain = Chain.ThorChain,
+        ticker = "TCY",
+        logo = "tcy",
+        address = "",
+        decimal = 8,
+        hexPublicKey = "",
+        priceProviderID = "tcy",
+        contractAddress = "tcy",
+        isNativeToken = false,
+    )
     val wewe = Coin(
         chain = Chain.Base,
         ticker = "WEWE",
