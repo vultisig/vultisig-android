@@ -65,7 +65,7 @@ internal fun <T> FormSelection(
 }
 
 @Composable
-private fun SelectionCard(
+internal fun SelectionCard(
     title: String,
     @DrawableRes actionIcon: Int? = null,
     onClick: () -> Unit,
