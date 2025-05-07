@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.deposit
 
+import timber.log.Timber
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -210,10 +211,14 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            accountsRepository.loadAddress(vaultId, chain)
-                .collect { address ->
-                    this@DepositFormViewModel.address.value = address
-                }
+            try {
+                accountsRepository.loadAddress(vaultId, chain)
+                    .collect { address ->
+                        this@DepositFormViewModel.address.value = address
+                    }
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
         }
 
         viewModelScope.launch {
@@ -328,10 +333,14 @@ internal class DepositFormViewModel @Inject constructor(
                             val gaiaAddress = inboundAddress.address
                             nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
                         }
-                        accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                            .collect { addresses ->
-                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
-                            }
+                        try {
+                            accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                                .collect { addresses ->
+                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                                }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                        }
                     }
 
                 }

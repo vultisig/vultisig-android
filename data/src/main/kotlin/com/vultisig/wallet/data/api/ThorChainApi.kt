@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import timber.log.Timber
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
@@ -129,7 +130,8 @@ internal class ThorChainApiImpl @Inject constructor(
                 response.body<String>()
             )
         } catch (e: Exception) {
-            // Error deserializing THORChain swap quote
+            Timber.tag("THORChainService")
+                .e("Error deserializing THORChain swap quote: ${e.message}")
             THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(
                     HttpStatusCode.fromValue(response.status.value).description
@@ -156,19 +158,24 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
-        val response = httpClient.post(Endpoints.THORCHAIN_BROADCAST_TX) {
-            contentType(ContentType.Application.Json)
-            header(xClientID, xClientIDValue)
-            setBody(tx)
-        }
-        val responseRawString = response.bodyAsText()
-        val result = json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
+        try {
+            val response = httpClient.post(Endpoints.THORCHAIN_BROADCAST_TX) {
+                contentType(ContentType.Application.Json)
+                header(xClientID, xClientIDValue)
+                setBody(tx)
+            }
+            val responseRawString = response.bodyAsText()
+            val result = json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
 
-        val txResponse = result.txResponse
-        if (txResponse?.code == 0 || txResponse?.code == 19) {
-            return txResponse.txHash
+            val txResponse = result.txResponse
+            if (txResponse?.code == 0 || txResponse?.code == 19) {
+                return txResponse.txHash
+            }
+            throw Exception("Error broadcasting transaction: $responseRawString")
+        } catch (e: Exception) {
+            Timber.tag("THORChainService").e("Error broadcasting transaction: ${e.message}")
+            throw e
         }
-        throw Exception("Error broadcasting transaction: $responseRawString")
     }
 
     override suspend fun getNetworkChainId(): String =
