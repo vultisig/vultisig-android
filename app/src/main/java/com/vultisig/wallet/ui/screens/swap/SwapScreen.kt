@@ -420,6 +420,7 @@ private fun RowScope.PercentageItem(
         color = Theme.colors.text.primary,
         textAlign = TextAlign.Center,
         modifier = Modifier
+            .clickable(onClick = onClick)
             .background(
                 color = Theme.colors.backgrounds.tertiary,
                 shape = RoundedCornerShape(99.dp),
@@ -428,7 +429,6 @@ private fun RowScope.PercentageItem(
                 all = 8.dp,
             )
             .weight(1f)
-            .clickable(onClick = onClick)
     )
 }
 

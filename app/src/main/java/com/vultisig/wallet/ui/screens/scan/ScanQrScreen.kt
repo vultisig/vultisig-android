@@ -120,16 +120,20 @@ internal fun ScanQrScreen(
     val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
         coroutineScope.launch {
             if (uri != null) {
-                val result = scanImage(InputImage.fromFilePath(context, uri))
-                val barcodes = if (result.isEmpty()) {
-                    val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
-                        .addWhiteBorder(2F)
-                    val inputImage = InputImage.fromBitmap(bitmap, 0)
-                    val resultBarcodes = scanImage(inputImage)
-                    bitmap.recycle()
-                    resultBarcodes
-                } else result
-                onSuccess(barcodes)
+                try {
+                    val result = scanImage(InputImage.fromFilePath(context, uri))
+                    val barcodes = if (result.isEmpty()) {
+                        val bitmap = requireNotNull(uriToBitmap(context.contentResolver, uri))
+                            .addWhiteBorder(2F)
+                        val inputImage = InputImage.fromBitmap(bitmap, 0)
+                        val resultBarcodes = scanImage(inputImage)
+                        bitmap.recycle()
+                        resultBarcodes
+                    } else result
+                    onSuccess(barcodes)
+                } catch (e: Exception) {
+                    Timber.e(e)
+                }
             }
         }
     }
