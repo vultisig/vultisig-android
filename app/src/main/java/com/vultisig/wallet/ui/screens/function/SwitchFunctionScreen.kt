@@ -39,8 +39,8 @@ internal fun SwitchFunctionScreen(
     FormSelection(
         selected = selectedToken,
         options = coinList,
-        mapTypeToString = { it.ticker },
         onSelectOption = onSelectCoin,
+        mapTypeToString = { it.ticker },
     )
 
     FormTextFieldCard(

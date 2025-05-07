@@ -47,8 +47,8 @@ internal fun TransferIbcFunctionScreen(
         FormSelection(
             selected = selectedChain,
             options = chainList,
-            mapTypeToString = { "${it.raw} ${it.feeUnit.uppercase()}" },
             onSelectOption = onSelectChain,
+            mapTypeToString = { "${it.raw} ${it.feeUnit.uppercase()}" },
         )
     }
 
@@ -58,8 +58,8 @@ internal fun TransferIbcFunctionScreen(
         FormSelection(
             selected = selectedToken,
             options = coinList,
-            mapTypeToString = { it.ticker },
             onSelectOption = onSelectCoin,
+            mapTypeToString = { it.ticker },
         )
     }
 

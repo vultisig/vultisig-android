@@ -25,8 +25,8 @@ internal fun MergeFunctionScreen(
     FormSelection(
         selected = selectedToken,
         options = coinList,
-        mapTypeToString = { it.denom.uppercase() },
         onSelectOption = onSelectCoin,
+        mapTypeToString = { it.denom.uppercase() },
     )
 
 
