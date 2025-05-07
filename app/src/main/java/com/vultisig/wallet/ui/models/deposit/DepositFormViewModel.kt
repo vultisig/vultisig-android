@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.models.DepositMemo.Unbond
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Tokens
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -36,8 +37,15 @@ import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
+import java.util.UUID
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
@@ -46,12 +54,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.util.UUID
-import javax.inject.Inject
 
 internal enum class DepositOption {
     Bond,
@@ -96,6 +99,8 @@ internal data class DepositFormUiModel(
 
     val selectedCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
+
+    val unstakableTcyAmount: String? = null,
 )
 
 @HiltViewModel
@@ -113,6 +118,7 @@ internal class DepositFormViewModel @Inject constructor(
     private val transactionRepository: DepositTransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val thorChainApi: ThorChainApi,
+    private val balanceRepository: BalanceRepository,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -204,14 +210,10 @@ internal class DepositFormViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            try {
-                accountsRepository.loadAddress(vaultId, chain)
-                    .collect { address ->
-                        this@DepositFormViewModel.address.value = address
-                    }
-            } catch (e: Exception) {
-                Timber.e(e)
-            }
+            accountsRepository.loadAddress(vaultId, chain)
+                .collect { address ->
+                    this@DepositFormViewModel.address.value = address
+                }
         }
 
         viewModelScope.launch {
@@ -243,7 +245,7 @@ internal class DepositFormViewModel @Inject constructor(
                             )
                         }
                     }
-            }.collect()
+            }.collect {}
         }
 
         viewModelScope.launch {
@@ -278,7 +280,7 @@ internal class DepositFormViewModel @Inject constructor(
                     }
                     else -> Unit
                 }
-            }.collect()
+            }.collect {}
         }
     }
 
@@ -317,36 +319,51 @@ internal class DepositFormViewModel @Inject constructor(
             when (option) {
                 DepositOption.Switch -> {
                     viewModelScope.launch {
-                        try {
-                            val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-                            val inboundAddress = inboundAddresses
-                                .firstOrNull { it.chain.equals("GAIA", ignoreCase = true) }
-                            if (inboundAddress != null && inboundAddress.halted.not() &&
-                                inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
-                            ) {
-                                val gaiaAddress = inboundAddress.address
-                                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
-                            }
-                            accountsRepository.loadAddress(vaultId, Chain.ThorChain)
-                                .collect { addresses ->
-                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
-                                }
-                        } catch (e: Exception) {
-                            Timber.e(e)
+                        val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+                        val inboundAddress = inboundAddresses
+                            .firstOrNull { it.chain.equals("GAIA", ignoreCase = true) }
+                        if (inboundAddress != null && inboundAddress.halted.not() &&
+                            inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
+                        ) {
+                            val gaiaAddress = inboundAddress.address
+                            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
                         }
+                        accountsRepository.loadAddress(vaultId, Chain.ThorChain)
+                            .collect { addresses ->
+                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                            }
                     }
 
                 }
 
                 DepositOption.Bond, DepositOption.Unbond, DepositOption.Leave ->
                     state.update {
-                        it.copy(selectedToken = Tokens.rune)
+                        it.copy(selectedToken = Tokens.rune, unstakableTcyAmount = null)
                     }
 
-                DepositOption.StakeTcy, DepositOption.UnstakeTcy ->
+                DepositOption.StakeTcy, DepositOption.UnstakeTcy -> {
                     state.update {
-                        it.copy(selectedToken = Tokens.tcy)
+                        it.copy(selectedToken = Tokens.tcy, unstakableTcyAmount = null)
                     }
+                    // Fetch unstakable TCY amount
+                    val addressValue = address.value?.address
+                    if (addressValue != null) {
+                        viewModelScope.launch {
+                            try {
+                                val unstakable = balanceRepository.getUnstakableTcyAmount(addressValue)
+                                val formattedAmount = formatUnstakableTcyAmount(unstakable)
+                                state.update {
+                                    it.copy(unstakableTcyAmount = formattedAmount)
+                                }
+                            } catch (e: Exception) {
+                                // Failed to fetch unstakable TCY amount
+                                state.update {
+                                    it.copy(unstakableTcyAmount = null)
+                                }
+                            }
+                        }
+                    }
+                }
 
                 else -> Unit
             }
@@ -460,6 +477,24 @@ internal class DepositFormViewModel @Inject constructor(
                 isLoading = true
                 val depositOption = state.value.depositOption
 
+                // Validate percentage input for TCY unstaking
+                if (depositOption == DepositOption.UnstakeTcy) {
+                    val percentageText = tokenAmountFieldState.text.toString()
+                    val percentage = percentageText.toFloatOrNull()
+                    
+                    if (percentage == null) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_amount)
+                        )
+                    }
+                    
+                    if (percentage <= 0f || percentage > 100f) {
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(R.string.send_error_no_amount, listOf("Percentage must be between 0 and 100"))
+                        )
+                    }
+                }
+
                 val transaction = when (depositOption) {
                     DepositOption.Bond -> createBondTransaction()
                     DepositOption.Unbond -> createUnbondTransaction()
@@ -470,11 +505,17 @@ internal class DepositFormViewModel @Inject constructor(
                     DepositOption.TransferIbc -> createTransferIbcTx()
                     DepositOption.Switch -> createSwitchTx()
                     DepositOption.Merge -> createMergeTx()
-                    DepositOption.StakeTcy -> createTcyStakeTx("tcy+")
-                    DepositOption.UnstakeTcy -> createTcyStakeTx("tcy-")
+                    DepositOption.StakeTcy -> createTcyStakeTx("TCY+")
+                    DepositOption.UnstakeTcy -> {
+                        // Get percentage from user input
+                        val percentageText = tokenAmountFieldState.text.toString()
+                        val percentage = percentageText.toFloatOrNull() ?: 100f // Default to 100% if invalid
+                        val basisPoints = (percentage * 100).toInt().coerceIn(0, 10000) // Convert to basis points (0-10000)
+                        createTcyStakeTx("TCY-:$basisPoints")
+                    }
                 }
 
-                Timber.d("Transaction: $transaction")
+
 
                 transactionRepository.addTransaction(transaction)
 
@@ -488,7 +529,7 @@ internal class DepositFormViewModel @Inject constructor(
                 showError(e.text)
             } catch (e: Exception) {
                 showError(UiText.StringResource(R.string.dialog_default_error_body))
-                Timber.e(e)
+                // Error occurred during deposit operation
             } finally {
                 isLoading = false
             }
@@ -867,8 +908,16 @@ internal class DepositFormViewModel @Inject constructor(
         val srcAddress = selectedToken.address
 
         val gasFee = gasFeeRepository.getGasFee(chain, srcAddress)
-
-        val tokenAmountInt = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+        
+        // For unstaking (TCY-:XXXX), we send zero amount - gas is covered by RUNE
+        // For staking (TCY+), we send the full amount entered by user
+        val tokenAmountInt = if (stakeMemo.startsWith("TCY-")) {
+            // For unstaking, send zero TCY as gas is covered by RUNE
+            BigInteger.ZERO
+        } else {
+            // For staking or other operations, validate and send the full amount
+            requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
+        }
 
         val memo = stakeMemo
 
@@ -1189,6 +1238,21 @@ internal class DepositFormViewModel @Inject constructor(
             )
 
         if ((selectedAccount.tokenValue?.value ?: BigInteger.ZERO) < tokenAmountInt) {
+            // For UnstakeTCY operations, check against the unstakable amount instead of the wallet balance
+            if (state.value.depositOption == DepositOption.UnstakeTcy && selectedToken.ticker == "TCY") {
+                // Convert the unstakable amount string to BigInteger for comparison
+                val unstakableAmount = state.value.unstakableTcyAmount
+                    ?.toBigDecimalOrNull()
+                    ?.movePointRight(selectedToken.decimal)
+                    ?.toBigInteger() ?: BigInteger.ZERO
+                
+                if (tokenAmountInt <= unstakableAmount) {
+                    // Amount is valid for unstaking
+                    return tokenAmountInt
+                }
+            }
+            
+            // For all other operations, or if the unstakable check failed
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_insufficient_balance)
             )
@@ -1238,6 +1302,28 @@ internal class DepositFormViewModel @Inject constructor(
             return UiText.StringResource(R.string.send_from_invalid_amount)
         }
         return null
+    }
+
+    private fun formatUnstakableTcyAmount(unstakableAmount: String?): String? {
+        if (unstakableAmount.isNullOrEmpty()) return null
+        return try {
+            val amount = unstakableAmount.toBigDecimalOrNull() ?: return null
+            
+            // TCY has 8 decimal places, so divide by 10^8 to get the human-readable amount
+            val humanReadableAmount = amount.movePointLeft(8)
+            
+            // Use the same decimal formatting as the rest of the app
+            val decimalFormat = DecimalFormat(
+                "#,###.########", // 8 decimal places max, consistent with app standard
+                DecimalFormatSymbols(Locale.getDefault())
+            )
+            
+            // Format and strip trailing zeros
+            decimalFormat.format(humanReadableAmount)
+        } catch (e: Exception) {
+            // Failed to format unstakable TCY amount
+            null
+        }
     }
 
     fun validateAssets() {

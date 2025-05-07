@@ -15,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -275,16 +278,29 @@ internal fun DepositFormScreen(
                         }
                     }
 
-                    if (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain ||
-                        depositOption == DepositOption.Custom && depositChain == Chain.MayaChain ||
+                    val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
+                    val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
+                    val unstakableBalance = state.unstakableTcyAmount?.takeIf { it.isNotBlank() } ?: "0"
+                    
+                    val amountLabel = when {
+                        isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
+                    }
+                    
+                    val amountHint = when {
+                        isUnstakeTcy -> "Enter percentage (%) to unstake"
+                        else -> stringResource(R.string.send_amount_currency_hint)
+                    }
+                    
+                    if (
+                        isTcyOption ||
+                        (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain) ||
+                        (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
                     ) {
                         FormTextFieldCard(
-                            title = stringResource(
-                                R.string.deposit_form_amount_title,
-                                state.balance.asString()
-                            ),
-                            hint = stringResource(R.string.send_amount_currency_hint),
+                            title = amountLabel,
+                            hint = amountHint,
                             keyboardType = KeyboardType.Number,
                             textFieldState = tokenAmountFieldState,
                             onLostFocus = onTokenAmountLostFocus,
@@ -411,6 +427,12 @@ internal fun DepositFormScreen(
     }
 
 }
+
+// String resources needed for new labels and placeholders
+// In res/values/strings.xml, add:
+// <string name="deposit_form_unstakable_tcy_label">Unstakable TCY</string>
+// <string name="deposit_form_unstakable_tcy_loading">Loading...</string>
+// <string name="deposit_form_unstakable_tcy_unavailable">Unavailable</string>
 
 @Preview
 @Composable

@@ -59,8 +59,12 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
-
+/**
+ * Interface for the BalanceRepository.
+ */
 interface BalanceRepository {
+
+    suspend fun getUnstakableTcyAmount(address: String): String?
 
     suspend fun getCachedTokenBalance(
         address: String,
@@ -101,6 +105,11 @@ internal class BalanceRepositoryImpl @Inject constructor(
     private val tronApi: TronApi,
     private val tokenValueDao: TokenValueDao,
 ) : BalanceRepository {
+
+    override suspend fun getUnstakableTcyAmount(address: String): String? {
+        return thorChainApi.getUnstakableTcyAmount(address)
+    }
+
 
     override suspend fun getCachedTokenBalance(
         address: String,

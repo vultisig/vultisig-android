@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace = "com.vulitisig.wallet"
+    namespace = "com.vultisig.wallet"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
