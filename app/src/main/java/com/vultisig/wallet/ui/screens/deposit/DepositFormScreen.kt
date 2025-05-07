@@ -181,12 +181,21 @@ internal fun DepositFormScreen(
                 )
             }
 
-            FormSelection(
-                selected = state.depositOption,
-                options = state.depositOptions,
-                mapTypeToString = { it.name },
-                onSelectOption = onSelectDepositOption,
-            )
+            FormSelection(selected = state.depositOption, options = state.depositOptions, onSelectOption = onSelectDepositOption, mapTypeToString = { option ->
+                    when (option) {
+                        DepositOption.Bond -> stringResource(R.string.deposit_option_bond)
+                        DepositOption.Unbond -> stringResource(R.string.deposit_option_unbond)
+                        DepositOption.Leave -> stringResource(R.string.deposit_option_leave)
+                        DepositOption.Stake -> stringResource(R.string.deposit_option_stake)
+                        DepositOption.Unstake -> stringResource(R.string.deposit_option_unstake)
+                        DepositOption.Custom -> stringResource(R.string.deposit_option_custom)
+                        DepositOption.TransferIbc -> stringResource(R.string.deposit_option_ibc_transfer)
+                        DepositOption.Switch -> stringResource(R.string.deposit_option_switch)
+                        DepositOption.Merge -> stringResource(R.string.deposit_option_merge)
+                        DepositOption.StakeTcy -> stringResource(R.string.deposit_option_stake_tcy)
+                        DepositOption.UnstakeTcy -> stringResource(R.string.deposit_option_unstake_tcy)
+                    }
+                })
 
             when (val depositOption = state.depositOption) {
                 DepositOption.TransferIbc -> {

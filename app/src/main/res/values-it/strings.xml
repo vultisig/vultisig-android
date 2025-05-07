@@ -333,4 +333,15 @@
     <string name="network_connection_lost">Connessione di rete persa. Controlla la tua connessione Internet</string>
     <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 1 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="edit_address_title">Modifica indirizzo</string>
+    <string name="deposit_option_bond">Bond</string>
+    <string name="deposit_option_unbond">Unbond</string>
+    <string name="deposit_option_leave">Leave</string>
+    <string name="deposit_option_stake">Stake</string>
+    <string name="deposit_option_unstake">Unstake</string>
+    <string name="deposit_option_custom">Custom</string>
+    <string name="deposit_option_ibc_transfer">IBC Transfer</string>
+    <string name="deposit_option_switch">Switch</string>
+    <string name="deposit_option_merge">Merge</string>
+    <string name="deposit_option_stake_tcy">Stake TCY</string>
+    <string name="deposit_option_unstake_tcy">Unstake TCY</string>
 </resources>
