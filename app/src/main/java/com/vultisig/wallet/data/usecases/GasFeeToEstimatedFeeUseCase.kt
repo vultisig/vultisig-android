@@ -2,8 +2,9 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EstimatedGasFee
-import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -44,7 +45,7 @@ internal class GasFeeToEstimatedFeeUseCaseImpl @Inject constructor(
 
 
         tokenValue = when {
-            chain.feeUnit.equals("Gwei", ignoreCase = true) ->
+            chain.standard == TokenStandard.EVM ->
                 tokenValue.copy(
                     value = tokenValue.value.divide(BigInteger.TEN.pow(9)),
                     unit = nativeToken.ticker,

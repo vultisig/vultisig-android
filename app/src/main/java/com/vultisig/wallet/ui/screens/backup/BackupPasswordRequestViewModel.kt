@@ -89,11 +89,11 @@ internal class BackupPasswordRequestViewModel @Inject constructor(
     fun saveVaultIntoUri(uri: Uri) {
         if (isFileExtensionValid(uri)) {
             val vault = vault.value
-                ?: error("Vault is empty, but it should've been filled when name was generated")
+                ?: return
             val vaultBackupData = createVaultBackup(
                 mapVaultToProto(vault),
                 null
-            ) ?: error("Vault backup data is empty on generation")
+            ) ?: return
 
             val isSuccess = context.saveContentToUri(uri, vaultBackupData)
 
