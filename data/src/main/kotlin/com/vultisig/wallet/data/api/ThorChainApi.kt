@@ -80,13 +80,13 @@ internal class ThorChainApiImpl @Inject constructor(
             val response = httpClient.get("https://thornode.ninerealms.com/thorchain/tcy_staker/$address") {
                 header(xClientID, xClientIDValue)
             }
-            val tcyStakerResponse = json.decodeFromString(
-                TcyStakerResponse.serializer(),
-                response.bodyAsText()
-            )
-            tcyStakerResponse.unstakable
+            if (!response.status.isSuccess()) {
+                null
+            } else {
+                response.body<TcyStakerResponse>().unstakable
+            }
         } catch (e: Exception) {
-            // Exception occurred while fetching unstakable TCY amount
+            // Exception occurred while fetching or parsing TCY staker data
             null
         }
     }
@@ -162,7 +162,7 @@ internal class ThorChainApiImpl @Inject constructor(
             setBody(tx)
         }
         val responseRawString = response.bodyAsText()
-        val result = response.body<CosmosTransactionBroadcastResponse>()
+        val result = json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
 
         val txResponse = result.txResponse
         if (txResponse?.code == 0 || txResponse?.code == 19) {

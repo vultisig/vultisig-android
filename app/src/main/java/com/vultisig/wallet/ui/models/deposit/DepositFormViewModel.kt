@@ -481,12 +481,7 @@ internal class DepositFormViewModel @Inject constructor(
                 if (depositOption == DepositOption.UnstakeTcy) {
                     val percentageText = tokenAmountFieldState.text.toString()
                     val percentage = percentageText.toFloatOrNull()
-                    
-                    if (percentage == null) {
-                        throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_amount)
-                        )
-                    }
+                        ?: throw InvalidTransactionDataException(UiText.StringResource(R.string.send_error_no_amount))
                     
                     if (percentage <= 0f || percentage > 100f) {
                         throw InvalidTransactionDataException(

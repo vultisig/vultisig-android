@@ -15,9 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -288,7 +285,7 @@ internal fun DepositFormScreen(
                     }
                     
                     val amountHint = when {
-                        isUnstakeTcy -> "Enter percentage (%) to unstake"
+                        isUnstakeTcy -> stringResource(R.string.deposit_form_unstake_percentage_hint)
                         else -> stringResource(R.string.send_amount_currency_hint)
                     }
                     
@@ -427,12 +424,6 @@ internal fun DepositFormScreen(
     }
 
 }
-
-// String resources needed for new labels and placeholders
-// In res/values/strings.xml, add:
-// <string name="deposit_form_unstakable_tcy_label">Unstakable TCY</string>
-// <string name="deposit_form_unstakable_tcy_loading">Loading...</string>
-// <string name="deposit_form_unstakable_tcy_unavailable">Unavailable</string>
 
 @Preview
 @Composable
