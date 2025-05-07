@@ -9,6 +9,8 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
@@ -138,8 +140,8 @@ internal class SessionApiImpl @Inject constructor(
         sessionId: String,
         localPartyId: String,
         messageId: String?,
-    ): List<Message> {
-        return httpClient.get("$serverUrl/message/$sessionId/$localPartyId") {
+    ): List<Message> = withContext(Dispatchers.IO) {
+        httpClient.get("$serverUrl/message/$sessionId/$localPartyId") {
             messageId?.let {
                 header(MESSAGE_ID_HEADER_TITLE, it)
             }

@@ -685,11 +685,8 @@ internal class SendFormViewModel @Inject constructor(
     private fun calculateGasLimit(
         chain: Chain,
         specific: BlockChainSpecific?,
-    ): BigInteger = if (chain.standard == TokenStandard.EVM && specific != null) {
-        (specific as BlockChainSpecific.Ethereum).gasLimit
-    } else {
-        BigInteger.valueOf(1)
-    }
+    ): BigInteger =
+        (specific as? BlockChainSpecific.Ethereum)?.gasLimit ?: BigInteger.valueOf(1)
 
     private fun showError(text: UiText) {
         uiState.update { it.copy(errorText = text) }
