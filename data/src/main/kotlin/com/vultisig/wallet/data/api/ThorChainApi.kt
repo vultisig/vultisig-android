@@ -165,7 +165,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 setBody(tx)
             }
             val responseRawString = response.bodyAsText()
-            val result = json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
+            val result = response.body<CosmosTransactionBroadcastResponse>()
 
             val txResponse = result.txResponse
             if (txResponse?.code == 0 || txResponse?.code == 19) {
