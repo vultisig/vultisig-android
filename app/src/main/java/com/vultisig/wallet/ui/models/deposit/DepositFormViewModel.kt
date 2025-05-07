@@ -250,7 +250,7 @@ internal class DepositFormViewModel @Inject constructor(
                             )
                         }
                     }
-            }.collect ()
+            }.collect {}
         }
 
         viewModelScope.launch {
