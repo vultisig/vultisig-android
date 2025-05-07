@@ -250,7 +250,7 @@ internal class DepositFormViewModel @Inject constructor(
                             )
                         }
                     }
-            }.collect {}
+            }.collect ()
         }
 
         viewModelScope.launch {
@@ -324,16 +324,16 @@ internal class DepositFormViewModel @Inject constructor(
             when (option) {
                 DepositOption.Switch -> {
                     viewModelScope.launch {
-                        val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-                        val inboundAddress = inboundAddresses
-                            .firstOrNull { it.chain.equals("GAIA", ignoreCase = true) }
-                        if (inboundAddress != null && inboundAddress.halted.not() &&
-                            inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
-                        ) {
-                            val gaiaAddress = inboundAddress.address
-                            nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
-                        }
                         try {
+                            val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
+                            val inboundAddress = inboundAddresses
+                                .firstOrNull { it.chain.equals("GAIA", ignoreCase = true) }
+                            if (inboundAddress != null && inboundAddress.halted.not() &&
+                                inboundAddress.chainLPActionsPaused.not() && inboundAddress.globalTradingPaused.not()
+                            ) {
+                                val gaiaAddress = inboundAddress.address
+                                nodeAddressFieldState.setTextAndPlaceCursorAtEnd(gaiaAddress)
+                            }
                             accountsRepository.loadAddress(vaultId, Chain.ThorChain)
                                 .collect { addresses ->
                                     thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
