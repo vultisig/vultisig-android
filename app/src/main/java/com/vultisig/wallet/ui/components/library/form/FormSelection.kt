@@ -27,7 +27,7 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun <T> FormSelection(
     selected: T,
     options: List<T>,
-    mapTypeToString: (T) -> String,
+    mapTypeToString: @Composable (T) -> String,
     onSelectOption: (T) -> Unit,
 ) {
     var isListExpanded by remember { mutableStateOf(false) }
