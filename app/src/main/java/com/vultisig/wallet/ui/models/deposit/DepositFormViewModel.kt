@@ -40,7 +40,6 @@ import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -365,6 +364,7 @@ internal class DepositFormViewModel @Inject constructor(
                                     it.copy(unstakableTcyAmount = formattedAmount)
                                 }
                             } catch (e: Exception) {
+                                Timber.e(e)
                                 // Failed to fetch unstakable TCY amount
                                 state.update {
                                     it.copy(unstakableTcyAmount = null)
@@ -532,6 +532,7 @@ internal class DepositFormViewModel @Inject constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                Timber.e(e)
                 showError(UiText.StringResource(R.string.dialog_default_error_body))
                 // Error occurred during deposit operation
             } finally {
@@ -1326,6 +1327,7 @@ internal class DepositFormViewModel @Inject constructor(
             decimalFormat.format(humanReadableAmount)
         } catch (e: Exception) {
             // Failed to format unstakable TCY amount
+            Timber.e("Error formatting unstakable TCY amount: ${e.message}")
             null
         }
     }
