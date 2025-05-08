@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.vultisig.wallet.data.models.Tokens
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -45,8 +46,9 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                             vault
                         )
                         try {
-                            tokenRepository
-                                .getTokensWithBalance(chain, address)
+                            (tokenRepository
+                                .getTokensWithBalance(chain, address) +
+                                    enabledByDefaultTokens.getOrDefault(chain, emptyList()))
                                 .filter { !it.isNativeToken }
                                 .forEach { token ->
                                     val updatedToken = token.copy(
@@ -64,6 +66,9 @@ internal class TokenRefreshWorker @AssistedInject constructor(
                 }
             return Result.success()
         }
+
+    private val enabledByDefaultTokens = listOf(Tokens.tcy)
+        .groupBy { it.chain }
 
     companion object {
         const val ARG_VAULT_ID = "vault_id"
