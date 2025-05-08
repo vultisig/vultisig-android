@@ -51,7 +51,7 @@ internal fun SwapTransactionOverviewScreen(
     transactionLink: String,
     approveTransactionLink: String,
     onComplete: () -> Unit,
-    progressLink: String,
+    progressLink: String?,
     onBack: () -> Unit = {},
     transactionTypeUiModel: SwapTransactionUiModel,
 ) {
@@ -170,16 +170,18 @@ internal fun SwapTransactionOverviewScreen(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        VsButton(
-                            label = "Track",
-                            variant = VsButtonVariant.Secondary,
-                            size = VsButtonSize.Small,
-                            modifier = Modifier
-                                .weight(1f),
-                            onClick = {
-                                uriHandler.openUri(progressLink)
-                            }
-                        )
+                        if (progressLink != null && progressLink.isNotEmpty()) {
+                            VsButton(
+                                label = "Track",
+                                variant = VsButtonVariant.Secondary,
+                                size = VsButtonSize.Small,
+                                modifier = Modifier
+                                    .weight(1f),
+                                onClick = {
+                                    uriHandler.openUri(progressLink)
+                                }
+                            )
+                        }
 
                         VsButton(
                             label = "Done",
