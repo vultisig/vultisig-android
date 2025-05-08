@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.api
 
+import timber.log.Timber
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
@@ -29,7 +31,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import timber.log.Timber
+
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -64,6 +66,8 @@ interface ThorChainApi {
 
     suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson
     suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress>
+
+    suspend fun getUnstakableTcyAmount(address: String): String?
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -71,6 +75,22 @@ internal class ThorChainApiImpl @Inject constructor(
     private val thorChainSwapQuoteResponseJsonSerializer: ThorChainSwapQuoteResponseJsonSerializer,
     private val json: Json,
 ) : ThorChainApi {
+
+    override suspend fun getUnstakableTcyAmount(address: String): String? {
+        return try {
+            val response = httpClient.get("https://thornode.ninerealms.com/thorchain/tcy_staker/$address") {
+                header(xClientID, xClientIDValue)
+            }
+            if (!response.status.isSuccess()) {
+                null
+            } else {
+                response.body<TcyStakerResponse>().unstakable
+            }
+        } catch (e: Exception) {
+            // Exception occurred while fetching or parsing TCY staker data
+            null
+        }
+    }
 
     private val xClientID = "X-Client-ID"
     private val xClientIDValue = "vultisig"
@@ -130,17 +150,11 @@ internal class ThorChainApiImpl @Inject constructor(
     }
 
     override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
-        try {
-            val response = httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
-                header(xClientID, xClientIDValue)
-            }
-            val content = response.body<NativeTxFeeRune>()
-            return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
-        } catch (e: Exception) {
-            Timber.tag("THORChainService")
-                .e("Error getting THORChain native transaction fee: ${e.message}")
-            throw e
+        val response = httpClient.get("https://thornode.ninerealms.com/thorchain/network") {
+            header(xClientID, xClientIDValue)
         }
+        val content = response.body<NativeTxFeeRune>()
+        return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
     }
 
     override suspend fun broadcastTransaction(tx: String): String? {
@@ -212,8 +226,7 @@ internal class ThorChainApiImpl @Inject constructor(
                 header(xClientID, xClientIDValue)
             }
         if (!response.status.isSuccess()) {
-            Timber.tag("THORChainService")
-                .e("Error getting THORChain inbound addresses: ${response.bodyAsText()}")
+            // Error getting THORChain inbound addresses
             throw Exception("Error getting THORChain inbound addresses")
         }
         return response.body()

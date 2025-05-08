@@ -275,16 +275,29 @@ internal fun DepositFormScreen(
                         }
                     }
 
-                    if (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain ||
-                        depositOption == DepositOption.Custom && depositChain == Chain.MayaChain ||
+                    val isUnstakeTcy = depositOption == DepositOption.UnstakeTcy
+                    val isTcyOption = depositOption == DepositOption.StakeTcy || isUnstakeTcy
+                    val unstakableBalance = state.unstakableTcyAmount?.takeIf { it.isNotBlank() } ?: "0"
+                    
+                    val amountLabel = when {
+                        isUnstakeTcy -> stringResource(R.string.deposit_form_amount_title, unstakableBalance)
+                        else -> stringResource(R.string.deposit_form_amount_title, state.balance.asString())
+                    }
+                    
+                    val amountHint = when {
+                        isUnstakeTcy -> stringResource(R.string.deposit_form_unstake_percentage_hint)
+                        else -> stringResource(R.string.send_amount_currency_hint)
+                    }
+                    
+                    if (
+                        isTcyOption ||
+                        (depositOption != DepositOption.Leave && depositChain == Chain.ThorChain) ||
+                        (depositOption == DepositOption.Custom && depositChain == Chain.MayaChain) ||
                         depositOption == DepositOption.Unstake || depositOption == DepositOption.Stake
                     ) {
                         FormTextFieldCard(
-                            title = stringResource(
-                                R.string.deposit_form_amount_title,
-                                state.balance.asString()
-                            ),
-                            hint = stringResource(R.string.send_amount_currency_hint),
+                            title = amountLabel,
+                            hint = amountHint,
                             keyboardType = KeyboardType.Number,
                             textFieldState = tokenAmountFieldState,
                             onLostFocus = onTokenAmountLostFocus,

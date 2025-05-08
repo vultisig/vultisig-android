@@ -355,4 +355,5 @@
     <string name="deposit_option_merge">Merge</string>
     <string name="deposit_option_stake_tcy">Stake TCY</string>
     <string name="deposit_option_unstake_tcy">Unstake TCY</string>
+    <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
 </resources>
