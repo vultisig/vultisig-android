@@ -234,7 +234,7 @@ internal class BlockChainSpecificRepositoryImpl @Inject constructor(
                     priorityFee = gasFee.value,
                     fromAddressPubKey = fromAddressPubKeyResult?.first,
                     toAddressPubKey = toAddressPubKeyResult?.first,
-                    programId = fromAddressPubKeyResult?.second ?: false
+                    programId = fromAddressPubKeyResult?.second == true
                 )
             )
         }

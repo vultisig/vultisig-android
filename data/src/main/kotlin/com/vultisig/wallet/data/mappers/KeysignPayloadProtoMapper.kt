@@ -141,7 +141,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                         priorityFee = BigInteger(it.priorityFee),
                         fromAddressPubKey = it.fromTokenAssociatedAddress,
                         toAddressPubKey = it.toTokenAssociatedAddress,
-                        programId = it.programId ?: false,
+                        programId = it.programId == true,
                     )
                 }
 

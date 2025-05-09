@@ -119,5 +119,7 @@ internal class VaultBackupOnboardingViewModel @Inject constructor(
         }
     }
 
-    fun back() {}
+    fun back() {
+        /* no-op */
+    }
 }

@@ -206,7 +206,7 @@ class DKLSKeygen(
                     delay(100)
                 }
             } catch (e: Exception) {
-                Timber.e("Failed to get messages", e)
+                Timber.e(e, "Failed to get messages")
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
@@ -434,7 +434,7 @@ class DKLSKeygen(
         }
     }
 
-    suspend fun DKLSReshareWithRetry(attempt: Int) {
+    suspend fun reshareWithRetry(attempt: Int) {
         setKeygenDone(false)
         var task: Job? = null
         try {
@@ -515,7 +515,7 @@ class DKLSKeygen(
             task?.cancel()
             if (attempt < 3) {
                 Timber.d("keygen/reshare retry, attempt: $attempt")
-                DKLSReshareWithRetry(attempt + 1)
+                reshareWithRetry(attempt + 1)
             } else {
                 throw e
             }

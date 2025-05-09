@@ -14,13 +14,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
-import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Secondary
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Medium
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Mini
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize.Small
+import com.vultisig.wallet.ui.components.buttons.VsButtonState.Disabled
+import com.vultisig.wallet.ui.components.buttons.VsButtonState.Enabled
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Primary
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant.Secondary
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 

@@ -313,7 +313,7 @@ internal class TokenRepositoryImpl @Inject constructor(
                     ticker = it.symbol,
                     logo = it.logoURI ?: "",
                     decimal = it.decimals,
-                    isNativeToken = supportedCoin?.isNativeToken?: false,
+                    isNativeToken = supportedCoin?.isNativeToken == true,
                     priceProviderID = "",
                     address = "",
                     hexPublicKey = "",

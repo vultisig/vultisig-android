@@ -23,7 +23,7 @@ object TonHelper {
     private fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
         require(payload.coin.chain == Chain.Ton) { "Coin is not TON" }
 
-        val (sequenceNumber, expireAt, bounceable) = payload.blockChainSpecific as? BlockChainSpecific.Ton
+        val (sequenceNumber, expireAt, _) = payload.blockChainSpecific as? BlockChainSpecific.Ton
             ?: throw RuntimeException("Fail to get Ton chain specific")
 
         val toAddress = AnyAddress(payload.toAddress, CoinType.TON)
@@ -73,7 +73,7 @@ object TonHelper {
         signatures: Map<String, KeysignResponse>
     ): SignedTransactionResult {
         val pubKeyData = vaultHexPublicKey.hexToByteArray()
-        val publicKey = PublicKey(pubKeyData, PublicKeyType.ED25519)
+        PublicKey(pubKeyData, PublicKeyType.ED25519)
         val inputData = getPreSignedInputData(payload)
         val hashes = TransactionCompiler.preImageHashes(CoinType.TON, inputData)
         val preSigningOutput = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput
@@ -97,7 +97,7 @@ object TonHelper {
             publicKeys
         )
 
-        val output = wallet.core.jni.proto.TheOpenNetwork.SigningOutput
+        val output = TheOpenNetwork.SigningOutput
             .parseFrom(compileWithSignature)
 
         return SignedTransactionResult(

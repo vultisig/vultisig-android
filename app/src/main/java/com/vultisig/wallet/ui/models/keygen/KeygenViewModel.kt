@@ -232,7 +232,7 @@ internal class KeygenViewModel @Inject constructor(
 
         when (action) {
             TssAction.KEYGEN, TssAction.Migrate -> dklsKeygen.dklsKeygenWithRetry(0)
-            TssAction.ReShare -> dklsKeygen.DKLSReshareWithRetry(0)
+            TssAction.ReShare -> dklsKeygen.reshareWithRetry(0)
         }
 
         updateStep(KeygenState.KeygenEdDSA)

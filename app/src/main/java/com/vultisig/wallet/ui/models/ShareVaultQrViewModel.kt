@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,7 +37,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
@@ -119,7 +119,7 @@ internal class ShareVaultQrViewModel @Inject constructor(
             withContext(Dispatchers.IO) {
                 val qrBitmap = generateBitmap(
                     logo = logo, mainColor = mainColor, backgroundColor = backgroundColor
-                ) ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+                ) ?: createBitmap(1, 1)
 
                 val bitmapPainter = BitmapPainter(
                     qrBitmap.asImageBitmap(), filterQuality = FilterQuality.None

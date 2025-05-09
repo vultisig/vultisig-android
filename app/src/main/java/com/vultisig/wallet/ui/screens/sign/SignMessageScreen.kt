@@ -62,12 +62,12 @@ internal fun SignMessageScreen(
     val progress: Float
     val title : String
 
-    when {
-        route == SendDst.Send.route -> {
+    when (route) {
+        SendDst.Send.route -> {
             progress = 0.25f
             title = stringResource(R.string.sign_message_sign_screen_title)
         }
-        route == SendDst.VerifyTransaction.staticRoute -> {
+        SendDst.VerifyTransaction.staticRoute -> {
             progress = 0.5f
             title = stringResource(R.string.verify_transaction_screen_title)
         }

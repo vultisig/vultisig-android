@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.models.settings
 
+import com.vultisig.wallet.data.models.settings.AppCurrency.entries
+
 
 enum class AppCurrency(
     val ticker: String,

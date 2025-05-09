@@ -119,7 +119,7 @@ object RippleHelper {
             publicKeys
         )
 
-        val output = wallet.core.jni.proto.Ripple.SigningOutput
+        val output = Ripple.SigningOutput
             .parseFrom(compileWithSignature)
 
         if (output.errorMessage.isNotEmpty()) {

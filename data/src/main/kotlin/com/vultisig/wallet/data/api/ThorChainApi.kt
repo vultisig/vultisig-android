@@ -1,9 +1,8 @@
 package com.vultisig.wallet.data.api
 
-import timber.log.Timber
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
@@ -24,14 +23,14 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-
+import timber.log.Timber
 import java.math.BigInteger
 import javax.inject.Inject
 

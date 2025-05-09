@@ -31,7 +31,7 @@ class MediatorService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        nsdManager = getSystemService(Context.NSD_SERVICE) as NsdManager
+        nsdManager = getSystemService(NSD_SERVICE) as NsdManager
         server = Server(nsdManager)
         Timber.d("onCreate")
     }

@@ -146,7 +146,7 @@ internal class KeysignViewModel(
                         encryption = encryption,
                     )
 
-                    dkls.DKLSKeysignWithRetry(0)
+                    dkls.keysignWithRetry(0)
 
                     this.signatures += dkls.signatures
                     if (signatures.isEmpty()) {

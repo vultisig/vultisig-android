@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.createBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -310,7 +311,7 @@ internal fun ShareVaultQrScreenPreview() {
         name = "Main Vault",
         shareVaultQrString = "placeholder",
         qrBitmapPainter = BitmapPainter(
-            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
+            createBitmap(1, 1).asImageBitmap()
         ),
         saveShareQrBitmap = {},
         onShareButtonClicked = {},

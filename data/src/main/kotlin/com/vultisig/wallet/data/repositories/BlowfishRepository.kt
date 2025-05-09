@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.api.BlowfishApi
 import com.vultisig.wallet.data.api.blowfishChainName
 import com.vultisig.wallet.data.api.blowfishNetwork
@@ -8,6 +7,7 @@ import com.vultisig.wallet.data.api.models.BlowfishMetadata
 import com.vultisig.wallet.data.api.models.BlowfishRequest
 import com.vultisig.wallet.data.api.models.BlowfishResponse
 import com.vultisig.wallet.data.api.models.BlowfishTxObject
+import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction

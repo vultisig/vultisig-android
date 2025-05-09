@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.createBitmap
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.ui.components.NetworkPrompts
@@ -308,7 +309,7 @@ private fun PeerDiscoveryPreview() {
         selectionState = listOf("1", "2"),
         participants = listOf("1", "2", "3"),
         bitmapPainter = BitmapPainter(
-            Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap(),
+            createBitmap(1, 1).asImageBitmap(),
             filterQuality = FilterQuality.None
         ),
         networkPromptOption = NetworkOption.Local,

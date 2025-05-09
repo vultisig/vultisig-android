@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.drawscope.draw
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.core.graphics.createBitmap
 import java.io.FileDescriptor
 import java.io.IOException
 
@@ -29,7 +30,11 @@ internal fun uriToBitmap(contentResolver: ContentResolver, selectedFileUri: Uri)
 
 internal fun Bitmap.addWhiteBorder(borderSize: Float): Bitmap {
     val bmpWithBorder =
-        Bitmap.createBitmap(width + (borderSize * 2).toInt(), height + (borderSize * 2).toInt(), config?: Bitmap.Config.ARGB_8888)
+        createBitmap(
+            width + (borderSize * 2).toInt(),
+            height + (borderSize * 2).toInt(),
+            config ?: Bitmap.Config.ARGB_8888
+        )
     val canvas = android.graphics.Canvas(bmpWithBorder)
     canvas.drawColor(Color.WHITE)
     canvas.drawBitmap(this, borderSize, borderSize, null)
@@ -41,7 +46,7 @@ internal fun Modifier.extractBitmap(processBitmap: (bitmap: Bitmap) -> Unit): Mo
         val width = this.size.width.toInt()
         val height = this.size.height.toInt()
         onDrawWithContent {
-            val tempBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val tempBitmap = createBitmap(width, height)
             val pictureCanvas = Canvas(android.graphics.Canvas(tempBitmap))
             draw(this, this.layoutDirection, pictureCanvas, this.size) {
                 this@onDrawWithContent.drawContent()
