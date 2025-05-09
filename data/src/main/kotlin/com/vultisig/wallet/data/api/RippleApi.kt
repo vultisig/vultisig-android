@@ -49,8 +49,14 @@ internal class RippleApiImp @Inject constructor(
 
             val rpcResp = response.body<RippleBroadcastResponseResponseJson>()
 
+            val resultMessage = rpcResp.result.engineResultMessage
+
             if (rpcResp.result.engineResult != "tesSUCCESS") {
-                if (rpcResp.result.engineResultMessage.equals(
+                if (
+                    resultMessage?.contains(
+                        "The transaction was applied", ignoreCase = true
+                    ) == true ||
+                    resultMessage.equals(
                         "This sequence number has already passed.",
                         ignoreCase = true
                     )
@@ -59,16 +65,17 @@ internal class RippleApiImp @Inject constructor(
                         return rpcResp.result.txJson.hash
                     }
                 }
-                return rpcResp.result.engineResultMessage ?: ""
+                return resultMessage ?: ""
             }
+
             if (rpcResp.result.txJson?.hash?.isNotEmpty() == true) {
-                return rpcResp.result.engineResultMessage ?: ""
+                return resultMessage ?: ""
             }
             return ""
         } catch (e: Exception) {
             Timber.e(
+                e.message,
                 "Error in Broadcast XRP Transaction",
-                e.message
             )
             error(e.message ?: "Error in Broadcast XRP Transaction")
         }
