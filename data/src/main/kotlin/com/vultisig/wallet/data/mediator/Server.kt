@@ -4,7 +4,6 @@ import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import com.vultisig.wallet.data.common.sha256
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import spark.Request
 import spark.Response

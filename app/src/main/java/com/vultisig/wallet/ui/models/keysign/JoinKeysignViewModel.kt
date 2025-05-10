@@ -788,7 +788,7 @@ internal class JoinKeysignViewModel @Inject constructor(
                 return true
             }
         } catch (e: Exception) {
-            Timber.e("Failed to check keysign start", e)
+            Timber.e(e, "Failed to check keysign start")
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }

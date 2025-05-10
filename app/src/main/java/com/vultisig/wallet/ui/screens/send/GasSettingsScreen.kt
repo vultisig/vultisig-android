@@ -35,9 +35,9 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.library.form.FormEntry
 import com.vultisig.wallet.ui.components.library.form.FormTextFieldCard
 import com.vultisig.wallet.ui.components.library.form.FormTitleContainer
+import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.GasSettingsUiModel
 import com.vultisig.wallet.ui.models.send.GasSettingsViewModel
-import com.vultisig.wallet.ui.models.send.GasSettings
 import com.vultisig.wallet.ui.models.send.PriorityFee
 import com.vultisig.wallet.ui.theme.Theme
 

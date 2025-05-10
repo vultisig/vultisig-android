@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.api.models
 
-import com.vultisig.wallet.data.utils.BigIntegerSerializer
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

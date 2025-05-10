@@ -171,7 +171,7 @@ class SchnorrKeygen(
                     delay(1000)
                 }
             } catch (e: Exception) {
-                Timber.e("Failed to get messages", e)
+                Timber.e(e, "Failed to get messages")
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0

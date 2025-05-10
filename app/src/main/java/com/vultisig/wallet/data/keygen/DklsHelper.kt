@@ -1,10 +1,10 @@
 package com.vultisig.wallet.data.keygen
 
-import kotlin.math.ceil
 import org.bouncycastle.asn1.ASN1EncodableVector
-import org.bouncycastle.asn1.DERSequence
 import org.bouncycastle.asn1.ASN1Integer
+import org.bouncycastle.asn1.DERSequence
 import java.math.BigInteger
+import kotlin.math.ceil
 
 object DklsHelper {
     fun getThreshold(input: Int): Long {

@@ -16,7 +16,7 @@ internal fun ReviewManager.showReviewPopUp(context: Context) {
             launchReviewFlow(context as Activity, reviewInfo)
         } else {
             // There was some problem, log or handle the error code.
-            @ReviewErrorCode val reviewErrorCode = (task.getException() as? ReviewException)?.errorCode
+            @ReviewErrorCode val reviewErrorCode = (task.exception as? ReviewException)?.errorCode
             Timber.e("ReviewError: $reviewErrorCode")
         }
     }

@@ -121,7 +121,7 @@ class SchnorrKeysign(
     }
 
     @Throws(Exception::class)
-    fun DKLSDecodeMessage(setupMsg: ByteArray): String {
+    private fun decodeMessage(setupMsg: ByteArray): String {
         val buf = tss_buffer()
         try {
             val setupMsgSlice = setupMsg.toGoSlice()
@@ -209,7 +209,7 @@ class SchnorrKeysign(
                     delay(100)
                 }
             } catch (e: Exception) {
-                Timber.e("Failed to get messages", e)
+                Timber.e(e, "Failed to get messages")
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
@@ -296,7 +296,7 @@ class SchnorrKeysign(
                     }
             }
 
-            val signingMsg = DKLSDecodeMessage(keysignSetupMsg)
+            val signingMsg = decodeMessage(keysignSetupMsg)
             if (signingMsg != messageToSign) {
                 throw RuntimeException("message doesn't match ($messageToSign) vs ($signingMsg)")
             }

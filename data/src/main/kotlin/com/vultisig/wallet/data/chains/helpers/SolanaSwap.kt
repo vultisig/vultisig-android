@@ -5,14 +5,13 @@ import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SignedTransactionResult
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.wallet.Swaps
 import tss.KeysignResponse
 import wallet.core.jni.Base64
+import wallet.core.jni.CoinType.SOLANA
 import wallet.core.jni.TransactionDecoder
 import wallet.core.jni.proto.Solana
-import wallet.core.jni.CoinType.SOLANA
 
 class SolanaSwap(
     private val vaultHexPublicKey: String,
@@ -45,9 +44,6 @@ class SolanaSwap(
         quote: OneInchSwapQuoteJson,
         keysignPayload: KeysignPayload,
     ): ByteArray {
-
-        val solanaSpecific = keysignPayload.blockChainSpecific as? BlockChainSpecific.Solana
-            ?: error("Invalid blockChainSpecific")
         if (keysignPayload.coin.chain != Chain.Solana)
             error("Chain is not Solana")
 

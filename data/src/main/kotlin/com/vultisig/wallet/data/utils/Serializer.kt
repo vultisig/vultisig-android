@@ -1,14 +1,11 @@
 package com.vultisig.wallet.data.utils
 
-import com.vultisig.wallet.data.api.models.JupiterSwapQuoteDeserialized
-import com.vultisig.wallet.data.api.models.JupiterSwapQuoteError
 import com.vultisig.wallet.data.api.models.KeysignResponseSerializable
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteError
 import com.vultisig.wallet.data.api.models.LiFiSwapQuoteJson
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.OneInchSwapQuoteJson
-import com.vultisig.wallet.data.api.models.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.SplTokenJson
 import com.vultisig.wallet.data.api.models.SplTokenResponseJson
 import com.vultisig.wallet.data.api.models.THORChainSwapQuote

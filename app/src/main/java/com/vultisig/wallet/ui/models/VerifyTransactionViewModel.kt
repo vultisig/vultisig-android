@@ -82,7 +82,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
     init {
         loadFastSign()
         loadTransaction()
-        transactionScan()
         loadPassword()
     }
 
@@ -176,7 +175,6 @@ internal class VerifyTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun transactionScan() {}
 }
 
 

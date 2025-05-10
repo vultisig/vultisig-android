@@ -133,7 +133,7 @@ class DKLSKeysign(
     }
 
     @Throws(Exception::class)
-    private fun DKLSDecodeMessage(setupMsg: ByteArray): String {
+    private fun decodeMessage(setupMsg: ByteArray): String {
         val buf = tss_buffer()
         try {
             val setupMsgSlice = setupMsg.toGoSlice()
@@ -225,7 +225,7 @@ class DKLSKeysign(
                     delay(100)
                 }
             } catch (e: Exception) {
-                Timber.e("Failed to get messages", e)
+                Timber.e(e, "Failed to get messages")
             }
 
             val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
@@ -274,7 +274,7 @@ class DKLSKeysign(
         sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyID, hash, messageID)
     }
 
-    private suspend fun DKLSKeysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
+    private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
         setKeysignDone(false)
         val msgHash = messageToSign.md5()
         val localMessenger = TssMessenger(
@@ -312,7 +312,7 @@ class DKLSKeysign(
                     }
             }
 
-            val signingMsg = DKLSDecodeMessage(keysignSetupMsg)
+            val signingMsg = decodeMessage(keysignSetupMsg)
             if (signingMsg != messageToSign) {
                 error("message doesn't match ($messageToSign) vs ($signingMsg)")
             }
@@ -359,7 +359,7 @@ class DKLSKeysign(
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             if (attempt < 3) {
-                DKLSKeysignOneMessageWithRetry(attempt + 1, messageToSign)
+                keysignOneMessageWithRetry(attempt + 1, messageToSign)
             }
         }
     }
@@ -378,9 +378,9 @@ class DKLSKeysign(
         }
     }
 
-    suspend fun DKLSKeysignWithRetry(attempt: Int) {
+    suspend fun keysignWithRetry(attempt: Int) {
         for (msg in messageToSign) {
-            DKLSKeysignOneMessageWithRetry(0, msg)
+            keysignOneMessageWithRetry(0, msg)
         }
     }
 
