@@ -50,7 +50,6 @@ internal data class ChainTokensUiModel(
     val canSwap: Boolean = true,
     val canSelectTokens: Boolean = false,
     val isBalanceVisible: Boolean = true,
-    val isBuyWeweVisible: Boolean = false,
 )
 
 @Immutable
@@ -121,7 +120,6 @@ internal class ChainTokensViewModel @Inject constructor(
         }
     }
 
-
     fun deposit() {
         viewModelScope.launch {
             navigator.navigate(
@@ -163,21 +161,6 @@ internal class ChainTokensViewModel @Inject constructor(
                     vaultId = vaultId,
                     chainId = chainRaw,
                     tokenId = model.id,
-                )
-            )
-        }
-    }
-
-    fun buyWewe() {
-        viewModelScope.launch {
-            if (!tokens.value.contains(Tokens.wewe)) {
-                enableTokenUseCase(vaultId, Tokens.wewe)
-            }
-            navigator.route(
-                Route.Swap(
-                    vaultId = vaultId,
-                    chainId = chainRaw,
-                    dstTokenId = Tokens.wewe.id,
                 )
             )
         }
@@ -242,8 +225,7 @@ internal class ChainTokensViewModel @Inject constructor(
                         totalBalance = totalBalance,
                         canDeposit = chain.isDepositSupported,
                         canSwap = chain.IsSwapSupported,
-                        canSelectTokens = chain.canSelectTokens,
-                        isBuyWeweVisible = chain == Chain.Base
+                        canSelectTokens = chain.canSelectTokens
                     )
                 }
             }.onCompletion {

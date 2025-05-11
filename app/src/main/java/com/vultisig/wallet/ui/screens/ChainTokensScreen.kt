@@ -92,7 +92,6 @@ internal fun ChainTokensScreen(
         onDeposit = viewModel::deposit,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
-        onBuyWeweClick = viewModel::buyWewe,
         onQrBtnClick = viewModel::navigateToQrAddressScreen,
         onShowReviewPopUp = {
             reviewManager.showReviewPopUp(context)
@@ -110,7 +109,7 @@ private fun ChainTokensScreen(
     onDeposit: () -> Unit = {},
     onSelectTokens: () -> Unit = {},
     onTokenClick: (ChainTokenUiModel) -> Unit = {},
-    onBuyWeweClick: () -> Unit = {},
+
     onQrBtnClick: () -> Unit = {},
     onShowReviewPopUp: () -> Unit = {},
 ) {
@@ -138,43 +137,7 @@ private fun ChainTokensScreen(
                     startIcon = R.drawable.ic_caret_left,
                 )
             },
-            bottomBar = {
-                if (uiModel.isBuyWeweVisible) {
-                    MultiColorButton(
-                        minHeight = 44.dp,
-                        backgroundColor = appColor.turquoise800,
-                        textColor = appColor.oxfordBlue800,
-                        iconColor = appColor.turquoise800,
-                        textStyle = Theme.montserrat.subtitle1,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                                bottom = 16.dp,
-                            ),
-                        content = {
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.ic_wewe),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(40.dp),
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = stringResource(id = R.string.chain_account_buy_wewe),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = Theme.montserrat.subtitle1
-                                )
-                            }
-                        },
-                        onClick = onBuyWeweClick
-                    )
-                }
-            }
+            bottomBar = {}
         ) {
             Box(
                 modifier = Modifier
