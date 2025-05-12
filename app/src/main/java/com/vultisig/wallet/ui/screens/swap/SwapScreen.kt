@@ -31,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -40,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -47,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -63,6 +66,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
+import com.vultisig.wallet.data.utils.timerFlow
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
@@ -82,7 +87,11 @@ import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import java.math.BigInteger
+import java.util.Locale
+import kotlin.time.Duration
 
 @Composable
 internal fun SwapScreen(
@@ -134,7 +143,19 @@ internal fun SwapScreen(
         topBar = {
             VsTopAppBar(
                 title = "Swap",
-                onBackClick = onBackClick,
+                iconLeft = R.drawable.ic_caret_left,
+                onIconLeftClick = onBackClick,
+                actions = {
+                    if (state.expiredAt != null) {
+                        QuoteTimer(
+                            expiredAt = state.expiredAt,
+                            modifier = Modifier
+                                .padding(
+                                    horizontal = 16.dp,
+                                )
+                        )
+                    }
+                }
             )
         },
         content = { contentPadding ->
@@ -569,6 +590,62 @@ private fun TokenInput(
     }
 }
 
+@Composable
+private fun QuoteTimer(
+    expiredAt: Instant,
+    modifier: Modifier = Modifier,
+) {
+    var timeLeft: String by remember { mutableStateOf("") }
+    var progress: Float by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(expiredAt) {
+        timerFlow()
+            .collect {
+                val now = Clock.System.now()
+                val left = expiredAt - now
+                timeLeft = formatDurationAsMinutesSeconds(left)
+                progress = (left / expiredAfter).toFloat()
+            }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier
+            .background(
+                color = Theme.colors.backgrounds.secondary,
+                shape = RoundedCornerShape(99.dp)
+            )
+            .padding(
+                vertical = 6.dp,
+                horizontal = 12.dp,
+            )
+    ) {
+        Text(
+            text = timeLeft,
+            style = Theme.brockmann.supplementary.caption,
+            color = Theme.colors.text.light,
+        )
+
+        CircularProgressIndicator(
+            progress = { progress },
+            trackColor = Theme.colors.borders.normal,
+            color = Theme.colors.primary.accent4,
+            strokeCap = StrokeCap.Square,
+            strokeWidth = 2.dp,
+            gapSize = 0.dp,
+            modifier = Modifier
+                .size(16.dp)
+        )
+    }
+}
+
+private fun formatDurationAsMinutesSeconds(duration: Duration): String {
+    val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+}
 
 @Preview
 @Composable
