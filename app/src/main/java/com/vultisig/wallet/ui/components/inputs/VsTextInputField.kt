@@ -76,7 +76,7 @@ internal fun VsTextInputField(
     onKeyEvent: ((KeyEvent) -> Boolean)? = null,
     type: VsTextInputFieldType = VsTextInputFieldType.Text,
     innerState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
-    focusRequester: FocusRequester? = null,
+    focusRequester: FocusRequester? = remember { FocusRequester() },
     hint: String? = null,
     footNote: String? = null,
     label: String? = null,
@@ -95,8 +95,10 @@ internal fun VsTextInputField(
     }
 
     Column(
-        modifier = modifier.animateContentSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+            .animateContentSize()
+            .clickable(onClick = { focusRequester?.requestFocus() }),
     ) {
         if (label != null || labelIcon != null) {
             Row(
@@ -164,6 +166,7 @@ internal fun VsTextInputField(
                             TextObfuscationMode.Visible
                         else TextObfuscationMode.RevealLastTyped,
                         modifier = Modifier
+                            .weight(1f)
                             .then(
                                 if (focusRequester != null)
                                     Modifier.focusRequester(focusRequester)
@@ -183,6 +186,8 @@ internal fun VsTextInputField(
                             TextInputFieldHint(
                                 textFieldState = textFieldState,
                                 hint = hint,
+                                modifier = Modifier
+                                    .weight(1f),
                             )
                             textField()
                         }
@@ -310,12 +315,14 @@ internal fun VsTextInputField(
 private fun TextInputFieldHint(
     textFieldState: TextFieldState,
     hint: String?,
+    modifier: Modifier = Modifier,
 ) {
     if (textFieldState.text.isEmpty() && hint != null) {
         Text(
             text = hint,
             color = Theme.colors.text.extraLight,
             style = Theme.brockmann.body.m.medium,
+            modifier = modifier,
         )
     }
 }

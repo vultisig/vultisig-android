@@ -37,6 +37,7 @@ internal open class VaultSettingsViewModel @Inject constructor(
             val hasFastSign = isVaultHasFastSignById(vaultId)
             uiModel.update {
                 it.copy(
+                    hasReshare = !hasFastSign,
                     hasMigration = hasMigration,
                     hasFastSign = hasFastSign
                 )

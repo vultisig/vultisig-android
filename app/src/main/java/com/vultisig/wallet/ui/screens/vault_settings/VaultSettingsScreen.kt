@@ -110,7 +110,7 @@ private fun VaultSettingsScreen(
                 icon = R.drawable.pencil,
                 onClick = onRenameClick,
             )
-            if(!uiModel.hasFastSign) {
+            if (uiModel.hasReshare) {
                 SettingsItem(
                     title = stringResource(R.string.vault_settings_reshare_title),
                     subtitle = stringResource(R.string.vault_settings_reshare_subtitle),

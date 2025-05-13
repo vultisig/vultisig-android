@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -110,6 +112,108 @@ internal fun FastVaultPasswordScreen(
                 onBackClick = onBackClick
             )
         },
+        content = {
+            Column(
+                modifier = Modifier
+                    .padding(it)
+                    .padding(
+                        top = 12.dp,
+                        start = 24.dp,
+                        end = 24.dp,
+                    )
+            ) {
+                Text(
+                    text = title,
+                    style = Theme.brockmann.headings.largeTitle,
+                    color = Theme.colors.text.primary,
+                )
+                UiSpacer(16.dp)
+
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    WarningCard(
+                        onShowMoreInfo = onShowMoreInfo,
+                        modifier = Modifier
+                            .onGloballyPositioned { position ->
+                                hintBoxOffset = position.boundsInRoot().bottom.toInt()
+                            }
+                    )
+
+                    UiSpacer(8.dp)
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(
+                            10.dp,
+                            Alignment.CenterVertically
+                        )
+                    ) {
+                        val focusRequester = remember {
+                            FocusRequester()
+                        }
+
+                        LaunchedEffect(Unit) {
+                            focusRequester.requestFocus()
+                        }
+
+                        VsTextInputField(
+                            textFieldState = passwordTextFieldState,
+                            hint = stringResource(R.string.fast_vault_password_screen_password_hint),
+                            trailingIcon = R.drawable.ic_question_mark,
+                            type = VsTextInputFieldType.Password(
+                                isVisible = state.isPasswordVisible,
+                                onVisibilityClick = onTogglePasswordVisibilityClick
+                            ),
+                            focusRequester = focusRequester,
+                            imeAction = ImeAction.Next,
+                            modifier = Modifier
+                                .testTag("FastVaultPasswordScreen.passwordField")
+                        )
+
+                        VsTextInputField(
+                            textFieldState = confirmPasswordTextFieldState,
+                            trailingIcon = R.drawable.ic_question_mark,
+                            hint = stringResource(R.string.fast_vault_password_screen_reenter_password_hint),
+                            type = VsTextInputFieldType.Password(
+                                isVisible = state.isConfirmPasswordVisible,
+                                onVisibilityClick = onToggleConfirmPasswordVisibilityClick
+                            ),
+                            innerState = state.innerState,
+                            footNote = (state.errorMessage ?: UiText.Empty).asString(),
+                            imeAction = ImeAction.Go,
+                            onKeyboardAction = {
+                                onNextClick()
+                            },
+                            modifier = Modifier
+                                .testTag("FastVaultPasswordScreen.confirmPasswordField")
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = state.isMoreInfoVisible,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                PasswordMoreInfo(
+                    text = stringResource(R.string.fast_vault_password_screen_hint),
+                    title = stringResource(R.string.fast_vault_password_screen_hint_title),
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .offset {
+                            IntOffset(
+                                x = 0,
+                                y = hintBoxOffset - statusBarHeight
+                            )
+                        }
+                        .clickable(onClick = onHideMoreInfo)
+                )
+            }
+        },
         bottomBar = {
             VsButton(
                 label = stringResource(R.string.fast_vault_password_screen_next),
@@ -122,101 +226,7 @@ internal fun FastVaultPasswordScreen(
                 onClick = onNextClick,
             )
         }
-    ) {
-        Column(
-            Modifier
-                .padding(it)
-                .padding(
-                    top = 12.dp,
-                    start = 24.dp,
-                    end = 24.dp,
-                )
-        ) {
-            Text(
-                text = title,
-                style = Theme.brockmann.headings.largeTitle,
-                color = Theme.colors.text.primary,
-            )
-            UiSpacer(16.dp)
-
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                WarningCard(
-                    onShowMoreInfo = onShowMoreInfo,
-                    modifier = Modifier
-                        .onGloballyPositioned { position ->
-                            hintBoxOffset = position.boundsInRoot().bottom.toInt()
-                        }
-                )
-                UiSpacer(24.dp)
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically)
-                ) {
-                    val focusRequester = remember {
-                        FocusRequester()
-                    }
-
-                    LaunchedEffect(Unit) {
-                        focusRequester.requestFocus()
-                    }
-
-                    VsTextInputField(
-                        textFieldState = passwordTextFieldState,
-                        hint = stringResource(R.string.fast_vault_password_screen_password_hint),
-                        trailingIcon = R.drawable.ic_question_mark,
-                        type = VsTextInputFieldType.Password(
-                            isVisible = state.isPasswordVisible,
-                            onVisibilityClick = onTogglePasswordVisibilityClick
-                        ),
-                        focusRequester = focusRequester,
-                        imeAction = ImeAction.Next,
-                        modifier = Modifier
-                            .testTag("FastVaultPasswordScreen.passwordField")
-                    )
-
-                    VsTextInputField(
-                        textFieldState = confirmPasswordTextFieldState,
-                        trailingIcon = R.drawable.ic_question_mark,
-                        hint = stringResource(R.string.fast_vault_password_screen_reenter_password_hint),
-                        type = VsTextInputFieldType.Password(
-                            isVisible = state.isConfirmPasswordVisible,
-                            onVisibilityClick = onToggleConfirmPasswordVisibilityClick
-                        ),
-                        innerState = state.innerState,
-                        footNote = (state.errorMessage ?: UiText.Empty).asString(),
-                        imeAction = ImeAction.Go,
-                        onKeyboardAction = {
-                            onNextClick()
-                        },
-                        modifier = Modifier
-                            .testTag("FastVaultPasswordScreen.confirmPasswordField")
-                    )
-                }
-            }
-        }
-
-        AnimatedVisibility(
-            visible = state.isMoreInfoVisible,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            PasswordMoreInfo(
-                text = stringResource(R.string.fast_vault_password_screen_hint),
-                title = stringResource(R.string.fast_vault_password_screen_hint_title),
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .offset {
-                        IntOffset(
-                            x = 0,
-                            y = hintBoxOffset - statusBarHeight
-                        )
-                    }
-                    .clickable(onClick = onHideMoreInfo)
-            )
-        }
-    }
+    )
 }
 
 @Composable
