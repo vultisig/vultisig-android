@@ -247,12 +247,6 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindRefreshQuoteUiRepository(
-        impl: RefreshQuoteUiRepositoryImpl
-    ): RefreshQuoteUiRepository
-
-    @Binds
-    @Singleton
     fun bindQrHelperModalRepository(
         impl: QrHelperModalRepositoryImpl
     ): QrHelperModalRepository

@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.IsSwapSupported
 import com.vultisig.wallet.data.models.OneInchSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
@@ -33,7 +34,6 @@ import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
-import com.vultisig.wallet.data.repositories.RefreshQuoteUiRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
@@ -55,7 +55,9 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -68,6 +70,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -95,7 +100,9 @@ internal data class SwapFormUiModel(
     val formError: UiText? = null,
     val isSwapDisabled: Boolean = false,
     val isLoading: Boolean = false,
+    val expiredAt: Instant? = null,
 )
+
 
 @HiltViewModel
 internal class SwapFormViewModel @Inject constructor(
@@ -117,7 +124,6 @@ internal class SwapFormViewModel @Inject constructor(
     private val tokenRepository: TokenRepository,
     private val requestResultRepository: RequestResultRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
-    private val refreshQuoteUiRepository: RefreshQuoteUiRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -147,7 +153,11 @@ internal class SwapFormViewModel @Inject constructor(
 
     private val addresses = MutableStateFlow<List<Address>>(emptyList())
 
+    private val refreshQuoteState = MutableStateFlow(0)
+
     private var selectTokensJob: Job? = null
+
+    private var refreshQuoteJob: Job? = null
 
     private var isLoading: Boolean
         get() = uiState.value.isLoading
@@ -710,9 +720,7 @@ internal class SwapFormViewModel @Inject constructor(
                 .combine(srcAmountState.textAsFlow()) { address, amount ->
                     address to srcAmount
                 }
-                .combine(refreshQuoteUiRepository.refreshValue) { (address, amount), _ ->
-                    address to amount
-                }
+                .combine(refreshQuoteState) { it, _ -> it }
                 .collect { (address, amount) ->
                     isLoading = true
                     val (src, dst) = address
@@ -828,7 +836,8 @@ internal class SwapFormViewModel @Inject constructor(
                                         fee = fiatValueToString.map(fiatFees),
                                         formError = null,
                                         isSwapDisabled = false,
-                                        isLoading = false
+                                        isLoading = false,
+                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
                                     )
                                 }
                             }
@@ -863,7 +872,8 @@ internal class SwapFormViewModel @Inject constructor(
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
-                                    data = quote
+                                    data = quote,
+                                    expiredAt = Clock.System.now() + expiredAfter
                                 )
 
                                 val fiatFees =
@@ -890,6 +900,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         formError = null,
                                         isSwapDisabled = false,
                                         isLoading = false,
+                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
                                     )
                                 }
                             }
@@ -922,7 +933,8 @@ internal class SwapFormViewModel @Inject constructor(
                                 this@SwapFormViewModel.quote = SwapQuote.OneInch(
                                     expectedDstValue = expectedDstValue,
                                     fees = tokenFees,
-                                    data = quote
+                                    data = quote,
+                                    expiredAt = Clock.System.now() + expiredAfter
                                 )
 
                                 val fiatFees =
@@ -952,6 +964,7 @@ internal class SwapFormViewModel @Inject constructor(
                                         formError = null,
                                         isSwapDisabled = false,
                                         isLoading = false,
+                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
                                     )
                                 }
                             }
@@ -991,7 +1004,8 @@ internal class SwapFormViewModel @Inject constructor(
                                 fee = "0",
                                 isSwapDisabled = true,
                                 formError = formError,
-                                isLoading = false
+                                isLoading = false,
+                                expiredAt = null,
                             )
                         }
                         Timber.e("swapError $e")
@@ -1000,7 +1014,21 @@ internal class SwapFormViewModel @Inject constructor(
                         isLoading = false
                         Timber.e(e)
                     }
+
+                    this@SwapFormViewModel.quote?.expiredAt?.let {
+                        launchRefreshQuoteTimer(it)
+                    }
                 }
+        }
+    }
+
+    private fun launchRefreshQuoteTimer(expiredAt: Instant) {
+        refreshQuoteJob?.cancel()
+        refreshQuoteJob = viewModelScope.launch {
+            withContext (Dispatchers.IO) {
+                delay(expiredAt - Clock.System.now())
+                refreshQuoteState.value++
+            }
         }
     }
 

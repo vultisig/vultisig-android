@@ -15,9 +15,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.swapAssetName
+import kotlinx.datetime.Clock
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -141,6 +143,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                     fees = tokenFees,
                     data = mayaQuote,
                     recommendedMinTokenValue = recommendedMinTokenValue,
+                    expiredAt = Clock.System.now() + expiredAfter
                 )
             }
         }
@@ -188,6 +191,7 @@ internal class SwapQuoteRepositoryImpl @Inject constructor(
                     recommendedMinTokenValue = recommendedMinTokenValue,
                     fees = tokenFees,
                     data = thorQuote.data,
+                    expiredAt = Clock.System.now() + expiredAfter,
                 )
             }
         }
