@@ -66,12 +66,14 @@ internal class RippleApiImp @Inject constructor(
                     }
                 }
                 return resultMessage ?: ""
+            } else {
+                val hash = rpcResp.result.txJson?.hash
+                return if (hash?.isNotEmpty() == true) {
+                    hash
+                } else {
+                    resultMessage ?: ""
+                }
             }
-
-            if (rpcResp.result.txJson?.hash?.isNotEmpty() == true) {
-                return resultMessage ?: ""
-            }
-            return ""
         } catch (e: Exception) {
             Timber.e(
                 e.message,
