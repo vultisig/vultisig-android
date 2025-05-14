@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResp
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
+import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
@@ -24,6 +25,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -67,6 +69,8 @@ interface ThorChainApi {
     suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress>
 
     suspend fun getUnstakableTcyAmount(address: String): String?
+
+    suspend fun getPools(): List<ThorChainPoolJson>
 }
 
 internal class ThorChainApiImpl @Inject constructor(
@@ -230,6 +234,18 @@ internal class ThorChainApiImpl @Inject constructor(
         }
         return response.body()
     }
+
+    override suspend fun getPools(): List<ThorChainPoolJson> =
+        httpClient
+            .get("$NNRLM_URL/pools") {
+                header(xClientID, xClientIDValue)
+            }.throwIfUnsuccessful()
+            .body()
+
+
+    companion object {
+        private const val NNRLM_URL = "https://thornode.ninerealms.com/thorchain"
+    }
 }
 
 @Serializable
@@ -273,4 +289,15 @@ data class THORChainInboundAddress(
     val gasRate: String,
     @SerialName("gas_rate_units")
     val gasRateUnits: String,
+)
+
+@Serializable
+data class ThorChainPoolJson(
+    // formatted as THOR.TCY
+    @SerialName("asset")
+    val asset: String,
+    // asset price in usd with 8 decimals
+    @Contextual
+    @SerialName("asset_tor_price")
+    val assetTorPrice: BigInteger,
 )
