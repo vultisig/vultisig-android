@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -270,10 +271,15 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             if (thorTokens.isEmpty()) return@coroutineScope // no tokens, no api request
 
             val tickerUsd = AppCurrency.USD.ticker.lowercase()
-            val poolAssetToPriceMap = thorApi.getPools()
-                .associate {
-                    it.asset.lowercase() to it.assetTorPrice
-                }
+            val poolAssetToPriceMap = try {
+                thorApi.getPools()
+                    .associate {
+                        it.asset.lowercase() to it.assetTorPrice
+                    }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to fetch prices from pools")
+                return@coroutineScope
+            }
 
             val tokenIdToPrices = thorTokens.asSequence()
                 .mapNotNull {
