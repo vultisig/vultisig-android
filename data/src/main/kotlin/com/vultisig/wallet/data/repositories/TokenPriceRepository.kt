@@ -3,10 +3,12 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.CurrencyToPrice
 import com.vultisig.wallet.data.api.LiQuestApi
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.db.dao.TokenPriceDao
 import com.vultisig.wallet.data.db.models.TokenPriceEntity
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -56,6 +58,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val coinGeckoApi: CoinGeckoApi,
     private val liQuestApi: LiQuestApi,
+    private val thorApi: ThorChainApi,
     private val tokenPriceDao: TokenPriceDao,
 ) : TokenPriceRepository {
 
@@ -137,6 +140,8 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
 
                 savePrices(pricesWithContractAddress, currency)
             }
+
+        fetchThorPrices(tokens)
     }
 
     override suspend fun getPriceByContactAddress(
@@ -166,7 +171,7 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     }
 
     private suspend fun savePrices(
-        tokenIdToPrices: Map<String, CurrencyToPrice>,
+        tokenIdToPrices: Map<TokenId, CurrencyToPrice>,
         currency: String,
     ) {
         val tokenIdToPricesFiltered = tokenIdToPrices.filter {
@@ -258,6 +263,35 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
     private suspend fun fetchTetherPrice() =
         getPriceByPriceProviderId(TETHER_PRICE_PROVIDER_ID)
 
+    private suspend fun fetchThorPrices(tokenList: List<Coin>) {
+        coroutineScope {
+            // if we have any thorchain tokens, then fetch their pool prices
+            val thorTokens = tokenList.filter { it.chain == Chain.ThorChain && !it.isNativeToken }
+            if (thorTokens.isEmpty()) return@coroutineScope // no tokens, no api request
+
+            val tickerUsd = AppCurrency.USD.ticker.lowercase()
+            val poolAssetToPriceMap = thorApi.getPools()
+                .associate {
+                    it.asset.lowercase() to it.assetTorPrice
+                }
+
+            val tokenIdToPrices = thorTokens.asSequence()
+                .mapNotNull {
+                    val tokenAsset = "thor.${it.ticker}".lowercase()
+                    val priceUsd = poolAssetToPriceMap[tokenAsset]
+                        ?.toBigDecimal(scale = 8)
+                        ?: return@mapNotNull null
+
+                    it.id to mapOf(tickerUsd to priceUsd)
+                }
+                .toMap()
+
+            savePrices(
+                tokenIdToPrices,
+                tickerUsd
+            )
+        }
+    }
 
 
     companion object {
