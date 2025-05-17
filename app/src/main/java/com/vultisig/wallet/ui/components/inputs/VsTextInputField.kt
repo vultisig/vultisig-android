@@ -166,7 +166,6 @@ internal fun VsTextInputField(
                             TextObfuscationMode.Visible
                         else TextObfuscationMode.RevealLastTyped,
                         modifier = Modifier
-                            .weight(1f)
                             .then(
                                 if (focusRequester != null)
                                     Modifier.focusRequester(focusRequester)
