@@ -193,8 +193,6 @@ internal fun VsTextInputField(
                         }
                     )
 
-                    UiSpacer(1f)
-
                     if (textFieldState.text.isNotEmpty()) {
                         Icon(
                             painter = painterResource(
