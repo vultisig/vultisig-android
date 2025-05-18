@@ -56,7 +56,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.zip
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
 
@@ -224,12 +223,92 @@ internal class BalanceRepositoryImpl @Inject constructor(
         address: String,
         coin: Coin,
     ): Flow<TokenValue> = flow {
-        val balance = try {
-            getBalance(coin, address)
-        } catch (e: Exception) {
-            BigInteger.ZERO
-        }
-        emit(TokenValue(balance, coin.ticker, coin.decimal))
+        emit(TokenValue(when (coin.chain) {
+            ThorChain -> {
+                val listCosmosBalance = thorChainApi.getBalance(address)
+                val balance = listCosmosBalance
+                    .find {
+                        it.denom.equals(coin.ticker, ignoreCase = true) ||
+                                it.denom.equals(coin.contractAddress, ignoreCase = true)
+                    }
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            MayaChain -> {
+                val listCosmosBalance = mayaChainApi.getBalance(address)
+                val balance = listCosmosBalance
+                    .find { it.denom.equals(coin.ticker, ignoreCase = true) }
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash -> {
+                val balance = blockchairApi.getAddressInfo(coin.chain, address)?.address?.balance
+                balance?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism,
+            Blast, CronosChain, ZkSync -> {
+                evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
+            }
+
+            GaiaChain, Kujira, Dydx, Osmosis, Terra, Noble, Akash -> {
+                val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
+
+                val balance = if (coin.contractAddress.startsWith("terra")) {
+                    cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
+                } else {
+                    val listCosmosBalance = cosmosApi.getBalance(address)
+                    listCosmosBalance
+                        .find {
+                            it.hasValidDenom(coin)
+                        }
+                }
+
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            TerraClassic -> {
+                val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
+
+                val balance = if (coin.contractAddress.startsWith("terra")) {
+                    cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
+                } else {
+                    val listCosmosBalance = cosmosApi.getBalance(address)
+                    listCosmosBalance.find {
+                        (coin.contractAddress.isEmpty() &&
+                                it.denom.equals(
+                                    coin.chain.feeUnit,
+                                    ignoreCase = true
+                                )) ||
+                                it.denom.equals(
+                                    coin.contractAddress,
+                                    ignoreCase = true,
+                                )
+                    }
+                }
+
+                balance?.amount?.toBigInteger() ?: 0.toBigInteger()
+            }
+
+            Solana -> {
+                if (coin.isNativeToken) {
+                    solanaApi.getBalance(address)
+                } else {
+                    splTokenRepository.getBalance(coin)
+                        ?: splTokenRepository.getCachedBalance(coin)
+                }
+            }
+            Polkadot -> polkadotApi.getBalance(address)
+
+            Sui -> suiApi.getBalance(
+                address,
+                coin.contractAddress
+            )
+
+            Ton -> tonApi.getBalance(address)
+            Chain.Ripple -> rippleApi.getBalance(coin)
+            Chain.Tron -> tronApi.getBalance(coin)
+        }, coin.ticker, coin.decimal))
     }.onEach { tokenValue ->
         tokenValueDao.insertTokenValue(
             TokenValueEntity(
@@ -239,97 +318,6 @@ internal class BalanceRepositoryImpl @Inject constructor(
                 tokenValue = tokenValue.value.toString(),
             )
         )
-    }
-
-    private suspend fun getBalance(
-        coin: Coin,
-        address: String,
-    ): BigInteger = when (coin.chain) {
-        ThorChain -> {
-            val listCosmosBalance = thorChainApi.getBalance(address)
-            val balance = listCosmosBalance
-                .find {
-                    it.denom.equals(coin.ticker, ignoreCase = true) ||
-                            it.denom.equals(coin.contractAddress, ignoreCase = true)
-                }
-            balance?.amount?.toBigInteger() ?: 0.toBigInteger()
-        }
-
-        MayaChain -> {
-            val listCosmosBalance = mayaChainApi.getBalance(address)
-            val balance = listCosmosBalance
-                .find { it.denom.equals(coin.ticker, ignoreCase = true) }
-            balance?.amount?.toBigInteger() ?: 0.toBigInteger()
-        }
-
-        Bitcoin, BitcoinCash, Litecoin, Dogecoin, Dash -> {
-            val balance = blockchairApi.getAddressInfo(coin.chain, address)?.address?.balance
-            balance?.toBigInteger() ?: 0.toBigInteger()
-        }
-
-        Ethereum, BscChain, Avalanche, Base, Arbitrum, Polygon, Optimism,
-        Blast, CronosChain, ZkSync -> {
-            evmApiFactory.createEvmApi(coin.chain).getBalance(coin)
-        }
-
-        GaiaChain, Kujira, Dydx, Osmosis, Terra, Noble, Akash -> {
-            val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
-
-            val balance = if (coin.contractAddress.startsWith("terra")) {
-                cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
-            } else {
-                val listCosmosBalance = cosmosApi.getBalance(address)
-                listCosmosBalance
-                    .find {
-                        it.hasValidDenom(coin)
-                    }
-            }
-
-            balance?.amount?.toBigInteger() ?: 0.toBigInteger()
-        }
-
-        TerraClassic -> {
-            val cosmosApi = cosmosApiFactory.createCosmosApi(coin.chain)
-
-            val balance = if (coin.contractAddress.startsWith("terra")) {
-                cosmosApi.getWasmTokenBalance(address, coin.contractAddress)
-            } else {
-                val listCosmosBalance = cosmosApi.getBalance(address)
-                listCosmosBalance.find {
-                    (coin.contractAddress.isEmpty() &&
-                            it.denom.equals(
-                                coin.chain.feeUnit,
-                                ignoreCase = true
-                            )) ||
-                            it.denom.equals(
-                                coin.contractAddress,
-                                ignoreCase = true,
-                            )
-                }
-            }
-
-            balance?.amount?.toBigInteger() ?: 0.toBigInteger()
-        }
-
-        Solana -> {
-            if (coin.isNativeToken) {
-                solanaApi.getBalance(address)
-            } else {
-                splTokenRepository.getBalance(coin)
-                    ?: splTokenRepository.getCachedBalance(coin)
-            }
-        }
-
-        Polkadot -> polkadotApi.getBalance(address)
-
-        Sui -> suiApi.getBalance(
-            address,
-            coin.contractAddress
-        )
-
-        Ton -> tonApi.getBalance(address)
-        Chain.Ripple -> rippleApi.getBalance(coin)
-        Chain.Tron -> tronApi.getBalance(coin)
     }
 
 }

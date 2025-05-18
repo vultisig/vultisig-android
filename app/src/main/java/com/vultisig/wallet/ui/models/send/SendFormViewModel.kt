@@ -1164,10 +1164,19 @@ internal class SendFormViewModel @Inject constructor(
                     isRefreshing = true
                 )
             }
-            val gasFee = gasFeeRepository.getGasFee(
-                srcAddress.chain,
-                srcAddress.address
-            )
+            val gasFee = try {
+                gasFeeRepository.getGasFee(
+                    srcAddress.chain,
+                    srcAddress.address
+                )
+            } catch (e: Exception) {
+                uiState.update {
+                    it.copy(
+                        isRefreshing = false
+                    )
+                }
+                return@launch
+            }
 
             this@SendFormViewModel.gasFee.value =
                 adjustGasFee(gasFee, gasSettings.value, specific.value)
