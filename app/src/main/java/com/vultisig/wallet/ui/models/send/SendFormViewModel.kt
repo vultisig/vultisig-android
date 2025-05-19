@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.GasFeeRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
@@ -153,6 +154,7 @@ internal class SendFormViewModel @Inject constructor(
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val advanceGasUiRepository: AdvanceGasUiRepository,
     private val vaultRepository: VaultRepository,
+    private val tokenRepository: TokenRepository,
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(SendFormUiModel())
@@ -729,7 +731,7 @@ internal class SendFormViewModel @Inject constructor(
      * Returns first token found for tokenId or chainId or first token it all list,
      * can return null if there's no tokens in the vault
      */
-    private fun findPreselectedToken(
+    private suspend fun findPreselectedToken(
         accounts: List<Account>,
         preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
@@ -748,9 +750,37 @@ internal class SendFormViewModel @Inject constructor(
             }
         }
 
-        // if user selected none, or nothing was found, select the first token
-        return searchByChainResult
-            ?: accounts.firstOrNull()?.token
+        if (searchByChainResult != null)
+            return searchByChainResult
+
+        // if chain Id is missing in accounts, add the first chain found by address manually.
+        val chainIdForAddition = preSelectedChainIds.firstOrNull()
+        chainIdForAddition?.let {
+            return addNativeTokenToVault(chainIdForAddition)
+        }
+
+        // if nothing was found, select the first token
+        return accounts.firstOrNull()?.token
+    }
+
+    private suspend fun addNativeTokenToVault(chainIdForAddition: ChainId): Coin {
+        val nativeToken = tokenRepository.getNativeToken(chainIdForAddition)
+        val vaultId = requireNotNull(vaultId)
+        val vault = requireNotNull(vaultRepository.get(vaultId))
+        val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(
+            coin = nativeToken,
+            vault = vault
+        )
+        val updatedCoin = nativeToken.copy(
+            address = address,
+            hexPublicKey = derivedPublicKey
+        )
+
+        vaultRepository.addTokenToVault(vaultId, updatedCoin)
+
+        loadAccounts(vaultId)
+
+        return updatedCoin
     }
 
     private fun calculateGasTokenBalance() {
