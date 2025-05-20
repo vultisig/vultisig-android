@@ -293,7 +293,8 @@ internal class SendFormViewModel @Inject constructor(
                     preSelectToken(
                         preSelectedChainIds = chainValidForAddress.map { it.id },
                         preSelectedTokenId = null,
-                        forcePreselection = true
+                        forcePreselection = true,
+                        isQrCodeResult = true,
                     )
                 }
             }
@@ -707,6 +708,7 @@ internal class SendFormViewModel @Inject constructor(
         preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
         forcePreselection: Boolean = false,
+        isQrCodeResult: Boolean = false,
     ) {
         Timber.d("preSelectToken($preSelectedChainIds, $preSelectedTokenId, $forcePreselection)")
 
@@ -714,7 +716,7 @@ internal class SendFormViewModel @Inject constructor(
         preSelectTokenJob = viewModelScope.launch {
             accounts.collect { accounts ->
                 val preSelectedToken = findPreselectedToken(
-                    accounts, preSelectedChainIds, preSelectedTokenId
+                    accounts, preSelectedChainIds, preSelectedTokenId, isQrCodeResult,
                 )
 
                 Timber.d("Found a new token to pre select $preSelectedToken")
@@ -735,6 +737,7 @@ internal class SendFormViewModel @Inject constructor(
         accounts: List<Account>,
         preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
+        isQrCodeResult: Boolean,
     ): Coin? {
         var searchByChainResult: Coin? = null
 
@@ -754,9 +757,11 @@ internal class SendFormViewModel @Inject constructor(
             return searchByChainResult
 
         // if chain Id is missing in accounts, add the first chain found by address manually.
-        val chainIdForAddition = preSelectedChainIds.firstOrNull()
-        chainIdForAddition?.let {
-            return addNativeTokenToVault(chainIdForAddition)
+        if (isQrCodeResult) {
+            val chainIdForAddition = preSelectedChainIds.firstOrNull()
+            chainIdForAddition?.let {
+                return addNativeTokenToVault(chainIdForAddition)
+            }
         }
 
         // if nothing was found, select the first token
