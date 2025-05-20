@@ -89,6 +89,11 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
             ?: BigDecimal.ZERO
     }
 
+    /**
+     * Refreshes and updates prices for the provided list of tokens using external APIs and saves them to the local database.
+     *
+     * For each token, fetches the latest price based on its price provider ID or contract address, converts prices to the current application currency, and updates both the in-memory cache and persistent storage. Also retrieves and updates ThorChain token prices in the selected currency.
+     */
     override suspend fun refresh(tokens: List<Coin>) {
         val currency = appCurrencyRepository.currency.first().ticker.lowercase()
         val currencies = listOf(currency)
@@ -148,6 +153,15 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         )
     }
 
+    /**
+     * Retrieves the price of a token using its blockchain chain ID and contract address.
+     *
+     * If a price is found, it is saved to the local cache and returned; otherwise, returns zero.
+     *
+     * @param chainId The blockchain chain identifier.
+     * @param contractAddress The contract address of the token.
+     * @return The token price as a BigDecimal, or zero if unavailable.
+     */
     override suspend fun getPriceByContactAddress(
         chainId: String,
         contractAddress: String,
@@ -264,9 +278,22 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
         ).values.firstOrNull()
 
 
-    private suspend fun fetchTetherPrice() =
+    /**
+         * Retrieves the current price of Tether (USDT) using its price provider ID.
+         *
+         * @return The price of Tether as a [BigDecimal].
+         */
+        private suspend fun fetchTetherPrice() =
         getPriceByPriceProviderId(TETHER_PRICE_PROVIDER_ID)
 
+    /**
+     * Fetches and saves ThorChain token prices in the specified currency.
+     *
+     * Retrieves pool prices for non-native ThorChain tokens, converts USD prices to the selected currency using the Tether rate, and updates the local price cache.
+     *
+     * @param tokenList List of tokens to fetch prices for.
+     * @param currency The target currency ticker for price conversion.
+     */
     private suspend fun fetchThorPrices(tokenList: List<Coin>, currency: String) {
         coroutineScope {
             // if we have any thorchain tokens, then fetch their pool prices
