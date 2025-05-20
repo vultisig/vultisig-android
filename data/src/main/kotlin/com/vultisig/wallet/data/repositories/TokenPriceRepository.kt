@@ -283,7 +283,10 @@ internal class TokenPriceRepositoryImpl @Inject constructor(
                 return@coroutineScope
             }
 
-            val tetherPrice = fetchTetherPrice()
+            val tickerUsd = AppCurrency.USD.ticker.lowercase()
+            val tetherPrice = if (currency.equals(tickerUsd, ignoreCase = true))
+                1.toBigDecimal()
+            else fetchTetherPrice()
 
             val tokenIdToPrices = thorTokens.asSequence()
                 .mapNotNull {
