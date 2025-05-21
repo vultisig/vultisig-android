@@ -67,7 +67,6 @@ internal fun KeysignView(
                             transactionLink = transactionLink,
                             approveTransactionLink = approveTransactionLink,
                             onComplete = onComplete,
-                            progressLink = progressLink,
                             onBack = onBack,
                             transactionTypeUiModel = transactionTypeUiModel,
                             showToolbar = showToolbar,
